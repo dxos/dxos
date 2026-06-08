@@ -15,7 +15,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 
 import { Sketch } from '#types';
 
-import { getSketchPath } from '../paths';
+import { getSketchesPath } from '../paths';
 
 const sketchTypename = Type.getTypename(Sketch.Sketch);
 
@@ -37,14 +37,14 @@ export default Capability.makeModule(
               data: () =>
                 Effect.gen(function* () {
                   const sketch = Sketch.make({ canvas: { schema: Sketch.TLDRAW_SCHEMA, content: {} } });
-                  yield* Operation.invoke(
+                  const { subject } = yield* Operation.invoke(
                     SpaceOperation.AddObject,
-                    { object: sketch, target: space.db },
+                    { object: sketch, target: space.db, hidden: true, targetNodeId: getSketchesPath(space.db.spaceId) },
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(
                     LayoutOperation.Open,
-                    { subject: [getSketchPath(space.db.spaceId, sketch.id)] },
+                    { subject: [...subject] },
                     { spaceId: space.db.spaceId },
                   );
                 }),

@@ -11,10 +11,11 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
 
-import { Markdown, MarkdownOperation } from '#types';
+import { Markdown } from '#types';
 
-import { getDocumentPath } from '../paths';
+import { getDocumentsPath } from '../paths';
 
 const documentTypename = Type.getTypename(Markdown.Document);
 
@@ -35,14 +36,15 @@ export default Capability.makeModule(
               id: 'create-document',
               data: () =>
                 Effect.gen(function* () {
-                  const { object: doc } = yield* Operation.invoke(
-                    MarkdownOperation.CreateMarkdown,
-                    {},
+                  const doc = Markdown.make({});
+                  const { subject } = yield* Operation.invoke(
+                    SpaceOperation.AddObject,
+                    { object: doc, target: space.db, hidden: true, targetNodeId: getDocumentsPath(space.db.spaceId) },
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(
                     LayoutOperation.Open,
-                    { subject: [getDocumentPath(space.db.spaceId, doc.id)] },
+                    { subject: [...subject] },
                     { spaceId: space.db.spaceId },
                   );
                 }),

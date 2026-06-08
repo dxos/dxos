@@ -15,7 +15,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 
 import { Sheet } from '#types';
 
-import { getSheetPath } from '../paths';
+import { getSheetsPath } from '../paths';
 
 const sheetTypename = Type.getTypename(Sheet.Sheet);
 
@@ -37,14 +37,14 @@ export default Capability.makeModule(
               data: () =>
                 Effect.gen(function* () {
                   const sheet = Sheet.make({});
-                  yield* Operation.invoke(
+                  const { subject } = yield* Operation.invoke(
                     SpaceOperation.AddObject,
-                    { object: sheet, target: space.db },
+                    { object: sheet, target: space.db, hidden: true, targetNodeId: getSheetsPath(space.db.spaceId) },
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(
                     LayoutOperation.Open,
-                    { subject: [getSheetPath(space.db.spaceId, sheet.id)] },
+                    { subject: [...subject] },
                     { spaceId: space.db.spaceId },
                   );
                 }),

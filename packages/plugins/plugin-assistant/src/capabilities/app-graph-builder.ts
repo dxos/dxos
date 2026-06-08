@@ -29,7 +29,9 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-import { getChatPath } from '../paths';
+import { SpaceOperation } from '@dxos/plugin-space';
+
+import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [AgentPrompt] as const;
@@ -222,11 +224,14 @@ export default Capability.makeModule(
                     { db: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Database.flush();
-                  const chatPath = getChatPath(space.db.spaceId, chat.id);
+                  const { subject } = yield* Operation.invoke(
+                    SpaceOperation.AddObject,
+                    { object: chat, target: space.db, hidden: true, targetNodeId: getChatsPath(space.db.spaceId) },
+                    { spaceId: space.db.spaceId },
+                  );
                   yield* Operation.invoke(
                     LayoutOperation.Open,
-                    { subject: [chatPath] },
+                    { subject: [...subject] },
                     { spaceId: space.db.spaceId },
                   );
                 }),
