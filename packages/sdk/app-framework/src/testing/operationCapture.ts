@@ -104,6 +104,13 @@ export const makeOperationCapture = (
           }
           return (real.invokePromise as any)(op, input, ...rest);
         },
+        schedule: (op: Operation.Definition<any, any>, input?: unknown, ...rest: any[]) => {
+          recordFn(op, input);
+          if (mockedKeys.has(String(op.meta.key))) {
+            return Effect.succeed(undefined);
+          }
+          return (real.schedule as any)(op, input, ...rest);
+        },
       };
 
       return [Capability.contributes(Capabilities.OperationInvoker, wrapped)];
