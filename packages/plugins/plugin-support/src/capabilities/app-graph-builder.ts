@@ -13,7 +13,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation } from '#types';
 
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE, SPACE_HOME_SUBJECT_PREFIX } from '../constants';
+import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE } from '../constants';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -126,9 +126,9 @@ export default Capability.makeModule(
       }),
 
       // Per-space Home virtual node, hoisted to the top of every space's navtree. The node is fully
-      // virtual (no backing ECHO object); the matching Article surface resolves the space from the
-      // subject (`${SPACE_HOME_SUBJECT_PREFIX}${space.id}`). The extension is positioned `first` so
-      // its node is inserted ahead of other `position: 'first'` siblings (Settings, Collections).
+      // virtual (no backing ECHO object); the matching Article surface uses `useActiveSpace()` to
+      // resolve the space. The extension is positioned `first` so its node is inserted ahead of
+      // other `position: 'first'` siblings (Settings, Collections).
       GraphBuilder.createExtension({
         id: 'spaceHome',
         position: 'first',
@@ -142,7 +142,7 @@ export default Capability.makeModule(
             {
               id: SPACE_HOME_NODE_ID,
               type: SPACE_HOME_NODE_TYPE,
-              data: `${SPACE_HOME_SUBJECT_PREFIX}${space.id}`,
+              data: SPACE_HOME_NODE_TYPE,
               properties: {
                 label: SPACE_HOME_NODE_LABEL,
                 icon: 'ph--house--regular',

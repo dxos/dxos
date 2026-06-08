@@ -7,9 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type SpaceId } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
 import { SupportSettings } from '#components';
 import {
@@ -26,7 +24,7 @@ import {
 import { meta } from '#meta';
 import { Settings, Support } from '#types';
 
-import { SHORTCUTS_DIALOG, SPACE_HOME_SUBJECT_PREFIX } from '../constants';
+import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -43,14 +41,9 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHome',
-        filter: AppSurface.subject(
-          AppSurface.Article,
-          (subject): subject is string => typeof subject === 'string' && subject.startsWith(SPACE_HOME_SUBJECT_PREFIX),
-        ),
-        component: ({ data, role }) => {
-          // subject = `${SPACE_HOME_SUBJECT_PREFIX}${space.id}` — space.id is a SpaceId.
-          const spaceId = (data.subject as string).slice(SPACE_HOME_SUBJECT_PREFIX.length) as SpaceId;
-          const space = useSpace(spaceId);
+        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
+        component: ({ role }) => {
+          const space = useActiveSpace();
           return <SpaceHomeArticle role={role} space={space} />;
         },
       }),

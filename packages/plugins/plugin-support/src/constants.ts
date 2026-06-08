@@ -25,8 +25,3 @@ export const SPACE_HOME_NODE_ID = 'home';
  */
 export const SPACE_HOME_NODE_TYPE = `${meta.id}.space-home-node`;
 
-/**
- * Prefix for the Home node's Article surface subject. The space id is appended so each space's Home
- * node resolves to its own space (`${SPACE_HOME_SUBJECT_PREFIX}${space.id}`).
- */
-export const SPACE_HOME_SUBJECT_PREFIX = `${meta.id}/home/`;
