@@ -3,15 +3,13 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { createContext } from '@radix-ui/react-context';
 import React, {
-  createContext,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 
@@ -38,16 +36,12 @@ type CarouselContextValue = {
   prev: () => void;
 };
 
-const CarouselContext = createContext<CarouselContextValue | null>(null);
+const CAROUSEL_NAME = 'Carousel';
+
+const [CarouselProvider, useCarouselContext] = createContext<CarouselContextValue>(CAROUSEL_NAME);
 
 /** Returns the current carousel state. Must be used within {@link Carousel.Root}. */
-export const useCarousel = (): CarouselContextValue => {
-  const context = useContext(CarouselContext);
-  if (!context) {
-    throw new Error('useCarousel must be used within Carousel.Root');
-  }
-  return context;
-};
+export const useCarousel = (): CarouselContextValue => useCarouselContext('useCarousel');
 
 //
 // Root
@@ -105,14 +99,12 @@ const CarouselRoot = ({
     setIndexState((i) => (i - 1 + count) % count);
   }, [count]);
 
-  const value = useMemo(() => ({ index, count, setIndex, next, prev }), [index, count, setIndex, next, prev]);
-
   if (count === 0) {
     return null;
   }
 
   return (
-    <CarouselContext.Provider value={value}>
+    <CarouselProvider index={index} count={count} setIndex={setIndex} next={next} prev={prev}>
       {/*
        * Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
        * gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
@@ -128,7 +120,7 @@ const CarouselRoot = ({
       >
         {children}
       </div>
-    </CarouselContext.Provider>
+    </CarouselProvider>
   );
 };
 
