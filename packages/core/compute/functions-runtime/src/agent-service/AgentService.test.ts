@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
@@ -17,7 +16,6 @@ import { expect } from 'vitest';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
-import { Process } from '@dxos/compute';
 import { Feed, Filter } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -169,14 +167,23 @@ const ResearchBlueprint = Blueprint.make({
   tools: Blueprint.toolDefinitions({ operations: [Research] }),
 });
 
-const TestLayer = AssistantTestLayer({
+const assistantTestLayerOptions = {
   types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
-  tracing: 'pretty',
-  aiServicePreset: 'edge-remote',
+  tracing: 'pretty' as const,
+  aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
-  enableToolBackgrounding: false,
   extraServices: makeResearchService,
+};
+
+const TestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  enableToolBackgrounding: false,
+});
+
+const BackgroundTestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  enableToolBackgrounding: true,
 });
 
 describe('Agent Service', () => {
@@ -296,23 +303,24 @@ describe('Agent Service', () => {
     ),
   );
 
-  // TODO(dmaretskyi): Figure out how to make it not sleep for 45 seconds.
-  it.scoped.skip(
+  it.scoped(
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const registry = yield* Registry.AtomRegistry;
-        const monitor = yield* Process.ProcessMonitorService;
-        registry.subscribe(monitor.processTreeAtom, (tree) => {
-          console.log(`\n----- Process tree -----\n${Process.prettyProcessTree(tree)}\n-----------------\n`);
-        });
-
         const agent = yield* AgentService.createSession({
           blueprints: [ResearchBlueprint],
         });
 
+        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        const taskDrainer = yield* Effect.gen(function* () {
+          while (true) {
+            yield* researchService.waitForTaskToAppear();
+            yield* researchService.completeOneTask();
+          }
+        }).pipe(Effect.fork);
+
         let ephemeralEventCount = 0;
-        yield* agent.subscribeEphemeral().pipe(
+        const ephemeralFiber = yield* agent.subscribeEphemeral().pipe(
           Stream.runForEach((msg) =>
             Effect.gen(function* () {
               for (const event of msg.events) {
@@ -330,11 +338,15 @@ describe('Agent Service', () => {
         }
         yield* agent.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
         yield* agent.waitForCompletion();
+
+        yield* Fiber.interrupt(taskDrainer);
+        yield* Fiber.interrupt(ephemeralFiber);
+
         expect(ephemeralEventCount).toBeGreaterThan(0);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(BackgroundTestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 120_000 },
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
   );
 });
