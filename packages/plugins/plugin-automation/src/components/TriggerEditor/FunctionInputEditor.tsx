@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Operation } from '@dxos/compute';
 import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
-import { type JsonPath } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
@@ -23,7 +23,7 @@ export type FunctionInputEditorProps = {
 
 export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChange }: FunctionInputEditorProps) => {
   const { t } = useTranslation(meta.id);
-  const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
+  const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as SchemaEx.JsonPath]);
   const selectedFunction = useMemo(
     () => (Ref.isRef(selectedFunctionValue) ? findOperationByUri(functions, selectedFunctionValue.uri) : undefined),
     [functions, selectedFunctionValue],

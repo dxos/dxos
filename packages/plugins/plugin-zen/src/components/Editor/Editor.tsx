@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { Form, omitId } from '@dxos/react-ui-form';
 
 import { type Dream } from '#types';
@@ -24,7 +24,7 @@ export const Editor = ({ dream }: EditorProps) => {
       Obj.update(dream, () => {
         for (const path of paths) {
           const value = values[path];
-          const parts = splitJsonPath(path as JsonPath);
+          const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
           Obj.setValue(dream, parts, value);
         }
       });

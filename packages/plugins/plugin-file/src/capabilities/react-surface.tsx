@@ -10,7 +10,7 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
 import { FileInput, FileSettings } from '#components';
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         id: 'createForm',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = findAnnotation<Record<string, string[]>>(
+          const annotation = SchemaEx.findAnnotation<Record<string, string[]>>(
             (data.schema as Schema.Schema.All).ast,
             FileAction.UploadAnnotationId,
           );

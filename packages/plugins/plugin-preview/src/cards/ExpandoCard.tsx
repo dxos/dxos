@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { Card } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -54,7 +54,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
       Obj.update(subject, () => {
         for (const path of paths) {
           const value = values[path];
-          const parts = splitJsonPath(path as JsonPath);
+          const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
           Obj.setValue(subject, parts, value);
         }
       });

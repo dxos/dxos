@@ -3,7 +3,12 @@
 //
 
 import { Node } from '@dxos/app-graph';
+import { createTypeSectionPaths } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention/types';
+
+import { Calendar } from '#types';
+
+const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = createTypeSectionPaths(Calendar.Calendar);
 
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
@@ -49,3 +54,5 @@ export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messag
  * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
  */
 export const getCalendarRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
+
+export { getCalendarsPath, getCalendarPath };

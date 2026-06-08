@@ -9,7 +9,7 @@ import { createFeedServiceLayer, type Space, getSpace } from '@dxos/client/echo'
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
@@ -134,7 +134,7 @@ export class QueueLogger implements SequenceLogger {
   private _appendToTraceFeed(items: any[]): Promise<void> {
     return Feed.append(this._invocationTraceFeed, items).pipe(
       Effect.provide(this._feedServiceLayer),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }
 

@@ -3,4 +3,5 @@
 //
 
 export * from './meta';
+export * from './paths';
 export * from './types';

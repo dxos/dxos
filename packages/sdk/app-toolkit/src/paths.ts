@@ -3,7 +3,7 @@
 //
 
 import { Node } from '@dxos/app-graph';
-import { Key, Obj } from '@dxos/echo';
+import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -117,6 +117,50 @@ export const fromUrlPath = (pathname: string): string => {
     return Node.RootId;
   }
   return `${Node.RootId}/${trimmed}`;
+};
+
+/**
+ * Canonical qualified path to the custom type section node directly under a space.
+ * This is the path used by sections created with {@link createTypeSectionExtension}.
+ * Distinct from {@link getTypePath} which navigates to the plugin-space database subtree.
+ */
+const getTypeSectionPath = (spaceId: string, typename: string): string => `${getSpacePath(spaceId)}/${typename}`;
+
+/**
+ * Canonical qualified path to a specific object within a custom type section.
+ * Use this instead of {@link getObjectPath} when navigating to objects surfaced by
+ * {@link createTypeSectionExtension}, so navigation lands in the custom section rather
+ * than the database subtree.
+ */
+const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: string): string =>
+  `${getSpacePath(spaceId)}/${typename}/${objectId}`;
+
+/**
+ * Creates strongly-typed path helpers for a plugin's custom type section.
+ *
+ * Pass an ECHO schema; the typename is derived once and captured in the returned helpers.
+ * Plugins destructure and re-export under their own names:
+ *
+ * ```ts
+ * const { getSectionPath: getChatsPath, getObjectPath: getChatPath } =
+ *   createTypeSectionPaths(Chat.Chat);
+ * export { getChatsPath, getChatPath };
+ * ```
+ *
+ * @idiom org.dxos.app-toolkit.typeSectionPath
+ *   applies: Navigating to or linking to objects of a plugin-specific ECHO type
+ *   instead-of: Building path strings with template literals at the call site
+ *   uses: {@link createTypeSectionPaths}
+ */
+export const createTypeSectionPaths = (type: Type.AnyEntity) => {
+  const typename = Type.getTypename(type);
+  invariant(typename, 'Schema must have a typename to create type section paths.');
+  return {
+    /** Canonical qualified path to the type's section node within a space. */
+    getSectionPath: (spaceId: string): string => getTypeSectionPath(spaceId, typename),
+    /** Canonical qualified path to a specific object within the type's section. */
+    getObjectPath: (spaceId: string, objectId: string): string => getTypeSectionObjectPath(spaceId, typename, objectId),
+  };
 };
 
 /**

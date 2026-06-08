@@ -70,10 +70,10 @@
       "path": "../react-ui-editor"
     },
     {
-      "path": "../react-ui-markdown"
+      "path": "../react-ui-experimental"
     },
     {
-      "path": "../react-ui-sfx"
+      "path": "../react-ui-markdown"
     },
     {
       "path": "../react-ui-syntax-highlighter"

@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-ui';
@@ -71,7 +71,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
 
       const config = { icon: mergedIcon, hue: mergedHue };
       log.info('Writing composer config', { path: workspace.path, config });
-      void runAndForwardErrors(
+      void EffectEx.runAndForwardErrors(
         writeComposerConfig(workspace.path, config).pipe(
           Effect.tap((success) =>
             success

@@ -12,7 +12,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Database, JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { MapSurface, MapViewEditor } from '#containers';
@@ -70,7 +70,10 @@ export default Capability.makeModule(() =>
           target: Database.Database | Collection.Collection | undefined;
           fieldPropertyAst?: SchemaAST.AST;
         } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>(
+            (data.schema as Schema.Schema.All).ast,
+            LocationAnnotationId,
+          );
           return !!annotation;
         },
         component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {

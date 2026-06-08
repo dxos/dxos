@@ -8,7 +8,8 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
-import { type JsonPath, type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
@@ -104,8 +105,8 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
 
   const handleColumnValuesChanged = useCallback(
     (column: Pipeline.Column) =>
-      (newValues: { name?: string }, { changed }: { changed: Record<JsonPath, boolean> }) => {
-        if (changed['name' as JsonPath]) {
+      (newValues: { name?: string }, { changed }: { changed: Record<SchemaEx.JsonPath, boolean> }) => {
+        if (changed['name' as SchemaEx.JsonPath]) {
           const columnIndex = columns.findIndex((c) => c === column);
           if (columnIndex === -1) {
             return;

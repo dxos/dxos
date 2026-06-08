@@ -8,11 +8,11 @@ import type * as Layer$ from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import type * as Schema$ from 'effect/Schema';
 
-import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
+import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint, Operation } from '@dxos/compute';
+import type { Blueprint, Credential, Operation } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
@@ -151,26 +151,13 @@ export namespace AppCapabilities {
   export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.plugin-asset');
 
   /**
-   * @deprecated Resolve {@link AiService.AiService} through the process manager
-   * runtime (via {@link Capabilities.ProcessManagerRuntime} or a
-   * {@link ServiceResolver}) instead of pulling this layer directly. The
-   * application-affinity `LayerSpec` contributed by `plugin-assistant`
-   * registers the same layer with the {@link Capabilities.LayerSpec} graph.
+   * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
+   * supplied by the active-space resolver — BYOK-aware resolvers wrap their HTTP client with
+   * `byokHeaderLayer(...)`; the rest carry it through unused.
    */
-  export type AiServiceLayer = Layer$.Layer<AiService$.AiService>;
-  /**
-   * @deprecated See the `AiServiceLayer` type above.
-   */
-  export const AiServiceLayer = Capability$.make<AiServiceLayer>(
-    'org.dxos.app-framework.capability.ai-service-factory',
-  );
-
-  /**
-   * Plugins can contribute them to provide model resolvers.
-   */
-  export const AiModelResolver = Capability$.make<Layer$.Layer<AiModelResolver$.AiModelResolver>>(
-    'org.dxos.app-framework.capability.ai-model-resolver',
-  );
+  export const AiModelResolver = Capability$.make<
+    Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
+  >('org.dxos.app-framework.capability.ai-model-resolver');
 
   export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 

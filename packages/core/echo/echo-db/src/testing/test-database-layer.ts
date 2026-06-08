@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { join } from 'node:path';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -18,7 +18,7 @@ import { makeFeedService } from '../queue/feed-service';
 import type { QueueFactory } from '../queue/queue-factory';
 import { EchoTestBuilder } from './echo-test-builder';
 
-const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
+const testBuilder = EffectEx.acquireReleaseResource(() => new EchoTestBuilder());
 
 export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => {
   return join('/tmp', `dxos-${name}`);

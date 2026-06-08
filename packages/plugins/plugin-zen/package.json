@@ -88,9 +88,9 @@
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
