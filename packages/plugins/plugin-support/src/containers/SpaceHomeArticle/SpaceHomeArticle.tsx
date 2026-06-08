@@ -7,7 +7,6 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import {
-  useAtomCapability,
   useCapabilities,
   useCapability,
   useOperationInvoker,
@@ -229,15 +228,16 @@ const WelcomePanel = memo(() => {
 WelcomePanel.displayName = 'WelcomePanel';
 
 /**
- * The assistant prompt, backed by an in-memory chat. On submit the chat is persisted to the space,
- * the message is queued as a pending prompt, and the chat is opened (where the prompt is submitted).
+ * Input prompt backed by an ephemeral in-memory chat. Its sole responsibility is to collect
+ * the user's text, context bindings, and preset choice, then on submit: persist the chat to
+ * the space, queue the text as a pending prompt, and navigate to it. AI generation runs in the
+ * opened chat view — the processor here exists only to back the context binder UI.
  */
 const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
   const registry = useRegistry();
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const stateAtom = useCapability(AssistantCapabilities.State);
   const runtime = useChatServices({ id: space?.id });
@@ -263,7 +263,7 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     };
   }, [space, nonce, invokePromise]);
 
-  const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
+  const processor = useChatProcessor({ space, chat, preset, runtime, registry });
 
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
