@@ -116,7 +116,7 @@ export const MediaPlayer = ({
           autoPlay={autoPlay}
           loop={loop}
           muted={muted}
-          crossOrigin={crossOrigin || undefined}
+          crossOrigin={crossOrigin}
           aria-label={alt}
         />
       );
@@ -130,7 +130,7 @@ export const MediaPlayer = ({
         autoPlay={autoPlay}
         loop={loop}
         muted={muted}
-        crossOrigin={crossOrigin || undefined}
+        crossOrigin={crossOrigin}
         aria-label={alt}
       />
     );
