@@ -80,7 +80,7 @@ export const Bounds: Story = {
   },
 };
 
-export const WithMarkers: Story = {
+export const Markers: Story = {
   args: {
     markers: [
       { id: 'los angeles', title: 'Los Angeles', location: { lat: 34.0522, lng: -118.2437 } },
@@ -112,7 +112,7 @@ export const WithMarkers: Story = {
 /**
  * https://docs.maptiler.com/leaflet
  */
-export const MapTiler: Story = {
+export const CustomTiles: Story = {
   args: {
     url: 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?&key=${key}',
   },

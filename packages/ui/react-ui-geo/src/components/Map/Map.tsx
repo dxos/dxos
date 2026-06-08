@@ -28,7 +28,7 @@ import {
 } from 'react-leaflet';
 
 import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { composableProps, defaultTx } from '@dxos/react-ui';
+import { composable, composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types';
@@ -197,10 +197,12 @@ const MapPinchZoom = () => {
   return null;
 };
 
-// Map.Viewport is the focusable Leaflet frame. It can be the target of a parent `<Panel.Content asChild>`
-// (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
-// container element, so the forwarded DOM ref can't be attached and is intentionally unused.
-const MapViewport = forwardRef<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
+/**
+ * Map.Viewport is the focusable Leaflet frame. It can be the target of a parent `<Panel.Content asChild>`
+ * (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
+ * container element, so the forwarded DOM ref can't be attached and is intentionally unused.
+ */
+const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
   const { scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...rest } = props;
   const { attention, registerMap } = useMapContext(MAP_VIEWPORT_NAME);
   // Local copy of the leaflet map for this component's own effects; also registered with Map.Root.
