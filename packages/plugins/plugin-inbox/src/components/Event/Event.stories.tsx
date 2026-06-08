@@ -14,45 +14,17 @@ import { translations } from '#translations';
 
 import { Event } from './Event';
 
-const DefaultStory = () => {
-  const event = useMemo(
-    () =>
-      EventType.make({
-        title: random.lorem.sentence(5),
-        description: random.lorem.paragraph(2),
-        owner: {},
-        attendees: Array.from({ length: 3 }, () => ({
-          name: random.person.fullName(),
-          email: random.internet.email(),
-        })),
-        startDate: new Date('2025-11-19T12:00:00').toISOString(),
-        endDate: new Date('2025-11-19T13:00:00').toISOString(),
-      }),
-    [],
-  );
-
-  return (
-    <Event.Root event={event}>
-      <Event.Toolbar alwaysActive />
-      <Event.Header />
-      <Event.Viewport>
-        <Event.Body />
-      </Event.Viewport>
-    </Event.Root>
-  );
-};
-
-// Editable form (as used for draft events). `createObject` yields a live, reactive ECHO object so the
-// `useObject`-bound inputs and the markdown body editor (createDocAccessor) work in the story.
-const EditableStory = () => {
+// `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
+// markdown body editor (createDocAccessor) work in the story.
+const DefaultStory = ({ editable }: { editable?: boolean }) => {
   const event = useMemo(
     () =>
       createObject(
         EventType.make({
           title: random.lorem.sentence(5),
-          description: '',
+          description: random.lorem.paragraph(2),
           owner: {},
-          attendees: Array.from({ length: 2 }, () => ({
+          attendees: Array.from({ length: 3 }, () => ({
             name: random.person.fullName(),
             email: random.internet.email(),
           })),
@@ -65,10 +37,10 @@ const EditableStory = () => {
 
   return (
     <Event.Root event={event}>
-      <Event.Toolbar alwaysActive onSave={() => {}} onDelete={() => {}} />
-      <Event.Header editable />
+      <Event.Toolbar alwaysActive onSave={editable ? () => {} : undefined} onDelete={editable ? () => {} : undefined} />
+      <Event.Header editable={editable} />
       <Event.Viewport>
-        <Event.Body editable />
+        <Event.Body editable={editable} />
       </Event.Viewport>
     </Event.Root>
   );
@@ -90,4 +62,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Editable: Story = { render: EditableStory };
+export const Editable: Story = {
+  args: {
+    editable: true,
+  },
+};
