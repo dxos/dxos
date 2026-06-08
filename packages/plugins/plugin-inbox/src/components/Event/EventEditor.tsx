@@ -127,7 +127,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
   return (
     <>
-      <Card.Row icon='ph--check--regular'>
+      <Card.Row>
         <Input.Root>
           <Input.TextInput
             placeholder={t('event-untitled.label')}
@@ -141,7 +141,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         </Input.Root>
       </Card.Row>
 
-      <Card.Row icon='ph--clock--regular'>
+      <Card.Row>
         <Input.Root>
           <div className='flex items-center gap-2'>
             <Input.Switch
@@ -167,7 +167,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* All-day events are single-day, so no end field; timed events choose a duration or explicit end. */}
       {!allDay && (
-        <Card.Row icon='ph--hourglass--regular'>
+        <Card.Row>
           <div className='flex items-center gap-2'>
             <Select.Root value={customEnd ? CUSTOM_END : presetValue} onValueChange={handleDurationChange}>
               <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
