@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -44,6 +45,7 @@ const meta = {
               yield* Effect.promise(() => personalSpace.waitUntilReady());
             }),
         }),
+        AssistantPlugin(),
       ],
     }),
   ],
@@ -57,5 +59,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Personal space: shows Welcome panel + toolbar (Start tour, Hide Welcome) at the top. */
+/** Personal space: shows Welcome panel + toolbar (Start tour, Hide Welcome) + assistant prompt. */
 export const Default: Story = {};
