@@ -222,20 +222,21 @@ const DefaultStory = ({
   };
 
   return (
-    <Globe.Root zoom={zoomProp} translation={translation} rotation={rotation}>
-      <Globe.Canvas
-        topology={styles?.dots ? dots : topology}
-        projection={projection}
-        styles={styles}
-        features={tour ? { points: features?.points ?? [] } : features}
-        ref={setController}
-      />
-      <Globe.Zoom onAction={handleAction} />
-      <Globe.Action onAction={handleAction} />
-      <Globe.Debug />
-      <Globe.Panel position='topright' classNames='w-20 h-20'>
-        <Leva />
-      </Globe.Panel>
+    <Globe.Root zoom={zoomProp} translation={translation} rotation={rotation} ref={setController}>
+      <Globe.Viewport>
+        <Globe.Canvas
+          topology={styles?.dots ? dots : topology}
+          projection={projection}
+          styles={styles}
+          features={tour ? { points: features?.points ?? [] } : features}
+        />
+        <Globe.Zoom onAction={handleAction} />
+        <Globe.Action onAction={handleAction} />
+        <Globe.Debug />
+        <Globe.Panel position='topright' classNames='w-20 h-20'>
+          <Leva />
+        </Globe.Panel>
+      </Globe.Viewport>
     </Globe.Root>
   );
 };
@@ -262,9 +263,11 @@ const Earth = ({ level }: { level: Level }) => {
   useWheel(controller);
 
   return (
-    <Globe.Root zoom={1.2} rotation={[0, 0, 0]}>
-      <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
-      <Globe.Zoom onAction={handleAction} />
+    <Globe.Root zoom={1.2} rotation={[0, 0, 0]} ref={setController}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} styles={defaultStyles} />
+        <Globe.Zoom onAction={handleAction} />
+      </Globe.Viewport>
     </Globe.Root>
   );
 };
@@ -286,25 +289,25 @@ export const Earth10 = () => {
  * code-split chunk fetched on demand the first time its tier is entered (default tiers: 110m / 50m).
  * Reads the live zoom from the globe context, so it must render inside `Globe.Root`.
  */
-const EarthLODContent = () => {
+const EarthLODContent = ({ controller }: { controller: GlobeController | null | undefined }) => {
   const { zoom } = useGlobeContext();
   const topology = useTopology(zoom);
-  const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
   useWheel(controller);
   return (
-    <>
-      <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
+    <Globe.Viewport>
+      <Globe.Canvas topology={topology} styles={defaultStyles} />
       <Globe.Zoom onAction={handleAction} />
-    </>
+    </Globe.Viewport>
   );
 };
 
 export const EarthLOD = () => {
+  const [controller, setController] = useState<GlobeController | null>();
   return (
-    <Globe.Root zoom={1.2} rotation={[0, 0, 0]}>
-      <EarthLODContent />
+    <Globe.Root zoom={1.2} rotation={[0, 0, 0]} ref={setController}>
+      <EarthLODContent controller={controller} />
       <Globe.Debug />
     </Globe.Root>
   );
@@ -319,9 +322,11 @@ export const Earthrise = () => {
 
   return (
     <div className='absolute bottom-0 left-0 right-0 '>
-      <Globe.Root classNames='h-[400px]' zoom={2.8} translation={{ x: 0, y: 400 }}>
-        <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
-        <Globe.Zoom onAction={handleAction} />
+      <Globe.Root zoom={2.8} translation={{ x: 0, y: 400 }} ref={setController}>
+        <Globe.Viewport classNames='h-[400px]'>
+          <Globe.Canvas topology={topology} styles={defaultStyles} />
+          <Globe.Zoom onAction={handleAction} />
+        </Globe.Viewport>
       </Globe.Root>
     </div>
   );
@@ -354,9 +359,11 @@ export const Mercator = () => {
   useWheel(controller);
 
   return (
-    <Globe.Root classNames='flex grow overflow-hidden' zoom={0.7} rotation={initialRotation}>
-      <Globe.Canvas ref={setController} topology={topology} projection='mercator' styles={monochrome} />
-      <Globe.Zoom onAction={handleAction} />
+    <Globe.Root zoom={0.7} rotation={initialRotation} ref={setController}>
+      <Globe.Viewport classNames='flex grow overflow-hidden'>
+        <Globe.Canvas topology={topology} projection='mercator' styles={monochrome} />
+        <Globe.Zoom onAction={handleAction} />
+      </Globe.Viewport>
     </Globe.Root>
   );
 };
