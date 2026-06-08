@@ -8,6 +8,8 @@ import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 import type { AssistantPluginOptions } from '#types';
 
+export const AgentHydrator = Capability.lazy('AgentHydrator', () => import('./agent-hydrator'));
+export const AgentRuntime = Capability.lazy<void, Capability.Any[]>('AgentRuntime', () => import('./agent-service'));
 export const AiContext = Capability.lazy<void, Capability.Any[]>('AiContext', () => import('./ai-context'));
 export const AiService = Capability.lazy<AssistantPluginOptions | void, Capability.Any[]>(
   'AiService',

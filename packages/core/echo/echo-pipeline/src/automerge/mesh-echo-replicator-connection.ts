@@ -142,7 +142,14 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
 
 const logSendSync = (message: AutomergeProtocolMessage) => {
   log('sendSyncMessage', () => {
-    const decodedSyncMessage = message.type === 'sync' && message.data ? A.decodeSyncMessage(message.data) : undefined;
+    let decodedSyncMessage: ReturnType<typeof A.decodeSyncMessage> | undefined;
+    if (message.type === 'sync' && message.data) {
+      try {
+        decodedSyncMessage = A.decodeSyncMessage(message.data);
+      } catch {
+        // Ignore malformed sync message data for logging purposes.
+      }
+    }
     return {
       sync: decodedSyncMessage && {
         headsLength: decodedSyncMessage.heads.length,

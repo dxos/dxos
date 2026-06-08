@@ -16,6 +16,8 @@ debug-storybook.log
 debug-storybook.log
 # vite-plugin-log dev file sink (default filename is `app.log`).
 app.log
+# vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
+test.log
 
 # Vitest
 vitest-results.json
