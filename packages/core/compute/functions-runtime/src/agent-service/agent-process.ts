@@ -123,7 +123,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               const firedAt = yield* alarmManager.takeFiredAlarm();
               if (firedAt != null) {
                 log('agent onAlarm self-wake', { firedAt });
-                inputQueue.push({ _tag: 'prompt', content: wakeUpPrompt(firedAt) });
+                inputQueue.push({ _tag: 'alarm', firedAt });
                 yield* AgentEventsKey.set(inputQueue);
               }
 
@@ -153,18 +153,19 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 Match.tag('tool_result', (item) =>
                   item.isError
                     ? [
-                        ContentBlock.Text.make({
-                          text: toolErrorResponse(item.pid, item.result as string),
-                          disposition: 'synthetic',
-                        }),
-                      ]
+                      ContentBlock.Text.make({
+                        text: toolErrorResponse(item.pid, item.result as string),
+                        disposition: 'synthetic',
+                      }),
+                    ]
                     : [
-                        ContentBlock.Text.make({
-                          text: toolResultResponse(item.pid, item.result),
-                          disposition: 'synthetic',
-                        }),
-                      ],
+                      ContentBlock.Text.make({
+                        text: toolResultResponse(item.pid, item.result),
+                        disposition: 'synthetic',
+                      }),
+                    ],
                 ),
+                Match.tag('alarm', (item) => [ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt), disposition: 'synthetic' })]),
                 Match.exhaustive,
               );
 
@@ -280,6 +281,9 @@ const AgentEvent = Schema.Union(
     result: Schema.Unknown,
     isError: Schema.Boolean,
   }),
+  Schema.TaggedStruct('alarm', {
+    firedAt: Schema.Number,
+  }),
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
@@ -297,7 +301,7 @@ const ToolCallState = Schema.Struct({
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable),
 });
-interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
+interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> { }
 
 // Id's of processes who's results were already submitted to the agent.
 const ToolCallStateKey = StorageService.key(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
@@ -608,11 +612,11 @@ const ToolExecutionService = ({
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
             const result = enableBackgrounding
               ? yield* awaitWithReport.pipe(
-                  Effect.timeout(backgroundThreshold),
-                  Effect.catchTag('TimeoutException', () =>
-                    Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
-                  ),
-                )
+                Effect.timeout(backgroundThreshold),
+                Effect.catchTag('TimeoutException', () =>
+                  Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
+                ),
+              )
               : yield* awaitWithReport;
             log('result', { result });
             return yield* result;
@@ -645,7 +649,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
       }),
     },
   }),
-) {}
+) { }
 
 // TODO(dmaretskyi): Currently broken: polling a completed process returns interruped error.
 const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
