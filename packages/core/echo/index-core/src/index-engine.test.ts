@@ -203,7 +203,7 @@ describe('IndexEngine', () => {
           documentId: 'd1',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -217,7 +217,7 @@ describe('IndexEngine', () => {
           documentId: 'd2',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -231,7 +231,7 @@ describe('IndexEngine', () => {
           documentId: 'd3',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_B,
@@ -283,7 +283,7 @@ describe('IndexEngine', () => {
           documentId: 'doc-done-test',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
         },
       ]);

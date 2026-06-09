@@ -59,7 +59,7 @@ describe('FtsIndex', () => {
           documentId: 'doc-1',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -168,7 +168,7 @@ describe('FtsIndex', () => {
           documentId: 'doc-100',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -182,7 +182,7 @@ describe('FtsIndex', () => {
           documentId: 'doc-200',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -196,7 +196,7 @@ describe('FtsIndex', () => {
           documentId: 'doc-1000',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -323,7 +323,7 @@ describe('FtsIndex', () => {
           documentId: 'doc-1',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -338,7 +338,7 @@ describe('FtsIndex', () => {
           documentId: 'doc-2',
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -634,7 +634,7 @@ describe('FtsIndex', () => {
             documentId: null,
             recordId: null,
             createdAt: null,
-        updatedAt: Date.now(),
+            updatedAt: Date.now(),
             data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
           },
           {
@@ -644,7 +644,7 @@ describe('FtsIndex', () => {
             documentId: null,
             recordId: null,
             createdAt: null,
-        updatedAt: Date.now(),
+            updatedAt: Date.now(),
             data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
           },
         ];
@@ -679,7 +679,7 @@ describe('FtsIndex', () => {
           documentId: null,
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
         };
 
@@ -714,7 +714,7 @@ describe('FtsIndex', () => {
           documentId: null,
           recordId: null,
           createdAt: null,
-        updatedAt: Date.now(),
+          updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
         }));
 
