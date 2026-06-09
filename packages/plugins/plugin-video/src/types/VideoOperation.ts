@@ -38,3 +38,24 @@ export const Transcribe = Operation.make({
   }),
   services: [Database.Service],
 });
+
+/**
+ * Fetch the full published description for a video by loading its watch page (via the Composer
+ * extension's CRX render-proxy, falling back to the EDGE CORS proxy) and parsing the description
+ * out of the page HTML. The description is written back onto the video.
+ */
+export const FetchDescription = Operation.make({
+  meta: {
+    key: makeKey('fetch-description'),
+    name: 'Fetch Video Description',
+    description: "Loads a video's watch page via the CRX proxy and extracts the full description.",
+    icon: 'ph--text-align-left--regular',
+  },
+  input: Schema.Struct({
+    video: Ref.Ref(Video.Video).annotations({ description: 'The video to fetch the description for.' }),
+  }),
+  output: Schema.Struct({
+    description: Schema.String.annotations({ description: 'The extracted video description.' }),
+  }),
+  services: [Database.Service],
+});

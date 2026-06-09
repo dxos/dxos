@@ -4,4 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const VideoOperationHandlerSet = OperationHandlerSet.lazy(() => import('./transcribe'));
+export const VideoOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./transcribe'),
+  () => import('./fetch-description'),
+);

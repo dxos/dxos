@@ -25,6 +25,7 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Video',
         'transcribe.label': 'Transcribe',
+        'fetch-description.label': 'Fetch description',
         'open-transcript.label': 'Open transcript',
         'player.empty.label': 'Set a video URL to play.',
         'player.open-original.label': 'Open original',

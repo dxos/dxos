@@ -22,6 +22,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   const [video] = useObject(subject);
   const { invokePromise } = useOperationInvoker();
   const [transcribing, setTranscribing] = useState(false);
+  const [fetchingDescription, setFetchingDescription] = useState(false);
   const hasTranscript = !!video.transcript;
 
   const handleTranscribe = useCallback(async () => {
@@ -33,6 +34,18 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
       await invokePromise(VideoOperation.Transcribe, { video: Ref.make(subject) });
     } finally {
       setTranscribing(false);
+    }
+  }, [invokePromise, subject]);
+
+  const handleFetchDescription = useCallback(async () => {
+    if (!invokePromise) {
+      return;
+    }
+    setFetchingDescription(true);
+    try {
+      await invokePromise(VideoOperation.FetchDescription, { video: Ref.make(subject) });
+    } finally {
+      setFetchingDescription(false);
     }
   }, [invokePromise, subject]);
 
@@ -63,6 +76,17 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           () => void handleTranscribe(),
         )
         .action(
+          'fetch-description',
+          {
+            label: ['fetch-description.label', { ns: meta.id }],
+            icon: 'ph--text-align-left--regular',
+            disabled: !video.url || fetchingDescription,
+            disposition: 'toolbar',
+            testId: 'video.toolbar.fetch-description',
+          },
+          () => void handleFetchDescription(),
+        )
+        .action(
           'open-transcript',
           {
             label: ['open-transcript.label', { ns: meta.id }],
@@ -74,7 +98,15 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           () => void handleOpenTranscript(),
         )
         .build(),
-    [video.url, hasTranscript, transcribing, handleTranscribe, handleOpenTranscript],
+    [
+      video.url,
+      hasTranscript,
+      transcribing,
+      fetchingDescription,
+      handleTranscribe,
+      handleFetchDescription,
+      handleOpenTranscript,
+    ],
   );
 
   return (
@@ -85,6 +117,9 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         </Panel.Toolbar>
         <Panel.Content>
           <VideoPlayer url={video.url} />
+          {video.description && (
+            <p className='whitespace-pre-wrap text-sm text-description'>{video.description}</p>
+          )}
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>

@@ -30,6 +30,14 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 - A "transcript/notes text object" ref is `Ref.Ref(Text.Text)` (`@dxos/schema`), created with `Text.make({ name, content })`. Schema registration is deduped by URI across plugins (`plugin-client/capabilities/schema-defs.ts`), so registering `Text.Text` in your `addSchemaModule` alongside markdown is safe (idempotent).
 
+### `Schema.optional` must be LAST in a `.pipe()` after `FormatAnnotation.set`
+
+- Order is `Schema.String.pipe(Schema.annotations({...}), FormatAnnotation.set(TypeFormat.X), Schema.optional)`. Putting `Schema.optional(Schema.String)` first then piping `FormatAnnotation.set` fails build with TS2684 `'this' context of type 'optional<...>' is not assignable` — `FormatAnnotation.set` needs the bare (non-optional) schema. There is no `TypeFormat.Multiline`; use `TypeFormat.Text` for multiline plain text.
+
+### CRX render-proxy is re-declared per-consumer, not shared
+
+- To load a full cross-origin page (incl. anti-bot/consent-gated like a YouTube watch page) use the Composer extension render-proxy: dispatch `composer:search-proxy:render` window event, await `:render:ack`, probe availability via `document.documentElement.dataset.composerSearchProxy === '1'`. Fall back to `proxyFetchLegacy(url)` from `@dxos/edge-client` (EDGE CORS proxy) when the extension is absent. Contract source of truth is `composer-crx/src/search-proxy/types.ts`; plugins MUST NOT depend on the extension app package, so each consumer re-declares the wire shapes locally (precedent: `plugin-commerce/src/util/renderViaCrx.ts`; copied into `plugin-video/src/util/fetch-page.ts`). YouTube's full description is in `ytInitialPlayerResponse.videoDetails.shortDescription` in the raw server HTML (no JS exec needed) — `og:description` is the truncated fallback.
+
 ## 2026-06-05 — plugin-comments (factored from plugin-thread), react-ui-thread
 
 ### No plugin → plugin deps when factoring a feature out
