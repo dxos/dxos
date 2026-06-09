@@ -11,7 +11,7 @@ import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref, Type, DXN } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
-import { Actor, Message } from '@dxos/types';
+import { Actor, Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -197,6 +197,93 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+});
+
+/**
+ * Create a single event on Google Calendar (the write counterpart to {@link GoogleCalendarSync}, and
+ * the calendar analogue of {@link GmailSend}). Sources credentials from the Integration.
+ */
+export const CreateGoogleCalendarEvent = Operation.make({
+  meta: {
+    key: makeKey('createGoogleCalendarEvent'),
+    name: 'Create Google Calendar Event',
+    description: 'Create an event on Google Calendar.',
+    icon: 'ph--calendar-plus--regular',
+  },
+  input: Schema.Struct({
+    event: Type.getSchema(Event.Event),
+    googleCalendarId: Schema.String.annotations({ description: 'Remote Google calendar id.' }),
+    integration: Ref.Ref(Integration.Integration).annotations({
+      description: 'Integration to source Google Calendar credentials from.',
+    }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String.annotations({ description: 'Remote Google event id.' }),
+  }),
+  services: [Credential.CredentialsService],
+});
+
+/**
+ * Push draft (locally-created, not-yet-synced) events for a calendar up to Google Calendar, then
+ * reconcile: each created event is stamped with its Google foreign key and the local draft object
+ * is removed (the canonical copy lands in the calendar feed on the next read-sync). Mirrors the
+ * email draft → send flow. When `event` is given, only that draft event is synced.
+ */
+export const SyncDraftEvents = Operation.make({
+  meta: {
+    key: makeKey('syncDraftEvents'),
+    name: 'Sync draft events',
+    description: 'Create locally-drafted calendar events on Google Calendar.',
+    icon: 'ph--calendar-check--regular',
+  },
+  // The Calendar (and optional Event) are passed as live ECHO objects (validated in the handler);
+  // services mirror GoogleCalendarSync since the handler creates events, then re-syncs the feed.
+  input: Schema.Struct({
+    calendar: Schema.Any,
+    event: Schema.optional(Schema.Any),
+  }),
+  output: Schema.Struct({
+    synced: Schema.Number,
+  }),
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+});
+
+/**
+ * Delete a calendar event. A draft (local) event is simply removed from the database; a synced
+ * event is deleted on Google Calendar (by its foreign key) and removed from the calendar feed.
+ */
+export const DeleteEvent = Operation.make({
+  meta: {
+    key: makeKey('deleteEvent'),
+    name: 'Delete event',
+    description: 'Delete a calendar event locally and on Google Calendar.',
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    calendar: Schema.Any,
+    event: Schema.Any,
+  }),
+  output: Schema.Struct({ deleted: Schema.Boolean }),
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
+});
+
+/**
+ * Delete an email. A draft (local) message is simply removed from the database; a synced message is
+ * moved to the trash on Gmail (by its foreign key) and removed from the mailbox feed.
+ */
+export const DeleteEmail = Operation.make({
+  meta: {
+    key: makeKey('deleteEmail'),
+    name: 'Delete email',
+    description: 'Delete an email locally and move it to the Gmail trash.',
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    mailbox: Schema.Any,
+    message: Schema.Any,
+  }),
+  output: Schema.Struct({ deleted: Schema.Boolean }),
   services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
 });
 

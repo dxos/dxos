@@ -11,6 +11,7 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 import { meta } from '#meta';
 
 import { Header } from '../Header';
+import { EventEditor } from './EventEditor';
 
 export type EventDetailsProps = {
   event: EventType.Event;
@@ -20,6 +21,8 @@ export type EventDetailsProps = {
   description?: boolean;
   /** Maximum attendee rows shown; omit for all. */
   maxAttendees?: number;
+  /** Render an editable form (title · all-day · start · end/duration) — used for draft events. */
+  editable?: boolean;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
@@ -27,18 +30,24 @@ export type EventDetailsProps = {
 /**
  * Presentational event summary rendered as `Card` rows (title · date · description · attendees).
  * Shared by the Event article header, the calendar `EventCard`, and the `EventStack` tile so all three
- * render the same field layout; callers supply the surrounding `Card.Root` chrome.
+ * render the same field layout; callers supply the surrounding `Card.Root` chrome. When `editable`,
+ * delegates to {@link EventEditor} for inline editing.
  */
 export const EventDetails = ({
   event,
   title = 'heading',
   description = false,
   maxAttendees,
+  editable = false,
   db,
   onContactCreate,
 }: EventDetailsProps) => {
   const { t } = useTranslation(meta.id);
   const attendees = maxAttendees != null ? event.attendees.slice(0, maxAttendees) : event.attendees;
+
+  if (editable) {
+    return <EventEditor event={event} db={db} onContactCreate={onContactCreate} />;
+  }
 
   return (
     <>

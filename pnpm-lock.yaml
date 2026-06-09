@@ -15345,6 +15345,9 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -15354,6 +15357,9 @@ importers:
       '@dxos/markdown':
         specifier: workspace:*
         version: link:../../common/markdown
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
