@@ -29,6 +29,6 @@ describe.skip('Web', () => {
         'Web search works.',
       ],
     }),
-    { timeout: agentTestTimeout() },
+    { timeout: agentTestTimeout(), tags: ['flaky'] },
   );
 });

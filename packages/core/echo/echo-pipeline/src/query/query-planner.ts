@@ -833,6 +833,21 @@ export class QueryPlanner {
       return QueryPlan.Plan.make(processedSteps);
     }
 
+    // A content-based reorder (by property value or system timestamp) needs the FULL candidate set
+    // before slicing — the index scan order does not match the requested order. Pushing the limit
+    // into the SelectStep would slice an arbitrary subset before sorting. Natural (by id) and rank
+    // (FTS scan already returns by rank) orders are consistent with the scan, so keep optimizing
+    // those.
+    if (orderStepIndex !== -1) {
+      const orderStep = processedSteps[orderStepIndex];
+      const reordersByContent =
+        orderStep._tag === 'OrderStep' &&
+        orderStep.order.some((order) => order.kind === 'property' || order.kind === 'timestamp');
+      if (reordersByContent) {
+        selectStepIndex = -1;
+      }
+    }
+
     // Create a mutable copy of steps to modify.
     const newSteps = [...processedSteps];
 

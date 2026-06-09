@@ -3,9 +3,11 @@
 //
 
 import * as Registry from '@effect-atom/atom/Registry';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { TestSchema } from '@dxos/echo/testing';
 import { arrayMove } from '@dxos/util';
@@ -13,6 +15,30 @@ import { arrayMove } from '@dxos/util';
 import * as AtomObj from './atom';
 
 describe('Echo Atom - Reactivity', () => {
+  test('atom updates when an annotation (meta) is mutated', () => {
+    const ColorAnnotation = Annotation.make({ id: 'org.dxos.test.color', schema: Schema.String });
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+
+    const registry = Registry.make();
+    const atom = AtomObj.make(obj);
+    registry.get(atom);
+
+    let updateCount = 0;
+    registry.subscribe(atom, () => {
+      updateCount++;
+    });
+
+    Obj.update(obj, (obj) => {
+      Annotation.set(obj, ColorAnnotation, 'red');
+    });
+
+    const snapshot = registry.get(atom);
+    expect(Annotation.get(snapshot, ColorAnnotation).pipe(Option.getOrUndefined)).toBe('red');
+    expect(updateCount).toBeGreaterThan(0);
+  });
+
   test('atom updates when Echo object is mutated', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),

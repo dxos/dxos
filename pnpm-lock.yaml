@@ -14532,6 +14532,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -14598,6 +14601,9 @@ importers:
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../../ui/react-ui-markdown
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
