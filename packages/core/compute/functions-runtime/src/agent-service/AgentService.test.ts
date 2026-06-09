@@ -443,6 +443,7 @@ const ALARM_SYSTEM_PROMPT = trim`
 const AlarmTestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed],
   systemPrompt: ALARM_SYSTEM_PROMPT,
+  aiServicePreset: 'edge-remote',
   model: 'ai.claude.model.claude-opus-4-6',
 });
 

@@ -69,6 +69,51 @@
   } = (a): Bar<unknown> => { ... };
   ```
 
+### Namespaces exports in packages
+
+- We're converting more and more packages to ones with namespaces exports. Example:
+
+```
+src/
+  Foo.ts
+  Bar.ts
+  errors.ts
+  index.ts
+  testing/
+    index.ts
+  internal/
+    foo.ts
+    bar.ts
+    baz.ts
+```
+
+```ts
+// index.ts
+export * as Foo from './Foo';
+export * as Bar from './Bar';
+export * from './errors';
+```
+
+```ts
+// Foo.ts
+
+// @import-as-namespace
+export const one = 1;
+export const two = 2;
+export const func: {
+  (a: string): number;
+  (a: number): string;
+} = (a) => {
+  return a;
+};
+```
+
+- Code is organized into modules exported as namespace. Modules have capital case names.
+- `@import-as-namespace` linter directive is used to mark the file as a namespace export.
+- Internal code is hidden in the `internal/` directory that is not exported.
+- `testing/` directory and `errors.ts` are the exception.
+- Use `@dxos/echo` as a reference for this pattern.
+
 ### React
 
 - Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
