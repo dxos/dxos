@@ -37,7 +37,8 @@ export const Routine = Schema.Struct({
 );
 
 export type Routine = Type.InstanceType<typeof Routine>;
-export type MakeOptions = {
+
+export type MakeProps = {
   name?: string;
   description?: string;
   input?: Schema.Schema.AnyNoContext;
@@ -55,7 +56,7 @@ export const make = ({
   instructions,
   blueprints = [],
   context = [],
-}: MakeOptions): Routine =>
+}: MakeProps): Routine =>
   Obj.make(Routine, {
     name,
     description,

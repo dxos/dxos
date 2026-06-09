@@ -3,4 +3,4 @@
 //
 
 export { default as LinearBlueprint } from './blueprint';
-export { SyncIssues, LinearHandlers } from './functions';
+export { LinearHandlers, LinearOperations } from './operations';

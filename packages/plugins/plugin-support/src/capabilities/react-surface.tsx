@@ -47,9 +47,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceHome',
         filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
-        component: ({ role }) => {
+        component: ({ data, role }) => {
           const space = useActiveSpace();
-          return <SpaceHomeArticle role={role} space={space} />;
+          return <SpaceHomeArticle role={role} attendableId={data.attendableId} space={space} />;
         },
       }),
       Surface.create({

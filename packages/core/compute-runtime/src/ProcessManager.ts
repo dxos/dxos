@@ -93,6 +93,18 @@ export interface Handle<I, O> {
   runToCompletion(): Effect.Effect<void>;
 
   /**
+   * Resolves when the process settles its current foreground turn: {@link Process.State.IDLE} or
+   * {@link Process.State.SUCCEEDED}, or {@link Process.State.HYBERNATING} with no pending alarm
+   * (i.e. only background children remain in flight).
+   *
+   * Unlike {@link runToCompletion}, this does NOT wait for background children (e.g. delegated
+   * sub-agents) to finish — so a supervisor's chat turn returns as soon as its reply is complete,
+   * while sub-agents continue running and report back out of band. Still waits through
+   * alarm-pending hybernation (more queued turn work). Defects on {@link Process.State.FAILED}.
+   */
+  runUntilSettled(): Effect.Effect<void>;
+
+  /**
    * Submits each input in order, then streams outputs until the process reaches {@link Process.State.IDLE}
    * or {@link Process.State.SUCCEEDED}. While {@link Process.State.HYBERNATING}, keeps waiting for outputs
    * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
@@ -375,6 +387,8 @@ export class ProcessManagerImpl implements Manager {
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
+      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
+      const clock = yield* Effect.clock;
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -529,6 +543,7 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
+        clock,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -571,6 +586,8 @@ export class ProcessManagerImpl implements Manager {
     definition: Process.Process<any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen(this, function* () {
+      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
+      const clock = yield* Effect.clock;
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
@@ -708,6 +725,7 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
+        clock,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -905,6 +923,8 @@ class DormantHandle<I, O> implements Handle<I, O> {
   terminate = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
   runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  runUntilSettled = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
   runAndExit = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
 }
