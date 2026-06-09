@@ -9,6 +9,5 @@ export const FeedOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./curate-magazine'),
   () => import('./fetch-article-content'),
   () => import('./load-post-content'),
-  () => import('./on-create-space'),
   () => import('./sync-feed'),
 );

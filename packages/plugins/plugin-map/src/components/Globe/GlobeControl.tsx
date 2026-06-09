@@ -183,16 +183,12 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
     };
 
     return (
-      <Globe.Root {...composableProps(props)} rotation={initialRotation} zoom={initialZoom} ref={forwardedRef}>
-        <Globe.Canvas
-          ref={setController}
-          topology={topology}
-          projection='orthographic'
-          features={features}
-          styles={styles}
-        />
-        <Globe.Action onAction={handleAction} />
-        <Globe.Zoom onAction={handleZoomAction} />
+      <Globe.Root rotation={initialRotation} zoom={initialZoom} ref={setController}>
+        <Globe.Viewport {...composableProps(props)} ref={forwardedRef}>
+          <Globe.Canvas topology={topology} projection='orthographic' features={features} styles={styles} />
+          <Globe.Action onAction={handleAction} />
+          <Globe.Zoom onAction={handleZoomAction} />
+        </Globe.Viewport>
       </Globe.Root>
     );
   },

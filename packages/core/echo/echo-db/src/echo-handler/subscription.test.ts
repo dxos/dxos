@@ -2,10 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing';
@@ -160,6 +162,34 @@ describe('create subscription', () => {
       task.array[0].nested_array[0].title = 'New value';
     });
     expect(counter.value).to.equal(2);
+  });
+
+  test('updates for annotation (meta) changes', async () => {
+    const { db } = await builder.createDatabase();
+    const ColorAnnotation = Annotation.make({ id: 'org.dxos.test.color', schema: Schema.String });
+    const task = Obj.make(TestSchema.Expando, {});
+    db.add(task);
+
+    const counter = createUpdateCounter(task);
+    let subscribeCalls = 0;
+    const unsubscribe = Obj.subscribe(task, () => {
+      subscribeCalls++;
+    });
+
+    expect(counter.value).to.equal(1);
+    Obj.update(task, (task) => {
+      Annotation.set(task, ColorAnnotation, 'red');
+    });
+    expect(Annotation.get(task, ColorAnnotation).pipe(Option.getOrUndefined)).to.equal('red');
+    // A meta/annotation mutation must notify the object's subscribers, like a data mutation.
+    expect(counter.value).to.equal(2);
+    expect(subscribeCalls).to.equal(1);
+
+    // The snapshot (what `useObject`/`AtomObj` expose to React) must carry the annotation.
+    const snapshot = Obj.getSnapshot(task);
+    expect(Annotation.get(snapshot, ColorAnnotation).pipe(Option.getOrUndefined)).to.equal('red');
+
+    unsubscribe();
   });
 });
 

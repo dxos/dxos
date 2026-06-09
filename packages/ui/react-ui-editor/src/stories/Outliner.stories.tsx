@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -37,10 +37,11 @@ const DefaultStory = ({ text }: DefaultStoryProps) => {
     ],
     [],
   );
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
     <EditorMenuProvider
-      view={controller?.view}
+      getView={getView}
       groups={commandGroups}
       onSelect={({ view, item }) => {
         if (item.onSelect) {

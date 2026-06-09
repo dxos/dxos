@@ -6,4 +6,5 @@
 //   Either refactor callers to not need them or factor them out to a shared package.
 export * from './hooks';
 export * from './meta';
+export * from './paths';
 export * from './types';

@@ -49,6 +49,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client-protocol"
     },
     {
@@ -71,6 +74,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

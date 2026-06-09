@@ -6,7 +6,15 @@ import 'leaflet/dist/leaflet.css';
 
 import { createContext } from '@radix-ui/react-context';
 import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, point, latLngBounds } from 'leaflet';
-import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, {
+  type PropsWithChildren,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   MapContainer,
@@ -53,33 +61,50 @@ type MapController = {
 type MapContextValue = {
   attention?: boolean;
   onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
+  /** Called by Map.Viewport to register/unregister the leaflet map with the controller owned by Map.Root. */
+  registerMap: (map: L.Map | null) => void;
 };
 
 const [MapContextProvider, useMapContext] = createContext<MapContextValue>('Map');
 
 //
-// Root
+// Root — headless; owns the imperative MapController (exposed via ref) and the map registry.
 //
 
-type MapRootProps = Pick<MapContextValue, 'onChange'>;
+type MapRootProps = PropsWithChildren<Pick<MapContextValue, 'onChange'>>;
 
 /**
- * Context provider for the map. Must wrap Map.Content.
+ * Context provider for the map. Must wrap Map.Viewport. The ref exposes a {@link MapController}.
  */
-const MapRoot = composable<HTMLDivElement, MapRootProps>(({ children, onChange, ...props }, forwardedRef) => {
+const MapRoot = forwardRef<MapController, MapRootProps>(({ children, onChange }, forwardedRef) => {
+  const mapRef = useRef<L.Map | null>(null);
+  const registerMap = useCallback((map: L.Map | null) => {
+    mapRef.current = map;
+  }, []);
+
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      getCenter: () => {
+        const center = mapRef.current?.getCenter();
+        return center ? { lat: center.lat, lng: center.lng } : undefined;
+      },
+      getZoom: () => mapRef.current?.getZoom(),
+      setCenter: (center: LatLngLiteral, zoom?: number) => {
+        mapRef.current?.setView(center, zoom);
+      },
+      setZoom: (cb: (zoom: number) => number) => {
+        mapRef.current?.setZoom(cb(mapRef.current?.getZoom() ?? 0));
+      },
+    }),
+    [],
+  );
+
   // TODO(burdon): Use attention: const [attention, setAttention] = useState(false);
   const attention = false;
   return (
-    <MapContextProvider attention={attention} onChange={onChange}>
-      <div
-        {...composableProps(props, {
-          role: 'none',
-          classNames: 'dx-container grid dx-focus-ring-inset',
-        })}
-        ref={forwardedRef}
-      >
-        {children}
-      </div>
+    <MapContextProvider attention={attention} onChange={onChange} registerMap={registerMap}>
+      {children}
     </MapContextProvider>
   );
 });
@@ -87,15 +112,15 @@ const MapRoot = composable<HTMLDivElement, MapRootProps>(({ children, onChange, 
 MapRoot.displayName = 'Map.Root';
 
 //
-// Content
+// Viewport
 //
 
-type MapContentProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
+type MapViewportProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-const MAP_CONTENT_NAME = 'Map.Content';
+const MAP_VIEWPORT_NAME = 'Map.Viewport';
 
 /**
  * Recalculates the leaflet map size when its container resizes (e.g. a companion
@@ -172,73 +197,76 @@ const MapPinchZoom = () => {
   return null;
 };
 
-const MapContent = forwardRef<MapController, MapContentProps>(
-  (
-    { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
-    forwardedRef,
-  ) => {
-    const { attention } = useMapContext(MAP_CONTENT_NAME);
-    const mapRef = useRef<L.Map>(null);
-    const map = mapRef.current;
+/**
+ * Map.Viewport is the focusable Leaflet frame. It can be the target of a parent `<Panel.Content asChild>`
+ * (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
+ * container element, so the forwarded DOM ref can't be attached and is intentionally unused.
+ */
+const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
+  const {
+    scrollWheelZoom = true,
+    doubleClickZoom = true,
+    touchZoom = true,
+    center,
+    zoom,
+    whenReady,
+    children,
+    ...rest
+  } = props;
+  const { attention, registerMap } = useMapContext(MAP_VIEWPORT_NAME);
+  // Local copy of the leaflet map for this component's own effects; also registered with Map.Root.
+  const [map, setMap] = useState<L.Map | null>(null);
 
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        getCenter: () => {
-          const center = mapRef.current?.getCenter();
-          return center ? { lat: center.lat, lng: center.lng } : undefined;
-        },
-        getZoom: () => mapRef.current?.getZoom(),
-        setCenter: (center: LatLngLiteral, zoom?: number) => {
-          mapRef.current?.setView(center, zoom);
-        },
-        setZoom: (cb: (zoom: number) => number) => {
-          mapRef.current?.setZoom(cb(mapRef.current?.getZoom() ?? 0));
-        },
-      }),
-      [],
-    );
+  // Register/unregister the map with the controller owned by Map.Root.
+  const setMapRef = useCallback(
+    (next: L.Map | null) => {
+      setMap(next);
+      registerMap(next);
+    },
+    [registerMap],
+  );
 
-    // Enable/disable scroll wheel zoom.
-    // TODO(burdon): Use attention:
-    // const {hasAttention} = useAttention(props.id);
-    useEffect(() => {
-      if (!map) {
-        return;
-      }
+  // Enable/disable scroll wheel zoom.
+  // TODO(burdon): Use attention:
+  // const {hasAttention} = useAttention(props.id);
+  useEffect(() => {
+    if (!map) {
+      return;
+    }
 
-      if (attention) {
-        map.scrollWheelZoom.enable();
-      } else {
-        map.scrollWheelZoom.disable();
-      }
-    }, [map, attention]);
+    if (attention) {
+      map.scrollWheelZoom.enable();
+    } else {
+      map.scrollWheelZoom.disable();
+    }
+  }, [map, attention]);
 
-    return (
-      <MapContainer
-        {...props}
-        className={mx('group relative grid bg-base-surface!', classNames)}
-        attributionControl={false}
-        zoomControl={false}
-        scrollWheelZoom={scrollWheelZoom}
-        doubleClickZoom={doubleClickZoom}
-        touchZoom={touchZoom}
-        // Allow fractional zoom so trackpad pinch (small ctrl+wheel deltas) isn't rounded away.
-        zoomSnap={0}
-        center={center ?? defaults.center}
-        zoom={zoom ?? defaults.zoom}
-        whenReady={() => {}}
-        ref={mapRef}
-      >
-        <MapResize />
-        <MapPinchZoom />
-        {children}
-      </MapContainer>
-    );
-  },
-);
+  return (
+    <MapContainer
+      {...composableProps(rest, {
+        // Frame classes (formerly on Map.Root): focusable grid container.
+        classNames: 'dx-container group relative grid dx-focus-ring-inset bg-base-surface!',
+      })}
+      attributionControl={false}
+      zoomControl={false}
+      scrollWheelZoom={scrollWheelZoom}
+      doubleClickZoom={doubleClickZoom}
+      touchZoom={touchZoom}
+      // Allow fractional zoom so trackpad pinch (small ctrl+wheel deltas) isn't rounded away.
+      zoomSnap={0}
+      center={center ?? defaults.center}
+      zoom={zoom ?? defaults.zoom}
+      whenReady={whenReady}
+      ref={setMapRef}
+    >
+      <MapResize />
+      <MapPinchZoom />
+      {children}
+    </MapContainer>
+  );
+});
 
-MapContent.displayName = 'Map.Content';
+MapViewport.displayName = 'Map.Viewport';
 
 //
 // Tiles
@@ -495,7 +523,7 @@ const MapAction = ({ onAction, position = 'bottomright', ...props }: MapControlP
 
 export const Map = {
   Root: MapRoot,
-  Content: MapContent,
+  Viewport: MapViewport,
   Tiles: MapTiles,
   Markers: MapMarkers,
   Lines: MapLines,
@@ -506,7 +534,7 @@ export const Map = {
 export {
   type MapController,
   type MapRootProps,
-  type MapContentProps,
+  type MapViewportProps,
   type MapTilesProps,
   type MapMarkersProps,
   type MapLinesProps,

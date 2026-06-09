@@ -25,7 +25,7 @@ const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
   return (
     <Panel.Root>
       {urlProp && (
-        <Panel.Toolbar>
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Input.Root>
               <Input.TextInput
@@ -38,16 +38,18 @@ const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content asChild>
-        <Map.Root>
-          <Map.Content ref={setController}>
+      {/* Map.Root is headless (context only), so it sits outside Panel.Content; Panel.Content asChild
+          then targets the Leaflet frame (Map.Viewport) directly — no extra wrapper element. */}
+      <Map.Root ref={setController}>
+        <Panel.Content asChild>
+          <Map.Viewport>
             <Map.Tiles url={url} />
             <Map.Markers markers={markers} />
             <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
             <Map.Action position='bottomright' />
-          </Map.Content>
-        </Map.Root>
-      </Panel.Content>
+          </Map.Viewport>
+        </Panel.Content>
+      </Map.Root>
     </Panel.Root>
   );
 };
@@ -78,7 +80,7 @@ export const Bounds: Story = {
   },
 };
 
-export const WithMarkers: Story = {
+export const Markers: Story = {
   args: {
     markers: [
       { id: 'los angeles', title: 'Los Angeles', location: { lat: 34.0522, lng: -118.2437 } },
@@ -110,7 +112,7 @@ export const WithMarkers: Story = {
 /**
  * https://docs.maptiler.com/leaflet
  */
-export const MapTiler: Story = {
+export const CustomTiles: Story = {
   args: {
     url: 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?&key=${key}',
   },
