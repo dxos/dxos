@@ -27,9 +27,9 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '../Annotation/annotations';
-import * as RefAtoms from '../../atom-impl/RefAtoms';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
+import * as RefAtoms from '../RefAtoms';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
