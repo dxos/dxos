@@ -17,11 +17,11 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import * as atomInternal from './internal/atom/entity-atoms';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
 import * as internal from './internal';
+import * as atomInternal from './internal/atom/entity-atoms';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
 import * as Ref from './Ref';

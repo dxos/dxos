@@ -19,7 +19,6 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
-import { refSimpleFamily } from '../atom/ref-atoms';
 import * as Database from '../../Database';
 import type * as Type from '../../Type';
 import {
@@ -28,6 +27,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '../Annotation/annotations';
+import { refSimpleFamily } from '../atom/ref-atoms';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
