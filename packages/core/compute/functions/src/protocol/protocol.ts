@@ -5,7 +5,6 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
@@ -16,7 +15,6 @@ import {
   InvalidOperationInputError,
   InvalidOperationOutputError,
   Operation,
-  OperationRegistry,
   Trace,
   byokHeaderLayer,
 } from '@dxos/compute';
@@ -32,7 +30,7 @@ import {
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
@@ -216,10 +214,6 @@ class FunctionContext extends Resource {
       ? makeOperationServiceLayer(this.context.services.functionsService)
       : unavailableOperationServiceLayer;
 
-    const operationRegistryLayer = this.context.services.functionsService
-      ? makeOperationRegistryLayer(this.context.services.functionsService, this.context.spaceId as SpaceId | undefined)
-      : emptyOperationRegistryLayer;
-
     const traceWriterLayer = this.context.services.traceService
       ? makeTraceWriterLayer(this.context.services.traceService)
       : Trace.writerLayerNoop;
@@ -243,7 +237,6 @@ class FunctionContext extends Resource {
       feedLayer,
       credentials,
       operationServiceLayer,
-      operationRegistryLayer,
       aiLayer,
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
@@ -346,27 +339,6 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
     error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
   }),
 } as Operation.OperationService);
-
-/**
- * Backs `OperationRegistry.Service` with the EDGE-provided `FunctionsService.query`. Returns
- * the first persistent operation matching the requested key, or `Option.none()` when not found.
- */
-const makeOperationRegistryLayer = (
-  functionsService: EdgeFunctionEnv.FunctionsService,
-  spaceId: SpaceId | undefined,
-): Layer.Layer<OperationRegistry.Service> =>
-  Layer.succeed(OperationRegistry.Service, {
-    resolve: (key: string) =>
-      Effect.gen(function* () {
-        const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
-        const match = (records as Operation.PersistentOperation[]).find((record) => Operation.getKey(record) === key);
-        return match ? Option.some(Operation.deserialize(match)) : Option.none();
-      }),
-  });
-
-const emptyOperationRegistryLayer = Layer.succeed(OperationRegistry.Service, {
-  resolve: () => Effect.succeed(Option.none()),
-});
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
   if (value == null) {

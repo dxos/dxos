@@ -4991,6 +4991,9 @@ importers:
         specifier: 'catalog:'
         version: 0.96.1(effect@3.21.3)
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../echo/echo-db
       effect:
         specifier: 3.21.3
         version: 3.21.3
