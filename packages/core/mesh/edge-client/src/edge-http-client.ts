@@ -28,7 +28,6 @@ import {
   type FeedProtocol,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
-  type GetPluginVersionsResponseBody,
   type GetPluginsResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -377,17 +376,6 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
-  }
-
-  public async getRegistryPluginVersions(
-    ctx: Context,
-    repo: string,
-    args?: EdgeHttpCallArgs,
-  ): Promise<GetPluginVersionsResponseBody> {
-    return this._call(ctx, new URL(`/registry/plugins/${encodeURIComponent(repo)}/versions`, this.baseUrl), {
-      ...args,
-      method: 'GET',
-    });
   }
 
   //
