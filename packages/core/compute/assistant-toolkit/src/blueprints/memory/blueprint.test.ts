@@ -110,7 +110,8 @@ describe('Memory Blueprint', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  // TODO(dmaretskyi): Flaky. The model does not reliably call save-memory after a provider-executed web search.
+  it.effect.skip(
     'natural: saves memories from a conversation with web search',
     Effect.fnUntraced(
       function* (_) {

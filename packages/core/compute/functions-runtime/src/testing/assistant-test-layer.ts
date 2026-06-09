@@ -219,7 +219,6 @@ export const AssistantTestBaseLayer = ({
         types,
       }),
     ),
-    Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(configuredCredentialsLayer(credentials)),
     Layer.provideMerge(
       Layer.effect(
@@ -233,6 +232,7 @@ export const AssistantTestBaseLayer = ({
         }),
       ),
     ),
+    Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),
