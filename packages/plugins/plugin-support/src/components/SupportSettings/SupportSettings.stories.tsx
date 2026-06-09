@@ -22,8 +22,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    welcomeDismissed: false,
-  },
-};
+export const Default: Story = {};

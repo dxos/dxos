@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -103,12 +102,7 @@ export default Capability.makeModule(() =>
           const client = useClient();
           const { invokePromise } = useOperationInvoker();
           const personal = getPersonalSpace(client);
-          const [properties, updateProperties] = useObject(personal?.properties);
-          const dismissed = properties
-            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-            : false;
-          const handleWelcomeDismissedChange = (value: boolean) =>
-            updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, value));
+          const [, updateProperties] = useObject(personal?.properties);
           const handleShowWelcome = () => {
             if (!personal) {
               return;
@@ -117,13 +111,7 @@ export default Capability.makeModule(() =>
             const workspace = getSpacePath(personal.id);
             void invokePromise(LayoutOperation.Open, { subject: [`${workspace}/${SPACE_HOME_NODE_ID}`], workspace });
           };
-          return (
-            <SupportSettings
-              welcomeDismissed={dismissed}
-              onWelcomeDismissedChange={handleWelcomeDismissedChange}
-              onShowWelcome={handleShowWelcome}
-            />
-          );
+          return <SupportSettings onShowWelcome={handleShowWelcome} />;
         },
       }),
     ]),
