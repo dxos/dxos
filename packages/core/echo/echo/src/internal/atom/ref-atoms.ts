@@ -4,7 +4,7 @@
 
 import * as Atom from '@effect-atom/atom/Atom';
 
-import type { Ref } from '../internal/Ref/ref';
+import type { Ref } from '../Ref/ref';
 import { loadRefTarget } from './ref-utils';
 
 /**

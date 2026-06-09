@@ -17,7 +17,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import * as atomInternal from './atom-impl/entity-atoms';
+import * as atomInternal from './internal/atom/entity-atoms';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';

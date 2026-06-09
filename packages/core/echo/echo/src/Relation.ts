@@ -13,7 +13,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import * as atomInternal from './atom-impl/entity-atoms';
+import * as atomInternal from './internal/atom/entity-atoms';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
