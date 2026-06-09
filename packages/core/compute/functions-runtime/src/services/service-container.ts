@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
+import { Credential, Operation, Trace } from '@dxos/compute';
+import { Database, Feed, Registry } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { ConfiguredCredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { entries } from '@dxos/util';
 
@@ -27,7 +28,7 @@ const SERVICES = {
   functionInvocationService: FunctionInvocationService,
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
-  operationRegistryService: OperationRegistry.Service,
+  registryService: Registry.Service,
   feeds: Feed.FeedService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
@@ -115,9 +116,7 @@ export class ServiceContainer {
       invokePromise: async () => ({ error: new Error('Not available') }),
     } as any);
 
-    const operationRegistryService = Layer.succeed(OperationRegistry.Service, {
-      resolve: () => Effect.succeed(undefined),
-    } as any);
+    const registryService = registryLayerNoop;
 
     return Layer.mergeAll(
       ai,
@@ -127,7 +126,7 @@ export class ServiceContainer {
       trace,
       functionCallService,
       operationService,
-      operationRegistryService,
+      registryService,
     ) as any;
   }
 }

@@ -8,9 +8,10 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +39,7 @@ const TestLayer = Layer.mergeAll(
     schedule: () => Effect.die('Operation.Service not available in test.'),
     invokePromise: async () => ({ error: new Error('Not available') }),
   } as any),
-  Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+  registryLayerNoop,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(

@@ -24,13 +24,7 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import {
-  type Credential,
-  Operation,
-  type OperationRegistry,
-  type ServiceNotAvailableError,
-  Trace,
-} from '@dxos/compute';
+import { type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
@@ -60,7 +54,7 @@ export type SpaceServices =
   | Credential.CredentialsService
   | AiService.AiService
   | AgentService.AgentService
-  | OperationRegistry.Service
+  | Registry.Service
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
