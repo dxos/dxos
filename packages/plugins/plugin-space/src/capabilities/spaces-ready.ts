@@ -84,7 +84,12 @@ export default Capability.makeModule(
       if (!spacesOrder) {
         // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
         //  Instead, we store order as an array of space ids.
-        personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+        try {
+          personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+        } catch (err) {
+          // The space may have been destroyed (e.g. during test teardown) between the query and the add.
+          log.warn('Failed to initialize spaces order, space may be closing', { err });
+        }
       }
     };
 
