@@ -14,7 +14,6 @@ tasks:
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/hooks/index.ts'
-      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/translations.ts'

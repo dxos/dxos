@@ -25,6 +25,12 @@ export type Plugin = {
   id: string;
   name: string;
   description?: string;
+  /**
+   * Publisher/provenance, not self-declared by the plugin: for registry plugins
+   * this is the verified publisher (AT Protocol handle, falling back to DID); for
+   * bundled plugins the host supplies a default at registration time.
+   */
+  author?: string;
   homePage?: string;
   source?: string;
   screenshots?: string[];

@@ -19,6 +19,7 @@
     "@babel/core": "catalog:",
     "@babel/preset-typescript": "catalog:",
     "babel-preset-solid": "catalog:",
+    "yaml": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {

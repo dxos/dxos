@@ -21,14 +21,14 @@ message PublishRequest {
 
 message PublishResponse {
   message PublishedModule {
-    dxos.config.Module module = 1;
+    dxos.config.Plugin module = 1;
     repeated string urls = 2;
   }
   repeated PublishedModule modules = 1;
 }
 
 message ListResponse {
-  repeated dxos.config.Module modules = 1;
+  repeated dxos.config.Plugin modules = 1;
 }
 
 message ResetResponse {

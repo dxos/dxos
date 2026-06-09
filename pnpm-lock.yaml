@@ -16026,6 +16026,9 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
     devDependencies:
       '@dxos/brand':
         specifier: workspace:*
@@ -21568,6 +21571,9 @@ importers:
       babel-preset-solid:
         specifier: 'catalog:'
         version: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
       yargs:
         specifier: 'catalog:'
         version: 16.2.0
