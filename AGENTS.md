@@ -46,9 +46,6 @@
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
 - Error handling: use Effect-TS patterns.
-- Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
-  - **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
-  - **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
 - JSDoc comments for public functions, all comments end with period.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
@@ -68,6 +65,16 @@
     (a: string): Bar<any>;
   } = (a): Bar<unknown> => { ... };
   ```
+
+### Testing
+
+- place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
+- **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
+- **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
+- Prefer unified `TestLayer` for all tests instead of creating a separate one for each test.
+- `TestLayer(opts?)` can be parametrized so tests can configure it.
+- Place test layer, configuration, and main defintions on top of the suite, while helpers go on the bottom.
+- Avoid sleep and polling in tests as much as possuble. Try to use events and TestClock instead.
 
 ### Namespaces exports in packages
 
