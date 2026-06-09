@@ -640,7 +640,7 @@ describe('Query', () => {
 
     test('timestamps survive peer reload', async () => {
       const reloadBuilder = new EchoTestBuilder();
-      onTestFinished(() => reloadBuilder.close());
+      onTestFinished(async () => { await reloadBuilder.close(); });
       const { peer, db: initialDb } = await reloadBuilder.createDatabase();
 
       const obj = initialDb.add(createTestObject({ value: 1 }));
