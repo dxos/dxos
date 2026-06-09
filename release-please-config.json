@@ -355,11 +355,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-atom/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/echo/echo-db/package.json",
           "jsonpath": "$.version"
         },

@@ -5,7 +5,6 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
 import { StateMap } from '@dxos/app-toolkit';
-import { AtomRef } from '@dxos/echo-atom';
 
 import { Subscription } from '../types';
 
@@ -24,7 +23,7 @@ export const postReadAtom = Atom.family((post: Subscription.Post) =>
     if (!ref) {
       return EMPTY_READ_SLICE;
     }
-    const subscription = get(AtomRef.make(ref));
+    const subscription = get(ref.atom);
     if (!subscription) {
       return EMPTY_READ_SLICE;
     }

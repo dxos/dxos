@@ -81,7 +81,6 @@
     "bind-event-listener": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
