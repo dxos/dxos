@@ -59,7 +59,7 @@ export type PreloadOptions = Options & {
  *
  * `url` is the URL of the plugin manifest (`plugin.json`), not the entry module.
  */
-export type RemotePluginEntry = {
+export type RemotePluginView = {
   id: string;
   url: string;
   /** Installed version string, e.g. `v1.0.0`. Populated after install from a community catalog entry. */
@@ -71,14 +71,14 @@ const defaultStorage = (): Storage => ({
   set: (key, value) => localStorage.setItem(key, value),
 });
 
-const getPersistedRemotePlugins = (storage: Storage, key: string): RemotePluginEntry[] => {
+const getPersistedRemotePlugins = (storage: Storage, key: string): RemotePluginView[] => {
   try {
     const parsed: unknown = JSON.parse(storage.get(key) ?? '[]');
     if (!Array.isArray(parsed)) {
       return [];
     }
     return parsed.filter(
-      (entry): entry is RemotePluginEntry =>
+      (entry): entry is RemotePluginView =>
         typeof entry === 'object' && entry !== null && typeof entry.id === 'string' && typeof entry.url === 'string',
     );
   } catch {
@@ -86,7 +86,7 @@ const getPersistedRemotePlugins = (storage: Storage, key: string): RemotePluginE
   }
 };
 
-const persistRemotePlugin = (storage: Storage, key: string, entry: RemotePluginEntry): void => {
+const persistRemotePlugin = (storage: Storage, key: string, entry: RemotePluginView): void => {
   try {
     const entries = getPersistedRemotePlugins(storage, key).filter((existing) => existing.id !== entry.id);
     entries.push(entry);
@@ -132,7 +132,7 @@ export const isLocalUrl = (locator: string): boolean => {
  * Useful for UI code that needs to know which loaded plugins were installed from a URL
  * (e.g. to surface a tag on remote or localhost-hosted plugins).
  */
-export const getRemoteEntries = (options: Options = {}): readonly RemotePluginEntry[] => {
+export const getRemoteEntries = (options: Options = {}): readonly RemotePluginView[] => {
   const storage = options.storage ?? defaultStorage();
   const key = options.key ?? DEFAULT_KEY;
   return getPersistedRemotePlugins(storage, key);

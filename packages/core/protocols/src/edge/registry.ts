@@ -73,7 +73,7 @@ export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
 
 /**
  * Verbatim content of a `package.profile` ATProto record, minus the rkey which is
- * lifted to {@link PluginEntrySchema.slug}. Display metadata only — no runtime identity.
+ * lifted to {@link PluginViewSchema.slug}. Display metadata only — no runtime identity.
  */
 export const PluginProfileSchema = Schema.Struct({
   /** Plugin display name. */
@@ -107,7 +107,7 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
  * - `latestVersion` is a convenience pointer into `releases` indicating the recommended
  *   install target.
  */
-export const PluginEntrySchema = Schema.Struct({
+export const PluginViewSchema = Schema.Struct({
   // ── Addressing / provenance (indexer-derived) ────────────────────────────
   /**
    * `at://` URI of the source `package.profile` record.
@@ -151,7 +151,7 @@ export const PluginEntrySchema = Schema.Struct({
    */
   latestVersion: Schema.String.pipe(Schema.nonEmptyString()),
 });
-export type PluginEntry = Schema.Schema.Type<typeof PluginEntrySchema>;
+export type PluginView = Schema.Schema.Type<typeof PluginViewSchema>;
 
 /**
  * Response body of `GET /registry/plugins`.
@@ -160,7 +160,7 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
   /** Wire-format schema version, pinned to 2. */
   version: Schema.Literal(2),
   /** Hydrated entries. */
-  plugins: Schema.Array(PluginEntrySchema),
+  plugins: Schema.Array(PluginViewSchema),
   /** Unix ms timestamp of the most recent successful index cycle. */
   refreshedAt: Schema.Number,
 });

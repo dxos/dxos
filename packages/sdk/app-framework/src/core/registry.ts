@@ -12,14 +12,14 @@ import { log } from '@dxos/log';
  * A registry plugin entry as seen by the plugin manager layer.
  * Populated from the registry catalog; represents the latest available version of a plugin.
  *
- * Independently defined from @dxos/protocols PluginEntry — similar shape but not the same type.
+ * Independently defined from @dxos/protocols PluginView — similar shape but not the same type.
  * Implementations of {@link PluginProvider} (e.g. {@link EdgeRegistryPluginProvider})
  * are responsible for mapping their wire-format entries to this shape.
  */
 export type Plugin = {
   /**
    * Composer plugin id — a bare NSID, e.g. `org.dxos.plugin.excalidraw`.
-   * Equals `slug` on the wire-format PluginEntry. Used for `manager.enable(id)`,
+   * Equals `slug` on the wire-format PluginView. Used for `manager.enable(id)`,
    * `DXN.make(id, version)`, install-version tracking, and all catalog lookups.
    */
   id: string;

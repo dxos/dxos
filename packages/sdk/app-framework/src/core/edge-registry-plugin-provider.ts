@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type PluginEntry } from '@dxos/protocols';
+import { type PluginView } from '@dxos/protocols';
 
 import * as Registry from './registry';
 
 /**
- * Maps a wire-format `PluginEntry` (from `@dxos/protocols`) to a
+ * Maps a wire-format `PluginView` (from `@dxos/protocols`) to a
  * `Registry.Plugin` (the app-framework domain type).
  *
  * This is the only translation seam between the two independently-defined type
@@ -21,7 +21,7 @@ import * as Registry from './registry';
  * (e.g. `org.dxos.plugin.excalidraw`), so `DXN.make(slug, latestVersion)`
  * reconstructs the canonical `Plugin.Meta.key`.
  */
-const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => {
+const toRegistryPlugin = (entry: PluginView): Registry.Plugin => {
   const latestRelease = entry.releases.find((release) => release.version === entry.latestVersion) ?? entry.releases[0];
   return {
     id: entry.slug,
@@ -39,9 +39,9 @@ const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => {
 };
 
 /**
- * Maps a wire-format `PluginEntry` release list to `Registry.PluginVersion[]`.
+ * Maps a wire-format `PluginView` release list to `Registry.PluginVersion[]`.
  */
-const toRegistryVersions = (entry: PluginEntry): Registry.PluginVersion[] =>
+const toRegistryVersions = (entry: PluginView): Registry.PluginVersion[] =>
   entry.releases.map((release) => ({
     tag: release.version,
     moduleUrl: release.moduleUrl,
@@ -62,7 +62,7 @@ const toRegistryVersions = (entry: PluginEntry): Registry.PluginVersion[] =>
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Registry.Plugin[] = [];
-  #cachedEntries: readonly PluginEntry[] = [];
+  #cachedEntries: readonly PluginView[] = [];
 
   constructor(private readonly _client: EdgeHttpClient) {}
 
