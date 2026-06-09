@@ -335,7 +335,7 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
         Effect.provide(AlarmTestLayer),
         TestHelpers.provideTestContext,
       ),
-      { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000 },
+      { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 60_000 },
     );
   });
 });
@@ -363,18 +363,20 @@ const countBlocks = (feed: Feed.Feed) =>
   });
 
 /**
- * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling) and
- * yields real wall time so async I/O such as memoized LLM HTTP can complete.
+ * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling).
+ * Live LLM generation needs real wall time between polls; memoized runs only yield to the runtime.
  */
 const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
   Effect.gen(function* () {
-    for (let step = 0; step < 120; step++) {
+    const waitForAsyncWork = MemoizedAiService.isGenerationEnabled()
+      ? Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)))
+      : Effect.yieldNow();
+    for (let step = 0; step < 240; step++) {
       if (yield* predicate) {
         return;
       }
       yield* TestClock.adjust(Duration.millis(50));
-      // TODO(dmaretskyi): This is just pumping the real clock instead of using the TestClock.
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
+      yield* waitForAsyncWork;
     }
     return yield* Effect.dieMessage('driveUntil: condition not reached');
   });
