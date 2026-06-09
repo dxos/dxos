@@ -4,7 +4,7 @@
 
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { JSONPath } from 'jsonpath-plus';
-import React, { type FC, type PropsWithChildren, forwardRef, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useMemo, useState } from 'react';
 
 import { Input, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -64,7 +64,7 @@ type SyntaxRootProps = PropsWithChildren<{
  * text mode (which would trip `Syntax.Filter`'s JSON-only guard). Mode is chosen by prop
  * presence, not value.
  */
-const SyntaxRoot: FC<ScopedProps<SyntaxRootProps>> = (props) => {
+const SyntaxRoot = (props: ScopedProps<SyntaxRootProps>) => {
   const { __scopeSyntax, children, language, source, replacer } = props;
   const isJson = 'data' in props;
   const data = props.data;

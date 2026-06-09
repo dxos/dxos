@@ -11,17 +11,26 @@ export interface EditorController {
   focus: () => void;
 }
 
-export const noopController: EditorController = {
+// Hide `view` from own-enumerable traversal. Controllers are passed through React props/context, and the
+// live `EditorView` reaches the global `window` via `view.observer.win` (CodeMirror's DOMObserver). React
+// 19.2's dev render-logger walks changed props' object graphs and would otherwise descend into `window`,
+// enumerate `window[0]` (a cross-origin iframe) and throw SecurityError. Direct access is unaffected.
+const withHiddenView = (controller: EditorController): EditorController => {
+  Object.defineProperty(controller, 'view', { enumerable: false });
+  return controller;
+};
+
+export const noopController: EditorController = withHiddenView({
   get view() {
     return null;
   },
   getText: () => '',
   setText: () => {},
   focus: () => {},
-};
+});
 
 export const createEditorController = (view: EditorView | null): EditorController => {
-  return {
+  return withHiddenView({
     get view() {
       return view;
     },
@@ -46,5 +55,5 @@ export const createEditorController = (view: EditorView | null): EditorControlle
       }
     },
     focus: () => view?.focus(),
-  };
+  });
 };

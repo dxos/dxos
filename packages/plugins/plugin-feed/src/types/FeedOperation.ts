@@ -6,7 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, DXN, Feed, Ref, Registry } from '@dxos/echo';
 
@@ -16,14 +15,6 @@ import * as Magazine from './Magazine';
 import * as Subscription from './Subscription';
 
 const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
-
-export const OnCreateSpace = Operation.make({
-  meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--rss--regular' },
-  input: Schema.Struct({
-    space: SpaceSchema,
-  }),
-  output: Schema.Void,
-});
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
 export const SyncFeed = Operation.make({

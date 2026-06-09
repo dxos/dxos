@@ -245,9 +245,7 @@ export namespace AppCapabilities {
    * Used to validate navigation targets against remote services (e.g., edge).
    * @category Capability
    */
-  export type NavigationPathResolver = (
-    qualifiedPath: string,
-  ) => Effect$.Effect<Option.Option<EID.EID>, never, Database.Service>;
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
 
   export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
     'org.dxos.app-framework.capability.navigation-path-resolver',

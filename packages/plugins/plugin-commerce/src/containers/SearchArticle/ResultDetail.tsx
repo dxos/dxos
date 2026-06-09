@@ -64,15 +64,17 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
       )}
 
       {result.images.length > 0 && (
-        <Carousel.Root count={result.images.length} classNames='rounded-xs overflow-hidden'>
-          <Carousel.Previous />
-          <Carousel.Viewport>
-            {result.images.map((image, index) => (
-              <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
-            ))}
-          </Carousel.Viewport>
-          <Carousel.Next />
-          <Carousel.Indicators />
+        <Carousel.Root count={result.images.length}>
+          <Carousel.Content classNames='rounded-xs overflow-hidden'>
+            <Carousel.Previous />
+            <Carousel.Viewport>
+              {result.images.map((image, index) => (
+                <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
+              ))}
+            </Carousel.Viewport>
+            <Carousel.Next />
+            <Carousel.Indicators />
+          </Carousel.Content>
         </Carousel.Root>
       )}
 
