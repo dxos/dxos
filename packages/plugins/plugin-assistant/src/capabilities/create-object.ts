@@ -14,6 +14,8 @@ import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { AssistantOperation } from '#types';
 
+import { getChatsPath } from '../paths';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
@@ -29,7 +31,7 @@ export default Capability.makeModule(
               object,
               target: options.target,
               hidden: true,
-              targetNodeId: options.targetNodeId,
+              targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId),
             });
           }),
       }),

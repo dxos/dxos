@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -20,6 +20,8 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
+
+const magazineTypename = Type.getTypename(Magazine.Magazine);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -33,45 +35,14 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      // Show Magazine.Magazine objects as nodes under each space.
-      GraphBuilder.createExtension({
-        id: 'magazines',
-        match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          const magazines = get(AtomQuery.make(space.db, Filter.type(Magazine.Magazine)));
-
-          return Effect.succeed([
-            Node.make({
-              id: 'magazines',
-              type: 'magazines',
-              data: 'magazines-root',
-              properties: {
-                label: 'Magazines',
-                icon: 'ph--newspaper-clipping--regular',
-                iconHue: 'indigo',
-                role: 'branch',
-                position: 'first',
-                space,
-              },
-              nodes: magazines
-                .map((magazine: Magazine.Magazine) =>
-                  createObjectNode({
-                    db: space.db,
-                    object: magazine,
-                  }),
-                )
-                .filter((node): node is NonNullable<typeof node> => node !== null),
-            }),
-          ]);
-        },
-      }),
+      createTypeSectionExtension(Magazine.Magazine, { position: 'first' }),
 
       // Add-magazine action on the Magazines section header.
       GraphBuilder.createExtension({
         id: 'magazinesSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === 'magazines' && space ? Option.some(space) : Option.none();
+          return node.type === magazineTypename && space ? Option.some(space) : Option.none();
         },
         actions: (space) =>
           Effect.succeed([
@@ -80,11 +51,11 @@ export default Capability.makeModule(
               data: () =>
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: space.db,
-                  typename: Type.getTypename(Magazine.Magazine),
+                  typename: magazineTypename,
                   initialFormValues: { feeds: [undefined] },
                 }),
               properties: {
-                label: ['add-object.label', { ns: Type.getTypename(Magazine.Magazine) }],
+                label: ['add-object.label', { ns: magazineTypename }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
