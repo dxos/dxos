@@ -182,13 +182,14 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Message[]> =>
   pipe(
     space.db.query(FeedTraceSink.query).atom,
-    Atom.map((feeds) =>
-      // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-      space.db.query(
-        feeds.length > 0
-          ? Query.type(Trace.Message).from(feeds[0])
-          : (Query.select(Filter.nothing()) as Query.Query<never>),
-      ).atom,
+    Atom.map(
+      (feeds) =>
+        // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
+        space.db.query(
+          feeds.length > 0
+            ? Query.type(Trace.Message).from(feeds[0])
+            : (Query.select(Filter.nothing()) as Query.Query<never>),
+        ).atom,
     ),
     (atom) => Atom.make((get) => get(get(atom))),
   );
