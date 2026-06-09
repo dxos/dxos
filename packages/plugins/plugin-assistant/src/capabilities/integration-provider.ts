@@ -54,9 +54,10 @@ const validateAnthropicKey = (apiKey: string): Effect.Effect<void, Error> =>
 const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenForm>> = {
   schema: AnthropicTokenForm,
   defaultValues: { token: '' },
+  // Validates before the dialog closes so 401/403 errors are shown inline.
+  onValidate: ({ values }) => validateAnthropicKey(values.token),
   onSubmit: ({ values, provider }) =>
-    Effect.gen(function* () {
-      yield* validateAnthropicKey(values.token);
+    Effect.sync(() => {
       const accessToken = Obj.make(AccessToken.AccessToken, {
         source: ANTHROPIC_SOURCE,
         token: values.token,
