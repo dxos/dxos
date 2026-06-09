@@ -80,7 +80,7 @@ interface TestLayerOptions {
    * Extra services to make available in the service resolver.
    * Operations can depend on those services.
    */
-  extraServices?: Layer.Layer<any, never, never>;
+  extraServices?: Layer.Layer<never, never, never>;
 }
 
 export type AssistantTestServices =
