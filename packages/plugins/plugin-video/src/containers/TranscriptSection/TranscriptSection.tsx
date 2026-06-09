@@ -14,8 +14,6 @@ import { Pending, Transcript } from '#components';
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
 
-const SYNC_INTERVAL_MS = 10_000;
-
 // TODO(burdon): Use AppSurface.Section.
 export type TranscriptSectionProps = {
   subject: Video.Video;
@@ -32,16 +30,10 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
 
-  // Tracks the playback base offset + wall-clock time when the user last seeked. Used by the 10s
-  // ticker to estimate current playback position for transcript scrolling.
-  const playbackRef = useRef<{ offset: number; startedAt: number } | null>(null);
-  const [currentSeconds, setCurrentSeconds] = useState<number | undefined>(undefined);
-
   // Set the selection point on the shared attention context; VideoSection observes it and moves the
   // player to the corresponding offset (the selection id is the seconds offset).
   const handleSeek = useCallback(
     (seconds: number) => {
-      playbackRef.current = { offset: seconds, startedAt: Date.now() };
       void invokePromise(LayoutOperation.Select, {
         contextId: attendableId,
         subject: { mode: 'single', id: String(Math.max(0, Math.floor(seconds))) },
@@ -49,19 +41,6 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     },
     [attendableId, invokePromise],
   );
-
-  // Periodically estimate the current playback position and update currentSeconds so the transcript
-  // can scroll to follow the video. Only runs after the user has seeked at least once.
-  // useEffect(() => {
-  //   const id = setInterval(() => {
-  //     if (!playbackRef.current) {
-  //       return;
-  //     }
-  //     const { offset, startedAt } = playbackRef.current;
-  //     setCurrentSeconds(offset + (Date.now() - startedAt) / 1000);
-  //   }, SYNC_INTERVAL_MS);
-  //   return () => clearInterval(id);
-  // }, []);
 
   // Auto-generate the transcript when missing. The `running` ref guards against re-entrancy across the
   // async gap before the reactive `video.transcript` field updates.
@@ -110,12 +89,5 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     return <Pending label={t('transcribing.pending.label')} />;
   }
 
-  return (
-    <Transcript
-      id={`${uri}/transcript`}
-      source={video.transcript}
-      currentSeconds={currentSeconds}
-      onSeek={handleSeek}
-    />
-  );
+  return <Transcript id={`${uri}/transcript`} source={video.transcript} onSeek={handleSeek} />;
 };
