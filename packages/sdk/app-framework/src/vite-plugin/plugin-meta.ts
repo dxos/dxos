@@ -58,14 +58,37 @@ export const readPluginMetaEntry = (packageDir: string): PluginMetaEntry | undef
   return plugin;
 };
 
+// Self-declared Plugin.Meta fields authored in dx.yml. Excludes `id` (→ key) and
+// build/publish orchestration, so neither leaks into the runtime meta / manifest.
+const META_KEYS = [
+  'name',
+  'description',
+  'homePage',
+  'source',
+  'spec',
+  'screenshots',
+  'icon',
+  'iconHue',
+  'tags',
+  'dependsOn',
+] as const;
+
+const pickMetaFields = (plugin: PluginMetaEntry): Omit<PluginMetaEntry, 'id'> => {
+  const out: Record<string, unknown> = {};
+  for (const key of META_KEYS) {
+    if (plugin[key] !== undefined) {
+      out[key] = plugin[key];
+    }
+  }
+  return out as Omit<PluginMetaEntry, 'id'>;
+};
+
 /**
  * Synthesizes the `#meta` module source from a plugin entry, identical to the
  * dx-compile esbuild adapter so dev/bundle (vite) and lib (esbuild) builds agree.
  */
 export const synthesizePluginMetaSource = (plugin: PluginMetaEntry): string => {
-  const { id, ...rest } = plugin;
-  const fields = Object.entries(rest)
-    .filter(([, value]) => value !== undefined)
+  const fields = Object.entries(pickMetaFields(plugin))
     .map(([key, value]) => `  ${key}: ${JSON.stringify(value)},`)
     .join('\n');
   return [
@@ -73,7 +96,7 @@ export const synthesizePluginMetaSource = (plugin: PluginMetaEntry): string => {
     "import { DXN } from '@dxos/keys';",
     '',
     'export const meta = Plugin.makeMeta({',
-    `  key: DXN.make(${JSON.stringify(id)}),`,
+    `  key: DXN.make(${JSON.stringify(plugin.id)}),`,
     fields,
     '});',
     '',
@@ -84,7 +107,7 @@ export const synthesizePluginMetaSource = (plugin: PluginMetaEntry): string => {
  * Builds the {@link BuildMeta} used for manifest emission from a dx.yml plugin
  * entry, injecting the build-time `version` (from the package's `package.json`).
  */
-export const toBuildMeta = (plugin: PluginMetaEntry, version: string): BuildMeta => {
-  const { id, ...rest } = plugin;
-  return { ...Plugin.makeMeta({ key: DXN.make(id, version), ...rest }), version };
-};
+export const toBuildMeta = (plugin: PluginMetaEntry, version: string): BuildMeta => ({
+  ...Plugin.makeMeta({ key: DXN.make(plugin.id, version), ...pickMetaFields(plugin) }),
+  version,
+});

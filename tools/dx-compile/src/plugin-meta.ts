@@ -56,11 +56,25 @@ export const readPluginMeta = (packageDir: string): PluginMetaEntry | undefined 
  * identical to a hand-written `src/meta.ts` — `id`/`version` are derived from the
  * `key` by `makeMeta`, so the key carries no version (matching prior behavior).
  */
+// Self-declared Plugin.Meta fields authored in dx.yml. Excludes `id` (→ key) and
+// build/publish orchestration, so neither leaks into the synthesized meta.
+const META_KEYS = [
+  'name',
+  'description',
+  'homePage',
+  'source',
+  'spec',
+  'screenshots',
+  'icon',
+  'iconHue',
+  'tags',
+  'dependsOn',
+] as const;
+
 export const synthesizePluginMetaSource = (plugin: PluginMetaEntry): string => {
-  const { id, ...rest } = plugin;
-  const fields = Object.entries(rest)
-    .filter(([, value]) => value !== undefined)
-    .map(([key, value]) => `  ${key}: ${JSON.stringify(value)},`)
+  const { id } = plugin;
+  const fields = META_KEYS.filter((key) => plugin[key] !== undefined)
+    .map((key) => `  ${key}: ${JSON.stringify(plugin[key])},`)
     .join('\n');
   return [
     "import { Plugin } from '@dxos/app-framework';",
