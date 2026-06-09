@@ -4,6 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
+import { meta as inboxMeta } from '@dxos/plugin-inbox';
 import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
@@ -42,8 +43,9 @@ export const meta = Plugin.makeMeta({
     ResearchSource contract without modifying the core blueprint.
   `,
   icon: 'ph--address-book--regular',
-  iconHue: 'emerald',
+  iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',
   spec: 'PLUGIN.mdl',
+  dependsOn: [inboxMeta.id],
   tags: ['labs'],
 });

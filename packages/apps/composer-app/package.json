@@ -65,6 +65,7 @@
     "@dxos/plugin-comments": "workspace:*",
     "@dxos/plugin-commerce": "workspace:*",
     "@dxos/plugin-conductor": "workspace:*",
+    "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-crx": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",

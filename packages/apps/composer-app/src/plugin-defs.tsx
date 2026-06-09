@@ -21,6 +21,7 @@ import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
+import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
@@ -147,6 +148,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
       CommercePlugin.meta.id,
+      CrmPlugin.meta.id,
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
@@ -232,6 +234,7 @@ export const getPlugins = ({
     PreviewPlugin(),
     ProcessManagerPlugin(),
     CommercePlugin(),
+    CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),

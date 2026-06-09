@@ -256,6 +256,9 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-crm"
+    },
+    {
       "path": "../../plugins/plugin-crx"
     },
     {

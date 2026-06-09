@@ -4,4 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const CrmOperationHandlerSet = OperationHandlerSet.lazy(() => import('./attach-image'));
+export const CrmOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./attach-image'),
+  () => import('./setup-mailbox-crm'),
+);

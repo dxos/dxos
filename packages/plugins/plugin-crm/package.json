@@ -49,6 +49,21 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
     },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/neutral/hooks/index.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -86,17 +101,25 @@
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "react": "catalog:"
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
