@@ -17,6 +17,15 @@ import { Video, VideoOperation } from '#types';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
+const isExternalHttpUrl = (value?: string): boolean => {
+  try {
+    const { protocol } = new URL(value ?? '');
+    return protocol === 'https:' || protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
 type VideoTabsProps = {
   attendableId: string;
   subject: Video.Video;
@@ -90,7 +99,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   const [summarizing, setSummarizing] = useState(false);
 
   const handleOpenOriginal = useCallback(() => {
-    if (video.url) {
+    if (isExternalHttpUrl(video.url)) {
       window.open(video.url, '_blank', 'noopener,noreferrer');
     }
   }, [video.url]);
@@ -119,7 +128,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           {
             label: ['open-original.label', { ns: meta.id }],
             icon: 'ph--arrow-square-out--regular',
-            disabled: !video.url,
+            disabled: !isExternalHttpUrl(video.url),
             disposition: 'toolbar',
             testId: 'video.toolbar.open-original',
           },
@@ -136,7 +145,15 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-          <Surface.Surface role='section' data={{ subject, attendableId, part: 'player' }} limit={1} />
+          <Surface.Surface
+            role='section'
+            data={{
+              subject,
+              attendableId,
+              part: 'player',
+            }}
+            limit={1}
+          />
           <VideoTabs
             attendableId={attendableId}
             subject={subject}

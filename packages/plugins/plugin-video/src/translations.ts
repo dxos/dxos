@@ -26,6 +26,7 @@ export const translations = [
         'plugin.name': 'Video',
         'transcribe.label': 'Transcribe',
         'transcribe-error.message': 'Transcription failed.',
+        'transcribe-retry.label': 'Retry',
         'summarize.label': 'Summarize',
         'summarize-error.message': 'Summarization failed.',
         'open-transcript.label': 'Open transcript',

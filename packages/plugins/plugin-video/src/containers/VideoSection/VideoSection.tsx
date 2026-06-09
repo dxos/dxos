@@ -27,5 +27,3 @@ export const VideoSection = ({ attendableId, subject }: VideoSectionProps) => {
 
   return <VideoPlayer url={video.url} startTime={startTime} />;
 };
-
-export default VideoSection;

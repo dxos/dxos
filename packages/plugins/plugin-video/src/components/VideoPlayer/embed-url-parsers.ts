@@ -78,7 +78,11 @@ export const toEmbedUrl = (url: string, startTime?: number): string | undefined 
     }
   }
 
-  // Fall back to the raw URL (e.g. a direct media file or an already-embeddable URL).
+  // Only fall back for safe http/https URLs (direct media files, already-embeddable URLs).
+  // Non-http schemes (data:, javascript:, etc.) are rejected as untrusted embed sources.
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return undefined;
+  }
   if (start !== undefined) {
     parsed.hash = `#t=${start}`;
   }

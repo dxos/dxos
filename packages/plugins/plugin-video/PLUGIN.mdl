@@ -42,32 +42,31 @@ type Video
 
 ```mdl
 component VideoArticle
-  desc: Article surface that plays a Video and offers transcription.
+  desc: Article surface that plays a Video and shows a tabbed transcript/summary panel below the player.
   props:
     video: Video
   state:
-    transcribing: boolean       # transcription request in flight
     summarizing: boolean        # summarization request in flight
-    view: transcript | summary  # which text the tabbed editor shows
+    tab: transcript | summary   # which tab is active
   slots:
     toolbar?: ReactNode
   actions:
-    transcribe()                # invokes op:transcribeVideo
     summarize()                 # invokes op:summarizeVideo
-    openOriginal()              # opens video.url in a new tab
+    openOriginal()              # opens video.url in a new tab (http/https only)
   emits:
-    onTranscribed(transcript: Ref<Text>)
     onSummarized(summary: Ref<Text>)
   layout: |
-    ┌──────────────────────────┐
-    │ [toolbar slot] Transcribe│
-    ├──────────────────────────┤
-    │                          │
-    │   <iframe> video embed   │
-    │                          │
-    ├──────────────────────────┤
-    │ transcript link (if any) │
-    └──────────────────────────┘
+    ┌──────────────────────────────────┐
+    │ [toolbar] ⬡ Open Original        │
+    ├──────────────────────────────────┤
+    │                                  │
+    │       <iframe> video embed       │
+    │                                  │
+    ├──────────────────────────────────┤
+    │ [Transcript] [Summary] [↻ regen] │
+    ├──────────────────────────────────┤
+    │   transcript or summary editor   │
+    └──────────────────────────────────┘
 ```
 
 ## Services

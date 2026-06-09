@@ -61,12 +61,13 @@ const fetchTranscript = (url: string, lang: string) =>
         throw new Error('Transcription service returned an empty transcript.');
       }
 
+      const raw = payload.result.markdown ?? payload.result.text;
       return {
         title: payload.result.title,
         // Normalize to one tight line per segment: join a timestamp link onto the text that follows it
         // (the worker puts the timestamp on its own line), then collapse any remaining blank lines.
         // Otherwise the hidden timestamp line renders as a blank row above each segment.
-        text: payload.result.markdown.replace(/(\[[^\]]*\]\([^)]*\))\s*\n\s*/g, '$1 ').replace(/\n{2,}/g, '\n'),
+        text: raw.replace(/(\[[^\]]*\]\([^)]*\))\s*\n\s*/g, '$1 ').replace(/\n{2,}/g, '\n'),
       };
     },
     catch: (error) => (error instanceof Error ? error : new Error('Transcription failed.')),

@@ -36,6 +36,7 @@ export const scrollbarAutohide = ({ timeout = 800 }: ScrollbarAutohideOptions = 
       destroy(): void {
         this._scroller.removeEventListener('scroll', this._handleScroll);
         clearTimeout(this._timer);
+        this._scroller.classList.remove('cm-scrolling');
       }
 
       // Show the thumb while scrolling; remove the class once scrolling has been idle for `timeout`.
