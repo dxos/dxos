@@ -121,6 +121,7 @@
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/plugin-trello": "workspace:*",
     "@dxos/plugin-trip": "workspace:*",
+    "@dxos/plugin-video": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/plugin-zen": "workspace:*",

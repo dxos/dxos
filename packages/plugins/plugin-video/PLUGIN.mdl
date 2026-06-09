@@ -14,18 +14,18 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 | Term        | URI                            |
 |-------------|--------------------------------|
-| `type`      | `org.dxos.mdl.type@1.0`       |
-| `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
-| `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
-| `service`   | `org.dxos.mdl.service@1.0`    |
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
 
 ## Types
 
 ```mdl
 type Text
-  desc: Plain/markdown text object from `@dxos/types`. Referenced, not defined here.
+  desc: Plain/markdown text object from `@dxos/schema`. Referenced, not defined here.
 ```
 
 ```mdl
@@ -54,15 +54,15 @@ component VideoArticle
   emits:
     onTranscribed(transcript: Ref<Text>)
   layout: |
-    ┌─────────────────────────┐
+    ┌──────────────────────────┐
     │ [toolbar slot] Transcribe│
-    ├─────────────────────────┤
-    │                         │
-    │   <iframe> video embed  │
-    │                         │
-    ├─────────────────────────┤
-    │ transcript link (if any)│
-    └─────────────────────────┘
+    ├──────────────────────────┤
+    │                          │
+    │   <iframe> video embed   │
+    │                          │
+    ├──────────────────────────┤
+    │ transcript link (if any) │
+    └──────────────────────────┘
 ```
 
 ## Services

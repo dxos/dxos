@@ -4,6 +4,28 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-08 — plugin-video (new plugin: Video type, EDGE transcribe op, embed player)
+
+### `Format.URL` rejects query strings — don't use it for URL fields
+
+- `Format.URL` (`@dxos/echo/internal`) applies a regex (`Format/string.ts`) that rejects `?query=` — so `Obj.make` throws on any real video/watch URL (`...?v=...`). Symptom: a storybook "Fatal Error / ParseError … Predicate refinement failure" at object creation. Use `Schema.String.pipe(Schema.annotations({...}), FormatAnnotation.set(TypeFormat.URL), Schema.optional)` to keep the URL form-input hint without the broken pattern. (Both exported from `@dxos/echo/internal`.) Matches the existing `// TODO: Format.URL breaks validation` notes in `@dxos/types` Organization/Person.
+
+### New-plugin skeleton checklist (things `moon run :build`/`:test` need beyond src)
+
+- `tsconfig.json` (extends `../../../tsconfig.base.json`, `references` per dep) — without it `:build` fails "No tsconfig.json found". References are auto-extended into `composer-app/tsconfig.json` + `release-please-config.json` by the postinstall sync.
+- `src/vite-env.d.ts` declaring `*.mdl?raw` (copy from plugin-chess) — needed for `import pluginSpec from '../PLUGIN.mdl?raw'`.
+- `vitest.config.ts` (`createConfig({ node: true, storybook: true })`) + a `.storybook/` dir (`main.mts`, `preview.mts`, and symlinks `manager-head.html`/`preview-head.html` → `tools/storybook/.storybook/*`) — without these `:test` fails "No projects matched filter 'node'" then storybook `MainFileMissingError`.
+- Register in `composer-app/src/plugin-defs.tsx`: import from `@dxos/plugin-foo/plugin`, add `FooPlugin()` to the instance list and `FooPlugin.meta.id` to a `getDefaults` list (Labs for experimental); add `@dxos/plugin-foo: workspace:*` to composer-app `package.json`.
+
+### Operations import from `@dxos/compute`, not `@dxos/operation`
+
+- In plugins, `Operation`/`OperationHandlerSet` come from `@dxos/compute` (the operations SKILL says `@dxos/operation` — wrong for plugin code). Handler reads input directly via `Effect.fn(function* ({ video, lang }) {...})`; resolve refs with `Database.load(ref)`, create with `Database.add(obj)`, mutate with `Obj.update`. Op needs `services: [Database.Service]`; the invoker scopes the space from the input ref (pass `Ref.make(liveObj)`), same as `plugin-assistant/operations/update-chat-name.ts`.
+- A client-side EDGE call with no auth is just `Effect.tryPromise(() => fetch(url))` in the handler — no EdgeHttpClient needed for a public worker on a distinct host.
+
+### Reuse `Text.Text` from `@dxos/schema` for text-body refs
+
+- A "transcript/notes text object" ref is `Ref.Ref(Text.Text)` (`@dxos/schema`), created with `Text.make({ name, content })`. Schema registration is deduped by URI across plugins (`plugin-client/capabilities/schema-defs.ts`), so registering `Text.Text` in your `addSchemaModule` alongside markdown is safe (idempotent).
+
 ## 2026-06-05 — plugin-comments (factored from plugin-thread), react-ui-thread
 
 ### No plugin → plugin deps when factoring a feature out
