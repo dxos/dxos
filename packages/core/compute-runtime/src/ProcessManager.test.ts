@@ -822,7 +822,8 @@ describe('reentrancy', () => {
       const restored = yield* dormant[0].hydrate(executable);
       expect(restored.status.state).toEqual(Process.State.HYBERNATING);
 
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 600)));
+      yield* TestClock.adjust(Duration.millis(500));
+      yield* restored.runToCompletion();
       expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
@@ -896,8 +897,9 @@ describe('durability', () => {
       const restored = yield* dormant[0].hydrate(waiting);
       expect(restored.status.state).toEqual(Process.State.HYBERNATING);
 
-      // Alarm re-armed; wait past the original due-time and assert it fired.
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 700)));
+      // Alarm re-armed on the ambient Clock; advance TestClock to fire it.
+      yield* TestClock.adjust(Duration.millis(500));
+      yield* restored.runToCompletion();
       expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
 
       // Record cleaned up after success.
