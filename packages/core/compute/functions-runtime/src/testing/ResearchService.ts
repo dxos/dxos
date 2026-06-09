@@ -74,7 +74,7 @@ export interface Service {
 export class ResearchService extends Context.Tag('@dxos/functions-runtime/testing/ResearchService')<
   ResearchService,
   Service
->() { }
+>() {}
 
 export const layer = Layer.effect(
   ResearchService,

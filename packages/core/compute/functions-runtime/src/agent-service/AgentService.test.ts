@@ -27,7 +27,6 @@ import * as AgentService from './AgentService';
 
 EntityId.dangerouslyDisableRandomness();
 
-
 const Research = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.research'),
@@ -68,10 +67,11 @@ const assistantTestLayerOptions = {
   extraServices: ResearchService.layer,
 };
 
-const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {}) => AssistantTestLayer({
-  ...assistantTestLayerOptions,
-  enableToolBackgrounding,
-});
+const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {}) =>
+  AssistantTestLayer({
+    ...assistantTestLayerOptions,
+    enableToolBackgrounding,
+  });
 
 describe('Agent Service', () => {
   it.effect(
@@ -290,7 +290,6 @@ describe('Agent Service', () => {
     { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
   );
 
-
   //
   // Alarm e2e (memoized LLM).
   //
@@ -309,45 +308,6 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
     aiServicePreset: 'edge-remote',
     model: 'ai.claude.model.claude-opus-4-6',
   });
-
-  /**
-  * Summarizes assistant text blocks and tool-call blocks persisted to the conversation feed.
-  */
-  const countBlocks = (feed: Feed.Feed) =>
-    Effect.gen(function* () {
-      const queryResult = yield* Feed.query(feed, Filter.type(Message.Message));
-      const messages = (yield* Effect.promise(() => queryResult.run())).filter(Obj.instanceOf(Message.Message));
-      let assistantTexts = 0;
-      let setAlarmCalls = 0;
-      for (const message of messages) {
-        for (const block of message.blocks) {
-          if (message.sender.role === 'assistant' && block._tag === 'text') {
-            assistantTexts++;
-          }
-          if (block._tag === 'toolCall' && block.name === 'set-alarm') {
-            setAlarmCalls++;
-          }
-        }
-      }
-      return { assistantTexts, setAlarmCalls };
-    });
-
-  /**
-  * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling) and
-  * yields real wall time so async I/O such as memoized LLM HTTP can complete.
-  */
-  const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
-    Effect.gen(function* () {
-      for (let step = 0; step < 120; step++) {
-        if (yield* predicate) {
-          return;
-        }
-        yield* TestClock.adjust(Duration.millis(50));
-        // TODO(dmaretskyi): This is just pumping the real clock instead of using the TestClock.
-        yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
-      }
-      return yield* Effect.dieMessage('driveUntil: condition not reached');
-    });
 
   describe('alarms', () => {
     it.scoped(
@@ -378,5 +338,43 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
       { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000 },
     );
   });
-
 });
+
+/**
+ * Summarizes assistant text blocks and tool-call blocks persisted to the conversation feed.
+ */
+const countBlocks = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const queryResult = yield* Feed.query(feed, Filter.type(Message.Message));
+    const messages = (yield* Effect.promise(() => queryResult.run())).filter(Obj.instanceOf(Message.Message));
+    let assistantTexts = 0;
+    let setAlarmCalls = 0;
+    for (const message of messages) {
+      for (const block of message.blocks) {
+        if (message.sender.role === 'assistant' && block._tag === 'text') {
+          assistantTexts++;
+        }
+        if (block._tag === 'toolCall' && block.name === 'set-alarm') {
+          setAlarmCalls++;
+        }
+      }
+    }
+    return { assistantTexts, setAlarmCalls };
+  });
+
+/**
+ * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling) and
+ * yields real wall time so async I/O such as memoized LLM HTTP can complete.
+ */
+const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
+  Effect.gen(function* () {
+    for (let step = 0; step < 120; step++) {
+      if (yield* predicate) {
+        return;
+      }
+      yield* TestClock.adjust(Duration.millis(50));
+      // TODO(dmaretskyi): This is just pumping the real clock instead of using the TestClock.
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
+    }
+    return yield* Effect.dieMessage('driveUntil: condition not reached');
+  });

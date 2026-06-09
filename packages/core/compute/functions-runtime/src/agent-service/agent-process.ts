@@ -106,150 +106,150 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         yield* toolCallManager.reconcileWithInputQueue(inputQueue);
 
         return {
-        onInput: Effect.fnUntraced(function* (prompt: string) {
-          log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
-          inputQueue.push({ _tag: 'prompt', content: prompt });
-          log('agent onInput persisting queue', { depth: inputQueue.length });
-          yield* AgentEventsKey.set(inputQueue);
-          log('agent onInput persisted', { depth: inputQueue.length });
-          alarmManager.reconcile(true);
-          log('agent onInput alarm scheduled');
-        }),
-        onAlarm: Effect.fnUntraced(
-          function* () {
-            log('agent onAlarm fired', { pending: inputQueue.length });
-
-            // If the agent scheduled a self-wake that has come due, enqueue a wake-up prompt.
-            const firedAt = yield* alarmManager.takeFiredAlarm();
-            if (firedAt != null) {
-              log('agent onAlarm self-wake', { firedAt });
-              inputQueue.push({ _tag: 'prompt', content: wakeUpPrompt(firedAt) });
-              yield* AgentEventsKey.set(inputQueue);
-            }
-
-            // Skip reported tool results at head of queue (stale after reload).
-            while (inputQueue.length > 0) {
-              const head = inputQueue[0];
-              if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
-                inputQueue.shift();
-                log.info('skip tool result that was reported synchronously', { pid: head.pid });
-                continue;
-              }
-              break;
-            }
-
-            const item = inputQueue.shift();
-            if (!item) {
-              log('agent onAlarm empty queue', {});
-              alarmManager.reconcile(false);
-              yield* AgentEventsKey.set(inputQueue);
-              return;
-            }
-
-            log('agent onAlarm handling', { tag: item._tag });
-
-            const prompt: ContentBlock.Any[] = Match.value(item).pipe(
-              Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
-              Match.tag('tool_result', (item) =>
-                item.isError
-                  ? [
-                      ContentBlock.Text.make({
-                        text: toolErrorResponse(item.pid, item.result as string),
-                        disposition: 'synthetic',
-                      }),
-                    ]
-                  : [
-                      ContentBlock.Text.make({
-                        text: toolResultResponse(item.pid, item.result),
-                        disposition: 'synthetic',
-                      }),
-                    ],
-              ),
-              Match.exhaustive,
-            );
-
-            log('begin request', { prompt });
-            log('trace agent request begin');
-            yield* Trace.write(AgentRequestBegin, {});
-            yield* session
-              .createRequest({
-                prompt,
-                // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
-                // toolkit: AsynchronousExectionToolkit,
-                toolkit: alarmToolkit,
-                system: options.systemPrompt,
-                mcpServers: options.getMcpServers?.(),
-              })
-              .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
-            log('end request');
+          onInput: Effect.fnUntraced(function* (prompt: string) {
+            log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
+            inputQueue.push({ _tag: 'prompt', content: prompt });
+            log('agent onInput persisting queue', { depth: inputQueue.length });
             yield* AgentEventsKey.set(inputQueue);
-            // Reconcile so a pending agent self-wake (or remaining queue work) is rescheduled.
-            alarmManager.reconcile(inputQueue.length > 0);
-          },
-          Effect.orDie,
-          Effect.provide(
-            Layer.mergeAll(
-              makeToolResolverFromOperations(),
-              ToolExecutionService({
-                toolCallManager,
-                feed,
-                enableBackgrounding: options.enableToolBackgrounding ?? false,
-              }),
-              AsynchronousExectionToolkitLayer,
-              AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
-            ).pipe(Layer.orDie),
-          ),
-        ),
-        onChildEvent: Effect.fnUntraced(function* (event) {
-          log('childEvent', { event });
-          if (event._tag === 'exited') {
-            if (!toolCallManager.isToolCall(event.pid)) {
-              log.verbose('childEvent ignored non-tool call', { pid: event.pid });
-              return;
-            }
+            log('agent onInput persisted', { depth: inputQueue.length });
+            alarmManager.reconcile(true);
+            log('agent onInput alarm scheduled');
+          }),
+          onAlarm: Effect.fnUntraced(
+            function* () {
+              log('agent onAlarm fired', { pending: inputQueue.length });
 
-            const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
-            if (Exit.isFailure(attachExit)) {
-              // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
-              // delivered synchronously before the interrupted turn.
-              if (
-                toolCallManager.isToolCall(event.pid) ||
-                inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
-                toolCallManager.isReported(event.pid)
-              ) {
-                log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
+              // If the agent scheduled a self-wake that has come due, enqueue a wake-up prompt.
+              const firedAt = yield* alarmManager.takeFiredAlarm();
+              if (firedAt != null) {
+                log('agent onAlarm self-wake', { firedAt });
+                inputQueue.push({ _tag: 'prompt', content: wakeUpPrompt(firedAt) });
+                yield* AgentEventsKey.set(inputQueue);
+              }
+
+              // Skip reported tool results at head of queue (stale after reload).
+              while (inputQueue.length > 0) {
+                const head = inputQueue[0];
+                if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
+                  inputQueue.shift();
+                  log.info('skip tool result that was reported synchronously', { pid: head.pid });
+                  continue;
+                }
+                break;
+              }
+
+              const item = inputQueue.shift();
+              if (!item) {
+                log('agent onAlarm empty queue', {});
+                alarmManager.reconcile(false);
+                yield* AgentEventsKey.set(inputQueue);
                 return;
               }
-              return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
-            }
-            const fiber = attachExit.value;
-            const result = yield* fiber.await.pipe(Effect.orDie).pipe(
-              Effect.map(
-                Exit.match({
-                  onSuccess: (value): AgentEvent => ({
-                    _tag: 'tool_result',
-                    pid: event.pid,
-                    result: value,
-                    isError: false,
-                  }),
-                  onFailure: (cause): AgentEvent => ({
-                    _tag: 'tool_result',
-                    pid: event.pid,
-                    result: Cause.pretty(cause),
-                    isError: true,
-                  }),
+
+              log('agent onAlarm handling', { tag: item._tag });
+
+              const prompt: ContentBlock.Any[] = Match.value(item).pipe(
+                Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
+                Match.tag('tool_result', (item) =>
+                  item.isError
+                    ? [
+                        ContentBlock.Text.make({
+                          text: toolErrorResponse(item.pid, item.result as string),
+                          disposition: 'synthetic',
+                        }),
+                      ]
+                    : [
+                        ContentBlock.Text.make({
+                          text: toolResultResponse(item.pid, item.result),
+                          disposition: 'synthetic',
+                        }),
+                      ],
+                ),
+                Match.exhaustive,
+              );
+
+              log('begin request', { prompt });
+              log('trace agent request begin');
+              yield* Trace.write(AgentRequestBegin, {});
+              yield* session
+                .createRequest({
+                  prompt,
+                  // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
+                  // toolkit: AsynchronousExectionToolkit,
+                  toolkit: alarmToolkit,
+                  system: options.systemPrompt,
+                  mcpServers: options.getMcpServers?.(),
+                })
+                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
+              log('end request');
+              yield* AgentEventsKey.set(inputQueue);
+              // Reconcile so a pending agent self-wake (or remaining queue work) is rescheduled.
+              alarmManager.reconcile(inputQueue.length > 0);
+            },
+            Effect.orDie,
+            Effect.provide(
+              Layer.mergeAll(
+                makeToolResolverFromOperations(),
+                ToolExecutionService({
+                  toolCallManager,
+                  feed,
+                  enableBackgrounding: options.enableToolBackgrounding ?? false,
                 }),
-              ),
-            );
-            inputQueue.push(result);
-            log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
-            yield* AgentEventsKey.set(inputQueue);
-            alarmManager.reconcile(true);
-            log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
-          }
-        }),
-      };
+                AsynchronousExectionToolkitLayer,
+                AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
+              ).pipe(Layer.orDie),
+            ),
+          ),
+          onChildEvent: Effect.fnUntraced(function* (event) {
+            log('childEvent', { event });
+            if (event._tag === 'exited') {
+              if (!toolCallManager.isToolCall(event.pid)) {
+                log.verbose('childEvent ignored non-tool call', { pid: event.pid });
+                return;
+              }
+
+              const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+              const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
+              if (Exit.isFailure(attachExit)) {
+                // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
+                // delivered synchronously before the interrupted turn.
+                if (
+                  toolCallManager.isToolCall(event.pid) ||
+                  inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
+                  toolCallManager.isReported(event.pid)
+                ) {
+                  log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
+                  return;
+                }
+                return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
+              }
+              const fiber = attachExit.value;
+              const result = yield* fiber.await.pipe(Effect.orDie).pipe(
+                Effect.map(
+                  Exit.match({
+                    onSuccess: (value): AgentEvent => ({
+                      _tag: 'tool_result',
+                      pid: event.pid,
+                      result: value,
+                      isError: false,
+                    }),
+                    onFailure: (cause): AgentEvent => ({
+                      _tag: 'tool_result',
+                      pid: event.pid,
+                      result: Cause.pretty(cause),
+                      isError: true,
+                    }),
+                  }),
+                ),
+              );
+              inputQueue.push(result);
+              log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
+              yield* AgentEventsKey.set(inputQueue);
+              alarmManager.reconcile(true);
+              log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
+            }
+          }),
+        };
       }),
   );
 

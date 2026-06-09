@@ -113,38 +113,22 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   // Fiber running the pending alarm `Effect.sleep`. Driven by the ambient `Clock`, so alarms honor
   // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
   // once the sleep has elapsed and the handler is running.
-  #alarmFiber: Fiber.RuntimeFiber<void> | null = null
-;
-  #services: Context.Context<R | Process.BaseServices>
-;
-  #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1))
-;
-  readonly #callbacks: Process.Callbacks<I, O, R>
-;
-  readonly #scope: Scope.CloseableScope
-;
-  readonly #registry: Registry.Registry
-;
-  readonly #outputQueue: Queue.Queue<OutputItem<O>>
-;
-  readonly #storage: StorageService.Service
-;
-  readonly #traceSink: Trace.Sink
-;
-  readonly #clock: Clock.Clock
-;
-  readonly #ephemeralBuffer = new EphemeralTraceBuffer()
-;
-  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = []
-;
-  readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined
-;
-  readonly #onStatusChanged: (() => void) | undefined
-;
-  readonly #hasRunningChildren: () => boolean
-;
-  readonly #onTerminate?: () => Effect.Effect<void>
-;
+  #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
+  #services: Context.Context<R | Process.BaseServices>;
+  #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  readonly #callbacks: Process.Callbacks<I, O, R>;
+  readonly #scope: Scope.CloseableScope;
+  readonly #registry: Registry.Registry;
+  readonly #outputQueue: Queue.Queue<OutputItem<O>>;
+  readonly #storage: StorageService.Service;
+  readonly #traceSink: Trace.Sink;
+  readonly #clock: Clock.Clock;
+  readonly #ephemeralBuffer = new EphemeralTraceBuffer();
+  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
+  readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
+  readonly #onStatusChanged: (() => void) | undefined;
+  readonly #hasRunningChildren: () => boolean;
+  readonly #onTerminate?: () => Effect.Effect<void>;
   constructor(
     readonly pid: Process.ID,
     parentId: Process.ID | null,
@@ -492,9 +476,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       this.#alarmDueAt = null;
       yield* this.#persistence.setAlarm(null);
       if (!this.#finished) {
-        yield* this.#persistence
-          .appendEvent({ _tag: 'alarm' })
-          .pipe(Effect.flatMap((seq) => this.#dispatchAlarm(seq)));
+        yield* this.#persistence.appendEvent({ _tag: 'alarm' }).pipe(Effect.flatMap((seq) => this.#dispatchAlarm(seq)));
       }
     });
   }
