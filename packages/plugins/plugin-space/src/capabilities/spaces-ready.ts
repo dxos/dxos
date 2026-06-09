@@ -57,15 +57,21 @@ export default Capability.makeModule(
     // Personal space initialization — deferred until found.
     //
 
+    // Tracks whether the module is still active. Set to false during cleanup to
+    // prevent fire-and-forget async work from accessing the db after client close.
+    let isActive = true;
     let personalSpaceInitialized = false;
     const initializePersonalSpace = async (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) => {
-      if (personalSpaceInitialized) {
+      if (!isActive || personalSpaceInitialized) {
         return;
       }
       // Set before any await so concurrent subscribe callbacks don't start a second initialization.
       personalSpaceInitialized = true;
 
       await personalSpace.waitUntilReady();
+      if (!isActive) {
+        return;
+      }
 
       if (fromCredential) {
         setPersonalSpace(personalSpace);
@@ -79,7 +85,15 @@ export default Capability.makeModule(
         );
       }
 
+      if (!isActive) {
+        return;
+      }
+
       const queryResults = await personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run();
+      if (!isActive) {
+        return;
+      }
+
       const spacesOrder = queryResults[0];
       if (!spacesOrder) {
         // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -340,6 +354,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
+        isActive = false;
         spaceSubscriptions.clear();
         subscriptions.clear();
       }),
