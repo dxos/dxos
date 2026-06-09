@@ -5,11 +5,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { URI } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -27,21 +27,37 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
-    const id = Entity.getURI(result);
+    const eid = Entity.getURI(result);
+
+    // For keyed entities (e.g. blueprints, operations) prefer the DXN key URI as the
+    // primary `id`. This allows registry-bound refs created via
+    // `Ref.fromURI(Blueprint.registryURI(key))` — which carry a `dxn:<key>` URI — to
+    // resolve correctly against options returned by the registry query below.
+    // The EID is kept as an alias so that EID-based refs (from `Ref.make(dbObject)`)
+    // still match after the `dxnToEntityId` alias check in `handleGetValue`.
+    const key = Entity.isEntity(result) ? Entity.getMeta(result).key : undefined;
+    // Mirror Blueprint.registryURI: prefer DXN form for valid NSIDs, fall back to the raw
+    // key string for keys that contain hyphens or other characters DXN.tryMake rejects.
+    const dxnId = key ? (DXN.tryMake(`dxn:${key}`) ?? key) : undefined;
+    const id = dxnId ?? eid;
+    const aliases: string[] | undefined = dxnId != null ? [eid] : undefined;
+
     const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
-    return { id, label: label ?? id };
+    return { id, label: label ?? id, aliases };
   });
 
 const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
   useQuery(
     db,
-    typename
-      ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
-        typename === ANY_OBJECT_TYPENAME
-        ? Filter.everything()
-        : Filter.typename(typename)
-      : Filter.nothing(),
+    !typename
+      ? Query.select(Filter.nothing())
+      : typename === ANY_OBJECT_TYPENAME
+      ? // For Ref.Ref(Obj.Unknown) show all space objects (registry is too broad for "any").
+        Query.select(Filter.everything())
+      : // Fan across space + registry so keyed entities (blueprints, operations, etc.)
+        // stored in the registry are included as picker options alongside local ones.
+        Query.select(Filter.typename(typename)).from(Scope.space(), Scope.registry()),
   );
 
 export type RefFieldProps = FormFieldComponentProps &
@@ -117,7 +133,13 @@ export const RefField = (props: RefFieldProps) => {
       if (isRef || isRefSnapshot(value)) {
         const dxnString = isRef ? value.uri : value['/'];
         const objectId = dxnToEntityId(dxnString);
-        const matchingOption = options.find((option) => dxnToEntityId(option.id) === objectId);
+        // Primary: match by extracted entity id (ULID for EID refs; key for DXN key refs).
+        const matchingOption =
+          options.find((option) => dxnToEntityId(option.id) === objectId) ??
+          // Alias fallback: for keyed entities whose primary id was promoted to a DXN key URI,
+          // the stored ref may still carry an EID-based URI (e.g. created via `Ref.make`).
+          // Check each option's alias list so those refs still resolve correctly.
+          options.find((option) => option.aliases?.some((alias) => dxnToEntityId(alias) === objectId));
         if (matchingOption) {
           return matchingOption;
         }
