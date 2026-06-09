@@ -19,9 +19,8 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Video } from '#types';
 
-import { VideoArticle } from './VideoArticle';
-
 import { VideoPlugin } from '../../plugin';
+import { VideoArticle } from './VideoArticle';
 
 const DefaultStory = () => {
   const [space] = useSpaces();

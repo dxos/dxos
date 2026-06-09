@@ -65,18 +65,10 @@ const VideoTabs = ({
         <Panel.Content>
           <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
-                role='tabpanel'
-                data={{ subject, attendableId, part: 'transcript' }}
-                limit={1}
-              />
+              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'transcript' }} limit={1} />
             </Tabs.Panel>
             <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
-                role='tabpanel'
-                data={{ subject, attendableId, part: 'summary' }}
-                limit={1}
-              />
+              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'summary' }} limit={1} />
             </Tabs.Panel>
           </Tabs.Viewport>
         </Panel.Content>

@@ -8,9 +8,7 @@ import { toEmbedUrl } from './embed-url-parsers';
 
 describe('toEmbedUrl', () => {
   test('maps a YouTube watch URL to an embed URL', ({ expect }) => {
-    expect(toEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    );
+    expect(toEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ');
   });
 
   test('maps a youtu.be short URL to an embed URL', ({ expect }) => {
@@ -18,9 +16,7 @@ describe('toEmbedUrl', () => {
   });
 
   test('passes through an existing YouTube embed URL', ({ expect }) => {
-    expect(toEmbedUrl('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe(
-      'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    );
+    expect(toEmbedUrl('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe('https://www.youtube.com/embed/dQw4w9WgXcQ');
   });
 
   test('maps a Vimeo URL to a player URL', ({ expect }) => {
