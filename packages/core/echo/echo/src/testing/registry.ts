@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from '@effect-atom/atom/Atom';
 import * as Layer from 'effect/Layer';
 
 import { Event } from '@dxos/async';
@@ -38,5 +39,6 @@ export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Re
     },
     firstOrUndefined: async () => undefined,
     subscribe: () => () => {},
+    atom: Atom.make((): never[] => []),
   })) as Registry.Registry['query'],
 } satisfies Registry.Registry);
