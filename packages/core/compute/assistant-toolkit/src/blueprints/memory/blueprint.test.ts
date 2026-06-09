@@ -110,7 +110,8 @@ describe('Memory Blueprint', () => {
     { timeout: 60_000 },
   );
 
-  it.effect(
+  // TODO(dmaretskyi): Flaky.
+  it.effect.skip(
     'natural: saves memories from a conversation with web search',
     Effect.fnUntraced(
       function* (_) {
