@@ -17,7 +17,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import * as AtomImpl from './atom-impl/obj-atoms';
+import * as atomInternal from './atom-impl/entity-atoms';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
@@ -917,6 +917,6 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom: typeof AtomImpl.make = AtomImpl.make;
-export const atomReactive: typeof AtomImpl.makeWithReactive = AtomImpl.makeWithReactive;
-export const atomProperty: typeof AtomImpl.makeProperty = AtomImpl.makeProperty;
+export const atom: typeof atomInternal.make = atomInternal.make;
+export const atomReactive: typeof atomInternal.makeWithReactive = atomInternal.makeWithReactive;
+export const atomProperty: typeof atomInternal.makeProperty = atomInternal.makeProperty;

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
-import * as AtomImpl from './atom-impl/obj-atoms';
+import * as atomInternal from './atom-impl/entity-atoms';
 import * as internal from './internal';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
@@ -340,4 +340,4 @@ export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void
 // Atoms
 //
 
-export const atom: typeof AtomImpl.makeEntity = AtomImpl.makeEntity;
+export const atom: typeof atomInternal.makeEntity = atomInternal.makeEntity;

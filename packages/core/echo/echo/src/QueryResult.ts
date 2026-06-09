@@ -112,7 +112,7 @@ export interface QueryResult<T> {
    * Self-updating atom. Updates automatically when query results change.
    * Memoized per QueryResult instance — repeated accesses return the same Atom.
    */
-  get atom(): Atom.Atom<T[]>;
+  readonly atom: Atom.Atom<T[]>;
 }
 
 /**

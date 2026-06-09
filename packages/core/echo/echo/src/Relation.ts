@@ -13,7 +13,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import * as AtomImpl from './atom-impl/obj-atoms';
+import * as atomInternal from './atom-impl/entity-atoms';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
@@ -578,4 +578,4 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom: typeof AtomImpl.makeRelation = AtomImpl.makeRelation;
+export const atom: typeof atomInternal.makeRelation = atomInternal.makeRelation;

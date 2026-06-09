@@ -51,14 +51,6 @@ plugins / sdk     (consumer code, imports only @dxos/echo)
 | `AtomQuery.fromQuery(result)`    | `queryResult.atom`           | `Atom<T[]>`                          | Memoized per QueryResult instance                                |
 | `AtomQuery.make(db, query)`      | `db.query(query).atom`       | `Atom<T[]>`                          | Memoized per QueryResult instance                                |
 
-### Key semantic distinction: `Obj.atom(ref)` vs `ref.atom`
-
-Two different behaviors currently exist and must be preserved:
-
-- **`ref.atom`** (`AtomRef.make`) — resolves the ref target once; does not subscribe to the target object's mutations. Use when `T` is not necessarily an `Obj.Unknown` (e.g., a Queue ref, a non-ECHO resource).
-
-- **`Obj.atom(ref)`** (`AtomObj.make(ref)`) — resolves the ref AND subscribes to the target object's snapshots via `Obj.subscribe`. Updates on every mutation of the target object. Use for ECHO objects where you want live reactive snapshots.
-
 ### New API sketch
 
 ```ts
@@ -67,19 +59,13 @@ export namespace Obj {
   // Snapshot atom (most common)
   export function atom<T extends Obj.Unknown>(obj: T): Atom<Obj.Snapshot<T>>;
   export function atom<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom<Obj.Snapshot<T> | undefined>;
-  export function atom<T extends Obj.Unknown>(obj: T | Ref.Ref<T> | undefined): Atom<Obj.Snapshot<T> | undefined>;
 
   // Live reactive atom (for Obj.update calls)
   export function atomReactive<T extends Obj.Unknown>(obj: T): Atom<T>;
   export function atomReactive<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom<T | undefined>;
-  export function atomReactive<T extends Obj.Unknown>(obj: T | Ref.Ref<T> | undefined): Atom<T | undefined>;
 
   // Property atom (fine-grained)
   export function atomProperty<T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom<T[K]>;
-  export function atomProperty<T extends Obj.Unknown, K extends keyof T>(
-    obj: T | undefined,
-    key: K,
-  ): Atom<T[K] | undefined>;
 }
 
 // --- Entity namespace additions ---
@@ -129,14 +115,14 @@ export interface QueryResult<T> {
 
 ### Step 2 — Create `packages/core/echo/echo/src/atom-impl/`
 
-Move the implementation files from `echo-atom` here with minimal changes:
+Create the implementation files in `atom-impl/`:
 
 ```text
 packages/core/echo/echo/src/atom-impl/
-  index.ts          — re-exports for internal use
-  ref-utils.ts      — loadRefTarget helper (moved verbatim from echo-atom)
-  obj-atoms.ts      — objectFamily, refFamily, propertyFamily, objectWithReactiveFamily, refWithReactiveFamily
-  query-atoms.ts    — queryFamily, fromQueryResult, queryableRegistry
+  ref-utils.ts      — loadRefTarget helper
+  entity-atoms.ts   — objectFamily, refFamily, propertyFamily, objectWithReactiveFamily, refWithReactiveFamily, entityFamily, relationFamily
+  ref-atoms.ts      — refSimpleFamily (one-shot ref load)
+  query-atoms.ts    — fromQueryResult
 ```
 
 These files are internal; no direct public export. The `atom-impl/` directory is consumed by the namespace files.
@@ -146,11 +132,11 @@ These files are internal; no direct public export. The `atom-impl/` directory is
 In `packages/core/echo/echo/src/Obj.ts`, add after the existing exports:
 
 ```ts
-import * as AtomImpl from './atom-impl/obj-atoms';
+import * as atomInternal from './atom-impl/entity-atoms';
 
-export const atom = AtomImpl.make;
-export const atomReactive = AtomImpl.makeWithReactive;
-export const atomProperty = AtomImpl.makeProperty;
+export const atom = atomInternal.make;
+export const atomReactive = atomInternal.makeWithReactive;
+export const atomProperty = atomInternal.makeProperty;
 ```
 
 ### Step 4 — Add `Entity.atom` and `Relation.atom`
@@ -158,13 +144,13 @@ export const atomProperty = AtomImpl.makeProperty;
 In `packages/core/echo/echo/src/Entity.ts`:
 
 ```ts
-export const atom = AtomImpl.makeForEntity;
+export const atom = atomInternal.makeEntity;
 ```
 
 In `packages/core/echo/echo/src/Relation.ts`:
 
 ```ts
-export const atom = AtomImpl.makeForRelation;
+export const atom = atomInternal.makeRelation;
 ```
 
 ### Step 5 — Add `atom` getter to `Ref<T>`
