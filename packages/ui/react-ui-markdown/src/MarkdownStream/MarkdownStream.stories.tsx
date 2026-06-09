@@ -124,7 +124,7 @@ const DefaultStory = ({
         random.lorem.paragraph(),
         `<react-widget>${random.lorem.paragraphs(3)}</react-widget>`,
         '',
-      ].join('\n\n'),
+      ].join('\n'),
     );
   }, [controller]);
 

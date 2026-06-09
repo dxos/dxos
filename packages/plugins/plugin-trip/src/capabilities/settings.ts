@@ -10,7 +10,12 @@ import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
 
-import { DEFAULT_TRIP_GAP_DAYS, setTripGapDays } from '../operations/extractor/config';
+import {
+  DEFAULT_PLANNING_WINDOW_DAYS,
+  DEFAULT_TRIP_GAP_DAYS,
+  setPlanningWindowDays,
+  setTripGapDays,
+} from '../operations/extractor/config';
 import { Settings } from '../types/Settings';
 
 /**
@@ -27,7 +32,11 @@ export default Capability.makeModule(
     });
 
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const sync = () => setTripGapDays(registry.get(settingsAtom).tripGapDays ?? DEFAULT_TRIP_GAP_DAYS);
+    const sync = () => {
+      const settings = registry.get(settingsAtom);
+      setTripGapDays(settings.tripGapDays ?? DEFAULT_TRIP_GAP_DAYS);
+      setPlanningWindowDays(settings.tripPlanningWindowDays ?? DEFAULT_PLANNING_WINDOW_DAYS);
+    };
     sync();
     const unsubscribe = registry.subscribe(settingsAtom, sync);
 

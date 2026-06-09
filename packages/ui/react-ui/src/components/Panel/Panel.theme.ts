@@ -19,7 +19,6 @@ const sizes: Record<Size, string> = {
 
 const root: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
-    // prettier-ignore
     'dx-container grid grid-cols-[100%] overflow-hidden',
     // Add uncategorized children to content slot.
     '[&>*:not([data-slot])]:[grid-area:content]',

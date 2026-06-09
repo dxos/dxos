@@ -199,9 +199,6 @@
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-atom/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-db/tsconfig.json"
     },
     {

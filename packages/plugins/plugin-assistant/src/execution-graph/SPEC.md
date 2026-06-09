@@ -295,9 +295,21 @@ the fork visually attached to the correct span identity.
 ### 8.4 Non-collapsible begin event
 
 ```
-branch  = parentBranch              // fork lives on the parent branch
+isProcessBoundary = span.meta.pid != null
+                 && parentSpan.meta.pid != null
+                 && span.meta.pid !== parentSpan.meta.pid
+branch  = isProcessBoundary ? ownBranch : parentBranch
 parents = lastInSpanContext(parentSpan)
 ```
+
+For a nested sub-span within the same process (or a span with no pid of its own),
+the begin commit lives on the **parent** branch — the fork only becomes visible at
+the span's first middle commit. For a **child process** (its own pid, differing
+from the parent's — e.g. a delegated sub-agent), the begin commit instead forks
+onto the span's **own** branch immediately, so a concurrent process gets its own
+lane from its first event rather than sharing the parent's lane until its first
+middle commit (which otherwise made the lane "snap" across as events streamed in).
+Test: `execution-graph.test.ts` → "child process (sub-agent) forks onto its own branch…".
 
 After emission: `beginCommitIdBySpan.set(span.id, commitId)` so any future
 `lastInSpanContext(span)` call can fall back to this commit.

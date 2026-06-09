@@ -5,7 +5,7 @@
 import { type Atom, useAtomSet } from '@effect-atom/atom-react';
 import React from 'react';
 
-import { AtomObj } from '@dxos/echo-atom';
+import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -44,7 +44,7 @@ export const MagazineToolbar = ({
     (get) => {
       const view = get(viewAtom);
       const busy = get(busyAtom);
-      const hasFeeds = (get(AtomObj.makeProperty(magazine, 'feeds')) ?? []).length > 0;
+      const hasFeeds = (get(Obj.atomProperty(magazine, 'feeds')) ?? []).length > 0;
       // Curate is disabled while busy or until there is at least one feed; the tooltip explains why.
       const curateLabel = !hasFeeds ? 'no-feeds.label' : busy ? 'refreshing-magazine.label' : 'curate.label';
 

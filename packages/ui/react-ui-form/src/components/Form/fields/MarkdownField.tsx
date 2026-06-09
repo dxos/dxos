@@ -6,7 +6,6 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { AtomRef } from '@dxos/echo-atom';
 import { createDocAccessor } from '@dxos/echo-db';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
@@ -90,7 +89,7 @@ export const MarkdownField = ({
 
 /** Read-only static rendering for a `Ref<Text>` value: resolve the ref and print its content. */
 const RefStaticText = ({ reference }: { reference: Ref.Ref<any> }) => {
-  const text = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
+  const text = useAtomValue(useMemo(() => reference.atom, [reference]));
   if (!text?.content) {
     return null;
   }
@@ -103,7 +102,7 @@ type RefMarkdownEditorProps = {
 };
 
 const RefMarkdownEditor = ({ reference, placeholder }: RefMarkdownEditorProps) => {
-  const text = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
+  const text = useAtomValue(useMemo(() => reference.atom, [reference]));
   const dataExtensions = useMemo(
     () => (text ? [createDataExtensions({ id: reference.uri, text: createDocAccessor(text, ['content']) })] : []),
     [text, reference],

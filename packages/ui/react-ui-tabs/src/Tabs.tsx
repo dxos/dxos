@@ -6,14 +6,7 @@ import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fl
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  Activity,
-  type ComponentPropsWithoutRef,
-  type MouseEvent,
-  forwardRef,
-  useCallback,
-  useLayoutEffect,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type MouseEvent, forwardRef, useCallback, useLayoutEffect } from 'react';
 
 import {
   Button,
@@ -26,9 +19,15 @@ import {
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Move to @dxos/react-ui.
+
 type TabsActivePart = 'list' | 'panel';
 
 const TABS_NAME = 'Tabs';
+
+//
+// Context
+//
 
 type TabsContextValue = {
   activePart: TabsActivePart;
@@ -41,6 +40,10 @@ const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TA
   activePart: 'list',
   setActivePart: () => {},
 });
+
+//
+// Root
+//
 
 type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
   Partial<
@@ -68,7 +71,6 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
     },
     forwardedRef,
   ) => {
-    // const tabsRoot = useRef<HTMLDivElement | null>(null);
     const tabsRoot = useForwardedRef(forwardedRef);
 
     // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
@@ -129,22 +131,30 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
 
 TabsRoot.displayName = 'Tabs.Root';
 
+//
+// Viewport
+//
+
 type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-function TabsViewport({ classNames, children, ...props }: TabsViewportProps) {
+const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
   const { activePart } = useTabsContext('TabsViewport');
   return (
     <div {...props} data-active={activePart} className={mx(classNames)}>
       {children}
     </div>
   );
-}
+};
 
 TabsViewport.displayName = 'Tabs.Viewport';
 
+//
+// Tablist
+//
+
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
-function TabsTablist({ children, classNames, ...props }: TabsTablistProps) {
+const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   const { orientation } = useTabsContext('TabsTablist');
   return (
     <TabsPrimitive.List
@@ -160,11 +170,15 @@ function TabsTablist({ children, classNames, ...props }: TabsTablistProps) {
       {children}
     </TabsPrimitive.List>
   );
-}
+};
 
 TabsTablist.displayName = 'Tabs.Tablist';
 
-function TabsBackButton({ onClick, classNames, ...props }: ButtonProps) {
+//
+// BackButton
+//
+
+const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
   const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -175,25 +189,31 @@ function TabsBackButton({ onClick, classNames, ...props }: ButtonProps) {
   );
 
   return <Button {...props} classNames={['@md:hidden text-start', classNames]} onClick={handleClick} />;
-}
+};
 
 TabsBackButton.displayName = 'Tabs.BackButton';
 
+//
+// TabGroupHeading
+//
+
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
-function TabsTabGroupHeading({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) {
-  return (
-    <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
-      {children}
-    </h2>
-  );
-}
+const TabsTabGroupHeading = ({ children, classNames, ...props }: TabsTabGroupHeadingProps) => (
+  <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
+    {children}
+  </h2>
+);
 
 TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 
+//
+// Tab
+//
+
 type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-function TabsTab({ value, classNames, children, onClick, ...props }: TabsTabProps) {
+const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
 
@@ -224,13 +244,17 @@ function TabsTab({ value, classNames, children, onClick, ...props }: TabsTabProp
       </Button>
     </TabsPrimitive.Trigger>
   );
-}
+};
 
 TabsTab.displayName = 'Tabs.Tab';
 
+//
+// IconTab
+//
+
 type TabsIconTabProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-function TabsIconTab({ value, classNames, onClick, ...props }: TabsIconTabProps) {
+const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
 
@@ -259,26 +283,35 @@ function TabsIconTab({ value, classNames, onClick, ...props }: TabsIconTabProps)
       />
     </TabsPrimitive.Trigger>
   );
-}
+};
 
 TabsIconTab.displayName = 'Tabs.IconTab';
 
+//
+// Panel
+//
+// Do NOT wrap TabsPanel children in React.Activity.
+// Radix TabsPrimitive.Content already unmounts inactive panels (no forceMount) — inactive tab
+// content is not in the DOM and effects do not run, which is the desired behaviour.
+// React.Activity (experimental in React 19) is a reconciler-level symbol that deactivates its
+// subtree when mode='hidden'. It was redundant here and prevented initial render of active panels.
+//
+
 type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
-function TabsPanel({ classNames, children, ...props }: TabsPanelProps) {
-  const { value: contextValue } = useTabsContext('TabsTab');
-  return (
-    <Activity mode={contextValue === props.value ? 'visible' : 'hidden'}>
-      <TabsPrimitive.Content {...props} className={mx('p-0! dx-focus-ring-inset-over-all', classNames)}>
-        {children}
-      </TabsPrimitive.Content>
-    </Activity>
-  );
-}
+const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => (
+  <TabsPrimitive.Content {...props} className={mx('p-0! dx-focus-ring-inset-over-all', classNames)}>
+    {children}
+  </TabsPrimitive.Content>
+);
 
 TabsPanel.displayName = 'Tabs.Panel';
 
 type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
+
+//
+// Tabs
+//
 
 export const Tabs = {
   Root: TabsRoot,
@@ -287,9 +320,9 @@ export const Tabs = {
   IconTab: TabsIconTab,
   TabPrimitive: TabsPrimitive.Trigger,
   TabGroupHeading: TabsTabGroupHeading,
+  Viewport: TabsViewport,
   Panel: TabsPanel,
   BackButton: TabsBackButton,
-  Viewport: TabsViewport,
 };
 
 export type {
@@ -299,6 +332,6 @@ export type {
   TabsTabProps,
   TabsTabPrimitiveProps,
   TabsTabGroupHeadingProps,
-  TabsPanelProps,
   TabsViewportProps,
+  TabsPanelProps,
 };

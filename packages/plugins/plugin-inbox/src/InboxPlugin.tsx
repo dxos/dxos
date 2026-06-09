@@ -8,6 +8,7 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
+import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
 
 import {
@@ -35,7 +36,14 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message, ExtractedFrom.ExtractedFrom],
+    schema: [
+      Event.Event,
+      Mailbox.Mailbox,
+      Calendar.Calendar,
+      Message.Message,
+      ExtractedFrom.ExtractedFrom,
+      TagIndex.TagIndex,
+    ],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

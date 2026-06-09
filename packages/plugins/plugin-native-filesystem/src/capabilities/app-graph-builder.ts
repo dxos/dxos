@@ -9,7 +9,6 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space';
@@ -145,9 +144,9 @@ export default Capability.makeModule(
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(AtomQuery.make(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
+          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
           if (order) {
-            const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
+            const snapshot = get(Obj.atom(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];
             orderMap = new Map(orderArray.map((id, index) => [id, index]));
             spacesOrder = order;

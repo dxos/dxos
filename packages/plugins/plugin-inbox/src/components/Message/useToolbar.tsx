@@ -22,6 +22,7 @@ export type UseMessageToolbarActionsProps = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  onDelete?: () => void;
 };
 
 export const useMessageActions = ({
@@ -34,6 +35,7 @@ export const useMessageActions = ({
   onReply,
   onReplyAll,
   onForward,
+  onDelete,
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
 
@@ -114,6 +116,18 @@ export const useMessageActions = ({
               },
               onForward,
             )),
+      )
+      .subgraph(
+        onDelete &&
+          ((b) =>
+            b.action(
+              'delete',
+              {
+                label: ['message-toolbar-delete.menu', { ns: meta.id }],
+                icon: 'ph--trash--regular',
+              },
+              onDelete,
+            )),
       );
 
     if (extractorActions.length > 0) {
@@ -144,6 +158,7 @@ export const useMessageActions = ({
     onReply,
     onReplyAll,
     onForward,
+    onDelete,
     extractorActions,
   ]);
 };

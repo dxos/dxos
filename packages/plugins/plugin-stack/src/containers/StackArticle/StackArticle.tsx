@@ -10,7 +10,6 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, type Ref } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -29,11 +28,11 @@ import {
 
 const collectionObjectsFamily = Atom.family((collection: Collection.Collection) =>
   Atom.make((get) => {
-    const snapshot = get(AtomObj.make(collection));
+    const snapshot = get(Obj.atom(collection));
     return (
       snapshot.objects
         // TODO(wittjosiah): Why isn't this type inferred correctly?
-        .map((ref: Ref.Ref<Obj.Unknown>) => get(AtomObj.makeWithReactive(ref)))
+        .map((ref: Ref.Ref<Obj.Unknown>) => get(Obj.atomReactive(ref)))
         .filter(isNonNullable)
     );
   }),

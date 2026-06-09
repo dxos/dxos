@@ -6,7 +6,7 @@ import { Blueprint, Template } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { EnableBlueprints, QueryBlueprints } from './functions';
+import { EnableBlueprints, QueryBlueprints } from './operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprintManager';
 

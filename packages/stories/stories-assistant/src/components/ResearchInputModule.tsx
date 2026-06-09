@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Entity, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
@@ -20,13 +21,22 @@ export const ResearchInputModule = ({ space }: ModuleProps) => {
   );
 
   return (
-    <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
-      {objects.map((object) => (
-        <li key={object.id}>
-          <DebugCard object={object} />
-        </li>
-      ))}
-    </ul>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Text>Research Input</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
+            {objects.map((object) => (
+              <DebugCard key={object.id} object={object} />
+            ))}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -48,4 +48,11 @@ export const getMessageSegmentId = (messageId: string): string => linkedSegment(
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${getMessageSegmentId(messageId)}`;
 
+/**
+ * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
+ * context id (which holds the `single` event selection) so the two selection modes don't collide.
+ * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
+ */
+export const getCalendarRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
+
 export { getCalendarsPath, getCalendarPath };
