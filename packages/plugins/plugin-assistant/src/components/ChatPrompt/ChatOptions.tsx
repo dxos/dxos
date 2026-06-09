@@ -16,21 +16,18 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
 import { meta } from '#meta';
-import { Assistant } from '#types';
+import { Assistant, type ChatPresetProps } from '#types';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
   toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
-export type ChatOptionsProps = {
+export type ChatOptionsProps = ChatPresetProps & {
   chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContext.Binder;
   registry?: Registry.Registry;
-  presets?: { id: string; label: string }[];
-  preset?: string;
-  onPresetChange?: (id: string) => void;
 };
 
 /**

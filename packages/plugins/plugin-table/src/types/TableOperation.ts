@@ -6,7 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { Database, Type, View, DXN } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
@@ -30,14 +29,6 @@ export const CreateTableSchema = Schema.Struct({
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
 const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
-
-export const OnCreateSpace = Operation.make({
-  meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--table--regular' },
-  input: Schema.Struct({
-    space: SpaceSchema,
-  }),
-  output: Schema.Void,
-});
 
 export const OnTypeAdded = Operation.make({
   meta: { key: makeKey('onTypeAdded'), name: 'On Type Added', icon: 'ph--table--regular' },

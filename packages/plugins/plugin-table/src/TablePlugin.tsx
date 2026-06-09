@@ -31,16 +31,6 @@ export const TablePlugin = Plugin.define(meta).pipe(
     translations: [...translations, ...formTranslations, ...tableTranslations],
   }),
   Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(TableOperation.OnCreateSpace, params),
-        ),
-      ),
-  }),
-  Plugin.addModule({
     id: 'on-type-added',
     activatesOn: SpaceEvents.TypeAdded,
     activate: () =>
