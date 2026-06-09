@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -24,6 +25,7 @@ import { trim } from '@dxos/util';
 import { ProcessManager } from '../index';
 import * as ResearchService from '../testing/ResearchService';
 import * as AgentService from './AgentService';
+import { type DelegationStrategy } from './delegation-strategy';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -40,6 +42,20 @@ const Research = Operation.make({
   services: [ResearchService.ResearchService],
 });
 
+/**
+ * Trivial child operation a {@link DelegationStrategy} can spawn as a sub-agent. Returns a derived
+ * string synchronously so the delegation lifecycle can be exercised without an extra LLM turn.
+ */
+const DelegatedWork = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.delegatedWork'),
+    name: 'Delegated work',
+    description: 'Performs a delegated unit of work',
+  },
+  input: Schema.String,
+  output: Schema.String,
+});
+
 const handlers = OperationHandlerSet.make(
   Research.pipe(
     Operation.withHandler(
@@ -47,6 +63,13 @@ const handlers = OperationHandlerSet.make(
         const research = yield* ResearchService.ResearchService;
         const result = yield* research.research(website);
         return result;
+      }),
+    ),
+  ),
+  DelegatedWork.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* (input) {
+        return `done: ${input}`;
       }),
     ),
   ),
@@ -70,8 +93,53 @@ const assistantTestLayerOptions = {
 const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {}) =>
   AssistantTestLayer({
     ...assistantTestLayerOptions,
-    enableToolBackgrounding,
+    agent: { enableToolBackgrounding },
   });
+
+//
+// Delegation (supervisor) fixtures.
+//
+
+interface DelegationHarness {
+  /** Work the stub strategy delegates on the next reconcile (keyed by a stable id). */
+  pending: { id: string; input: string }[];
+  /** Completions observed via the strategy's `onComplete` callback. */
+  completed: { id: string; exit: Exit.Exit<unknown> }[];
+}
+
+const delegationHarness: DelegationHarness = { pending: [], completed: [] };
+
+/**
+ * Stub {@link DelegationStrategy} driven by {@link delegationHarness}: each reconcile delegates the
+ * pending work not already in flight (spawning {@link DelegatedWork} as a linked child) and records
+ * completions, so a test can assert the reconcile → spawn → onChildEvent → onComplete loop.
+ */
+const StubDelegationStrategy: DelegationStrategy = {
+  reconcile: (_feed, activeIds) =>
+    Effect.succeed(
+      delegationHarness.pending
+        .filter((work) => !activeIds.has(work.id))
+        .map((work) => ({
+          id: work.id,
+          spawn: Effect.gen(function* () {
+            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+            const fiber = yield* invoker.invokeFiber(DelegatedWork, work.input);
+            return fiber.pid;
+          }),
+        })),
+    ),
+  onComplete: (_feed, id, exit) =>
+    Effect.sync(() => {
+      delegationHarness.completed.push({ id, exit });
+      // Drop the completed work so a later reconcile does not re-delegate it.
+      delegationHarness.pending = delegationHarness.pending.filter((work) => work.id !== id);
+    }),
+};
+
+const DelegationTestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  agent: { delegationStrategy: StubDelegationStrategy },
+});
 
 describe('Agent Service', () => {
   it.effect(
@@ -290,6 +358,38 @@ describe('Agent Service', () => {
     { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
   );
 
+  describe('delegation (stub)', () => {
+    it.scoped(
+      'delegates work to a sub-agent and folds the result back on completion',
+      Effect.fnUntraced(
+        function* (_) {
+          delegationHarness.pending = [{ id: 'task-1', input: 'forty-two' }];
+          delegationHarness.completed = [];
+
+          const agent = yield* AgentService.createSession();
+          yield* agent.submitPrompt('What is the capital of France?');
+          // Settles on the turn's reply; the delegated child runs in the background (not awaited here).
+          yield* agent.waitForCompletion();
+
+          // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
+          yield* Effect.promise(async () => {
+            await expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1);
+          });
+
+          const [completion] = delegationHarness.completed;
+          expect(completion.id).toBe('task-1');
+          expect(Exit.isSuccess(completion.exit)).toBe(true);
+          if (Exit.isSuccess(completion.exit)) {
+            expect(completion.exit.value).toBe('done: forty-two');
+          }
+        },
+        Effect.provide(DelegationTestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+    );
+  });
+
   //
   // Alarm e2e (memoized LLM).
   //
@@ -304,7 +404,7 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
 
   const AlarmTestLayer = AssistantTestLayer({
     types: [Organization.Organization, Feed.Feed],
-    systemPrompt: ALARM_SYSTEM_PROMPT,
+    agent: { systemPrompt: ALARM_SYSTEM_PROMPT },
     aiServicePreset: 'edge-remote',
     model: 'ai.claude.model.claude-opus-4-6',
   });

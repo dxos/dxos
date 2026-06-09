@@ -46,7 +46,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Routine.MakeOptions, 'name' | 'blueprints' | 'input' | 'output'> {
+interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints' | 'input' | 'output'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
