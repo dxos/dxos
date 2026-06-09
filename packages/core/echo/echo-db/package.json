@@ -51,6 +51,7 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
     "effect": "catalog:",

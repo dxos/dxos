@@ -5,7 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { Obj } from '@dxos/echo';
 
 import { type Magazine, type Subscription } from '../types';
 import { publishedTimestamp } from '../util/date';
@@ -25,8 +25,8 @@ export type MagazineView = 'default' | 'starred' | 'archived';
  */
 const magazinePostsAtom = Atom.family((magazine: Magazine.Magazine) =>
   Atom.make<Subscription.Post[]>((get) => {
-    const refs = get(AtomObj.makeProperty(magazine, 'posts')) ?? [];
-    const posts = refs.map((ref) => get(AtomRef.make(ref))).filter((post): post is Subscription.Post => Boolean(post));
+    const refs = get(Obj.atomProperty(magazine, 'posts')) ?? [];
+    const posts = refs.map((ref) => get(ref.atom)).filter((post): post is Subscription.Post => Boolean(post));
     return [...posts].sort((postA, postB) => publishedTimestamp(postB.published) - publishedTimestamp(postA.published));
   }),
 );

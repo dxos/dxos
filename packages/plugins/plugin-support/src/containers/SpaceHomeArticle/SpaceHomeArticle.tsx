@@ -10,7 +10,6 @@ import { useCapabilities, useCapability, useOperationInvoker, usePluginManager }
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
@@ -88,13 +87,13 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 
   const handleHideWelcome = useCallback(() => setDismissed(true), [setDismissed]);
 
-  // Reactive toolbar: reads the dismissed annotation via get(AtomObj.make(space.properties)) so the
+  // Reactive toolbar: reads the dismissed annotation via get(Obj.atom(space.properties)) so the
   // menu action graph updates without a React re-render cycle when the annotation changes. Always
   // rendered — actions are hidden when welcome is not shown, but the toolbar slot stays visible so
   // future actions can be added without structural changes.
   const menuActions = useMenuBuilder(
     (get) => {
-      const properties = space?.properties ? get(AtomObj.make(space.properties)) : undefined;
+      const properties = space?.properties ? get(Obj.atom(space.properties)) : undefined;
       const isDismissed = properties
         ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
         : false;

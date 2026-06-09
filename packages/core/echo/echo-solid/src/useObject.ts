@@ -6,7 +6,6 @@ import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
 import { Obj, Ref } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 export interface ObjectUpdateCallback<T> {
@@ -146,10 +145,36 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
   // Determine if input is a ref.
   const isRef = createMemo(() => Ref.isRef(resolvedInput()));
 
+  // Signal to notify when a ref's target loads.
+  // Incremented by the ref.atom subscription below so that liveObj re-evaluates.
+  const [refLoadVersion, setRefLoadVersion] = createSignal(0, { equals: false });
+
+  // Subscribe to ref.atom (load-only) to detect when the ref target becomes available.
+  // This drives liveObj reactivity for the property-subscription case.
+  createEffect(() => {
+    const input = resolvedInput();
+    if (!input || !Ref.isRef(input)) {
+      return;
+    }
+    const unsubscribe = registry.subscribe(
+      input.atom,
+      () => {
+        setRefLoadVersion((v) => v + 1);
+      },
+      { immediate: false },
+    );
+    onCleanup(unsubscribe);
+  });
+
   // Get the live object for the callback (refs need to dereference).
+  // For refs, depends on refLoadVersion so it re-evaluates when the target loads.
   const liveObj = createMemo(() => {
     const input = resolvedInput();
-    return isRef() ? (input as Ref.Ref<T>)?.target : (input as T | undefined);
+    if (!isRef()) {
+      return input as T | undefined;
+    }
+    refLoadVersion();
+    return (input as Ref.Ref<T>)?.target;
   });
 
   // Create a stable callback that handles both object and property updates.
@@ -179,8 +204,6 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
   };
 
   if (property !== undefined) {
-    // For property subscriptions on refs, we subscribe to trigger re-render on load.
-    useObjectValue(registry, objOrRef);
     return [useObjectProperty(registry, liveObj, property), callback as ObjectPropUpdateCallback<T[K]>];
   } else {
     return [useObjectValue(registry, objOrRef), callback as ObjectUpdateCallback<T>];
@@ -189,7 +212,7 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
 
 /**
  * Internal function for subscribing to an Echo object or Ref.
- * AtomObj.make handles both objects and refs, returning snapshots.
+ * Obj.atom handles both objects and refs, returning snapshots.
  */
 function useObjectValue<T extends Obj.Unknown>(
   registry: Registry.Registry,
@@ -200,7 +223,9 @@ function useObjectValue<T extends Obj.Unknown>(
 
   // Initialize with the current value (if available).
   const initialInput = resolvedInput();
-  const initialValue = initialInput ? registry.get(AtomObj.make(initialInput)) : undefined;
+  const initialValue = initialInput
+    ? registry.get(Ref.isRef(initialInput) ? Obj.atom(initialInput) : Obj.atom(initialInput as T))
+    : undefined;
   const [value, setValue] = createSignal<T | undefined>(initialValue as T | undefined);
 
   // Subscribe to atom updates.
@@ -212,7 +237,7 @@ function useObjectValue<T extends Obj.Unknown>(
       return;
     }
 
-    const atom = AtomObj.make(input);
+    const atom = Ref.isRef(input) ? Obj.atom(input) : Obj.atom(input as T);
     const currentValue = registry.get(atom);
     setValue(() => currentValue as unknown as T);
 
@@ -240,7 +265,7 @@ function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
 ): Accessor<T[K] | undefined> {
   // Initialize with the current value (if available).
   const initialObj = obj();
-  const initialValue = initialObj ? registry.get(AtomObj.makeProperty(initialObj, property)) : undefined;
+  const initialValue = initialObj ? registry.get(Obj.atomProperty(initialObj, property)) : undefined;
   const [value, setValue] = createSignal<T[K] | undefined>(initialValue);
 
   // Subscribe to atom updates.
@@ -252,7 +277,7 @@ function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
       return;
     }
 
-    const atom = AtomObj.makeProperty(currentObj, property);
+    const atom = Obj.atomProperty(currentObj, property);
     const currentValue = registry.get(atom);
     setValue(() => currentValue);
 

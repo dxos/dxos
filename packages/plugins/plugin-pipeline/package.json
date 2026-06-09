@@ -90,7 +90,6 @@
     "@dxos/compute": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",

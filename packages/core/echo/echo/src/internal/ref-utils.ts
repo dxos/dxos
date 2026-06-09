@@ -4,20 +4,14 @@
 
 import type * as Atom from '@effect-atom/atom/Atom';
 
-import type { Ref } from '@dxos/echo';
+import type { Ref } from './Ref/ref';
 
 /**
  * Internal helper for loading ref targets in atoms.
  * Handles the common pattern of checking for loaded target and triggering async load.
- *
- * @param ref - The ref to load.
- * @param get - The atom context for setSelf.
- * @param onTargetAvailable - Callback invoked when target is available (sync or async).
- *   Should return the value to use for the atom.
- * @returns The result of onTargetAvailable if target is already loaded, undefined otherwise.
  */
 export const loadRefTarget = <T, R>(
-  ref: Ref.Ref<T>,
+  ref: Ref<T>,
   get: Atom.Context,
   onTargetAvailable: (target: T) => R,
 ): R | undefined => {
@@ -28,10 +22,7 @@ export const loadRefTarget = <T, R>(
     return onTargetAvailable(currentTarget);
   }
 
-  // Subscribe to the ref's resolution event in case the target loads later
-  // (e.g. when a sibling client creates the linked object). Without this,
-  // a one-shot async load that fails because the document hasn't propagated
-  // would leave the atom permanently undefined.
+  // Subscribe to the ref's resolution event in case the target loads later.
   const unsubscribe = ref.onResolved(() => {
     const target = ref.target;
     if (target) {
@@ -47,8 +38,7 @@ export const loadRefTarget = <T, R>(
       get.setSelf(onTargetAvailable(loadedTarget));
     })
     .catch(() => {
-      // Loading failed; the resolution subscription above will pick up
-      // cross-client updates when they arrive.
+      // Loading failed; the resolution subscription above will pick up cross-client updates.
     });
 
   return undefined;

@@ -10,7 +10,6 @@ import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-too
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
@@ -84,7 +83,7 @@ export default Capability.makeModule(
         id: 'integrationsSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
+          const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
           if (integrations.length === 0) {
             return Effect.succeed([]);
           }
@@ -115,7 +114,7 @@ export default Capability.makeModule(
           return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
+          const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
           return Effect.succeed(
             integrations
               .map((integration) =>
