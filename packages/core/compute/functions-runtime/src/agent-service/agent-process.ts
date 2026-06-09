@@ -123,186 +123,183 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
 
         return {
-        onInput: Effect.fnUntraced(function* (prompt: string) {
-          log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
-          inputQueue.push({ _tag: 'prompt', content: prompt });
-          log('agent onInput persisting queue', { depth: inputQueue.length });
-          yield* AgentEventsKey.set(inputQueue);
-          log('agent onInput persisted', { depth: inputQueue.length });
-          alarmManager.reconcile(true);
-          log('agent onInput alarm scheduled');
-        }),
-        onAlarm: Effect.fnUntraced(
-          function* () {
-            log('agent onAlarm fired', { pending: inputQueue.length });
+          onInput: Effect.fnUntraced(function* (prompt: string) {
+            log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
+            inputQueue.push({ _tag: 'prompt', content: prompt });
+            log('agent onInput persisting queue', { depth: inputQueue.length });
+            yield* AgentEventsKey.set(inputQueue);
+            log('agent onInput persisted', { depth: inputQueue.length });
+            alarmManager.reconcile(true);
+            log('agent onInput alarm scheduled');
+          }),
+          onAlarm: Effect.fnUntraced(
+            function* () {
+              log('agent onAlarm fired', { pending: inputQueue.length });
 
-            // If the agent scheduled a self-wake that has come due, enqueue a wake-up prompt.
-            const firedAt = yield* alarmManager.takeFiredAlarm();
-            if (firedAt != null) {
-              log('agent onAlarm self-wake', { firedAt });
-              inputQueue.push({ _tag: 'alarm', firedAt });
-              yield* AgentEventsKey.set(inputQueue);
-            }
-
-            // Skip reported tool results at head of queue (stale after reload).
-            while (inputQueue.length > 0) {
-              const head = inputQueue[0];
-              if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
-                inputQueue.shift();
-                log.info('skip tool result that was reported synchronously', { pid: head.pid });
-                continue;
+              // If the agent scheduled a self-wake that has come due, enqueue a wake-up prompt.
+              const firedAt = yield* alarmManager.takeFiredAlarm();
+              if (firedAt != null) {
+                log('agent onAlarm self-wake', { firedAt });
+                inputQueue.push({ _tag: 'alarm', firedAt });
+                yield* AgentEventsKey.set(inputQueue);
               }
-              break;
-            }
 
-            const item = inputQueue.shift();
-            if (!item) {
-              log('agent onAlarm empty queue', {});
-              alarmManager.reconcile(false);
-              yield* AgentEventsKey.set(inputQueue);
-              return;
-            }
+              // Skip reported tool results at head of queue (stale after reload).
+              while (inputQueue.length > 0) {
+                const head = inputQueue[0];
+                if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
+                  inputQueue.shift();
+                  log.info('skip tool result that was reported synchronously', { pid: head.pid });
+                  continue;
+                }
+                break;
+              }
 
-            log('agent onAlarm handling', { tag: item._tag });
+              const item = inputQueue.shift();
+              if (!item) {
+                log('agent onAlarm empty queue', {});
+                alarmManager.reconcile(false);
+                yield* AgentEventsKey.set(inputQueue);
+                return;
+              }
 
-            const prompt: ContentBlock.Any[] = Match.value(item).pipe(
-              Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
-              Match.tag('tool_result', (item) =>
-                item.isError
-                  ? [
+              log('agent onAlarm handling', { tag: item._tag });
+
+              const prompt: ContentBlock.Any[] = Match.value(item).pipe(
+                Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
+                Match.tag('tool_result', (item) =>
+                  item.isError
+                    ? [
                       ContentBlock.Text.make({
                         text: toolErrorResponse(item.pid, item.result as string),
                         disposition: 'synthetic',
                       }),
                     ]
-                  : [
+                    : [
                       ContentBlock.Text.make({
                         text: toolResultResponse(item.pid, item.result),
                         disposition: 'synthetic',
                       }),
                     ],
-              ),
-              Match.tag('alarm', (item) => [
-                ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt), disposition: 'synthetic' }),
-              ]),
-              Match.exhaustive,
-            );
+                ),
+                Match.tag('alarm', (item) => [
+                  ContentBlock.Text.make({ text: wakeUpPrompt(item.firedAt), disposition: 'synthetic' }),
+                ]),
+                Match.exhaustive,
+              );
 
-            log('begin request', { prompt });
-            log('trace agent request begin');
-            yield* Trace.write(AgentRequestBegin, {});
-            yield* session
-              .createRequest({
-                prompt,
-                // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
-                // toolkit: AsynchronousExectionToolkit,
-                toolkit: alarmToolkit,
-                system: options.systemPrompt,
-                mcpServers: options.getMcpServers?.(),
-              })
-              .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
-            log('end request');
-            yield* AgentEventsKey.set(inputQueue);
+              log('begin request', { prompt });
+              log('trace agent request begin');
+              yield* Trace.write(AgentRequestBegin, {});
+              yield* session
+                .createRequest({
+                  prompt,
+                  // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
+                  // toolkit: AsynchronousExectionToolkit,
+                  toolkit: alarmToolkit,
+                  system: options.systemPrompt,
+                  mcpServers: options.getMcpServers?.(),
+                })
+                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
+              log('end request');
+              yield* AgentEventsKey.set(inputQueue);
 
-            // Reconcile outstanding work into linked child processes (supervisor behaviour). The
-            // children are linked, so their exits wake `onChildEvent` below.
-            if (Option.isSome(strategy)) {
-              const activeIds = new Set(delegations.map((delegation) => delegation.id));
-              const pending = yield* strategy.value.reconcile(feed, activeIds);
-              for (const delegation of pending) {
-                const pid = yield* delegation.spawn;
-                delegations.push({ pid, id: delegation.id });
-                log('delegated work', { pid, id: delegation.id });
-              }
-              if (pending.length > 0) {
-                yield* DelegationsKey.set(delegations);
-              }
-            }
-
-            // Reconcile so a pending agent self-wake (or remaining queue work) is rescheduled.
-            alarmManager.reconcile(inputQueue.length > 0);
-          },
-          Effect.orDie,
-          Effect.provide(
-            Layer.mergeAll(
-              makeToolResolverFromOperations(),
-              ToolExecutionService({
-                toolCallManager,
-                feed,
-                enableBackgrounding: options.enableToolBackgrounding ?? false,
-              }),
-              AsynchronousExectionToolkitLayer,
-              AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
-            ).pipe(Layer.orDie),
-          ),
-        ),
-        onChildEvent: Effect.fnUntraced(function* (event) {
-          log('childEvent', { event });
-          if (event._tag === 'exited') {
-            // A delegated sub-agent finished: read its result and hand it to the strategy (which
-            // updates the work item and notifies the user). Unlike tool results, this does not
-            // re-enter the turn — the supervisor folds it in out of band.
-            const delegation = delegations.find((delegation) => delegation.pid === event.pid);
-            if (delegation) {
-              delegations = delegations.filter((other) => other.pid !== event.pid);
-              yield* DelegationsKey.set(delegations);
-              const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-              const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
-              const exit = yield* fiber.await;
+              // Reconcile outstanding work into linked child processes (supervisor behaviour). The
+              // children are linked, so their exits wake `onChildEvent` below.
               if (Option.isSome(strategy)) {
-                yield* strategy.value.onComplete(feed, delegation.id, exit);
+                const activeIds = new Set(delegations.map((delegation) => delegation.id));
+                const pending = yield* strategy.value.reconcile(feed, activeIds);
+                for (const delegation of pending) {
+                  const pid = yield* delegation.spawn;
+                  delegations.push({ pid, id: delegation.id });
+                  log('delegated work', { pid, id: delegation.id });
+                }
+                if (pending.length > 0) {
+                  yield* DelegationsKey.set(delegations);
+                }
               }
-              log('delegated work completed', { pid: event.pid, id: delegation.id, success: Exit.isSuccess(exit) });
-              return;
-            }
 
-            if (!toolCallManager.isToolCall(event.pid)) {
-              log.verbose('childEvent ignored non-tool call', { pid: event.pid });
-              return;
-            }
-
-            const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-            const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
-            if (Exit.isFailure(attachExit)) {
-              // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
-              // delivered synchronously before the interrupted turn.
-              if (
-                toolCallManager.isToolCall(event.pid) ||
-                inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
-                toolCallManager.isReported(event.pid)
-              ) {
-                log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
-                return;
-              }
-              return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
-            }
-            const fiber = attachExit.value;
-            const result = yield* fiber.await.pipe(Effect.orDie).pipe(
-              Effect.map(
-                Exit.match({
-                  onSuccess: (value): AgentEvent => ({
-                    _tag: 'tool_result',
-                    pid: event.pid,
-                    result: value,
-                    isError: false,
-                  }),
-                  onFailure: (cause): AgentEvent => ({
-                    _tag: 'tool_result',
-                    pid: event.pid,
-                    result: Cause.pretty(cause),
-                    isError: true,
-                  }),
+              // Reconcile so a pending agent self-wake (or remaining queue work) is rescheduled.
+              alarmManager.reconcile(inputQueue.length > 0);
+            },
+            Effect.orDie,
+            Effect.provide(
+              Layer.mergeAll(
+                makeToolResolverFromOperations(),
+                ToolExecutionService({
+                  toolCallManager,
+                  feed,
+                  enableBackgrounding: options.enableToolBackgrounding ?? false,
                 }),
-              ),
-            );
-            inputQueue.push(result);
-            log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
-            yield* AgentEventsKey.set(inputQueue);
-            alarmManager.reconcile(true);
-            log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
-          }
-        }),
-      };
+                AsynchronousExectionToolkitLayer,
+                AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
+              ).pipe(Layer.orDie),
+            ),
+          ),
+          onChildEvent: Effect.fnUntraced(function* (event) {
+            log('childEvent', { event });
+            if (event._tag === 'exited') {
+              // A delegated sub-agent finished: read its result and hand it to the strategy (which
+              // updates the work item and notifies the user). Unlike tool results, this does not
+              // re-enter the turn — the supervisor folds it in out of band.
+              const delegation = delegations.find((delegation) => delegation.pid === event.pid);
+              if (delegation) {
+                delegations = delegations.filter((other) => other.pid !== event.pid);
+                yield* DelegationsKey.set(delegations);
+                const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
+                const exit = yield* fiber.await;
+                if (Option.isSome(strategy)) {
+                  yield* strategy.value.onComplete(feed, delegation.id, exit);
+                }
+                log('delegated work completed', { pid: event.pid, id: delegation.id, success: Exit.isSuccess(exit) });
+                // alarmManager.reconcile(true);
+              } else if (toolCallManager.isToolCall(event.pid)) {
+                const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
+                if (Exit.isFailure(attachExit)) {
+                  // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
+                  // delivered synchronously before the interrupted turn.
+                  if (
+                    toolCallManager.isToolCall(event.pid) ||
+                    inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
+                    toolCallManager.isReported(event.pid)
+                  ) {
+                    log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
+                    return;
+                  }
+                  return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
+                }
+                const fiber = attachExit.value;
+                const result = yield* fiber.await.pipe(Effect.orDie).pipe(
+                  Effect.map(
+                    Exit.match({
+                      onSuccess: (value): AgentEvent => ({
+                        _tag: 'tool_result',
+                        pid: event.pid,
+                        result: value,
+                        isError: false,
+                      }),
+                      onFailure: (cause): AgentEvent => ({
+                        _tag: 'tool_result',
+                        pid: event.pid,
+                        result: Cause.pretty(cause),
+                        isError: true,
+                      }),
+                    }),
+                  ),
+                );
+                inputQueue.push(result);
+                log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
+                yield* AgentEventsKey.set(inputQueue);
+                alarmManager.reconcile(true);
+                log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
+              } else {
+                log.verbose('childEvent ignored non-tool call and not a delegation', { pid: event.pid });
+              }
+            }
+          }),
+        };
       }),
   );
 
@@ -366,7 +363,7 @@ const ToolCallState = Schema.Struct({
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable),
 });
-interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
+interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> { }
 
 // Id's of processes who's results were already submitted to the agent.
 const ToolCallStateKey = StorageService.key(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
@@ -677,11 +674,11 @@ const ToolExecutionService = ({
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
             const result = enableBackgrounding
               ? yield* awaitWithReport.pipe(
-                  Effect.timeout(backgroundThreshold),
-                  Effect.catchTag('TimeoutException', () =>
-                    Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
-                  ),
-                )
+                Effect.timeout(backgroundThreshold),
+                Effect.catchTag('TimeoutException', () =>
+                  Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
+                ),
+              )
               : yield* awaitWithReport;
             log('result', { result });
             return yield* result;
@@ -714,7 +711,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
       }),
     },
   }),
-) {}
+) { }
 
 // TODO(dmaretskyi): Currently broken: polling a completed process returns interruped error.
 const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(

@@ -35,7 +35,7 @@ import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { AgentService, type DelegationStrategy } from '../agent-service';
+import { AgentService, type AgentServiceOptions } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
@@ -63,26 +63,11 @@ interface TestLayerOptions {
 
   disableLlmMemoization?: boolean;
 
+  /**
+   * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
+   * The model defaults to the resolved test-layer model when not set here.
+   */
   agent?: AgentServiceOptions;
-
-  /**
-   * Core system prompt for the agent.
-   */
-  systemPrompt?: string;
-
-  /**
-   * If true, long-running tool calls are moved to the background and the agent is notified
-   * asynchronously when they complete. Currently unstable — disabled by default.
-   *
-   * @default false
-   */
-  enableToolBackgrounding?: boolean;
-
-  /**
-   * Optional supervisor behaviour. When provided, the agent reconciles outstanding work into linked
-   * child processes after each turn and folds their results back into the conversation on completion.
-   */
-  delegationStrategy?: DelegationStrategy;
 
   /**
    * Extra services to make available in the service resolver.
@@ -119,7 +104,7 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
-  const agentOptions = options.agent ?? {};
+  const agentOptions: AgentServiceOptions = { ...options.agent };
   agentOptions.model ??= resolvedModel;
 
   return Layer.empty.pipe(

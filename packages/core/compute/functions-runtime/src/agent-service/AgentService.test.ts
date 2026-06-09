@@ -93,7 +93,7 @@ const assistantTestLayerOptions = {
 const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {}) =>
   AssistantTestLayer({
     ...assistantTestLayerOptions,
-    enableToolBackgrounding,
+    agent: { enableToolBackgrounding },
   });
 
 //
@@ -138,7 +138,7 @@ const StubDelegationStrategy: DelegationStrategy = {
 
 const DelegationTestLayer = AssistantTestLayer({
   ...assistantTestLayerOptions,
-  delegationStrategy: StubDelegationStrategy,
+  agent: { delegationStrategy: StubDelegationStrategy },
 });
 
 describe('Agent Service', () => {
@@ -404,7 +404,7 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
 
   const AlarmTestLayer = AssistantTestLayer({
     types: [Organization.Organization, Feed.Feed],
-    systemPrompt: ALARM_SYSTEM_PROMPT,
+    agent: { systemPrompt: ALARM_SYSTEM_PROMPT },
     aiServicePreset: 'edge-remote',
     model: 'ai.claude.model.claude-opus-4-6',
   });
