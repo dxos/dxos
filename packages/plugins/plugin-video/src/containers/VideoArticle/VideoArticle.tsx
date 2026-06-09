@@ -17,75 +17,6 @@ import { Video, VideoOperation } from '#types';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
-const isExternalHttpUrl = (value?: string): boolean => {
-  try {
-    const { protocol } = new URL(value ?? '');
-    return protocol === 'https:' || protocol === 'http:';
-  } catch {
-    return false;
-  }
-};
-
-type VideoTabsProps = {
-  attendableId: string;
-  subject: Video.Video;
-  role: string | undefined;
-  tab: string;
-  onTabChange: (tab: string) => void;
-  onRegenerate: () => void;
-  isRegenerateDisabled: boolean;
-  isSummarizing: boolean;
-};
-
-const VideoTabs = ({
-  attendableId,
-  subject,
-  role,
-  tab,
-  onTabChange,
-  onRegenerate,
-  isRegenerateDisabled,
-  isSummarizing,
-}: VideoTabsProps) => {
-  const { t } = useTranslation(meta.id);
-  return (
-    <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar>
-          <Toolbar.Root>
-            <Tabs.Tablist classNames='p-0'>
-              <Tabs.Tab value='transcript'>{t('transcript.tab.label')}</Tabs.Tab>
-              <Tabs.Tab value='summary'>{t('summary.tab.label')}</Tabs.Tab>
-            </Tabs.Tablist>
-            {tab === 'summary' && (
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--arrows-clockwise--regular'
-                label={t('regenerate.label')}
-                disabled={isRegenerateDisabled}
-                iconClassNames={isSummarizing ? 'animate-spin' : undefined}
-                classNames='ml-auto'
-                onClick={onRegenerate}
-              />
-            )}
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
-            <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'transcript' }} limit={1} />
-            </Tabs.Panel>
-            <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'summary' }} limit={1} />
-            </Tabs.Panel>
-          </Tabs.Viewport>
-        </Panel.Content>
-      </Panel.Root>
-    </Tabs.Root>
-  );
-};
-
 /**
  * Composes the video layout from three independent surfaces (player, transcript, summary).
  * Each part lives in its own surface so the cross-origin player iframe and the CodeMirror editors never share a
@@ -154,7 +85,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
             }}
             limit={1}
           />
-          <VideoTabs
+          <TranscriptTabs
             attendableId={attendableId}
             subject={subject}
             role={role}
@@ -167,5 +98,74 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>
+  );
+};
+
+const isExternalHttpUrl = (value?: string): boolean => {
+  try {
+    const { protocol } = new URL(value ?? '');
+    return protocol === 'https:' || protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
+type TranscriptTabsProps = {
+  attendableId: string;
+  subject: Video.Video;
+  role: string | undefined;
+  tab: string;
+  isRegenerateDisabled: boolean;
+  isSummarizing: boolean;
+  onTabChange: (tab: string) => void;
+  onRegenerate: () => void;
+};
+
+const TranscriptTabs = ({
+  attendableId,
+  subject,
+  role,
+  tab,
+  isRegenerateDisabled,
+  isSummarizing,
+  onTabChange,
+  onRegenerate,
+}: TranscriptTabsProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Tabs.Tablist classNames='p-0'>
+              <Tabs.Tab value='transcript'>{t('transcript.tab.label')}</Tabs.Tab>
+              <Tabs.Tab value='summary'>{t('summary.tab.label')}</Tabs.Tab>
+            </Tabs.Tablist>
+            {tab === 'summary' && (
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--arrows-clockwise--regular'
+                label={t('regenerate.label')}
+                disabled={isRegenerateDisabled}
+                iconClassNames={isSummarizing ? 'animate-spin' : undefined}
+                classNames='ml-auto'
+                onClick={onRegenerate}
+              />
+            )}
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
+            <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
+              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'transcript' }} limit={1} />
+            </Tabs.Panel>
+            <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
+              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'summary' }} limit={1} />
+            </Tabs.Panel>
+          </Tabs.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };

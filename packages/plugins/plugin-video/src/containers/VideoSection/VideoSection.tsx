@@ -10,6 +10,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { VideoPlayer } from '#components';
 import { type Video } from '#types';
 
+// TODO(burdon): Use AppSurface.Section.
 export type VideoSectionProps = {
   subject: Video.Video;
   attendableId: string;
@@ -24,6 +25,5 @@ export const VideoSection = ({ attendableId, subject }: VideoSectionProps) => {
   // The transcript sets the selection point (a seconds offset) to seek the player.
   const selected = useSelected(attendableId, 'single');
   const startTime = selected && /^\d+$/.test(selected) ? Number(selected) : undefined;
-
   return <VideoPlayer url={video.url} startTime={startTime} />;
 };

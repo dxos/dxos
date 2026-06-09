@@ -16,6 +16,7 @@ import { Video, VideoOperation } from '#types';
 
 const SYNC_INTERVAL_MS = 10_000;
 
+// TODO(burdon): Use AppSurface.Section.
 export type TranscriptSectionProps = {
   subject: Video.Video;
   attendableId: string;
@@ -51,16 +52,16 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
 
   // Periodically estimate the current playback position and update currentSeconds so the transcript
   // can scroll to follow the video. Only runs after the user has seeked at least once.
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (!playbackRef.current) {
-        return;
-      }
-      const { offset, startedAt } = playbackRef.current;
-      setCurrentSeconds(offset + (Date.now() - startedAt) / 1000);
-    }, SYNC_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, []);
+  // useEffect(() => {
+  //   const id = setInterval(() => {
+  //     if (!playbackRef.current) {
+  //       return;
+  //     }
+  //     const { offset, startedAt } = playbackRef.current;
+  //     setCurrentSeconds(offset + (Date.now() - startedAt) / 1000);
+  //   }, SYNC_INTERVAL_MS);
+  //   return () => clearInterval(id);
+  // }, []);
 
   // Auto-generate the transcript when missing. The `running` ref guards against re-entrancy across the
   // async gap before the reactive `video.transcript` field updates.
@@ -80,12 +81,18 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
         spaceId: Obj.getDatabase(subject)?.spaceId,
         notify: { error: ['transcribe-error.message', { ns: meta.id }] },
       },
-    ).then(
-      () => { setTranscribeFailed(false); },
-      () => { setTranscribeFailed(true); },
-    ).finally(() => {
-      runningRef.current = false;
-    });
+    )
+      .then(
+        () => {
+          setTranscribeFailed(false);
+        },
+        () => {
+          setTranscribeFailed(true);
+        },
+      )
+      .finally(() => {
+        runningRef.current = false;
+      });
   }, [video.url, video.transcript, invokePromise, subject, retryCount]);
 
   if (!video.transcript) {
@@ -99,6 +106,7 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
         </div>
       );
     }
+
     return <Pending label={t('transcribing.pending.label')} />;
   }
 
@@ -106,10 +114,8 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     <Transcript
       id={`${uri}/transcript`}
       source={video.transcript}
-      onSeek={handleSeek}
       currentSeconds={currentSeconds}
+      onSeek={handleSeek}
     />
   );
 };
-
-export default TranscriptSection;

@@ -40,6 +40,12 @@ const TRANSCRIPT_CONTENT = trim`
 >> Welcome to the show.
 `;
 
+const SUMMARY_CONTENT = trim`
+## Summary
+
+- A short sample summary.
+`;
+
 const meta = {
   title: 'plugins/plugin-video/containers/VideoArticle',
   render: DefaultStory,
@@ -57,7 +63,7 @@ const meta = {
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
               const transcript = space.db.add(Text.make({ content: TRANSCRIPT_CONTENT }));
-              const summary = space.db.add(Text.make({ content: '## Summary\n\n- A short sample summary.' }));
+              const summary = space.db.add(Text.make({ content: SUMMARY_CONTENT }));
               const video = space.db.add(Video.make({ url: VIDEO_URL }));
               Obj.update(video, (video) => {
                 video.transcript = Ref.make(transcript);

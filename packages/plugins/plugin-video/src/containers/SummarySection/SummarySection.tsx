@@ -13,6 +13,7 @@ import { Pending } from '#components';
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
 
+// TODO(burdon): Use AppSurface.Section.
 export type SummarySectionProps = {
   subject: Video.Video;
   attendableId: string;
@@ -41,7 +42,9 @@ export const SummarySection = ({ attendableId, subject }: SummarySectionProps) =
     runningRef.current = true;
     void invokePromise(
       VideoOperation.Summarize,
-      { video: Ref.make(subject) },
+      {
+        video: Ref.make(subject),
+      },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
         notify: { error: ['summarize-error.message', { ns: meta.id }] },
@@ -57,5 +60,3 @@ export const SummarySection = ({ attendableId, subject }: SummarySectionProps) =
 
   return <Surface.Surface role='tabpanel' data={{ subject: summary, attendableId }} limit={1} />;
 };
-
-export default SummarySection;
