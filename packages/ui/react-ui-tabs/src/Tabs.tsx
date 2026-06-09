@@ -290,11 +290,11 @@ TabsIconTab.displayName = 'Tabs.IconTab';
 //
 // Panel
 //
-// Do NOT wrap TabsPanel children in React.Activity (mode='hidden'/'visible').
-// React.Activity is a reconciler-level symbol (experimental in React 19) that deactivates its
-// subtree when mode='hidden' — effects do not run and rendering is deferred indefinitely.
-// This caused surfaces rendered inside inactive tab panels to never mount.
-// Radix TabsPrimitive.Content already handles visibility via CSS (display:none / hidden attr).
+// Do NOT wrap TabsPanel children in React.Activity.
+// Radix TabsPrimitive.Content already unmounts inactive panels (no forceMount) — inactive tab
+// content is not in the DOM and effects do not run, which is the desired behaviour.
+// React.Activity (experimental in React 19) is a reconciler-level symbol that deactivates its
+// subtree when mode='hidden'. It was redundant here and prevented initial render of active panels.
 //
 
 type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
