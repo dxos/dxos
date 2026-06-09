@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
-import { Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { type Context, cancelWithContext } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
@@ -18,6 +18,9 @@ import { ComplexSet } from '@dxos/util';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
+
+/** Max wait for a client handle to leave `pending` during a disk-only probe. */
+const DISK_PROBE_TIMEOUT = 5_000;
 
 /**
  * Options for {@link AutomergeDocumentLoader.loadObjectDocument}.
@@ -353,7 +356,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       // the doc is not on disk, surface "unavailable" without ever
       // blocking on the network.
       if (opts.diskOnly) {
-        const onDisk = await handle.whenSettledOnDisk();
+        const onDisk = await asyncTimeout(handle.whenSettledOnDisk(), DISK_PROBE_TIMEOUT).catch(() => false);
         if (!onDisk) {
           this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
           log('object document unavailable on disk', { objectId, docUrl: handle.url });

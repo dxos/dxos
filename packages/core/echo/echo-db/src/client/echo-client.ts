@@ -239,18 +239,26 @@ export class EchoClient extends Resource {
     }
 
     const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
-    if (objectDocId !== documentId) {
+    if (documentId !== undefined && objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;
     }
 
-    // The object's own doc is loaded via the normal path (which may wait
-    // on the network — important for refs/queries that resolve objects
-    // currently being replicated from another peer). The non-stalling
-    // contract is provided by `CoreDatabase`: recursive strong-dep loads
-    // always run with `diskOnly: true` (see `_onObjectDocumentLoaded`),
-    // and `_areDepsResolved` lets `loadObjectCoreById` resolve with
-    // `undefined` when a dep is unreachable instead of hanging.
-    return db._loadObjectById(objectId, { allowDeleted: true });
+    // Index query hydration must match `SpaceQuerySource`: when the core is
+    // already in the working set, return it without waiting for strong-dep
+    // resolution (which can block on network/disk probes indefinitely).
+    const cached = db.getObjectById(objectId, { deleted: true });
+    if (cached) {
+      return cached;
+    }
+
+    // Load the object's own document when needed. Do not block query results
+    // on strong-dep hydration or network fetch — filters run against the
+    // loaded core's structure, same as the local working-set query path.
+    return db._loadObjectById(objectId, {
+      allowDeleted: true,
+      returnWithUnsatisfiedDeps: true,
+      diskOnly: true,
+    });
   }
 }

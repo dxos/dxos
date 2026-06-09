@@ -4,7 +4,7 @@
 
 import * as Array from 'effect/Array';
 
-import { Event } from '@dxos/async';
+import { Event, TimeoutError, asyncTimeout } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
@@ -42,6 +42,9 @@ export type IndexQueryProviderProps = {
 };
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
+
+/** Per-index-hit object hydration budget (parallel across hits). */
+const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
@@ -268,11 +271,7 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = await this._params.objectLoader.loadObject({
-      spaceId: result.spaceId,
-      objectId: result.id,
-      documentId: result.documentId,
-    });
+    const object = await this._resolveIndexedObject(result);
     if (!object) {
       return null;
     }
@@ -288,6 +287,38 @@ export class IndexQuerySource implements QuerySource {
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
     };
     return queryResult;
+  }
+
+  /**
+   * Hydrate an index hit. Prefer objects already in the local working set
+   * (same as {@link SpaceQuerySource}) so index queries do not block on
+   * strong-dep resolution or network fetches for materialized cores.
+   */
+  private async _resolveIndexedObject(result: RemoteQueryResult): Promise<Entity.Unknown | undefined> {
+    const database = this._params.graph.getDatabase(result.spaceId);
+    if (database) {
+      const cached = database.getObjectById(result.id, { deleted: true });
+      if (cached) {
+        return cached;
+      }
+    }
+
+    try {
+      return await asyncTimeout(
+        this._params.objectLoader.loadObject({
+          spaceId: result.spaceId,
+          objectId: result.id,
+          documentId: result.documentId,
+        }),
+        INDEX_OBJECT_LOAD_TIMEOUT,
+      );
+    } catch (err) {
+      if (err instanceof TimeoutError) {
+        log.warn('index object load timed out', { objectId: result.id, spaceId: result.spaceId });
+        return undefined;
+      }
+      throw err;
+    }
   }
 
   private _closeStream(): void {

@@ -6,6 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { Filter } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { EID, EntityId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
@@ -230,5 +231,62 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(aId), 1000);
     expect(resolved).toBeUndefined();
+  });
+
+  test('db.query(Filter.everything()).run() completes when indexed objects are in the working set with unresolved strong deps', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const mainObjectId = EntityId.random();
+    const depObjectId = EntityId.random();
+
+    const mainDocHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [mainObjectId]: {
+          meta: { keys: [] },
+          data: { title: 'main' },
+          system: {
+            kind: 'object',
+            type: { '/': EID.make({ entityId: depObjectId }) },
+          },
+        },
+      },
+    });
+
+    const sourceBuilder = new EchoTestBuilder();
+    await openAndClose(sourceBuilder);
+    const sourcePeer = await sourceBuilder.createPeer();
+    const orphanDepHandle = await sourcePeer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [depObjectId]: {
+          meta: { keys: [] },
+          data: { name: 'unreachable-dep' },
+          system: { kind: 'object' },
+        },
+      },
+    });
+
+    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    spaceRootHandle.change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
+      newDoc.links[depObjectId] = new A.RawString(orphanDepHandle.url);
+    });
+
+    await sleep(200);
+
+    const partial = await asyncTimeout(
+      db.coreDatabase.loadObjectCoreById(mainObjectId, { returnWithUnsatisfiedDeps: true }),
+      1000,
+    );
+    expect(partial).toBeDefined();
+
+    const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
+    expect(results.some((object) => object.id === mainObjectId)).toBe(true);
   });
 });
