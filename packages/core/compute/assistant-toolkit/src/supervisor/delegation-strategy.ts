@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 
 import { AiContext } from '@dxos/assistant';
 import { Routine } from '@dxos/compute';
-import { Supervisor } from '@dxos/compute-runtime';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
@@ -125,7 +125,11 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
 
         delegations.push({
           id: task.id,
-          spawn: Supervisor.delegate(AgentPrompt, { prompt: Ref.make(routine), input: {} }),
+          spawn: Effect.gen(function* () {
+            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+            const fiber = yield* invoker.invokeFiber(AgentPrompt, { prompt: Ref.make(routine), input: {} });
+            return fiber.pid;
+          }),
         });
       }
       return delegations;

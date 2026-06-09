@@ -25,7 +25,7 @@ import {
 } from '@dxos/assistant';
 import { Credential, McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
-import { ProcessManager, Supervisor } from '@dxos/compute-runtime';
+import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -246,7 +246,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             if (delegation) {
               delegations = delegations.filter((other) => other.pid !== event.pid);
               yield* DelegationsKey.set(delegations);
-              const exit = yield* Supervisor.collectResult(event.pid);
+              const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+              const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
+              const exit = yield* fiber.await;
               if (Option.isSome(strategy)) {
                 yield* strategy.value.onComplete(feed, delegation.id, exit);
               }

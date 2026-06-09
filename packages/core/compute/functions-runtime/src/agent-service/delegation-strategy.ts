@@ -11,7 +11,7 @@ import { type Database, type Feed } from '@dxos/echo';
 
 /**
  * A unit of work the supervisor delegates to a linked child process. `spawn` is an existential over
- * the child operation's input/output types: the strategy constructs it (e.g. via `Supervisor.delegate`)
+ * the child operation's input/output types: the strategy constructs it (e.g. via `invokeFiber`)
  * so {@link AgentProcess} can remain agnostic to the operation type and just track the returned pid.
  */
 export interface Delegation {
@@ -22,7 +22,7 @@ export interface Delegation {
 
   /**
    * Spawns the child for this delegation and returns its process id. Must be linked (non-blocking)
-   * so the child's exit wakes the supervisor's `onChildEvent` — i.e. `Supervisor.delegate`.
+   * so the child's exit wakes the supervisor's `onChildEvent` — i.e. `ProcessOperationInvoker.invokeFiber`.
    */
   readonly spawn: Effect.Effect<Process.ID, never, ProcessManager.ProcessOperationInvoker.Service>;
 }

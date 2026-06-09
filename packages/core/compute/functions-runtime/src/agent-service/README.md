@@ -13,7 +13,7 @@ the agent/plan ECHO types (it cannot depend on `@dxos/assistant-toolkit`).
 ```mermaid
 flowchart TB
   subgraph rt["@dxos/compute-runtime"]
-    SUP["Supervisor<br/>delegate() / collectResult()<br/><i>(linked child via invokeFiber)</i>"]
+    POI["ProcessOperationInvoker<br/>invokeFiber() / attachFiber()<br/><i>(linked child)</i>"]
   end
 
   subgraph fr["@dxos/functions-runtime · agent-service"]
@@ -22,7 +22,7 @@ flowchart TB
     SS["DelegationStrategy <i>(type-only seam)</i><br/>reconcile() / onComplete()"]
     AS --> AP
     AP -. "calls" .-> SS
-    AP --> SUP
+    AP --> POI
   end
 
   subgraph tk["@dxos/assistant-toolkit"]
@@ -38,8 +38,9 @@ flowchart TB
   IMPL --> CAP
 ```
 
-- **`Supervisor`** (runtime primitive, no AI): `delegate` spawns a linked, non-blocking child and
-  returns its `pid`; `collectResult` reads the finished child's `Exit` via the retained fiber.
+- **`ProcessOperationInvoker`** (runtime primitive, no AI): `invokeFiber` spawns a linked,
+  non-blocking child and returns a fiber with `pid`; `attachFiber` + `fiber.await` reads the
+  finished child's `Exit`.
 - **`DelegationStrategy`** (this dir, type-only): the pluggable policy `AgentProcess` calls —
   `reconcile` (what to delegate) and `onComplete` (how to fold a result back). Absent → plain chat.
 - **`makeDelegationStrategy()`** (assistant-toolkit): the concrete, agent/plan-aware implementation,
@@ -48,7 +49,7 @@ flowchart TB
 ## Delegation lifecycle
 
 The child's exit is only a **wake signal** — its output value is read separately via
-`collectResult` (the `ChildEvent` does not carry the payload). `DelegationsKey` persists the
+`attachFiber` + `fiber.await` (the `ChildEvent` does not carry the payload). `DelegationsKey` persists the
 `pid → id` map so a child that exits after the supervisor hibernates can still be correlated.
 
 ```mermaid
@@ -56,7 +57,7 @@ sequenceDiagram
   participant U as User
   participant AP as AgentProcess (supervisor)
   participant ST as DelegationStrategy
-  participant SUP as Supervisor
+  participant POI as ProcessOperationInvoker
   participant CH as Sub-agent (child process)
 
   U->>AP: submitInput(prompt)
@@ -64,17 +65,17 @@ sequenceDiagram
   AP->>ST: reconcile(feed, activeIds)
   ST-->>AP: Delegation[] { id, spawn }
   loop per delegation
-    AP->>SUP: spawn = Supervisor.delegate(op, input)
-    SUP->>CH: invokeFiber (linked, non-blocking)
-    SUP-->>AP: pid
+    AP->>POI: invokeFiber(op, input)
+    POI->>CH: linked child (non-blocking)
+    POI-->>AP: pid
     AP->>AP: DelegationsKey.set(pid → id)
   end
   Note over AP: turn settles via runUntilSettled — supervisor stays IDLE/HYBERNATING and accepts more input
 
   CH-->>AP: exit (wake only — no payload)
   AP->>AP: onChildEvent: match pid → id, drop from DelegationsKey
-  AP->>SUP: collectResult(pid)
-  SUP-->>AP: Exit of output value
+  AP->>POI: attachFiber(pid) + await
+  POI-->>AP: Exit of output value
   AP->>ST: onComplete(feed, id, exit)
   ST->>U: update Task status + post message (reference blocks → dx-anchor)
 ```
@@ -86,5 +87,5 @@ sequenceDiagram
 | `AgentService` / `layer` | `AgentService.ts` | Per-feed session cache (model-aware); wires `delegationStrategy` into `AgentProcess`. |
 | `AgentProcess` | `agent-process.ts` | Turn loop (`onAlarm`) + child-exit wake (`onChildEvent`); owns `DelegationsKey`. |
 | `DelegationStrategy`, `Delegation` | `delegation-strategy.ts` | Type-only seam: `reconcile` / `onComplete`; `Delegation = { id, spawn }`. |
-| `Supervisor.delegate` / `collectResult` | `@dxos/compute-runtime` | Linked-child spawn + result read. |
+| `ProcessOperationInvoker.invokeFiber` / `attachFiber` | `@dxos/compute-runtime` | Linked-child spawn + result read. |
 | `makeDelegationStrategy()` | `@dxos/assistant-toolkit` | Concrete agent/plan-aware strategy. |
