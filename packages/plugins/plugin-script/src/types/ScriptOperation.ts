@@ -40,4 +40,4 @@ export const CreateScript = Operation.make({
     object: Type.getSchema(Script.Script),
   }),
 });
-c
+c;
