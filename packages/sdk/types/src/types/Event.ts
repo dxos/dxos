@@ -12,13 +12,13 @@ import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
+import * as Geo from './Geo';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
 
 /**
  * https://schema.org/Event
  */
-// TODO(burdon): Location (string | Ref<Place>)
 export const Event = Schema.Struct({
   id: Obj.ID,
   title: Schema.optional(Schema.String),
@@ -27,6 +27,17 @@ export const Event = Schema.Struct({
   attendees: Schema.Array(Actor.Actor),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
+
+  /**
+   * Whether the event spans whole days (no time-of-day). Maps to Google Calendar `start.date`/`end.date`
+   * rather than `start.dateTime`/`end.dateTime`.
+   */
+  allDay: Schema.optional(Schema.Boolean),
+
+  /**
+   * Physical location of the event (https://schema.org/Event `location`).
+   */
+  location: Schema.optional(Geo.PostalAddress),
 
   /**
    * Transcript of the meeting.
@@ -55,5 +66,7 @@ export const Event = Schema.Struct({
 );
 
 export type Event = Type.InstanceType<typeof Event>;
-export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>): Event =>
-  Obj.make(Event, { attendees, ...props });
+
+export type MakeProps = MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>;
+
+export const make = ({ attendees = [], ...props }: MakeProps): Event => Obj.make(Event, { attendees, ...props });

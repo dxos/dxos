@@ -16,7 +16,6 @@ import {
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -175,10 +174,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(AtomQuery.make(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
+          const [spacesOrder] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
           const { graph } = capabilities.get(AppCapabilities.AppGraph);
 
-          const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
+          const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
           const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
           const orderMap = new Map(order.map((id, index) => [id, index]));
 
@@ -186,7 +185,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
           spaces.forEach((space) => {
             if (space.state.get() === SpaceState.SPACE_READY) {
-              get(AtomObj.make(space.properties));
+              get(Obj.atom(space.properties));
             }
           });
 
@@ -233,7 +232,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         // Recompute actions when a migration completes (state transition or versionProperty stamp).
         get(CreateAtom.fromObservable(space.state));
         if (space.state.get() === SpaceState.SPACE_READY) {
-          get(AtomObj.make(space.properties));
+          get(Obj.atom(space.properties));
         }
 
         return Effect.succeed(

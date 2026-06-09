@@ -2,24 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isSameDay } from 'date-fns';
-import React, { useCallback } from 'react';
+import { addHours, isSameDay, startOfHour } from 'date-fns';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler } from '#components';
 import { meta } from '#meta';
-import { type Calendar } from '#types';
+import { type Calendar, InboxOperation, DraftEvent } from '#types';
 
-import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
+import { getCalendarRangeSelectionId } from '../../paths';
+import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -37,18 +39,23 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const id = attendableId ?? Obj.getURI(calendar);
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
+  const [selectedDate, setSelectedDate] = useState<Date>();
 
   const feed = calendar.feed?.target;
-  const events = useQuery(
+  // Synced events live in the calendar feed (read-only); draft events are local db objects parented
+  // to this calendar (not yet pushed to Google). Overlay both on the calendar.
+  const syncedEvents = useQuery(
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
-  ).toSorted(byDate());
-
-  // TODO(burdon): Actual test should be if we have synced; not number of messages.
-  const isEmpty = events.length === 0;
+  );
+  const draftEvents = useQuery(db, Query.select(Filter.type(Event.Event))).filter((event) =>
+    DraftEvent.belongsTo(event, calendar.id),
+  );
+  const events = useMemo(() => [...syncedEvents, ...draftEvents].toSorted(byDate()), [syncedEvents, draftEvents]);
 
   const handleDateSelect = useCallback(
     ({ date }: { date: Date }) => {
+      setSelectedDate(date);
       const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
         void invokePromise(LayoutOperation.Select, {
@@ -60,22 +67,17 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [events, id, invokePromise],
   );
 
-  const handleAction = useCallback<EventStackActionHandler>(
-    (action) => {
-      switch (action.type) {
-        case 'current': {
-          const event = events.find((entry) => entry.id === action.eventId);
-          void showItem({
-            contextId: id,
-            selectionId: action.eventId,
-            companion: linkedSegment('event'),
-            path: event ? getObjectPathFromObject(event) : undefined,
-          });
-          break;
-        }
-      }
+  // Persist a committed multi-day range into the selection manager (as ISO date strings) so actions
+  // contributed to the calendar — e.g. plugin-trip's "Plan trip from calendar" — can read it. Uses a
+  // dedicated context id so the `range` mode doesn't collide with the `single` event selection on `id`.
+  const handleRangeSelect = useCallback(
+    ({ range }: { range: { from: Date; to: Date } }) => {
+      void invokePromise(LayoutOperation.Select, {
+        contextId: getCalendarRangeSelectionId(id),
+        subject: { mode: 'range', from: range.from.toISOString(), to: range.to.toISOString() },
+      });
     },
-    [events, id, showItem],
+    [id, invokePromise],
   );
 
   const handleNavigate = useCallback(
@@ -91,6 +93,62 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [events, id, showItem],
   );
 
+  const handleAction = useCallback<EventStackActionHandler>(
+    (action) => {
+      switch (action.type) {
+        case 'current': {
+          handleNavigate(action.eventId);
+          break;
+        }
+      }
+    },
+    [handleNavigate],
+  );
+
+  // Create a draft event (defaulting to the selected day, else now), rounding the start up to the
+  // next whole hour, and focus it.
+  const handleCreate = useCallback(() => {
+    if (!db) {
+      return;
+    }
+    const base = selectedDate ?? new Date();
+    const floor = startOfHour(base);
+    const start = floor.getTime() === base.getTime() ? floor : addHours(floor, 1);
+    const event = db.add(
+      DraftEvent.make({
+        owner: {},
+        description: '',
+        startDate: start.toISOString(),
+        endDate: addHours(start, 1).toISOString(),
+      }),
+    );
+    Obj.setParent(event, subject);
+    handleNavigate(event.id);
+  }, [db, subject, selectedDate, handleNavigate]);
+
+  // Push all draft events for this calendar to Google Calendar.
+  const handleSyncDraft = useCallback(() => {
+    void invokePromise(InboxOperation.SyncDraftEvents, { calendar });
+  }, [invokePromise, calendar]);
+
+  const menuActions = useMenuBuilder(() => {
+    let builder = MenuBuilder.make()
+      .root({ label: ['calendar-toolbar.menu', { ns: meta.id }] })
+      .action(
+        'create-event',
+        { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--calendar-plus--regular' },
+        handleCreate,
+      );
+    if (draftEvents.length > 0) {
+      builder = builder.action(
+        'sync-draft',
+        { label: ['calendar-toolbar-sync.menu', { ns: meta.id }], icon: 'ph--cloud-arrow-up--regular' },
+        handleSyncDraft,
+      );
+    }
+    return builder.build();
+  }, [handleCreate, handleSyncDraft, draftEvents.length]);
+
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
   return (
@@ -105,16 +163,19 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
               <NaturalCalendar.Grid
                 dates={events.map((event) => new Date(event.startDate))}
                 onSelect={handleDateSelect}
+                onSelectRange={handleRangeSelect}
               />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>{isEmpty && <InitializeCalendarAction calendar={subject} />}</Toolbar.Root>
-          </Panel.Toolbar>
+          <Menu.Root {...menuActions} attendableId={id}>
+            <Panel.Toolbar asChild>
+              <Menu.Toolbar />
+            </Panel.Toolbar>
+          </Menu.Root>
           <Panel.Content asChild>
-            {isEmpty ? (
+            {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
               <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />

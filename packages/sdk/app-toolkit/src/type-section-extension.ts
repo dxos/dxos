@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 
 import { whenSpace } from './app-node-matcher';
@@ -40,7 +39,7 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * @idiom org.dxos.app-toolkit.typeSection
  *   applies: Dedicated sidebar sections that list objects of a single ECHO type under a space
  *   instead-of: Only surfacing the type in plugin-space's generic database subtree, which buries it and reduces discoverability for the app user
- *   uses: {@link createTypeSectionExtension}, {@link AppNodeMatcher.whenSpace}, {@link AtomQuery}, {@link Filter.type}, {@link createObjectNode}
+ *   uses: {@link createTypeSectionExtension}, {@link AppNodeMatcher.whenSpace}, {@link Filter.type}, {@link createObjectNode}
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
@@ -62,7 +61,7 @@ export const createTypeSectionExtension = (
     id: typename,
     match: whenSpace,
     connector: (space, get) => {
-      const objects = get(AtomQuery.make(space.db, filter)) as Obj.Unknown[];
+      const objects = get(space.db.query(filter).atom) as Obj.Unknown[];
       if (objects.length === 0) {
         return Effect.succeed([]);
       }

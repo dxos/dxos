@@ -5,8 +5,7 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
-import { type Obj } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { Obj } from '@dxos/echo';
 
 import { type Magazine, type Subscription } from '../types';
 import { getImageUrl, getSnippet } from '../util/post-content';
@@ -33,12 +32,12 @@ export type MagazinePostData = {
 export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
   Atom.make<MagazinePostData>((get) => {
     const [post, magazine] = key;
-    const snapshot = get(AtomObj.make(post));
+    const snapshot = get(Obj.atom(post));
     const ref = post.source;
-    const subscription = ref ? get(AtomRef.make(ref)) : undefined;
+    const subscription = ref ? get(ref.atom) : undefined;
     // `name`/`url` via property atoms — fire only on name/url change (e.g. after first sync).
     const feedName = subscription
-      ? get(AtomObj.makeProperty(subscription, 'name')) || get(AtomObj.makeProperty(subscription, 'url'))
+      ? get(Obj.atomProperty(subscription, 'name')) || get(Obj.atomProperty(subscription, 'url'))
       : undefined;
     const { readAt } = get(postReadAtom(post));
     const { starred } = get(postTagsAtom(post));

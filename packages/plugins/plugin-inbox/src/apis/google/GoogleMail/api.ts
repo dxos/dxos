@@ -107,3 +107,12 @@ export const sendMessage = Effect.fn('sendMessage')(function* (
     ),
   );
 });
+
+/**
+ * Moves a message to the trash (requires the `gmail.modify` scope).
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/trash
+ */
+export const trashMessage = Effect.fn('trashMessage')(function* (userId: string, messageId: string) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', messageId, 'trash']).toString();
+  return yield* makeGoogleApiRequest(url, { method: 'POST' }).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
+});

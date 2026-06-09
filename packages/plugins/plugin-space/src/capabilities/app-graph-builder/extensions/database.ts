@@ -11,8 +11,7 @@ import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -80,7 +79,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Persisted types live in the space db; static/runtime types live in the shared registry.
         // Fan across both so the space's own types appear without leaking other spaces' types.
         const allSchemas = get(
-          AtomQuery.make(space.db, Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())),
+          space.db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).atom,
         );
 
         const userSchemas = allSchemas.filter((type) => {
@@ -107,7 +106,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             return true;
           }
           const typename = Type.getTypename(schema);
-          const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
+          const objects = get(space.db.query(Filter.typename(typename)).atom);
           if (ViewAnnotation.has(schema)) {
             return objects.some((obj) => !viewIndex.isView(obj));
           }
@@ -127,7 +126,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
         const typename = Type.getTypename(schema);
 
@@ -178,16 +177,16 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, typename }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
-        const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
+        const objects = get(space.db.query(Filter.typename(typename)).atom).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
 
         return Effect.succeed(
           objects
             .map((object: Obj.Unknown) => {
-              get(AtomObj.make(object));
+              get(Obj.atom(object));
               return createObjectNode({
                 db: space.db,
                 object,
@@ -213,7 +212,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
         const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
@@ -259,7 +258,8 @@ const createSchemaNode = ({
     Match.when(
       (value: Type.AnyEntity) => Type.getDatabase(value) != null,
       (mutableSchema) => {
-        const snapshot = get(AtomObj.make(mutableSchema));
+        // Type.AnyEntity has KindId=Type at the type level but is a valid ECHO entity at runtime.
+        const snapshot = get(Entity.atom(mutableSchema as unknown as Entity.Unknown));
         return {
           label: (snapshot as { name?: string }).name || [
             'object-name.placeholder',

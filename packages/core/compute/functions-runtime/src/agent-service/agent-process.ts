@@ -23,15 +23,17 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Credential, McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
@@ -51,6 +53,13 @@ interface AgentProcessOptions {
    * @default false
    */
   enableToolBackgrounding?: boolean;
+
+  /**
+   * When provided, the agent acts as a supervisor: after each turn it delegates outstanding work to
+   * linked child processes and folds their results back into the conversation on completion. Absent
+   * (the default) the process behaves as a plain conversational agent.
+   */
+  delegationStrategy?: DelegationStrategy;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -69,7 +78,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
         Operation.Service,
-        OperationRegistry.Service,
+        Registry.Service,
         StorageService.StorageService,
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
@@ -91,6 +100,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
+
         // Read time from the ambient Effect Clock so alarm scheduling and the due-check stay
         // consistent (and both honor a TestClock under tests).
         const clock = yield* Effect.clock;
@@ -104,6 +114,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
         // execution path are stale after reload and would cause onAlarm to drop them.
         yield* toolCallManager.reconcileWithInputQueue(inputQueue);
+
+        // Optional supervisor behaviour: when a strategy is provided, the agent reconciles
+        // outstanding work into linked child processes after each turn and folds their results back
+        // into the conversation on completion. Absent (the default), the process behaves as a plain
+        // conversational agent.
+        const strategy = Option.fromNullable(options.delegationStrategy);
+        let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
 
         return {
           onInput: Effect.fnUntraced(function* (prompt: string) {
@@ -186,6 +203,22 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
               log('end request');
               yield* AgentEventsKey.set(inputQueue);
+
+              // Reconcile outstanding work into linked child processes (supervisor behaviour). The
+              // children are linked, so their exits wake `onChildEvent` below.
+              if (Option.isSome(strategy)) {
+                const activeIds = new Set(delegations.map((delegation) => delegation.id));
+                const pending = yield* strategy.value.reconcile(feed, activeIds);
+                for (const delegation of pending) {
+                  const pid = yield* delegation.spawn;
+                  delegations.push({ pid, id: delegation.id });
+                  log('delegated work', { pid, id: delegation.id });
+                }
+                if (pending.length > 0) {
+                  yield* DelegationsKey.set(delegations);
+                }
+              }
+
               // Reconcile so a pending agent self-wake (or remaining queue work) is rescheduled.
               alarmManager.reconcile(inputQueue.length > 0);
             },
@@ -206,50 +239,64 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onChildEvent: Effect.fnUntraced(function* (event) {
             log('childEvent', { event });
             if (event._tag === 'exited') {
-              if (!toolCallManager.isToolCall(event.pid)) {
-                log.verbose('childEvent ignored non-tool call', { pid: event.pid });
-                return;
-              }
-
-              const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-              const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
-              if (Exit.isFailure(attachExit)) {
-                // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
-                // delivered synchronously before the interrupted turn.
-                if (
-                  toolCallManager.isToolCall(event.pid) ||
-                  inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
-                  toolCallManager.isReported(event.pid)
-                ) {
-                  log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
-                  return;
+              // A delegated sub-agent finished: read its result and hand it to the strategy (which
+              // updates the work item and notifies the user). Unlike tool results, this does not
+              // re-enter the turn — the supervisor folds it in out of band.
+              const delegation = delegations.find((delegation) => delegation.pid === event.pid);
+              if (delegation) {
+                delegations = delegations.filter((other) => other.pid !== event.pid);
+                yield* DelegationsKey.set(delegations);
+                const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
+                const exit = yield* fiber.await;
+                if (Option.isSome(strategy)) {
+                  yield* strategy.value.onComplete(feed, delegation.id, exit);
                 }
-                return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
+                log('delegated work completed', { pid: event.pid, id: delegation.id, success: Exit.isSuccess(exit) });
+                // alarmManager.reconcile(true);
+              } else if (toolCallManager.isToolCall(event.pid)) {
+                const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
+                if (Exit.isFailure(attachExit)) {
+                  // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
+                  // delivered synchronously before the interrupted turn.
+                  if (
+                    toolCallManager.isToolCall(event.pid) ||
+                    inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
+                    toolCallManager.isReported(event.pid)
+                  ) {
+                    log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
+                    return;
+                  }
+                  return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
+                }
+                const fiber = attachExit.value;
+                const result = yield* fiber.await.pipe(Effect.orDie).pipe(
+                  Effect.map(
+                    Exit.match({
+                      onSuccess: (value): AgentEvent => ({
+                        _tag: 'tool_result',
+                        pid: event.pid,
+                        result: value,
+                        isError: false,
+                      }),
+                      onFailure: (cause): AgentEvent => ({
+                        _tag: 'tool_result',
+                        pid: event.pid,
+                        result: Cause.pretty(cause),
+                        isError: true,
+                      }),
+                    }),
+                  ),
+                );
+                inputQueue.push(result);
+                log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
+                yield* AgentEventsKey.set(inputQueue);
+                alarmManager.reconcile(true);
+                log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
+              } else {
+                log.verbose('childEvent ignored non-tool call and not a delegation', { pid: event.pid });
               }
-              const fiber = attachExit.value;
-              const result = yield* fiber.await.pipe(Effect.orDie).pipe(
-                Effect.map(
-                  Exit.match({
-                    onSuccess: (value): AgentEvent => ({
-                      _tag: 'tool_result',
-                      pid: event.pid,
-                      result: value,
-                      isError: false,
-                    }),
-                    onFailure: (cause): AgentEvent => ({
-                      _tag: 'tool_result',
-                      pid: event.pid,
-                      result: Cause.pretty(cause),
-                      isError: true,
-                    }),
-                  }),
-                ),
-              );
-              inputQueue.push(result);
-              log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
-              yield* AgentEventsKey.set(inputQueue);
-              alarmManager.reconcile(true);
-              log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
             }
           }),
         };
@@ -271,6 +318,7 @@ interface ToolExecutionServiceOptions {
   backgroundThreshold?: Duration.Duration;
 
   toolCallManager: ToolCallManager;
+
   feed: Feed.Feed;
 }
 
@@ -292,6 +340,18 @@ type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 const AgentEventsKey = StorageService.key(
   Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
   'inputQueue',
+).pipe(StorageService.withDefault(() => []));
+
+/**
+ * Tracks delegated sub-agent child processes (pid -> correlation id) so that, after a hibernation,
+ * a delegated child's exit can be matched back to the work it was fulfilling.
+ */
+const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).pipe(Schema.mutable);
+type Delegation = Schema.Schema.Type<typeof Delegation>;
+
+const DelegationsKey = StorageService.key(
+  Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
+  'delegations',
 ).pipe(StorageService.withDefault(() => []));
 
 const ToolCallState = Schema.Struct({
@@ -683,8 +743,8 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
  * Instructs model that the tool is running in the background.
  */
 const toolIsRunningInBackgroundResponse = (pid: Process.ID) =>
-  `Tool is running in the background id=${pid}; wait for the completion notification to get the result.`;
-// `Tool is running in the background id=${pid}; use ${AsynchronousExectionToolkit.tools['poll-tools'].name} to get the result.`;
+  `Tool is running in the background (id=${pid}); wait for the completion notification to get the result.`;
+// `Tool is running in the background (id=${pid}); use ${AsynchronousExectionToolkit.tools['poll-tools'].name} to get the result.`;
 
 const toolResultResponse = (pid: string, value: unknown) => `<result pid=${pid}>${JSON.stringify(value)}</result>`;
 
