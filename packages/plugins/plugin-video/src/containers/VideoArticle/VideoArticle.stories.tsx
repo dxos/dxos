@@ -38,6 +38,9 @@ const VIDEO_URL = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 const TRANSCRIPT_CONTENT = trim`
 [0:02](https://youtu.be/dQw4w9WgXcQ?t=2)
 >> Welcome to the show.
+
+[0:02](https://youtu.be/dQw4w9WgXcQ?t=10)
+>> Nice to see you.
 `;
 
 const SUMMARY_CONTENT = trim`

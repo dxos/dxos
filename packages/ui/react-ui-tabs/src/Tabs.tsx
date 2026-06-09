@@ -6,13 +6,7 @@ import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fl
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type ComponentPropsWithoutRef,
-  type MouseEvent,
-  forwardRef,
-  useCallback,
-  useLayoutEffect,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type MouseEvent, forwardRef, useCallback, useLayoutEffect } from 'react';
 
 import {
   Button,
@@ -24,6 +18,8 @@ import {
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
+
+// TODO(burdon): Move to @dxos/react-ui.
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -294,7 +290,7 @@ TabsIconTab.displayName = 'Tabs.IconTab';
 //
 // Panel
 //
-// NOTE(@dmaretskyi): Do NOT wrap TabsPanel children in React.Activity (mode='hidden'/'visible').
+// Do NOT wrap TabsPanel children in React.Activity (mode='hidden'/'visible').
 // React.Activity is a reconciler-level symbol (experimental in React 19) that deactivates its
 // subtree when mode='hidden' — effects do not run and rendering is deferred indefinitely.
 // This caused surfaces rendered inside inactive tab panels to never mount.
