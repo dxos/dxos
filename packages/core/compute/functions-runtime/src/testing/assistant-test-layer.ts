@@ -35,7 +35,7 @@ import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { AgentService, type AgentServiceOptions } from '../agent-service';
+import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
@@ -67,7 +67,7 @@ interface TestLayerOptions {
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
-  agent?: AgentServiceOptions;
+  agent?: AgentService.AgentServiceOptions;
 
   /**
    * Extra services to make available in the service resolver.
@@ -104,7 +104,7 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
-  const agentOptions: AgentServiceOptions = { ...options.agent };
+  const agentOptions: AgentService.AgentServiceOptions = { ...options.agent };
   agentOptions.model ??= resolvedModel;
 
   return Layer.empty.pipe(

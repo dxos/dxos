@@ -924,6 +924,8 @@ class DormantHandle<I, O> implements Handle<I, O> {
 
   runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
+  runUntilSettled = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
   runAndExit = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
 }
 
