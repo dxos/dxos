@@ -303,6 +303,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
+    // Virtual read-only properties on the root meta proxy — sourced from the system
+    // section and the automerge change graph, not from the stored meta section.
+    if (target[symbolNamespace] === META_NAMESPACE && target[symbolPath].length === 0) {
+      if (prop === 'createdAt') {
+        return target[symbolInternals].core.getCreatedAt();
+      }
+      if (prop === 'updatedAt') {
+        return target[symbolInternals].core.getUpdatedAt();
+      }
+    }
+
     const decodedValueAtPath = this._getDecodedValueAtPath(target, prop);
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
@@ -322,6 +333,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return true;
     }
     invariant(typeof prop === 'string');
+
+    // createdAt / updatedAt are virtual read-only properties on the meta proxy.
+    if (target[symbolNamespace] === META_NAMESPACE && (prop === 'createdAt' || prop === 'updatedAt')) {
+      throw new TypeError(`'${prop}' is a read-only system property.`);
+    }
 
     // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals].core;

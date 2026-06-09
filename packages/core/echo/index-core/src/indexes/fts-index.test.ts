@@ -58,7 +58,8 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -104,6 +105,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId,
@@ -125,6 +127,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-1',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId,
@@ -164,7 +167,8 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-100',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -177,7 +181,8 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-200',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -190,7 +195,8 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1000',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -240,6 +246,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -254,6 +261,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -314,7 +322,8 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-1',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -328,7 +337,8 @@ describe('FtsIndex', () => {
           queueNamespace: null,
           documentId: 'doc-2',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -399,6 +409,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -413,6 +424,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -427,6 +439,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -477,6 +490,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-space',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -491,6 +505,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -542,6 +557,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s1',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -556,6 +572,7 @@ describe('FtsIndex', () => {
         queueNamespace: null,
         documentId: 'doc-s2',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -570,6 +587,7 @@ describe('FtsIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -615,7 +633,8 @@ describe('FtsIndex', () => {
             queueNamespace: 'data',
             documentId: null,
             recordId: null,
-            updatedAt: Date.now(),
+            createdAt: null,
+        updatedAt: Date.now(),
             data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
           },
           {
@@ -624,7 +643,8 @@ describe('FtsIndex', () => {
             queueNamespace: 'data',
             documentId: null,
             recordId: null,
-            updatedAt: Date.now(),
+            createdAt: null,
+        updatedAt: Date.now(),
             data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
           },
         ];
@@ -658,7 +678,8 @@ describe('FtsIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
         };
 
@@ -692,7 +713,8 @@ describe('FtsIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
         }));
 

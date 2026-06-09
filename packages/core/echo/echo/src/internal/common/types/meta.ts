@@ -73,6 +73,18 @@ export const EntityMetaSchema = Schema.Struct({
    * Dictionary of annotations to this entity.
    */
   annotations: Dictionary,
+
+  /**
+   * Unix ms timestamp when this entity was created.
+   * Read-only; sourced from the system section of the automerge document — not stored in meta.
+   */
+  createdAt: Schema.optional(Schema.Number),
+
+  /**
+   * Unix ms timestamp of the last automerge change on this entity's document.
+   * Read-only; derived from the automerge change graph — not stored in meta.
+   */
+  updatedAt: Schema.optional(Schema.Number),
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;

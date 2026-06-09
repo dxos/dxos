@@ -102,7 +102,7 @@ export class ObjectCore {
         tags: opts?.meta?.tags ?? [],
         annotations: opts?.meta?.annotations ?? {},
       }),
-      system: {},
+      system: { createdAt: Date.now() },
     });
   }
 
@@ -445,6 +445,37 @@ export class ObjectCore {
 
   setType(ref: EncodedReference): void {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
+  }
+
+  /**
+   * Returns the Unix ms timestamp stored in system.createdAt, or undefined for objects
+   * created before this field was introduced.
+   */
+  getCreatedAt(): number | undefined {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'createdAt']);
+    return typeof value === 'number' ? value : undefined;
+  }
+
+  /**
+   * Returns the Unix ms timestamp of the last automerge change on this document,
+   * or undefined when no change history is available.
+   * Note: second-level precision (automerge change timestamps are Unix seconds).
+   */
+  getUpdatedAt(): number | undefined {
+    const doc = this.doc ?? this.docHandle?.doc();
+    if (!doc) {
+      return undefined;
+    }
+    // `doc` is Doc<EntityStructure>|Doc<DatabaseDirectory>; getChangesMetaSince operates on
+    // the underlying automerge state irrespective of the data type — no typed alternative.
+    const changes = A.getChangesMetaSince(doc as any, []);
+    let maxTime = 0;
+    for (const change of changes) {
+      if (change.time > maxTime) {
+        maxTime = change.time;
+      }
+    }
+    return maxTime > 0 ? maxTime * 1000 : undefined;
   }
 
   getMeta(): EntityMeta {

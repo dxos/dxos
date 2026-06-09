@@ -121,6 +121,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
@@ -159,6 +160,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
       };
@@ -200,7 +202,8 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'd1',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -213,7 +216,8 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'd2',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -226,7 +230,8 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'd3',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: {
             id: EntityId.random(),
             [ATTR_TYPE]: TYPE_B,
@@ -277,7 +282,8 @@ describe('IndexEngine', () => {
           queueNamespace: null,
           documentId: 'doc-done-test',
           recordId: null,
-          updatedAt: Date.now(),
+          createdAt: null,
+        updatedAt: Date.now(),
           data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
         },
       ]);
@@ -313,6 +319,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: { id: id1, [ATTR_TYPE]: TYPE_A, title: 'Doc in space1' },
       };
@@ -322,6 +329,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: { id: id2, [ATTR_TYPE]: TYPE_B, title: 'Doc in space2' },
       };
@@ -365,6 +373,7 @@ describe('IndexEngine', () => {
         queueId: null,
         queueNamespace: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: EntityId.random(),
