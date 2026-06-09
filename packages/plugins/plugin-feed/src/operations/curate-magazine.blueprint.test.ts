@@ -18,7 +18,7 @@ import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
-import { Text } from '@dxos/schema';
+import { StateMap, TagIndex, Text } from '@dxos/schema';
 
 import { MagazineBlueprint } from '../blueprints';
 import { FeedOperation, Magazine, Subscription } from '../types';
@@ -30,7 +30,16 @@ const TestLayer = AssistantTestLayer({
   // FeedOperationHandlerSet provides CurateMagazine + SyncFeed + FetchArticleContent (the blueprint
   // tool); AgentHandlers provides the AgentPrompt handler the curate operation invokes.
   operationHandlers: [FeedOperationHandlerSet, AgentHandlers],
-  types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
+  types: [
+    Feed.Feed,
+    Subscription.Subscription,
+    Subscription.Post,
+    Magazine.Magazine,
+    Tag.Tag,
+    Text.Text,
+    StateMap.StateMap,
+    TagIndex.TagIndex,
+  ],
   blueprints: [MagazineBlueprint.make()],
 });
 
