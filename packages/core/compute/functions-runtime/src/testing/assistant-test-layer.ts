@@ -63,17 +63,10 @@ interface TestLayerOptions {
   disableLlmMemoization?: boolean;
 
   /**
-   * Core system prompt for the agent.
+   * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
+   * The model defaults to the resolved test-layer model when not set here.
    */
-  systemPrompt?: string;
-
-  /**
-   * If true, long-running tool calls are moved to the background and the agent is notified
-   * asynchronously when they complete. Currently unstable — disabled by default.
-   *
-   * @default false
-   */
-  enableToolBackgrounding?: boolean;
+  agent?: AgentService.AgentServiceOptions;
 
   /**
    * Extra services to make available in the service resolver.
@@ -109,22 +102,20 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
+  const agentOptions: AgentService.AgentServiceOptions = { ...options.agent };
+  agentOptions.model ??= resolvedModel;
+
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(
-      AgentService.layer({
-        systemPrompt: options.systemPrompt,
-        model: resolvedModel,
-        enableToolBackgrounding: options.enableToolBackgrounding,
-      }),
-    ),
+    Layer.provideMerge(AgentService.layer(agentOptions)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
     Layer.provideMerge(AiService.model(resolvedModel)),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
-      options.aiService ?? TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+      options.aiService ??
+        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,

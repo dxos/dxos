@@ -8,7 +8,6 @@ import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';
 import { Obj, Query } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { getSpace, isSpace } from '@dxos/react-client/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';
@@ -23,7 +22,7 @@ export const usePipelineBoardModel = (
     }
 
     const space = getSpace(pipeline);
-    const columnsAtom = AtomObj.makeProperty(pipeline, 'columns');
+    const columnsAtom = Obj.atomProperty(pipeline, 'columns');
     const columnAtomFamily = Atom.family<string, Atom.Atom<Pipeline.Column | undefined>>((viewKey: string) =>
       Atom.make((get) => {
         const columns = get(columnsAtom);
@@ -37,7 +36,7 @@ export const usePipelineBoardModel = (
         if (column == null) {
           return [];
         }
-        const viewSnapshot = get(AtomObj.make(column.view));
+        const viewSnapshot = get(Obj.atom(column.view));
         if (!viewSnapshot?.query?.ast) {
           return [];
         }
@@ -46,7 +45,7 @@ export const usePipelineBoardModel = (
         if (!queryTarget) {
           return [];
         }
-        const raw = get(AtomQuery.make(queryTarget, query));
+        const raw = get(queryTarget.query(query).atom);
         return isSpace(queryTarget) ? raw : [...raw].reverse();
       }),
     );

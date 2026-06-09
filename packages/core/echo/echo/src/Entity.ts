@@ -10,6 +10,7 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
+import * as ObjAtoms from './internal/ObjAtoms';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import type * as Tag from './Tag';
@@ -334,3 +335,9 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+
+//
+// Atoms
+//
+
+export const atom = ObjAtoms.makeEntity;

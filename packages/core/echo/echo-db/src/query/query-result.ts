@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Atom from '@effect-atom/atom/Atom';
+
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
@@ -24,6 +26,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   private _resultCache?: QueryResult.EntityEntry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
+  private _atom: Atom.Atom<T[]> | undefined = undefined;
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
@@ -150,6 +153,19 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     }
 
     return unsubscribe;
+  }
+
+  get atom(): Atom.Atom<T[]> {
+    if (!this._atom) {
+      this._atom = Atom.make((get) => {
+        const unsubscribe = this.subscribe(() => {
+          get.setSelf(this.runSync());
+        });
+        get.addFinalizer(unsubscribe);
+        return this.runSync();
+      });
+    }
+    return this._atom;
   }
 
   private _ensureCachePresent(): void {

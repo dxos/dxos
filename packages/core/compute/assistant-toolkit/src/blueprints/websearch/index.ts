@@ -4,4 +4,4 @@
 
 export { default as WebSearchBlueprint } from './blueprint';
 export { WebSearchToolkit, WebSearchToolkitOpaque } from './toolkit';
-export { Fetch as WebSearchFetch, WebSearchHandlers } from './functions';
+export { WebSearchHandlers, WebSearchOperations } from './operations';

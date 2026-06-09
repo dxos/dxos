@@ -19,10 +19,12 @@ export const usePresets = (online: boolean): UsePresets => {
     () => AiServicePresets.filter((preset) => online === (preset.provider === 'dxos-remote')),
     [online],
   );
+
   const presetOptions = useMemo(
     () => presets.map(({ id, model, label }) => ({ id, label: label ?? model })),
     [presets],
   );
+
   useEffect(() => {
     setPreset(presets[0]);
   }, [presets]);

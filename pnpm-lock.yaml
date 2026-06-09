@@ -2864,9 +2864,6 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -4878,6 +4875,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../compute-runtime
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -5578,6 +5578,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       effect:
         specifier: 3.21.3
         version: 3.21.3
@@ -5585,37 +5588,6 @@ importers:
       '@types/node':
         specifier: 22.10.2
         version: 22.10.2
-
-  packages/core/echo/echo-atom:
-    dependencies:
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo-db
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@effect-atom/atom':
-        specifier: 'catalog:'
-        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
-    devDependencies:
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../../common/test-utils
-      effect:
-        specifier: 3.21.3
-        version: 3.21.3
 
   packages/core/echo/echo-db:
     dependencies:
@@ -5682,6 +5654,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2)
@@ -5962,9 +5937,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../echo-atom
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
@@ -5996,9 +5968,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../echo-atom
       '@dxos/effect-atom-solid':
         specifier: workspace:*
         version: link:../../../common/effect-atom-solid
@@ -7074,9 +7043,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7852,9 +7818,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -8124,9 +8087,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -8339,9 +8299,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -8811,9 +8768,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -9017,9 +8971,6 @@ importers:
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
     devDependencies:
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -9074,9 +9025,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -10087,9 +10035,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -10718,9 +10663,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -10917,9 +10859,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -11117,9 +11056,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -11290,9 +11226,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -11460,6 +11393,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11672,9 +11608,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -11957,9 +11890,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -12390,9 +12320,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -12878,9 +12805,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -14065,9 +13989,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -14380,9 +14301,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -14553,9 +14471,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -15345,9 +15260,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
@@ -16087,9 +15999,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -16212,9 +16121,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -16991,9 +16897,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -17412,6 +17315,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -19210,9 +19116,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -19421,9 +19324,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -20436,9 +20336,6 @@ importers:
         specifier: 'catalog:'
         version: 3.0.0
     devDependencies:
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -20758,9 +20655,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-atom':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

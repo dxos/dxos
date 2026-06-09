@@ -35,37 +35,39 @@ export const ChatModule = ({ space }: ModuleProps) => {
 
   const feedTarget = chat?.feed?.target;
 
+  // Honor the view mode selected in ChatOptions (persisted on `chat.view`). Subscribe via
+  // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
+  const [viewValue] = useObject(chat, 'view');
+  const view = Assistant.ChatViews.find((value) => value === viewValue);
+
   if (!chat || !processor) {
     return null;
   }
 
   return (
     <Chat.Root chat={chat} feed={feedTarget} processor={processor}>
-      <Panel.Root className='dx-document'>
+      <Panel.Root>
         <Panel.Toolbar asChild>
-          <Chat.Toolbar />
+          <Chat.Toolbar attendableId={chat.id} alwaysActive>
+            <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content>
+                  <ExecutionGraphModule space={space} />
+                  <Popover.Arrow />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          </Chat.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Chat.Content>
-            <Toolbar.Root>
-              <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
-              <Popover.Root>
-                <Popover.Trigger asChild>
-                  <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content>
-                    <ExecutionGraphModule space={space} />
-                    <Popover.Arrow />
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
-            </Toolbar.Root>
-            <Chat.Thread />
+            <Chat.Thread viewType={view} />
             {hasPlan && (
-              <div className='flex flex-col items-center py-2 overflow-hidden'>
-                <Chat.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
-              </div>
+              <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
             )}
             <Chat.Prompt
               {...chatProps}

@@ -10,6 +10,7 @@ import { Filter } from '@dxos/echo';
 import { ScriptCapabilities } from '@dxos/plugin-script';
 import { ScriptArticle } from '@dxos/plugin-script/containers';
 import { useQuery } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 
 import { type ModuleProps } from './types';
 
@@ -22,8 +23,10 @@ export const ScriptModule = ({ space }: ModuleProps) => {
   }
 
   return (
-    <div className='flex w-full h-[70vh] min-h-[20rem] overflow-auto'>
-      <ScriptArticle role='section' subject={script} settings={settings} env={compiler.environment} />
-    </div>
+    <Panel.Root>
+      <Panel.Content classNames='flex w-full min-h-[20rem] overflow-auto'>
+        <ScriptArticle role='section' subject={script} settings={settings} env={compiler.environment} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
