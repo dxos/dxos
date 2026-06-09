@@ -41,6 +41,12 @@ import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+
+  /**
+   * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
+   * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
+   */
+  aiService?: Layer.Layer<AiService.AiService>;
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
@@ -74,7 +80,7 @@ interface TestLayerOptions {
    * Extra services to make available in the service resolver.
    * Operations can depend on those services.
    */
-  extraServices?: Layer.Layer<any, never, never>;
+  extraServices?: Layer.Layer<never, never, never>;
 }
 
 export type AssistantTestServices =
@@ -120,7 +126,8 @@ export const AssistantTestLayer = (
     Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
-      TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+      options.aiService ??
+        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
@@ -131,7 +138,7 @@ export const AssistantTestLayer = (
  * Service resolver for testing.
  */
 export const AssistantTestServiceResolverLayer = ({
-  extraServices = Layer.empty as any,
+  extraServices = Layer.empty,
 }: Pick<TestLayerOptions, 'extraServices'>) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,
@@ -196,11 +203,11 @@ export const AssistantTestServiceResolverLayer = ({
  * Only storage + registry.
  */
 export const AssistantTestBaseLayer = ({
-  toolkits = [],
   operationHandlers = [],
+  toolkits = [],
   types = [],
-  blueprints = [],
   credentials = [],
+  blueprints = [],
 }: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'blueprints' | 'tracing' | 'credentials'>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)

@@ -46,9 +46,6 @@
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
 - Error handling: use Effect-TS patterns.
-- Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
-  - **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
-  - **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
 - JSDoc comments for public functions, all comments end with period.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
@@ -69,6 +66,61 @@
     (a: string): Bar<any>;
   } = (a): Bar<unknown> => { ... };
   ```
+
+### Testing
+
+- place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
+- **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
+- **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
+- Prefer unified `TestLayer` for all tests instead of creating a separate one for each test.
+- `TestLayer(opts?)` can be parametrized so tests can configure it.
+- Place test layer, configuration, and main definitions on top of the suite, while helpers go on the bottom.
+- Avoid sleep and polling in tests as much as possible. Try to use events and TestClock instead.
+
+### Namespaces exports in packages
+
+- We're converting more and more packages to ones with namespaces exports. Example:
+
+```text
+src/
+  Foo.ts
+  Bar.ts
+  errors.ts
+  index.ts
+  testing/
+    index.ts
+  internal/
+    foo.ts
+    bar.ts
+    baz.ts
+```
+
+```ts
+// index.ts
+export * as Foo from './Foo';
+export * as Bar from './Bar';
+export * from './errors';
+```
+
+```ts
+// Foo.ts
+
+// @import-as-namespace
+export const one = 1;
+export const two = 2;
+export const func: {
+  (a: string): number;
+  (a: number): string;
+} = (a) => {
+  return a;
+};
+```
+
+- Code is organized into modules exported as namespace. Modules have capital case names.
+- `@import-as-namespace` linter directive is used to mark the file as a namespace export.
+- Internal code is hidden in the `internal/` directory that is not exported.
+- `testing/` directory and `errors.ts` are the exception.
+- Use `@dxos/echo` as a reference for this pattern.
 
 ### React
 
