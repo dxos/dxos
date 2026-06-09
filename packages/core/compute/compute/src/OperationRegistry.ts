@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Database, Filter, Query, Registry } from '@dxos/echo';
+import { Database, Filter, Query } from '@dxos/echo';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -49,26 +49,3 @@ export const layer: Layer.Layer<Service, never, Database.Service | OperationHand
     }),
   );
 
-/**
- * Layer that seeds the `Registry.Service` with serialized operation definitions from
- * `OperationHandlerSet.OperationHandlerProvider`. Enables code that queries the echo
- * registry (e.g. `Template.processTemplate`, `makeToolResolverFromOperations`) to find
- * operations that are provided as in-process handlers.
- *
- * Usage: include this layer in your test/app stack after both
- * `Registry.Service` and `OperationHandlerSet.OperationHandlerProvider` are provided.
- */
-export const operationsToRegistryLayer: Layer.Layer<
-  Registry.Service,
-  never,
-  OperationHandlerSet.OperationHandlerProvider | Registry.Service
-> = Layer.effect(
-  Registry.Service,
-  Effect.gen(function* () {
-    const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
-    const registry = yield* Registry.Service;
-    const handlers = yield* handlerSet.handlers;
-    registry.add(handlers.map(Operation.serialize));
-    return registry;
-  }),
-);

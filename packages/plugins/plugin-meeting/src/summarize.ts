@@ -17,7 +17,8 @@ import {
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import { Trace, Operation } from '@dxos/compute';
-import { Database, Registry, Type } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
@@ -67,7 +68,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
         schedule: () => Effect.die('Not available.'),
         invokePromise: async () => ({ error: new Error('Not available.') }),
       } as any),
-      Layer.succeed(Registry.Service, { query: () => ({ run: async () => [], results: [], entries: [], runSync: () => [], runSyncEntries: () => [], first: async () => undefined, firstOrUndefined: async () => undefined, subscribe: () => () => {} }) } as any),
+      registryLayerNoop,
     ),
   ),
 );

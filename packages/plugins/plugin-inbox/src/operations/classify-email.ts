@@ -11,7 +11,8 @@ import * as Option from 'effect/Option';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Registry, Relation, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
@@ -131,7 +132,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(Registry.Service, { query: () => ({ run: async () => [], results: [], entries: [], runSync: () => [], runSyncEntries: () => [], first: async () => undefined, firstOrUndefined: async () => undefined, subscribe: () => () => {} }) } as any),
+          registryLayerNoop,
         ),
       ),
     ),

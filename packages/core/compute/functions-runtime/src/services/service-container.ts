@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Registry } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { ConfiguredCredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { entries } from '@dxos/util';
 
@@ -115,9 +116,7 @@ export class ServiceContainer {
       invokePromise: async () => ({ error: new Error('Not available') }),
     } as any);
 
-    const registryService = Layer.succeed(Registry.Service, {
-      query: () => ({ run: async () => [], results: [], entries: [], runSync: () => [], runSyncEntries: () => [], first: async () => undefined, firstOrUndefined: async () => undefined, subscribe: () => () => {} }),
-    } as any);
+    const registryService = registryLayerNoop;
 
     return Layer.mergeAll(
       ai,

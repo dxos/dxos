@@ -19,7 +19,6 @@ import {
   Credential,
   Operation,
   OperationHandlerSet,
-  OperationRegistry,
   Process,
   Routine,
   ServiceNotAvailableError,
@@ -192,7 +191,18 @@ export const AssistantTestLayer = ({
         configuredCredentialsLayer(credentials),
       ),
     ),
-    Layer.provideMerge(OperationRegistry.operationsToRegistryLayer),
+    Layer.provideMerge(
+      Layer.effect(
+        Registry.Service,
+        Effect.gen(function* () {
+          const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+          const registry = yield* Registry.Service;
+          const handlers = yield* handlerSet.handlers;
+          registry.add(handlers.map(Operation.serialize));
+          return registry;
+        }),
+      ),
+    ),
     Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),

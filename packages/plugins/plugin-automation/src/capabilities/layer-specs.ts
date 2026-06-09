@@ -10,7 +10,7 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';import { ProcessManager } from '@dxos/compute-runtime';
+import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Registry } from '@dxos/echo';
 import {
   AgentService,
@@ -108,7 +108,17 @@ const OperationsToRegistrySpec = LayerSpec.make(
     requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider],
     provides: [Registry.Service],
   },
-  () => OperationRegistry.operationsToRegistryLayer,
+  () =>
+    Layer.effect(
+      Registry.Service,
+      Effect.gen(function* () {
+        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const registry = yield* Registry.Service;
+        const handlers = yield* handlerSet.handlers;
+        registry.add(handlers.map(Operation.serialize));
+        return registry;
+      }),
+    ),
 );
 
 /**

@@ -14,7 +14,7 @@ import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
-import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { type Credential, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { type Database, Feed, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-db';
 import { credentialsLayerFromDatabase } from '@dxos/functions';
@@ -78,7 +78,18 @@ export const chatLayer = ({
   );
 
   return operationServiceLayer.pipe(
-    Layer.provideMerge(OperationRegistry.operationsToRegistryLayer),
+    Layer.provideMerge(
+      Layer.effect(
+        Registry.Service,
+        Effect.gen(function* () {
+          const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+          const registry = yield* Registry.Service;
+          const handlers = yield* handlerSet.handlers;
+          registry.add(handlers.map(Operation.serialize));
+          return registry;
+        }),
+      ),
+    ),
     Layer.provideMerge(registryLayer()),
     Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),

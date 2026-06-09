@@ -11,7 +11,8 @@ import * as Option from 'effect/Option';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation } from '@dxos/compute';
-import { Database, Registry } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { trim } from '@dxos/util';
 
 import { TranscriptOperation } from '../types';
@@ -58,7 +59,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(Registry.Service, { query: () => ({ run: async () => [], results: [], entries: [], runSync: () => [], runSyncEntries: () => [], first: async () => undefined, firstOrUndefined: async () => undefined, subscribe: () => () => {} }) } as any),
+          registryLayerNoop,
         ),
       ),
     ),
