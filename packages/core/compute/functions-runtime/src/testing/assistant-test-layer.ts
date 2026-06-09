@@ -109,9 +109,7 @@ export const AssistantTestLayer = (
 
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(
-      AgentService.layer(agentOptions),
-    ),
+    Layer.provideMerge(AgentService.layer(agentOptions)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
@@ -119,7 +117,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??
-      TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
@@ -237,7 +235,7 @@ const AssistantTestTracingLayer = (
     Match.exhaustive,
   );
 
-interface TestLayerWithTriggersOptions extends TestLayerOptions { }
+interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 
 export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerDispatcher | TriggerStateStore;
 
