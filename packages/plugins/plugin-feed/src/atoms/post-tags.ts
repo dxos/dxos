@@ -4,8 +4,8 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { TagIndex } from '@dxos/app-toolkit';
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
+import { TagIndex } from '@dxos/schema';
 
 import { Subscription } from '../types';
 
@@ -49,11 +49,15 @@ export const postTagsAtom = Atom.family((post: Subscription.Post) =>
     if (!subscription) {
       return EMPTY_TAG_SLICE;
     }
+    const tagIndex = get(subscription.tags.atom);
+    if (!tagIndex) {
+      return EMPTY_TAG_SLICE;
+    }
     const db = Obj.getDatabase(subscription);
     const { starredUri, archivedUri } = db ? get(tagUrisAtom(db)) : EMPTY_TAG_URIS;
     return {
-      starred: get(TagIndex.atom(subscription, 'tags', post.id, starredUri)),
-      archived: get(TagIndex.atom(subscription, 'tags', post.id, archivedUri)),
+      starred: get(TagIndex.atom(tagIndex, post.id, starredUri)),
+      archived: get(TagIndex.atom(tagIndex, post.id, archivedUri)),
     };
   }).pipe(Atom.keepAlive),
 );

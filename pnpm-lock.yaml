@@ -9067,6 +9067,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -16934,6 +16937,9 @@ importers:
         specifier: 3.21.3
         version: 3.21.3
     devDependencies:
+      '@automerge/automerge':
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client

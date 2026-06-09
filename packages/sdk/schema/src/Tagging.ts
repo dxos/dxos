@@ -14,36 +14,30 @@ import * as TagIndex from './TagIndex';
  * or alongside it (immutable feed/queue objects).
  *
  * - Mutable database objects track their tags in `Obj.getMeta(obj).tags` (an array of `Ref<Tag>`).
- * - Immutable feed objects can't carry their own meta, so their tags live in a {@link TagIndex} on
- *   a host object; pass that host via {@link Options.host}.
+ * - Immutable feed objects can't carry their own meta, so their tags live in a {@link TagIndex}
+ *   object referenced from a host; pass that index via {@link Options.index}.
  *
  * Either way the tag id is an existing {@link Tag} object's id/URI, so the same tag applies across
  * mutable and immutable objects and its label is resolved (and edited) in one place. This API works
  * in terms of those URI tag ids; on the mutable path it converts to/from the stored `Ref<Tag>`.
  */
 export interface Options {
-  /** Host object whose tag index holds tags for the (immutable) object. Omit for mutable objects. */
-  host?: Obj.Any;
-  /** Tag-index field name on the host (default `tags`). */
-  key?: string;
+  /** Tag index holding tags for the (immutable) object. Omit for mutable objects. */
+  index?: TagIndex.TagIndex;
 }
 
-const DEFAULT_KEY = 'tags';
-
 /** Returns the tag ids (URIs) applied to an object. */
-export const get = (object: Obj.Any | Obj.Snapshot<Obj.Any>, options: Options = {}): string[] => {
-  const { host, key = DEFAULT_KEY } = options;
-  if (host) {
-    return TagIndex.bind(host, key).tags(object.id);
+export const get = (object: Obj.Any | Obj.Snapshot<Obj.Any>, { index }: Options = {}): string[] => {
+  if (index) {
+    return TagIndex.bind(index).tags(object.id);
   }
   return Obj.getMeta(object).tags.map((tag) => tag.uri);
 };
 
 /** Applies a tag (by id/URI) to an object (idempotent). */
-export const set = (object: Obj.Any, tagId: string, options: Options = {}): void => {
-  const { host, key = DEFAULT_KEY } = options;
-  if (host) {
-    TagIndex.bind(host, key).setTag(tagId, object.id);
+export const set = (object: Obj.Any, tagId: string, { index }: Options = {}): void => {
+  if (index) {
+    TagIndex.bind(index).setTag(tagId, object.id);
     return;
   }
   // Stored tag refs are canonical EIDs (read-time upgrade normalizes legacy DXN ids); normalize the
@@ -58,10 +52,9 @@ export const set = (object: Obj.Any, tagId: string, options: Options = {}): void
 };
 
 /** Removes a tag (by id/URI) from an object. No-op when not present. */
-export const unset = (object: Obj.Any, tagId: string, options: Options = {}): void => {
-  const { host, key = DEFAULT_KEY } = options;
-  if (host) {
-    TagIndex.bind(host, key).unsetTag(tagId, object.id);
+export const unset = (object: Obj.Any, tagId: string, { index }: Options = {}): void => {
+  if (index) {
+    TagIndex.bind(index).unsetTag(tagId, object.id);
     return;
   }
   const id = EID.tryParse(tagId) ?? tagId;
