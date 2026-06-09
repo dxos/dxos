@@ -9,8 +9,8 @@ import { DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as TagIndex from './TagIndex';
 import * as Tagging from './Tagging';
+import * as TagIndex from './TagIndex';
 
 /** A minimal immutable feed item. */
 const Item = Schema.Struct({

@@ -48,9 +48,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
                 [...sourceById].map(([entityId, source]) =>
                   Database.load(source).pipe(
                     // Resolve the child tag index so `hasTag` can read it synchronously below.
-                    Effect.tap((subscription) =>
-                      Database.load(subscription.tags),
-                    ),
+                    Effect.tap((subscription) => Database.load(subscription.tags)),
                     Effect.map((subscription) => [entityId, subscription] as const),
                   ),
                 ),

@@ -28,7 +28,9 @@ describe('postReadAtom', () => {
   });
 
   test('fires when this post is marked read', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     await db.flush();
@@ -46,7 +48,9 @@ describe('postReadAtom', () => {
   });
 
   test('does not fire when a sibling post is marked read', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     const postB = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -64,7 +68,9 @@ describe('postReadAtom', () => {
   });
 
   test('does not fire when an unrelated subscription field changes', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     await db.flush();
@@ -95,7 +101,9 @@ describe('postTagsAtom', () => {
   });
 
   test('fires when this post is starred', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     await db.flush();
@@ -116,7 +124,9 @@ describe('postTagsAtom', () => {
   });
 
   test('does not fire when a sibling post is starred (after tag warm-up)', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     const postB = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
