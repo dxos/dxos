@@ -63,7 +63,7 @@ export default Capability.makeModule(
     let personalSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
     let personalSpaceInitialized = false;
 
-    const personalSpaceInitEffect =  (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) =>
+    const personalSpaceInitEffect = (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) =>
       Effect.gen(function* () {
         yield* Effect.promise(() => personalSpace.waitUntilReady());
 
