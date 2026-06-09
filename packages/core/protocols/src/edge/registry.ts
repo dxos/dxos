@@ -10,6 +10,9 @@ import * as Schema from 'effect/Schema';
  * Defined locally rather than imported from @dxos/app-framework to keep the protocols
  * package free of UI/runtime dependencies. Consumers can treat decoded values as
  * `Plugin.Meta` directly.
+ *
+ * @deprecated Used only by the GitHub-backed hydration pipeline (`hydrate.ts`).
+ * New code should use {@link PluginProfileSchema} instead.
  */
 export const PluginMetaSchema = Schema.Struct({
   id: Schema.String.pipe(Schema.nonEmptyString()),
@@ -24,13 +27,6 @@ export const PluginMetaSchema = Schema.Struct({
   iconHue: Schema.optional(Schema.String),
 });
 export type PluginMeta = Schema.Schema.Type<typeof PluginMetaSchema>;
-
-/**
- * Health signal the registry service attaches to a hydrated entry when a refresh fails.
- * Clients surface the appropriate badge or filter entries based on this field.
- */
-export const PluginHealthSchema = Schema.Literal('ok', 'release-missing', 'manifest-invalid', 'repo-unavailable');
-export type PluginHealth = Schema.Schema.Type<typeof PluginHealthSchema>;
 
 /**
  * Filename of the entry module every plugin must publish at the root of its bundle.
@@ -61,26 +57,99 @@ export const PluginManifestSchema = Schema.Struct({
 });
 export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
 
+// ─── ATProto-native registry view ────────────────────────────────────────────
+
 /**
- * Single hydrated plugin entry returned by the registry service.
+ * A single installable release of a plugin, projected from a `package.release`
+ * ATProto record.
+ */
+export const PluginReleaseSchema = Schema.Struct({
+  /** Semver version string, e.g. `0.8.3`. */
+  version: Schema.String.pipe(Schema.nonEmptyString()),
+  /** URL the host dynamic-imports to install this specific version. */
+  moduleUrl: Schema.String.pipe(Schema.nonEmptyString()),
+});
+export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
+
+/**
+ * Verbatim content of a `package.profile` ATProto record, minus the rkey which is
+ * lifted to {@link PluginEntrySchema.slug}. Display metadata only — no runtime identity.
+ */
+export const PluginProfileSchema = Schema.Struct({
+  /** Plugin display name. */
+  name: Schema.String.pipe(Schema.nonEmptyString()),
+  description: Schema.optional(Schema.String),
+  /** Publisher's homepage or plugin documentation URL. */
+  homepage: Schema.optional(Schema.String),
+  /** Source repository URL. */
+  source: Schema.optional(Schema.String),
+  tags: Schema.optional(Schema.Array(Schema.String)),
+  screenshots: Schema.optional(Schema.Array(Schema.String)),
+  icon: Schema.optional(Schema.String),
+  iconHue: Schema.optional(Schema.String),
+});
+export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
+
+/**
+ * A single hydrated plugin entry returned by `GET /registry/plugins`.
+ *
+ * This is an indexer-assembled *view* — analogous to emdash's `PackageView` — projected
+ * from four ATProto record types: `package.profile`, `package.release`,
+ * `publisher.profile`, and `publisher.verification`. It is NOT a direct serialization
+ * of any single ATProto record.
+ *
+ * Design notes:
+ * - `slug` is required to be a valid NSID (e.g. `org.dxos.plugin.excalidraw`), making it
+ *   the single identifier for both PDS addressing and the composer runtime plugin id.
+ *   `DXN.make(slug, latestVersion)` reconstructs the canonical `Plugin.Meta.key`.
+ * - `releases` inlines all known versions, eliminating a separate versions round-trip for
+ *   the version picker. Ordered newest-first.
+ * - `latestVersion` is a convenience pointer into `releases` indicating the recommended
+ *   install target.
  */
 export const PluginEntrySchema = Schema.Struct({
-  /** GitHub repository in `owner/name` form. Empty string for entries sourced from a `manifestUrl`. */
-  repo: Schema.String,
-  /** Plugin metadata from the repo's latest-release `manifest.json`. */
-  meta: PluginMetaSchema,
+  // ── Addressing / provenance (indexer-derived) ────────────────────────────
   /**
-   * URL of the plugin's `manifest.json`. Composer's URL loader fetches this, eagerly caches
-   * every declared asset via the platform `PluginAssetCache`, then dynamic-imports the entry.
-   * The URL must be CORS-safe and have its declared assets reachable as siblings.
+   * `at://` URI of the source `package.profile` record.
+   * Globally unique and stable — never changes after the record is published.
    */
-  moduleUrl: Schema.String,
-  /** Release tag the entry was resolved from (e.g. `v0.1.0`). Empty string for `manifestUrl` entries. */
-  releaseTag: Schema.String,
-  /** Health signal set by the service when an entry fails to refresh. */
-  health: PluginHealthSchema,
-  /** Unix ms when this entry was last successfully hydrated. */
-  hydratedAt: Schema.Number,
+  uri: Schema.String.pipe(Schema.nonEmptyString()),
+  /** Publisher DID, e.g. `did:plc:abc…`. Cryptographic identity; never changes. */
+  did: Schema.String.pipe(Schema.nonEmptyString()),
+  /**
+   * Publisher AT Protocol handle at index time, e.g. `alice.bsky.social`.
+   * Display-only — handles can be reassigned; never use as a stable key.
+   */
+  handle: Schema.optional(Schema.String),
+  /**
+   * Package slug — the rkey of the `package.profile` record.
+   * MUST be a valid NSID (e.g. `org.dxos.plugin.excalidraw`).
+   * Serves as both the PDS record address and the composer plugin id.
+   * `DXN.make(slug, latestVersion)` yields the canonical `Plugin.Meta.key`.
+   */
+  slug: Schema.String.pipe(Schema.nonEmptyString()),
+  /** Unix ms when the indexer last assembled this entry. */
+  indexedAt: Schema.Number,
+  /**
+   * Trust labels derived from curator `publisher.verification` records.
+   * An empty array means the entry has no verification signal.
+   */
+  labels: Schema.Array(Schema.String),
+
+  // ── Verbatim profile record content ─────────────────────────────────────
+  profile: PluginProfileSchema,
+
+  // ── Releases (projected from package.release records) ───────────────────
+  /**
+   * All known releases for this package, ordered newest-first.
+   * Powers the version picker directly — no separate endpoint needed.
+   */
+  releases: Schema.Array(PluginReleaseSchema),
+  /**
+   * The latest (recommended) release version. Always references an entry in `releases`.
+   * Used by the host to determine whether an update is available.
+   */
+  latestVersion: Schema.String.pipe(Schema.nonEmptyString()),
 });
 export type PluginEntry = Schema.Schema.Type<typeof PluginEntrySchema>;
 
@@ -88,61 +157,19 @@ export type PluginEntry = Schema.Schema.Type<typeof PluginEntrySchema>;
  * Response body of `GET /registry/plugins`.
  */
 export const GetPluginsResponseBodySchema = Schema.Struct({
-  /** Wire-format schema version, pinned to 1. */
-  version: Schema.Literal(1),
-  /** Hydrated entries. Order matches the order in the upstream catalog manifest. */
+  /** Wire-format schema version, pinned to 2. */
+  version: Schema.Literal(2),
+  /** Hydrated entries. */
   plugins: Schema.Array(PluginEntrySchema),
-  /** Unix ms timestamp of the most recent successful refresh cycle. */
+  /** Unix ms timestamp of the most recent successful index cycle. */
   refreshedAt: Schema.Number,
 });
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
 
 /**
- * A single published version of a plugin, as returned by the registry service's
- * versions endpoint. Sourced from the publishing project's GitHub releases.
- *
- * The host treats `tag` opaquely; ordering — newest first — is the service's
- * responsibility (typically reverse-chronological by release date).
- */
-export const PluginVersionSchema = Schema.Struct({
-  /** Release tag (e.g. `v0.1.21`). Stable identifier for this version. */
-  tag: Schema.String.pipe(Schema.nonEmptyString()),
-  /**
-   * URL of this version's `manifest.json`. Matches the shape of {@link PluginEntrySchema.fields.moduleUrl}
-   * but pinned to a specific release rather than the latest. Composer's URL loader fetches
-   * this when the user installs / rolls back to this version.
-   */
-  moduleUrl: Schema.String.pipe(Schema.nonEmptyString()),
-  /** Unix ms when the version was released. Optional — services that lack this signal can omit. */
-  releasedAt: Schema.optional(Schema.Number),
-});
-export type PluginVersion = Schema.Schema.Type<typeof PluginVersionSchema>;
-
-/**
- * Response body of `GET /registry/plugins/:repo/versions`.
- *
- * `:repo` is the GitHub `owner/name` form, URL-encoded (so `/` is escaped).
- * Returns all hydratable releases for the repo, newest first; clients display them
- * in the version picker for install / roll-back. Unauthenticated; same surface area
- * as `GET /registry/plugins`.
- */
-export const GetPluginVersionsResponseBodySchema = Schema.Struct({
-  /** Wire-format schema version, pinned to 1. */
-  version: Schema.Literal(1),
-  /** Available versions for the requested repo, newest first. */
-  versions: Schema.Array(PluginVersionSchema),
-  /** Unix ms timestamp of the most recent successful refresh cycle for this repo. */
-  refreshedAt: Schema.Number,
-});
-export type GetPluginVersionsResponseBody = Schema.Schema.Type<typeof GetPluginVersionsResponseBodySchema>;
-
-/**
  * A catalog entry. Two flavours:
  *  - `{ repo }`: the registry service hydrates from the GitHub repo's latest release.
- *    Used by the production catalog.
- *  - `{ manifestUrl }`: the registry service skips GitHub and fetches the manifest directly.
- *    Used for local development against an in-progress plugin (e.g. served by `vite preview`)
- *    so authors can iterate without publishing a release.
+ *  - `{ manifestUrl }`: fetches the manifest directly (used for local dev).
  */
 export const RegistryEntrySchema = Schema.Union(
   Schema.Struct({ repo: Schema.String.pipe(Schema.nonEmptyString()) }),
