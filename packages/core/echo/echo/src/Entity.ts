@@ -10,7 +10,7 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
-import * as atomInternal from './internal/atom/entity-atoms';
+import * as ObjAtoms from './atom-impl/ObjAtoms';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import type * as Tag from './Tag';
@@ -340,4 +340,4 @@ export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void
 // Atoms
 //
 
-export const atom = atomInternal.makeEntity;
+export const atom = ObjAtoms.makeEntity;

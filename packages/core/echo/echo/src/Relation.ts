@@ -16,7 +16,7 @@ import { assumeType } from '@dxos/util';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
-import * as atomInternal from './internal/atom/entity-atoms';
+import * as ObjAtoms from './atom-impl/ObjAtoms';
 import * as entityInternal from './internal/Entity';
 import * as Obj from './Obj';
 import type * as Ref from './Ref';
@@ -578,4 +578,4 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom = atomInternal.makeRelation;
+export const atom = ObjAtoms.makeRelation;

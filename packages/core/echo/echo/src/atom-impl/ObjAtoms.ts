@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Atom from '@effect-atom/atom/Atom';
 import * as Result from '@effect-atom/atom/Result';
 import * as Effect from 'effect/Effect';
@@ -10,14 +12,15 @@ import * as Option from 'effect/Option';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Entity from '../../Entity';
-import type * as Obj from '../../Obj';
-import type * as Ref from '../../Ref';
-import type * as Relation from '../../Relation';
-import { subscribe } from '../common/proxy/reactive';
-import { isEntity, getDatabase } from '../Entity';
-import { getSnapshot } from '../Obj';
-import { RefTypeId } from '../Ref/ref';
+import type * as Entity from '../Entity';
+import type * as Obj from '../Obj';
+import type * as Ref from '../Ref';
+import type * as Relation from '../Relation';
+import { subscribe } from '../internal/common/proxy/reactive';
+import { isEntity, getDatabase } from '../internal/Entity';
+import { getSnapshot } from '../internal/Obj';
+import { RefTypeId } from '../internal/Ref/ref';
+
 import { loadRefTarget } from './ref-utils';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>

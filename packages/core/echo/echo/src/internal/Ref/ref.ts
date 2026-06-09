@@ -27,7 +27,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '../Annotation/annotations';
-import { refSimpleFamily } from '../atom/ref-atoms';
+import * as RefAtoms from '../../atom-impl/RefAtoms';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
@@ -548,7 +548,7 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   get atom(): Atom.Atom<T | undefined> {
-    return refSimpleFamily(this);
+    return RefAtoms.refSimpleFamily(this);
   }
 
   /**

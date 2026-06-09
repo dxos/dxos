@@ -21,7 +21,7 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
 import * as internal from './internal';
-import * as atomInternal from './internal/atom/entity-atoms';
+import * as ObjAtoms from './atom-impl/ObjAtoms';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
 import * as Ref from './Ref';
@@ -917,6 +917,6 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom = atomInternal.make;
-export const atomReactive = atomInternal.makeWithReactive;
-export const atomProperty = atomInternal.makeProperty;
+export const atom = ObjAtoms.make;
+export const atomReactive = ObjAtoms.makeWithReactive;
+export const atomProperty = ObjAtoms.makeProperty;
