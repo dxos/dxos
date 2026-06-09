@@ -31,12 +31,11 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const provider = useRegistryPluginProvider();
   const { invokePromise } = useOperationInvoker();
 
-  const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
+  const { catalogEntry, moduleUrl } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
   const { pickerVersions, selectedVersionTag, setSelectedVersionTag } = useVersionPicker({
     provider,
     pluginId,
-    repo,
     moduleUrl,
     installedVersionTag,
   });

@@ -10,21 +10,19 @@ import { EffectEx } from '@dxos/effect';
 
 /**
  * Owns the version picker's state machine: fetches the available versions list
- * from the provider, prepends the installed version when the catalog stub omits
- * it, and keeps the selection clamped to whatever's currently in the list (so
- * an external update doesn't strand the trigger on a tag that's no longer
- * available).
+ * from the provider (served from the inlined `releases` array on each entry —
+ * no separate endpoint needed) and keeps the selection clamped to whatever's
+ * currently in the list so an external update doesn't strand the trigger on a
+ * tag that's no longer available.
  */
 export const useVersionPicker = ({
   provider,
   pluginId,
-  repo,
   moduleUrl,
   installedVersionTag,
 }: {
   provider: Registry.Manager;
   pluginId: string;
-  repo: string | undefined;
   moduleUrl: string | undefined;
   installedVersionTag: string | undefined;
 }): {
@@ -35,23 +33,17 @@ export const useVersionPicker = ({
   const [versions, setVersions] = useState<readonly Registry.PluginVersion[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
 
-  // Load version list once the catalog entry's repo is known. Reset state
-  // when `repo` is absent or the fetch fails so a previous plugin's
-  // versions don't leak into the picker for the current plugin. The
-  // `cancelled` flag guards against a stale in-flight `listVersions`
-  // response overwriting the newer state after `repo`/`pluginId` changes.
+  // Load version list whenever pluginId changes. The `cancelled` flag guards
+  // against a stale in-flight response overwriting newer state when the user
+  // navigates between plugins quickly.
   useEffect(() => {
-    if (!repo) {
-      setVersions([]);
-      setSelectedVersionTag(undefined);
-      return;
-    }
-    // Clear stale picker state before fetching so the UI doesn't display the
-    // previous plugin's versions/selection while `listVersions` is pending.
     setVersions([]);
     setSelectedVersionTag(undefined);
+    if (!pluginId) {
+      return;
+    }
     let cancelled = false;
-    void provider.listVersions(repo).pipe(
+    void provider.listVersions(pluginId).pipe(
       Effect.match({
         onSuccess: (vs) => {
           if (cancelled) {
@@ -75,7 +67,7 @@ export const useVersionPicker = ({
     return () => {
       cancelled = true;
     };
-  }, [provider, repo, pluginId]);
+  }, [provider, pluginId]);
 
   // Make sure the picker always lists the installed version, even if the catalog
   // hasn't surfaced it (the current `listVersions` stub only returns latest).

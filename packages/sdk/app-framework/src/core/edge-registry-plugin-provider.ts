@@ -16,21 +16,36 @@ import * as Registry from './registry';
  *
  * This is the only translation seam between the two independently-defined type
  * hierarchies — fields are mapped explicitly, with no shared type between them.
+ *
+ * `slug` serves as the composer plugin id: it is required to be a valid NSID
+ * (e.g. `org.dxos.plugin.excalidraw`), so `DXN.make(slug, latestVersion)`
+ * reconstructs the canonical `Plugin.Meta.key`.
  */
-const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => ({
-  id: entry.meta.id,
-  name: entry.meta.name,
-  description: entry.meta.description,
-  homePage: entry.meta.homePage,
-  source: entry.meta.source,
-  screenshots: entry.meta.screenshots ? [...entry.meta.screenshots] : undefined,
-  tags: entry.meta.tags ? [...entry.meta.tags] : undefined,
-  icon: entry.meta.icon,
-  iconHue: entry.meta.iconHue,
-  moduleUrl: entry.moduleUrl,
-  repo: entry.repo,
-  version: entry.releaseTag,
-});
+const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => {
+  const latestRelease = entry.releases.find((release) => release.version === entry.latestVersion) ?? entry.releases[0];
+  return {
+    id: entry.slug,
+    name: entry.profile.name,
+    description: entry.profile.description,
+    homePage: entry.profile.homepage,
+    source: entry.profile.source,
+    screenshots: entry.profile.screenshots ? [...entry.profile.screenshots] : undefined,
+    tags: entry.profile.tags ? [...entry.profile.tags] : undefined,
+    icon: entry.profile.icon,
+    iconHue: entry.profile.iconHue,
+    moduleUrl: latestRelease?.moduleUrl ?? '',
+    version: entry.latestVersion,
+  };
+};
+
+/**
+ * Maps a wire-format `PluginEntry` release list to `Registry.PluginVersion[]`.
+ */
+const toRegistryVersions = (entry: PluginEntry): Registry.PluginVersion[] =>
+  entry.releases.map((release) => ({
+    tag: release.version,
+    moduleUrl: release.moduleUrl,
+  }));
 
 /**
  * Implements `Registry.PluginProvider` against the Edge `/registry` HTTP endpoints.
@@ -41,18 +56,13 @@ const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => ({
  * cycle. The class needs only the public `EdgeHttpClient` type, so a one-way
  * type-import is enough.
  *
- * `listVersions` is currently a stub: it returns the single latest version derived
- * from the cached plugin list, so the host's version picker has something to render.
- * The wire contract for the real endpoint already exists — see
- * `GetPluginVersionsResponseBodySchema` in `@dxos/protocols/edge/registry` and
- * {@link EdgeHttpClient.getRegistryPluginVersions} — so once Edge ships
- * `GET /registry/plugins/:repo/versions`, swap this stub for a call to
- * `this._client.getRegistryPluginVersions(...)` and map each entry through a
- * `toRegistryPluginVersion` helper (mirror of {@link toRegistryPlugin}).
+ * `listVersions` is served directly from the `releases` array inlined on each
+ * entry — no separate endpoint is needed.
  */
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
   #cachedPlugins: readonly Registry.Plugin[] = [];
+  #cachedEntries: readonly PluginEntry[] = [];
 
   constructor(private readonly _client: EdgeHttpClient) {}
 
@@ -62,30 +72,29 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
       catch: (error) => (error instanceof Error ? error : new Error(String(error))),
     }).pipe(
       Effect.map((body) => {
-        const plugins = body.plugins.filter((entry) => entry.health === 'ok').map(toRegistryPlugin);
+        this.#cachedEntries = body.plugins;
+        const plugins = body.plugins.map(toRegistryPlugin);
         this.#cachedPlugins = plugins;
         return plugins;
       }),
     );
   }
 
-  listVersions(repo: string): Effect.Effect<readonly Registry.PluginVersion[], Error> {
-    // Stub: return only the currently-known version until Edge implements the versions endpoint.
-    const plugin = this.#cachedPlugins.find((candidate) => candidate.repo === repo);
-    if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${repo}`));
+  listVersions(id: string): Effect.Effect<readonly Registry.PluginVersion[], Error> {
+    const entry = this.#cachedEntries.find((candidate) => candidate.slug === id);
+    if (!entry) {
+      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
     }
-    const version: Registry.PluginVersion = { tag: plugin.version, moduleUrl: plugin.moduleUrl };
-    return Effect.succeed([version]);
+    return Effect.succeed(toRegistryVersions(entry));
   }
 
-  getPlugin(repo: string, version?: string): Effect.Effect<Registry.Plugin, Error> {
-    const plugin = this.#cachedPlugins.find((p) => p.repo === repo);
+  getPlugin(id: string, version?: string): Effect.Effect<Registry.Plugin, Error> {
+    const plugin = this.#cachedPlugins.find((candidate) => candidate.id === id);
     if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${repo}`));
+      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
     }
     if (version && version !== plugin.version) {
-      return Effect.fail(new Error(`Version ${version} not available for ${repo}; only ${plugin.version} is cached`));
+      return Effect.fail(new Error(`Version ${version} not available for ${id}; only ${plugin.version} is cached`));
     }
     return Effect.succeed(plugin);
   }
