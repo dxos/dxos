@@ -41,6 +41,12 @@ import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+
+  /**
+   * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
+   * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
+   */
+  aiService?: Layer.Layer<AiService.AiService>;
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
@@ -58,23 +64,16 @@ interface TestLayerOptions {
   disableLlmMemoization?: boolean;
 
   /**
-   * Core system prompt for the agent.
+   * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
+   * The model defaults to the resolved test-layer model when not set here.
    */
-  systemPrompt?: string;
-
-  /**
-   * If true, long-running tool calls are moved to the background and the agent is notified
-   * asynchronously when they complete. Currently unstable — disabled by default.
-   *
-   * @default false
-   */
-  enableToolBackgrounding?: boolean;
+  agent?: AgentService.AgentServiceOptions;
 
   /**
    * Extra services to make available in the service resolver.
    * Operations can depend on those services.
    */
-  extraServices?: Layer.Layer<any, never, never>;
+  extraServices?: Layer.Layer<never, never, never>;
 }
 
 export type AssistantTestServices =
@@ -105,22 +104,20 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
+  const agentOptions: AgentService.AgentServiceOptions = { ...options.agent };
+  agentOptions.model ??= resolvedModel;
+
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(
-      AgentService.layer({
-        systemPrompt: options.systemPrompt,
-        model: resolvedModel,
-        enableToolBackgrounding: options.enableToolBackgrounding,
-      }),
-    ),
+    Layer.provideMerge(AgentService.layer(agentOptions)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
     Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
-      TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+      options.aiService ??
+        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
@@ -131,7 +128,7 @@ export const AssistantTestLayer = (
  * Service resolver for testing.
  */
 export const AssistantTestServiceResolverLayer = ({
-  extraServices = Layer.empty as any,
+  extraServices = Layer.empty,
 }: Pick<TestLayerOptions, 'extraServices'>) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,
@@ -196,11 +193,11 @@ export const AssistantTestServiceResolverLayer = ({
  * Only storage + registry.
  */
 export const AssistantTestBaseLayer = ({
-  toolkits = [],
   operationHandlers = [],
+  toolkits = [],
   types = [],
-  blueprints = [],
   credentials = [],
+  blueprints = [],
 }: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'blueprints' | 'tracing' | 'credentials'>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)

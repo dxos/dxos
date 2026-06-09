@@ -78,12 +78,19 @@ const validateToken = (token: string) =>
 const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
   schema: DiscordTokenForm,
   defaultValues: { token: '' },
-  onSubmit: ({ values, provider }) =>
+  // Validates before the dialog closes so 401/format errors are shown inline.
+  onValidate: ({ values }) =>
     Effect.gen(function* () {
       const token = values.token.trim();
       if (token.length === 0) {
         return yield* Effect.fail(new Error('Bot token is required.'));
       }
+      yield* validateToken(token);
+    }),
+  onSubmit: ({ values, provider }) =>
+    Effect.gen(function* () {
+      // Trim defensively: onValidate is optional and callers bypass it in tests.
+      const token = values.token.trim();
       const self = yield* validateToken(token);
       const account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       const accessToken = Obj.make(AccessToken.AccessToken, {

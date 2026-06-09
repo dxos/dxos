@@ -1,0 +1,1285 @@
+[
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800819470,
+        "type": "assistant.agentRequestBegin",
+        "data": {}
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "e200b1f7-30a5-4aa8-ba12-31c6d9ddf4aa",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800819779,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "e200b1f7-30a5-4aa8-ba12-31c6d9ddf4aa",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800819796,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800819855,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG004MEGN8W9GP1T443300A",
+          "role": "user",
+          "block": {
+            "_tag": "text",
+            "text": "create a sub-agent that creates a haiku in a new document"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "fe05f5e6-f261-464a-a993-1ecc78557286",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800820015,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "fe05f5e6-f261-464a-a993-1ecc78557286",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800820031,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800822596,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG006SHPCW6D5WZJT9J0TKE",
+          "role": "assistant",
+          "block": {
+            "_tag": "toolCall",
+            "toolCallId": "toolu_01T1XhBHArQ2UNHvdCEtWY1C",
+            "name": "update-tasks",
+            "input": "{\"tasks\": [{\"id\":\"task_1\",\"title\":\"Create a sub-agent that writes a haiku in a new document\",\"status\":\"in-progress\"}]}",
+            "providerExecuted": false,
+            "operationKey": "dxn:org.dxos.function.planning.updateTasks",
+            "operationName": "Update tasks",
+            "operationIcon": "ph--check-square-offset--regular"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800822638,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG007BDN1MTQT7JXNC9MFQW",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-sonnet-4-6",
+            "duration": 2536,
+            "message": "OK",
+            "toolCalls": 1,
+            "usage": {
+              "inputTokens": 3,
+              "outputTokens": 90,
+              "totalTokens": 93
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "4f9baefc-1353-406d-b883-0b5a7d1f0e31",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Update tasks (dxn:org.dxos.function.planning.updateTasks)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800822760,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.planning.updateTasks",
+          "name": "Update tasks",
+          "icon": "ph--check-square-offset--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "4f9baefc-1353-406d-b883-0b5a7d1f0e31",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Update tasks (dxn:org.dxos.function.planning.updateTasks)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800822783,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.planning.updateTasks",
+          "name": "Update tasks",
+          "icon": "ph--check-square-offset--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800822829,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG007HCMJQEHXMRSCQCQDNY",
+          "role": "tool",
+          "block": {
+            "_tag": "toolResult",
+            "toolCallId": "toolu_01T1XhBHArQ2UNHvdCEtWY1C",
+            "name": "update-tasks",
+            "result": "\"You must update the task status to 'in-progress' when you start and 'done' when complete.\\nCurrent plan updated:\\n<plan>\\n  - **IN-PROGRESS**: Create a sub-agent that writes a haiku in a new document <!-- id=task_1 -->\\n</plan>\"",
+            "providerExecuted": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "211a43a3-f85b-4925-aae3-af92c46ac91b",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800823031,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "211a43a3-f85b-4925-aae3-af92c46ac91b",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800823047,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825033,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG009EK5A1PBQW38R1T8ABZ",
+          "role": "assistant",
+          "block": {
+            "_tag": "toolCall",
+            "toolCallId": "toolu_014hZLnJnQzNRkr9Xwx6gJ79",
+            "name": "delegate-task",
+            "input": "{\"title\": \"Create a haiku in a new document\"}",
+            "providerExecuted": false,
+            "operationKey": "dxn:org.dxos.function.delegation.delegateTask",
+            "operationName": "Delegate task",
+            "operationIcon": "ph--share-network--regular"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825087,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG009QYZCDFTBGFSNCFXZ4C",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-sonnet-4-6",
+            "duration": 1981,
+            "message": "OK",
+            "toolCalls": 1,
+            "usage": {
+              "inputTokens": 1,
+              "outputTokens": 60,
+              "totalTokens": 61
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cad71a95-5fbc-45cd-a834-bfc7e5085a3f",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Delegate task (dxn:org.dxos.function.delegation.delegateTask)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825246,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.delegation.delegateTask",
+          "name": "Delegate task",
+          "icon": "ph--share-network--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cad71a95-5fbc-45cd-a834-bfc7e5085a3f",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Delegate task (dxn:org.dxos.function.delegation.delegateTask)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825268,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.delegation.delegateTask",
+          "name": "Delegate task",
+          "icon": "ph--share-network--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825324,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG009ZCDCCCF7ZPHE3SECXG",
+          "role": "tool",
+          "block": {
+            "_tag": "toolResult",
+            "toolCallId": "toolu_014hZLnJnQzNRkr9Xwx6gJ79",
+            "name": "delegate-task",
+            "result": "\"Delegated work as an in-progress task. Current plan:\\n<plan>\\n  - **IN-PROGRESS**: Create a sub-agent that writes a haiku in a new document <!-- id=task_1 -->\\n  - **IN-PROGRESS**: Create a haiku in a new document <!-- id=1-d4 -->\\n</plan>\"",
+            "providerExecuted": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf82b042-0703-4e57-b630-204f0e13deee",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825537,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf82b042-0703-4e57-b630-204f0e13deee",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800825552,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800827693,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00B9HS4BWE7G8NPYGEG00",
+          "role": "assistant",
+          "block": {
+            "_tag": "text",
+            "text": "Done! I've created a sub-agent with the task of writing a haiku in a new document. The sub-agent is now in progress and will create the document with a haiku. Once it completes, the artifact will be available in the space."
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800827757,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00CBCTK0Y7068HEY1TJXJ",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-sonnet-4-6",
+            "duration": 2135,
+            "message": "OK",
+            "toolCalls": 0,
+            "usage": {
+              "inputTokens": 1,
+              "outputTokens": 57,
+              "totalTokens": 58
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Agent",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "conversationId": "01KTFZZXTFTNVTK86WEJ6DKTFT",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800827765,
+        "type": "assistant.agentRequestEnd",
+        "data": {}
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800827912,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.prompt",
+          "name": "Run Routine",
+          "icon": "ph--brain--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "58e4ed1d-6cb2-475e-850a-d89be0c5c714",
+      "processName": "Update Chat Name (dxn:org.dxos.plugin.assistant.operation.updateChatName)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828033,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.plugin.assistant.operation.updateChatName",
+          "name": "Update Chat Name",
+          "icon": "ph--pencil--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "b070e30f-bafe-4118-94da-83681c24d49d",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828277,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "b070e30f-bafe-4118-94da-83681c24d49d",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828278,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828323,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00CX281TNXBSMXVWGJFER",
+          "role": "user",
+          "block": {
+            "_tag": "text",
+            "text": "Complete the following task and report the result concisely.\n\nIf you create any documents or artifacts, call completeJob with a JSON object of the\nform { \"summary\": string, \"artifactIds\": string[] }, where artifactIds are the exact\nids returned by the tools that created them. Otherwise return a short summary string.\n\nTask: Create a haiku in a new document\n<input>{}</input>"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "c2b79fcc-a455-4546-b306-fe175a2b646a",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828453,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "c2b79fcc-a455-4546-b306-fe175a2b646a",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828455,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "58e4ed1d-6cb2-475e-850a-d89be0c5c714",
+      "processName": "Update Chat Name (dxn:org.dxos.plugin.assistant.operation.updateChatName)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800828735,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.plugin.assistant.operation.updateChatName",
+          "name": "Update Chat Name",
+          "icon": "ph--pencil--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800830265,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00EK399C8GJJ8VA656YCB",
+          "role": "assistant",
+          "block": {
+            "_tag": "reasoning",
+            "reasoningText": "The user wants me to create a haiku in a new document."
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800831962,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00EW0KX1Z76MNJBD0958W",
+          "role": "assistant",
+          "block": {
+            "_tag": "toolCall",
+            "toolCallId": "toolu_0178cbySPezLkhabBTSDtzCL",
+            "name": "create",
+            "input": "{\"name\": \"Haiku\", \"content\": \"# Haiku\\n\\nAutumn leaves descend,\\nWhispering through quiet woods—\\nEarth breathes in their fall.\"}",
+            "providerExecuted": false,
+            "operationKey": "dxn:org.dxos.function.markdown.create",
+            "operationName": "Create",
+            "operationIcon": "ph--file-text--regular"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800832083,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00GJK5KB5BQT6C5H9HE6J",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-opus-4-6",
+            "duration": 3587,
+            "message": "OK",
+            "toolCalls": 1,
+            "usage": {
+              "inputTokens": 3,
+              "outputTokens": 126,
+              "totalTokens": 129
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "dd1b51d9-f2f7-4144-945b-7ccd96978964",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Create (dxn:org.dxos.function.markdown.create)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800832091,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.markdown.create",
+          "name": "Create",
+          "icon": "ph--file-text--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "dd1b51d9-f2f7-4144-945b-7ccd96978964",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Create (dxn:org.dxos.function.markdown.create)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800832174,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.markdown.create",
+          "name": "Create",
+          "icon": "ph--file-text--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800832177,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00GNGWSK4HBSS3G6GHN3Z",
+          "role": "tool",
+          "block": {
+            "_tag": "toolResult",
+            "toolCallId": "toolu_0178cbySPezLkhabBTSDtzCL",
+            "name": "create",
+            "result": "{\"id\":\"echo://BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN/01KTG00GJWSZ4SQSXABYFWGDVV\"}",
+            "providerExecuted": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "01175964-6ffa-4785-84cb-649cbb80edd5",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800832318,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "01175964-6ffa-4785-84cb-649cbb80edd5",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800832319,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834244,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00J47C4BSC65F86Z1DY9C",
+          "role": "assistant",
+          "block": {
+            "_tag": "toolCall",
+            "toolCallId": "toolu_019cwi3tVMMseebHThRSJkRA",
+            "name": "add-artifact",
+            "input": "{\"name\": \"Haiku\", \"artifact\": \"echo://BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN/01KTG00GJWSZ4SQSXABYFWGDVV\"}",
+            "providerExecuted": false,
+            "operationKey": "dxn:org.dxos.function.agent.addArtifact",
+            "operationName": "Add artifact",
+            "operationIcon": "ph--plus--regular"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834342,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00JS52RCKXSCQNEGYW6ZS",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-opus-4-6",
+            "duration": 1991,
+            "message": "OK",
+            "toolCalls": 1,
+            "usage": {
+              "inputTokens": 1,
+              "outputTokens": 121,
+              "totalTokens": 122
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2f805c44-2f1e-4fff-9f1d-5864bc176d56",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Add artifact (dxn:org.dxos.function.agent.addArtifact)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834363,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.addArtifact",
+          "name": "Add artifact",
+          "icon": "ph--plus--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "2f805c44-2f1e-4fff-9f1d-5864bc176d56",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Add artifact (dxn:org.dxos.function.agent.addArtifact)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834365,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.addArtifact",
+          "name": "Add artifact",
+          "icon": "ph--plus--regular",
+          "outcome": "failure",
+          "error": "There should be exactly one agent in context. Got: 0"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834370,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00JT1JGBNR4C0TW653WVV",
+          "role": "tool",
+          "block": {
+            "_tag": "toolResult",
+            "toolCallId": "toolu_019cwi3tVMMseebHThRSJkRA",
+            "name": "add-artifact",
+            "error": "Error: There should be exactly one agent in context. Got: 0",
+            "providerExecuted": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "901f7e36-b0be-4e9e-99df-389261ff3722",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834486,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "901f7e36-b0be-4e9e-99df-389261ff3722",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800834487,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800837620,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00MSMF112Q6HS7TM5YRWZ",
+          "role": "assistant",
+          "block": {
+            "_tag": "toolCall",
+            "toolCallId": "toolu_01C5PdSKAg51X4odG3F3Nzf6",
+            "name": "completeJob",
+            "input": "{\"success\": {\"summary\":\"Created a new document titled 'Haiku' containing an autumn-themed haiku: \\\"Autumn leaves descend, / Whispering through quiet woods— / Earth breathes in their fall.\\\"\",\"artifactIds\":[\"echo://BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN/01KTG00GJWSZ4SQSXABYFWGDVV\"]}}",
+            "providerExecuted": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800837627,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00NZTEE9V745YZTH9RJVS",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-opus-4-6",
+            "duration": 3095,
+            "message": "OK",
+            "toolCalls": 1,
+            "usage": {
+              "inputTokens": 1,
+              "outputTokens": 158,
+              "totalTokens": 159
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800837636,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00P04B6FP1T09Y1XN487Q",
+          "role": "tool",
+          "block": {
+            "_tag": "toolResult",
+            "toolCallId": "toolu_01C5PdSKAg51X4odG3F3Nzf6",
+            "name": "completeJob",
+            "providerExecuted": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "639e78ff-d0b1-4d00-8e52-7fc43d245c9f",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800837746,
+        "type": "operation.start",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "639e78ff-d0b1-4d00-8e52-7fc43d245c9f",
+      "parentPid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "processName": "Get Agent Context (dxn:org.dxos.function.agent.getContext)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800837747,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.agent.getContext",
+          "name": "Get Agent Context",
+          "icon": "ph--info--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800838834,
+        "type": "assistant.completeBlock",
+        "data": {
+          "messageId": "01KTG00Q5HN24VN54SRMH1GPT6",
+          "role": "assistant",
+          "block": {
+            "_tag": "stats",
+            "model": "claude-opus-4-6",
+            "duration": 1052,
+            "message": "OK",
+            "toolCalls": 0,
+            "usage": {
+              "inputTokens": 1,
+              "outputTokens": 2,
+              "totalTokens": 3
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "meta": {
+      "pid": "cf8f7243-5b1d-4902-b158-70d9107d5f43",
+      "parentPid": "2433a0a1-7c09-46e6-bc6f-893f104d1691",
+      "processName": "Run Routine (dxn:org.dxos.function.prompt)",
+      "space": "BIRSBKL52RS4PRK3IU2GHWTRLO5T6VOLN",
+      "runtimeName": "local"
+    },
+    "isEphemeral": false,
+    "events": [
+      {
+        "timestamp": 1780800838870,
+        "type": "operation.end",
+        "data": {
+          "key": "dxn:org.dxos.function.prompt",
+          "name": "Run Routine",
+          "icon": "ph--brain--regular",
+          "outcome": "success"
+        }
+      }
+    ]
+  }
+]

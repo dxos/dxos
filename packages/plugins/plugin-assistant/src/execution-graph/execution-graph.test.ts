@@ -263,6 +263,36 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[2].parents?.length).toBe(2);
   });
 
+  test('child process (sub-agent) forks onto its own branch from its first event', ({ expect }) => {
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestBegin, {}));
+        // A delegated sub-agent runs as a separate process: its own pid, parented to the supervisor.
+        // With an inner status event the span is non-collapsible, so its begin event is emitted as a
+        // real fork — and because it crosses a process boundary it forks onto its OWN branch.
+        yield* withMeta(
+          { pid: 'sub', parentPid: 'supervisor' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Run Routine' });
+            yield* Trace.write(CompleteBlock, {
+              messageId: MESSAGE_ID,
+              role: 'assistant',
+              block: { _tag: 'status', statusText: 'working', pending: false },
+            });
+            yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Run Routine', outcome: 'success' });
+          }),
+        );
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestEnd, {}));
+      }),
+    );
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    // The sub-agent's begin ("Run Routine") lands on its OWN branch ('sub'), not the supervisor's —
+    // so a concurrent sub-agent gets its own lane from its first event rather than sharing the
+    // parent lane until its first middle commit.
+    const begin = commits.find((commit) => commit.message === 'Run Routine');
+    expect(begin?.branch).toBe('sub');
+  });
+
   test('pending span with user message → user lands on own branch, not parent', ({ expect }) => {
     const messages = collectTraceEvents(
       // Agent has begun and emitted a user message, but has NOT yet completed.

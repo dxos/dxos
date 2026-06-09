@@ -3,4 +3,4 @@
 //
 
 export { default as DiscordBlueprint } from './blueprint';
-export { FetchMessages, DiscordHandlers } from './functions';
+export { DiscordHandlers, DiscordOperations } from './operations';
