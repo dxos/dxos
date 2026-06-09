@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { LogLevel, createFileProcessor, log } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
+import { createFileProcessor } from '@dxos/log/file-processor';
 import { isNode } from '@dxos/util';
 
 import { ReplicantEnvImpl, ReplicantRegistry } from '../env';

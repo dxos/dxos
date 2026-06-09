@@ -17,6 +17,7 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { useObject } from '@dxos/echo-react';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type ChessModel,
   Gameboard,
@@ -26,7 +27,6 @@ import {
   getRawPgn,
   useGameboardContext,
 } from '@dxos/react-ui-gameboard';
-import { useSoundEffect } from '@dxos/react-ui-sfx';
 
 import { type Chess } from '#types';
 

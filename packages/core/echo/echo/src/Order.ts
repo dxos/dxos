@@ -44,3 +44,25 @@ export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =
     kind: 'rank',
     direction,
   });
+
+/**
+ * Order by the system `updatedAt` timestamp (last re-indexed). Default direction is 'desc'
+ * (most-recently-updated first). Mirrors {@link Filter.updated}.
+ */
+export const updated = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =>
+  new OrderClass({
+    kind: 'timestamp',
+    field: 'updatedAt',
+    direction,
+  });
+
+/**
+ * Order by the system `createdAt` timestamp (first indexed). Default direction is 'desc'
+ * (most-recently-created first). Mirrors {@link Filter.created}.
+ */
+export const created = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =>
+  new OrderClass({
+    kind: 'timestamp',
+    field: 'createdAt',
+    direction,
+  });

@@ -17,13 +17,13 @@ import { mx } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat/events';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
-import { type ChatPresetsProps } from './ChatPresets';
 import { ChatReferences } from './ChatReferences';
 import { ChatStatusIndicator } from './ChatStatusIndicator';
 
@@ -40,9 +40,8 @@ export type ChatPromptProps = ThemedClassName<
       online?: boolean;
       placeholder?: ChatEditorProps['placeholder'];
       onOnlineChange?: (online: boolean) => void;
-      onPresetChange?: ChatPresetsProps['onChange'];
     },
-    Omit<ChatPresetsProps, 'onChange'>
+    ChatPresetProps
   >
 >;
 

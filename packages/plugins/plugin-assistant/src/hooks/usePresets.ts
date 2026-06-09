@@ -4,13 +4,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ChatPromptProps } from '#components';
+import { type ChatPresetProps } from '#types';
 
 import { type AiServicePreset, AiServicePresets } from '../processor';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
-} & Pick<ChatPromptProps, 'presets' | 'onPresetChange'>;
+} & Pick<ChatPresetProps, 'presets' | 'onPresetChange'>;
 
 export const usePresets = (online: boolean): UsePresets => {
   // TODO(burdon): Memo preset for provider.
@@ -29,7 +29,7 @@ export const usePresets = (online: boolean): UsePresets => {
     setPreset(presets[0]);
   }, [presets]);
 
-  const handlePresetChange = useCallback<NonNullable<ChatPromptProps['onPresetChange']>>(
+  const handlePresetChange = useCallback<NonNullable<ChatPresetProps['onPresetChange']>>(
     (id) => {
       const preset = presets.find((preset) => preset.id === id);
       if (preset) {

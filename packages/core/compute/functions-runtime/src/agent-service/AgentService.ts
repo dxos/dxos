@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -16,8 +17,9 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { AgentProcess } from './agent-process';
+import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
 
 export interface Service {
@@ -25,6 +27,12 @@ export interface Service {
    * Gets or creates a session for a feed.
    */
   getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
+
+  /**
+   * Hydrates agent processes persisted by a previous session.
+   * Each record is rehydrated with a fresh {@link AgentProcess} built from the layer options.
+   */
+  hydrate: () => Effect.Effect<void>;
 }
 
 export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
@@ -59,6 +67,11 @@ export interface Session {
   waitForCompletion: () => Effect.Effect<void>;
 
   /**
+   * Terminates the agent process and clears its durable storage.
+   */
+  terminate: () => Effect.Effect<void>;
+
+  /**
    * Subscribe to ephemeral trace events (e.g., streaming partial messages).
    * Replays buffered events, then streams new ones until the process ends.
    */
@@ -70,14 +83,18 @@ export interface Session {
  */
 export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
 
+export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
+
 export interface GetSessionOptions {
   readonly model?: ModelName;
+  readonly systemPrompt?: string;
 }
 
 export interface CreateSessionOptions {
   readonly blueprints?: Blueprint.Blueprint[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
   readonly model?: ModelName;
+  readonly systemPrompt?: string;
 }
 
 export const createSession: (
@@ -143,7 +160,34 @@ export const layer = (opts?: {
         { model: ModelName | undefined; handle: ProcessManager.Handle<string, void>; session: Session }
       >();
 
-      return {
+      const makeExecutable = (model?: ModelName) =>
+        AgentProcess({
+          systemPrompt: opts?.systemPrompt,
+          model: model ?? opts?.model,
+          getMcpServers: opts?.getMcpServers,
+          enableToolBackgrounding: opts?.enableToolBackgrounding,
+          delegationStrategy: opts?.delegationStrategy,
+        });
+
+      const hydrateAgents = Effect.fnUntraced(function* () {
+        // Handles cached before shutdown are suspended and no longer registered with the manager.
+        sessionCache.clear();
+
+        const executable = makeExecutable();
+        const agents = yield* processManager.list({ key: AGENT_PROCESS_KEY });
+        log('agent hydrate', { count: agents.length });
+        for (const agent of agents) {
+          yield* agent
+            .hydrate(executable)
+            .pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
+              ),
+            );
+        }
+      });
+
+      const service: Service = {
         getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
           Effect.gen(function* () {
             const model = options?.model ?? opts?.model;
@@ -163,13 +207,7 @@ export const layer = (opts?: {
             const target = Obj.getURI(feed);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-            const executable = AgentProcess({
-              systemPrompt: opts?.systemPrompt,
-              model,
-              getMcpServers: opts?.getMcpServers,
-              enableToolBackgrounding: opts?.enableToolBackgrounding,
-              delegationStrategy: opts?.delegationStrategy,
-            });
+            const executable = makeExecutable(model);
 
             // Reuse a still-running process for this feed only when there was no cached session
             // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
@@ -178,6 +216,7 @@ export const layer = (opts?: {
 
             let handle: ProcessManager.Handle<string, void>;
             if (processes.length > 0) {
+              yield* processes[0].hydrate(executable);
               handle = processes[0];
             } else {
               handle = yield* processManager.spawn(executable, {
@@ -193,15 +232,25 @@ export const layer = (opts?: {
               });
             }
 
-            const session = makeSession(handle, feed);
+            const releaseSession = () => {
+              sessionCache.delete(feed.id);
+            };
+            const session = makeSession(handle, feed, releaseSession);
             sessionCache.set(feed.id, { model, handle, session });
             return session;
           }),
+        hydrate: hydrateAgents,
       };
+
+      return service;
     }),
   );
 
-const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
+const makeSession = (
+  process: ProcessManager.Handle<string, void>,
+  feed: Feed.Feed,
+  releaseSession: () => void,
+): Session => ({
   feed,
   getContext: () =>
     Effect.gen(function* () {
@@ -224,5 +273,6 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),
+  terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
   subscribeEphemeral: () => process.subscribeEphemeral(),
 });

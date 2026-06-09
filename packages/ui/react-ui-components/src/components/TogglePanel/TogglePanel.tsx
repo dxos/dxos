@@ -26,44 +26,55 @@ type ContextValue = {
 const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>('TogglePanel');
 
 //
-// Root
+// Root — headless; owns disclosure state. Wrap children in a `TogglePanel.Content`.
 //
 
 const ROOT_NAME = 'TogglePanel.Root';
 
-type RootProps = ThemedClassName<
-  PropsWithChildren<
-    {
-      open?: boolean;
-      defaultOpen?: boolean;
-      onChangeOpen?: (open: boolean) => void;
-    } & Partial<Pick<ContextValue, 'duration'>>
-  >
+type RootProps = PropsWithChildren<
+  {
+    open?: boolean;
+    defaultOpen?: boolean;
+    onChangeOpen?: (open: boolean) => void;
+  } & Partial<Pick<ContextValue, 'duration'>>
 >;
 
-const Root = composable<HTMLDivElement, RootProps>(
-  ({ children, open: openProp, defaultOpen = false, duration = 250, onChangeOpen, ...props }, forwardedRef) => {
-    const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
-    useEffect(() => {
-      onChangeOpen?.(open);
-    }, [open]);
+const Root = ({ children, open: openProp, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => {
+  const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
 
-    return (
-      <TogglePanelContext duration={duration} open={open} setOpen={setOpen}>
-        <div
-          {...composableProps(props, {
-            classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden',
-          })}
-          ref={forwardedRef}
-        >
-          {children}
-        </div>
-      </TogglePanelContext>
-    );
-  },
-);
+  useEffect(() => {
+    onChangeOpen?.(open);
+  }, [open, onChangeOpen]);
+
+  return (
+    <TogglePanelContext duration={duration} open={open} setOpen={setOpen}>
+      {children}
+    </TogglePanelContext>
+  );
+};
 
 Root.displayName = ROOT_NAME;
+
+//
+// Content — the bordered shell that frames the header and body.
+//
+
+const CONTENT_NAME = 'TogglePanel.Content';
+
+type ContentProps = ThemedClassName<PropsWithChildren>;
+
+const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => (
+  <div
+    {...composableProps(props, {
+      classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden',
+    })}
+    ref={forwardedRef}
+  >
+    {children}
+  </div>
+));
+
+Content.displayName = CONTENT_NAME;
 
 //
 // Header
@@ -102,15 +113,15 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
 Header.displayName = HEADER_NAME;
 
 //
-// Content
+// Body — collapsible region driven by the disclosure state.
 //
 
-const CONTENT_NAME = 'TogglePanel.Content';
+const BODY_NAME = 'TogglePanel.Body';
 
-type ContentProps = ThemedClassName<PropsWithChildren>;
+type BodyProps = ThemedClassName<PropsWithChildren>;
 
-const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => {
-  const { duration, open } = useTogglePanelContext(CONTENT_NAME);
+const Body = composable<HTMLDivElement, BodyProps>(({ children, ...props }, forwardedRef) => {
+  const { duration, open } = useTogglePanelContext(BODY_NAME);
   return (
     <div
       {...composableProps(props, {
@@ -124,7 +135,7 @@ const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }
   );
 });
 
-Content.displayName = CONTENT_NAME;
+Body.displayName = BODY_NAME;
 
 //
 // Viewport
@@ -151,14 +162,16 @@ Viewport.displayName = VIEWPORT_NAME;
 
 export const TogglePanel = {
   Root,
-  Header,
   Content,
+  Header,
+  Body,
   Viewport,
 };
 
 export type {
   RootProps as TogglePanelRootProps,
-  HeaderProps as TogglePanelHeaderProps,
   ContentProps as TogglePanelContentProps,
+  HeaderProps as TogglePanelHeaderProps,
+  BodyProps as TogglePanelBodyProps,
   ViewportProps as TogglePanelViewportProps,
 };

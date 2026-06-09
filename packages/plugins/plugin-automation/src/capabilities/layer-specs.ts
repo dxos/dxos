@@ -14,15 +14,12 @@ import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Registry } from '@dxos/echo';
 import {
-  AgentService,
   FeedTraceSink,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-
-import { AutomationCapabilities } from '../types';
 
 //
 // Capability Module
@@ -92,22 +89,6 @@ const OpaqueToolkitSpec = LayerSpec.make(
             return OpaqueToolkit.merge(...toolkits);
           },
         });
-      }),
-    ),
-);
-
-const AgentServiceSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [ProcessManager.ProcessManagerService, Capability.Service],
-    provides: [AgentService.AgentService],
-  },
-  () =>
-    Layer.unwrapEffect(
-      Effect.gen(function* () {
-        // Optional supervisor behaviour, contributed by a plugin that knows the agent/plan model.
-        const strategies = yield* Capability.getAll(AutomationCapabilities.AgentDelegationStrategy);
-        return AgentService.layer({ delegationStrategy: strategies[0] });
       }),
     ),
 );
@@ -195,7 +176,6 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
     Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
-    Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
     Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
     Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),

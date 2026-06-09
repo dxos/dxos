@@ -42,6 +42,18 @@ namespace Order1 {
       kind: 'rank',
       direction,
     });
+  export const updated = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
+    new OrderClass({
+      kind: 'timestamp',
+      field: 'updatedAt',
+      direction,
+    });
+  export const created = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
+    new OrderClass({
+      kind: 'timestamp',
+      field: 'createdAt',
+      direction,
+    });
 }
 
 const Order2: typeof Order$ = Order1;
@@ -776,6 +788,10 @@ const prettyQuery = (query: QueryAST.Query): string => {
         }
         if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
+        }
+        if (o.kind === 'timestamp') {
+          const fn = o.field === 'updatedAt' ? 'updated' : 'created';
+          return `Order.${fn}(${JSON.stringify(o.direction)})`;
         }
         return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
       });

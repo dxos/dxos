@@ -1191,7 +1191,6 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "limit": 10,
             "scope": [
               {
                 "_tag": "space",
