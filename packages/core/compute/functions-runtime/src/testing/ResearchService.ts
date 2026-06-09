@@ -136,7 +136,7 @@ export const layer = Layer.effect(
             if (!task) {
               return;
             }
-            yield* complete(task!);
+            yield* complete(task);
           }
         }),
     });

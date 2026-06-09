@@ -126,7 +126,8 @@ export const AssistantTestLayer = (
     Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
-      TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+      options.aiService ??
+        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
@@ -137,7 +138,7 @@ export const AssistantTestLayer = (
  * Service resolver for testing.
  */
 export const AssistantTestServiceResolverLayer = ({
-  extraServices = Layer.empty as any,
+  extraServices = Layer.empty,
 }: Pick<TestLayerOptions, 'extraServices'>) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,

@@ -73,14 +73,14 @@
 - **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
 - Prefer unified `TestLayer` for all tests instead of creating a separate one for each test.
 - `TestLayer(opts?)` can be parametrized so tests can configure it.
-- Place test layer, configuration, and main defintions on top of the suite, while helpers go on the bottom.
-- Avoid sleep and polling in tests as much as possuble. Try to use events and TestClock instead.
+- Place test layer, configuration, and main definitions on top of the suite, while helpers go on the bottom.
+- Avoid sleep and polling in tests as much as possible. Try to use events and TestClock instead.
 
 ### Namespaces exports in packages
 
 - We're converting more and more packages to ones with namespaces exports. Example:
 
-```
+```text
 src/
   Foo.ts
   Bar.ts
