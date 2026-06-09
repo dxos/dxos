@@ -124,7 +124,8 @@
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
     "idb-keyval": "catalog:",
-    "solid-js": "catalog:"
+    "solid-js": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",

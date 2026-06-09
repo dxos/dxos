@@ -1,11 +1,4 @@
 version: 1
-package:
-  modules:
-    - name: tasks
-      type: dxos:type/app
-      build:
-        command: moon run tasks:bundle
-        outdir: out/tasks
 
 runtime:
   client:

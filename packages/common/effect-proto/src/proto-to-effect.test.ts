@@ -21,8 +21,8 @@ describe('parseProto / config.proto', () => {
     const types = registry.list();
     expect(types).toContain('dxos.config.Config');
     expect(types).toContain('dxos.config.Package');
-    expect(types).toContain('dxos.config.Module');
-    expect(types).toContain('dxos.config.Module.Build');
+    expect(types).toContain('dxos.config.Plugin');
+    expect(types).toContain('dxos.config.Plugin.Build');
     expect(types).toContain('dxos.config.Runtime');
     expect(types).toContain('dxos.config.Runtime.Client');
     expect(types).toContain('dxos.config.Runtime.Client.Storage');
@@ -95,14 +95,14 @@ describe('parseProto / config.proto', () => {
     const value = {
       license: 'MIT',
       repos: [{ name: 'core', url: 'git@github.com:dxos/dxos.git', version: '1.0.0' }],
-      modules: [{ id: 'a' }, { id: 'b' }],
+      plugins: [{ id: 'a' }, { id: 'b' }],
     };
     expect(Schema.decodeUnknownSync(Package)(value)).toEqual(value);
   });
 
   test('handles recursive types via lazy refs', ({ expect }) => {
     const registry = parseProto(CONFIG_PROTO_SOURCE);
-    const Module = registry.get('dxos.config.Module');
+    const Module = registry.get('dxos.config.Plugin');
 
     const value = {
       id: 'root',
@@ -113,7 +113,7 @@ describe('parseProto / config.proto', () => {
 
   test('accepts an arbitrary object for google.protobuf.Any', ({ expect }) => {
     const registry = parseProto(CONFIG_PROTO_SOURCE);
-    const Module = registry.get('dxos.config.Module');
+    const Module = registry.get('dxos.config.Plugin');
 
     const value = {
       id: 'mod',

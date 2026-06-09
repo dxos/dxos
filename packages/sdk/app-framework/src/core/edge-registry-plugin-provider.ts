@@ -27,6 +27,8 @@ const toRegistryPlugin = (entry: PluginView): Registry.Plugin => {
     id: entry.slug,
     name: entry.profile.name,
     description: entry.profile.description,
+    // Provenance: the verified publisher is the author (handle preferred, DID fallback).
+    author: entry.handle ?? entry.did,
     homePage: entry.profile.homepage,
     source: entry.profile.source,
     screenshots: entry.profile.screenshots ? [...entry.profile.screenshots] : undefined,

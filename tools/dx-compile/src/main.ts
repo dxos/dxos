@@ -20,6 +20,8 @@ import { BabelSolidTransformPlugin } from './babel-solid-transform-plugin.ts';
 import { bundleDepsPlugin } from './bundle-deps-plugin.ts';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin.ts';
 import { fixRequirePlugin } from './fix-require-plugin.ts';
+import { readPluginMeta } from './plugin-meta.ts';
+import { pluginMetaPlugin } from './plugin-meta-esbuild-plugin.ts';
 import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports.ts';
 import { SwcTransformPlugin } from './swc-transform-plugin.ts';
 
@@ -57,6 +59,19 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
     throw new Error('Could not find package.json.');
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
+
+  const packageDir = dirname(packagePath);
+
+  // Packages with a `dx.yml` plugin entry get a `#meta` module synthesized from
+  // config (see `pluginMetaPlugin`). Inject the `#meta` entry automatically so it
+  // emits as `meta.mjs` — plugins don't list it in their compile entrypoints.
+  const hasPluginMeta = readPluginMeta(packageDir) !== undefined;
+  const entryPoints: (string | { in: string; out: string })[] = options.entryPoints.map((entry) =>
+    entry === '#meta' ? { in: '#meta', out: 'meta' } : entry,
+  );
+  if (hasPluginMeta && !options.entryPoints.includes('#meta')) {
+    entryPoints.push({ in: '#meta', out: 'meta' });
+  }
 
   let tsConfig: any;
   try {
@@ -135,7 +150,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
 
       const start = Date.now();
       const result = await build({
-        entryPoints: options.entryPoints,
+        entryPoints,
         outdir,
         outExtension: { '.js': extension },
         format: 'esm', // Output is later transpiled to CJS via plugin.
@@ -169,6 +184,8 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
               }
             : undefined,
         plugins: [
+          // Resolve `#meta` from dx.yml (must run before imports-field resolution).
+          pluginMetaPlugin(packageDir),
           restrictRelativeImportsPlugin({
             allowedDirectory: process.cwd(),
           }),
