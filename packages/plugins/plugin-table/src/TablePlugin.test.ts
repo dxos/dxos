@@ -16,7 +16,7 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('TablePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    // on-space-created and on-schema-added need SpaceEvents (not fired in tests).
+    // on-type-added needs SpaceEvents (not fired in tests).
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), TablePlugin()],
     });

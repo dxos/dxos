@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -85,6 +88,9 @@
     },
     {
       "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-theme"
