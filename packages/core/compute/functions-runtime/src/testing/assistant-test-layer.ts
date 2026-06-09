@@ -79,7 +79,7 @@ interface TestLayerOptions {
    * Extra services to make available in the service resolver.
    * Operations can depend on those services.
    */
-  extraServices?: Layer.Layer<any, never, never>;
+  extraServices?: Layer.Layer<never, never, never>;
 }
 
 export type AssistantTestServices =
@@ -135,7 +135,7 @@ export const AssistantTestLayer = (
  * Service resolver for testing.
  */
 export const AssistantTestServiceResolverLayer = ({
-  extraServices = Layer.empty as any,
+  extraServices = Layer.empty,
 }: Pick<TestLayerOptions, 'extraServices'>) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,
@@ -199,11 +199,11 @@ export const AssistantTestServiceResolverLayer = ({
  * Only storage + registry.
  */
 export const AssistantTestBaseLayer = ({
-  toolkits = [],
   operationHandlers = [],
+  toolkits = [],
   types = [],
-  blueprints = [],
   credentials = [],
+  blueprints = [],
 }: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'blueprints' | 'tracing' | 'credentials'>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)

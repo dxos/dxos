@@ -375,6 +375,8 @@ export class ProcessManagerImpl implements Manager {
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
+      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
+      const clock = yield* Effect.clock;
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -529,6 +531,7 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
+        clock,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -571,6 +574,8 @@ export class ProcessManagerImpl implements Manager {
     definition: Process.Process<any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen(this, function* () {
+      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
+      const clock = yield* Effect.clock;
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
@@ -708,6 +713,7 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
+        clock,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
