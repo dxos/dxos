@@ -42,6 +42,7 @@ const WELCOME_SLIDE = {
 
 export type SpaceHomeArticleProps = {
   role?: string;
+  attendableId?: string;
   space: Space | undefined;
 };
 
@@ -50,7 +51,7 @@ export type SpaceHomeArticleProps = {
  * dismissed). Below that are the most-recently-modified objects (of registered, non-hidden types),
  * or starter prompts when the space is empty, above the assistant prompt pinned at the bottom.
  */
-export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
+export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -109,7 +110,7 @@ export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions}>
+      <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
           <Menu.Toolbar />
         </Panel.Toolbar>
