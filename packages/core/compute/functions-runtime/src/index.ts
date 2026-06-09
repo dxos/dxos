@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-/** Points at `AgentService.ts` so consumers get `createSession`/`getSession`/`layer` under `AgentService.*`, not the agent-service barrel. */
-export * as AgentService from './agent-service/AgentService';
-export { AGENT_PROCESS_KEY } from './agent-service/agent-process';
+// Re-exports the agent-service barrel: `AgentService` namespace (createSession/getSession/layer),
+// `AGENT_PROCESS_KEY`, and the delegation types (`Delegation`, `DelegationStrategy`).
+export * from './agent-service';
 export * from './executor';
 export { ProcessManager } from './process';
 export * from './services';

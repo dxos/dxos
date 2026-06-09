@@ -15,8 +15,8 @@ import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import DatabaseBlueprint from './blueprint';
-import { DatabaseHandlers } from './functions';
-import { Query as DatabaseQueryOperation } from './functions/definitions';
+import { DatabaseHandlers } from './operations';
+import { Query as DatabaseQueryOperation } from './operations/definitions';
 
 EntityId.dangerouslyDisableRandomness();
 

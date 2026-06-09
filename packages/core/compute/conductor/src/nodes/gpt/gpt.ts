@@ -13,8 +13,8 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Ref, Type } from '@dxos/echo';
+import { Operation, Trace } from '@dxos/compute';
+import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -158,7 +158,7 @@ export const gptNode = defineComputeNode({
       Layer.succeed(Database.Service, yield* Database.Service),
       Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
       Layer.succeed(Operation.Service, yield* Operation.Service),
-      Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
+      Layer.succeed(Registry.Service, yield* Registry.Service),
     );
 
     // TODO(dmaretskyi): Should this use conversation instead?

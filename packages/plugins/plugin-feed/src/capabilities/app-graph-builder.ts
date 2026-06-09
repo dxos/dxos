@@ -11,7 +11,6 @@ import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -76,7 +75,7 @@ export default Capability.makeModule(
           let post: Subscription.Post | undefined;
           if (postId) {
             for (const ref of magazine.posts) {
-              const resolved = get(AtomRef.make(ref)) as Subscription.Post | undefined;
+              const resolved = get(ref.atom) as Subscription.Post | undefined;
               if (resolved?.id === postId) {
                 post = resolved;
                 break;

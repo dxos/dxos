@@ -21,7 +21,8 @@ export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = useTranslation(meta.id);
-  const snippet = useMemo(() => getSnippet(subject), [subject]);
+  // NOTE: Newline is added so that Fade does not obscure the last line.
+  const snippet = useMemo(() => getSnippet(subject) + '\n', [subject]);
   const extensions = useMemo(() => [snippetExtension({ height: 300, scale: 0.8 })], []);
   const info = getInfo(subject);
 
@@ -33,7 +34,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
             <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (
                 <Editor.Root {...editorRootProps}>
-                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} />
+                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} compact />
                 </Editor.Root>
               )}
             </MarkdownEditorProvider>
@@ -55,7 +56,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
 const Fade = () => (
   <div
     className={mx(
-      'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
+      'z-10 absolute bottom-0 inset-x-0 h-6 w-full',
       'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
     )}
   />

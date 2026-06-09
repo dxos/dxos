@@ -9,6 +9,9 @@ import { meta } from '#meta';
 /** Google Calendar / Gmail foreign-key `Meta.keys[].source` used by inbox sync. */
 export const GOOGLE_INTEGRATION_SOURCE = 'google.com';
 
+/** Foreign-key `Meta.keys[].source` stamped on synced Gmail messages (see gmail mapper). */
+export const GMAIL_SOURCE = 'gmail.com';
+
 /** `IntegrationProvider.id` for Gmail OAuth / sync; use as `providerId` on `integration--auth` surfaces. */
 export const GMAIL_PROVIDER_ID = 'gmail';
 

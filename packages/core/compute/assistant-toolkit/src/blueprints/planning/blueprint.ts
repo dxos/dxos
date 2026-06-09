@@ -4,7 +4,7 @@
 
 import { Blueprint } from '@dxos/compute';
 
-import { UpdateTasks } from './functions';
+import { UpdateTasks } from './operations/update-tasks';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.planning';
 

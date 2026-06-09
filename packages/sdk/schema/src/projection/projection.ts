@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { Format, Obj, Type, View } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { type JsonSchemaType, type Mutable, TypeEnum, formatToType, typeToFormat } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
@@ -116,7 +115,7 @@ export class ProjectionModel {
     this._baseSchema = baseSchema;
     this._change = change;
 
-    this._viewAtom = AtomObj.make(this._view);
+    this._viewAtom = Obj.atom(this._view);
 
     // Derived atom that extracts projection from the view snapshot.
     this._projectionAtom = Atom.make((get) => {

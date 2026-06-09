@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -147,7 +146,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
 
   if (viewSchemas.length > 0) {
     const filter = Filter.or(...viewSchemas.map((schema) => Filter.type(schema)));
-    const viewObjects = get(AtomQuery.make(space.db, filter));
+    const viewObjects = get(space.db.query(filter).atom);
 
     for (const viewObject of viewObjects) {
       if (!Obj.isObject(viewObject)) {
@@ -162,7 +161,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
         continue;
       }
 
-      const viewSnapshot = get(AtomObj.make(viewObject));
+      const viewSnapshot = get(Obj.atom(viewObject));
       let holder: unknown = viewSnapshot;
       for (const segment of path) {
         holder =
@@ -175,7 +174,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
         viewObjectIds.add(viewObject.id);
       }
 
-      const viewTarget = holder !== undefined ? get(AtomObj.make(holder as Obj.Any)) : undefined;
+      const viewTarget = holder !== undefined ? get(Obj.atom(holder as Obj.Any)) : undefined;
       const typename = getTypenameFromQuery(viewTarget?.query?.ast);
       if (typename) {
         const existing = viewsByTypename.get(typename) ?? [];

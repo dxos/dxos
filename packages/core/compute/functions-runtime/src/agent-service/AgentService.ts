@@ -20,6 +20,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
+import { type DelegationStrategy } from './delegation-strategy';
 
 export interface Service {
   /**
@@ -46,6 +47,16 @@ export interface Session {
   readonly feed: Feed.Feed;
 
   /**
+   * Gets the context objects from the agent.
+   */
+  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
+
+  /**
+   * Adds context objects to the agent.
+   */
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
+
+  /**
    * Submits a prompt to the agent.
    */
   submitPrompt: (prompt: string) => Effect.Effect<void>;
@@ -65,16 +76,6 @@ export interface Session {
    * Replays buffered events, then streams new ones until the process ends.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
-
-  /**
-   * Adds context objects to the agent.
-   */
-  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
-
-  /**
-   * Gets the context objects from the agent.
-   */
-  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
 }
 
 /**
@@ -121,7 +122,7 @@ export const createSession: (
   return yield* getSession(feed, { model: opts?.model });
 }, Effect.scoped);
 
-export const layer = (opts?: {
+export interface AgentServiceOptions {
   systemPrompt?: string;
   /**
    * Default model used by sessions that don't specify one explicitly.
@@ -140,7 +141,15 @@ export const layer = (opts?: {
    * @default false
    */
   enableToolBackgrounding?: boolean;
-}): Layer.Layer<AgentService, never, ProcessManager.Service> =>
+
+  /**
+   * When provided, sessions act as supervisors: the agent delegates outstanding work to sub-agent
+   * child processes and folds their results back into the conversation. Absent — a plain agent.
+   */
+  delegationStrategy?: DelegationStrategy;
+}
+
+export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
@@ -159,6 +168,7 @@ export const layer = (opts?: {
           model: model ?? opts?.model,
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
+          delegationStrategy: opts?.delegationStrategy,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {
@@ -199,7 +209,7 @@ export const layer = (opts?: {
             const target = Obj.getURI(feed);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-            const executable = makeExecutable(options?.model);
+            const executable = makeExecutable(model);
 
             // Reuse a still-running process for this feed only when there was no cached session
             // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
@@ -212,7 +222,7 @@ export const layer = (opts?: {
               handle = processes[0];
             } else {
               handle = yield* processManager.spawn(executable, {
-                name: 'agent',
+                name: 'Agent',
                 target,
                 environment: {
                   ...(spaceId !== undefined ? { space: spaceId } : {}),
@@ -244,10 +254,12 @@ const makeSession = (
   releaseSession: () => void,
 ): Session => ({
   feed,
-  submitPrompt: (prompt: string) => process.submitInput(prompt),
-  waitForCompletion: () => process.runToCompletion(),
-  terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
-  subscribeEphemeral: () => process.subscribeEphemeral(),
+  getContext: () =>
+    Effect.gen(function* () {
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+      return binder.getObjects().map((object) => Ref.make(object));
+    }).pipe(Effect.scoped),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime<Feed.FeedService>();
@@ -259,10 +271,10 @@ const makeSession = (
         }),
       );
     }).pipe(Effect.scoped),
-  getContext: () =>
-    Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-      return binder.getObjects().map((object) => Ref.make(object));
-    }).pipe(Effect.scoped),
+  submitPrompt: (prompt: string) => process.submitInput(prompt),
+  // Settle when the turn's reply is complete; do NOT block on background sub-agents
+  // (a supervisor delegates work that runs after the turn and reports back out of band).
+  waitForCompletion: () => process.runUntilSettled(),
+  terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
+  subscribeEphemeral: () => process.subscribeEphemeral(),
 });
