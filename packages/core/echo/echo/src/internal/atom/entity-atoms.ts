@@ -100,9 +100,10 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
 
       const unsubscribe2 = subscribe(obj, () => {
         const newValue = obj[key];
-        if (previousSnapshot !== newValue) {
-          previousSnapshot = snapshotForComparison(newValue);
-          get.setSelf(snapshotForComparison(newValue));
+        const newSnapshot = snapshotForComparison(newValue);
+        if (newSnapshot !== previousSnapshot) {
+          previousSnapshot = newSnapshot;
+          get.setSelf(newSnapshot);
         }
       });
 
