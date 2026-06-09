@@ -35,7 +35,7 @@ import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { AgentService } from '../agent-service';
+import { AgentService, type DelegationStrategy } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
@@ -63,6 +63,8 @@ interface TestLayerOptions {
 
   disableLlmMemoization?: boolean;
 
+  agent?: AgentServiceOptions;
+
   /**
    * Core system prompt for the agent.
    */
@@ -75,6 +77,12 @@ interface TestLayerOptions {
    * @default false
    */
   enableToolBackgrounding?: boolean;
+
+  /**
+   * Optional supervisor behaviour. When provided, the agent reconciles outstanding work into linked
+   * child processes after each turn and folds their results back into the conversation on completion.
+   */
+  delegationStrategy?: DelegationStrategy;
 
   /**
    * Extra services to make available in the service resolver.
@@ -111,14 +119,13 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
+  const agentOptions = options.agent ?? {};
+  agentOptions.model ??= resolvedModel;
+
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(
-      AgentService.layer({
-        systemPrompt: options.systemPrompt,
-        model: resolvedModel,
-        enableToolBackgrounding: options.enableToolBackgrounding,
-      }),
+      AgentService.layer(agentOptions),
     ),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
@@ -127,7 +134,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??
-        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+      TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
@@ -245,7 +252,7 @@ const AssistantTestTracingLayer = (
     Match.exhaustive,
   );
 
-interface TestLayerWithTriggersOptions extends TestLayerOptions {}
+interface TestLayerWithTriggersOptions extends TestLayerOptions { }
 
 export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerDispatcher | TriggerStateStore;
 

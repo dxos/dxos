@@ -35,7 +35,7 @@ export interface Service {
   hydrate: () => Effect.Effect<void>;
 }
 
-export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
+export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() { }
 
 /**
  * Handle to an agent session.
@@ -122,7 +122,7 @@ export const createSession: (
   return yield* getSession(feed, { model: opts?.model });
 }, Effect.scoped);
 
-export const layer = (opts?: {
+export interface AgentServiceOptions {
   systemPrompt?: string;
   /**
    * Default model used by sessions that don't specify one explicitly.
@@ -147,7 +147,9 @@ export const layer = (opts?: {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
-}): Layer.Layer<AgentService, never, ProcessManager.Service> =>
+}
+
+export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
