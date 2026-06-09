@@ -20,7 +20,7 @@ export const SupportSettings = ({ onShowWelcome }: SupportSettingsProps) => {
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
         <SettingsForm.Item title={t('show-welcome.label')} description={t('show-welcome.description')}>
-          <Button onClick={onShowWelcome}>{t('show-welcome.button')}</Button>
+          <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
         </SettingsForm.Item>
       </SettingsForm.Section>
     </SettingsForm.Viewport>
