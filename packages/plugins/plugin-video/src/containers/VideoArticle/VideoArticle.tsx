@@ -7,67 +7,95 @@ import React, { useCallback, useState } from 'react';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useMediaQuery } from '@dxos/react-hooks';
 import { useObject } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Tabs } from '@dxos/react-ui-tabs';
 
-import { VideoPlayer } from '#components';
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
+type VideoTabsProps = {
+  attendableId: string;
+  subject: Video.Video;
+  role: string | undefined;
+  tab: string;
+  onTabChange: (tab: string) => void;
+  onRegenerate: () => void;
+  isRegenerateDisabled: boolean;
+  isSummarizing: boolean;
+};
+
+const VideoTabs = ({
+  attendableId,
+  subject,
+  role,
+  tab,
+  onTabChange,
+  onRegenerate,
+  isRegenerateDisabled,
+  isSummarizing,
+}: VideoTabsProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar>
+          <Toolbar.Root>
+            <Tabs.Tablist classNames='p-0'>
+              <Tabs.Tab value='transcript'>{t('transcript.tab.label')}</Tabs.Tab>
+              <Tabs.Tab value='summary'>{t('summary.tab.label')}</Tabs.Tab>
+            </Tabs.Tablist>
+            {tab === 'summary' && (
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--arrows-clockwise--regular'
+                label={t('regenerate.label')}
+                disabled={isRegenerateDisabled}
+                iconClassNames={isSummarizing ? 'animate-spin' : undefined}
+                classNames='ml-auto'
+                onClick={onRegenerate}
+              />
+            )}
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
+            <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
+              <Surface.Surface
+                role='tabpanel'
+                data={{ subject, attendableId, part: 'transcript' }}
+                limit={1}
+              />
+            </Tabs.Panel>
+            <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
+              <Surface.Surface
+                role='tabpanel'
+                data={{ subject, attendableId, part: 'summary' }}
+                limit={1}
+              />
+            </Tabs.Panel>
+          </Tabs.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
+  );
+};
+
+/**
+ * Composes the video layout from three independent surfaces (player, transcript, summary).
+ * Each part lives in its own surface so the cross-origin player iframe and the CodeMirror editors never share a
+ * component/prop graph.
+ * The transcript/summary are shown in a tab panel below the player on large form factors.
+ */
 export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps) => {
-  const [video] = useObject(subject);
   const { invokePromise } = useOperationInvoker();
-  const [transcribing, setTranscribing] = useState(false);
+  const [video] = useObject(subject);
+  const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);
-  // Embed the transcript/summary surface below the player only on large form factors.
-  const [isLg] = useMediaQuery('lg');
-  const hasTranscript = !!video.transcript;
-  // The transcript sets the selection point (a seconds offset) to seek the player.
-  const selected = useSelected(attendableId, 'single');
-  const startTime = selected && /^\d+$/.test(selected) ? Number(selected) : undefined;
-
-  const handleTranscribe = useCallback(async () => {
-    if (!invokePromise) {
-      return;
-    }
-    setTranscribing(true);
-    try {
-      await invokePromise(
-        VideoOperation.Transcribe,
-        { video: Ref.make(subject) },
-        {
-          spaceId: Obj.getDatabase(subject)?.spaceId,
-          notify: { error: ['transcribe-error.message', { ns: meta.id }] },
-        },
-      );
-    } finally {
-      setTranscribing(false);
-    }
-  }, [invokePromise, subject]);
-
-  const handleSummarize = useCallback(async () => {
-    if (!invokePromise) {
-      return;
-    }
-    setSummarizing(true);
-    try {
-      await invokePromise(
-        VideoOperation.Summarize,
-        { video: Ref.make(subject) },
-        {
-          spaceId: Obj.getDatabase(subject)?.spaceId,
-          notify: { error: ['summarize-error.message', { ns: meta.id }] },
-        },
-      );
-    } finally {
-      setSummarizing(false);
-    }
-  }, [invokePromise, subject]);
 
   const handleOpenOriginal = useCallback(() => {
     if (video.url) {
@@ -75,32 +103,25 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
     }
   }, [video.url]);
 
+  // Manual summary regeneration (the summary surface generates it automatically when first missing).
+  const handleRegenerate = useCallback(() => {
+    if (!invokePromise || !video.transcript) {
+      return;
+    }
+    setSummarizing(true);
+    void invokePromise(
+      VideoOperation.Summarize,
+      { video: Ref.make(subject) },
+      {
+        spaceId: Obj.getDatabase(subject)?.spaceId,
+        notify: { error: ['summarize-error.message', { ns: meta.id }] },
+      },
+    ).finally(() => setSummarizing(false));
+  }, [invokePromise, subject, video.transcript]);
+
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .action(
-          'transcribe',
-          {
-            label: ['transcribe.label', { ns: meta.id }],
-            icon: 'ph--subtitles--regular',
-            disabled: !video.url || transcribing,
-            disposition: 'toolbar',
-            testId: 'video.toolbar.transcribe',
-          },
-          () => void handleTranscribe(),
-        )
-        .action(
-          'summarize',
-          {
-            label: ['summarize.label', { ns: meta.id }],
-            icon: 'ph--text-align-left--regular',
-            disabled: !hasTranscript || summarizing,
-            disposition: 'toolbar',
-            testId: 'video.toolbar.summarize',
-          },
-          () => void handleSummarize(),
-        )
-        .separator()
         .action(
           'open-original',
           {
@@ -113,7 +134,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           () => handleOpenOriginal(),
         )
         .build(),
-    [video.url, hasTranscript, transcribing, summarizing, handleTranscribe, handleSummarize, handleOpenOriginal],
+    [video.url, handleOpenOriginal],
   );
 
   return (
@@ -123,12 +144,19 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-          <VideoPlayer url={video.url} startTime={startTime} />
-          {isLg && <Surface.Surface role='transcript' data={{ subject, attendableId }} limit={1} />}
+          <Surface.Surface role='section' data={{ subject, attendableId, part: 'player' }} limit={1} />
+          <VideoTabs
+            attendableId={attendableId}
+            subject={subject}
+            role={role}
+            tab={tab}
+            onTabChange={setTab}
+            onRegenerate={handleRegenerate}
+            isRegenerateDisabled={!video.transcript || summarizing}
+            isSummarizing={summarizing}
+          />
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>
   );
 };
-
-export default VideoArticle;

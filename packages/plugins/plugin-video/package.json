@@ -122,6 +122,7 @@
   },
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

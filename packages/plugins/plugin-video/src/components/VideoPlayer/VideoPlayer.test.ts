@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { toEmbedUrl } from './VideoPlayer';
+import { toEmbedUrl } from './embed-url-parsers';
 
 describe('toEmbedUrl', () => {
   test('maps a YouTube watch URL to an embed URL', ({ expect }) => {

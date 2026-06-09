@@ -196,7 +196,7 @@ class SpeakerWidget extends WidgetType {
 //
 
 /** Finds the first markdown link in a line whose text or target is a timestamp. */
-const parseLineTimestamp = (
+export const parseLineTimestamp = (
   text: string,
 ): { start: number; end: number; seconds: number; label: string } | undefined => {
   LINK_RE.lastIndex = 0;

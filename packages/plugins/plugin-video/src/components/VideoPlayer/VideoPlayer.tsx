@@ -8,6 +8,8 @@ import { Icon, composable, composableProps, useTranslation } from '@dxos/react-u
 
 import { meta } from '#meta';
 
+import { toEmbedUrl } from './embed-url-parsers';
+
 export type VideoPlayerProps = {
   url?: string;
   /** Seconds offset to start playback at; changing it reloads the player at that position. */
@@ -53,64 +55,3 @@ export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
     );
   },
 );
-
-/**
- * Maps a video URL to an embeddable iframe URL. Recognises YouTube and Vimeo;
- * returns the original URL for anything else. When `startTime` (seconds) is set, the embed
- * starts at that offset and autoplays.
- */
-export const toEmbedUrl = (url: string, startTime?: number): string | undefined => {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return undefined;
-  }
-
-  const host = parsed.hostname.replace(/^www\./, '');
-  const start = startTime != null && Number.isFinite(startTime) ? Math.max(0, Math.floor(startTime)) : undefined;
-
-  // YouTube (watch / short links).
-  const youTubeId =
-    host === 'youtu.be'
-      ? parsed.pathname.slice(1)
-      : (host === 'youtube.com' || host === 'm.youtube.com') && !parsed.pathname.startsWith('/embed/')
-        ? parsed.searchParams.get('v')
-        : undefined;
-  if (youTubeId) {
-    const params = new URLSearchParams();
-    if (start !== undefined) {
-      params.set('start', String(start));
-      params.set('autoplay', '1');
-    }
-    const query = params.toString();
-    return `https://www.youtube.com/embed/${youTubeId}${query ? `?${query}` : ''}`;
-  }
-  // YouTube (already an embed URL).
-  if ((host === 'youtube.com' || host === 'm.youtube.com') && parsed.pathname.startsWith('/embed/')) {
-    if (start !== undefined) {
-      parsed.searchParams.set('start', String(start));
-      parsed.searchParams.set('autoplay', '1');
-    }
-    return parsed.toString();
-  }
-
-  // Vimeo.
-  const vimeoId = host === 'vimeo.com' ? parsed.pathname.split('/').filter(Boolean)[0] : undefined;
-  if (vimeoId) {
-    return `https://player.vimeo.com/video/${vimeoId}${start !== undefined ? `?autoplay=1#t=${start}s` : ''}`;
-  }
-  if (host === 'player.vimeo.com') {
-    if (start !== undefined) {
-      parsed.searchParams.set('autoplay', '1');
-      parsed.hash = `#t=${start}s`;
-    }
-    return parsed.toString();
-  }
-
-  // Fall back to the raw URL (e.g. a direct media file or an already-embeddable URL).
-  if (start !== undefined) {
-    parsed.hash = `#t=${start}`;
-  }
-  return parsed.toString();
-};

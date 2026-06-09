@@ -8,8 +8,9 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { initializeIdentity, ClientPlugin } from '@dxos/plugin-client/testing';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
@@ -48,10 +49,21 @@ const meta = {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
-              space.db.add(Video.make({ name: 'Sample video', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }));
+              const transcript = space.db.add(
+                Text.make({ content: '[0:02](https://youtu.be/dQw4w9WgXcQ?t=2) >> Welcome to the show.' }),
+              );
+              const summary = space.db.add(Text.make({ content: '## Summary\n\n- A short sample summary.' }));
+              const video = space.db.add(
+                Video.make({ name: 'Sample video', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }),
+              );
+              Obj.update(video, (video) => {
+                video.transcript = Ref.make(transcript);
+                video.summary = Ref.make(summary);
+              });
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
+        MarkdownPlugin(),
         VideoPlugin(),
       ],
     }),

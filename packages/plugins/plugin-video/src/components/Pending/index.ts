@@ -3,5 +3,3 @@
 //
 
 export * from './Pending';
-export * from './Transcript';
-export * from './VideoPlayer';
