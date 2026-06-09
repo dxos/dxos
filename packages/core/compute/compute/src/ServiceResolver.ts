@@ -111,7 +111,7 @@ export const make = (
  * Create a ServiceResolver backed by a static Context.
  * Tags present in the context are resolved; missing tags fail with ServiceNotAvailableError.
  */
-export const fromContext = (ctx: Context.Context<any>): ServiceResolver =>
+export const fromContext = <Services>(ctx: Context.Context<Services>): ServiceResolver =>
   make((tag, context) =>
     Effect.gen(function* () {
       const service = Context.getOption(ctx, tag);

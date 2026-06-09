@@ -364,13 +364,14 @@ const countBlocks = (feed: Feed.Feed) =>
 
 /**
  * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling).
- * Live LLM generation needs real wall time between polls; memoized runs only yield to the runtime.
+ * Live LLM generation needs real wall time between polls; memoized runs flush the event loop
+ * via a 0ms timer so Promise-based ECHO operations can complete between checks.
  */
 const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
   Effect.gen(function* () {
     const waitForAsyncWork = MemoizedAiService.isGenerationEnabled()
       ? Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)))
-      : Effect.yieldNow();
+      : Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
     for (let step = 0; step < 240; step++) {
       if (yield* predicate) {
         return;
