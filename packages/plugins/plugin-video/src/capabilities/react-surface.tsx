@@ -8,8 +8,9 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
 
-import { VideoArticle } from '#containers';
+import { TranscriptArticle, VideoArticle } from '#containers';
 import { Video } from '#types';
 
 export default Capability.makeModule(() =>
@@ -23,6 +24,16 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => (
           <VideoArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      // Transcript/summary surface, embedded below the video player (see VideoArticle).
+      Surface.create({
+        id: 'transcript.video',
+        role: 'transcript',
+        filter: (data): data is { subject: Video.Video; attendableId: string } =>
+          Obj.instanceOf(Video.Video, data.subject),
+        component: ({ data, role }) => (
+          <TranscriptArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
     ]),

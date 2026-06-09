@@ -3,4 +3,4 @@
 //
 
 export * from './Transcript';
-export * from './VideoPlayer';
+export * from './decorate-transcript';

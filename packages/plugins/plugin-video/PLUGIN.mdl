@@ -30,11 +30,12 @@ type Text
 
 ```mdl
 type Video
-  desc: A video resource with an optional linked transcript.
+  desc: A video resource with optional linked transcript and summary.
   fields:
     name: string              # label
-    url: string               # source URL (Format.URL); embeddable in an iframe
+    url: string               # source URL; embeddable in an iframe
     transcript?: Ref<Text>    # optional link to a generated transcript text object
+    summary?: Ref<Text>       # optional link to a generated summary text object
 ```
 
 ## Components
@@ -45,14 +46,18 @@ component VideoArticle
   props:
     video: Video
   state:
-    transcribing: boolean       # request to EDGE in flight
+    transcribing: boolean       # transcription request in flight
+    summarizing: boolean        # summarization request in flight
+    view: transcript | summary  # which text the tabbed editor shows
   slots:
     toolbar?: ReactNode
   actions:
     transcribe()                # invokes op:transcribeVideo
-    openTranscript()            # navigates to video.transcript target
+    summarize()                 # invokes op:summarizeVideo
+    openOriginal()              # opens video.url in a new tab
   emits:
     onTranscribed(transcript: Ref<Text>)
+    onSummarized(summary: Ref<Text>)
   layout: |
     ┌──────────────────────────┐
     │ [toolbar slot] Transcribe│
@@ -75,10 +80,11 @@ service TranscriptionService
     transcribe(url: string, lang: string) → Text
   note: |
     HTTP GET https://transcription.dxos.network/video?url=<url>&lang=<lang>
-    Response: { text: string }. No auth. lang defaults to "en".
-    Invoked via EdgeHttpClient from @dxos/edge-client.
+    Response: { success: boolean, result: { videoId, title, languageCode, generated, text } }.
+    lang defaults to "en". The worker sends no CORS headers, so the browser request is routed
+    through the EDGE CORS proxy via `proxyFetchLegacy` from @dxos/edge-client.
   errors:
-    TranscriptionFailed: worker returned a non-2xx response or empty body
+    TranscriptionFailed: worker returned a non-2xx response, success=false, or empty text
 ```
 
 ## Operations
@@ -100,7 +106,27 @@ op transcribeVideo
   note: |
     Resolves video.url → GET worker → Text.make({ content }) →
     Database write → Obj.update(video, { transcript: Ref.make(text) }).
+    Also adopts the worker's `result.title` as Video.name when the name is empty.
     Exposed on the ./operations subpath for blueprint/tool reuse.
+```
+
+```mdl
+op summarizeVideo
+  desc: |
+    Summarizes a Video's transcript via the assistant AI stack, creates a Text object with the
+    markdown summary, and links it back via Video.summary.
+  input:
+    video: Ref<Video>
+  output: Ref<Text>             # the created/linked summary
+  errors:
+    NoTranscript: video has no transcript to summarize
+    SummarizationFailed: the AI request produced no summary
+  effects: [ai, echo:write, echo:read]
+  requires: [Database.Service, AiService]
+  note: |
+    Loads video.transcript content → AiRequest.run with a summarization system prompt
+    (claude-sonnet) → Text.make({ content }) → Database write →
+    Obj.update(video, { summary: Ref.make(text) }). Requires AI/BYOK configured in the host.
 ```
 
 ## Features
@@ -146,11 +172,38 @@ feat F-3: Transcribe Video
 ```
 
 ```mdl
-feat F-4: View Transcript
+feat F-4: Summarize Video
 
   req F-4.1:
-    when: Video.transcript is set
-    then: VideoArticle surfaces an affordance to open the transcript
+    when: the user triggers Summarize on the VideoArticle
+    then: op:summarizeVideo is invoked with the Video ref
+    note: the action is enabled only once Video.transcript exists
+
+  req F-4.2:
+    when: op:summarizeVideo runs
+    then: the transcript content is summarized via the AI stack
+    errors: [NoTranscript, SummarizationFailed]
+
+  req F-4.3:
+    when: the AI returns a summary
+    then: a Text object is created and Video.summary is set to reference it
+```
+
+```mdl
+feat F-5: View Transcript and Summary
+
+  req F-5.1:
+    when: Video.transcript or Video.summary is set
+    then: VideoArticle shows a Transcript/Summary tab strip below the player
+
+  req F-5.2:
+    when: a tab is selected
+    then: the editor renders that text object read-only (markdown), live-bound to ECHO
+
+  req F-5.3:
+    when: op:summarizeVideo completes
+    then: the view switches to the Summary tab
+    tags: [follow-up: comments anchored to the summary via the comments plugin]
 ```
 
 ## Acceptance

@@ -22,8 +22,16 @@ export const Video = Schema.Struct({
     FormatAnnotation.set(TypeFormat.URL),
     Schema.optional,
   ),
+  description: Schema.optional(Schema.String).annotations({
+    description: 'Published description of the video.',
+  }),
   transcript: Ref.Ref(Text.Text).pipe(
-    Schema.annotations({ description: 'Generated transcript text object.' }),
+    Schema.annotations({ description: 'Generated transcript.' }),
+    FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
+  summary: Ref.Ref(Text.Text).pipe(
+    Schema.annotations({ description: 'Generated summary.' }),
     FormInputAnnotation.set(false),
     Schema.optional,
   ),

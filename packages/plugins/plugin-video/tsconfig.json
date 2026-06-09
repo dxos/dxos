@@ -33,10 +33,22 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
@@ -51,10 +63,28 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

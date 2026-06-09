@@ -4,4 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const VideoOperationHandlerSet = OperationHandlerSet.lazy(() => import('./transcribe'));
+// TODO(burdon): Import from EDGE.
+export * as TranscriptionService from './TranscriptionService';
+
+export const VideoOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./transcribe'),
+  () => import('./summarize'),
+);

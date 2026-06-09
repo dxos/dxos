@@ -24,19 +24,19 @@ type Story = StoryObj<typeof meta>;
 export const YouTube: Story = {
   args: {
     url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    classNames: 'is-[40rem]',
+    classNames: 'w-[40rem]',
   },
 };
 
 export const Vimeo: Story = {
   args: {
     url: 'https://vimeo.com/76979871',
-    classNames: 'is-[40rem]',
+    classNames: 'w-[40rem]',
   },
 };
 
 export const Empty: Story = {
   args: {
-    classNames: 'is-[40rem]',
+    classNames: 'w-[40rem]',
   },
 };
