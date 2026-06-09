@@ -75,6 +75,9 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
   }, [video.url, video.transcript, invokePromise, subject, retryCount]);
 
   if (!video.transcript) {
+    if (!video.url) {
+      return <Pending label={t('no-url.pending.label')} />;
+    }
     if (transcribeFailed) {
       return (
         <div className='grid place-items-center w-full p-4 text-description gap-2'>

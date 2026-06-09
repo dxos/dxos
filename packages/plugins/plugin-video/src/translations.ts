@@ -33,6 +33,7 @@ export const translations = [
         'open-original.label': 'Open original',
         'transcript.tab.label': 'Transcript',
         'summary.tab.label': 'Summary',
+        'no-url.pending.label': 'Set a video URL to generate a transcript.',
         'transcribing.pending.label': 'Generating transcript…',
         'summarizing.pending.label': 'Generating summary…',
         'regenerate.label': 'Regenerate summary',
