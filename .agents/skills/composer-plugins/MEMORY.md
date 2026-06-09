@@ -22,6 +22,10 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - In plugins, `Operation`/`OperationHandlerSet` come from `@dxos/compute` (the operations SKILL says `@dxos/operation` — wrong for plugin code). Handler reads input directly via `Effect.fn(function* ({ video, lang }) {...})`; resolve refs with `Database.load(ref)`, create with `Database.add(obj)`, mutate with `Obj.update`. Op needs `services: [Database.Service]`; the invoker scopes the space from the input ref (pass `Ref.make(liveObj)`), same as `plugin-assistant/operations/update-chat-name.ts`.
 - A client-side EDGE call with no auth is just `Effect.tryPromise(() => fetch(url))` in the handler — no EdgeHttpClient needed for a public worker on a distinct host.
 
+### create→navigate crash `Open` / `Database.Service space=<missing>` is a STALE-BRANCH symptom, not a plugin bug
+
+- Symptom: creating ANY object (reproduced with Sketch too) throws `ServiceNotAvailable: @dxos/echo/Database/Service (affinity=process) space=<missing>` from `LayoutOperation.Open` (deck `operations/open.ts`), crashing the create dialog + app boot (deck url-handler reopens the active subject). Root cause: an older `Open` declared `services: [Capability.Service, Database.Service]`; the create dialog/url-handler invoke it without `spaceId`, so the spawned process can't materialise the space-affinity `Database.Service`. Fixed on main by #11725 (dropped `Database.Service` from `Open`). **If a new-plugin branch hits this, it's behind main — merge `origin/main`.** Confirm with `git show origin/main:packages/sdk/app-toolkit/src/operations.ts | sed -n '/const Open/,/services/p'`.
+
 ### Reuse `Text.Text` from `@dxos/schema` for text-body refs
 
 - A "transcript/notes text object" ref is `Ref.Ref(Text.Text)` (`@dxos/schema`), created with `Text.make({ name, content })`. Schema registration is deduped by URI across plugins (`plugin-client/capabilities/schema-defs.ts`), so registering `Text.Text` in your `addSchemaModule` alongside markdown is safe (idempotent).
