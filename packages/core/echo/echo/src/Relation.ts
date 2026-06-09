@@ -578,4 +578,4 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom: typeof atomInternal.makeRelation = atomInternal.makeRelation;
+export const atom = atomInternal.makeRelation;

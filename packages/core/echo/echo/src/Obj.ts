@@ -917,6 +917,6 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom: typeof atomInternal.make = atomInternal.make;
-export const atomReactive: typeof atomInternal.makeWithReactive = atomInternal.makeWithReactive;
-export const atomProperty: typeof atomInternal.makeProperty = atomInternal.makeProperty;
+export const atom = atomInternal.make;
+export const atomReactive = atomInternal.makeWithReactive;
+export const atomProperty = atomInternal.makeProperty;

@@ -340,4 +340,4 @@ export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void
 // Atoms
 //
 
-export const atom: typeof atomInternal.makeEntity = atomInternal.makeEntity;
+export const atom = atomInternal.makeEntity;
