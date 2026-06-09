@@ -535,6 +535,9 @@
       "path": "packages/plugins/plugin-trip/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-video/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {
