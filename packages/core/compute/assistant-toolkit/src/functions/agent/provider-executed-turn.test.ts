@@ -20,7 +20,11 @@ import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 // provider-executed calls, so a paused web-search turn reports `done: true` and the loop exits
 // before the search completes — the agent never gets results and never calls `completeJob`.
 
-const FINISH = (reason: string) => ({ type: 'finish', reason, usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 } });
+const FINISH = (reason: string) => ({
+  type: 'finish',
+  reason,
+  usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+});
 
 // Turn 1: a provider-executed web-search call, then a paused finish (no results yet).
 const PAUSED_WEB_SEARCH_TURN = [
@@ -59,24 +63,21 @@ const scriptedAiService = (model: LanguageModel.LanguageModel): Layer.Layer<AiSe
 describe('AiRequest provider-executed tool turns', () => {
   it.effect(
     'continues the turn loop after a paused provider-executed (web search) tool call',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const scripted = makeScriptedModel([PAUSED_WEB_SEARCH_TURN, DONE_TURN, DONE_TURN]);
+    Effect.fnUntraced(function* ({ expect }) {
+      const scripted = makeScriptedModel([PAUSED_WEB_SEARCH_TURN, DONE_TURN, DONE_TURN]);
 
-        const request = new AiRequest.Request();
-        yield* request
-          .run({ prompt: 'Research Sentry.', system: 'You are a test agent.' })
-          .pipe(
-            Effect.provide(ToolExecutionServices),
-            Effect.provide(AssistantTestLayer({ aiService: scriptedAiService(scripted.model) })),
-          );
+      const request = new AiRequest.Request();
+      yield* request
+        .run({ prompt: 'Research Sentry.', system: 'You are a test agent.' })
+        .pipe(
+          Effect.provide(ToolExecutionServices),
+          Effect.provide(AssistantTestLayer({ aiService: scriptedAiService(scripted.model) })),
+        );
 
-        // The loop must call the model at least twice: once for the paused web-search turn, then
-        // again to continue once the provider tool completes. With the bug it stops after one call.
-        expect(scripted.callCount).toBeGreaterThanOrEqual(2);
-      },
-      TestHelpers.provideTestContext,
-    ),
+      // The loop must call the model at least twice: once for the paused web-search turn, then
+      // again to continue once the provider tool completes. With the bug it stops after one call.
+      expect(scripted.callCount).toBeGreaterThanOrEqual(2);
+    }, TestHelpers.provideTestContext),
     { timeout: 20_000 },
   );
 });

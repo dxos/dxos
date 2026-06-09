@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Mailbox } from '@dxos/plugin-inbox';
 import { GraphBuilder } from '@dxos/plugin-graph';
+import { Mailbox } from '@dxos/plugin-inbox';
 
 import { meta } from '#meta';
 

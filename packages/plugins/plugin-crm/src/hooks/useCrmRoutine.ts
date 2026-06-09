@@ -81,11 +81,7 @@ export const useCrmRoutine = ({
   const handleSetup = useCallback(async () => {
     setPending(true);
     try {
-      await invokePromise(
-        CrmOperation.SetupMailboxCrm,
-        { mailboxUri: Obj.getURI(mailbox) },
-        { spaceId: db?.spaceId },
-      );
+      await invokePromise(CrmOperation.SetupMailboxCrm, { mailboxUri: Obj.getURI(mailbox) }, { spaceId: db?.spaceId });
     } finally {
       setPending(false);
     }

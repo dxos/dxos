@@ -53,11 +53,11 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
     !typename
       ? Query.select(Filter.nothing())
       : typename === ANY_OBJECT_TYPENAME
-      ? // For Ref.Ref(Obj.Unknown) show all space objects (registry is too broad for "any").
-        Query.select(Filter.everything())
-      : // Fan across space + registry so keyed entities (blueprints, operations, etc.)
-        // stored in the registry are included as picker options alongside local ones.
-        Query.select(Filter.typename(typename)).from(Scope.space(), Scope.registry()),
+        ? // For Ref.Ref(Obj.Unknown) show all space objects (registry is too broad for "any").
+          Query.select(Filter.everything())
+        : // Fan across space + registry so keyed entities (blueprints, operations, etc.)
+          // stored in the registry are included as picker options alongside local ones.
+          Query.select(Filter.typename(typename)).from(Scope.space(), Scope.registry()),
   );
 
 export type RefFieldProps = FormFieldComponentProps &

@@ -7,8 +7,8 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { ProfileOf } from '#types';
 import { translations } from '#translations';
+import { ProfileOf } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
