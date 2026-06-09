@@ -10,8 +10,9 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -69,7 +70,7 @@ const handler: Operation.WithHandler<typeof VideoOperation.Summarize> = VideoOpe
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          registryLayerNoop,
         ),
       ),
     ),
