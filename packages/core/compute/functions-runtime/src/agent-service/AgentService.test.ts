@@ -372,9 +372,9 @@ describe('Agent Service', () => {
           yield* agent.waitForCompletion();
 
           // The post-turn reconcile spawned a linked child; its exit drives onChildEvent → onComplete.
-          yield* Effect.promise(() =>
-            expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1),
-          );
+          yield* Effect.promise(async () => {
+            await expect.poll(() => delegationHarness.completed.length, { timeout: 5_000 }).toBe(1);
+          });
 
           const [completion] = delegationHarness.completed;
           expect(completion.id).toBe('task-1');
