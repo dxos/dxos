@@ -202,7 +202,6 @@ export const AssistantTestServiceResolverLayer = ({
  * Only storage + registry.
  */
 export const AssistantTestBaseLayer = ({
-  aiService,
   operationHandlers = [],
   toolkits = [],
   types = [],

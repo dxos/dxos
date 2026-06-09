@@ -481,7 +481,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
 
   #makeAlarmSleepEffect(delay: number): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.withClock(this.#clock));
+      // 0ms delays must not block on the TestClock — use yieldNow() so they complete in the
+      // current event loop without requiring a TestClock.adjust call from the test.
+      if (delay > 0) {
+        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.withClock(this.#clock));
+      } else {
+        yield* Effect.yieldNow();
+      }
       this.#alarmFiber = null;
       this.#alarmDueAt = null;
       yield* this.#persistence.setAlarm(null);

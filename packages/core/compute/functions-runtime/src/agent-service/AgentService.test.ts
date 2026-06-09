@@ -443,8 +443,7 @@ const ALARM_SYSTEM_PROMPT = trim`
 const AlarmTestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed],
   systemPrompt: ALARM_SYSTEM_PROMPT,
-  aiServicePreset: 'direct',
-  model: 'ai.claude.model.claude-sonnet-4-5',
+  model: 'ai.claude.model.claude-opus-4-6',
 });
 
 /**
