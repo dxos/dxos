@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
 import { registryLayer } from '@dxos/echo-db';
+import { DXN } from '@dxos/keys';
 
 import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
@@ -109,8 +109,8 @@ describe('Template', () => {
       },
       schedule: () => Effect.succeed(undefined),
       invokePromise: () => Promise.resolve({}),
-    // Operation.OperationService.invoke is a complex overloaded type; a partial test stub
-    // cannot express all overload variants without the cast.
+      // Operation.OperationService.invoke is a complex overloaded type; a partial test stub
+      // cannot express all overload variants without the cast.
     } as unknown as Operation.OperationService);
 
     test('resolves a value-kind input from its default', async () => {

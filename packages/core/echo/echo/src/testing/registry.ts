@@ -13,33 +13,30 @@ import * as Registry from '../Registry';
  * Use this in test layer stacks that require `Registry.Service` but don't need
  * actual registry contents.
  */
-export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(
-  Registry.Service,
-  {
-    [Registry.TypeId]: Registry.TypeId,
-    id: 'noop-registry',
-    changed: new Event<void>(),
-    local: [],
-    add: () => {},
-    remove: () => false,
-    clear: () => {},
-    get: () => undefined,
-    getByURI: () => undefined,
-    list: () => [],
-    // QueryFn is an overloaded interface — a single generic function cannot satisfy both overload
-    // signatures without a cast. This is the intentional type-system boundary.
-    query: ((_queryOrFilter: unknown) => ({
-      results: [],
-      entries: [],
-      run: async () => [],
-      runEntries: async () => [],
-      runSync: () => [],
-      runSyncEntries: () => [],
-      first: async (): Promise<never> => {
-        throw new Error('registryLayerNoop: registry is empty');
-      },
-      firstOrUndefined: async () => undefined,
-      subscribe: () => () => {},
-    })) as Registry.Registry['query'],
-  } satisfies Registry.Registry,
-);
+export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Registry.Service, {
+  [Registry.TypeId]: Registry.TypeId,
+  id: 'noop-registry',
+  changed: new Event<void>(),
+  local: [],
+  add: () => {},
+  remove: () => false,
+  clear: () => {},
+  get: () => undefined,
+  getByURI: () => undefined,
+  list: () => [],
+  // QueryFn is an overloaded interface — a single generic function cannot satisfy both overload
+  // signatures without a cast. This is the intentional type-system boundary.
+  query: ((_queryOrFilter: unknown) => ({
+    results: [],
+    entries: [],
+    run: async () => [],
+    runEntries: async () => [],
+    runSync: () => [],
+    runSyncEntries: () => [],
+    first: async (): Promise<never> => {
+      throw new Error('registryLayerNoop: registry is empty');
+    },
+    firstOrUndefined: async () => undefined,
+    subscribe: () => () => {},
+  })) as Registry.Registry['query'],
+} satisfies Registry.Registry);

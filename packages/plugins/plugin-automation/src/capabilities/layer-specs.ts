@@ -10,7 +10,8 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';import { ProcessManager } from '@dxos/compute-runtime';
+import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Registry } from '@dxos/echo';
 import {
   AgentService,

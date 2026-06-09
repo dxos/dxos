@@ -24,12 +24,7 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import {
-  type Credential,
-  Operation,
-  type ServiceNotAvailableError,
-  Trace,
-} from '@dxos/compute';
+import { type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
