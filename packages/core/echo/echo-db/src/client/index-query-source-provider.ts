@@ -295,7 +295,8 @@ export class IndexQuerySource implements QuerySource {
    * strong-dep resolution or network fetches for materialized cores.
    */
   private async _resolveIndexedObject(result: RemoteQueryResult): Promise<Entity.Unknown | undefined> {
-    const database = this._params.graph.getDatabase(result.spaceId);
+    const spaceId = SpaceId.make(result.spaceId);
+    const database = this._params.graph.getDatabase(spaceId);
     if (database) {
       const cached = database.getObjectById(result.id, { deleted: true });
       if (cached) {
@@ -306,7 +307,7 @@ export class IndexQuerySource implements QuerySource {
     try {
       return await asyncTimeout(
         this._params.objectLoader.loadObject({
-          spaceId: result.spaceId,
+          spaceId,
           objectId: result.id,
           documentId: result.documentId,
         }),
@@ -314,7 +315,7 @@ export class IndexQuerySource implements QuerySource {
       );
     } catch (err) {
       if (err instanceof TimeoutError) {
-        log.warn('index object load timed out', { objectId: result.id, spaceId: result.spaceId });
+        log.warn('index object load timed out', { objectId: result.id, spaceId });
         return undefined;
       }
       throw err;
