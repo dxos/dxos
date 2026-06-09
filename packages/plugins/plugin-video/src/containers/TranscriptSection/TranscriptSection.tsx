@@ -45,14 +45,15 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
   // Auto-generate the transcript when missing. The `running` ref guards against re-entrancy across the
   // async gap before the reactive `video.transcript` field updates.
   const runningRef = useRef(false);
-  const [transcribeFailed, setTranscribeFailed] = useState(false);
+  const [transcribeError, setTranscribeError] = useState<string | undefined>(undefined);
   const [retryCount, setRetryCount] = useState(0);
   useEffect(() => {
     if (!video.url || video.transcript || runningRef.current || !invokePromise) {
       return;
     }
     runningRef.current = true;
-    setTranscribeFailed(false);
+    setTranscribeError(undefined);
+    // invokePromise always resolves with { data?, error? } — it never rejects.
     void invokePromise(
       VideoOperation.Transcribe,
       { video: Ref.make(subject) },
@@ -61,14 +62,9 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
         notify: { error: ['transcribe-error.message', { ns: meta.id }] },
       },
     )
-      .then(
-        () => {
-          setTranscribeFailed(false);
-        },
-        () => {
-          setTranscribeFailed(true);
-        },
-      )
+      .then(({ error }) => {
+        setTranscribeError(error?.message);
+      })
       .finally(() => {
         runningRef.current = false;
       });
@@ -78,10 +74,10 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     if (!video.url) {
       return <Pending label={t('no-url.pending.label')} />;
     }
-    if (transcribeFailed) {
+    if (transcribeError !== undefined) {
       return (
         <div className='grid place-items-center w-full p-4 text-description gap-2'>
-          <span>{t('transcribe-error.message')}</span>
+          <span>{transcribeError}</span>
           <Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}
           </Button>

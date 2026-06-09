@@ -54,6 +54,11 @@ const fetchTranscript = (url: string, lang: string) =>
       // so a direct browser fetch is blocked. `proxyFetchLegacy` forwards the request server-side.
       const response = await proxyFetchLegacy(target);
       if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        if (response.status === 404) {
+          // The transcription worker returns 404 when the video is private, deleted, or region-restricted.
+          throw new Error(`Video is unavailable or private. (${body.trim() || response.status})`);
+        }
         throw new Error(`Transcription service returned ${response.status}.`);
       }
       const payload = (await response.json()) as TranscriptionService.TranscriptResponse;
