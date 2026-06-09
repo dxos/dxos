@@ -3,13 +3,9 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import * as Context from 'effect/Context';
-import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as Layer from 'effect/Layer';
-import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
@@ -18,147 +14,19 @@ import { expect } from 'vitest';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
-import { Process } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { ProcessManager } from '../index';
+import * as ResearchService from '../testing/ResearchService';
 import * as AgentService from './AgentService';
 
 EntityId.dangerouslyDisableRandomness();
 
-//
-// Test data.
-//
-
-const TEST_DATA = {
-  organizations: [
-    Organization.make({
-      name: 'Cyberdyne Systems',
-      website: 'https://cyberdyne.com',
-    }),
-    Organization.make({
-      name: 'Acme Robotics',
-      website: 'https://acmerobotics.example',
-    }),
-    Organization.make({
-      name: 'Globex Research',
-      website: 'https://globex.example',
-    }),
-  ],
-  research: {
-    'https://cyberdyne.com': `
-      Cyberdyne Systems is a company that builds AI agents.
-      They are based in San Francisco, California.
-      They were founded in 1984.
-      They are a public company.
-      They are listed on the NASDAQ under the symbol CYBR.
-      They are a member of the S&P 500 index.
-    `,
-    'https://acmerobotics.example': `
-      Acme Robotics designs industrial automation and collaborative robots.
-      They are headquartered in Austin, Texas.
-      They were founded in 2010.
-      They serve manufacturing and logistics customers worldwide.
-    `,
-    'https://globex.example': `
-      Globex Research runs applied R&D labs focused on materials science and energy storage.
-      They are based in Cambridge, Massachusetts.
-      They partner with universities and government grants programs.
-      Their flagship product line is solid-state battery prototypes for EVs.
-    `,
-  } as Record<string, string>,
-};
-
-interface ResearchTask {
-  id: string;
-  state: 'pending' | 'completed' | 'interrupted';
-  website: string;
-  deferred: Deferred.Deferred<string>;
-}
-
-class ResearchService extends Context.Tag('@dxos/functions-runtime/ResearchService')<
-  ResearchService,
-  {
-    getTasks: () => readonly ResearchTask[];
-    research: (website: string) => Effect.Effect<string>;
-    waitForTaskToAppear: () => Effect.Effect<void>;
-    completeOneTask: () => Effect.Effect<void>;
-    completeAllTasks: () => Effect.Effect<void>;
-  }
->() {}
-
-const makeResearchService = Layer.effect(
-  ResearchService,
-  Effect.gen(function* () {
-    const taskSignal = yield* Queue.unbounded<void>();
-    const tasks: ResearchTask[] = [];
-    const complete = (task: ResearchTask) =>
-      Effect.gen(function* () {
-        log.info('complete research', { id: task.id, website: task.website });
-        task.state = 'completed';
-        const result = TEST_DATA.research[task.website];
-        if (!result) {
-          yield* Effect.die(new Error(`No research found for ${task.website}`));
-          return;
-        }
-        yield* Deferred.succeed(task.deferred, result);
-      });
-
-    return ResearchService.of({
-      getTasks: () => tasks,
-      research: (website: string) =>
-        Effect.gen(function* () {
-          const id = crypto.randomUUID();
-          const task: ResearchTask = { id, state: 'pending', website, deferred: yield* Deferred.make<string>() };
-          log.info('start research', { id, website });
-          tasks.push(task);
-          yield* Queue.offer(taskSignal, undefined);
-          return yield* Deferred.await(task.deferred).pipe(
-            Effect.onInterrupt(() =>
-              Effect.sync(() => {
-                log.info('interrupt research', { id, website: task.website });
-                task.state = 'interrupted';
-              }),
-            ),
-          );
-        }),
-      waitForTaskToAppear: () =>
-        Effect.gen(function* () {
-          while (true) {
-            const task = tasks.find((t) => t.state === 'pending');
-            if (task) {
-              return;
-            }
-            yield* Queue.take(taskSignal);
-          }
-        }),
-      completeOneTask: () =>
-        Effect.gen(function* () {
-          const task = tasks.find((t) => t.state === 'pending');
-          if (!task) {
-            return;
-          }
-          yield* complete(task);
-        }),
-      completeAllTasks: () =>
-        Effect.gen(function* () {
-          while (true) {
-            const task = tasks.find((t) => t.state === 'pending');
-            if (!task) {
-              return;
-            }
-            yield* complete(task!);
-          }
-        }),
-    });
-  }),
-);
 
 const Research = Operation.make({
   meta: {
@@ -170,14 +38,14 @@ const Research = Operation.make({
     website: Schema.String.annotations({ description: 'The website of the organization to research' }),
   }),
   output: Schema.String,
-  services: [ResearchService],
+  services: [ResearchService.ResearchService],
 });
 
 const handlers = OperationHandlerSet.make(
   Research.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ website }) {
-        const research = yield* ResearchService;
+        const research = yield* ResearchService.ResearchService;
         const result = yield* research.research(website);
         return result;
       }),
@@ -197,7 +65,7 @@ const assistantTestLayerOptions = {
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
-  extraServices: makeResearchService,
+  extraServices: ResearchService.layer,
 };
 
 const TestLayer = AssistantTestLayer({
@@ -236,9 +104,9 @@ describe('Agent Service', () => {
         const agent = yield* AgentService.createSession({
           blueprints: [ResearchBlueprint],
         });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
-        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeOneTask();
         yield* agent.waitForCompletion();
@@ -256,8 +124,8 @@ describe('Agent Service', () => {
         let agent = yield* AgentService.createSession({
           blueprints: [ResearchBlueprint],
         });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
-        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
+        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
 
         yield* agent.terminate();
@@ -275,9 +143,9 @@ describe('Agent Service', () => {
         let agent = yield* AgentService.createSession({
           blueprints: [ResearchBlueprint],
         });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
-        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
 
         const processManager = yield* ProcessManager.ProcessManagerService;
@@ -306,9 +174,9 @@ describe('Agent Service', () => {
         let agent = yield* AgentService.createSession({
           blueprints: [ResearchBlueprint],
         });
-        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+        yield* agent.submitPrompt(`Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`);
 
-        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeOneTask();
 
@@ -389,7 +257,7 @@ describe('Agent Service', () => {
           blueprints: [ResearchBlueprint],
         });
 
-        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         const taskDrainer = yield* Effect.gen(function* () {
           yield* researchService.waitForTaskToAppear();
           yield* researchService.completeOneTask();
@@ -409,7 +277,7 @@ describe('Agent Service', () => {
           Effect.fork,
         );
 
-        for (const org of TEST_DATA.organizations) {
+        for (const org of ResearchService.getTestData().organizations) {
           yield* agent.submitPrompt(JSON.stringify(org));
         }
         yield* agent.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
