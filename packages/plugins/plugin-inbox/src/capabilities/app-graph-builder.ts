@@ -351,7 +351,9 @@ export default Capability.makeModule(
           }
 
           const eventId = get(selectedId(matched.nodeId));
-          const fromFeed = get(db.query(Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)).atom)[0];
+          const fromFeed = get(
+            db.query(Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)).atom,
+          )[0];
           // Draft events live in the space db (not the feed); fall back to a db lookup so the
           // companion resolves a locally-created event too.
           const fromDb = eventId ? get(db.query(Query.select(Filter.id(eventId))).atom)[0] : undefined;
