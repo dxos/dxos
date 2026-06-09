@@ -4,7 +4,8 @@
 
 import { useCallback } from 'react';
 
-import { type ControlProps, type GlobeController } from '../components';
+import { type ControlProps } from '../components';
+import { type GlobeController } from './context';
 
 const ZOOM_FACTOR = 0.1;
 

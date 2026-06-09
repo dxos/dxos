@@ -75,7 +75,11 @@ export type MediaPlayerProps = ThemedClassName<{
   autoPlay?: boolean;
   loop?: boolean;
   muted?: boolean;
-  /** Defaults to 'anonymous' for cross-origin sources (e.g. signed S3 URLs). */
+  /**
+   * CORS mode for `<video>`/`<audio>`. Omitted by default — plain playback needs no CORS, and
+   * forcing it breaks sources whose response/redirect lacks `access-control-allow-origin` (e.g.
+   * Cloudflare Stream's signed MP4 redirect). Set 'anonymous' only when reading frames into a canvas.
+   */
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   /** CSS `object-fit` for `<img>` and `<video>`. Ignored for `<iframe>`/`<audio>`. Defaults to 'cover'. */
   fit?: MediaFit;
@@ -97,7 +101,7 @@ export const MediaPlayer = ({
   loop = false,
   muted = false,
   alt,
-  crossOrigin = 'anonymous',
+  crossOrigin,
   fit = 'cover',
 }: MediaPlayerProps) => {
   const fitClass = FIT_CLASS[fit];

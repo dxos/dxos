@@ -136,15 +136,17 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
           // Carousel resets to index 0 (the latest) every time a new url is
           // prepended — `key={urls.length}` forces a fresh mount on growth so
           // the user lands on the new clip without manual navigation.
-          <Carousel.Root key={urls.length} count={urls.length} classNames='min-h-0 h-full p-2'>
-            <Carousel.Previous />
-            <Carousel.Viewport classNames='aspect-auto h-full'>
-              {urls.map((url, index) => (
-                <Carousel.Slide key={url} index={index} src={url} kind={generation.type} />
-              ))}
-            </Carousel.Viewport>
-            <Carousel.Next />
-            <Carousel.Indicators />
+          <Carousel.Root key={urls.length} count={urls.length}>
+            <Carousel.Content classNames='min-h-0 h-full p-2'>
+              <Carousel.Previous />
+              <Carousel.Viewport classNames='aspect-auto h-full'>
+                {urls.map((url, index) => (
+                  <Carousel.Slide key={url} index={index} src={url} kind={generation.type} />
+                ))}
+              </Carousel.Viewport>
+              <Carousel.Next />
+              <Carousel.Indicators />
+            </Carousel.Content>
           </Carousel.Root>
         )}
       </Panel.Content>

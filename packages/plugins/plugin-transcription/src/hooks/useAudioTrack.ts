@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 /**
  *
  */
-// TODO(burdon): Reconcile with react-ui-sfx and plugin-calls.
+// TODO(burdon): Reconcile with react-ui-experimental and plugin-calls.
 export const useAudioTrack = (active?: boolean, constraints?: MediaTrackConstraints): MediaStreamTrack | undefined => {
   const [track, setTrack] = useState<MediaStreamTrack>();
   useEffect(() => {

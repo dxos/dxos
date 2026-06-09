@@ -4,27 +4,24 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Settings } from '#types';
 
-export type SupportSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
+export type SupportSettingsProps = {
+  onShowWelcome?: () => void;
+};
 
-export const SupportSettings = ({ settings, onSettingsChange }: SupportSettingsProps) => {
+export const SupportSettings = ({ onShowWelcome }: SupportSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.FieldSet
-          readonly={!onSettingsChange}
-          schema={Settings.Settings}
-          values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
-        />
+        <SettingsForm.Item title={t('show-welcome.label')} description={t('show-welcome.description')}>
+          <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
+        </SettingsForm.Item>
       </SettingsForm.Section>
     </SettingsForm.Viewport>
   );

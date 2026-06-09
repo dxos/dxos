@@ -34,12 +34,23 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
         "default": "./dist/lib/node-esm/index.mjs"
-      }
+      },
+      "default": "./dist/lib/node-esm/index.mjs"
+    },
+    "./file-processor": {
+      "source": "./src/processors/file-processor.ts",
+      "types": "./dist/types/src/processors/file-processor.d.ts",
+      "node": {
+        "require": "./dist/lib/node/processors/file-processor.cjs",
+        "default": "./dist/lib/node-esm/processors/file-processor.mjs"
+      },
+      "default": "./dist/lib/node-esm/processors/file-processor.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

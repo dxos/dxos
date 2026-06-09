@@ -9,19 +9,19 @@ import { Operation } from '@dxos/compute';
 
 import { SupportOperation } from '#types';
 
-import { WELCOME_NODE_ID } from '../constants';
+import { SPACE_HOME_NODE_ID } from '../constants';
 
 const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = SupportOperation.OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space, isDefault }) {
-      // The Welcome node is fully virtual and only emitted for the personal space.
+      // On personal-space creation, land on its Home node (where the Welcome content is shown).
       if (!isDefault) {
         return;
       }
-      const welcomePath = `${getSpacePath(space.id)}/${WELCOME_NODE_ID}`;
-      yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: welcomePath });
+      const homePath = `${getSpacePath(space.id)}/${SPACE_HOME_NODE_ID}`;
+      yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: homePath });
       // Expose is scheduled because the navtree may not have rendered yet at this point.
-      yield* Operation.schedule(LayoutOperation.Expose, { subject: welcomePath });
+      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
     }),
   ),
 );

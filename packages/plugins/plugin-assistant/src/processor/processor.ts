@@ -290,10 +290,13 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     await EffectEx.runAndForwardErrors(
       Effect.gen(this, function* () {
+        log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-      }),
+        const session = yield* AgentService.getSession(this._feed);
+        yield* session.terminate();
+      }).pipe(Effect.provide(this._spaceLayer)),
     );
 
     this.#requestFiber = undefined;

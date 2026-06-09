@@ -90,6 +90,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-audio"
+    },
+    {
       "path": "../../ui/react-ui-components"
     },
     {
@@ -103,9 +106,6 @@
     },
     {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
