@@ -2,12 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
@@ -21,7 +17,6 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ThreadOperation } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -44,16 +39,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     id: 'channel-backend-feed',
     activatesOn: ActivationEvents.Startup,
     activate: ChannelBackendFeed,
-  }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(ThreadOperation.OnCreateSpace, params),
-        ),
-      ),
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
