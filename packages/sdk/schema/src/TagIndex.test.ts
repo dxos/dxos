@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { createFeedServiceLayer, getObjectCore } from '@dxos/echo-db';
@@ -16,21 +16,51 @@ import { EntityId } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';
 
-/** A minimal immutable feed item. */
+/** A minimal item standing in for an immutable feed object. */
 const Item = Schema.Struct({
   text: Schema.String,
 }).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0')));
 
-/** Minimal host for op-count benchmarks (no required feed ref). */
-const BenchHost = Schema.Struct({
-  tags: TagIndex.field(),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.BenchHost', '0.1.0')));
-
-/** A host pairing an immutable feed of items with a tag index over them. */
+/** A host pairing an immutable feed of items with a referenced tag index over them. */
 const Host = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
-  tags: TagIndex.field(),
+  tags: Ref.Ref(TagIndex.TagIndex),
 }).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0')));
+
+describe('TagIndex', () => {
+  test('sets, unsets, and inverts feed-object tags', () => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const a = Obj.make(Item, { text: 'a' });
+    const b = Obj.make(Item, { text: 'b' });
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, a.id);
+    tags.setTag(urgent, b.id);
+    tags.setTag(later, b.id);
+    // Idempotent.
+    tags.setTag(urgent, a.id);
+
+    // Filter the feed by tag: tag -> object ids.
+    expect([...tags.objects(urgent)]).toEqual([a.id, b.id]);
+    expect([...tags.objects(later)]).toEqual([b.id]);
+    expect([...tags.objects('dxn:tag:missing')]).toEqual([]);
+
+    // Inverse: object -> tag ids.
+    expect(tags.tags(b.id).sort()).toEqual([later, urgent]);
+    expect(tags.tags(a.id)).toEqual([urgent]);
+    expect(tags.tagIds().sort()).toEqual([later, urgent]);
+
+    // Unset prunes the membership; emptying a tag drops the key.
+    tags.unsetTag(urgent, a.id);
+    expect([...tags.objects(urgent)]).toEqual([b.id]);
+    tags.unsetTag(urgent, b.id);
+    expect([...tags.objects(urgent)]).toEqual([]);
+    expect(tags.tagIds()).toEqual([later]);
+  });
+});
 
 describe('TagIndex (feed integration)', () => {
   let builder: EchoTestBuilder;
@@ -46,16 +76,16 @@ describe('TagIndex (feed integration)', () => {
   // Regression for DX-984: setTag/unsetTag must use push/splice (in-place), not spread-replace.
   // Spread-replace causes O(n) Automerge ops per call → O(n²) total → multi-MiB documents.
   test('setTag emits O(1) Automerge ops per append', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [BenchHost] });
+    await using peer = await builder.createPeer({ types: [TagIndex.TagIndex] });
     const db = await peer.createDatabase();
     const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
-      const host = yield* Database.add(Obj.make(BenchHost, {}));
+      const tagIndex = yield* Database.add(TagIndex.make());
       yield* Database.flush();
 
-      const tags = TagIndex.bind(host, 'tags');
-      const core = getObjectCore(host);
+      const tags = TagIndex.bind(tagIndex);
+      const core = getObjectCore(tagIndex);
       const urgent = 'dxn:tag:urgent';
       const N = 200;
 
@@ -73,16 +103,16 @@ describe('TagIndex (feed integration)', () => {
   });
 
   test('unsetTag emits O(1) Automerge ops per removal', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [BenchHost] });
+    await using peer = await builder.createPeer({ types: [TagIndex.TagIndex] });
     const db = await peer.createDatabase();
     const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
-      const host = yield* Database.add(Obj.make(BenchHost, {}));
+      const tagIndex = yield* Database.add(TagIndex.make());
       yield* Database.flush();
 
-      const tags = TagIndex.bind(host, 'tags');
-      const core = getObjectCore(host);
+      const tags = TagIndex.bind(tagIndex);
+      const core = getObjectCore(tagIndex);
       const urgent = 'dxn:tag:urgent';
       const N = 200;
       const ids = Array.from({ length: N }, () => EntityId.random());
@@ -104,15 +134,17 @@ describe('TagIndex (feed integration)', () => {
   });
 
   test('tags immutable feed objects and filters the feed by tag', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Feed.Feed, Item, Host] });
+    await using peer = await builder.createPeer({ types: [Feed.Feed, Item, Host, TagIndex.TagIndex] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const host = yield* Database.add(Obj.make(Host, { feed: Ref.make(feed) }));
+      const tagIndex = yield* Database.add(TagIndex.make());
+      const host = yield* Database.add(Obj.make(Host, { feed: Ref.make(feed), tags: Ref.make(tagIndex) }));
       Obj.setParent(feed, host);
+      Obj.setParent(tagIndex, host);
       yield* Database.flush();
 
       // Append immutable items to the feed.
@@ -122,7 +154,7 @@ describe('TagIndex (feed integration)', () => {
 
       // Tag feed objects by their ids (tag ids reference existing Tag objects/URIs).
       const urgent = 'dxn:echo:@:urgent';
-      const tags = TagIndex.bind(host, 'tags');
+      const tags = TagIndex.bind(tagIndex);
       tags.setTag(urgent, hello.id);
 
       // Persisted across a round-trip read (arrays stored as arrays, not numeric-keyed objects).

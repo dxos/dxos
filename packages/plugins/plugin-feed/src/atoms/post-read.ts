@@ -4,7 +4,7 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { StateMap } from '@dxos/app-toolkit';
+import { StateMap } from '@dxos/schema';
 
 import { Subscription } from '../types';
 
@@ -27,7 +27,11 @@ export const postReadAtom = Atom.family((post: Subscription.Post) =>
     if (!subscription) {
       return EMPTY_READ_SLICE;
     }
-    const state = get(StateMap.atom<Subscription.PostState>(subscription, 'postState', post.id));
+    const stateMap = get(subscription.postState.atom);
+    if (!stateMap) {
+      return EMPTY_READ_SLICE;
+    }
+    const state = get(StateMap.atom<Subscription.PostState>(stateMap, post.id));
     return { readAt: state.readAt };
   }).pipe(Atom.keepAlive),
 );

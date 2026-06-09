@@ -65,6 +65,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "node-html-parser": "catalog:",

@@ -9,8 +9,8 @@ import { DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as Tagging from './Tagging';
 import * as TagIndex from './TagIndex';
+import * as Tagging from './Tagging';
 
 /** A minimal immutable feed item. */
 const Item = Schema.Struct({
@@ -20,7 +20,7 @@ const Item = Schema.Struct({
 /** A host pairing an immutable feed of items with a tag index over them. */
 const Host = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
-  tags: TagIndex.field(),
+  tags: Ref.Ref(TagIndex.TagIndex),
 }).pipe(Type.makeObject(DXN.make('org.dxos.test.tagging.Host', '0.1.0')));
 
 describe('Tagging', () => {
@@ -50,11 +50,16 @@ describe('Tagging', () => {
     expect(Tagging.get(person)).toEqual([]);
   });
 
-  test('tags an immutable feed object via the host TagIndex', async ({ expect }) => {
-    const { db, queues } = await builder.createDatabase({ types: [Feed.Feed, Tag.Tag, Item, Host] });
+  test('tags an immutable feed object via a referenced TagIndex', async ({ expect }) => {
+    const { db, queues } = await builder.createDatabase({
+      types: [Feed.Feed, Tag.Tag, Item, Host, TagIndex.TagIndex],
+    });
     const feed = Feed.make();
-    const host = db.add(Obj.make(Host, { feed: Ref.make(feed) }));
+    const tagIndex = TagIndex.make();
+    const host = db.add(Obj.make(Host, { feed: Ref.make(feed), tags: Ref.make(tagIndex) }));
+    // Cascade-delete the children with the host.
     Obj.setParent(feed, host);
+    Obj.setParent(tagIndex, host);
     const tag = db.add(Tag.make({ label: 'Urgent' }));
     await db.flush();
     const tagId = Obj.getURI(tag);
@@ -63,13 +68,13 @@ describe('Tagging', () => {
     const message = Obj.make(Item, { text: 'hello' });
     await queues.get(queueDxn).append([message]);
 
-    Tagging.set(message, tagId, { host });
-    expect(Tagging.get(message, { host })).toEqual([tagId]);
-    // Written through the host index, not the (immutable) message's meta.
-    expect([...TagIndex.bind(host, 'tags').objects(tagId)]).toEqual([message.id]);
+    Tagging.set(message, tagId, { index: tagIndex });
+    expect(Tagging.get(message, { index: tagIndex })).toEqual([tagId]);
+    // Written through the referenced index, not the (immutable) message's meta.
+    expect([...TagIndex.bind(tagIndex).objects(tagId)]).toEqual([message.id]);
 
-    Tagging.unset(message, tagId, { host });
-    expect(Tagging.get(message, { host })).toEqual([]);
+    Tagging.unset(message, tagId, { index: tagIndex });
+    expect(Tagging.get(message, { index: tagIndex })).toEqual([]);
   });
 
   test('resolves tag ids to Tag objects', async ({ expect }) => {
