@@ -84,7 +84,7 @@ export const translations = [
         'hide-welcome.button': 'Hide Welcome',
         // Settings.
         'settings.title': 'Support settings',
-        'show-welcome.button': 'Show welcome page',
+        'show-welcome.button': 'Show welcome',
         // Help menu (status-indicator surface; right-rail ? dropdown).
         'help-menu.label': 'Help & resources',
         'docs.label': 'Documentation',
