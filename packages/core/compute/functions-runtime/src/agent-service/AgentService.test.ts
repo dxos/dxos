@@ -68,14 +68,9 @@ const assistantTestLayerOptions = {
   extraServices: ResearchService.layer,
 };
 
-const TestLayer = AssistantTestLayer({
+const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {}) => AssistantTestLayer({
   ...assistantTestLayerOptions,
-  enableToolBackgrounding: false,
-});
-
-const BackgroundTestLayer = AssistantTestLayer({
-  ...assistantTestLayerOptions,
-  enableToolBackgrounding: true,
+  enableToolBackgrounding,
 });
 
 describe('Agent Service', () => {
@@ -91,7 +86,7 @@ describe('Agent Service', () => {
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
@@ -111,7 +106,7 @@ describe('Agent Service', () => {
         yield* researchService.completeOneTask();
         yield* agent.waitForCompletion();
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
@@ -131,7 +126,7 @@ describe('Agent Service', () => {
         yield* agent.terminate();
         expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
   );
@@ -161,7 +156,7 @@ describe('Agent Service', () => {
         agent = yield* AgentService.getSession(agent.feed);
         yield* agent.waitForCompletion();
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
@@ -196,7 +191,7 @@ describe('Agent Service', () => {
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('cyberdyne');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
@@ -227,7 +222,7 @@ describe('Agent Service', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
         expect(text.toLocaleLowerCase()).toContain('france');
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
@@ -244,7 +239,7 @@ describe('Agent Service', () => {
         yield* AgentService.hydrate();
         yield* AgentService.hydrate();
       },
-      Effect.provide(TestLayer),
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
   );
@@ -289,96 +284,99 @@ describe('Agent Service', () => {
 
         expect(ephemeralEventCount).toBeGreaterThan(0);
       },
-      Effect.provide(BackgroundTestLayer),
+      Effect.provide(TestLayer({ enableToolBackgrounding: true })),
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
   );
-});
 
-//
-// Alarm e2e (memoized LLM).
-//
 
-const ALARM_SYSTEM_PROMPT = trim`
-  You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).
-  When asked to set an alarm, you MUST call the set-alarm tool with the requested duration.
-  Do not pretend to set an alarm in text — always use the set-alarm tool.
-  After the tool succeeds, briefly confirm the alarm was scheduled and stop.
-  When you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.
+  //
+  // Alarm e2e (memoized LLM).
+  //
+
+  const ALARM_SYSTEM_PROMPT = trim`
+You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).
+When asked to set an alarm, you MUST call the set-alarm tool with the requested duration.
+Do not pretend to set an alarm in text — always use the set-alarm tool.
+After the tool succeeds, briefly confirm the alarm was scheduled and stop.
+When you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.
 `;
 
-const AlarmTestLayer = AssistantTestLayer({
-  types: [Organization.Organization, Feed.Feed],
-  systemPrompt: ALARM_SYSTEM_PROMPT,
-  aiServicePreset: 'edge-remote',
-  model: 'ai.claude.model.claude-opus-4-6',
-});
-
-/**
- * Summarizes assistant text blocks and tool-call blocks persisted to the conversation feed.
- */
-const countBlocks = (feed: Feed.Feed) =>
-  Effect.gen(function* () {
-    const queryResult = yield* Feed.query(feed, Filter.type(Message.Message));
-    const messages = (yield* Effect.promise(() => queryResult.run())).filter(Obj.instanceOf(Message.Message));
-    let assistantTexts = 0;
-    let setAlarmCalls = 0;
-    for (const message of messages) {
-      for (const block of message.blocks) {
-        if (message.sender.role === 'assistant' && block._tag === 'text') {
-          assistantTexts++;
-        }
-        if (block._tag === 'toolCall' && block.name === 'set-alarm') {
-          setAlarmCalls++;
-        }
-      }
-    }
-    return { assistantTexts, setAlarmCalls };
+  const AlarmTestLayer = AssistantTestLayer({
+    types: [Organization.Organization, Feed.Feed],
+    systemPrompt: ALARM_SYSTEM_PROMPT,
+    aiServicePreset: 'edge-remote',
+    model: 'ai.claude.model.claude-opus-4-6',
   });
 
-/**
- * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling) and
- * yields real wall time so async I/O such as memoized LLM HTTP can complete.
- */
-const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
-  Effect.gen(function* () {
-    for (let step = 0; step < 120; step++) {
-      if (yield* predicate) {
-        return;
+  /**
+  * Summarizes assistant text blocks and tool-call blocks persisted to the conversation feed.
+  */
+  const countBlocks = (feed: Feed.Feed) =>
+    Effect.gen(function* () {
+      const queryResult = yield* Feed.query(feed, Filter.type(Message.Message));
+      const messages = (yield* Effect.promise(() => queryResult.run())).filter(Obj.instanceOf(Message.Message));
+      let assistantTexts = 0;
+      let setAlarmCalls = 0;
+      for (const message of messages) {
+        for (const block of message.blocks) {
+          if (message.sender.role === 'assistant' && block._tag === 'text') {
+            assistantTexts++;
+          }
+          if (block._tag === 'toolCall' && block.name === 'set-alarm') {
+            setAlarmCalls++;
+          }
+        }
       }
-      yield* TestClock.adjust(Duration.millis(50));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
-    }
-    return yield* Effect.dieMessage('driveUntil: condition not reached');
+      return { assistantTexts, setAlarmCalls };
+    });
+
+  /**
+  * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling) and
+  * yields real wall time so async I/O such as memoized LLM HTTP can complete.
+  */
+  const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
+    Effect.gen(function* () {
+      for (let step = 0; step < 120; step++) {
+        if (yield* predicate) {
+          return;
+        }
+        yield* TestClock.adjust(Duration.millis(50));
+        // TODO(dmaretskyi): This is just pumping the real clock instead of using the TestClock.
+        yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
+      }
+      return yield* Effect.dieMessage('driveUntil: condition not reached');
+    });
+
+  describe('alarms', () => {
+    it.scoped(
+      'agent schedules a self-wake and resumes when its alarm fires (TestClock)',
+      Effect.fnUntraced(
+        function* (_) {
+          const agent = yield* AgentService.createSession({});
+
+          yield* agent.submitPrompt('Use the set-alarm tool to schedule a wake-up in 1 hour.');
+
+          // First request: the agent calls `set-alarm` then finishes, leaving a self-wake armed ~1h out.
+          yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ setAlarmCalls }) => setAlarmCalls >= 1)));
+          expect((yield* countBlocks(agent.feed)).setAlarmCalls).toBe(1);
+
+          // The process is hibernating until the self-wake fires. Advancing the clock past it resumes
+          // the agent, which produces a second response.
+          yield* TestClock.adjust(Duration.hours(1));
+          yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ assistantTexts }) => assistantTexts >= 2)));
+          yield* agent.waitForCompletion();
+
+          const final = yield* countBlocks(agent.feed);
+          expect(final.setAlarmCalls).toBe(1);
+          expect(final.assistantTexts).toBeGreaterThanOrEqual(2);
+        },
+        Effect.provide(AlarmTestLayer),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000 },
+    );
   });
 
-describe('Agent alarms', () => {
-  it.scoped(
-    'agent schedules a self-wake and resumes when its alarm fires (TestClock)',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({});
-
-        yield* agent.submitPrompt('Use the set-alarm tool to schedule a wake-up in 1 hour.');
-
-        // First request: the agent calls `set-alarm` then finishes, leaving a self-wake armed ~1h out.
-        yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ setAlarmCalls }) => setAlarmCalls >= 1)));
-        expect((yield* countBlocks(agent.feed)).setAlarmCalls).toBe(1);
-
-        // The process is hibernating until the self-wake fires. Advancing the clock past it resumes
-        // the agent, which produces a second response.
-        yield* TestClock.adjust(Duration.hours(1));
-        yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ assistantTexts }) => assistantTexts >= 2)));
-        yield* agent.waitForCompletion();
-
-        const final = yield* countBlocks(agent.feed);
-        expect(final.setAlarmCalls).toBe(1);
-        expect(final.assistantTexts).toBeGreaterThanOrEqual(2);
-      },
-      Effect.provide(AlarmTestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000 },
-  );
 });
