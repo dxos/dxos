@@ -2,146 +2,114 @@
 // Copyright 2025 DXOS.org
 //
 
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import { describe, expect, it } from 'vitest';
 
-import { Feed, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { EntityId } from '@dxos/keys';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { Message } from '@dxos/types';
 
 import * as SessionLink from './SessionLink';
 import { SessionLoader } from './SessionLoader';
 
-// Deterministic IDs so snapshots are stable across runs.
-EntityId.dangerouslyDisableRandomness();
-
-/**
- * Builds a Layer<Feed.FeedService> backed by an in-memory feed→objects map.
- * Each feed only contains the objects registered for it; unknown feeds return [].
- * SessionLoader already type-filters results via Obj.instanceOf, so returning all
- * objects is sufficient.
- */
-const makeFeedLayer = (feedMap: Map<string, object[]>): Layer.Layer<Feed.FeedService> =>
-  Layer.succeed(Feed.FeedService, {
-    append: async () => {},
-    remove: async () => {},
-    query: (feed: Feed.Feed) => ({
-      subscribe: () => () => {},
-      results: [],
-      run: async () => feedMap.get(feed.id) ?? [],
-    }),
-    sync: async () => {},
-    getSyncState: async () => ({ blocksToPull: 0, blocksToPush: 0, totalBlocks: 0 }),
-  } as any);
-
-const run = <A>(effect: Effect.Effect<A, never, Feed.FeedService>, feedMap: Map<string, object[]>): Promise<A> =>
-  EffectEx.runAndForwardErrors(effect.pipe(Effect.provide(makeFeedLayer(feedMap))));
+// Monotonic timestamps so chronological sorting in SessionLoader is deterministic.
+let clock = 0;
+const makeMessage = (text: string, sender: 'user' | 'assistant' = 'user') =>
+  Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
 
 describe('SessionLoader', () => {
-  it('returns original messages when no SessionLink exists in feed', async () => {
-    const feed = Feed.make();
-    const loader = new SessionLoader();
-    const msg = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'hello' }] });
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, Message.Message, SessionLink.SessionLink] });
 
-    const result = await run(loader.reifyHistory(feed, [msg]), new Map([[feed.id, []]]));
+  it.effect('returns original messages when no SessionLink exists in feed', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+      const message = makeMessage('hello');
+      yield* Feed.append(feed, [message]);
 
-    expect(result).toEqual([msg]);
-  });
+      const result = yield* new SessionLoader().reifyHistory(feed, [message]);
 
-  it('prepends source history when SessionLink resolves to a valid message', async () => {
-    const sourceFeed = Feed.make();
-    const forkFeed = Feed.make();
+      expect(result.map((msg) => msg.id)).toEqual([message.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-    const msg1 = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'first' }] });
-    const msg2 = Message.make({ sender: 'assistant', blocks: [{ _tag: 'text', text: 'second' }] });
-    const forkMsg = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'new turn' }] });
+  it.effect('prepends source history when SessionLink resolves to a valid message', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const sourceFeed = db.add(Feed.make());
+      const forkFeed = db.add(Feed.make());
 
-    const link = Obj.make(SessionLink.SessionLink, {
-      feedRef: Ref.make(sourceFeed),
-      messageId: msg2.id,
-    });
+      const msg1 = makeMessage('first');
+      const msg2 = makeMessage('second', 'assistant');
+      const forkMsg = makeMessage('new turn');
+      yield* Feed.append(sourceFeed, [msg1, msg2]);
 
-    const feedMap = new Map<string, object[]>([
-      [sourceFeed.id, [msg1, msg2]],
-      [forkFeed.id, [link]],
-    ]);
-    const loader = new SessionLoader();
+      yield* Feed.append(forkFeed, [
+        Obj.make(SessionLink.SessionLink, { feedRef: Ref.make(sourceFeed), messageId: msg2.id }),
+      ]);
 
-    const result = await run(loader.reifyHistory(forkFeed, [forkMsg]), feedMap);
+      const result = yield* new SessionLoader().reifyHistory(forkFeed, [forkMsg]);
 
-    expect(result).toHaveLength(3);
-    expect(result[0].id).toBe(msg1.id);
-    expect(result[1].id).toBe(msg2.id);
-    expect(result[2].id).toBe(forkMsg.id);
-  });
+      expect(result.map((msg) => msg.id)).toEqual([msg1.id, msg2.id, forkMsg.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-  it('respects the fork cutoff — excludes messages after messageId', async () => {
-    const sourceFeed = Feed.make();
-    const forkFeed = Feed.make();
+  it.effect('respects the fork cutoff — excludes messages after messageId', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const sourceFeed = db.add(Feed.make());
+      const forkFeed = db.add(Feed.make());
 
-    const msg1 = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'a' }] });
-    const msg2 = Message.make({ sender: 'assistant', blocks: [{ _tag: 'text', text: 'b' }] });
-    const msg3 = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'c — after fork' }] });
+      const msg1 = makeMessage('a');
+      const msg2 = makeMessage('b', 'assistant');
+      const msg3 = makeMessage('c — after fork');
+      yield* Feed.append(sourceFeed, [msg1, msg2, msg3]);
 
-    const link = Obj.make(SessionLink.SessionLink, {
-      feedRef: Ref.make(sourceFeed),
-      messageId: msg2.id, // fork at msg2; msg3 should be excluded
-    });
+      yield* Feed.append(forkFeed, [
+        // Fork at msg2; msg3 should be excluded.
+        Obj.make(SessionLink.SessionLink, { feedRef: Ref.make(sourceFeed), messageId: msg2.id }),
+      ]);
 
-    const feedMap = new Map<string, object[]>([
-      [sourceFeed.id, [msg1, msg2, msg3]],
-      [forkFeed.id, [link]],
-    ]);
-    const loader = new SessionLoader();
+      const result = yield* new SessionLoader().reifyHistory(forkFeed, []);
 
-    const result = await run(loader.reifyHistory(forkFeed, []), feedMap);
+      expect(result.map((msg) => msg.id)).toEqual([msg1.id, msg2.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-    expect(result).toHaveLength(2);
-    expect(result[0].id).toBe(msg1.id);
-    expect(result[1].id).toBe(msg2.id);
-  });
+  it.effect('returns original messages when messageId is not found in source feed (fail-closed)', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const sourceFeed = db.add(Feed.make());
+      const forkFeed = db.add(Feed.make());
 
-  it('returns original messages when messageId is not found in source feed (fail-closed)', async () => {
-    const sourceFeed = Feed.make();
-    const forkFeed = Feed.make();
+      const msg1 = makeMessage('existing');
+      const currentMsg = makeMessage('new turn');
+      yield* Feed.append(sourceFeed, [msg1]);
 
-    const msg1 = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'existing' }] });
-    const currentMsg = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'new turn' }] });
+      yield* Feed.append(forkFeed, [
+        Obj.make(SessionLink.SessionLink, { feedRef: Ref.make(sourceFeed), messageId: Obj.ID.random() }),
+      ]);
 
-    const missingId = Obj.ID.random();
-    const link = Obj.make(SessionLink.SessionLink, {
-      feedRef: Ref.make(sourceFeed),
-      messageId: missingId,
-    });
+      const result = yield* new SessionLoader().reifyHistory(forkFeed, [currentMsg]);
 
-    const feedMap = new Map<string, object[]>([
-      [sourceFeed.id, [msg1]],
-      [forkFeed.id, [link]],
-    ]);
-    const loader = new SessionLoader();
+      expect(result.map((msg) => msg.id)).toEqual([currentMsg.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-    const result = await run(loader.reifyHistory(forkFeed, [currentMsg]), feedMap);
+  it.effect('returns original messages when source feed reference is unresolvable', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const forkFeed = db.add(Feed.make());
+      const unresolvedFeed = Feed.make(); // Intentionally not added to the database.
 
-    expect(result).toEqual([currentMsg]);
-  });
+      yield* Feed.append(forkFeed, [
+        Obj.make(SessionLink.SessionLink, { feedRef: Ref.make(unresolvedFeed), messageId: Obj.ID.random() }),
+      ]);
 
-  it('returns original messages when source feed reference is unresolvable', async () => {
-    const forkFeed = Feed.make();
-    const unresolvedFeed = Feed.make(); // intentionally absent from feedMap
+      const currentMsg = makeMessage('hello');
+      const result = yield* new SessionLoader().reifyHistory(forkFeed, [currentMsg]);
 
-    const link = Obj.make(SessionLink.SessionLink, {
-      feedRef: Ref.make(unresolvedFeed),
-      messageId: Obj.ID.random(),
-    });
-
-    const feedMap = new Map<string, object[]>([[forkFeed.id, [link]]]);
-    const loader = new SessionLoader();
-
-    const currentMsg = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'hello' }] });
-    const result = await run(loader.reifyHistory(forkFeed, [currentMsg]), feedMap);
-
-    expect(result).toEqual([currentMsg]);
-  });
+      expect(result.map((msg) => msg.id)).toEqual([currentMsg.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
