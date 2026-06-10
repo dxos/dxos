@@ -5,7 +5,6 @@
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';

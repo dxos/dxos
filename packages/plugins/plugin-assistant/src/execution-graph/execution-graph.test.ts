@@ -225,7 +225,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
@@ -283,7 +283,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Run Routine', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -375,7 +375,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'b', name: 'B', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -558,14 +558,14 @@ describe('buildExecutionGraph scenarios', () => {
             role: 'user',
             block: { _tag: 'text', text: 'First question', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
           yield* Trace.write(AgentRequestBegin, {});
           yield* Trace.write(CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'Follow-up question', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -647,7 +647,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -697,7 +697,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -745,7 +745,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -795,7 +795,7 @@ describe('buildExecutionGraph scenarios', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
 
