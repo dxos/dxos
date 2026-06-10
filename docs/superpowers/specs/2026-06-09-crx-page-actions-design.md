@@ -169,8 +169,20 @@ Deliberately simple first consumer; existing UI components only.
   best-effort via assistant when available — initial fallback is og-description as excerpt; AI
   summary is not load-bearing).
 
+### Package consolidation: merge plugin-extension into plugin-crx
+
+`packages/plugins/plugin-extension` (extension settings schema + `ExtensionSettings` panel +
+react-surface, `pingExtension` util) is merged into `plugin-crx` as a precursor:
+
+- Move `pingExtension`, components, and surface contributions into `plugin-crx`; unify the two
+  settings schemas/panels into one CRX settings module.
+- Update `composer-app/src/plugin-defs.tsx` (and tsconfig/package refs) to drop the plugin.
+- Delete `plugin-extension`; no compatibility re-exports — all call sites updated in the same
+  change.
+
 ## Milestones
 
+- **M0 (consolidation)**: merge plugin-extension into plugin-crx (above).
 - **M1 (bookmarks)**: descriptor capability + bridge sync + popup menu + `snapshot` extractor +
   plugin-bookmarks (schema, surfaces, `AddFromSnapshot`). Smallest full-pipe proof.
 - **M2 (commerce)**: `ConfigureProviderFromSnapshot` replaces the copy-URL flow; context menus
