@@ -190,13 +190,13 @@ export const ResetDialog = ({
           <AlertDialog.ActionBar>
             <IconButton
               variant='primary'
-              icon='ph--stethoscope--regular'
+              icon='ph--barricade--regular'
               iconOnly={!isNotMobile}
               label={t('safe-mode.label')}
               onClick={handleSafeMode}
             />
             <IconButton
-              icon='ph--lifebuoy--regular'
+              icon='ph--stethoscope--regular'
               iconOnly={!isNotMobile}
               label={t('recovery.label')}
               onClick={handleRecovery}
