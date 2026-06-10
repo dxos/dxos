@@ -3,7 +3,7 @@
 //
 
 export * from '@effect/sql-sqlite-wasm';
-export * as OpfsWorker from '@effect/sql-sqlite-wasm/OpfsWorker';
-export * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
+export * as OpfsWorker from './OpfsWorker';
+export * as SqliteClient from './SqliteClient';
 export * as SqliteMigrator from '@effect/sql-sqlite-wasm/SqliteMigrator';
 export * as SqlTransaction from './SqlTransaction';

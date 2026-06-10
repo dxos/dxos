@@ -22,9 +22,8 @@ import {
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
-import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
-import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
@@ -311,26 +310,12 @@ const SqlExportLayer: Layer.Layer<SqlExport.SqlExport, never, SqliteClient.Sqlit
 
 /**
  * Local SQLite layer for the worker.
- * Uses OPFS sync API as an FS backend.
- * Does NOT spawn a new worker.
+ * Uses in-process OPFS via {@link SqliteClient.layerOpfs} (no MessagePort).
  * NOTE: Only usable within a worker.
- * TODO(mykola): This does not work right now. Fix.
  */
-const LocalSqliteOpfsLayer = Layer.unwrapScoped(
-  Effect.gen(function* () {
-    const { port1: clientPort, port2: serverPort } = new MessageChannel();
-    clientPort.start();
-    serverPort.start();
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        clientPort.close();
-        serverPort.close();
-      }),
-    );
-
-    yield* Effect.forkScoped(OpfsWorker.run({ port: serverPort, dbName: DB_NAME }));
-    return SqlExportLayer.pipe(Layer.provideMerge(SqliteClient.layer({ worker: Effect.succeed(clientPort) })));
-  }),
+const LocalSqliteOpfsLayer = SqlExportLayer.pipe(
+  Layer.provideMerge(SqliteClient.layerOpfs({ dbName: DB_NAME })),
+  Layer.provideMerge(Reactivity.layer),
 );
 
 // TODO(wittjosiah): Factor out to a separate module.
