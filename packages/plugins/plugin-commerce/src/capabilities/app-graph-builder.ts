@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, QueryResult, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
@@ -23,7 +23,7 @@ export default Capability.makeModule(
         id: 'commerceProviders',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const providers = get(space.db.query(Filter.type(Provider.Provider)).atom);
+          const providers = get(QueryResult.atom(space.db, Filter.type(Provider.Provider)));
           if (providers.length === 0) {
             return Effect.succeed([]);
           }

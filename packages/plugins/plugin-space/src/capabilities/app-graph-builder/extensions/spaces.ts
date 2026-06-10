@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, QueryResult } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -174,7 +174,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
+          const [spacesOrder] = get(QueryResult.atom(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
           const { graph } = capabilities.get(AppCapabilities.AppGraph);
 
           const spacesOrderSnapshot = spacesOrder ? get(Obj.atom(spacesOrder)) : undefined;
