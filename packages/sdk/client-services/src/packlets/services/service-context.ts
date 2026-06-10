@@ -15,6 +15,7 @@ import {
   EchoHost,
   type EdgeAutomergeReplicator,
   MeshEchoReplicator,
+  runSqliteHealthCheck,
   SqliteMetadataStore,
   SpaceManager,
   valueEncoding,
@@ -249,6 +250,10 @@ export class ServiceContext extends Resource {
     );
 
     await this._checkStorageVersion();
+
+    log('running sqlite health check...');
+    await runSqliteHealthCheck(this._runtime);
+    log('sqlite health check passed');
 
     log('opening...');
 

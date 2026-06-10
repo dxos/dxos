@@ -130,7 +130,19 @@ const createBrowserProject = ({
       alias: { ...TIKTOKEN_ALIAS },
     },
     optimizeDeps: {
-      include: ['buffer/'],
+      // Deps discovered mid-run trigger a re-optimize + page reload, which destroys the
+      // vitest runner state (isolate: false) and fails every remaining test file with
+      // "Cannot read properties of undefined (reading 'config')". Pre-bundle the deps
+      // that tests pull in lazily (worker bundles / dynamic imports / late test files).
+      // Workspace packages are linked, so their deps need the nested `parent > dep` syntax.
+      include: [
+        'buffer/',
+        'chalk',
+        'effect/Schema',
+        '@dxos/log > @dxos/util > @hazae41/symbol-dispose-polyfill',
+        '@dxos/log > @dxos/keys > ulidx',
+        '@dxos/log > lodash.defaultsdeep',
+      ],
       esbuildOptions: {
         plugins: [
           // TODO(burdon): esbuild version mismatch.

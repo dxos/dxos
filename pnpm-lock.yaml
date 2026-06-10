@@ -2716,6 +2716,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
@@ -2794,6 +2797,9 @@ importers:
       codemirror:
         specifier: 'catalog:'
         version: 6.0.2
+      crc-32:
+        specifier: 'catalog:'
+        version: 1.2.2
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0

@@ -4,9 +4,8 @@
 
 /// <reference lib="webworker" />
 
-import { writePoolSqlitePayload } from '../../../../common/sql-sqlite/src/opfs-pool-sync';
-
-const DB_NAME = 'DXOS';
+import { writePoolSqlitePayload } from '../internal/opfs-pool-sync';
+import * as OpfsPool from '../OpfsPool';
 
 type PoolWorkerMessage = ['write', id: number, data: Uint8Array] | ['close'];
 
@@ -22,7 +21,7 @@ self.addEventListener('message', (event: MessageEvent<PoolWorkerMessage>) => {
       const [, id, data] = message;
       const payload = new Uint8Array(data.byteLength);
       payload.set(data);
-      await writePoolSqlitePayload(DB_NAME, payload);
+      await writePoolSqlitePayload(OpfsPool.DEFAULT_DB_FILENAME, payload);
       self.postMessage([id, undefined, undefined]);
     } catch (error: unknown) {
       const text = error instanceof Error ? error.message : String(error);

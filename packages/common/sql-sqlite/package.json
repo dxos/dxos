@@ -23,15 +23,15 @@
       "browser": "./dist/lib/browser/SqliteClient.mjs",
       "node": "./dist/lib/node-esm/SqliteClient.mjs"
     },
+    "./OpfsPool": {
+      "types": "./dist/types/src/OpfsPool.d.ts",
+      "browser": "./dist/lib/browser/OpfsPool.mjs",
+      "node": "./dist/lib/node-esm/OpfsPool.mjs"
+    },
     "./OpfsWorker": {
       "types": "./dist/types/src/OpfsWorker.d.ts",
       "browser": "./dist/lib/browser/OpfsWorker.mjs",
       "node": "./dist/lib/node-esm/OpfsWorker.mjs"
-    },
-    "./opfs-pool-sync": {
-      "types": "./dist/types/src/opfs-pool-sync.d.ts",
-      "browser": "./dist/lib/browser/opfs-pool-sync.mjs",
-      "node": "./dist/lib/node-esm/opfs-pool-sync.mjs"
     },
     "./SqliteMigrator": {
       "types": "./dist/types/src/SqliteMigrator.d.ts",
