@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
@@ -39,17 +39,26 @@ export { useChatContext };
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'chat' | 'processor'> & {
     feed?: Feed.Feed;
+    /** Fallback database when the chat is transient (not yet persisted). */
+    db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
+    /**
+     * Runs (and is awaited) before the request fires on submit. Lets a transient chat
+     * persist and flush its conversation feed so the agent can resolve it.
+     */
+    onSubmit?: (text: string) => Promise<void> | void;
   }
 >;
 
-const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
-  const db = chat && Obj.getDatabase(chat);
+  // Transient chats have no database of their own; fall back to the supplied space db so
+  // the message query and context controls operate before the chat is persisted.
+  const db = (chat && Obj.getDatabase(chat)) || dbFallback;
 
   // Event sink.
   const event = useMemo(() => new Event<ChatEvent>(), []);
@@ -93,7 +102,9 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
           const text = ev.text.trim();
           if (!streaming && text.length) {
             lastPrompt.current = ev.text;
-            void processor.request({ message: text });
+            // Await persistence (transient chat) before requesting so the agent resolves the
+            // now-durable conversation feed; resolves immediately when there is no hook.
+            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text }));
           }
           break;
         }
@@ -118,7 +129,7 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
 
       onEvent?.(ev);
     });
-  }, [event, dump, processor, streaming, onEvent]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit]);
 
   return (
     <ChatContextProvider

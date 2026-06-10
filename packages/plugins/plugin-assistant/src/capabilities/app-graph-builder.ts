@@ -20,7 +20,7 @@ import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Filter, Obj, Type, type Ref } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -202,8 +202,15 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: one Chat.Chat per space, hidden when empty.
-      createTypeSectionExtension(Chat.Chat),
+      // Section node: standalone Chat.Chat objects per space (companions are excluded).
+      createTypeSectionExtension(Chat.Chat, {
+        // Exclude chats that are the source of a CompanionTo relation; those belong to
+        // their primary object's companion panel and should not appear in the top-level list.
+        query: Query.without(
+          Query.select(Filter.type(Chat.Chat)),
+          Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
+        ),
+      }),
 
       // Create-chat action on the Chats section header.
       GraphBuilder.createExtension({
