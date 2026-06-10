@@ -40,7 +40,8 @@ const getIPData = Effect.fn(function* (config: Config) {
   const httpClientNoTrace = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
   // Check cache first.
-  const cachedData = yield* Effect.promise(() => localForage.getItem<CachedIPData>('dxos:observability:ipdata'));
+  // v2 key discards entries cached by the previous schema (which used `country` instead of `country_name`).
+  const cachedData = yield* Effect.promise(() => localForage.getItem<CachedIPData>('dxos:observability:ipdata:v2'));
   if (cachedData && cachedData.timestamp > Date.now() - IP_DATA_CACHE_TIMEOUT) {
     return cachedData.data;
   }
@@ -67,7 +68,7 @@ const getIPData = Effect.fn(function* (config: Config) {
 
   if (data) {
     yield* Effect.promise(() =>
-      localForage.setItem('dxos:observability:ipdata', { data, timestamp: Date.now() }),
+      localForage.setItem('dxos:observability:ipdata:v2', { data, timestamp: Date.now() }),
     );
   }
 
