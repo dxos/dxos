@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { type Root as ReactRoot, createRoot } from 'react-dom/client';
 import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
@@ -105,8 +105,9 @@ const Root = () => {
   }, []);
 
   // Embedded in the chat's toolbar so the chat input stays the first row of
-  // the popup; rendered standalone only when the chat is absent.
+  // the popup; rendered standalone whenever the chat is absent or crashed.
   const pageActions = tabId !== undefined && tabUrl ? <PageActions tabId={tabId} tabUrl={tabUrl} /> : null;
+  const standaloneActions = pageActions && <div className='flex items-center p-1'>{pageActions}</div>;
   const showChat = !thumbnailUrl && !!host;
 
   return (
@@ -117,19 +118,28 @@ const Root = () => {
           // Chat lives behind its own ErrorBoundary: the chat-agent endpoint
           // can be unreachable (e.g., dev worker not running) and a fetch
           // failure inside useAgentChat would otherwise take down the whole
-          // popup — including the Clip flow, which is independent of chat.
-          <ErrorBoundary name='popup/chat' fallbackRender={() => null}>
+          // popup — including the Clip and page-action flows, which are
+          // independent of chat, so the fallback keeps the actions visible.
+          <ErrorBoundary name='popup/chat' fallbackRender={() => standaloneActions}>
             <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} onClip={handleClip} actions={pageActions} />
           </ErrorBoundary>
         )}
-        {!showChat && pageActions && <div className='flex items-center p-1'>{pageActions}</div>}
+        {!showChat && standaloneActions}
       </Container>
     </ErrorBoundary>
   );
 };
 
+declare global {
+  // Survives dev-mode HMR re-execution of this entry module: React warns (and
+  // detaches the old tree) if the same container is passed to createRoot twice.
+  // eslint-disable-next-line no-var
+  var __composerPopupRoot: ReactRoot | undefined;
+}
+
 const main = async () => {
-  createRoot(document.getElementById('root')!).render(<Root />);
+  globalThis.__composerPopupRoot ??= createRoot(document.getElementById('root')!);
+  globalThis.__composerPopupRoot.render(<Root />);
 };
 
 void main();
