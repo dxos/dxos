@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
-import { createTestSqliteRuntime } from '@dxos/echo-pipeline/testing';
+import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-host';
+import { createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';

@@ -19,7 +19,7 @@ For **Effect** patterns (Layer, `Effect.gen`, services), read [.cursor/skills/ef
 | [`@dxos/echo`](../../../packages/core/echo/echo/)                   | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
 | [`@dxos/echo-db`](../../../packages/core/echo/echo-db/)             | `EchoClient`, `EchoHost`, `EchoDatabaseImpl`, hypergraph, migrations, sync helpers                         |
 | [`@dxos/echo-react`](../../../packages/core/echo/echo-react/)       | `useQuery`, `useObject`, `useSchema`                                                                       |
-| [`@dxos/echo-pipeline`](../../../packages/core/echo/echo-pipeline/) | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
+| [`@dxos/echo-host`](../../../packages/core/echo/echo-host/) | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
 
 ## Obtaining a `Database`
 

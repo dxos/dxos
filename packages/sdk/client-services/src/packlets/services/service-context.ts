@@ -19,7 +19,7 @@ import {
   SqliteMetadataStore,
   SpaceManager,
   valueEncoding,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';

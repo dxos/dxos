@@ -111,20 +111,20 @@ Resources with `@trace.resource()` **and** `@trace.span()` methods. Only these n
 
 | Class                         | File                                         | Notes                                                                                                                          |
 | ----------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `Space`                       | `echo-pipeline/.../space.ts`                 | `_open` has `@trace.span()`, forwards `ctx` to `_controlPipeline.start(ctx)`. `_close` forwards `ctx` to `protocol.stop(ctx)`. |
+| `Space`                       | `echo-host/.../space.ts`                 | `_open` has `@trace.span()`, forwards `ctx` to `_controlPipeline.start(ctx)`. `_close` forwards `ctx` to `protocol.stop(ctx)`. |
 | `Identity`                    | `client-services/.../identity.ts`            | `open`/`close` have `@trace.span()`, forward `ctx` to `space.open(ctx)` / `space.close(ctx)`.                                  |
 | `DataSpaceManager`            | `client-services/.../data-space-manager.ts`  | `createSpace`/`acceptSpace` have `@trace.span()`, forward `ctx` to `_constructSpace`, `open`, pipelines.                       |
 | `AutomergeDocumentLoaderImpl` | `echo-db/.../automerge-doc-loader.ts`        | `loadSpaceRootDocHandle(ctx)` forwards to `_initDocHandle(ctx)`.                                                               |
 | `InvitationsManager`          | `client-services/.../invitations-manager.ts` | `createInvitation(ctx)` propagates through.                                                                                    |
-| `ControlPipeline`             | `echo-pipeline/.../control-pipeline.ts`      | `start(ctx)` passes `ctx` into `_consumePipeline(ctx)`.                                                                        |
+| `ControlPipeline`             | `echo-host/.../control-pipeline.ts`      | `start(ctx)` passes `ctx` into `_consumePipeline(ctx)`.                                                                        |
 
 ### Fixed in this pass
 
 | Class                    | File                                        | Fix                                                                                                                                                                                                                                                             |
 | ------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AutomergeHost._open`    | `echo-pipeline/.../automerge-host.ts`       | Now passes `ctx` to `_collectionSynchronizer.open(ctx)` and `close(ctx)`.                                                                                                                                                                                       |
+| `AutomergeHost._open`    | `echo-host/.../automerge-host.ts`       | Now passes `ctx` to `_collectionSynchronizer.open(ctx)` and `close(ctx)`.                                                                                                                                                                                       |
 | `DataSpace._close`       | `client-services/.../data-space.ts`         | Now passes `ctx` to `_inner.close(ctx)` (was calling without ctx).                                                                                                                                                                                              |
-| `EchoHost._open`         | `echo-pipeline/.../echo-host.ts`            | Now passes `ctx` to `_automergeHost.open(ctx)` (was calling without ctx).                                                                                                                                                                                       |
+| `EchoHost._open`         | `echo-host/.../echo-host.ts`            | Now passes `ctx` to `_automergeHost.open(ctx)` (was calling without ctx).                                                                                                                                                                                       |
 | `ServiceContext._open`   | `client-services/.../service-context.ts`    | Now passes `ctx` to `dataSpaceManager.open(ctx)` (in `_initialize(ctx)`) and `edgeAgentManager.open(ctx)`. `networkManager`/`spaceManager` kept on zero-arg `open()` - they are not `Resource`-based and not traced, so they do not contribute to orphan roots. |
 | `DataSpaceManager._open` | `client-services/.../data-space-manager.ts` | Added `ctx: Context` parameter and `@trace.span({ op: 'lifecycle' })`. Auto-activation and `_constructSpace` now forward the caller `ctx` instead of a bare `this._ctx`, so `space.activate(ctx)` -> `initializeDataPipeline(ctx)` has a live parent span.      |
 | `DataSpaceManager`       | `client-services/.../data-space-manager.ts` | Promoted to `@trace.resource({ lifecycle: true })`. The `postOpen` `connectToSpace` closure now uses `this._ctx` (lifecycle span) instead of the captured `_constructSpace` ctx, which could be disposed by the time `postOpen` fires.                          |
@@ -136,8 +136,8 @@ Resources with `@trace.resource()` **and** `@trace.span()` methods. Only these n
 | `SpaceList._open`             | `client/.../space-list.ts`                  | Creates `this._ctx = new Context()` (ignores `ctx` param for lifecycle) | Client-side class; `this._ctx` is for detached stream subscriptions / microtasks. `@trace.span()` on `_open` covers the span hierarchy.                                                                                                                                                                                                                                                                                                                                          |
 | `SpaceList._close`            | `client/.../space-list.ts`                  | `ctx` param unused in body                                              | Close disposes `this._ctx` and tears down streams; no downstream methods that need caller ctx.                                                                                                                                                                                                                                                                                                                                                                                   |
 | `SpaceProxy._initializeDb`    | `client/.../space-proxy.ts`                 | `_ctx` param unused; uses `this._ctx` for `cancelWithContext`           | Lifecycle-scoped cancellation for property waits. Documented in P2.                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `EchoEdgeReplicator`          | `echo-pipeline/.../echo-edge-replicator.ts` | `connectToSpace(ctx)` underuses `ctx` in body                           | Class does NOT extend `Resource`. `connect(ctx, ...)` stores `this._ctx = ctx.derive()`, which inherits `TRACE_SPAN_ATTRIBUTE` (a W3C string) from the caller's ctx via the parent chain. The string is stored indefinitely — there is no eviction. Reconnect/restart calls (`_handleReconnect`, restart scheduled task) both pass `this._ctx` to `_openConnection`, which keeps them under the originating `ServiceContext._open` span. No fragility found; P3 is not required. |
-| `AutomergeHost#0.flush` (RPC) | `echo-pipeline/.../data-service.ts`         | Called with `Context.default()` from RPC handler                        | RPC boundary — accepted trace root.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `EchoEdgeReplicator`          | `echo-host/.../echo-edge-replicator.ts` | `connectToSpace(ctx)` underuses `ctx` in body                           | Class does NOT extend `Resource`. `connect(ctx, ...)` stores `this._ctx = ctx.derive()`, which inherits `TRACE_SPAN_ATTRIBUTE` (a W3C string) from the caller's ctx via the parent chain. The string is stored indefinitely — there is no eviction. Reconnect/restart calls (`_handleReconnect`, restart scheduled task) both pass `this._ctx` to `_openConnection`, which keeps them under the originating `ServiceContext._open` span. No fragility found; P3 is not required. |
+| `AutomergeHost#0.flush` (RPC) | `echo-host/.../data-service.ts`         | Called with `Context.default()` from RPC handler                        | RPC boundary — accepted trace root.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### Design note: Resource base class and `this._ctx`
 
@@ -212,20 +212,20 @@ This does NOT create disposal linkage — the `parent` field is only used for at
 - `packages/core/mesh/network-manager/src/swarm/swarm.ts`
 - `packages/core/mesh/network-manager/src/swarm/peer.ts`
 - `packages/core/mesh/network-manager/src/swarm/connection.ts`
-- `packages/core/echo/echo-pipeline/src/automerge/automerge-host.ts`
-- `packages/core/echo/echo-pipeline/src/automerge/echo-network-adapter.ts`
-- `packages/core/echo/echo-pipeline/src/automerge/echo-replicator.ts`
-- `packages/core/echo/echo-pipeline/src/automerge/collection-synchronizer.ts`
-- `packages/core/echo/echo-pipeline/src/db-host/echo-host.ts`
-- `packages/core/echo/echo-pipeline/src/db-host/data-service.ts`
-- `packages/core/echo/echo-pipeline/src/db-host/documents-synchronizer.ts`
-- `packages/core/echo/echo-pipeline/src/db-host/query-service.ts`
-- `packages/core/echo/echo-pipeline/src/db-host/automerge-data-source.ts`
-- `packages/core/echo/echo-pipeline/src/space/space-protocol.ts`
-- `packages/core/echo/echo-pipeline/src/space/control-pipeline.ts`
-- `packages/core/echo/echo-pipeline/src/space/space.ts`
-- `packages/core/echo/echo-pipeline/src/edge/echo-edge-replicator.ts`
-- `packages/core/echo/echo-pipeline/src/query/query-executor.ts`
+- `packages/core/echo/echo-host/src/automerge/automerge-host.ts`
+- `packages/core/echo/echo-host/src/automerge/echo-network-adapter.ts`
+- `packages/core/echo/echo-host/src/automerge/echo-replicator.ts`
+- `packages/core/echo/echo-host/src/automerge/collection-synchronizer.ts`
+- `packages/core/echo/echo-host/src/db-host/echo-host.ts`
+- `packages/core/echo/echo-host/src/db-host/data-service.ts`
+- `packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts`
+- `packages/core/echo/echo-host/src/db-host/query-service.ts`
+- `packages/core/echo/echo-host/src/db-host/automerge-data-source.ts`
+- `packages/core/echo/echo-host/src/space/space-protocol.ts`
+- `packages/core/echo/echo-host/src/space/control-pipeline.ts`
+- `packages/core/echo/echo-host/src/space/space.ts`
+- `packages/core/echo/echo-host/src/edge/echo-edge-replicator.ts`
+- `packages/core/echo/echo-host/src/query/query-executor.ts`
 - `packages/core/echo/echo-db/src/core-db/core-database.ts`
 - `packages/core/echo/echo-db/src/queue/queue-query-context.ts`
 - `packages/core/echo/echo-db/src/client/index-query-source-provider.ts`

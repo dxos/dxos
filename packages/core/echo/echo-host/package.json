@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/echo-pipeline",
+  "name": "@dxos/echo-host",
   "version": "0.8.3",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",

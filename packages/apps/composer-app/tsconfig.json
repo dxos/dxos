@@ -154,7 +154,7 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/echo/echo-protocol"

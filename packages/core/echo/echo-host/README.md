@@ -1,11 +1,11 @@
-# @dxos/echo-pipeline
+# @dxos/echo-host
 
 ECHO database.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/echo-pipeline
+pnpm i @dxos/echo-host
 ```
 
 ## DXOS Resources
