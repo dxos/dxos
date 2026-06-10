@@ -224,11 +224,15 @@ const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
 
   const { controller } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
+  // Stable getter identity (changes only when the controller does) so the FileUpload effect, whose
+  // deps include `getView`, does not re-run every render and re-upload the same file.
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
+
   return (
     <NaturalMarkdownToolbar
       {...props}
       id={attendableId ?? id}
-      getView={() => controller?.view ?? null}
+      getView={getView}
       onAction={onAction}
       onFileUpload={onFileUpload}
       onViewModeChange={onViewModeChange}

@@ -86,8 +86,10 @@ export const parseCaptionTracks = (player: unknown): CaptionTrack[] => {
  * human-authored track, finally the first available.
  */
 export const selectCaptionTrack = (tracks: readonly CaptionTrack[], lang: string): CaptionTrack | undefined => {
+  const primary = (code?: string): string | undefined => code?.split('-')[0];
   const matchesLang = (track: CaptionTrack): boolean =>
-    track.languageCode === lang || track.languageCode?.split('-')[0] === lang;
+    track.languageCode === lang ||
+    (primary(track.languageCode) !== undefined && primary(track.languageCode) === primary(lang));
   const isManual = (track: CaptionTrack): boolean => track.kind !== 'asr';
 
   return (

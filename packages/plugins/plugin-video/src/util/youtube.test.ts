@@ -103,6 +103,10 @@ describe('selectCaptionTrack', () => {
     expect(selectCaptionTrack([manualFr, usEn], 'en')).toBe(usEn);
   });
 
+  test('matches the primary subtag both ways (en-US request against an en track)', ({ expect }) => {
+    expect(selectCaptionTrack([manualFr, manualEn], 'en-US')).toBe(manualEn);
+  });
+
   test('falls back to an auto-generated track when no manual match exists', ({ expect }) => {
     expect(selectCaptionTrack([manualFr, asrEn], 'en')).toBe(asrEn);
   });
