@@ -24,6 +24,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {
