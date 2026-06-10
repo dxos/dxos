@@ -4,7 +4,7 @@
 
 import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, Obj, Query, QueryResult, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -40,7 +40,7 @@ describe('QueryResult per-instance atom getter', () => {
     await testBuilder.close();
   });
 
-  test('creates atom with initial results', async () => {
+  test('creates atom with initial results', async ({ expect }) => {
     db.add(Obj.make(TestItem, { name: 'Object 1', value: 100 }));
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 100 }));
     await db.flush();
@@ -54,12 +54,12 @@ describe('QueryResult per-instance atom getter', () => {
     expect(results.map((result) => result.name).sort()).toEqual(['Object 1', 'Object 2']);
   });
 
-  test('memoizes the atom per instance', async () => {
+  test('memoizes the atom per instance', async ({ expect }) => {
     const queryResult = db.query(Query.select(Filter.type(TestItem, { value: 100 })));
     expect(queryResult.atom).toBe(queryResult.atom);
   });
 
-  test('registry.subscribe fires on QueryResult changes', async () => {
+  test('registry.subscribe fires on QueryResult changes', async ({ expect }) => {
     db.add(Obj.make(TestItem, { name: 'Initial', value: 200 }));
     await db.flush();
 
@@ -82,7 +82,7 @@ describe('QueryResult per-instance atom getter', () => {
     expect(latestResults).toHaveLength(2);
   });
 
-  test('registry.subscribe fires when objects are removed', async () => {
+  test('registry.subscribe fires when objects are removed', async ({ expect }) => {
     const obj1 = db.add(Obj.make(TestItem, { name: 'Object 1', value: 300 }));
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 300 }));
     await db.flush();
@@ -107,7 +107,7 @@ describe('QueryResult per-instance atom getter', () => {
     expect(latestResults[0].name).toBe('Object 2');
   });
 
-  test('unsubscribing from registry stops receiving updates', async () => {
+  test('unsubscribing from registry stops receiving updates', async ({ expect }) => {
     db.add(Obj.make(TestItem, { name: 'Initial', value: 400 }));
     await db.flush();
 
@@ -134,7 +134,7 @@ describe('QueryResult per-instance atom getter', () => {
     expect(updateCount).toBe(countAfterFirstAdd);
   });
 
-  test('works with empty query results', async () => {
+  test('works with empty query results', async ({ expect }) => {
     const queryResult = db.query(Query.select(Filter.type(TestItem, { value: 999 })));
     await queryResult.run();
 
@@ -149,7 +149,7 @@ describe('QueryResult.atom (memoized family)', () => {
     atomRegistry = Registry.make();
   });
 
-  test('memoizes per registry instance', () => {
+  test('memoizes per registry instance', ({ expect }) => {
     const registry = makeRegistry({ initial: [TestItem] });
 
     // Same queryable + filter must yield the same atom instance. Otherwise reactive connectors
@@ -163,7 +163,7 @@ describe('QueryResult.atom (memoized family)', () => {
     expect(QueryResult.atom(otherRegistry, Filter.type(Type.Type))).not.toBe(atom1);
   });
 
-  test('queries registry type entities', () => {
+  test('queries registry type entities', ({ expect }) => {
     const registry = makeRegistry({ initial: [TestItem] });
 
     const atom = QueryResult.atom(registry, Filter.type(Type.Type));
@@ -172,7 +172,7 @@ describe('QueryResult.atom (memoized family)', () => {
     expect(results.map((type) => Type.getTypename(type))).toContain('com.example.type.testItem');
   });
 
-  test('updates when registry contents change', () => {
+  test('updates when registry contents change', ({ expect }) => {
     const registry = makeRegistry({ initial: [TestItem] });
 
     const atom = QueryResult.atom(registry, Filter.type(Type.Type));
@@ -203,7 +203,7 @@ describe('QueryResult.atom on queues', () => {
     await testBuilder.close();
   });
 
-  test('Filter.type on queue', async () => {
+  test('Filter.type on queue', async ({ expect }) => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
@@ -223,7 +223,7 @@ describe('QueryResult.atom on queues', () => {
     expect(results.map((result) => result.name).sort()).toEqual(['jane', 'john']);
   });
 
-  test('Filter.id on queue', async () => {
+  test('Filter.id on queue', async ({ expect }) => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);

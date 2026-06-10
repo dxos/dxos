@@ -17,6 +17,18 @@ import * as Registry from '../Registry';
 // Keyed by queryable identifier. Holds the Queryable weakly so it is collected with its space.
 const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
 
+/**
+ * Recursively sorts object keys before stringifying so that semantically identical ASTs
+ * (whose key insertion orders may differ across call sites) produce the same string.
+ */
+const stableStringify = (value: unknown): string =>
+  JSON.stringify(value, (_, val) => {
+    if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+      return Object.fromEntries(Object.entries(val as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1)));
+    }
+    return val;
+  });
+
 // Separator that cannot appear in a queryable identifier (DXN/EID strings use colons, not '~').
 const KEY_SEPARATOR = '~';
 
@@ -74,6 +86,9 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
  * required form inside graph-builder connectors/actions and other atom computes, which re-run on
  * every reactive change: the per-instance `queryResult.atom` getter would open (and leak) a new
  * subscription on each run because `queryable.query(...)` constructs a fresh QueryResult each call.
+ *
+ * If the queryable is garbage-collected (no longer referenced externally), the returned atom
+ * produces an empty array rather than throwing.
  */
 export const make = <T extends Entity.Unknown>(
   queryable: Database.Queryable,
@@ -87,6 +102,6 @@ export const make = <T extends Entity.Unknown>(
     ? queryOrFilter
     : Query.select(queryOrFilter as Filter.Filter<T>);
 
-  const key = `${identifier}${KEY_SEPARATOR}${JSON.stringify(normalizedQuery.ast)}`;
+  const key = `${identifier}${KEY_SEPARATOR}${stableStringify(normalizedQuery.ast)}`;
   return queryFamily(key) as Atom.Atom<T[]>;
 };
