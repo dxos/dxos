@@ -233,7 +233,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     expect(resolved).toBeUndefined();
   });
 
-  test('db.query(Filter.everything()).run() completes when indexed objects are in the working set with unresolved strong deps', async () => {
+  test('db.query(Filter.everything()).run() completes and excludes objects with permanently unavailable strong deps', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { peer, db } = await testBuilder.createDatabase();
@@ -280,13 +280,65 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     await sleep(200);
 
-    const partial = await asyncTimeout(
-      db.coreDatabase.loadObjectCoreById(mainObjectId, { returnWithUnsatisfiedDeps: true }),
-      1000,
-    );
-    expect(partial).toBeDefined();
+    // Main object is materialized locally but its schema dep is unreachable.
+    const core = db.coreDatabase.getObjectCoreById(mainObjectId, { load: false });
+    expect(core).toBeDefined();
+    expect(db.coreDatabase.areStrongDepsSatisfied(core!)).toBe(false);
 
     const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
-    expect(results.some((object) => object.id === mainObjectId)).toBe(true);
+    expect(results.some((object) => object.id === mainObjectId)).toBe(false);
+  });
+
+  // Reproduces the Composer stall from 2026-06-10: objects whose strong dep
+  // (dynamic schema object) id is ABSENT from the space directory — no inline
+  // entry, no link. `loadObjectDocument` used to park such ids in
+  // `_objectsPendingDocumentLoad` ("loading delayed until object links are
+  // initialized") forever: the dep was never loaded NOR marked unavailable,
+  // so `_areDepsResolved` never became true and query hydration hung until
+  // an external timeout dropped the hit. Now the loader emits
+  // `onObjectUnavailable` for directory-absent ids immediately, so dependents
+  // resolve promptly and queries exclude the broken object without stalling.
+  test('query completes promptly and excludes objects whose strong dep is absent from the space directory', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const mainObjectId = EntityId.random();
+    const danglingDepId = EntityId.random();
+
+    const mainDocHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [mainObjectId]: {
+          meta: { keys: [] },
+          data: { title: 'main' },
+          system: {
+            kind: 'object',
+            type: { '/': EID.make({ entityId: danglingDepId }) },
+          },
+        },
+      },
+    });
+
+    // Link only the main object — the dep id has no entry in the directory at all.
+    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    spaceRootHandle.change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
+    });
+
+    await sleep(200);
+
+    // The dangling dep resolves as unavailable instead of parking forever, so the
+    // load completes promptly with `undefined` (deps unsatisfied → object omitted).
+    const begin = performance.now();
+    const loaded = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
+    expect(loaded).toBeUndefined();
+
+    const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
+    expect(results.some((object) => object.id === mainObjectId)).toBe(false);
+    // Well under the per-hit hydration timeout — no stall, no timeout-driven completion.
+    expect(performance.now() - begin).toBeLessThan(1500);
   });
 });

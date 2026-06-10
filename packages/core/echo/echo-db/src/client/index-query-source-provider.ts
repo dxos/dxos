@@ -290,19 +290,11 @@ export class IndexQuerySource implements QuerySource {
   }
 
   /**
-   * Hydrate an index hit. Prefer objects already in the local working set
-   * (same as {@link SpaceQuerySource}) so index queries do not block on
-   * strong-dep resolution or network fetches for materialized cores.
+   * Hydrate an index hit via disk-only load; skip objects whose strong deps
+   * are permanently unavailable.
    */
   private async _resolveIndexedObject(result: RemoteQueryResult): Promise<Entity.Unknown | undefined> {
     const spaceId = SpaceId.make(result.spaceId);
-    const database = this._params.graph.getDatabase(spaceId);
-    if (database) {
-      const cached = database.getObjectById(result.id, { deleted: true });
-      if (cached) {
-        return cached;
-      }
-    }
 
     try {
       return await asyncTimeout(

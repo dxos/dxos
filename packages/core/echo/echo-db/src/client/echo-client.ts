@@ -244,20 +244,10 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    // Index query hydration must match `SpaceQuerySource`: when the core is
-    // already in the working set, return it without waiting for strong-dep
-    // resolution (which can block on network/disk probes indefinitely).
-    const cached = db.getObjectById(objectId, { deleted: true });
-    if (cached) {
-      return cached;
-    }
-
-    // Load the object's own document when needed. Do not block query results
-    // on strong-dep hydration or network fetch — filters run against the
-    // loaded core's structure, same as the local working-set query path.
+    // Disk-only load: wait for dep probes to settle, then return the core
+    // only when strong deps are satisfied (unavailable deps → `undefined`).
     return db._loadObjectById(objectId, {
       allowDeleted: true,
-      returnWithUnsatisfiedDeps: true,
       diskOnly: true,
     });
   }
