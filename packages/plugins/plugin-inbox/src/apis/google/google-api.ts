@@ -42,6 +42,8 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
   let request;
   if (options.method === 'POST') {
     request = HttpClientRequest.post(url);
+  } else if (options.method === 'DELETE') {
+    request = HttpClientRequest.del(url);
   } else {
     request = HttpClientRequest.get(url);
   }
@@ -53,7 +55,9 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
   const response = yield* request.pipe(
     HttpClientRequest.setHeader('accept', 'application/json'),
     httpClientWithTracerDisabled.execute,
-    Effect.flatMap((res) => res.json),
+    // DELETE (and some writes) return 204 No Content; tolerate an empty body, but still parse any
+    // error JSON the API returns on failure.
+    Effect.flatMap((res) => res.text.pipe(Effect.map((text) => (text ? JSON.parse(text) : {})))),
     Effect.timeout('10 second'),
     Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
     Effect.scoped,

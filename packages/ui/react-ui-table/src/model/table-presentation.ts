@@ -201,7 +201,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           })
           .join('');
 
-        cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;
+        cell.accessoryHtml = `<div class="flex flex-row gap-1 overflow-x-auto">${tags}</div>`;
       }
     }
 

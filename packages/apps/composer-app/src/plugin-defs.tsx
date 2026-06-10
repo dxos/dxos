@@ -81,6 +81,7 @@ import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
+import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
@@ -150,6 +151,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
+      VideoPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
   ]
@@ -272,6 +274,7 @@ export const getPlugins = ({
     TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
+    VideoPlugin(),
     VoxelPlugin(),
     FilePlugin(),
     WnfsPlugin(),

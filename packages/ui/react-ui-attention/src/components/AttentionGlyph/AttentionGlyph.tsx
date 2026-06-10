@@ -95,7 +95,7 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
 
     return (
       <div className='flex group' data-attention={attended} data-contains-attended={containsAttended}>
-        <span role='none' {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
+        <span {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
           {icon}
         </span>
       </div>

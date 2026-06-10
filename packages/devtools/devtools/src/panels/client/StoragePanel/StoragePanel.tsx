@@ -310,7 +310,7 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
         const { id, iconName, Element, items } = item;
         return (
           <TreeItem.Root key={id} collapsible={!!items?.length} open>
-            <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
+            <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
               <Icon icon={iconName} />
               {Element}
             </div>

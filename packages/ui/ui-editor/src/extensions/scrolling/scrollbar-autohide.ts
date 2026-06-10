@@ -20,25 +20,30 @@ export type ScrollbarAutohideOptions = {
  */
 export const scrollbarAutohide = ({ timeout = 800 }: ScrollbarAutohideOptions = {}): Extension => [
   ViewPlugin.fromClass(
+    // NOTE: Uses TS `private`/plain fields rather than ES `#private`. CodeMirror's plugin lifecycle
+    // (and the source/prebundled double-load in dev) can invoke `destroy` with a `this` that the
+    // WeakMap-based `#private` transpilation rejects ("private field on non-instance"), crashing
+    // editor teardown. Plain fields avoid the membership check.
     class {
-      #scroller: HTMLElement;
-      #timer?: ReturnType<typeof setTimeout>;
+      private readonly _scroller: HTMLElement;
+      private _timer?: ReturnType<typeof setTimeout>;
 
       constructor(view: EditorView) {
-        this.#scroller = view.scrollDOM;
-        this.#scroller.addEventListener('scroll', this.#handleScroll, { passive: true });
+        this._scroller = view.scrollDOM;
+        this._scroller.addEventListener('scroll', this._handleScroll, { passive: true });
       }
 
       destroy(): void {
-        this.#scroller.removeEventListener('scroll', this.#handleScroll);
-        clearTimeout(this.#timer);
+        this._scroller.removeEventListener('scroll', this._handleScroll);
+        clearTimeout(this._timer);
+        this._scroller.classList.remove('cm-scrolling');
       }
 
       // Show the thumb while scrolling; remove the class once scrolling has been idle for `timeout`.
-      readonly #handleScroll = (): void => {
-        this.#scroller.classList.add('cm-scrolling');
-        clearTimeout(this.#timer);
-        this.#timer = setTimeout(() => this.#scroller.classList.remove('cm-scrolling'), timeout);
+      private readonly _handleScroll = (): void => {
+        this._scroller.classList.add('cm-scrolling');
+        clearTimeout(this._timer);
+        this._timer = setTimeout(() => this._scroller.classList.remove('cm-scrolling'), timeout);
       };
     },
   ),

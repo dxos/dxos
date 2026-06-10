@@ -6,7 +6,7 @@ import { beforeEach, afterEach, describe, expect, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { Text } from '@dxos/schema';
+import { StateMap, TagIndex, Text } from '@dxos/schema';
 
 import { Magazine, Subscription } from '../types';
 import { applyKeep, resolveSelected } from './curate-magazine';
@@ -24,7 +24,16 @@ describe('applyKeep', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
+      types: [
+        Feed.Feed,
+        Subscription.Subscription,
+        Subscription.Post,
+        Magazine.Magazine,
+        Tag.Tag,
+        Text.Text,
+        StateMap.StateMap,
+        TagIndex.TagIndex,
+      ],
     });
     return { db };
   };

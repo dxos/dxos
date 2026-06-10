@@ -17,3 +17,18 @@ export const getTripGapDays = (): number => tripGapDays;
 export const setTripGapDays = (days: number): void => {
   tripGapDays = Number.isFinite(days) && days >= 0 ? days : DEFAULT_TRIP_GAP_DAYS;
 };
+
+/** Default number of days from today to include when planning a trip from a calendar with no selected range. */
+export const DEFAULT_PLANNING_WINDOW_DAYS = 14;
+
+// Process-level bridge (see `tripGapDays`): the Settings module writes the configured window here so
+// the app-graph action can read it without UI capabilities. Falls back to the default when unset.
+let planningWindowDays = DEFAULT_PLANNING_WINDOW_DAYS;
+
+/** Current planning window in days (set by the plugin Settings module; default 14). */
+export const getPlanningWindowDays = (): number => planningWindowDays;
+
+/** Update the planning window. Called by the Settings module when the user changes it. */
+export const setPlanningWindowDays = (days: number): void => {
+  planningWindowDays = Number.isFinite(days) && days >= 1 ? days : DEFAULT_PLANNING_WINDOW_DAYS;
+};
