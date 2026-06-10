@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SpaceState } from '@dxos/client/echo';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
+import { SpaceState } from '@dxos/client/echo';
 
 import { bootRecoveryClient, destroyRecoveryClient, isRecoveryClientBooted } from './boot-client';
 import { getDxos } from './dxos-globals';

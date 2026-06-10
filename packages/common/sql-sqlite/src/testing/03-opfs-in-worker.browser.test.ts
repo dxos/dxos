@@ -5,7 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import * as OpfsPool from '../OpfsPool';
-
 import {
   createSerializedDatabase,
   runInWorkerTestCase,

@@ -5,11 +5,11 @@
 /// <reference lib="webworker" />
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as Client from '@effect/sql/SqlClient';
-import * as SqlError from '@effect/sql/SqlError';
-import * as SqlConnection from '@effect/sql/SqlConnection';
-import * as Statement from '@effect/sql/Statement';
 import * as WasmSqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
+import * as Client from '@effect/sql/SqlClient';
+import * as SqlConnection from '@effect/sql/SqlConnection';
+import * as SqlError from '@effect/sql/SqlError';
+import * as Statement from '@effect/sql/Statement';
 import * as WaSqlite from '@effect/wa-sqlite';
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';

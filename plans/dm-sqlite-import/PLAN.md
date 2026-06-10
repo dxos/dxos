@@ -26,19 +26,19 @@ recovery.startClient()
 
 ## Status checklist
 
-| Step | Task | Status |
-| ---- | ---- | ------ |
-| A1 | Reproduce import + boot failure on branch | ⬜ |
-| A2 | Fix OPFS pool import (if still broken) | ⬜ |
-| A3 | Add browser tests for `writePoolSqlitePayload` roundtrip | ⬜ |
-| A4 | Add browser test: `.dxprofile` decode → pool write → verify | ⬜ |
-| A5 | Recovery E2E: import → `startClient()` → diagnostics pass | ⬜ |
-| B1 | Audit `@dxos/sql-sqlite` browser test coverage | ✅ |
-| B2 | Un-skip or replace skipped OPFS browser tests | ✅ |
-| B3 | Wire `moon run sql-sqlite:test-browser` in CI path | ✅ |
-| C1 | Spike: in-worker SqliteClient without MessagePort | ⬜ |
-| C2 | Decision: fork `@effect/sql-sqlite-wasm` vs thin direct layer | ⬜ |
-| C3 | Implement chosen path for `LocalSqliteOpfsLayer` | ⬜ |
+| Step | Task                                                          | Status |
+| ---- | ------------------------------------------------------------- | ------ |
+| A1   | Reproduce import + boot failure on branch                     | ⬜     |
+| A2   | Fix OPFS pool import (if still broken)                        | ⬜     |
+| A3   | Add browser tests for `writePoolSqlitePayload` roundtrip      | ⬜     |
+| A4   | Add browser test: `.dxprofile` decode → pool write → verify   | ⬜     |
+| A5   | Recovery E2E: import → `startClient()` → diagnostics pass     | ⬜     |
+| B1   | Audit `@dxos/sql-sqlite` browser test coverage                | ✅     |
+| B2   | Un-skip or replace skipped OPFS browser tests                 | ✅     |
+| B3   | Wire `moon run sql-sqlite:test-browser` in CI path            | ✅     |
+| C1   | Spike: in-worker SqliteClient without MessagePort             | ⬜     |
+| C2   | Decision: fork `@effect/sql-sqlite-wasm` vs thin direct layer | ⬜     |
+| C3   | Implement chosen path for `LocalSqliteOpfsLayer`              | ⬜     |
 
 ---
 
@@ -82,10 +82,10 @@ Record:
 
 Two import mechanisms exist; recovery uses **pool sync**, not OpfsWorker deserialize:
 
-| Path | Module | Mechanism | Used by |
-| ---- | ------ | --------- | ------- |
-| Pool sync | `opfs-pool-sync.ts` | Raw bytes at offset 4096 + VFS header | Recovery import |
-| Worker import | `OpfsWorker.ts` `['import', …]` | `deserialize` + `VACUUM` on open DB | Client export/import API (host) |
+| Path          | Module                          | Mechanism                             | Used by                         |
+| ------------- | ------------------------------- | ------------------------------------- | ------------------------------- |
+| Pool sync     | `opfs-pool-sync.ts`             | Raw bytes at offset 4096 + VFS header | Recovery import                 |
+| Worker import | `OpfsWorker.ts` `['import', …]` | `deserialize` + `VACUUM` on open DB   | Client export/import API (host) |
 
 Investigate if failures are:
 
@@ -136,14 +136,14 @@ Manual + optional playwright/debug-port automation:
 
 ### Current inventory (`@dxos/sql-sqlite`)
 
-| File | Status | Covers |
-| ---- | ------ | ------ |
-| `sqlite-memory.browser.test.ts` | ✅ active | wa-sqlite in-memory CRUD |
-| `opfs-worker.browser.test.ts` | ⏭ `describe.skip` | Effect `SqliteClient.layer` + OPFS worker |
-| `sqlite-idb.browser.test.ts` | ⏭ skip | IDBBatchAtomicVFS (broken) |
-| `sqlite-effect-idb.browser.test.ts` | ⏭ skip | Effect client + IDB VFS |
-| `opfs-pool-sync.ts` | ❌ none | Pool header write (critical for recovery) |
-| `OpfsWorker.ts` import/export | ❌ none | deserialize + VACUUM path |
+| File                                | Status             | Covers                                    |
+| ----------------------------------- | ------------------ | ----------------------------------------- |
+| `sqlite-memory.browser.test.ts`     | ✅ active          | wa-sqlite in-memory CRUD                  |
+| `opfs-worker.browser.test.ts`       | ⏭ `describe.skip` | Effect `SqliteClient.layer` + OPFS worker |
+| `sqlite-idb.browser.test.ts`        | ⏭ skip            | IDBBatchAtomicVFS (broken)                |
+| `sqlite-effect-idb.browser.test.ts` | ⏭ skip            | Effect client + IDB VFS                   |
+| `opfs-pool-sync.ts`                 | ❌ none            | Pool header write (critical for recovery) |
+| `OpfsWorker.ts` import/export       | ❌ none            | deserialize + VACUUM path                 |
 
 Package config: [vitest.config.ts](../../packages/common/sql-sqlite/vitest.config.ts) — browser project `chromium`; moon tag `ts-test-browser`.
 
@@ -197,11 +197,11 @@ Validate in `test-worker-factory` or a new browser test running inside a worker 
 
 ### C2 — Decision matrix
 
-| Option | Pros | Cons |
-| ------ | ---- | ---- |
-| **A. Full fork** of `@effect/sql-sqlite-wasm` into `@dxos/sql-sqlite` | Own release cycle, no devDependency on Effect wasm pkg | Upstream merge burden |
-| **B. Direct connection layer only** — keep Effect SqliteClient for worker mode | Smaller diff, fixes `LocalSqliteOpfsLayer` | Two code paths to maintain |
-| **C. Replace MessageChannel with in-memory port shim** | Minimal API change | Still mimics protocol; doesn't remove copying |
+| Option                                                                         | Pros                                                   | Cons                                          |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
+| **A. Full fork** of `@effect/sql-sqlite-wasm` into `@dxos/sql-sqlite`          | Own release cycle, no devDependency on Effect wasm pkg | Upstream merge burden                         |
+| **B. Direct connection layer only** — keep Effect SqliteClient for worker mode | Smaller diff, fixes `LocalSqliteOpfsLayer`             | Two code paths to maintain                    |
+| **C. Replace MessageChannel with in-memory port shim**                         | Minimal API change                                     | Still mimics protocol; doesn't remove copying |
 
 **Recommendation:** Start with **B** — add `layerOpfsDirect` used by `LocalSqliteOpfsLayer`; keep worker `SqliteClient.layer({ worker })` for main-thread recovery and composer-app. Revisit full fork if Effect wasm API churn blocks import/export fixes.
 
@@ -218,17 +218,17 @@ Replace MessageChannel wiring in [worker-runtime.ts](../../packages/sdk/client-s
 
 ## Key files
 
-| File | Role |
-| ---- | ---- |
-| `packages/apps/composer-app/src/recovery/import-sqlite.ts` | `.dxprofile` / `.sqlite` picker + decode |
-| `packages/apps/composer-app/src/recovery/opfs-worker-bridge.ts` | Pool worker bridge + verify |
-| `packages/apps/composer-app/src/recovery/opfs-pool-worker.ts` | Sync OPFS write worker |
-| `packages/common/sql-sqlite/src/opfs-pool-sync.ts` | `writePoolSqlitePayload` |
-| `packages/common/sql-sqlite/src/OpfsWorker.ts` | OPFS sqlite worker (forked Effect) |
-| `packages/sdk/client-services/src/packlets/storage/profile-archive-sqlite.ts` | Archive encode/decode helpers |
-| `packages/sdk/client/src/services/local-client-services.ts` | Main-thread OPFS worker client |
-| `packages/sdk/client-services/src/packlets/worker/worker-runtime.ts` | In-worker sqlite (MessageChannel today) |
-| `.agents/skills/composer-forensics/` | Recovery debug port + offline extract |
+| File                                                                          | Role                                     |
+| ----------------------------------------------------------------------------- | ---------------------------------------- |
+| `packages/apps/composer-app/src/recovery/import-sqlite.ts`                    | `.dxprofile` / `.sqlite` picker + decode |
+| `packages/apps/composer-app/src/recovery/opfs-worker-bridge.ts`               | Pool worker bridge + verify              |
+| `packages/apps/composer-app/src/recovery/opfs-pool-worker.ts`                 | Sync OPFS write worker                   |
+| `packages/common/sql-sqlite/src/opfs-pool-sync.ts`                            | `writePoolSqlitePayload`                 |
+| `packages/common/sql-sqlite/src/OpfsWorker.ts`                                | OPFS sqlite worker (forked Effect)       |
+| `packages/sdk/client-services/src/packlets/storage/profile-archive-sqlite.ts` | Archive encode/decode helpers            |
+| `packages/sdk/client/src/services/local-client-services.ts`                   | Main-thread OPFS worker client           |
+| `packages/sdk/client-services/src/packlets/worker/worker-runtime.ts`          | In-worker sqlite (MessageChannel today)  |
+| `.agents/skills/composer-forensics/`                                          | Recovery debug port + offline extract    |
 
 ---
 

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 
 import { isValidSqliteDatabase, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
@@ -10,7 +11,6 @@ import { schema } from '@dxos/protocols/proto';
 import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
-import CRC32 from 'crc-32';
 
 import { exportOpfsSqlite } from './opfs-export';
 

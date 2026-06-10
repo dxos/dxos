@@ -11,7 +11,6 @@ import * as Layer from 'effect/Layer';
 
 import * as OpfsPool from '../OpfsPool';
 import * as SqliteClient from '../SqliteClient';
-
 import { TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers';
 
 const DB_NAME = 'DXOS';

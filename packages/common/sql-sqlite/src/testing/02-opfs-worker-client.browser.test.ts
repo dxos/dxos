@@ -3,12 +3,11 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
-import { describe, expect, test } from 'vitest';
 import * as Effect from 'effect/Effect';
+import { describe, expect, test } from 'vitest';
 
 import * as OpfsPool from '../OpfsPool';
 import * as SqliteClient from '../SqliteClient';
-
 import {
   copySqliteSnapshot,
   createSerializedDatabase,

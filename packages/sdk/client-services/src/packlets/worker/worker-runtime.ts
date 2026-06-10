@@ -22,8 +22,8 @@ import {
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
