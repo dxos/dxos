@@ -78,6 +78,10 @@ export const Readonly: Story = {
 };
 
 /**
- * No fake relay installed — the connection test reports "Extension not detected".
+ * No fake relay — the connection test talks to the real composer-crx extension. For development:
+ * load the dev extension (`moon run composer-crx:build`, load unpacked from `out/composer-crx`),
+ * then add this storybook's origin (e.g. `http://localhost:9009/*`) to the extension's Composer
+ * URLs in its options page so the content relay installs here. Without that setup the test
+ * reports "Extension not detected".
  */
-export const NotDetected: Story = {};
+export const Live: Story = {};

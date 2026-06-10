@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { Button, Icon } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
 
 import { getActionsForUrl } from '../../page-actions/registry';
 import {
@@ -102,10 +102,13 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
     <div className='flex flex-col gap-1 p-2'>
       <div className='flex flex-wrap gap-2'>
         {actions.map((action) => (
-          <Button key={action.id} onClick={() => handleRun(action)} disabled={states[action.id] === 'pending'}>
-            <Icon icon={action.icon} size={4} classNames='mie-2' />
-            {action.label}
-          </Button>
+          <IconButton
+            key={action.id}
+            disabled={states[action.id] === 'pending'}
+            icon={action.icon}
+            label={action.label}
+            onClick={() => handleRun(action)}
+          />
         ))}
       </div>
       {message && (
