@@ -126,10 +126,13 @@ export const PlankComponent = memo(
     const isAttendable =
       (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
 
+    // Companions share attention with their primary, so they attend to the primary's id
+    // (matching the plank's attention container, which keys to `primary?.id ?? id`).
+    const attendableId = isCompanion ? (primary?.id ?? id) : id;
     const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
         node && {
-          attendableId: id,
+          attendableId,
           subject: node.data,
           companionTo: primary?.data,
           properties: node.properties,
@@ -137,7 +140,7 @@ export const PlankComponent = memo(
           path,
           popoverAnchorId,
         },
-      [node, node?.data, node?.properties, path, popoverAnchorId, primary?.data, variant],
+      [node, node?.data, node?.properties, path, popoverAnchorId, primary?.data, variant, attendableId],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.

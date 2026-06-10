@@ -18,10 +18,10 @@ import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatArticleProps = AppSurface.ObjectSectionProps<ChatType.Chat> & {
   companionTo?: Obj.Unknown;
-} & Pick<ChatRootProps, 'onEvent'>;
+} & Pick<ChatRootProps, 'onEvent' | 'onSubmit'>;
 
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
-  ({ role, attendableId, subject: chat, companionTo, onEvent }, forwardedRef) => {
+  ({ role, attendableId, subject: chat, companionTo, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
@@ -67,7 +67,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     }
 
     return (
-      <ChatComponent.Root chat={chat} feed={feedTarget} processor={processor} onEvent={onEvent}>
+      <ChatComponent.Root
+        chat={chat}
+        feed={feedTarget}
+        db={space?.db}
+        processor={processor}
+        onEvent={onEvent}
+        onSubmit={onSubmit}
+      >
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar className='bg-toolbar-surface'>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
