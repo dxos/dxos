@@ -433,6 +433,9 @@
       "path": "../../plugins/plugin-trip"
     },
     {
+      "path": "../../plugins/plugin-video"
+    },
+    {
       "path": "../../plugins/plugin-voxel"
     },
     {

@@ -49,7 +49,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             />
           </Treegrid.Cell>
         ) : (
-          <Treegrid.Cell role='none' />
+          <Treegrid.Cell />
         )}
       </ActionRoot>
       {ItemEnd && (

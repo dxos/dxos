@@ -385,7 +385,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             )}
             {messageLabels.length > 0 && (
               <Card.Row>
-                <div role='none' className='flex flex-wrap gap-1 py-1'>
+                <div className='flex flex-wrap gap-1 py-1'>
                   {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
                     <button
                       key={labelId}

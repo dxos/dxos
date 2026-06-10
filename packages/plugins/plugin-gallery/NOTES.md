@@ -89,7 +89,7 @@ asChild` cleanly.
 ## Aspect-ratio image rendering inside Card.Root
 
 - `Card.Root` is a grid (icon | title | menu). A bare `<img>` lands in a
-  single column. Wrap with `<div role='none' className='col-span-full'>`
+  single column. Wrap with `<div className='col-span-full'>`
   to span the full card width — same trick `Card.Poster` uses.
 - For aspect-driven masonry tiles, render `<img class="block w-full h-auto"
 width={W} height={H} style={{ aspectRatio: W / H }}>`. Set width/height
