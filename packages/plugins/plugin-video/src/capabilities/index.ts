@@ -6,6 +6,7 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
 
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

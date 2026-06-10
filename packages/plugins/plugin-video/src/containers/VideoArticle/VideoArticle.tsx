@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -28,8 +28,6 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   const [video] = useObject(subject);
   const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);
-  const [fetchingDescription, setFetchingDescription] = useState(false);
-  const [fetchingTranscript, setFetchingTranscript] = useState(false);
   // Resolve the transcript so summary regeneration can be gated on it actually having content.
   useObject(subject.transcript);
   const hasTranscript = (subject.transcript?.target?.content?.trim().length ?? 0) > 0;
@@ -40,12 +38,15 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
     }
   }, [video.url]);
 
-  // Load the watch page via the CRX render-proxy (edge-proxy fallback) and populate Video.description.
-  const handleFetchDescription = useCallback(() => {
-    if (!invokePromise || !video.url) {
+  // Auto-populate the description from the source page when empty (scraped via the FetchDescription
+  // op). `running` guards re-entrancy across the async gap before the reactive `video.description`
+  // field updates; on failure the deps are unchanged so it does not retry in a loop.
+  const fetchingDescriptionRef = useRef(false);
+  useEffect(() => {
+    if (!invokePromise || !video.url || video.description?.trim() || fetchingDescriptionRef.current) {
       return;
     }
-    setFetchingDescription(true);
+    fetchingDescriptionRef.current = true;
     void invokePromise(
       VideoOperation.FetchDescription,
       { video: Ref.make(subject) },
@@ -53,25 +54,10 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         spaceId: Obj.getDatabase(subject)?.spaceId,
         notify: { error: ['fetch-description-error.message', { ns: meta.id }] },
       },
-    ).finally(() => setFetchingDescription(false));
-  }, [invokePromise, subject, video.url]);
-
-  // Retrieve the transcript from the video's published captions via the CRX render-proxy. An
-  // alternative to the EDGE-based auto-transcription that TranscriptSection triggers on first view.
-  const handleFetchTranscript = useCallback(() => {
-    if (!invokePromise || !video.url) {
-      return;
-    }
-    setFetchingTranscript(true);
-    void invokePromise(
-      VideoOperation.FetchTranscript,
-      { video: Ref.make(subject) },
-      {
-        spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['fetch-transcript-error.message', { ns: meta.id }] },
-      },
-    ).finally(() => setFetchingTranscript(false));
-  }, [invokePromise, subject, video.url]);
+    ).finally(() => {
+      fetchingDescriptionRef.current = false;
+    });
+  }, [invokePromise, subject, video.url, video.description]);
 
   // Manual summary regeneration (the summary surface generates it automatically when first missing).
   const handleRegenerate = useCallback(() => {
@@ -103,37 +89,8 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           },
           () => handleOpenOriginal(),
         )
-        .action(
-          'fetchDescription',
-          {
-            label: ['fetch-description.label', { ns: meta.id }],
-            icon: 'ph--text-align-left--regular',
-            disabled: !video.url || fetchingDescription,
-            disposition: 'toolbar',
-            testId: 'video.toolbar.fetch-description',
-          },
-          () => handleFetchDescription(),
-        )
-        .action(
-          'fetchTranscript',
-          {
-            label: ['fetch-transcript.label', { ns: meta.id }],
-            icon: 'ph--closed-captioning--regular',
-            disabled: !video.url || fetchingTranscript,
-            disposition: 'toolbar',
-            testId: 'video.toolbar.fetch-transcript',
-          },
-          () => handleFetchTranscript(),
-        )
         .build(),
-    [
-      video.url,
-      fetchingDescription,
-      fetchingTranscript,
-      handleOpenOriginal,
-      handleFetchDescription,
-      handleFetchTranscript,
-    ],
+    [video.url, handleOpenOriginal],
   );
 
   return (
