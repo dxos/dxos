@@ -67,9 +67,7 @@ const getIPData = Effect.fn(function* (config: Config) {
   );
 
   if (data) {
-    yield* Effect.promise(() =>
-      localForage.setItem('dxos:observability:ipdata:v2', { data, timestamp: Date.now() }),
-    );
+    yield* Effect.promise(() => localForage.setItem('dxos:observability:ipdata:v2', { data, timestamp: Date.now() }));
   }
 
   return data;
