@@ -20,7 +20,6 @@ export const Bookmark = Schema.Struct({
   image: Schema.optional(Schema.String),
   excerpt: Schema.optional(Schema.String),
   summary: Schema.optional(Schema.String),
-  createdAt: Schema.String,
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
@@ -30,6 +29,9 @@ export type Bookmark = Type.InstanceType<typeof Bookmark>;
 
 /** Creates a Bookmark object. */
 export const make = (props: Obj.MakeProps<typeof Bookmark>): Bookmark => Obj.make(Bookmark, props);
+
+/** Checks if a value is a Bookmark object. */
+export const instanceOf = (value: unknown): value is Bookmark => Obj.instanceOf(Bookmark, value);
 
 /**
  * Best-effort mapping from a page-action snapshot. Missing fields are left
@@ -42,5 +44,4 @@ export const fromSnapshot = (snapshot: PageAction.Snapshot): Bookmark =>
     favicon: snapshot.source.favicon,
     image: snapshot.hints?.ogImage,
     excerpt: snapshot.hints?.ogDescription ?? snapshot.selection?.text?.slice(0, EXCERPT_LENGTH),
-    createdAt: snapshot.source.clippedAt,
   });

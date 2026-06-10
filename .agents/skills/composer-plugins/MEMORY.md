@@ -10,6 +10,14 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 - For an icon-plus-label button use `IconButton` (`@dxos/react-ui`) with `icon`/`label` props, not `<Button><Icon …/>{label}</Button>` with manual `mie-2` spacing (user corrected `CrxSettings.tsx`; same applies to the composer-crx popup `PageActions.tsx`).
 
+### TS2883 cross-package `Capability.lazy` fix that preserves code-splitting
+
+- When a `Capability.lazy(...)` module contributes a type declared in ANOTHER package (TS2883 "inferred type cannot be named / not portable"), annotate the barrel export as `Capability.LazyCapability<void, Capability.Capability<typeof OtherPlugin.TheCapability>>` — the `LazyCapability<Props, Value>` annotation on the barrel export is what fixes portability while keeping the module boundary intact (no eager import). This is the precedent in plugin-osrm, plugin-trip, and plugin-bookmarks (`PageActionProvider`). Prefer this over the eager re-export fallback already documented below.
+
+### No `createdAt`/`updatedAt` data fields on schemas — ECHO meta provides them
+
+- Do not add a `createdAt` (or `updatedAt`) field to an ECHO type's data schema; the object's built-in meta carries creation/update timestamps (user corrected `Bookmark.ts` — field removed from schema, `fromSnapshot`, PLUGIN.mdl). Only model a timestamp as data when it differs semantically from object creation (e.g. an external event time).
+
 ### Stories that exercise an extension/relay round-trip install a fake relay
 
 - A component calling `pingExtension` (or any page↔extension CustomEvent contract) always fails in storybook ("Extension not detected") — add a story `Decorator` that sets the readiness dataset marker and acks the request events (see `CrxSettings.stories.tsx` `withFakeExtension`), plus an explicit `NotDetected` story. Export the event-name constants from the util module so test + story don't re-declare them.

@@ -37,7 +37,6 @@ type Bookmark
     image?: string               # hints.ogImage
     excerpt?: string             # hints.ogDescription ?? first 280 chars of selection text
     summary?: string             # optional AI summary (future; not set at creation)
-    createdAt: string            # ISO timestamp, from snapshot source.clippedAt
 ```
 
 ## Features
@@ -66,7 +65,6 @@ feat F-2: AddFromSnapshot Operation
         favicon   ← snapshot.source.favicon
         image     ← snapshot.hints.ogImage
         excerpt   ← snapshot.hints.ogDescription ?? first 280 chars of selection.text
-        createdAt ← snapshot.source.clippedAt
       and the operation returns { id } of the created object.
 
   req F-2.2:
@@ -117,7 +115,6 @@ test T-1: Snapshot mapping prefers og hints
     - excerpt === ogDescription
     - image === ogImage
     - favicon === source.favicon
-    - createdAt === source.clippedAt
 ```
 
 ```mdl

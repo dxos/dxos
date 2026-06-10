@@ -3,6 +3,8 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
+  - storybook
 tasks:
   compile:
     args:

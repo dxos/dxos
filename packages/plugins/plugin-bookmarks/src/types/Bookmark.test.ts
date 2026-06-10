@@ -28,7 +28,6 @@ describe('Bookmark.fromSnapshot', () => {
     expect(bookmark.excerpt).toBe('A description.');
     expect(bookmark.image).toBe('https://example.com/og.png');
     expect(bookmark.favicon).toBe('https://example.com/favicon.ico');
-    expect(bookmark.createdAt).toBe('2026-06-09T12:00:00.000Z');
   });
 
   test('falls back to tab title and selection text', ({ expect }) => {
@@ -39,5 +38,16 @@ describe('Bookmark.fromSnapshot', () => {
     expect(bookmark.title).toBe('Tab Title');
     expect(bookmark.excerpt).toHaveLength(280);
     expect(bookmark.image).toBeUndefined();
+  });
+
+  test('maps snapshot with no hints and no selection', ({ expect }) => {
+    const bookmark = Bookmark.fromSnapshot({
+      source: { url: 'https://a.com', title: 'Tab Title', clippedAt: '2026-06-09T12:00:00.000Z' },
+    });
+    expect(bookmark.title).toBe('Tab Title');
+    expect(bookmark.url).toBe('https://a.com');
+    expect(bookmark.excerpt).toBeUndefined();
+    expect(bookmark.image).toBeUndefined();
+    expect(bookmark.favicon).toBeUndefined();
   });
 });
