@@ -54,7 +54,7 @@ export const CrmMailboxCompanion = ({ companionTo }: CrmMailboxCompanionProps) =
         ) : (
           <>
             <p className='text-sm text-description'>{t('crm-routine.setup.description')}</p>
-            <Button disabled={pending} onClick={() => void handleSetup()}>
+            <Button disabled={pending || !db} onClick={() => void handleSetup()}>
               {pending ? t('crm-routine.setup-pending.label') : t('crm-routine.setup.label')}
             </Button>
           </>

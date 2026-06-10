@@ -20,7 +20,7 @@ import {
   TypeEntityId,
   TypeId,
 } from '../common/types';
-import { MetaId } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.

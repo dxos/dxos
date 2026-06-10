@@ -7,7 +7,9 @@ import { DXN, EID, URI, type SpaceId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';
-import { getMeta } from '../common/types/meta';
+// Import MetaId from model-symbols (a dependency-free primitive file) rather than from
+// meta.ts to avoid the circular import: api.ts → meta.ts → ref.ts → Database.ts → type-uri.ts → api.ts.
+import { MetaId } from '../common/types/model-symbols';
 import { type InternalObjectProps, ObjectDatabaseId } from './model';
 import { getObjectEchoUri } from './util';
 
@@ -34,7 +36,7 @@ export const getUri = (entity: AnyEntity, options?: GetURIOptions): URI.URI => {
   const prefer = options?.prefer;
 
   if (prefer === 'named') {
-    const key = getMeta(entity as any)?.key;
+    const key = (entity as any)[MetaId]?.key;
     if (key) {
       return (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
     }

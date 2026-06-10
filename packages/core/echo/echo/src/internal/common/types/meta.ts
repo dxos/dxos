@@ -16,6 +16,7 @@ import { Dictionary } from '../../Annotation/dictionary';
 // Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
 import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
 import { type AnyProperties } from './base';
+import { MetaId } from './model-symbols';
 import { TagTypeDXN } from './well-known-types';
 
 /**
@@ -23,10 +24,8 @@ import { TagTypeDXN } from './well-known-types';
  */
 export const ATTR_META = '@meta';
 
-/**
- * Metadata section.
- */
-export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
+// MetaId is defined in model-symbols (the canonical home for primitive entity symbols);
+// imported here for use as the property-accessor key below.
 
 //
 // EntityMeta
