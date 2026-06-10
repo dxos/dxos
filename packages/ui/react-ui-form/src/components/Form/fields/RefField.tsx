@@ -29,15 +29,10 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { 
   results.map((result) => {
     const eid = Entity.getURI(result);
 
-    // For keyed entities (e.g. blueprints, operations) prefer the DXN key URI as the
-    // primary `id`. This allows registry-bound refs created via
-    // `Ref.fromURI(Blueprint.registryURI(key))` — which carry a `dxn:<key>` URI — to
-    // resolve correctly against options returned by the registry query below.
-    // The EID is kept as an alias so that EID-based refs (from `Ref.make(dbObject)`)
-    // still match after the `dxnToEntityId` alias check in `handleGetValue`.
+    // Keyed entities (blueprints, operations) use a DXN key URI as the primary id so that
+    // registry refs resolve against picker options. The EID is kept as an alias so that
+    // EID-based refs still match via the alias check in `handleGetValue`.
     const key = Entity.isEntity(result) ? Entity.getMeta(result).key : undefined;
-    // Mirror Blueprint.registryURI: prefer DXN form for valid NSIDs, fall back to the raw
-    // key string for keys that contain hyphens or other characters DXN.tryMake rejects.
     const dxnId = key ? (DXN.tryMake(`dxn:${key}`) ?? key) : undefined;
     const id = dxnId ?? eid;
     const aliases: string[] | undefined = dxnId != null ? [eid] : undefined;
@@ -53,10 +48,9 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
     !typename
       ? Query.select(Filter.nothing())
       : typename === ANY_OBJECT_TYPENAME
-        ? // For Ref.Ref(Obj.Unknown) show all space objects (registry is too broad for "any").
+        ? // Untyped refs show space objects only; the registry is too broad for "any".
           Query.select(Filter.everything())
-        : // Fan across space + registry so keyed entities (blueprints, operations, etc.)
-          // stored in the registry are included as picker options alongside local ones.
+        : // Include registry scope so keyed entities (blueprints, operations) appear as options.
           Query.select(Filter.typename(typename)).from(Scope.space(), Scope.registry()),
   );
 
@@ -116,16 +110,9 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
-    // Match form-value Refs against options by the bare entity id, not by full
-    // URI string. A just-created object's Ref (`Ref.make`) carries the LOCAL
-    // EID `echo:/<id>`, while options derived from `Entity.getURI` carry the
-    // qualified EID `echo://<spaceId>/<id>`; encoded snapshots use the DXN
-    // form `dxn:echo:<space|@>:<id>`. The entity id (a ULID) contains neither
-    // `:` nor `/`, so it is always the final delimiter-separated segment —
-    // splitting on both reconciles all three forms. Comparing full strings (or
-    // splitting on `:` alone, which leaves `/`-delimited EIDs intact) makes the
-    // just-created Ref's lookup fail and the slot render empty even though the
-    // underlying form value IS set.
+    // Match against options by the bare entity id rather than the full URI string, since
+    // local EIDs (`echo:/<id>`), qualified EIDs (`echo://<space>/<id>`), and DXN snapshots
+    // (`dxn:echo:…:<id>`) all encode the same ULID in the final delimiter-separated segment.
     const dxnToEntityId = (dxn: string): string => dxn.split(/[:/]/).filter(Boolean).pop() ?? dxn;
 
     const unknownToRefOption = (value: unknown) => {
@@ -133,12 +120,10 @@ export const RefField = (props: RefFieldProps) => {
       if (isRef || isRefSnapshot(value)) {
         const dxnString = isRef ? value.uri : value['/'];
         const objectId = dxnToEntityId(dxnString);
-        // Primary: match by extracted entity id (ULID for EID refs; key for DXN key refs).
         const matchingOption =
           options.find((option) => dxnToEntityId(option.id) === objectId) ??
-          // Alias fallback: for keyed entities whose primary id was promoted to a DXN key URI,
-          // the stored ref may still carry an EID-based URI (e.g. created via `Ref.make`).
-          // Check each option's alias list so those refs still resolve correctly.
+          // For keyed entities the primary option id is a DXN key URI; the stored ref may
+          // still carry an EID-based URI. Check aliases so those refs still resolve.
           options.find((option) => option.aliases?.some((alias) => dxnToEntityId(alias) === objectId));
         if (matchingOption) {
           return matchingOption;
