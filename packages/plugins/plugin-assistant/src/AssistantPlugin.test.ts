@@ -4,11 +4,10 @@
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type TestContext } from '@effect/vitest';
-import { pipe } from 'effect';
+import { pipe } from 'effect/Function';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';

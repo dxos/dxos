@@ -2,20 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import {
-  AgentBlueprintHandlers,
-  AgentHandlers,
-  AgentWizardHandlers,
-  BlueprintManagerHandlers,
-  DatabaseHandlers,
-  DelegationHandlers,
-  WebSearchHandlers,
+    AgentBlueprintHandlers,
+    AgentHandlers,
+    AgentWizardHandlers,
+    BlueprintManagerHandlers,
+    DatabaseHandlers,
+    DelegationHandlers,
+    WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { EffectEx } from '@dxos/effect';
 
 import { AssistantOperationHandlerSet } from '#operations';
 
@@ -38,7 +38,7 @@ describe('operation registry round-trip', () => {
   });
 
   test('assistant plugin operation inputs deserialize to struct-like schemas', async ({ expect }) => {
-    const handlers = await Effect.runPromise(handlerSet.handlers);
+    const handlers = await EffectEx.runPromise(handlerSet.handlers);
     const failures: string[] = [];
     for (const operation of handlers) {
       const record = Operation.serialize(operation);
