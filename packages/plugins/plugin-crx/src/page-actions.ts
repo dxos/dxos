@@ -31,10 +31,7 @@ export type InvokeDeps = {
  * Answer a registry-list request with the currently contributed actions as
  * serializable descriptors.
  */
-export const handleListEvent = (
-  detail: unknown,
-  getActions: () => PageAction.PageAction[],
-): PageAction.ListAck => {
+export const handleListEvent = (detail: unknown, getActions: () => PageAction.PageAction[]): PageAction.ListAck => {
   const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)(detail);
   if (Either.isLeft(decoded)) {
     log.info('rejected invalid page-actions list request');

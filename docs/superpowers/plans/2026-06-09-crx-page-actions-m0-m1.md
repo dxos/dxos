@@ -60,6 +60,7 @@ M1 plugin-bookmarks (new package, private):
 ### Task 1: Merge settings schema, util, and tests into plugin-crx
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-crx/src/types/Settings.ts`
 - Create: `packages/plugins/plugin-crx/src/util/index.ts`, `packages/plugins/plugin-crx/src/util/pingExtension.ts`, `packages/plugins/plugin-crx/src/util/pingExtension.test.ts`, `packages/plugins/plugin-crx/src/types/Settings.test.ts`
 
@@ -93,6 +94,7 @@ export * from './pingExtension';
 ### Task 2: Move the settings surface (CrxSettings component + react-surface)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-crx/src/components/CrxSettings/{CrxSettings.tsx,CrxSettings.stories.tsx,index.ts}`, `packages/plugins/plugin-crx/src/capabilities/react-surface.tsx`
 - Modify: `packages/plugins/plugin-crx/src/components/index.ts`, `packages/plugins/plugin-crx/src/capabilities/index.ts`, `packages/plugins/plugin-crx/src/CrxPlugin.tsx`, `packages/plugins/plugin-crx/src/translations.ts`, `packages/plugins/plugin-crx/moon.yml`
 
@@ -115,6 +117,7 @@ export const ReactSurface = Capability.lazy('ReactSurface', () => import('./reac
 ### Task 3: Update plugin-crx PLUGIN.mdl and meta
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-crx/PLUGIN.mdl`, `packages/plugins/plugin-crx/src/meta.ts`
 
 - [ ] **Step 1:** In `PLUGIN.mdl`: extend the `type Settings` block with the four merged fields (copy the field comments from plugin-extension's PLUGIN.mdl), and add a feature block after F-2:
@@ -138,6 +141,7 @@ feat F-2b: Render-Proxy Settings
 ### Task 4: Deregister and delete plugin-extension
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx` (drop line 31 import and line 206 `!isTauri && ExtensionPlugin(),`), `packages/apps/composer-app/package.json` (drop `"@dxos/plugin-extension"`), `packages/apps/composer-app/tsconfig.json` (drop the `plugin-extension` reference)
 - Delete: `packages/plugins/plugin-extension/` (entire directory)
 
@@ -153,6 +157,7 @@ feat F-2b: Render-Proxy Settings
 ### Task 5: PageAction types + capability
 
 **Files:**
+
 - Create: `packages/plugins/plugin-crx/src/types/PageAction.ts`
 - Modify: `packages/plugins/plugin-crx/src/types/index.ts`, `packages/plugins/plugin-crx/src/types/CrxCapabilities.ts`, `packages/plugins/plugin-crx/package.json` (deps + `./types` export), `packages/plugins/plugin-crx/moon.yml` (no change — types entry exists)
 
@@ -296,9 +301,7 @@ export type InvokeAck =
  * Page actions contributed by plugins for the browser extension to surface.
  * Contributions are arrays; consumers flatten via `getAll`.
  */
-export const PageAction = Capability.make<import('./PageAction').PageAction[]>(
-  `${meta.id}.capability.page-action`,
-);
+export const PageAction = Capability.make<import('./PageAction').PageAction[]>(`${meta.id}.capability.page-action`);
 ```
 
 - [ ] **Step 4:** Add `export * as PageAction from './PageAction';` to `types/index.ts`.
@@ -308,6 +311,7 @@ export const PageAction = Capability.make<import('./PageAction').PageAction[]>(
 ### Task 6: Page-action listener (list + invoke) with tests
 
 **Files:**
+
 - Create: `packages/plugins/plugin-crx/src/page-actions.ts`, `packages/plugins/plugin-crx/src/page-actions.test.ts`, `packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts`
 - Modify: `packages/plugins/plugin-crx/src/capabilities/index.ts`, `packages/plugins/plugin-crx/src/CrxPlugin.tsx`, `packages/plugins/plugin-crx/src/translations.ts`
 
@@ -447,10 +451,7 @@ export type InvokeDeps = {
  * Answer a registry-list request with the currently contributed actions as
  * serializable descriptors.
  */
-export const handleListEvent = (
-  detail: unknown,
-  getActions: () => PageAction.PageAction[],
-): PageAction.ListAck => {
+export const handleListEvent = (detail: unknown, getActions: () => PageAction.PageAction[]): PageAction.ListAck => {
   const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)(detail);
   if (Either.isLeft(decoded)) {
     log.info('rejected invalid page-actions list request');
@@ -647,6 +648,7 @@ feat F-8: Page Actions Registry & Invocation
 ### Task 7: Wire types + match patterns
 
 **Files:**
+
 - Create: `packages/apps/composer-crx/src/page-actions/types.ts`, `packages/apps/composer-crx/src/page-actions/types.test.ts`, `packages/apps/composer-crx/src/page-actions/match-pattern.ts`, `packages/apps/composer-crx/src/page-actions/match-pattern.test.ts`, `packages/apps/composer-crx/src/page-actions/index.ts`
 
 - [ ] **Step 1: Write failing tests.** `match-pattern.test.ts` (mirror `bridge/urls.test.ts` style):
@@ -807,6 +809,7 @@ and validators `decodeDescriptor`, `decodeListAck`, `decodeInvokeAck` (each fiel
 ### Task 8: Extractors
 
 **Files:**
+
 - Create: `packages/apps/composer-crx/src/extractors/{types.ts,snapshot.ts,snapshot.test.ts,index.ts}`
 
 - [ ] **Step 1: Failing test** (`snapshot.test.ts`, mirror the jsdom/document setup used by `picker/harvest.test.ts` — read that file first and copy its environment configuration):
@@ -941,6 +944,7 @@ export const runExtractor = async (name: string, context: ExtractorContext): Pro
 ### Task 9: Content-script relays
 
 **Files:**
+
 - Modify: `packages/apps/composer-crx/src/content.ts`
 
 - [ ] **Step 1: All-pages handlers** (extract + predicate). Add to `content.ts` after `installBridge()` definitions, and call from `main()`:
@@ -1072,6 +1076,7 @@ Call `installPageActionHelpers();` and `void installPageActionsRelay();` from `m
 ### Task 10: Background registry + invoke orchestration
 
 **Files:**
+
 - Create: `packages/apps/composer-crx/src/page-actions/registry.ts`, `packages/apps/composer-crx/src/page-actions/invoke.ts`
 - Modify: `packages/apps/composer-crx/src/bridge/sender.ts` (export `findComposerTab`), `packages/apps/composer-crx/src/background.ts`
 
@@ -1152,14 +1157,9 @@ export const getRegistry = async (): Promise<PageActionsRegistry> => {
 /**
  * Cached actions applicable to a URL in a given context.
  */
-export const getActionsForUrl = async (
-  url: string,
-  context: 'popup' | 'page',
-): Promise<PageActionDescriptor[]> => {
+export const getActionsForUrl = async (url: string, context: 'popup' | 'page'): Promise<PageActionDescriptor[]> => {
   const { actions } = await getRegistry();
-  return actions.filter(
-    (action) => action.contexts.includes(context) && matchesUrlPatterns(url, action.urlPatterns),
-  );
+  return actions.filter((action) => action.contexts.includes(context) && matchesUrlPatterns(url, action.urlPatterns));
 };
 ```
 
@@ -1231,13 +1231,7 @@ const deliverInvoke = async (request: object): Promise<InvokeAck> => {
  * Run a page action end-to-end: extract inputs on the source tab, then
  * deliver the invoke request to Composer.
  */
-export const runPageAction = async ({
-  actionId,
-  tabId,
-}: {
-  actionId: string;
-  tabId: number;
-}): Promise<InvokeAck> => {
+export const runPageAction = async ({ actionId, tabId }: { actionId: string; tabId: number }): Promise<InvokeAck> => {
   const { actions } = await getRegistry();
   const action = actions.find((candidate) => candidate.id === actionId);
   if (!action) {
@@ -1270,27 +1264,24 @@ export const runPageAction = async ({
 
 ```ts
 import { refreshRegistry, runPageAction } from './page-actions';
-import {
-  PAGE_ACTIONS_READY_MESSAGE_TYPE,
-  PAGE_ACTION_RUN_MESSAGE_TYPE,
-} from './page-actions/types';
+import { PAGE_ACTIONS_READY_MESSAGE_TYPE, PAGE_ACTION_RUN_MESSAGE_TYPE } from './page-actions/types';
 
-  // Page actions: refresh the registry when a Composer tab announces itself,
-  // and run actions on behalf of the popup.
-  browser.runtime.onMessage.addListener((msg: any, sender): undefined | Promise<unknown> => {
-    if (!msg || msg.type !== PAGE_ACTIONS_READY_MESSAGE_TYPE) {
-      return undefined;
-    }
-    return refreshRegistry(sender.tab?.id);
-  });
-  browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
-    if (!msg || msg.type !== PAGE_ACTION_RUN_MESSAGE_TYPE) {
-      return undefined;
-    }
-    return runPageAction({ actionId: msg.actionId, tabId: msg.tabId });
-  });
-  browser.runtime.onStartup?.addListener?.(() => void refreshRegistry());
-  void refreshRegistry();
+// Page actions: refresh the registry when a Composer tab announces itself,
+// and run actions on behalf of the popup.
+browser.runtime.onMessage.addListener((msg: any, sender): undefined | Promise<unknown> => {
+  if (!msg || msg.type !== PAGE_ACTIONS_READY_MESSAGE_TYPE) {
+    return undefined;
+  }
+  return refreshRegistry(sender.tab?.id);
+});
+browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
+  if (!msg || msg.type !== PAGE_ACTION_RUN_MESSAGE_TYPE) {
+    return undefined;
+  }
+  return runPageAction({ actionId: msg.actionId, tabId: msg.tabId });
+});
+browser.runtime.onStartup?.addListener?.(() => void refreshRegistry());
+void refreshRegistry();
 ```
 
 - [ ] **Step 5: Build + tests.** `moon run composer-crx:build && moon run composer-crx:test`. Expected: green. **Commit** `feat(composer-crx): page-action registry cache and invoke orchestration`.
@@ -1298,6 +1289,7 @@ import {
 ### Task 11: Popup page-actions menu
 
 **Files:**
+
 - Create: `packages/apps/composer-crx/src/components/PageActions/{PageActions.tsx,index.ts}`
 - Modify: `packages/apps/composer-crx/src/components/index.ts`, `packages/apps/composer-crx/src/popup.tsx`
 
@@ -1412,7 +1404,9 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
 - [ ] **Step 2: Wire into popup.** In `popup.tsx`, track the active tab id alongside the url (extend the existing `tabs.query` effect to `setTab({ id: tab.id, url })`), and render inside `Container` above the Chat block:
 
 ```tsx
-{tab?.id !== undefined && tab.url && <PageActions tabId={tab.id} tabUrl={tab.url} />}
+{
+  tab?.id !== undefined && tab.url && <PageActions tabId={tab.id} tabUrl={tab.url} />;
+}
 ```
 
 - [ ] **Step 3: Build.** `moon run composer-crx:build`. Expected: green. **Commit** `feat(composer-crx): page-actions menu in popup`.
@@ -1424,6 +1418,7 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
 ### Task 12: PLUGIN.mdl (USER APPROVAL CHECKPOINT)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-bookmarks/PLUGIN.mdl`
 
 - [ ] **Step 1:** Write the spec using `packages/reflect/deus/lang/PLUGIN-.template.mdl` as the template and `plugin-chess/PLUGIN.mdl` as the reference. Content: header (`id: org.dxos.plugin.bookmarks`, `name: BookmarksPlugin`, `version: 0.1.0`); prose: manages a list of clipped web pages with optional summaries; created primarily via the browser extension's "Add bookmark" page action. Types: `Bookmark { title, url, favicon?, image?, excerpt?, summary?, createdAt }`. Features: F-1 Bookmark schema registration; F-2 AddFromSnapshot operation (snapshot → Bookmark in target db, title ← hints.ogTitle ?? source.title, excerpt ← hints.ogDescription ?? first 280 chars of selection text, image ← hints.ogImage, favicon ← source.favicon, createdAt ← source.clippedAt); F-3 page-action contribution (all http(s) URLs, snapshot extractor, popup+page contexts); F-4 surfaces (Card + Article rendering title/image/excerpt/summary with a link to the source). Acceptance tests: T-1 fromSnapshot field mapping with hints; T-2 fromSnapshot fallbacks without hints; T-3 AddFromSnapshot persists a Bookmark.
@@ -1433,6 +1428,7 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
 ### Task 13: Package skeleton
 
 **Files:**
+
 - Create: `packages/plugins/plugin-bookmarks/{package.json,moon.yml}`, `src/{index.ts,meta.ts,plugin.ts,BookmarksPlugin.tsx,translations.ts,vite-env.d.ts}`, `src/types/index.ts`, `src/capabilities/index.ts`, `src/components/index.ts`, `src/containers/index.ts`
 - Modify: `packages/apps/composer-app/{src/plugin-defs.tsx,package.json,tsconfig.json}` (registration deferred to Task 17)
 
@@ -1570,6 +1566,7 @@ Empty barrels: `components/index.ts` (`export {};` placeholder comment), `contai
 ### Task 14: Bookmark schema + mapping tests
 
 **Files:**
+
 - Create: `packages/plugins/plugin-bookmarks/src/types/{Bookmark.ts,Bookmark.test.ts}`
 - Modify: `packages/plugins/plugin-bookmarks/src/types/index.ts`
 
@@ -1680,6 +1677,7 @@ export const fromSnapshot = (snapshot: PageAction.Snapshot): Bookmark =>
 ### Task 15: AddFromSnapshot operation + handlers
 
 **Files:**
+
 - Create: `packages/plugins/plugin-bookmarks/src/types/BookmarkOperation.ts`, `src/operations/{add-from-snapshot.ts,index.ts}`, `src/capabilities/operation-handler.ts`
 - Modify: `src/capabilities/index.ts`
 
@@ -1761,6 +1759,7 @@ export const BookmarkOperationHandlerSet = OperationHandlerSet.lazy(() => import
 ### Task 16: Page-action contribution + surfaces
 
 **Files:**
+
 - Create: `src/capabilities/page-action.ts`, `src/capabilities/react-surface.tsx`, `src/containers/BookmarkArticle/{BookmarkArticle.tsx,BookmarkArticle.stories.tsx,index.ts}`, `src/containers/BookmarkCard/{BookmarkCard.tsx,BookmarkCard.stories.tsx,index.ts}`
 - Modify: `src/capabilities/index.ts`, `src/containers/index.ts`
 
@@ -1886,6 +1885,7 @@ Add to `capabilities/index.ts`: `ReactSurface` lazy export.
 ### Task 17: Register in composer-app + integration
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx` (import `BookmarksPlugin` from `@dxos/plugin-bookmarks/plugin`; add `BookmarksPlugin(),` in the alphabetical position before `CallsPlugin()`), `packages/apps/composer-app/package.json` (`"@dxos/plugin-bookmarks": "workspace:*"`), `packages/apps/composer-app/tsconfig.json` (reference `../../plugins/plugin-bookmarks`)
 
 - [ ] **Step 1:** Make the edits; `HUSKY=0 CI=true pnpm install --no-frozen-lockfile`.

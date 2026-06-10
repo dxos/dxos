@@ -8,8 +8,8 @@
 
 import { describe, test } from 'vitest';
 
-import { MAX_HTML_LENGTH, snapshotExtractor } from './snapshot';
 import { runExtractor } from './index';
+import { MAX_HTML_LENGTH, snapshotExtractor } from './snapshot';
 
 describe('snapshot extractor', () => {
   test('captures source, hints, and html', async ({ expect }) => {

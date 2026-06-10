@@ -26,7 +26,7 @@ A new, deliberately simple `plugin-bookmarks` is built alongside as the first co
      future peer delivers it to an embedded runtime or writes it into ECHO instead of the bridge.
    - All descriptor evaluation (URL matching, menu construction, predicates) runs extension-side
      against the cache — never delegated to the live tab.
-2. **MV3 constraint.** Dynamically-installed plugins contribute *data only* (descriptors). Code
+2. **MV3 constraint.** Dynamically-installed plugins contribute _data only_ (descriptors). Code
    that runs in extension contexts (extractors, predicate evaluation, generic card rendering) is
    bundled into the CRX at build time.
 3. **Context matching.** URL match patterns are the primary gate (`documentUrlPatterns` natively
@@ -56,13 +56,13 @@ app-graph actions carry closures; these must cross a process boundary as data.
 
 ```ts
 type PageActionDescriptor = {
-  id: string;                      // 'dxos.org/plugin/commerce/page-action/configure-provider'
-  label: string;                   // resolved (translated) Composer-side before sync
-  icon: string;                    // ph icon name
-  urlPatterns: string[];           // Chrome match patterns
-  predicate?: { exists: string };  // lazy DOM condition
-  extractor: string | { name: string; params?: unknown };  // default 'snapshot'
-  operation: string;               // DXN of the operation to invoke
+  id: string; // 'dxos.org/plugin/commerce/page-action/configure-provider'
+  label: string; // resolved (translated) Composer-side before sync
+  icon: string; // ph icon name
+  urlPatterns: string[]; // Chrome match patterns
+  predicate?: { exists: string }; // lazy DOM condition
+  extractor: string | { name: string; params?: unknown }; // default 'snapshot'
+  operation: string; // DXN of the operation to invoke
   contexts: ('popup' | 'page' | 'selection' | 'link')[];
 };
 ```
@@ -98,24 +98,33 @@ type OperationRequest = {
   actionId: string;
   operation: string;
   page: { url: string; title: string; favicon?: string };
-  inputs: unknown;                 // extractor output
+  inputs: unknown; // extractor output
   invokedFrom: 'popup' | 'contextMenu';
 };
 
 type OperationAck =
   | { ok: true; id: string; card?: SerializedCard }
-  | { ok: false; id: string; error:
-      | 'unsupportedVersion' | 'unknownAction' | 'notApplicable'
-      | 'extractorFailed' | 'noSpace' | 'operationFailed' | 'timeout' };
+  | {
+      ok: false;
+      id: string;
+      error:
+        | 'unsupportedVersion'
+        | 'unknownAction'
+        | 'notApplicable'
+        | 'extractorFailed'
+        | 'noSpace'
+        | 'operationFailed'
+        | 'timeout';
+    };
 ```
 
 ```ts
 type SerializedCard = {
   title: string;
   subtitle?: string;
-  image?: string;                  // URL
+  image?: string; // URL
   fields?: { label: string; value: string }[];
-  link?: string;                   // open-in-Composer URL
+  link?: string; // open-in-Composer URL
 };
 ```
 
@@ -129,15 +138,15 @@ listener alongside the existing clip listener.
 type ExtractorContext = {
   document: Document;
   selection?: Selection;
-  menuInfo?: { linkUrl?: string; srcUrl?: string };  // from contextMenus click
-  params?: unknown;                                  // descriptor-supplied
+  menuInfo?: { linkUrl?: string; srcUrl?: string }; // from contextMenus click
+  params?: unknown; // descriptor-supplied
 };
 
 type Extractor<T> = {
-  name: string;                       // key referenced by descriptors
-  outputSchema: Schema.Schema<T>;     // validated before the envelope ships
+  name: string; // key referenced by descriptors
+  outputSchema: Schema.Schema<T>; // validated before the envelope ships
   paramsSchema?: Schema.Schema<any>;
-  run: (context: ExtractorContext) => Promise<T>;    // executes in content-script world
+  run: (context: ExtractorContext) => Promise<T>; // executes in content-script world
 };
 ```
 
@@ -150,6 +159,7 @@ type Extractor<T> = {
   `composer-crx` and `plugin-crx` the same way Clip types are handled today.
 
 Built-ins:
+
 - `snapshot` — url/title/selection/truncated HTML/hints (og, JSON-LD, h1); the Clip capture,
   generalized.
 - `youtube-video` — video id, title, description, transcript via in-page fetch (M3).
