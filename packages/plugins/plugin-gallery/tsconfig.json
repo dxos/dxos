@@ -4,7 +4,8 @@
   ],
   "compilerOptions": {
     "types": [
-      "node"
+      "node",
+      "@dxos/app-framework/meta"
     ]
   },
   "exclude": [

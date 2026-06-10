@@ -30,7 +30,6 @@
       "default": "./dist/lib/neutral/containers/index.mjs"
     },
     "#meta": {
-      "types": "./src/meta.d.ts",
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#operations": {

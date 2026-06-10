@@ -49,6 +49,9 @@
       "node": "./dist/lib/node-esm/plugin/index.mjs",
       "types": "./dist/types/src/plugin/index.d.ts"
     },
+    "./meta": {
+      "types": "./meta/index.d.ts"
+    },
     "./PluginManager": {
       "source": "./src/core/plugin-manager.ts",
       "browser": "./dist/lib/browser/plugin-manager/index.mjs",
