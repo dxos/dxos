@@ -3091,6 +3091,60 @@ describe('Query', () => {
       expect(names).toEqual(['Child1', 'Child2']);
     });
   });
+
+  describe('Result caching', () => {
+    test('repeated query() with the same serialized query returns the same instance and atom', async () => {
+      const { db } = await builder.createDatabase();
+
+      const first = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
+      const second = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
+
+      // The shared instance is what makes inline `query(...).atom` open a single subscription
+      // instead of a fresh one on every re-evaluation.
+      expect(second).toBe(first);
+      expect(second.atom).toBe(first.atom);
+    });
+
+    test('different queries return different atoms', async () => {
+      const { db } = await builder.createDatabase();
+
+      const a = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
+      const b = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 200 })));
+
+      expect(b).not.toBe(a);
+      expect(b.atom).not.toBe(a.atom);
+    });
+
+    test('the same query against different databases returns different atoms', async () => {
+      const { db: db1 } = await builder.createDatabase();
+      const { db: db2 } = await builder.createDatabase();
+
+      const query = () => Query.select(Filter.type(TestSchema.Expando, { value: 100 }));
+      expect(db2.query(query())).not.toBe(db1.query(query()));
+      expect(db2.query(query()).atom).not.toBe(db1.query(query()).atom);
+    });
+
+    test('cached result stays reactive across a shared subscription', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 100 }));
+      await db.flush();
+
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
+      let count = 0;
+      const unsubscribe = query.subscribe(() => {
+        count++;
+      });
+      onTestFinished(unsubscribe);
+
+      // A subsequent call returns the cached instance; updates flow through the one subscription.
+      expect(db.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })))).toBe(query);
+
+      db.add(createTestObject({ value: 100 }));
+      await db.flush({ updates: true });
+      expect(count).toEqual(1);
+      expect(query.runSync()).toHaveLength(2);
+    });
+  });
 });
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {

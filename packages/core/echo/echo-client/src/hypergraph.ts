@@ -17,6 +17,7 @@ import { type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
+  QueryResultCache,
   QueryResultImpl,
   type QuerySource,
   RegistryQuerySource,
@@ -41,6 +42,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
+
+  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
+  // serialized query. Covers both graph and database queries since `EchoDatabaseImpl.query`
+  // normalizes scope and delegates here.
+  readonly #queryResultCache = new QueryResultCache();
 
   constructor() {
     this._registry = makeRegistry();
@@ -119,7 +125,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return new QueryResultImpl(this._createLiveObjectQueryContext(), query);
+    return this.#queryResultCache.getOrCreate(
+      query,
+      () => new QueryResultImpl(this._createLiveObjectQueryContext(), query),
+    );
   }
 
   /**
