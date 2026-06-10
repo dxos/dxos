@@ -71,8 +71,19 @@ export const PAGE_ACTION_EXTRACT_MESSAGE_TYPE = 'composer-crx:page-action:extrac
 export const PAGE_ACTION_PREDICATE_MESSAGE_TYPE = 'composer-crx:page-action:predicate';
 
 /**
+ * Window CustomEvent dispatched by the Composer page once its page-actions
+ * listeners are attached (mirrors `PageAction.READY_EVENT` in plugin-crx —
+ * keep the string value in sync). The content-script relay listens for this
+ * and forwards a ready runtime message to the background.
+ */
+export const PAGE_ACTIONS_PAGE_READY_EVENT = 'composer:page-actions:ready';
+
+/**
  * Runtime message `type` discriminator the Composer-tab content relay sends to
- * the background worker once the page-actions bridge is listening.
+ * the background worker to indicate the page-actions bridge is ready to
+ * receive requests. Sent both at relay install time (for pages that are already
+ * booted) and when the page dispatches {@link PAGE_ACTIONS_PAGE_READY_EVENT}
+ * (for pages that boot after the content script).
  */
 export const PAGE_ACTIONS_READY_MESSAGE_TYPE = 'composer-crx:page-actions:ready';
 

@@ -146,6 +146,12 @@ export const installPageActionListeners = (
 
   window.addEventListener(PageAction.LIST_EVENT, onList as EventListener);
   window.addEventListener(PageAction.INVOKE_EVENT, onInvoke as EventListener);
+
+  // Announce that the page-side listeners are ready so the extension relay
+  // can trigger a registry refresh even when Composer boots after the
+  // content script has already installed.
+  window.dispatchEvent(new CustomEvent(PageAction.READY_EVENT));
+
   return () => {
     window.removeEventListener(PageAction.LIST_EVENT, onList as EventListener);
     window.removeEventListener(PageAction.INVOKE_EVENT, onInvoke as EventListener);

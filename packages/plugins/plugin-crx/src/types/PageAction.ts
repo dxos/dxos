@@ -88,6 +88,13 @@ export const toDescriptor = (action: PageAction): Descriptor => ({
 // Wire protocol (extension → Composer page, via window CustomEvents).
 //
 
+/**
+ * Window CustomEvent dispatched by the Composer page once its page-actions
+ * listeners are attached. The content-script relay listens for this and
+ * forwards a ready message to the background so it can refresh its registry.
+ */
+export const READY_EVENT = 'composer:page-actions:ready';
+
 export const LIST_EVENT = 'composer:page-actions:list';
 export const LIST_ACK_EVENT = 'composer:page-actions:list:ack';
 export const INVOKE_EVENT = 'composer:page-action:invoke';

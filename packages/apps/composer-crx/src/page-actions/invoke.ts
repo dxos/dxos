@@ -15,14 +15,10 @@ import {
   PAGE_ACTION_INVOKE_MESSAGE_TYPE,
   decodeInvokeAck,
 } from './types';
+import { nextId, sleep } from './util';
 
 const OPEN_RETRY_INTERVAL_MS = 1_500;
 const OPEN_RETRY_ATTEMPTS = 10;
-
-let counter = 0;
-const nextId = (): string => globalThis.crypto?.randomUUID?.() ?? `invoke-${(counter += 1)}`;
-
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 

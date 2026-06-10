@@ -15,6 +15,7 @@ import {
   PAGE_ACTIONS_LIST_ACK_EVENT,
   PAGE_ACTIONS_LIST_EVENT,
   PAGE_ACTIONS_LIST_MESSAGE_TYPE,
+  PAGE_ACTIONS_PAGE_READY_EVENT,
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
   PAGE_ACTION_INVOKE_ACK_EVENT,
@@ -301,8 +302,16 @@ const installPageActionsRelay = async (): Promise<void> => {
     });
   });
 
-  // Let the background refresh its registry once the page is up.
+  // Fallback: send ready immediately for pages that were already booted when
+  // the content script installed (e.g. extension updated while tab was open).
   browser.runtime.sendMessage({ type: PAGE_ACTIONS_READY_MESSAGE_TYPE }).catch((err: unknown) => log.catch(err));
+
+  // Also listen for the page's own ready announce so we catch the common case
+  // where Composer boots seconds after document_start (React app initialising,
+  // plugin activation).
+  window.addEventListener(PAGE_ACTIONS_PAGE_READY_EVENT, () => {
+    browser.runtime.sendMessage({ type: PAGE_ACTIONS_READY_MESSAGE_TYPE }).catch((err: unknown) => log.catch(err));
+  });
 };
 
 const main = async () => {
