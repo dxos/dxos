@@ -170,23 +170,22 @@ const main = async () => {
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
-  const OTEL_LOG_LEVEL_KEY = 'composer/otel-log-level';
   const otel = {
-    /** Enable debug-level OTEL log export for this device (persisted across reloads). */
+    /** Enable debug-level OTEL log export for this device (persisted across reloads, works in workers). */
     enableDebugLogs: () => {
-      localStorage.setItem(OTEL_LOG_LEVEL_KEY, 'debug');
+      void Observability.storeOtelLogLevel(APP_KEY, 'debug');
       // eslint-disable-next-line no-console
       console.info('[otel] Debug log level enabled — all debug logs will be sent to SignOz.');
     },
     /** Remove the debug override and revert to the default INFO log level. */
     disableDebugLogs: () => {
-      localStorage.removeItem(OTEL_LOG_LEVEL_KEY);
+      void Observability.storeOtelLogLevel(APP_KEY, null);
       // eslint-disable-next-line no-console
       console.info('[otel] Debug log level override removed — reverted to INFO.');
     },
-    /** Return the active OTEL log level override, or undefined if using the default. */
-    getLogLevel: (): string | null => {
-      const level = localStorage.getItem(OTEL_LOG_LEVEL_KEY);
+    /** Return the active OTEL log level override, or null if using the default. */
+    getLogLevel: async (): Promise<string | null> => {
+      const level = await Observability.getOtelLogLevel(APP_KEY);
       // eslint-disable-next-line no-console
       console.info(`[otel] Log level: ${level ?? 'default (INFO)'}`);
       return level;

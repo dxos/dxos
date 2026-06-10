@@ -16,28 +16,40 @@ import {
   getRelativeFilename,
 } from '@dxos/log';
 
+import { getOtelLogLevel } from '../../storage';
 import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 
 const FLATTEN_DEPTH = 1;
 
-/** localStorage key for per-device OTEL log level override (e.g. `composer/otel-log-level`). */
-export const otelLogLevelStorageKey = (serviceName: string) => `${serviceName}/otel-log-level`;
+// Must match the key written by storeOtelLogLevel in storage/browser.ts.
+const OTEL_LOG_LEVEL_STORAGE_KEY = (serviceName: string) => `${serviceName}/otel-log-level`;
 
-/** Returns a persisted log level override for this service, or undefined if none is set. */
+// Primed from localForage at OtelLogs construction so worker contexts (where localStorage
+// is unavailable) can still respect a persisted log level override.
+const _logLevelCache = new Map<string, LogLevel | undefined>();
+
+const parseLogLevel = (stored: string): LogLevel | undefined => {
+  const level = LogLevel[stored.toUpperCase() as keyof typeof LogLevel];
+  return typeof level === 'number' ? level : undefined;
+};
+
+/** Returns the persisted log level override for this service, or undefined if none is set. */
 const getStoredLogLevel = (serviceName: string): LogLevel | undefined => {
+  // Main thread: check localStorage directly for live updates without a reload.
   try {
-    if (typeof localStorage === 'undefined') {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(OTEL_LOG_LEVEL_STORAGE_KEY(serviceName));
+      if (stored) {
+        return parseLogLevel(stored);
+      }
+      // Explicit null/absence in localStorage means the override was cleared.
       return undefined;
     }
-    const stored = localStorage.getItem(otelLogLevelStorageKey(serviceName));
-    if (!stored) {
-      return undefined;
-    }
-    const level = LogLevel[stored.toUpperCase() as keyof typeof LogLevel];
-    return typeof level === 'number' ? level : undefined;
   } catch {
-    return undefined;
+    // localStorage not available (e.g., in workers) — fall through to cache.
   }
+  // Workers: use value primed from localForage at construction time.
+  return _logLevelCache.get(serviceName);
 };
 
 export type OtelLogOptions = OtelOptions & {
@@ -62,6 +74,13 @@ export class OtelLogs {
     this._loggerProvider = new LoggerProvider({
       resource: this.options.resource,
       processors: [new BatchLogRecordProcessor(logExporter)],
+    });
+
+    // Prime the module-level cache from localForage so worker contexts (which lack localStorage)
+    // can also respect a persisted log level override.
+    const serviceName = options.resource.attributes[ATTR_SERVICE_NAME]?.toString() ?? '';
+    void getOtelLogLevel(serviceName).then((stored) => {
+      _logLevelCache.set(serviceName, stored ? parseLogLevel(stored) : undefined);
     });
   }
 
