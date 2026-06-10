@@ -102,6 +102,12 @@ export type CredentialForm<Values = any> = {
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
   /**
+   * Optional async pre-submit validation. Runs before the dialog closes so
+   * errors are shown inline. On failure the dialog stays open with the error
+   * message; on success `onSubmit` proceeds normally.
+   */
+  onValidate?: (input: { values: Values; provider: IntegrationProviderEntry }) => Effect.Effect<void, Error>;
+  /**
    * Build the next step of the integration flow from form values.
    *
    * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's

@@ -30,7 +30,7 @@ const DefaultStory = (args: DefaultStoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/EditEmailPanel',
+  title: 'plugins/plugin-inbox/components/EditMessage',
   component: EditMessage as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],

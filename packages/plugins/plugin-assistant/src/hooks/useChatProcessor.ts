@@ -12,8 +12,8 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { Credential, OperationRegistry, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, type Registry } from '@dxos/echo';
+import { Credential, ServiceResolver } from '@dxos/compute';
+import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
@@ -89,7 +89,7 @@ export const useChatProcessor = ({
       Credential.CredentialsService,
       AiService.AiService,
       AgentService.AgentService,
-      OperationRegistry.Service,
+      Registry.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 

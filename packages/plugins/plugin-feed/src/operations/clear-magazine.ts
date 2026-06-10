@@ -46,7 +46,11 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
               }
               const subscriptionEntries = yield* Effect.all(
                 [...sourceById].map(([entityId, source]) =>
-                  Database.load(source).pipe(Effect.map((subscription) => [entityId, subscription] as const)),
+                  Database.load(source).pipe(
+                    // Resolve the child tag index so `hasTag` can read it synchronously below.
+                    Effect.tap((subscription) => Database.load(subscription.tags)),
+                    Effect.map((subscription) => [entityId, subscription] as const),
+                  ),
                 ),
                 { concurrency: 'unbounded' },
               );

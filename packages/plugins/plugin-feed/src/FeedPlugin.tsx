@@ -5,6 +5,7 @@
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
+import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
@@ -31,7 +32,14 @@ export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Subscription.Subscription, Subscription.Post, Subscription.PostContent, Magazine.Magazine],
+    schema: [
+      Subscription.Subscription,
+      Subscription.Post,
+      Subscription.PostContent,
+      Magazine.Magazine,
+      StateMap.StateMap,
+      TagIndex.TagIndex,
+    ],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

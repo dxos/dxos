@@ -146,6 +146,39 @@ const QueryItem = Object.freeze({
     }
     return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
+
+  /**
+   * EIDs of objects this item strongly depends on: the schema object (when the type is an
+   * ECHO object reference), relation source/target, and the parent. Mirrors
+   * `ObjectCore.getStrongDependencies` on the client. Queue items hydrate from indexed
+   * snapshots and don't gate on dependency loads, so they report no strong deps.
+   */
+  getStrongDependencies: (item: QueryItem): EID.EID[] => {
+    if (!item.doc) {
+      return [];
+    }
+    const res: EID.EID[] = [];
+    const push = (ref: EncodedReference | undefined) => {
+      if (!ref) {
+        return;
+      }
+      try {
+        const uri = EID.tryParse(EncodedReference.toURI(ref));
+        if (uri) {
+          res.push(uri);
+        }
+      } catch {
+        log.warn('invalid reference', { ref: ref['/'] });
+      }
+    };
+    push(EntityStructure.getTypeReference(item.doc));
+    if (EntityStructure.getEntityKind(item.doc) === 'relation') {
+      push(EntityStructure.getRelationSource(item.doc));
+      push(EntityStructure.getRelationTarget(item.doc));
+    }
+    push(EntityStructure.getParent(item.doc));
+    return res;
+  },
 });
 
 /**
@@ -244,6 +277,7 @@ const TRACE_QUERY_EXECUTION = !!import.meta.env?.DX_TRACE_QUERY_EXECUTION;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
+const MAX_DEPTH_FOR_STRONG_DEP_TRACING = 10;
 
 /**
  * Cached scope constraints extracted from a query plan.
@@ -525,7 +559,10 @@ export class QueryExecutor extends Resource {
     });
 
     const prevResultSet = this._lastResultSet;
-    const { workingSet, trace } = await this._execPlan(this._plan, []);
+    const { workingSet: rawWorkingSet, trace } = await this._execPlan(this._plan, []);
+    // Omit objects whose strong deps cannot be resolved from local state so they
+    // never reach the client, where hydration would fail or stall on them.
+    const workingSet = await this._filterUnresolvableStrongDeps(rawWorkingSet);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
@@ -1737,6 +1774,68 @@ export class QueryExecutor extends Resource {
     }
     const snapshotMap = await this._loadQueueSnapshotMap([meta]);
     return this._loadFromQueue(meta, snapshotMap);
+  }
+
+  /**
+   * Filters out items whose strong dependencies (schema object, relation endpoints,
+   * parent) are not resolvable from local state — dangling references or docs that are
+   * not on disk. Mirrors the client-side working-set filter so dep-broken objects are
+   * excluded consistently on both sides of the query pipeline.
+   */
+  private async _filterUnresolvableStrongDeps(workingSet: QueryItem[]): Promise<QueryItem[]> {
+    // Resolved dep verdicts shared across items (e.g. a common schema object).
+    const verdicts = new Map<string, boolean>();
+    const resolvable = await Promise.all(
+      workingSet.map((item) =>
+        this._areStrongDepsResolvable(item, MAX_DEPTH_FOR_STRONG_DEP_TRACING, verdicts, new Set()),
+      ),
+    );
+    const result = workingSet.filter((_item, index) => resolvable[index]);
+    if (result.length !== workingSet.length) {
+      log('omitted items with unresolvable strong deps', {
+        queryId: this._id,
+        omitted: workingSet.filter((_item, index) => !resolvable[index]).map((item) => item.objectId),
+      });
+    }
+    return result;
+  }
+
+  private async _areStrongDepsResolvable(
+    item: QueryItem,
+    remainingDepth: number,
+    verdicts: Map<string, boolean>,
+    seen: Set<string>,
+  ): Promise<boolean> {
+    if (remainingDepth <= 0) {
+      // Depth cap reached — give the item the benefit of the doubt rather than excluding it.
+      return true;
+    }
+
+    const results = await Promise.all(
+      QueryItem.getStrongDependencies(item).map(async (dep) => {
+        if (!EID.isLocal(dep)) {
+          // Cross-space references are not gated (mirrors `ObjectCore.getStrongDependencies` usage).
+          return true;
+        }
+        const key = compositeKey(item.spaceId, dep);
+        const cached = verdicts.get(key);
+        if (cached !== undefined) {
+          return cached;
+        }
+        if (seen.has(key)) {
+          // Reference cycle — treat as resolvable (mirrors the client's seen-set behavior).
+          return true;
+        }
+        seen.add(key);
+
+        const depItem = await this._loadFromDXN(dep, { sourceSpaceId: item.spaceId });
+        const verdict =
+          depItem != null && (await this._areStrongDepsResolvable(depItem, remainingDepth - 1, verdicts, seen));
+        verdicts.set(key, verdict);
+        return verdict;
+      }),
+    );
+    return results.every(Boolean);
   }
 
   private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {

@@ -15,7 +15,7 @@ import { Magazine } from '#types';
 export const MagazineProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Magazine.Magazine>) => {
   const { t } = useTranslation(meta.id);
   return (
-    <div role='none' className='flex flex-col gap-1'>
+    <div className='flex flex-col gap-1'>
       <span className='text-sm text-description'>{t('topic-instructions.label')}</span>
       <TemplateEditor id={Obj.getURI(subject)} source={subject.instructions.source} lineNumbers={false} />
     </div>

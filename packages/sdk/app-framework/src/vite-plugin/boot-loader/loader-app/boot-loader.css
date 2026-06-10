@@ -70,7 +70,7 @@ body {
 @media (prefers-color-scheme: dark) {
   #boot-loader {
     background: var(--boot-loader-bg-dark, #0a0a0a);
-    color: var(--boot-loader-fg-dark, #fafafa);
+    color: var(--boot-loader-fg-dark, #f0f0f0);
     --boot-loader-accent: var(--boot-loader-accent-dark, var(--color-composer-300));
   }
 }

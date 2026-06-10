@@ -100,4 +100,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  // External fetch to dxos.network unreachable in headless storybook test environment.
+  tags: ['!test'],
+};

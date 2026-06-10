@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Routine, Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Routine, Trace, Operation } from '@dxos/compute';
+import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
@@ -52,7 +52,7 @@ export const AgentPrompt = Operation.make({
     Database.Service,
     Feed.FeedService,
     OpaqueToolkit.OpaqueToolkitProvider,
-    OperationRegistry.Service,
+    Registry.Service,
     Trace.TraceService,
   ],
 });

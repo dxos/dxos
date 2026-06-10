@@ -6,7 +6,6 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
-import { AtomRef } from '@dxos/echo-atom';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
@@ -91,7 +90,7 @@ type InlineFormProps = {
 };
 
 const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: InlineFormProps) => {
-  const target = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
+  const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const typename = target ? (Obj.getTypename(target) ?? undefined) : undefined;
   const typeFromRegistry = useType(db, typename);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;

@@ -19,7 +19,6 @@ import {
   Credential,
   Operation,
   OperationHandlerSet,
-  OperationRegistry,
   Process,
   Routine,
   ServiceNotAvailableError,
@@ -64,17 +63,10 @@ interface TestLayerOptions {
   disableLlmMemoization?: boolean;
 
   /**
-   * Core system prompt for the agent.
+   * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
+   * The model defaults to the resolved test-layer model when not set here.
    */
-  systemPrompt?: string;
-
-  /**
-   * If true, long-running tool calls are moved to the background and the agent is notified
-   * asynchronously when they complete. Currently unstable — disabled by default.
-   *
-   * @default false
-   */
-  enableToolBackgrounding?: boolean;
+  agent?: AgentService.AgentServiceOptions;
 
   /**
    * Extra services to make available in the service resolver.
@@ -91,7 +83,6 @@ export type AssistantTestServices =
   | AiService.AiService
   | Database.Service
   | Registry.Service
-  | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
@@ -111,19 +102,16 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
+  const agentOptions: AgentService.AgentServiceOptions = { ...options.agent };
+  agentOptions.model ??= resolvedModel;
+
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(
-      AgentService.layer({
-        systemPrompt: options.systemPrompt,
-        model: resolvedModel,
-        enableToolBackgrounding: options.enableToolBackgrounding,
-      }),
-    ),
+    Layer.provideMerge(AgentService.layer(agentOptions)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
-    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
+    Layer.provideMerge(AiService.model(resolvedModel)),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??
@@ -148,7 +136,7 @@ export const AssistantTestServiceResolverLayer = ({
         Effect.map(Layer.succeedContext),
       );
 
-      const extraSericesRt = yield* Layer.toRuntime(extraServices);
+      const extraServicesRt = yield* Layer.toRuntime(extraServices);
 
       return ServiceResolver.compose(
         ServiceResolver.succeed(AiContext.Service, (context) =>
@@ -190,11 +178,10 @@ export const AssistantTestServiceResolverLayer = ({
           OpaqueToolkit.OpaqueToolkitProvider,
           Feed.FeedService,
           AiService.AiService,
-          OperationRegistry.Service,
           Registry.Service,
           Credential.CredentialsService,
         ),
-        ServiceResolver.fromContext(extraSericesRt.context),
+        ServiceResolver.fromContext(extraServicesRt.context),
       );
     }),
   );
@@ -217,15 +204,26 @@ export const AssistantTestBaseLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
-    Layer.provideMerge(OperationRegistry.layer),
     Layer.provideMerge(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         types,
       }),
     ),
-    Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(configuredCredentialsLayer(credentials)),
+    Layer.provideMerge(
+      Layer.effect(
+        Registry.Service,
+        Effect.gen(function* () {
+          const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+          const registry = yield* Registry.Service;
+          const handlers = yield* handlerSet.handlers;
+          registry.add(handlers.map(Operation.serialize));
+          return registry;
+        }),
+      ),
+    ),
+    Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),

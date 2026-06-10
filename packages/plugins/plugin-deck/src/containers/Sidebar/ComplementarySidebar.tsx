@@ -173,9 +173,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
             data-value={getLinkedVariant(companion.id)}
             variant='default'
           />
-          <div role='none' className='px-1'>
-            {toLocalizedString(companion.properties.label, t)}
-          </div>
+          <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='bg-r1-surface'>

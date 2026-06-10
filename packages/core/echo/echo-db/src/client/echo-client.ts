@@ -244,13 +244,11 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    // The object's own doc is loaded via the normal path (which may wait
-    // on the network — important for refs/queries that resolve objects
-    // currently being replicated from another peer). The non-stalling
-    // contract is provided by `CoreDatabase`: recursive strong-dep loads
-    // always run with `diskOnly: true` (see `_onObjectDocumentLoaded`),
-    // and `_areDepsResolved` lets `loadObjectCoreById` resolve with
-    // `undefined` when a dep is unreachable instead of hanging.
-    return db._loadObjectById(objectId, { allowDeleted: true });
+    // Disk-only load: wait for dep states to settle, then return the core
+    // only when strong deps are satisfied (unavailable deps → `undefined`).
+    return db._loadObjectById(objectId, {
+      allowDeleted: true,
+      diskOnly: true,
+    });
   }
 }

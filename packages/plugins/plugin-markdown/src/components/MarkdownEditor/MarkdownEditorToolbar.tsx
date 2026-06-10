@@ -13,17 +13,20 @@ import { FileUpload, type FileUploadAction } from './FileUpload';
 
 export type MarkdownEditorToolbarProps = {
   id: string;
-  editorView?: EditorView;
+  // Provided as a getter (not a value prop) so the live `EditorView` is never carried in a React prop
+  // that React 19.2's dev render-logger would walk into a cross-origin frame. See
+  // `react-ui-editor/.../controller.ts` for the full rationale.
+  getView?: () => EditorView | null;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<EditorToolbarProps, 'role' | 'customActions' | 'onAction' | 'onViewModeChange'>;
 
 export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorToolbarProps>(
-  ({ id, role, editorView, customActions, onAction, onFileUpload, onViewModeChange, ...props }, forwardedRef) => {
+  ({ id, role, getView, customActions, onAction, onFileUpload, onViewModeChange, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const [upload, setUpload] = useState<FileUploadAction | null>(null);
     const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
 
-    if (!editorView) {
+    if (!getView?.()) {
       return <div className={className} {...rest} ref={forwardedRef} />;
     }
 
@@ -40,7 +43,7 @@ export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorTo
           onViewModeChange={onViewModeChange}
         />
 
-        {onFileUpload && <FileUpload ref={uploadRef} editorView={editorView} onFileUpload={onFileUpload} />}
+        {onFileUpload && <FileUpload ref={uploadRef} getView={getView} onFileUpload={onFileUpload} />}
       </div>
     );
   },

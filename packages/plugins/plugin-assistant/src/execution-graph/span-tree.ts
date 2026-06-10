@@ -109,7 +109,7 @@ export interface BuildSpanTreeOptions {
  *        root span if no span is currently open for that pid (or the event has no pid).
  *   3. Sort each span's children by their earliest event timestamp.
  */
-export const buildSpanTree = (messages: Trace.Message[], options: BuildSpanTreeOptions = {}): Span => {
+export const buildSpanTree = (messages: readonly Trace.Message[], options: BuildSpanTreeOptions = {}): Span => {
   const allEvents = messages.flatMap((message) => Trace.flatten(message));
   allEvents.sort((a, b) => a.timestamp - b.timestamp);
 
@@ -124,6 +124,13 @@ export const buildSpanTree = (messages: Trace.Message[], options: BuildSpanTreeO
   // A process may host multiple sequential spans (e.g. successive agent requests), so we
   // track the active one and start a new span on the next begin event.
   const openSpans = new Map<string, MutableSpan>();
+
+  // Most-recent span for each pid, open OR already closed. Used as the parent fallback for a
+  // child process whose parent span has already ended — e.g. a delegated sub-agent runs
+  // concurrently and its begin event arrives after the supervisor's turn (its parent) closed.
+  // Without this the child would nest at the root and render on its own top-level lane, reusing
+  // a sibling's released lane instead of forking off its parent.
+  const lastSpanByPid = new Map<string, MutableSpan>();
 
   let spanCounter = 0;
   const allocSpanId = (pid: string): string => {
@@ -150,13 +157,16 @@ export const buildSpanTree = (messages: Trace.Message[], options: BuildSpanTreeO
 
     if (BEGIN_EVENT_TYPES.has(event.type)) {
       const parentPid = event.meta.parentPid;
-      const parent = (parentPid && openSpans.get(parentPid)) || root;
+      // Prefer the parent's currently-open span; fall back to its most-recent (closed) span so a
+      // child process whose parent has already ended still nests under it (delegated sub-agents).
+      const parent = (parentPid && (openSpans.get(parentPid) ?? lastSpanByPid.get(parentPid))) || root;
       const span = makeMutableSpan(allocSpanId(pid), computeMeta(event.meta));
       span.events.push(event);
       noteTimestamp(span, event.timestamp);
       parent.children.push(span);
       // The new span supersedes any previously-open span for this pid.
       openSpans.set(pid, span);
+      lastSpanByPid.set(pid, span);
       continue;
     }
 

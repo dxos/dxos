@@ -5,6 +5,7 @@
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
+- DO NOT EVER ASK a-or-b questions without numbering them.
 - ALWAYS test your work after each step.
 
 ## Dependencies
@@ -50,6 +51,7 @@
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
+- Avoid default exports unless required.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.

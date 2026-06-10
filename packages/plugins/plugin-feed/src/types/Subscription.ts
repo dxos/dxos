@@ -7,13 +7,12 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { StateMap, TagIndex } from '@dxos/app-toolkit';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { type Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
-import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
+import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 
 /** Subscription protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
@@ -98,13 +97,13 @@ export const Subscription = Schema.Struct({
    * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
    * are tags — see `tags`.)
    */
-  postState: StateMap.field(PostState),
+  postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
   /**
    * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
    * {@link SYSTEM_TAGS}) are modelled as {@link Tag} objects so they
-   * participate in the space-wide tag system.
+   * participate in the space-wide tag system. Stored as a child {@link TagIndex} object.
    */
-  tags: TagIndex.field(),
+  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name', 'url']),
   Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'orange' }),
@@ -120,17 +119,24 @@ export const instanceOf = (value: unknown): value is Subscription => Obj.instanc
 
 /** Creates a Subscription.Subscription with backing ECHO feeds for posts and fetched content. */
 export const makeSubscription = (
-  props: Omit<Obj.MakeProps<typeof Subscription>, 'feed' | 'contentFeed'> = {},
+  props: Omit<Obj.MakeProps<typeof Subscription>, 'feed' | 'contentFeed' | 'postState' | 'tags'> = {},
 ): Subscription => {
   const postFeed = Feed.make();
   const contentFeed = Feed.make();
+  const postState = StateMap.make();
+  const tags = TagIndex.make();
   const subscription = Obj.make(Subscription, {
     feed: Ref.make(postFeed),
     contentFeed: Ref.make(contentFeed),
+    postState: Ref.make(postState),
+    tags: Ref.make(tags),
     ...props,
   });
   Obj.setParent(postFeed, subscription);
   Obj.setParent(contentFeed, subscription);
+  // Per-Post state and tag index are children: cascade-deleted with the subscription.
+  Obj.setParent(postState, subscription);
+  Obj.setParent(tags, subscription);
   return subscription;
 };
 
@@ -227,16 +233,17 @@ export const getReadAt = (
   subscription: Subscription | Obj.Snapshot<Subscription> | undefined,
   postId: EntityId,
 ): string | undefined => {
-  if (!subscription) {
-    return undefined;
-  }
-  // Snapshot<T> omits OfKind but preserves all data fields; StateMap.bind works at runtime.
-  return StateMap.bind<PostState>(subscription as Subscription, 'postState').get(postId).readAt;
+  const stateMap = subscription?.postState.target;
+  return stateMap ? StateMap.bind<PostState>(stateMap).get(postId).readAt : undefined;
 };
 
 /** Sets/clears the Post's read marker. */
-export const setReadAt = (subscription: Subscription, postId: EntityId, value: string | undefined): void =>
-  StateMap.bind<PostState>(subscription, 'postState').patch(postId, { readAt: value });
+export const setReadAt = (subscription: Subscription, postId: EntityId, value: string | undefined): void => {
+  const stateMap = subscription.postState.target;
+  if (stateMap) {
+    StateMap.bind<PostState>(stateMap).patch(postId, { readAt: value });
+  }
+};
 
 /** Resolves the uri of an existing system Tag without creating one; `undefined` when absent. Async. */
 export const findSystemTagUri = async (
@@ -252,13 +259,10 @@ export const hasTag = (
   subscription: Subscription | Obj.Snapshot<Subscription> | undefined,
   postId: EntityId,
   tagUri: string | undefined,
-): boolean =>
-  // Snapshot<T> omits OfKind but preserves all data fields; TagIndex.bind works at runtime.
-  subscription && tagUri
-    ? TagIndex.bind(subscription as Subscription, 'tags')
-        .objects(tagUri)
-        .includes(postId)
-    : false;
+): boolean => {
+  const tagIndex = subscription?.tags.target;
+  return !!(tagIndex && tagUri) && TagIndex.bind(tagIndex).objects(tagUri).includes(postId);
+};
 
 /** Sets/clears a system tag (`starred`/`archived`) on a Post (find-or-creates the Tag object). Async. */
 export const setTag = async (
@@ -270,7 +274,11 @@ export const setTag = async (
 ): Promise<void> => {
   const tag = await Tag.findOrCreate(db, SYSTEM_TAGS[which]);
   const uri = Obj.getURI(tag).toString();
-  const tags = TagIndex.bind(subscription, 'tags');
+  const tagIndex = subscription.tags.target;
+  if (!tagIndex) {
+    return;
+  }
+  const tags = TagIndex.bind(tagIndex);
   if (value) {
     tags.setTag(uri, postId);
   } else {

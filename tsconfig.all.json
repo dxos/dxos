@@ -199,9 +199,6 @@
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-atom/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-db/tsconfig.json"
     },
     {
@@ -533,6 +530,9 @@
     },
     {
       "path": "packages/plugins/plugin-trip/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"

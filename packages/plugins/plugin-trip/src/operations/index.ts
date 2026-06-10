@@ -11,4 +11,6 @@ export const TripOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./merge-trip'),
   () => import('./plan-route'),
   () => import('./search-bookings'),
+  () => import('./create-trip-from-events'),
+  () => import('./add-segment'),
 );

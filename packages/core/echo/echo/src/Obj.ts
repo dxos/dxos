@@ -23,6 +23,7 @@ import * as Err from './Err';
 import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
+import * as ObjAtoms from './internal/ObjAtoms';
 import * as Ref from './Ref';
 import type * as Tag from './Tag';
 import * as Type from './Type';
@@ -911,3 +912,11 @@ export const decodeVersion = internal.decodeVersion;
  * Accepts both reactive objects and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom = ObjAtoms.make;
+export const atomReactive = ObjAtoms.makeWithReactive;
+export const atomProperty = ObjAtoms.makeProperty;

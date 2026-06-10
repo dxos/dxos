@@ -15,7 +15,6 @@ import React from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -237,42 +236,40 @@ class ObjectsTreeModel {
     if (typeof anchor === 'string') {
       invariant(EntityId.isValid(anchor));
 
-      const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
-        this.#database.query(
-          Query.all(
-            Query.select(Filter.id(anchor)).children(),
-            Query.select(Filter.id(anchor)).sourceOf(),
-            Query.select(Filter.id(anchor)).targetOf(),
-            Query.select(Filter.id(anchor)).source(),
-            Query.select(Filter.id(anchor)).target(),
-          )
-            .options({
-              deleted: 'include',
-            })
-            .from(this.#database),
-        ),
-      );
+      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
+        Query.all(
+          Query.select(Filter.id(anchor)).children(),
+          Query.select(Filter.id(anchor)).sourceOf(),
+          Query.select(Filter.id(anchor)).targetOf(),
+          Query.select(Filter.id(anchor)).source(),
+          Query.select(Filter.id(anchor)).target(),
+        )
+          .options({
+            deleted: 'include',
+          })
+          .from(this.#database),
+      ).atom;
 
       return Atom.make((get) =>
         pipe(
           get(entities),
-          Array.map((entity) => AtomObj.make(entity).pipe(get)),
+          Array.map((entity) => Entity.atom(entity).pipe(get)),
           Array.map((entity) => this.#mapEntityToTreeItems(entity, anchor)),
           Array.sortBy(itemOrder),
         ),
       );
     } else if (this.#root !== null) {
-      return AtomObj.make(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
+      return Entity.atom(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
     } else {
-      const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
-        this.#database.query(Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database)),
-      );
+      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
+        Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database),
+      ).atom;
 
       return Atom.make((get) =>
         pipe(
           get(entities),
           Array.filter(Obj.isObject),
-          Array.map((entity) => AtomObj.make(entity).pipe(get)),
+          Array.map((entity) => Obj.atom(entity).pipe(get)),
           Array.map((entity) => this.#mapEntityToTreeItems(entity, null)),
           Array.sortBy(itemOrder),
         ),
