@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { createAnnotationHelper } from '@dxos/echo/Annotation';
 
 export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnnotationId');
 

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
-import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/Annotation';
 import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 

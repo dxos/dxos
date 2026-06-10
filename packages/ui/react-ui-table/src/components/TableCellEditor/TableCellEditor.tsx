@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { type Type } from '@dxos/echo';
-import { Format, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import {

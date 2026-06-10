@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Format, GeoLocation, TypeEnum } from '@dxos/echo/internal';
+import { Format, GeoLocation, TypeEnum } from '@dxos/echo/Format';
 import { type ValidationError } from '@dxos/schema';
 
 /**

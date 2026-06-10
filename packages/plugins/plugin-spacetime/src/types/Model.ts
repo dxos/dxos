@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 /** Supported primitive geometry types. */
 export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'cone', 'pyramid');

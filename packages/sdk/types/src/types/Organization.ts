@@ -6,14 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import {
-  Format,
-  FormatAnnotation,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
+import { DXN, Annotation, Format, Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/Annotation';
+import { FormatAnnotation } from '@dxos/echo/Format';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const StatusOptions = [

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Mutable, type EntityMeta } from '@dxos/echo/internal';
+import { type EntityMeta, type Mutable } from '@dxos/echo/Obj';
 import { type SpaceId } from '@dxos/keys';
 
 // TODO: use URL scheme for source?

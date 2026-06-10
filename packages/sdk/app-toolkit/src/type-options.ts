@@ -6,7 +6,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { type Database, Type } from '@dxos/echo';
-import { EntityKind, HiddenAnnotation, createAnnotationHelper, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
+import { createAnnotationHelper } from '@dxos/echo/Annotation';
 
 export const TypeInputOptions = Schema.Struct({
   location: Schema.Array(Schema.Literal('database', 'runtime')),

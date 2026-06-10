@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { createAnnotationHelper } from '@dxos/echo/Annotation';
 
 /**
  * Identifies a schema as an object with a canonical feed reference

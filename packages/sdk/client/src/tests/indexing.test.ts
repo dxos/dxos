@@ -7,8 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Entity, Filter, Obj, type QueryResult } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
+import { type Entity, Filter, Obj, Ref, type QueryResult } from '@dxos/echo';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

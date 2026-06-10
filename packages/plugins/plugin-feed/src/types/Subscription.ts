@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { type Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';

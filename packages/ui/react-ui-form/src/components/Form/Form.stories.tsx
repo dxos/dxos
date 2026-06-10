@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { DXN, Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type AnyProperties } from '@dxos/echo/Obj';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';

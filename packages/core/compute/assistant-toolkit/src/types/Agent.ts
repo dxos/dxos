@@ -12,7 +12,7 @@ import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId } from '@dxos/keys';

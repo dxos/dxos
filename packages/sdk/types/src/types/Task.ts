@@ -6,16 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/echo';
-import {
-  Format,
-  FormatAnnotation,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
+import { GeneratorAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/Annotation';
+import { FormatAnnotation } from '@dxos/echo/Format';
 
 import * as Person from './Person';
 import * as Project from './Project';

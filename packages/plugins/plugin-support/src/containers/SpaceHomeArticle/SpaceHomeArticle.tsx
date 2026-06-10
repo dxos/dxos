@@ -10,7 +10,8 @@ import { useCapabilities, useCapability, useOperationInvoker, usePluginManager }
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';

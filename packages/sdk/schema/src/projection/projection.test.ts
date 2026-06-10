@@ -10,7 +10,11 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { Format, Ref, TypeEnum, getPropertyMetaAnnotation, toJsonSchema } from '@dxos/echo/internal';
+import { getPropertyMetaAnnotation } from '@dxos/echo/Annotation';
+import { Format } from '@dxos/echo';
+import { TypeEnum } from '@dxos/echo/Format';
+import { toJsonSchema } from '@dxos/echo/JsonSchema';
+import { Ref } from '@dxos/echo/Ref';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { createAnnotationHelper } from '@dxos/echo/Annotation';
 
 /**
  * Lists the domains recognized by a property holding {@link APIKey} entries

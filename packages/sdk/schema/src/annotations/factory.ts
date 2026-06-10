@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import { createAnnotationHelper } from '@dxos/echo/Annotation';
 
 /**
  * Custom factory used by generic create flows (e.g. the form picker's "Create

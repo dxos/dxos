@@ -15,7 +15,7 @@ import {
   type ReferenceAnnotationValue,
   getTypeAnnotation,
   unwrapOptional,
-} from '@dxos/echo/internal';
+} from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';

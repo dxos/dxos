@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type AnyProperties } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';

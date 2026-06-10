@@ -6,8 +6,9 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type JsonSchemaType, type Mutable, toEffectSchema } from '@dxos/echo/internal';
-import { getSnapshot } from '@dxos/echo/internal';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import { toEffectSchema } from '@dxos/echo/JsonSchema';
+import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
@@ -691,7 +692,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const currentRow = this._registry.get(this._rows)[row];
       invariant(currentRow, 'Invalid row index');
 
-      const snapshot = { ...getSnapshot(currentRow) };
+      const snapshot = { ...getSnapshot(currentRow as unknown as Obj.Unknown) };
       SchemaEx.setValue(snapshot, field.path, transformedValue);
 
       const type = Obj.getType(currentRow as unknown as Obj.Unknown);

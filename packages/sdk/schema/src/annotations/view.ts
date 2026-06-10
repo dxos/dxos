@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { type Obj, Type, View } from '@dxos/echo';
-import { createAnnotationHelper, type AnnotationHelper } from '@dxos/echo/internal';
+import { createAnnotationHelper, type AnnotationHelper } from '@dxos/echo/Annotation';
 
 // TODO(wittjosiah): This won't serialize into echo. Migrate to `Annotation.make` to store in `PropertyMeta`.
 export const ViewAnnotationId = Symbol.for('@dxos/schema/annotation/View');

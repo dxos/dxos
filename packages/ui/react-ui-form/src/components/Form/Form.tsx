@@ -9,7 +9,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { Annotation as EchoAnnotation, Type } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type AnyProperties } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import {
   Column,

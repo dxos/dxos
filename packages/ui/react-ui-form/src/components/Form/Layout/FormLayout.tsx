@@ -9,7 +9,7 @@ import * as String from 'effect/String';
 import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type AnyProperties } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { Input } from '@dxos/react-ui';
 

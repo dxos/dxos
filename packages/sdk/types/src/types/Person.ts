@@ -7,7 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
+import { GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/Annotation';
+import { Format } from '@dxos/echo/Format';
 
 import * as Geo from './Geo';
 import * as Organization from './Organization';

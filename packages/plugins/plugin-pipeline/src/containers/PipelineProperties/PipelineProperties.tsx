@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';

@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { EID } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

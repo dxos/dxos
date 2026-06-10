@@ -4,19 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Registry, Type } from '@dxos/echo';
-import {
-  EchoObjectSchema,
-  Format,
-  FormatAnnotation,
-  type JsonSchemaType,
-  type Mutable,
-  PropertyMetaAnnotationId,
-  type SelectOption,
-  TypeEnum,
-  formatToType,
-  toEffectSchema,
-} from '@dxos/echo/internal';
+import { Format, type Registry, Type } from '@dxos/echo';
+import { PropertyMetaAnnotationId } from '@dxos/echo/Annotation';
+import { FormatAnnotation, type SelectOption, TypeEnum, formatToType } from '@dxos/echo/Format';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
+import { type Mutable } from '@dxos/echo/Obj';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 
@@ -93,7 +85,7 @@ export const getSchemaFromPropertyDefinitions = (
   // `EchoObjectSchema(...)` yields a static `Type.Obj` entity; unwrap to its
   // source schema (which carries the typename annotation) before handing it to
   // `createEchoSchema`, which expects a raw Effect Schema.
-  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
+  const typeSchema = Schema.Struct(fields).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
   const schema = createEchoSchema(Type.getSchema(typeSchema));
 
   // Wrap schema modifications in Type.update so they run inside the schema's change context.

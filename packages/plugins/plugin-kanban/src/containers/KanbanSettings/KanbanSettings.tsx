@@ -7,7 +7,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { useObject, useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';

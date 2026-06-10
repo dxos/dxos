@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
 export type Level = Schema.Schema.Type<typeof Level>;

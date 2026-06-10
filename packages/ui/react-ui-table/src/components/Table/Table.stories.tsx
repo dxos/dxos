@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
-import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { PropertyMetaAnnotationId } from '@dxos/echo/Annotation';
+import { type Mutable } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';

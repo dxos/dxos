@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { batchEvents } from '@dxos/echo/internal';
+import { batch as batchEvents } from '@dxos/echo/Obj';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { ThreadOperation } from '../types';

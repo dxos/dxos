@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
 import { DXN, Format, Type } from '@dxos/echo';
-import { TypeEnum } from '@dxos/echo/internal';
+import { TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { random } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';

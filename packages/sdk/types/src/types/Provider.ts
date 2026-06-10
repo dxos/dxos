@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Ref } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 
 import * as Organization from './Organization';
 

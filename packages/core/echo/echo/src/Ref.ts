@@ -96,6 +96,10 @@ export type Resolver = refInternal.RefResolver;
 
 export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
+export const refFromEncodedReference = refInternal.refFromEncodedReference;
+export const createSchemaReference = refInternal.createSchemaReference;
+export const getSchemaReference = refInternal.getSchemaReference;
+
 export const make = refInternal.Ref.make;
 
 // TODO(dmaretskyi): Consider just allowing `make` to accept URI.

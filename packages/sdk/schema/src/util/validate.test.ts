@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
-import { type PropertyKey } from '@dxos/echo/internal';
+import { type PropertyKey } from '@dxos/echo/Obj';
 
 describe('validate', () => {
   test('clamp', ({ expect }) => {
