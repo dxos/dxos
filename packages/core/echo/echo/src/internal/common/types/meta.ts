@@ -9,7 +9,6 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
-import type * as Entity from '../../../Entity';
 import type * as Tag from '../../../Tag';
 import { Dictionary } from '../../Annotation/dictionary';
 // `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
