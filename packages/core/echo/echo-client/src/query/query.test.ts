@@ -7,7 +7,7 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import {
   Collection,
   Dataset,
@@ -2666,6 +2666,41 @@ describe('Query', () => {
       // Initial subscription sees all three; after the delete the reactive query drops Bob.
       expect(updates.at(0)).toEqual(['Alice', 'Bob', 'Charlie']);
       expect(updates.at(-1)).toEqual(['Alice', 'Charlie']);
+    });
+
+    // Regression: traversal queries (targetOf/sourceOf) must fire reactive updates when a
+    // matching relation is added. SpaceQuerySource skips traversal queries (they can only be
+    // evaluated against the SQL index), so the IndexQuerySource reactive stream is the only
+    // path — this test verifies that path completes after db.flush().
+    test('traversal query fires reactive update when a relation is added', async ({ expect, onTestFinished }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.HasManager] });
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      await db.flush();
+
+      const query = db.query(Query.select(Filter.id(alice.id)).targetOf(TestSchema.HasManager).source());
+
+      const updates: string[][] = [];
+      const unsub = query.subscribe(
+        (q) => {
+          updates.push(q.results.map((p) => (p as TestSchema.Person).name!).sort());
+        },
+        { fire: true },
+      );
+      onTestFinished(unsub);
+
+      // No relations yet.
+      expect(updates.at(-1)).toEqual([]);
+
+      // Add Bob as the source of a HasManager relation targeting Alice.
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Relation.make(TestSchema.HasManager, { [Relation.Source]: bob, [Relation.Target]: alice }));
+      await db.flush({ indexes: true });
+
+      // The subscription must fire via the IndexQuerySource reactive stream.
+      await waitForCondition({ condition: () => updates.at(-1)?.includes('Bob') ?? false, timeout: 2000 });
+
+      expect(updates.at(-1)).toEqual(['Bob']);
     });
   });
 
