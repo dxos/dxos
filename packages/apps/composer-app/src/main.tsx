@@ -170,7 +170,29 @@ const main = async () => {
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
-  (window as any).composer = { profiler };
+  const OTEL_LOG_LEVEL_KEY = 'composer/otel-log-level';
+  const otel = {
+    /** Enable debug-level OTEL log export for this device (persisted across reloads). */
+    enableDebugLogs: () => {
+      localStorage.setItem(OTEL_LOG_LEVEL_KEY, 'debug');
+      // eslint-disable-next-line no-console
+      console.info('[otel] Debug log level enabled — all debug logs will be sent to SignOz.');
+    },
+    /** Remove the debug override and revert to the default INFO log level. */
+    disableDebugLogs: () => {
+      localStorage.removeItem(OTEL_LOG_LEVEL_KEY);
+      // eslint-disable-next-line no-console
+      console.info('[otel] Debug log level override removed — reverted to INFO.');
+    },
+    /** Return the active OTEL log level override, or undefined if using the default. */
+    getLogLevel: (): string | null => {
+      const level = localStorage.getItem(OTEL_LOG_LEVEL_KEY);
+      // eslint-disable-next-line no-console
+      console.info(`[otel] Log level: ${level ?? 'default (INFO)'}`);
+      return level;
+    },
+  };
+  (window as any).composer = { profiler, otel };
 
   Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 

@@ -5,7 +5,7 @@
 import { SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
-import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import {
   type LogConfig,
@@ -19,6 +19,26 @@ import {
 import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 
 const FLATTEN_DEPTH = 1;
+
+/** localStorage key for per-device OTEL log level override (e.g. `composer/otel-log-level`). */
+export const otelLogLevelStorageKey = (serviceName: string) => `${serviceName}/otel-log-level`;
+
+/** Returns a persisted log level override for this service, or undefined if none is set. */
+const getStoredLogLevel = (serviceName: string): LogLevel | undefined => {
+  try {
+    if (typeof localStorage === 'undefined') {
+      return undefined;
+    }
+    const stored = localStorage.getItem(otelLogLevelStorageKey(serviceName));
+    if (!stored) {
+      return undefined;
+    }
+    const level = LogLevel[stored.toUpperCase() as keyof typeof LogLevel];
+    return typeof level === 'number' ? level : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
@@ -51,8 +71,10 @@ export class OtelLogs {
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
     );
 
+    const serviceName = this.options.resource.attributes[ATTR_SERVICE_NAME]?.toString() ?? '';
+    const effectiveLogLevel = getStoredLogLevel(serviceName) ?? this.options.logLevel;
     if (
-      entry.level < this.options.logLevel ||
+      entry.level < effectiveLogLevel ||
       (!this.options.includeSharedWorkerLogs && entry.meta?.S?.remoteSessionId)
     ) {
       return;
