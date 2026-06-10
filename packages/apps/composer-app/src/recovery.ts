@@ -132,10 +132,6 @@ const recoveryHelpers: RecoveryHelpers = {
     hasClient: Boolean(getDxos().client),
   }),
   inspectOpfsPool: listOpfsPoolFiles,
-  opfsExportViaWorker: async () => {
-    const bytes = await exportOpfsSqlite();
-    return { byteLength: bytes.byteLength };
-  },
   compactDocuments: async (options) => {
     print('Compacting linked Automerge documents (epoch migration)…');
     const started = performance.now();

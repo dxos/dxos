@@ -6,42 +6,43 @@ import { isValidSqliteDatabase } from '@dxos/client-services';
 
 import { readOpfsSqliteDatabase } from './opfs-pool';
 
-/** Cap on the size floor so very large profiles don't demand impossible minimums. */
-const MIN_PAYLOAD_BYTES_CAP = 1_000_000;
+/** Compare a sample of bytes at both ends to detect truncated or partial writes cheaply. */
+const SAMPLE_BYTES = 4096;
+
+const sampleMismatch = (source: Uint8Array, payload: Uint8Array): boolean => {
+  const head = Math.min(SAMPLE_BYTES, source.byteLength);
+  for (let index = 0; index < head; index++) {
+    if (source[index] !== payload[index]) {
+      return true;
+    }
+  }
+  const tailStart = Math.max(0, source.byteLength - SAMPLE_BYTES);
+  for (let index = tailStart; index < source.byteLength; index++) {
+    if (source[index] !== payload[index]) {
+      return true;
+    }
+  }
+  return false;
+};
 
 /**
- * Minimum acceptable OPFS payload size for a given source file.
- * Import goes through deserialize + VACUUM, which can legitimately shrink the database
- * (free pages are dropped), so only enforce a conservative floor — never more than the
- * source size itself.
+ * Verify OPFS holds the imported SQLite database (async read — no SQLite, no worker).
+ * Import is a raw byte copy, so the payload must match the source exactly.
  */
-export const minImportedPayloadBytes = (sourceBytes: Uint8Array): number =>
-  Math.min(Math.ceil(sourceBytes.byteLength / 2), MIN_PAYLOAD_BYTES_CAP);
-
-/**
- * Verify OPFS holds the imported SQLite database (async read — do not open a second OPFS worker).
- * @param expectedPayloadBytes Authoritative size reported by the in-worker post-import export.
- */
-export const verifyOpfsSqliteImport = async (
-  sourceBytes: Uint8Array,
-  options?: { expectedPayloadBytes?: number },
-): Promise<number> => {
+export const verifyOpfsSqliteImport = async (sourceBytes: Uint8Array): Promise<number> => {
   const payload = await readOpfsSqliteDatabase();
   if (!isValidSqliteDatabase(payload)) {
     throw new Error('Imported OPFS database has invalid SQLite header');
   }
 
-  if (options?.expectedPayloadBytes !== undefined && payload.byteLength < options.expectedPayloadBytes) {
+  if (payload.byteLength !== sourceBytes.byteLength) {
     throw new Error(
-      `OPFS payload smaller than in-worker export (OPFS ${payload.byteLength.toLocaleString()}, export ${options.expectedPayloadBytes.toLocaleString()})`,
+      `OPFS payload size mismatch (source ${sourceBytes.byteLength.toLocaleString()}, OPFS ${payload.byteLength.toLocaleString()})`,
     );
   }
 
-  const minPayloadBytes = minImportedPayloadBytes(sourceBytes);
-  if (payload.byteLength < minPayloadBytes) {
-    throw new Error(
-      `OPFS import too small (source file ${sourceBytes.byteLength.toLocaleString()}, OPFS payload ${payload.byteLength.toLocaleString()}, min ${minPayloadBytes.toLocaleString()})`,
-    );
+  if (sampleMismatch(sourceBytes, payload)) {
+    throw new Error('OPFS payload differs from imported source bytes');
   }
 
   return payload.byteLength;

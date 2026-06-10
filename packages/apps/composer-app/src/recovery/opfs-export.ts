@@ -4,8 +4,8 @@
 
 import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
 
-import { readOpfsSqliteDatabase } from './opfs-pool';
-import { importOpfsDatabaseViaWorker } from './opfs-worker-bridge';
+import { verifyOpfsSqliteImport } from './opfs-import-verify';
+import { readOpfsSqliteDatabase, writeOpfsSqliteDatabase } from './opfs-pool';
 
 const DB_NAME = OPFS_SQLITE_DB_FILENAME;
 
@@ -23,9 +23,14 @@ export const exportOpfsProfileArchive = async (options?: { origin?: string }): P
 };
 
 /**
- * Replace the OPFS `DXOS` database via native SQLite import (deserialize + VACUUM) in a worker.
+ * Replace the OPFS `DXOS` database by writing raw SQLite bytes into the pool file.
+ * SQLite is deliberately not involved: `sqlite3_deserialize` cannot persist to a VFS and
+ * wa-sqlite exposes no backup API, so a direct byte-exact pool write is the reliable path.
  */
-export const importOpfsSqlite = async (bytes: Uint8Array): Promise<number> => importOpfsDatabaseViaWorker(bytes);
+export const importOpfsSqlite = async (bytes: Uint8Array): Promise<number> => {
+  await writeOpfsSqliteDatabase(bytes, DB_NAME);
+  return verifyOpfsSqliteImport(bytes);
+};
 
 /** Trigger a browser download of a `.dxprofile` archive. */
 export const downloadProfileArchiveExport = (bytes: Uint8Array, filename?: string) => {

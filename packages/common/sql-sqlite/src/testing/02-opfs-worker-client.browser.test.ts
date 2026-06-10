@@ -6,6 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, test } from 'vitest';
 import * as Effect from 'effect/Effect';
 
+import { OPFS_SQLITE_DB_FILENAME, readOpfsSqliteDatabase, writeOpfsSqliteDatabase } from '../internal/opfs-pool-async';
 import * as SqliteClient from '../SqliteClient';
 
 import {
@@ -82,6 +83,68 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
         const restored = yield* sql`SELECT value FROM roundtrip_probe`;
         expect(restored).toHaveLength(1);
         expect(restored[0].value).toBe('roundtrip');
+      }),
+    );
+  });
+
+  test('full export/import flow: write → async export → async import → read', async () => {
+    const marker = `import-flow-${crypto.randomUUID()}`;
+
+    // 1. Write via SqliteClient (OPFS worker), then release the pool handles.
+    await runWithOpfsSqliteClient(
+      Effect.gen(function* () {
+        const client = yield* SqlClient.SqlClient;
+        yield* client`CREATE TABLE IF NOT EXISTS import_flow_probe (marker TEXT NOT NULL)`;
+        yield* client`DELETE FROM import_flow_probe`;
+        yield* client`INSERT INTO import_flow_probe (marker) VALUES (${marker})`;
+      }),
+    );
+
+    // 2. Export: raw async OPFS read (no SQLite, no worker).
+    const exported = await readOpfsSqliteDatabase(OPFS_SQLITE_DB_FILENAME);
+    expect(isValidSqliteDatabase(exported)).toBe(true);
+    expect(exported.byteLength).toBeGreaterThan(0);
+
+    // 3. Diverge the database so the import has something to restore.
+    await runWithOpfsSqliteClient(
+      Effect.gen(function* () {
+        const client = yield* SqlClient.SqlClient;
+        yield* client`DELETE FROM import_flow_probe`;
+        const rows = yield* client`SELECT marker FROM import_flow_probe`;
+        expect(rows).toHaveLength(0);
+      }),
+    );
+
+    // 4. Import: raw async OPFS write of the exported snapshot.
+    await writeOpfsSqliteDatabase(exported, OPFS_SQLITE_DB_FILENAME);
+
+    // The pool payload must be byte-exact.
+    const reread = await readOpfsSqliteDatabase(OPFS_SQLITE_DB_FILENAME);
+    expect(reread.byteLength).toBe(exported.byteLength);
+    expect(reread).toEqual(exported);
+
+    // 5. Read via a fresh SqliteClient — the imported state must be visible.
+    await runWithOpfsSqliteClient(
+      Effect.gen(function* () {
+        const client = yield* SqlClient.SqlClient;
+        const rows = yield* client`SELECT marker FROM import_flow_probe ORDER BY rowid`;
+        expect(rows).toHaveLength(1);
+        expect(rows[0].marker).toBe(marker);
+      }),
+    );
+  });
+
+  test('imports an external snapshot via raw pool write and reads it back', async () => {
+    const source = await createSerializedDatabase('pool-import-e2e');
+
+    await writeOpfsSqliteDatabase(copySqliteSnapshot(source), OPFS_SQLITE_DB_FILENAME);
+
+    await runWithOpfsSqliteClient(
+      Effect.gen(function* () {
+        const client = yield* SqlClient.SqlClient;
+        const rows = yield* client`SELECT label FROM items ORDER BY id`;
+        expect(rows).toHaveLength(1);
+        expect(rows[0].label).toBe('pool-import-e2e');
       }),
     );
   });

@@ -12,8 +12,14 @@ const HEADER_MAX_PATH_SIZE = 512;
 const HEADER_FLAGS_SIZE = 4;
 const HEADER_DIGEST_SIZE = 8;
 const HEADER_CORPUS_SIZE = HEADER_MAX_PATH_SIZE + HEADER_FLAGS_SIZE;
+const HEADER_OFFSET_FLAGS = HEADER_MAX_PATH_SIZE;
 const HEADER_OFFSET_DIGEST = HEADER_CORPUS_SIZE;
 const HEADER_OFFSET_DATA = 4096;
+
+const SQLITE_OPEN_READWRITE = 0x00000002;
+const SQLITE_OPEN_CREATE = 0x00000004;
+const SQLITE_OPEN_MAIN_DB = 0x00000100;
+const MAIN_DB_FLAGS = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_DB;
 
 const SQLITE_MAGIC = new TextEncoder().encode('SQLite format 3\u0000');
 
@@ -61,6 +67,39 @@ const readAssociatedPath = async (fileHandle: FileSystemFileHandle): Promise<str
 
   const pathEnd = corpus.indexOf(0);
   return pathEnd <= 0 ? '' : new TextDecoder().decode(corpus.subarray(0, pathEnd));
+};
+
+const buildHeader = (path: string, flags: number): Uint8Array => {
+  const header = new Uint8Array(HEADER_OFFSET_DATA);
+  const corpus = header.subarray(0, HEADER_CORPUS_SIZE);
+  const encoded = new TextEncoder().encodeInto(path, corpus);
+  if (encoded.written !== undefined && encoded.written >= HEADER_MAX_PATH_SIZE) {
+    throw new Error('OPFS associated path too long');
+  }
+
+  const dataView = new DataView(corpus.buffer, corpus.byteOffset, corpus.byteLength);
+  dataView.setUint32(HEADER_OFFSET_FLAGS, flags);
+
+  const digest = computeDigest(corpus);
+  header.set(new Uint8Array(digest.buffer), HEADER_OFFSET_DIGEST);
+
+  return header;
+};
+
+const copyToArrayBuffer = (bytes: Uint8Array): Uint8Array<ArrayBuffer> => {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy;
+};
+
+const writeAssociatedPath = async (fileHandle: FileSystemFileHandle, path: string, flags: number): Promise<void> => {
+  const header = buildHeader(path, flags);
+  const writable = await fileHandle.createWritable({ keepExistingData: false });
+  try {
+    await writable.write(copyToArrayBuffer(header));
+  } finally {
+    await writable.close();
+  }
 };
 
 const getOpfsDirectory = async (): Promise<FileSystemDirectoryHandle> => {
@@ -188,4 +227,43 @@ export const readOpfsSqliteDatabase = async (
   }
 
   return new Uint8Array(await file.slice(HEADER_OFFSET_DATA).arrayBuffer());
+};
+
+/**
+ * Write raw SQLite bytes into the OPFS pool file for `dbFilename` (async — requires no
+ * live OPFS sqlite worker holding sync access handles on the pool).
+ */
+export const writeOpfsSqliteDatabase = async (
+  database: Uint8Array,
+  dbFilename: string = OPFS_SQLITE_DB_FILENAME,
+): Promise<void> => {
+  const associatedPath = associatedPathForDb(dbFilename);
+  const directory = await getOpfsDirectory();
+  const files = await openPoolFiles(directory);
+
+  let target = files.find((file) => file.associatedPath === associatedPath);
+  if (!target) {
+    target = files.find((file) => !file.associatedPath);
+  }
+
+  if (!target) {
+    const name = crypto.randomUUID().replaceAll('-', '').slice(0, 11);
+    const fileHandle = await directory.getFileHandle(name, { create: true });
+    target = { name, handle: fileHandle, associatedPath: '' };
+  }
+
+  const header = buildHeader(associatedPath, MAIN_DB_FLAGS);
+  const writable = await target.handle.createWritable({ keepExistingData: false });
+  try {
+    await writable.write(copyToArrayBuffer(header));
+    await writable.write(copyToArrayBuffer(database));
+  } finally {
+    await writable.close();
+  }
+
+  for (const file of files) {
+    if (file.associatedPath === `${associatedPath}-journal`) {
+      await writeAssociatedPath(file.handle, '', 0);
+    }
+  }
 };

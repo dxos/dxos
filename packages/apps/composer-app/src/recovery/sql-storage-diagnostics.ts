@@ -105,7 +105,9 @@ const summarizeHaloFeed = (
 };
 
 /**
- * Inspect OPFS pool + SQLite via {@link SqliteClient.layerOpfs} (no DXOS client boot).
+ * Inspect OPFS pool + SQLite (no DXOS client boot). Reads the OPFS payload asynchronously,
+ * then queries it through an in-memory SQLite (deserialize) — safe on the main thread and
+ * never touches the OPFS pool sync access handles.
  */
 export const runSqlStorageDiagnostics = async (
   log: (message: string) => void = () => {},
@@ -124,24 +126,19 @@ export const runSqlStorageDiagnostics = async (
   log('');
 
   log('Async OPFS export (read-only)');
-  let asyncExportBytes: number | undefined;
-  let validSqliteHeader: boolean | undefined;
-  try {
-    const exportStarted = performance.now();
-    const bytes = await exportOpfsSqlite();
-    asyncExportBytes = bytes.byteLength;
-    validSqliteHeader = isValidSqliteDatabase(bytes);
-    log(`  ${asyncExportBytes.toLocaleString()} bytes (${(performance.now() - exportStarted).toFixed(0)} ms)`);
-    log(`  header: ${validSqliteHeader ? 'valid SQLite 3' : 'invalid'}`);
-  } catch (error) {
-    log(`  export failed: ${error instanceof Error ? error.message : String(error)}`);
-  }
+  const exportStarted = performance.now();
+  const databaseBytes = await exportOpfsSqlite();
+  const asyncExportBytes = databaseBytes.byteLength;
+  const validSqliteHeader = isValidSqliteDatabase(databaseBytes);
+  log(`  ${asyncExportBytes.toLocaleString()} bytes (${(performance.now() - exportStarted).toFixed(0)} ms)`);
+  log(`  header: ${validSqliteHeader ? 'valid SQLite 3' : 'invalid'}`);
   log('');
 
-  log(`SQLite via layerOpfs (${OPFS_SQLITE_DB_FILENAME})`);
+  log(`SQLite (in-memory copy of ${OPFS_SQLITE_DB_FILENAME})`);
 
   const sqlResult = await Effect.gen(function* () {
     const sql = yield* SqliteClient.SqliteClient;
+    yield* sql.import(databaseBytes);
 
     const integrity = (yield* sql<{ integrity_check: string }>`PRAGMA integrity_check`)[0]?.integrity_check;
     const pageCount = Number((yield* sql<{ page_count: number }>`PRAGMA page_count`)[0]?.page_count ?? 0);
@@ -221,7 +218,7 @@ export const runSqlStorageDiagnostics = async (
           }
         : undefined,
     };
-  }).pipe(Effect.provide(SqliteClient.layerOpfs({ dbName: OPFS_SQLITE_DB_FILENAME })), Effect.scoped, Effect.runPromise);
+  }).pipe(Effect.provide(SqliteClient.layerMemory({})), Effect.scoped, Effect.runPromise);
 
   log(`  integrity: ${sqlResult.integrity ?? 'unknown'}`);
   log(`  db size:   ${sqlResult.dbBytes?.toLocaleString() ?? '?'} bytes`);

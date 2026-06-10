@@ -47,7 +47,6 @@ export type RecoveryHelpers = {
   inspectOpfsPool: () => Promise<
     Array<{ name: string; associatedPath: string; totalBytes: number; payloadBytes: number }>
   >;
-  opfsExportViaWorker: () => Promise<{ byteLength: number }>;
 };
 
 export const attachRecoveryHelpers = (helpers: RecoveryHelpers): void => {
