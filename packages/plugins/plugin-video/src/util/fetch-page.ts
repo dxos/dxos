@@ -126,7 +126,13 @@ export const fetchYouTubePlayer = (videoId: string): Effect.Effect<unknown, Fetc
         },
         body: JSON.stringify({
           context: {
-            client: { clientName: 'ANDROID', clientVersion: ANDROID_CLIENT_VERSION, androidSdkVersion: 30, hl: 'en', gl: 'US' },
+            client: {
+              clientName: 'ANDROID',
+              clientVersion: ANDROID_CLIENT_VERSION,
+              androidSdkVersion: 30,
+              hl: 'en',
+              gl: 'US',
+            },
           },
           videoId,
         }),

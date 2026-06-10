@@ -37,33 +37,35 @@ export type SummaryProps = {
  * a cross-origin `SecurityError`. Rendering the summary through a generic Surface (the markdown
  * plugin's editor) reintroduces that prop and crashes the article; this local editor avoids it.
  */
-export const Summary = composable<HTMLDivElement, SummaryProps>(({ classNames, id, source, ...props }, forwardedRef) => {
-  const { themeMode } = useThemeContext();
-  // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
-  // loads asynchronously and isn't reactive on its own.
-  const [resolved] = useObject(source);
-  const { parentRef } = useTextEditor(() => {
-    const target = source?.target;
-    if (!resolved || !target) {
-      return {};
-    }
+export const Summary = composable<HTMLDivElement, SummaryProps>(
+  ({ classNames, id, source, ...props }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
+    // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
+    // loads asynchronously and isn't reactive on its own.
+    const [resolved] = useObject(source);
+    const { parentRef } = useTextEditor(() => {
+      const target = source?.target;
+      if (!resolved || !target) {
+        return {};
+      }
 
-    return {
-      initialValue: target.content ?? '',
-      extensions: [
-        createDataExtensions({ id, text: createDocAccessor(target, ['content']) }),
-        createBasicExtensions({ lineWrapping: true }),
-        createThemeExtensions({ themeMode, slots: documentSlots }),
-        createMarkdownExtensions(),
-        decorateMarkdown(),
-      ],
-    };
-  }, [themeMode, id, resolved]);
+      return {
+        initialValue: target.content ?? '',
+        extensions: [
+          createDataExtensions({ id, text: createDocAccessor(target, ['content']) }),
+          createBasicExtensions({ lineWrapping: true }),
+          createThemeExtensions({ themeMode, slots: documentSlots }),
+          createMarkdownExtensions(),
+          decorateMarkdown(),
+        ],
+      };
+    }, [themeMode, id, resolved]);
 
-  return (
-    <div
-      {...composableProps(props, { classNames: ['dx-container', classNames] })}
-      ref={composeRefs(parentRef, forwardedRef)}
-    />
-  );
-});
+    return (
+      <div
+        {...composableProps(props, { classNames: ['dx-container', classNames] })}
+        ref={composeRefs(parentRef, forwardedRef)}
+      />
+    );
+  },
+);
