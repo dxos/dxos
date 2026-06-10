@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 

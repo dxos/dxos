@@ -152,7 +152,9 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
  * Upserts a blueprint into the database.
  * If the blueprint already exists in the database, the local (possibly forked) copy is returned as-is.
  * Otherwise, a fresh copy is cloned from the registry and added.
+ * @deprecated Since we're using a registry we no longer need to store blueprints in the database.
  */
+// TODO(dmaretskyi): Remove.
 export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service | Database.Service> =>
   Effect.gen(function* () {
     const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));

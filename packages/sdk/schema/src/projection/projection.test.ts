@@ -8,8 +8,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { makeRegistry } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Format, Ref, TypeEnum, getPropertyMetaAnnotation, toJsonSchema } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { valueEncoding } from '@dxos/echo-pipeline';
+import { valueEncoding } from '@dxos/echo-host';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';

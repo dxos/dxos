@@ -199,13 +199,13 @@
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-db/tsconfig.json"
+      "path": "packages/core/echo/echo-client/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-generator/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-pipeline/tsconfig.json"
+      "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"

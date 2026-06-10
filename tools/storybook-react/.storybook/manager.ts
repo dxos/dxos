@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import './suppress-storybook-deprecation-warnings';
+
 import { addons } from 'storybook/manager-api';
 
 import { dxosTheme } from './theme';

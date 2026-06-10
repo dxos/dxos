@@ -23,7 +23,9 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
     <AlertDialog.Content size='md' classNames='min-h-[15rem]'>
       <AlertDialog.Body>
         <AlertDialog.Title>{t('recovery-code-dialog.title')}</AlertDialog.Title>
-        <p className='py-4'>{t('recovery-code-dialog.description')}</p>
+        <AlertDialog.Description classNames='py-4'>
+          {t('recovery-code-dialog.description')}
+        </AlertDialog.Description>
         <Clipboard.Provider>
           <Code code={code} />
         </Clipboard.Provider>

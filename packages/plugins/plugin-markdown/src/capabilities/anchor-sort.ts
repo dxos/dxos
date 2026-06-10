@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Relation, Type } from '@dxos/echo';
-import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-client';
 import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '#types';

@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
-import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { createDocAccessor, getTextInRange } from '@dxos/echo-client';
 
 import { MarkdownOperation } from '#types';
 import { Markdown } from '#types';

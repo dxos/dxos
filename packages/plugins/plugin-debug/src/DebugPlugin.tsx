@@ -44,7 +44,7 @@ const setupDevtools = () => {
 
   // Used to test how composer handles breaking protocol changes.
   (globalThis as any).composer.changeStorageVersionInMetadata = async (version: number) => {
-    const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
+    const { changeStorageVersionInMetadata } = await import('@dxos/echo-host/testing');
     const { createStorageObjects } = await import('@dxos/client-services');
     const client: Client = (window as any).dxos.client;
     const config = client.config;
