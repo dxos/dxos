@@ -701,6 +701,65 @@ describe('Query', () => {
         db.query(Query.select(Filter.or(Filter.updated({ after: Date.now() }), Filter.type(TestSchema.Expando)))).run(),
       ).rejects.toThrow(/too complex/);
     });
+
+    test('Order.created ordering is consistent with Obj.getMeta(obj).createdAt', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+
+      // system.createdAt is Date.now() (ms precision); brief sleeps ensure distinct values.
+      const obj1 = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+      await sleep(20);
+      const obj2 = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+      await sleep(20);
+      const obj3 = db.add(createTestObject({ value: 3 }));
+      await db.flush();
+
+      // Verify the Obj.getMeta API exposes strictly ordered createdAt values.
+      const t1 = Obj.getMeta(obj1).createdAt!;
+      const t2 = Obj.getMeta(obj2).createdAt!;
+      const t3 = Obj.getMeta(obj3).createdAt!;
+      expect(t1).toBeDefined();
+      expect(t2).toBeGreaterThan(t1);
+      expect(t3).toBeGreaterThan(t2);
+
+      // The index-backed query ordering must agree with those timestamps.
+      const ordered = await db.query(Query.select(Filter.everything()).orderBy(Order.created('desc'))).run();
+      // Most-recently-created first.
+      expect(ordered.map((o) => o.id)).to.deep.equal([obj3.id, obj2.id, obj1.id]);
+    });
+
+    test('Order.updated ordering is consistent with Obj.getMeta(obj).updatedAt', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const [obj1, obj2, obj3] = range(3).map((index) => db.add(createTestObject({ value: index })));
+      await db.flush();
+
+      // Mutate in a known order. Automerge timestamps have 1-second precision, so each
+      // mutation needs a >1 s gap so the index assigns distinct updatedAt values.
+      await sleep(1100);
+      Obj.update(obj2, (obj: any) => {
+        obj.value = 20;
+      });
+      await db.flush();
+      await sleep(1100);
+      Obj.update(obj1, (obj: any) => {
+        obj.value = 10;
+      });
+      await db.flush();
+
+      // Obj.getMeta must reflect the mutation order (obj1 newest, obj3 oldest).
+      const upd1 = Obj.getMeta(obj1).updatedAt!;
+      const upd2 = Obj.getMeta(obj2).updatedAt!;
+      const upd3 = Obj.getMeta(obj3).updatedAt!;
+      expect(upd1).toBeGreaterThan(upd2);
+      expect(upd2).toBeGreaterThan(upd3);
+
+      // The index-backed query ordering must agree with those updatedAt values.
+      const recent = await db.query(Query.select(Filter.everything()).orderBy(Order.updated('desc')).limit(3)).run();
+      expect(recent).to.have.length(3);
+      // Most-recently-mutated first.
+      expect(recent.map((o) => o.id)).to.deep.equal([obj1.id, obj2.id, obj3.id]);
+    });
   });
 
   describe('Queue queries', () => {
