@@ -9,11 +9,11 @@ needs low-level access).
 
 ## Summary by difficulty
 
-| Difficulty | Symbol count | Effort |
-|------------|-------------|--------|
-| Easy (1) — just change import path | ~65% of all uses | Mechanical sed/codemod |
+| Difficulty                                              | Symbol count     | Effort                      |
+| ------------------------------------------------------- | ---------------- | --------------------------- |
+| Easy (1) — just change import path                      | ~65% of all uses | Mechanical sed/codemod      |
 | Medium (2) — symbol needs promotion to a public subpath | ~20% of all uses | Small API surface additions |
-| Hard (3) — true internal plumbing; needs API design | ~15% of all uses | Design decision + refactor |
+| Hard (3) — true internal plumbing; needs API design     | ~15% of all uses | Design decision + refactor  |
 
 ---
 
@@ -26,14 +26,14 @@ Migration is mechanical: update the import string. No behavior change.
 
 The public `Annotation.ts` module exports these as **flat names** (no namespace prefix needed):
 
-| Symbol | Uses | Note |
-|--------|------|------|
-| `LabelAnnotation` | 39 | Direct re-export from internal |
-| `FormInputAnnotation` | 38 | Direct re-export |
-| `HiddenAnnotation` | 14 | Direct re-export |
-| `getTypeAnnotation` | 7 | Direct re-export |
-| `GeneratorAnnotation` | 5 | Direct re-export |
-| `DescriptionAnnotation` | 2 | Direct re-export |
+| Symbol                  | Uses | Note                           |
+| ----------------------- | ---- | ------------------------------ |
+| `LabelAnnotation`       | 39   | Direct re-export from internal |
+| `FormInputAnnotation`   | 38   | Direct re-export               |
+| `HiddenAnnotation`      | 14   | Direct re-export               |
+| `getTypeAnnotation`     | 7    | Direct re-export               |
+| `GeneratorAnnotation`   | 5    | Direct re-export               |
+| `DescriptionAnnotation` | 2    | Direct re-export               |
 
 **Migration**: `import { LabelAnnotation, FormInputAnnotation } from '@dxos/echo/internal'`
 → `import { LabelAnnotation, FormInputAnnotation } from '@dxos/echo/Annotation'`
@@ -50,20 +50,20 @@ The public `Annotation.ts` module exports these as **flat names** (no namespace 
 
 The public `Format.ts` module does `export * from './internal/Format'`, so all of these are available:
 
-| Symbol | Uses | Note |
-|--------|------|------|
-| `Format` (namespace with `.DateTime`, `.Text`, etc.) | 45 | The `Format` namespace object |
-| `TypeEnum` | 12 | Enum: `String`, `Number`, `Date`, `Boolean`, `Ref`, etc. |
-| `SelectOption` | 4 | `Schema.Struct({ id, label, ... })` |
-| `FormatAnnotation` | 4 | Annotation helper for TypeFormat |
-| `GeoLocation` | 3 | Schema for `{ lat, lng }` |
-| `FormatEnums` | 1 | `Object.values(TypeFormat).sort()` |
-| `TypeFormat` | 1 | The enum backing `Format.Format` type alias |
-| `formatToType` | 2 | Lookup: TypeFormat → TypeEnum |
-| `typeToFormat` | 1 | Lookup: TypeEnum → TypeFormat |
-| `GeoPoint` | 1 | `{ geolocation: GeoLocation }` |
-| `DecimalPrecision` | 1 | Annotation for decimal display precision |
-| `OptionsAnnotationId` | 1 | Symbol for options annotation (in Format/types.ts) |
+| Symbol                                               | Uses | Note                                                     |
+| ---------------------------------------------------- | ---- | -------------------------------------------------------- |
+| `Format` (namespace with `.DateTime`, `.Text`, etc.) | 45   | The `Format` namespace object                            |
+| `TypeEnum`                                           | 12   | Enum: `String`, `Number`, `Date`, `Boolean`, `Ref`, etc. |
+| `SelectOption`                                       | 4    | `Schema.Struct({ id, label, ... })`                      |
+| `FormatAnnotation`                                   | 4    | Annotation helper for TypeFormat                         |
+| `GeoLocation`                                        | 3    | Schema for `{ lat, lng }`                                |
+| `FormatEnums`                                        | 1    | `Object.values(TypeFormat).sort()`                       |
+| `TypeFormat`                                         | 1    | The enum backing `Format.Format` type alias              |
+| `formatToType`                                       | 2    | Lookup: TypeFormat → TypeEnum                            |
+| `typeToFormat`                                       | 1    | Lookup: TypeEnum → TypeFormat                            |
+| `GeoPoint`                                           | 1    | `{ geolocation: GeoLocation }`                           |
+| `DecimalPrecision`                                   | 1    | Annotation for decimal display precision                 |
+| `OptionsAnnotationId`                                | 1    | Symbol for options annotation (in Format/types.ts)       |
 
 **Migration**: `import { Format, TypeEnum } from '@dxos/echo/internal'`
 → `import { Format, TypeEnum } from '@dxos/echo/Format'`
@@ -85,12 +85,12 @@ Note: `OptionsAnnotationId` lives in `Format/types.ts` but is not yet re-exporte
 
 The public `Ref.ts` module exports `Ref` (class + namespace) and the ref utilities:
 
-| Symbol | Uses | Note |
-|--------|------|------|
-| `Ref` | 5 | The `Ref<T>` schema / type |
-| `refFromEncodedReference` | 1 | Construct a Ref from encoded wire data |
-| `createSchemaReference` | 1 | JSON schema reference object builder |
-| `getSchemaReference` | 1 | Extract reference info from JSON schema property |
+| Symbol                    | Uses | Note                                             |
+| ------------------------- | ---- | ------------------------------------------------ |
+| `Ref`                     | 5    | The `Ref<T>` schema / type                       |
+| `refFromEncodedReference` | 1    | Construct a Ref from encoded wire data           |
+| `createSchemaReference`   | 1    | JSON schema reference object builder             |
+| `getSchemaReference`      | 1    | Extract reference info from JSON schema property |
 
 **Migration**: `import { Ref } from '@dxos/echo/internal'`
 → `import { Ref } from '@dxos/echo/Ref'`
@@ -107,11 +107,11 @@ if missing, add them (Tier 2).
 
 ### 1d. JsonSchema symbols → `@dxos/echo/JsonSchema`
 
-| Symbol | Uses | Note |
-|--------|------|------|
-| `JsonSchemaType` | 5 | Use `JsonSchema.JsonSchema` type or `import type { JsonSchemaType } from '@dxos/echo/JsonSchema'` |
-| `toJsonSchema` | 2 | Available as `JsonSchema.toJsonSchema` |
-| `toEffectSchema` | 2 | Available as `JsonSchema.toEffectSchema` |
+| Symbol           | Uses | Note                                                                                              |
+| ---------------- | ---- | ------------------------------------------------------------------------------------------------- |
+| `JsonSchemaType` | 5    | Use `JsonSchema.JsonSchema` type or `import type { JsonSchemaType } from '@dxos/echo/JsonSchema'` |
+| `toJsonSchema`   | 2    | Available as `JsonSchema.toJsonSchema`                                                            |
+| `toEffectSchema` | 2    | Available as `JsonSchema.toEffectSchema`                                                          |
 
 **Migration**: `import { type JsonSchemaType, toJsonSchema } from '@dxos/echo/internal'`
 → `import type { JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema'; import { toJsonSchema } from '@dxos/echo/JsonSchema'`
@@ -127,14 +127,15 @@ Note: `JsonSchemaType` (the internal type name) maps to `JsonSchema` (the public
 
 ### 1e. Entity / Obj symbols → `@dxos/echo/Entity` or `@dxos/echo/Obj`
 
-| Symbol | Uses | Public equivalent |
-|--------|------|-------------------|
-| `Mutable` | 12 | `Entity.Mutable<T>` (from `@dxos/echo/Entity`) or `Obj.Mutable<T>` (from `@dxos/echo/Obj`) |
-| `isInstanceOf` | 3 | `Entity.isInstanceOf` (from `@dxos/echo/Entity`) |
-| `getSnapshot` | 2 | `Obj.getSnapshot` (from `@dxos/echo/Obj`) |
-| `EntityKind` | 6 | `Entity.Kind` enum (from `@dxos/echo/Entity`) |
+| Symbol         | Uses | Public equivalent                                                                          |
+| -------------- | ---- | ------------------------------------------------------------------------------------------ |
+| `Mutable`      | 12   | `Entity.Mutable<T>` (from `@dxos/echo/Entity`) or `Obj.Mutable<T>` (from `@dxos/echo/Obj`) |
+| `isInstanceOf` | 3    | `Entity.isInstanceOf` (from `@dxos/echo/Entity`)                                           |
+| `getSnapshot`  | 2    | `Obj.getSnapshot` (from `@dxos/echo/Obj`)                                                  |
+| `EntityKind`   | 6    | `Entity.Kind` enum (from `@dxos/echo/Entity`)                                              |
 
 **Migration examples**:
+
 ```ts
 // Before
 import { type Mutable } from '@dxos/echo/internal';
@@ -172,15 +173,15 @@ Fix = add an export line (or rename) in the relevant namespace file.
 
 ### 2a. Annotation ID symbols not yet in `@dxos/echo/Annotation`
 
-| Symbol | Uses | Lives in | Proposed home |
-|--------|------|----------|---------------|
-| `PropertyMetaAnnotationId` | 5 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
-| `PropertyMetaAnnotation` | 1 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
-| `PropertyMeta` | 1 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
-| `getPropertyMetaAnnotation` | 1 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
-| `ReferenceAnnotationId` | 4 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
-| `ReferenceAnnotationValue` | 3 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
-| `FieldLookupAnnotationId` | 1 | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| Symbol                      | Uses | Lives in                             | Proposed home           |
+| --------------------------- | ---- | ------------------------------------ | ----------------------- |
+| `PropertyMetaAnnotationId`  | 5    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| `PropertyMetaAnnotation`    | 1    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| `PropertyMeta`              | 1    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| `getPropertyMetaAnnotation` | 1    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| `ReferenceAnnotationId`     | 4    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| `ReferenceAnnotationValue`  | 3    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
+| `FieldLookupAnnotationId`   | 1    | `internal/Annotation/annotations.ts` | `@dxos/echo/Annotation` |
 
 **Fix**: Add these to the explicit export list in `src/Annotation.ts`.
 
@@ -193,9 +194,9 @@ Fix = add an export line (or rename) in the relevant namespace file.
 
 ### 2b. `OptionsAnnotationId` not yet in `@dxos/echo/Format`
 
-| Symbol | Uses | Lives in | Proposed home |
-|--------|------|----------|---------------|
-| `OptionsAnnotationId` | 1 | `internal/Format/types.ts` | `@dxos/echo/Format` |
+| Symbol                | Uses | Lives in                   | Proposed home       |
+| --------------------- | ---- | -------------------------- | ------------------- |
+| `OptionsAnnotationId` | 1    | `internal/Format/types.ts` | `@dxos/echo/Format` |
 
 `Format/types.ts` is already re-exported via `Format/index.ts` which is re-exported by
 the public `Format.ts`. So `OptionsAnnotationId` should already be in `@dxos/echo/Format` —
@@ -208,9 +209,9 @@ add it to `Format.ts`.
 
 ### 2c. `createAnnotationHelper` — replace with `Annotation.make`
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `createAnnotationHelper` | 9 | `internal/Annotation/util.ts` |
+| Symbol                   | Uses | Lives in                      |
+| ------------------------ | ---- | ----------------------------- |
+| `createAnnotationHelper` | 9    | `internal/Annotation/util.ts` |
 
 `createAnnotationHelper` is the internal API for registering Effect-schema–backed annotations
 with `get`/`set` helpers. The public API is `Annotation.make` (from `@dxos/echo`), which takes
@@ -218,6 +219,7 @@ with `get`/`set` helpers. The public API is `Annotation.make` (from `@dxos/echo`
 
 **Migration**: Each call site must be converted from the symbol-based internal helper to the
 public string-ID–based `Annotation.make`. These are in:
+
 - `sdk/schema/src/annotations/api-key.ts`
 - `sdk/schema/src/annotations/factory.ts`
 - `sdk/schema/src/annotations/feed.ts`
@@ -236,9 +238,9 @@ check they serialize identically before migration.
 
 ### 2d. `AnyEntity` → express as `Entity.Unknown | Relation.Unknown`
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `AnyEntity` | 2 | `internal/common/types/base.ts` |
+| Symbol      | Uses | Lives in                        |
+| ----------- | ---- | ------------------------------- |
+| `AnyEntity` | 2    | `internal/common/types/base.ts` |
 
 `AnyEntity` is `{ id: EntityId } & AnyProperties`. It predates the typed entity model.
 In all current consumer contexts it can be replaced with `Entity.Unknown` (from
@@ -250,9 +252,9 @@ In all current consumer contexts it can be replaced with `Entity.Unknown` (from
 
 ### 2e. `EntityMeta` type → use `ReturnType<typeof Entity.getMeta>`
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `EntityMeta` | 2 | `internal/common/types/meta.ts` |
+| Symbol       | Uses | Lives in                        |
+| ------------ | ---- | ------------------------------- |
+| `EntityMeta` | 2    | `internal/common/types/meta.ts` |
 
 Used as a type annotation in `functions-runtime/src/url.ts` and
 `packages/core/echo/echo-db/src/core-db/object-core.ts`. The latter is internal to echo-db
@@ -264,9 +266,9 @@ expressed via `ReturnType<typeof Entity.getMeta>` (the public API shape), or pro
 
 ### 2f. `getSchemaURI` → `@dxos/echo/Annotation` or a designated migration entrypoint
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `getSchemaURI` | 1 | `internal/Annotation/annotations.ts` |
+| Symbol         | Uses | Lives in                             |
+| -------------- | ---- | ------------------------------------ |
+| `getSchemaURI` | 1    | `internal/Annotation/annotations.ts` |
 
 Used only in `sdk/migrations/src/migration-builder.ts`. This belongs in
 `@dxos/echo/Annotation` as a public utility (it returns the fully-qualified DXN URI for a
@@ -283,11 +285,11 @@ Each one requires a decision about what the _right_ abstraction is.
 
 ### 3a. Proxy inspection utilities — `isProxy`, `getProxyTarget`, `getProxyHandler`
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `isProxy` | 7 | `internal/common/proxy/proxy-utils.ts` |
-| `getProxyTarget` | 2 | `internal/common/proxy/proxy-utils.ts` |
-| `getProxyHandler` | 1 | `internal/common/proxy/proxy-utils.ts` (test-only) |
+| Symbol            | Uses | Lives in                                           |
+| ----------------- | ---- | -------------------------------------------------- |
+| `isProxy`         | 7    | `internal/common/proxy/proxy-utils.ts`             |
+| `getProxyTarget`  | 2    | `internal/common/proxy/proxy-utils.ts`             |
+| `getProxyHandler` | 1    | `internal/common/proxy/proxy-utils.ts` (test-only) |
 
 **`isProxy`** is used broadly to guard "is this thing an ECHO live object?" checks before
 doing mutations. It deserves promotion to the public API under a better name.
@@ -314,9 +316,9 @@ split), this will become redundant. No public API needed; keep in internal.
 
 ### 3b. Reactive event batching — `batchEvents`
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `batchEvents` | 4 | `internal/common/proxy/event-batch.ts` |
+| Symbol        | Uses | Lives in                               |
+| ------------- | ---- | -------------------------------------- |
+| `batchEvents` | 4    | `internal/common/proxy/event-batch.ts` |
 
 Used in: `echo-db/src/core-db/core-database.ts`,
 `echo-db/src/echo-handler/echo-array.ts`, `echo-db/src/hypergraph.ts`,
@@ -338,20 +340,21 @@ echo-client internal uses to an in-package internal import.
 
 ### 3c. Raw JSON model attribute keys — `ATTR_TYPE`, `ATTR_META`, `ATTR_PARENT`, `ATTR_RELATION_SOURCE`, `ATTR_RELATION_TARGET`, `ATTR_DELETED`
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `ATTR_TYPE` | 8 | `internal/common/types/typename.ts` |
-| `ATTR_META` | 3 | `internal/common/types/meta.ts` |
-| `ATTR_RELATION_SOURCE` | 3 | `internal/common/types/model-symbols.ts` |
-| `ATTR_RELATION_TARGET` | 3 | `internal/common/types/model-symbols.ts` |
-| `ATTR_PARENT` | 2 | `internal/common/types/typename.ts` |
-| `ATTR_DELETED` | 2 | `internal/common/types/model-symbols.ts` |
+| Symbol                 | Uses | Lives in                                 |
+| ---------------------- | ---- | ---------------------------------------- |
+| `ATTR_TYPE`            | 8    | `internal/common/types/typename.ts`      |
+| `ATTR_META`            | 3    | `internal/common/types/meta.ts`          |
+| `ATTR_RELATION_SOURCE` | 3    | `internal/common/types/model-symbols.ts` |
+| `ATTR_RELATION_TARGET` | 3    | `internal/common/types/model-symbols.ts` |
+| `ATTR_PARENT`          | 2    | `internal/common/types/typename.ts`      |
+| `ATTR_DELETED`         | 2    | `internal/common/types/model-symbols.ts` |
 
 These are the raw JSON property keys used in the Automerge document model:
 `"@type"`, `"@meta"`, `"@parent"`, `"@relationSource"`, `"@relationTarget"`, `"@deleted"`.
 They are not user-facing — they're the wire format inside CRDTs.
 
 **Consumers** are all internal to the packages being refactored:
+
 - `echo-db/src/client/index-query-source-provider.ts`
 - `echo-db/src/core-db/core-database.ts`
 - `echo-db/src/echo-handler/edit-history.ts`
@@ -364,6 +367,7 @@ They are not user-facing — they're the wire format inside CRDTs.
 - `index-core/src/indexes/reverse-ref-index.test.ts`
 
 **Decision**: These should NOT become public. Instead:
+
 1. The echo-db / echo-client files move to a package-internal import after S2.
 2. The echo-pipeline / echo-host and index-core files should import them through
    `@dxos/echo-host/internal` (a new `@dxos/echo-host` designated internal entrypoint,
@@ -374,12 +378,12 @@ They are not user-facing — they're the wire format inside CRDTs.
 
 ### 3d. `ObjectJSON` and queue-level serialization types
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `ObjectJSON` | 5 | `internal/Obj/json-serializer.ts` |
-| `objectStructureToJson` | 1 | `internal/Obj/json-serializer.ts` |
-| `assertObjectModel` | 1 | `internal/Obj/json-serializer.ts` |
-| `setRefResolverOnData` | 1 | `internal/Ref/ref.ts` |
+| Symbol                  | Uses | Lives in                          |
+| ----------------------- | ---- | --------------------------------- |
+| `ObjectJSON`            | 5    | `internal/Obj/json-serializer.ts` |
+| `objectStructureToJson` | 1    | `internal/Obj/json-serializer.ts` |
+| `assertObjectModel`     | 1    | `internal/Obj/json-serializer.ts` |
+| `setRefResolverOnData`  | 1    | `internal/Ref/ref.ts`             |
 
 `ObjectJSON` is the snapshot-JSON wire format: `{ id, '@type', '@meta', ... }`. It is used
 heavily in the queue subsystem (`echo-db/src/queue/queue.ts`, `queue-service.ts`) and in
@@ -395,14 +399,15 @@ these move to echo-host after S1 is fully in place, and should import from a sha
 
 ### 3e. `EventId`, `objectData`, `SelfURIId`, `ParentId` — internal proxy/identity symbols
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `EventId` | 1 | `internal/common/proxy/symbols.ts` |
-| `objectData` | 1 | `internal/common/proxy/proxy-types.ts` |
-| `SelfURIId` | 1 | `internal/common/types/model-symbols.ts` |
-| `ParentId` | 1 | `internal/common/types/model-symbols.ts` |
+| Symbol       | Uses | Lives in                                 |
+| ------------ | ---- | ---------------------------------------- |
+| `EventId`    | 1    | `internal/common/proxy/symbols.ts`       |
+| `objectData` | 1    | `internal/common/proxy/proxy-types.ts`   |
+| `SelfURIId`  | 1    | `internal/common/types/model-symbols.ts` |
+| `ParentId`   | 1    | `internal/common/types/model-symbols.ts` |
 
 All four are used inside `echo-db` (future echo-client) internals:
+
 - `EventId` → `echo-db/src/echo-handler/echo-proxy-target.ts`
 - `objectData` → `echo-db/src/util/devtools-formatter.ts`
 - `SelfURIId`, `ParentId` → `echo-db/src/queue/queue.ts`
@@ -416,9 +421,9 @@ devtools protocol. Consider moving the devtools formatter into echo-client's
 
 ### 3f. `defineHiddenProperty` — JS property plumbing
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `defineHiddenProperty` | 1 | `internal/common/proxy/define-hidden-property.ts` |
+| Symbol                 | Uses | Lives in                                          |
+| ---------------------- | ---- | ------------------------------------------------- |
+| `defineHiddenProperty` | 1    | `internal/common/proxy/define-hidden-property.ts` |
 
 Used in `echo-db/src/queue/queue.ts` to stamp a hidden property on a queue item.
 This is internal echo-client plumbing. After S2 this becomes an in-package import.
@@ -428,9 +433,9 @@ No public API needed.
 
 ### 3g. `setRefResolver` — internal ref resolution wiring
 
-| Symbol | Uses | Lives in |
-|--------|------|----------|
-| `setRefResolver` | 1 | `internal/Ref/ref.ts` |
+| Symbol           | Uses | Lives in              |
+| ---------------- | ---- | --------------------- |
+| `setRefResolver` | 1    | `internal/Ref/ref.ts` |
 
 Used in `echo-db/src/hypergraph.ts` to wire the global ref resolver. After S2, in-package.
 No public API needed — this is a one-time wiring call inside the database initialization.
@@ -516,7 +521,7 @@ After S4 (`@dxos/echo-client/internal` is created):
    `Annotation.make` serialize identically over the wire and in Effect Schema AST nodes. If not,
    a compatibility shim is needed before migrating.
 
-4. **echo-pipeline ATTR_ path**: echo-pipeline is being renamed to echo-host (S1). Once the rename
+4. **echo-pipeline ATTR\_ path**: echo-pipeline is being renamed to echo-host (S1). Once the rename
    is complete, the question is whether to create `@dxos/echo-host/internal` as a separate
    entrypoint or co-locate the ATTR constants inside echo-host itself (moving them out of
    `@dxos/echo/internal` entirely). The latter is cleaner but requires moving source files.
