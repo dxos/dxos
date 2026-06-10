@@ -2667,7 +2667,6 @@ describe('Query', () => {
       expect(updates.at(0)).toEqual(['Alice', 'Bob', 'Charlie']);
       expect(updates.at(-1)).toEqual(['Alice', 'Charlie']);
     });
-
   });
 
   describe('Dynamic types', () => {
