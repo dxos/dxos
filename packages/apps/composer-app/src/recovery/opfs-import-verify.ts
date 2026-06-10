@@ -6,37 +6,41 @@ import { isValidSqliteDatabase } from '@dxos/client-services';
 
 import { readOpfsSqliteDatabase } from './opfs-pool';
 
-/** Typical empty Composer OPFS database after migrations. */
-const EMPTY_OPFS_DB_BYTES = 512_000;
-
-/** Minimum exported bytes for a profile that was large on disk. */
-const LARGE_PROFILE_MIN_EXPORT_BYTES = 1_000_000;
+/** Cap on the size floor so very large profiles don't demand impossible minimums. */
+const MIN_PAYLOAD_BYTES_CAP = 1_000_000;
 
 /**
- * Minimum in-worker export size after deserialize for a given source file.
+ * Minimum acceptable OPFS payload size for a given source file.
+ * Import goes through deserialize + VACUUM, which can legitimately shrink the database
+ * (free pages are dropped), so only enforce a conservative floor — never more than the
+ * source size itself.
  */
-export const minInWorkerExportBytes = (sourceBytes: Uint8Array): number =>
-  sourceBytes.byteLength > EMPTY_OPFS_DB_BYTES ? LARGE_PROFILE_MIN_EXPORT_BYTES : sourceBytes.byteLength;
+export const minImportedPayloadBytes = (sourceBytes: Uint8Array): number =>
+  Math.min(Math.ceil(sourceBytes.byteLength / 2), MIN_PAYLOAD_BYTES_CAP);
 
 /**
- * Verify OPFS holds an imported SQLite database (async read — do not open a second OPFS worker).
+ * Verify OPFS holds the imported SQLite database (async read — do not open a second OPFS worker).
+ * @param expectedPayloadBytes Authoritative size reported by the in-worker post-import export.
  */
 export const verifyOpfsSqliteImport = async (
   sourceBytes: Uint8Array,
-  options?: { minExportBytes?: number },
+  options?: { expectedPayloadBytes?: number },
 ): Promise<number> => {
   const payload = await readOpfsSqliteDatabase();
   if (!isValidSqliteDatabase(payload)) {
     throw new Error('Imported OPFS database has invalid SQLite header');
   }
 
-  const minExportBytes =
-    options?.minExportBytes ??
-    (sourceBytes.byteLength > EMPTY_OPFS_DB_BYTES ? LARGE_PROFILE_MIN_EXPORT_BYTES : sourceBytes.byteLength);
-
-  if (payload.byteLength < minExportBytes) {
+  if (options?.expectedPayloadBytes !== undefined && payload.byteLength < options.expectedPayloadBytes) {
     throw new Error(
-      `OPFS import too small (source file ${sourceBytes.byteLength.toLocaleString()}, OPFS payload ${payload.byteLength.toLocaleString()}, min ${minExportBytes.toLocaleString()})`,
+      `OPFS payload smaller than in-worker export (OPFS ${payload.byteLength.toLocaleString()}, export ${options.expectedPayloadBytes.toLocaleString()})`,
+    );
+  }
+
+  const minPayloadBytes = minImportedPayloadBytes(sourceBytes);
+  if (payload.byteLength < minPayloadBytes) {
+    throw new Error(
+      `OPFS import too small (source file ${sourceBytes.byteLength.toLocaleString()}, OPFS payload ${payload.byteLength.toLocaleString()}, min ${minPayloadBytes.toLocaleString()})`,
     );
   }
 

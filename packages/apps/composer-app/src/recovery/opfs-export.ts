@@ -23,8 +23,7 @@ export const exportOpfsProfileArchive = async (options?: { origin?: string }): P
 };
 
 /**
- * Replace the OPFS `DXOS` database with raw SQLite bytes via the OPFS worker.
- * Must go through AccessHandlePoolVFS sync handles — async OPFS writes are overwritten on worker open.
+ * Replace the OPFS `DXOS` database via native SQLite import (deserialize + VACUUM) in a worker.
  */
 export const importOpfsSqlite = async (bytes: Uint8Array): Promise<number> => importOpfsDatabaseViaWorker(bytes);
 

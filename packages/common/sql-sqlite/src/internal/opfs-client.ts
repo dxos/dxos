@@ -212,7 +212,7 @@ export const makeOpfs = (
 /** Layer providing in-process OPFS {@link WasmSqliteClient.SqliteClient}. */
 export const layerOpfs = (
   config: OpfsConfig,
-): Layer.Layer<WasmSqliteClient.SqliteClient | Client.SqlClient, SqlError.SqlError, Reactivity.Reactivity> =>
+): Layer.Layer<WasmSqliteClient.SqliteClient | Client.SqlClient, SqlError.SqlError> =>
   Layer.scopedContext(
     Effect.map(makeOpfs(config), (client) =>
       Context.make(WasmSqliteClient.SqliteClient, client).pipe(Context.add(Client.SqlClient, client)),

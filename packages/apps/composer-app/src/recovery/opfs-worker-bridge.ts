@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { minInWorkerExportBytes, verifyOpfsSqliteImport } from './opfs-import-verify';
+import { verifyOpfsSqliteImport } from './opfs-import-verify';
 
 type PoolWorkerInbound = ['ready', undefined, undefined] | [id: number, error: string | undefined, results: unknown];
 
@@ -37,7 +37,8 @@ const waitForWorkerMessage = (
   });
 
 /**
- * Write raw SQLite bytes into the OPFS pool via sync access handles in a dedicated worker.
+ * Import raw SQLite bytes through the native SQLite import path (deserialize + VACUUM)
+ * inside a dedicated worker, then verify the persisted OPFS payload.
  */
 export const importOpfsDatabaseViaWorker = async (
   database: Uint8Array,
@@ -48,6 +49,7 @@ export const importOpfsDatabaseViaWorker = async (
   copy.set(database);
 
   const worker = createPoolWorker();
+  let exportByteLength: number | undefined;
 
   try {
     await waitForWorkerMessage(worker, ([id]) => id === 'ready', timeoutMs);
@@ -56,10 +58,11 @@ export const importOpfsDatabaseViaWorker = async (
     const writePromise = waitForWorkerMessage(worker, ([id]) => id === writeId, timeoutMs);
     worker.postMessage(['write', writeId, copy]);
 
-    const [, error] = await writePromise;
+    const [, error, results] = await writePromise;
     if (error) {
-      throw new Error(typeof error === 'string' ? error : 'OPFS pool write failed');
+      throw new Error(typeof error === 'string' ? error : 'OPFS import failed');
     }
+    exportByteLength = typeof results === 'number' ? results : undefined;
 
     worker.postMessage(['close']);
   } catch (error) {
@@ -69,7 +72,7 @@ export const importOpfsDatabaseViaWorker = async (
     worker.terminate();
   }
 
-  return verifyOpfsSqliteImport(database, { minExportBytes: minInWorkerExportBytes(database) });
+  return verifyOpfsSqliteImport(database, { expectedPayloadBytes: exportByteLength });
 };
 
 /** @deprecated Opening a second OPFS sqlite worker can reset pool files; prefer async OPFS read. */

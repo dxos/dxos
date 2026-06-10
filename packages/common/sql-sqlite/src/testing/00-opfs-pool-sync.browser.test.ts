@@ -14,7 +14,7 @@ import {
   listOpfsPoolFiles,
   OPFS_SQLITE_DB_FILENAME,
   readOpfsSqliteDatabase,
-} from '../opfs-pool-async';
+} from '../internal/opfs-pool-async';
 
 const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite.wasm', import.meta.url).href;
 

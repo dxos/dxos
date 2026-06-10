@@ -4,8 +4,8 @@
 
 /// <reference lib="webworker" />
 
-import { OPFS_SQLITE_DB_FILENAME } from '../opfs-pool-async';
-import { writePoolSqlitePayload } from '../opfs-pool-sync';
+import { OPFS_SQLITE_DB_FILENAME } from '../internal/opfs-pool-async';
+import { writePoolSqlitePayload } from '../internal/opfs-pool-sync';
 
 type PoolWorkerMessage = ['write', id: number, data: Uint8Array] | ['close'];
 

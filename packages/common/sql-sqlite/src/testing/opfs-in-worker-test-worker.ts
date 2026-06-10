@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as SqliteClient from '../SqliteClient';
-import { isValidSqliteDatabase } from '../opfs-pool-async';
+import { isValidSqliteDatabase } from '../internal/opfs-pool-async';
 
 const DB_NAME = 'DXOS';
 

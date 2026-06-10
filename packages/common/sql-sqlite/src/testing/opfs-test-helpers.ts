@@ -7,7 +7,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { isValidSqliteDatabase } from '../opfs-pool-async';
+import { isValidSqliteDatabase } from '../internal/opfs-pool-async';
 import * as SqliteClient from '../SqliteClient';
 
 const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite.wasm', import.meta.url).href;
