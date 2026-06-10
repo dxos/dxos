@@ -30,6 +30,7 @@
       "default": "./dist/lib/neutral/containers/index.mjs"
     },
     "#meta": {
+      "types": "@dxos/app-framework/meta",
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#operations": {
