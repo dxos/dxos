@@ -4,12 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpaceHomePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { SupportOperation } from '#types';
-
-import { SPACE_HOME_NODE_ID } from '../constants';
 
 const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = SupportOperation.OnCreateSpace.pipe(
   Operation.withHandler(
@@ -18,7 +16,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = Su
       if (!isDefault) {
         return;
       }
-      const homePath = `${getSpacePath(space.id)}/${SPACE_HOME_NODE_ID}`;
+      const homePath = getSpaceHomePath(space.id);
       yield* Operation.invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: homePath });
       // Expose is scheduled because the navtree may not have rendered yet at this point.
       yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
