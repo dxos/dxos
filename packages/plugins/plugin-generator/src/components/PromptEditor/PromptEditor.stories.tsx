@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { withClientProvider } from '@dxos/react-client/testing';
+import { createObject } from '@dxos/echo-db';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -16,14 +16,14 @@ import { PromptEditor } from './PromptEditor';
 type DefaultStoryProps = { content?: string };
 
 const DefaultStory = ({ content }: DefaultStoryProps) => {
-  const text = useMemo(() => Text.make({ content: content ?? '' }), [content]);
+  const text = useMemo(() => createObject(Text.make({ content: content ?? '' })), [content]);
   return <PromptEditor id='story' text={text} />;
 };
 
 const meta = {
   title: 'plugins/plugin-generator/components/PromptEditor',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
