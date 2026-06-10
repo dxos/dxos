@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
@@ -77,11 +77,15 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Per-space integrations folder; kept empty until an Integration exists.
+      // Per-space integrations folder nested under the space's settings section
+      // (alongside Automations, Functions); kept empty until an Integration exists.
       // Separate listing extension so graph reacts when targets are deleted.
       GraphBuilder.createExtension({
         id: 'integrationsSection',
-        match: AppNodeMatcher.whenSpace,
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        },
         connector: (space, get) => {
           const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
           if (integrations.length === 0) {
