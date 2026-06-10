@@ -70,14 +70,14 @@ catalogs:
       specifier: ^1.0.3
       version: 1.0.3
     '@bufbuild/buf':
-      specifier: 1.65.0
-      version: 1.65.0
+      specifier: 1.70.0
+      version: 1.70.0
     '@bufbuild/protobuf':
-      specifier: 2.11.0
-      version: 2.11.0
+      specifier: 2.12.0
+      version: 2.12.0
     '@bufbuild/protoc-gen-es':
-      specifier: 2.11.0
-      version: 2.11.0
+      specifier: 2.12.0
+      version: 2.12.0
     '@ch-ui/icons':
       specifier: ^1.0.1
       version: 1.0.1
@@ -1450,8 +1450,8 @@ catalogs:
       specifier: ^3.6.2
       version: 3.6.2
     protobufjs:
-      specifier: ^8.0.0
-      version: 8.0.0
+      specifier: 8.5.0
+      version: 8.5.0
     pwa-asset-generator:
       specifier: ^6.4.0
       version: 6.4.0
@@ -3633,7 +3633,7 @@ importers:
         version: 4.6.2
       protobufjs:
         specifier: 'catalog:'
-        version: 8.0.0
+        version: 8.5.0
     devDependencies:
       '@types/lodash.merge':
         specifier: 'catalog:'
@@ -3767,7 +3767,7 @@ importers:
         version: 3.21.3
       protobufjs:
         specifier: 'catalog:'
-        version: 8.0.0
+        version: 8.5.0
     devDependencies:
       '@dxos/protocols':
         specifier: workspace:*
@@ -4177,7 +4177,7 @@ importers:
         version: 13.0.3
       protobufjs:
         specifier: 'catalog:'
-        version: 8.0.0
+        version: 8.5.0
       read-pkg:
         specifier: 'catalog:'
         version: 5.2.0
@@ -6649,7 +6649,7 @@ importers:
     dependencies:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
-        version: 2.11.0
+        version: 2.12.0
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -6671,10 +6671,10 @@ importers:
     devDependencies:
       '@bufbuild/buf':
         specifier: 'catalog:'
-        version: 1.65.0
+        version: 1.70.0
       '@bufbuild/protoc-gen-es':
         specifier: 'catalog:'
-        version: 2.11.0(@bufbuild/protobuf@2.11.0)
+        version: 2.12.0(@bufbuild/protobuf@2.12.0)
       '@dxos/protobuf-compiler':
         specifier: workspace:*
         version: link:../../common/protobuf-compiler
@@ -23129,68 +23129,68 @@ packages:
     peerDependencies:
       astro: ^5.0.0
 
-  '@bufbuild/buf-darwin-arm64@1.65.0':
-    resolution: {integrity: sha512-2U8CHjW1ysINYKwIPcc4WAiQPxe91RIjNtjpg+RC9rP0aZ7TpGm5MTMY5l3sN4drtmKdb9rBs3bMQsMNhSc90A==}
+  '@bufbuild/buf-darwin-arm64@1.70.0':
+    resolution: {integrity: sha512-c7owUswBbMmwfHPH9JRBEJu09mrXYGC33V2JQCgraWCBm74Z95AOkhDua50qiBrQnysvJkJ0p/z4MWxJqcpnIA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
 
-  '@bufbuild/buf-darwin-x64@1.65.0':
-    resolution: {integrity: sha512-aMqfc6pQC4L9dZpSD61XCEpPWKEtb1rXDPkK0/tzrfTWodnbaJ/elNoxsCGzbZVSMFeAdomUpXmSMrk8ALfWWw==}
+  '@bufbuild/buf-darwin-x64@1.70.0':
+    resolution: {integrity: sha512-sucV3lQXVuOqYs3+ToulkUh2tZuMnl286DKb44imp3PnexVhAVOP7d3ybYe98HNGwysEdjNP2WIOGb0uKuRCIQ==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
 
-  '@bufbuild/buf-linux-aarch64@1.65.0':
-    resolution: {integrity: sha512-gzqvY4PLRQ7g0+RlE9g+OL/6yPd5szG7e3Wd5bgjJzfKaQerNiQWaGyPLdcRsIM/WxJhT5e5lG8OrrWHwgQ9Ig==}
+  '@bufbuild/buf-linux-aarch64@1.70.0':
+    resolution: {integrity: sha512-4viSYqbhIusd6LR+JayDex8S1rLUL+hTUMYUgSPl75EC93FpJM4vkk2RhoAhyjQqWF/JQLcyWV8kjRRiIwygdg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
 
-  '@bufbuild/buf-linux-armv7@1.65.0':
-    resolution: {integrity: sha512-RpYFuPr9MKniD+WNfDgCclyvMu+/w9kK41OWr9sNnbS2BorujskwPiY0iTf5j+8+n/MeAnLIGlyC36+vUB/wIw==}
+  '@bufbuild/buf-linux-armv7@1.70.0':
+    resolution: {integrity: sha512-GqujpTX4MXtYiUkxd6oI1g0JaCX3L6koT16Gl0D0HIQ/V2mptH7x4UW8nK3tAURMjrHsEEhcSJRtmfINTTKnsg==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [linux]
 
-  '@bufbuild/buf-linux-x64@1.65.0':
-    resolution: {integrity: sha512-0j06h1uKCXlOtrlNcTBkURazT+AwMNvuVxgJsYeUDnSliN05QS7LnBzPOwKg76ariSqlLo+QXk9eNtdhgVjYOg==}
+  '@bufbuild/buf-linux-x64@1.70.0':
+    resolution: {integrity: sha512-5WHGUIb5iLFXcnqV33TDejqaPgx0CWFaYW7b4wh12wT0w3DR+ghFq6S6RmYyZLbTuhS4ZFsf+xyk5m+HViKxrA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
 
-  '@bufbuild/buf-win32-arm64@1.65.0':
-    resolution: {integrity: sha512-KBFsQ3iEityUuLTUCoXAO6ZTGUXWljSjK4upqofsYCb4OJeSeVguD7b09efkQt9ymKsXBt5wQicsRdkMJy/VEA==}
+  '@bufbuild/buf-win32-arm64@1.70.0':
+    resolution: {integrity: sha512-dU1qh7iD08/1avCHwIOoGsatQctE6uGwgOue9GOaThi8/Rdy1x9CC/eFdyFSeCMwbUg9ABQvMGUocylfUe6xDw==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
 
-  '@bufbuild/buf-win32-x64@1.65.0':
-    resolution: {integrity: sha512-vJYzHjncSLdy4sPDW8kLqUldHh6Vucg6KabAflm7CDj29lU/HydV8T+nOVsXkoRMUf4+H/qy8WjnSMEtRkaogA==}
+  '@bufbuild/buf-win32-x64@1.70.0':
+    resolution: {integrity: sha512-iKYbjTbEk0ppkv2SrsPFhYus93kj/aMN8aRsrpuo91ZVqXg8JcH4XXbgFpwiFAsiABjqKICFfnDomrFvv49UOA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
 
-  '@bufbuild/buf@1.65.0':
-    resolution: {integrity: sha512-IQmIBB2CGbJAwx1NkuAWMuj4QGPnZ8mujbf4ckx9t6KI9EzfUzql1OyKi9qPrxlLAciI+kBIyPDQ2MIvXTxWUg==}
+  '@bufbuild/buf@1.70.0':
+    resolution: {integrity: sha512-oJWGqltlu8F7VVNHLoJ3pFXhjfiGpbh7+/mXW0y+VMPWFGxc9YDv4de1UcX7zhhjV6MbE4SiEGo5Gs5jhpVg5A==}
     engines: {node: '>=12'}
     hasBin: true
 
-  '@bufbuild/protobuf@2.11.0':
-    resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
+  '@bufbuild/protobuf@2.12.0':
+    resolution: {integrity: sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA==}
 
-  '@bufbuild/protoc-gen-es@2.11.0':
-    resolution: {integrity: sha512-VzQuwEQDXipbZ1soWUuAWm1Z0C3B/IDWGeysnbX6ogJ6As91C2mdvAND/ekQ4YIWgen4d5nqLfIBOWLqCCjYUA==}
+  '@bufbuild/protoc-gen-es@2.12.0':
+    resolution: {integrity: sha512-d9htF6jEkSwPbp9d/vSmZOBF7eeG18AvTMKmVg4I23afnrQOxL2w3WOXa9TaufMCyu24QakEUb4vux8apI5e7A==}
     engines: {node: '>=20'}
     hasBin: true
     peerDependencies:
-      '@bufbuild/protobuf': 2.11.0
+      '@bufbuild/protobuf': 2.12.0
     peerDependenciesMeta:
       '@bufbuild/protobuf':
         optional: true
 
-  '@bufbuild/protoplugin@2.11.0':
-    resolution: {integrity: sha512-lyZVNFUHArIOt4W0+dwYBe5GBwbKzbOy8ObaloEqsw9Mmiwv2O48TwddDoHN4itylC+BaEGqFdI1W8WQt2vWJQ==}
+  '@bufbuild/protoplugin@2.12.0':
+    resolution: {integrity: sha512-ORlDITp8AFUXzIhLRoMCG+ud+D3MPKWb5HQXBoskMMnjeyEjE1H1qLonVNPyOr8lkx3xSfYUo8a0dvOZJVAzow==}
 
   '@capsizecss/unpack@4.0.0':
     resolution: {integrity: sha512-VERIM64vtTP1C4mxQ5thVT9fK0apjPFobqybMtA1UdUujWka24ERHbRHFGmpbbhp73MhV+KSsHQH9C6uOTdEQA==}
@@ -37183,8 +37183,8 @@ packages:
     resolution: {integrity: sha512-CvexbZtbov6jW2eXAvLukXjXUW1TzFaivC46BpWc/3BpcCysb5Vffu+B3XHMm8lVEuy2Mm4XGex8hBSg1yapPg==}
     engines: {node: '>=12.0.0'}
 
-  protobufjs@8.0.0:
-    resolution: {integrity: sha512-jx6+sE9h/UryaCZhsJWbJtTEy47yXoGNYI4z8ZaRncM0zBKeRqjO2JEcOUYwrYGb1WLhXM1FfMzW3annvFv0rw==}
+  protobufjs@8.5.0:
+    resolution: {integrity: sha512-df1jWDPA5VIBNRtuAHjqr09f2qN5D4Vke1wYqOQg1XJ7ZDpA7BD6L7E4tyChgGRLB5hqk2m79Zsy0WHwV9a84A==}
     engines: {node: '>=12.0.0'}
 
   protocol-buffers-encodings@1.2.0:
@@ -42567,50 +42567,50 @@ snapshots:
       astro: 6.1.9(@azure/identity@4.13.0)(@types/node@22.10.2)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.30.0)(terser@5.46.0)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.2)
       zod: 3.25.76
 
-  '@bufbuild/buf-darwin-arm64@1.65.0':
+  '@bufbuild/buf-darwin-arm64@1.70.0':
     optional: true
 
-  '@bufbuild/buf-darwin-x64@1.65.0':
+  '@bufbuild/buf-darwin-x64@1.70.0':
     optional: true
 
-  '@bufbuild/buf-linux-aarch64@1.65.0':
+  '@bufbuild/buf-linux-aarch64@1.70.0':
     optional: true
 
-  '@bufbuild/buf-linux-armv7@1.65.0':
+  '@bufbuild/buf-linux-armv7@1.70.0':
     optional: true
 
-  '@bufbuild/buf-linux-x64@1.65.0':
+  '@bufbuild/buf-linux-x64@1.70.0':
     optional: true
 
-  '@bufbuild/buf-win32-arm64@1.65.0':
+  '@bufbuild/buf-win32-arm64@1.70.0':
     optional: true
 
-  '@bufbuild/buf-win32-x64@1.65.0':
+  '@bufbuild/buf-win32-x64@1.70.0':
     optional: true
 
-  '@bufbuild/buf@1.65.0':
+  '@bufbuild/buf@1.70.0':
     optionalDependencies:
-      '@bufbuild/buf-darwin-arm64': 1.65.0
-      '@bufbuild/buf-darwin-x64': 1.65.0
-      '@bufbuild/buf-linux-aarch64': 1.65.0
-      '@bufbuild/buf-linux-armv7': 1.65.0
-      '@bufbuild/buf-linux-x64': 1.65.0
-      '@bufbuild/buf-win32-arm64': 1.65.0
-      '@bufbuild/buf-win32-x64': 1.65.0
+      '@bufbuild/buf-darwin-arm64': 1.70.0
+      '@bufbuild/buf-darwin-x64': 1.70.0
+      '@bufbuild/buf-linux-aarch64': 1.70.0
+      '@bufbuild/buf-linux-armv7': 1.70.0
+      '@bufbuild/buf-linux-x64': 1.70.0
+      '@bufbuild/buf-win32-arm64': 1.70.0
+      '@bufbuild/buf-win32-x64': 1.70.0
 
-  '@bufbuild/protobuf@2.11.0': {}
+  '@bufbuild/protobuf@2.12.0': {}
 
-  '@bufbuild/protoc-gen-es@2.11.0(@bufbuild/protobuf@2.11.0)':
+  '@bufbuild/protoc-gen-es@2.12.0(@bufbuild/protobuf@2.12.0)':
     dependencies:
-      '@bufbuild/protoplugin': 2.11.0
+      '@bufbuild/protoplugin': 2.12.0
     optionalDependencies:
-      '@bufbuild/protobuf': 2.11.0
+      '@bufbuild/protobuf': 2.12.0
     transitivePeerDependencies:
       - supports-color
 
-  '@bufbuild/protoplugin@2.11.0':
+  '@bufbuild/protoplugin@2.12.0':
     dependencies:
-      '@bufbuild/protobuf': 2.11.0
+      '@bufbuild/protobuf': 2.12.0
       '@typescript/vfs': 1.6.2(typescript@6.0.3)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -58650,19 +58650,8 @@ snapshots:
       '@types/node': 22.10.2
       long: 5.3.2
 
-  protobufjs@8.0.0:
+  protobufjs@8.5.0:
     dependencies:
-      '@protobufjs/aspromise': 1.1.2
-      '@protobufjs/base64': 1.1.2
-      '@protobufjs/codegen': 2.0.4
-      '@protobufjs/eventemitter': 1.1.0
-      '@protobufjs/fetch': 1.1.0
-      '@protobufjs/float': 1.0.2
-      '@protobufjs/inquire': 1.1.0
-      '@protobufjs/path': 1.1.2
-      '@protobufjs/pool': 1.1.0
-      '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.10.2
       long: 5.3.2
 
   protocol-buffers-encodings@1.2.0:
