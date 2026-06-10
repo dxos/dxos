@@ -399,7 +399,7 @@ const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Toolbar.IconButton variant='ghost' label={label} icon={icon} iconOnly iconClassNames={iconStyles?.fg} />
+        <Toolbar.IconButton variant='ghost' label={label} icon={icon} iconOnly iconClassNames={iconStyles?.text} />
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>
