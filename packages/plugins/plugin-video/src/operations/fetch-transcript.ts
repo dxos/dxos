@@ -11,11 +11,12 @@ import { Text } from '@dxos/schema';
 
 import { VideoOperation } from '../types';
 import {
-  fetchPage,
+  extractVideoId,
   fetchResource,
+  fetchYouTubePlayer,
   formatTranscriptMarkdown,
+  parseCaptionTracks,
   parseTimedText,
-  parseYouTubeCaptionTracks,
   selectCaptionTrack,
 } from '../util';
 
@@ -26,15 +27,16 @@ const handler: Operation.WithHandler<typeof VideoOperation.FetchTranscript> = Vi
     Effect.fn(function* ({ video, lang }) {
       const videoObj = yield* Database.load(video);
       invariant(videoObj.url, 'Video has no URL to fetch a transcript for.');
+      const videoId = extractVideoId(videoObj.url);
+      invariant(videoId, 'Could not parse a YouTube video id from the URL.');
 
-      // Discover the caption tracks from the watch page (render-proxy preferred), then pick one.
-      const html = yield* fetchPage(videoObj.url);
-      const tracks = parseYouTubeCaptionTracks(html);
+      // Query the InnerTube player endpoint (ANDROID client) for the caption tracks, then pick one.
+      const player = yield* fetchYouTubePlayer(videoId);
+      const tracks = parseCaptionTracks(player);
       invariant(tracks.length > 0, 'No captions are available for this video.');
       const track = selectCaptionTrack(tracks, lang ?? DEFAULT_LANG);
       invariant(track, 'No suitable caption track was found.');
 
-      // The track baseUrl is a signed timed-text data endpoint: fetch it raw via the CORS proxy.
       const xml = yield* fetchResource(track.baseUrl);
       const segments = parseTimedText(xml);
       invariant(segments.length > 0, 'The caption track was empty.');

@@ -30,6 +30,9 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   const [summarizing, setSummarizing] = useState(false);
   const [fetchingDescription, setFetchingDescription] = useState(false);
   const [fetchingTranscript, setFetchingTranscript] = useState(false);
+  // Resolve the transcript so summary regeneration can be gated on it actually having content.
+  useObject(subject.transcript);
+  const hasTranscript = (subject.transcript?.target?.content?.trim().length ?? 0) > 0;
 
   const handleOpenOriginal = useCallback(() => {
     if (isExternalHttpUrl(video.url)) {
@@ -72,7 +75,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
 
   // Manual summary regeneration (the summary surface generates it automatically when first missing).
   const handleRegenerate = useCallback(() => {
-    if (!invokePromise || !video.transcript) {
+    if (!invokePromise || !hasTranscript) {
       return;
     }
     setSummarizing(true);
@@ -84,13 +87,13 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         notify: { error: ['summarize-error.message', { ns: meta.id }] },
       },
     ).finally(() => setSummarizing(false));
-  }, [invokePromise, subject, video.transcript]);
+  }, [invokePromise, subject, hasTranscript]);
 
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
         .action(
-          'open-original',
+          'openOriginal',
           {
             label: ['open-original.label', { ns: meta.id }],
             icon: 'ph--arrow-square-out--regular',
@@ -101,7 +104,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           () => handleOpenOriginal(),
         )
         .action(
-          'fetch-description',
+          'fetchDescription',
           {
             label: ['fetch-description.label', { ns: meta.id }],
             icon: 'ph--text-align-left--regular',
@@ -112,7 +115,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           () => handleFetchDescription(),
         )
         .action(
-          'fetch-transcript',
+          'fetchTranscript',
           {
             label: ['fetch-transcript.label', { ns: meta.id }],
             icon: 'ph--closed-captioning--regular',
@@ -156,7 +159,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
             tab={tab}
             onTabChange={setTab}
             onRegenerate={handleRegenerate}
-            isRegenerateDisabled={!video.transcript || summarizing}
+            isRegenerateDisabled={!hasTranscript || summarizing}
             isSummarizing={summarizing}
           />
         </Panel.Content>

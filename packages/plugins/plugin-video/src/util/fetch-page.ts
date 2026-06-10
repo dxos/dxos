@@ -93,6 +93,43 @@ export const fetchResource = (url: string): Effect.Effect<string, FetchError> =>
     catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
   });
 
+// YouTube's InnerTube `player` endpoint, queried as the ANDROID app client. Unlike the web client,
+// the ANDROID client's caption `baseUrl`s are not gated behind a BotGuard proof-of-origin (`pot`)
+// token, so they can be fetched directly through the CORS proxy. The API key is YouTube's public,
+// hard-coded ANDROID client key (not a secret); the client version is bumped periodically by YouTube.
+const PLAYER_ENDPOINT = 'https://www.youtube.com/youtubei/v1/player';
+const ANDROID_API_KEY = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
+const ANDROID_CLIENT_VERSION = '20.10.38';
+const ANDROID_USER_AGENT = `com.google.android.youtube/${ANDROID_CLIENT_VERSION} (Linux; U; Android 11) gzip`;
+
+/**
+ * Fetch a YouTube video's player response (caption tracks, video details) via the InnerTube `player`
+ * endpoint, through the EDGE CORS proxy. Returns the parsed JSON; callers narrow it with the
+ * `youtube` parsers.
+ */
+export const fetchYouTubePlayer = (videoId: string): Effect.Effect<unknown, FetchError> =>
+  Effect.tryPromise({
+    try: async () => {
+      const target = new URL(PLAYER_ENDPOINT);
+      target.searchParams.set('key', ANDROID_API_KEY);
+      const response = await proxyFetchLegacy(target, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'user-agent': ANDROID_USER_AGENT },
+        body: JSON.stringify({
+          context: {
+            client: { clientName: 'ANDROID', clientVersion: ANDROID_CLIENT_VERSION, androidSdkVersion: 30, hl: 'en', gl: 'US' },
+          },
+          videoId,
+        }),
+      });
+      if (!response.ok) {
+        throw new FetchError(`YouTube player API returned HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+    catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
+  });
+
 const renderViaCrx = (url: string): Effect.Effect<string, FetchError> =>
   Effect.async<string, FetchError>((resume) => {
     if (typeof window === 'undefined' || !isCrxRenderAvailable()) {

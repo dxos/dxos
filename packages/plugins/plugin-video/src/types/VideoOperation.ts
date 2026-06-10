@@ -15,7 +15,15 @@ import { meta } from '#meta';
 
 import * as Video from './Video';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+// TODO(burdon): Factor out.
+
+type NoHyphens<S extends string> = S extends `${string}-${string}` ? never : S;
+
+function makeKey<const Head extends readonly string[], const Last extends string>(
+  ...parts: [...Head, NoHyphens<Last>]
+) {
+  return DXN.make(parts.join('.'));
+}
 
 /**
  * Transcribe a video via the remote EDGE transcription service and link the resulting
@@ -23,7 +31,7 @@ const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
  */
 export const Transcribe = Operation.make({
   meta: {
-    key: makeKey('transcribe'),
+    key: makeKey(meta.id, 'operation', 'transcribe'),
     name: 'Transcribe Video',
     description: 'Transcribes a video via the EDGE transcription service and links the transcript.',
     icon: 'ph--subtitles--regular',
@@ -46,7 +54,7 @@ export const Transcribe = Operation.make({
  */
 export const Summarize = Operation.make({
   meta: {
-    key: makeKey('summarize'),
+    key: makeKey(meta.id, 'operation', 'summarize'),
     name: 'Summarize Video',
     description: "Summarizes the video's transcript and links the summary.",
     icon: 'ph--text-align-left--regular',
@@ -61,17 +69,17 @@ export const Summarize = Operation.make({
 });
 
 /**
- * Fetch a video's transcript directly from its published caption tracks: load the watch page (via the
- * Composer extension's CRX render-proxy) to discover the timed-text tracks, download the best-matching
- * track, and link the formatted transcript onto the video. An alternative to {@link Transcribe} (which
- * uses the remote EDGE transcription service) for videos that already publish captions — no
- * server-side ASR round-trip.
+ * Fetch a video's transcript directly from its published caption tracks: query YouTube's InnerTube
+ * player endpoint (via the EDGE CORS proxy) to discover the timed-text tracks, download the
+ * best-matching track, and link the formatted transcript onto the video. An alternative to
+ * {@link Transcribe} (which uses the remote EDGE transcription service) for videos that already
+ * publish captions — no server-side ASR round-trip.
  */
 export const FetchTranscript = Operation.make({
   meta: {
-    key: makeKey('fetch-transcript'),
+    key: makeKey(meta.id, 'operation', 'fetchTranscript'),
     name: 'Fetch Video Transcript',
-    description: "Loads a video's caption tracks via the CRX proxy and links the transcript.",
+    description: "Loads a video's published caption tracks and links the transcript.",
     icon: 'ph--closed-captioning--regular',
   },
   input: Schema.Struct({
@@ -93,7 +101,7 @@ export const FetchTranscript = Operation.make({
  */
 export const FetchDescription = Operation.make({
   meta: {
-    key: makeKey('fetch-description'),
+    key: makeKey(meta.id, 'operation', 'fetchDescription'),
     name: 'Fetch Video Description',
     description: "Loads a video's watch page via the CRX proxy and extracts the full description.",
     icon: 'ph--text-align-left--regular',

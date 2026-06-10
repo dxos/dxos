@@ -6,9 +6,10 @@ import { describe, test } from 'vitest';
 
 import {
   type CaptionTrack,
+  extractVideoId,
   formatTranscriptMarkdown,
+  parseCaptionTracks,
   parseTimedText,
-  parseYouTubeCaptionTracks,
   parseYouTubeDescription,
   selectCaptionTrack,
 } from './youtube';
@@ -40,8 +41,22 @@ describe('parseYouTubeDescription', () => {
   });
 });
 
-describe('parseYouTubeCaptionTracks', () => {
-  test('extracts caption tracks from ytInitialPlayerResponse', ({ expect }) => {
+describe('extractVideoId', () => {
+  test('parses watch, short, embed, and youtu.be URLs', ({ expect }) => {
+    expect(extractVideoId('https://www.youtube.com/watch?v=aircAruvnKk&t=10s')).toBe('aircAruvnKk');
+    expect(extractVideoId('https://youtu.be/aircAruvnKk?t=10')).toBe('aircAruvnKk');
+    expect(extractVideoId('https://www.youtube.com/shorts/aircAruvnKk')).toBe('aircAruvnKk');
+    expect(extractVideoId('https://www.youtube.com/embed/aircAruvnKk')).toBe('aircAruvnKk');
+  });
+
+  test('returns undefined for non-YouTube or unparseable URLs', ({ expect }) => {
+    expect(extractVideoId('https://vimeo.com/12345')).toBeUndefined();
+    expect(extractVideoId('not a url')).toBeUndefined();
+  });
+});
+
+describe('parseCaptionTracks', () => {
+  test('extracts caption tracks from a player response object', ({ expect }) => {
     const player = {
       captions: {
         playerCaptionsTracklistRenderer: {
@@ -57,9 +72,7 @@ describe('parseYouTubeCaptionTracks', () => {
         },
       },
     };
-    const html = `<script>ytInitialPlayerResponse = ${JSON.stringify(player)};</script>`;
-    const tracks = parseYouTubeCaptionTracks(html);
-    expect(tracks).toEqual([
+    expect(parseCaptionTracks(player)).toEqual([
       { baseUrl: 'https://yt/api/timedtext?lang=en', languageCode: 'en', kind: undefined, name: 'English' },
       {
         baseUrl: 'https://yt/api/timedtext?lang=en&kind=asr',
@@ -71,7 +84,8 @@ describe('parseYouTubeCaptionTracks', () => {
   });
 
   test('returns empty array when no captions are present', ({ expect }) => {
-    expect(parseYouTubeCaptionTracks('<html><body>no captions</body></html>')).toEqual([]);
+    expect(parseCaptionTracks({ videoDetails: {} })).toEqual([]);
+    expect(parseCaptionTracks(undefined)).toEqual([]);
   });
 });
 
@@ -113,6 +127,19 @@ describe('parseTimedText', () => {
     expect(parseTimedText(xml)).toEqual([
       { start: 0, text: 'Hello & welcome' },
       { start: 2.75, text: "it's great" },
+    ]);
+  });
+
+  test('parses InnerTube format-3 <p t d> cues (milliseconds, with <s> word spans)', ({ expect }) => {
+    const xml =
+      '<?xml version="1.0" encoding="utf-8" ?><timedtext format="3"><body>' +
+      '<p t="4220" d="1180">This is a 3.</p>' +
+      '<p t="6060" d="2000"><s>blue</s><s> one</s></p>' +
+      '<p t="9000" d="500"></p>' +
+      '</body></timedtext>';
+    expect(parseTimedText(xml)).toEqual([
+      { start: 4.22, text: 'This is a 3.' },
+      { start: 6.06, text: 'blue one' },
     ]);
   });
 

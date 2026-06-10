@@ -4,12 +4,12 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Pending } from '#components';
+import { Pending, Summary } from '#components';
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
 
@@ -20,23 +20,31 @@ export type SummarySectionProps = {
 };
 
 /**
- * Section/tabpanel surface that renders the summary via the markdown editable surface, or a pending
- * indicator while it is generated. The summary is generated on demand once a transcript exists.
+ * Section/tabpanel surface that renders the editable {@link Summary}, or a pending indicator while it
+ * is generated. The summary is generated on demand once a transcript exists.
+ *
+ * Renders the editor via the local {@link Summary} component (not a generic Surface) so the
+ * CodeMirror `EditorView` is never carried in a React prop — see {@link Summary} for why that crashes
+ * alongside the cross-origin player iframe.
  */
-export const SummarySection = ({ attendableId, subject }: SummarySectionProps) => {
+export const SummarySection = ({ subject }: SummarySectionProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [video] = useObject(subject);
-  // Resolve the summary's target so the editable markdown surface receives the live Text object once
-  // the ref loads (and re-renders when the summary is first generated).
+  const uri = Obj.getURI(subject);
+  // Resolve the summary's target so we know whether to show the editor or the pending state.
   useObject(subject.summary);
   const summary = subject.summary?.target;
+  // Resolve the transcript so we can gate summary generation on it actually having content (an empty
+  // transcript would make Summarize throw "Transcript is empty").
+  useObject(subject.transcript);
+  const hasTranscript = (subject.transcript?.target?.content?.trim().length ?? 0) > 0;
 
-  // Auto-generate the summary once a transcript exists. The `running` ref guards against re-entrancy
-  // across the async gap before the reactive `video.summary` field updates.
+  // Auto-generate the summary once a non-empty transcript exists. The `running` ref guards against
+  // re-entrancy across the async gap before the reactive `video.summary` field updates.
   const runningRef = useRef(false);
   useEffect(() => {
-    if (!video.transcript || video.summary || runningRef.current || !invokePromise) {
+    if (!hasTranscript || video.summary || runningRef.current || !invokePromise) {
       return;
     }
     runningRef.current = true;
@@ -52,11 +60,12 @@ export const SummarySection = ({ attendableId, subject }: SummarySectionProps) =
     ).finally(() => {
       runningRef.current = false;
     });
-  }, [video.transcript, video.summary, invokePromise, subject]);
+  }, [hasTranscript, video.summary, invokePromise, subject]);
 
   if (!summary) {
-    return <Pending label={t('summarizing.pending.label')} />;
+    // Don't imply generation is underway when there is no transcript to summarize.
+    return <Pending label={t(hasTranscript ? 'summarizing.pending.label' : 'no-transcript.pending.label')} />;
   }
 
-  return <Surface.Surface role='tabpanel' data={{ subject: summary, attendableId }} limit={1} />;
+  return <Summary id={`${uri}/summary`} source={subject.summary} />;
 };

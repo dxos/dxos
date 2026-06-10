@@ -19,9 +19,31 @@ export const parseYouTubeDescription = (html: string): string | undefined => {
   );
 };
 
-/** A caption track advertised by a YouTube watch page. */
+/** Extract the YouTube video id from a watch / short / embed / youtu.be URL. */
+export const extractVideoId = (url: string): string | undefined => {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') {
+      return parsed.pathname.split('/').filter(Boolean)[0];
+    }
+    if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
+      const queryId = parsed.searchParams.get('v');
+      if (queryId) {
+        return queryId;
+      }
+      const pathId = /^\/(?:shorts|embed|live|v)\/([^/?#]+)/.exec(parsed.pathname);
+      return pathId?.[1];
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/** A caption track advertised by a YouTube video. */
 export type CaptionTrack = {
-  /** Timed-text endpoint that returns the captions (already signed by YouTube). */
+  /** Timed-text endpoint that returns the captions. */
   baseUrl: string;
   /** BCP-47 language code, e.g. `en`, `en-US`. */
   languageCode?: string;
@@ -32,15 +54,11 @@ export type CaptionTrack = {
 };
 
 /**
- * Extract the caption tracks advertised by a YouTube watch page.
- *
- * The tracks (including the signed timed-text `baseUrl` for each) live in the same
- * `ytInitialPlayerResponse` blob that carries the description, under
- * `captions.playerCaptionsTracklistRenderer.captionTracks`. Returns `[]` when the video publishes no
- * captions (or the blob is absent).
+ * Extract caption tracks from a YouTube player response object (the JSON returned by the InnerTube
+ * `player` endpoint, or the `ytInitialPlayerResponse` blob in a watch page). Returns `[]` when the
+ * video publishes no captions.
  */
-export const parseYouTubeCaptionTracks = (html: string): CaptionTrack[] => {
-  const player = extractJsonAfter(html, 'ytInitialPlayerResponse');
+export const parseCaptionTracks = (player: unknown): CaptionTrack[] => {
   const raw = readValue(player, ['captions', 'playerCaptionsTracklistRenderer', 'captionTracks']);
   if (!Array.isArray(raw)) {
     return [];
@@ -89,16 +107,28 @@ export type TranscriptSegment = {
 };
 
 /**
- * Parse YouTube's timed-text caption XML (`<transcript><text start="0" dur="1.5">…</text>…`) into
- * ordered segments. Empty or untimed cues are skipped.
+ * Parse YouTube's timed-text caption XML into ordered segments. Handles both formats YouTube serves:
+ * the legacy `<text start="0" dur="1.5">…</text>` (seconds) and the InnerTube format-3
+ * `<p t="4220" d="1180">…</p>` (milliseconds, cue text may contain nested `<s>` word spans). Empty or
+ * untimed cues are skipped.
  */
 export const parseTimedText = (xml: string): TranscriptSegment[] => {
   const segments: TranscriptSegment[] = [];
-  const cueRe = /<text\b([^>]*)>([\s\S]*?)<\/text>/g;
+  const cueRe = /<(text|p)\b([^>]*)>([\s\S]*?)<\/\1>/g;
   let match: RegExpExecArray | null;
   while ((match = cueRe.exec(xml))) {
-    const start = Number(/\bstart="([^"]*)"/.exec(match[1])?.[1] ?? 'NaN');
-    const text = decodeHtmlEntities(match[2].replace(/\s+/g, ' ').trim());
+    const [, tag, attrs, inner] = match;
+    const start =
+      tag === 'text'
+        ? Number(/\bstart="([^"]*)"/.exec(attrs)?.[1] ?? 'NaN')
+        : Number(/\bt="([^"]*)"/.exec(attrs)?.[1] ?? 'NaN') / 1000;
+    // Strip any nested tags (format-3 `<s>` word spans), collapse whitespace, decode entities.
+    const text = decodeHtmlEntities(
+      inner
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    );
     if (!Number.isFinite(start) || text.length === 0) {
       continue;
     }

@@ -40,6 +40,7 @@ export const translations = [
         'no-url.pending.label': 'Set a video URL to generate a transcript.',
         'transcribing.pending.label': 'Generating transcript…',
         'summarizing.pending.label': 'Generating summary…',
+        'no-transcript.pending.label': 'A transcript is required to generate a summary.',
         'regenerate.label': 'Regenerate summary',
         'player.empty.label': 'Set a video URL to play.',
       },
