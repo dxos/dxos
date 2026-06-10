@@ -30,6 +30,11 @@ describe('Bookmark.fromSnapshot', () => {
     expect(bookmark.favicon).toBe('https://example.com/favicon.ico');
   });
 
+  test('prefers the captured thumbnail over the og-image URL', ({ expect }) => {
+    const bookmark = Bookmark.fromSnapshot({ ...snapshot, imageData: 'data:image/jpeg;base64,AAAA' });
+    expect(bookmark.image).toBe('data:image/jpeg;base64,AAAA');
+  });
+
   test('falls back to tab title and selection text', ({ expect }) => {
     const bookmark = Bookmark.fromSnapshot({
       source: { url: 'https://a.com', title: 'Tab Title', clippedAt: '2026-06-09T12:00:00.000Z' },

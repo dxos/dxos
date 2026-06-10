@@ -31,6 +31,12 @@ export const Snapshot = Schema.Struct({
   source: Clip.Source,
   selection: Schema.optional(Clip.Selection),
   hints: Schema.optional(Clip.Hints),
+  /**
+   * Downscaled thumbnail of the page's primary image as a data URL, captured
+   * by the extension's background worker (which can fetch images whose hosts
+   * block cross-origin embedding).
+   */
+  imageData: Schema.optional(Schema.String),
   html: Schema.optional(Schema.String),
   htmlTruncated: Schema.optional(Schema.Boolean),
 });

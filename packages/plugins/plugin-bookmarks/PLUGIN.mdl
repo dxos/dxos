@@ -34,7 +34,7 @@ type Bookmark
     title: string                # hints.ogTitle ?? source.title
     url: string                  # the bookmarked page URL
     favicon?: string             # source.favicon
-    image?: string               # hints.ogImage
+    image?: string               # imageData (extension-captured thumbnail data URL) ?? hints.ogImage
     excerpt?: string             # hints.ogDescription ?? first 280 chars of selection text
     summary?: string             # optional AI summary (future; not set at creation)
 ```
@@ -63,7 +63,8 @@ feat F-2: AddFromSnapshot Operation
         title     ← snapshot.hints.ogTitle ?? snapshot.source.title
         url       ← snapshot.source.url
         favicon   ← snapshot.source.favicon
-        image     ← snapshot.hints.ogImage
+        image     ← snapshot.imageData ?? snapshot.hints.ogImage
+                    (imageData is the extension-captured thumbnail data URL)
         excerpt   ← snapshot.hints.ogDescription ?? first 280 chars of selection.text
       and the operation returns { id } of the created object.
 

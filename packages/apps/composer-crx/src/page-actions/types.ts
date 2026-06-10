@@ -170,6 +170,8 @@ export type Snapshot = {
     h1?: string;
     firstImage?: string;
   };
+  /** Downscaled thumbnail of the page's primary image as a data URL, captured by the background worker. */
+  imageData?: string;
   html?: string;
   htmlTruncated?: boolean;
 };

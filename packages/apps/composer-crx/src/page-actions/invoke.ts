@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 
 import { findComposerTab, openComposerTab } from '../bridge/sender';
 import { getRegistry } from './registry';
+import { enrichSnapshotWithThumbnail } from './thumbnail';
 import {
   type InvokeAck,
   type InvokeRequest,
@@ -130,12 +131,16 @@ export const runPageAction = async ({ actionId, tabId }: { actionId: string; tab
     return { version: 1, id: '', ok: false, error: result.error };
   }
 
+  // Best-effort thumbnail: the background worker can fetch og-images whose
+  // hosts block cross-origin embedding in the Composer page.
+  const inputs = await enrichSnapshotWithThumbnail(result.inputs);
+
   const request: InvokeRequest = {
     version: 1,
     id: nextId(),
     actionId: action.id,
     page: { url: tab.url ?? '', title: tab.title ?? '' },
-    inputs: result.inputs,
+    inputs,
     invokedFrom: 'popup',
   };
   return deliverInvoke(request);
