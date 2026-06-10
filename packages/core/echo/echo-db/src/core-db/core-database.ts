@@ -340,12 +340,6 @@ export class CoreDatabase {
       return this._coreOrUndefined(cachedCore, returnWithUnsatisfiedDeps);
     }
 
-    if (cachedCore && !this._areDepsSatisfied(cachedCore)) {
-      // Ensure dep loads are requested so `loadObjectCoreById` can
-      // resolve via `_areDepsResolved` instead of waiting indefinitely.
-      this._scheduleStrongDepDiskLoads(cachedCore);
-    }
-
     const isReady = () => {
       if (diskOnly && this._unavailableObjects.has(objectId)) {
         return true;
@@ -1057,36 +1051,6 @@ export class CoreDatabase {
       }
       return this._areDepsResolved(depCore, seen);
     });
-  }
-
-  /**
-   * Request loads for unsatisfied strong deps so their state resolves
-   * (loaded or unavailable) and callers waiting on `_areDepsResolved`
-   * (e.g. query hydration) can finish promptly. Dep loads are always
-   * `diskOnly` — deps are a system-internal hydration step and must never
-   * block on the network (mirrors `_onObjectDocumentLoaded`).
-   */
-  private _scheduleStrongDepDiskLoads(core: ObjectCore, seen: Set<EntityId> = new Set<EntityId>()): void {
-    seen.add(core.id);
-    for (const dep of core.getStrongDependencies()) {
-      if (!EID.isLocal(dep)) {
-        continue;
-      }
-      const depObjectId = EID.getEntityId(dep);
-      if (!depObjectId || seen.has(depObjectId)) {
-        continue;
-      }
-      seen.add(depObjectId);
-
-      if (!this._objects.has(depObjectId) && !this._unavailableObjects.has(depObjectId)) {
-        this._automergeDocLoader.loadObjectDocument(depObjectId, { diskOnly: true });
-      }
-
-      const depCore = this._objects.get(depObjectId);
-      if (depCore && !this._areDepsSatisfied(depCore)) {
-        this._scheduleStrongDepDiskLoads(depCore, seen);
-      }
-    }
   }
 
   private _onObjectUnavailable({ objectId }: ObjectUnavailable): void {
