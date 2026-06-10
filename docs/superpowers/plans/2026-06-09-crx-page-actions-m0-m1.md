@@ -1421,7 +1421,7 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
 
 - Create: `packages/plugins/plugin-bookmarks/PLUGIN.mdl`
 
-- [ ] **Step 1:** Write the spec using `packages/reflect/deus/lang/PLUGIN-.template.mdl` as the template and `plugin-chess/PLUGIN.mdl` as the reference. Content: header (`id: org.dxos.plugin.bookmarks`, `name: BookmarksPlugin`, `version: 0.1.0`); prose: manages a list of clipped web pages with optional summaries; created primarily via the browser extension's "Add bookmark" page action. Types: `Bookmark { title, url, favicon?, image?, excerpt?, summary?, createdAt }`. Features: F-1 Bookmark schema registration; F-2 AddFromSnapshot operation (snapshot → Bookmark in target db, title ← hints.ogTitle ?? source.title, excerpt ← hints.ogDescription ?? first 280 chars of selection text, image ← hints.ogImage, favicon ← source.favicon, createdAt ← source.clippedAt); F-3 page-action contribution (all http(s) URLs, snapshot extractor, popup+page contexts); F-4 surfaces (Card + Article rendering title/image/excerpt/summary with a link to the source). Acceptance tests: T-1 fromSnapshot field mapping with hints; T-2 fromSnapshot fallbacks without hints; T-3 AddFromSnapshot persists a Bookmark.
+- [ ] **Step 1:** Write the spec using `packages/reflect/deus/lang/PLUGIN-.template.mdl` as the template and `plugin-chess/PLUGIN.mdl` as the reference. Content: header (`id: org.dxos.plugin.bookmarks`, `name: BookmarksPlugin`, `version: 0.1.0`); prose: manages a list of clipped web pages with optional summaries; created primarily via the browser extension's "Add bookmark" page action. Types: `Bookmark { title, url, favicon?, image?, excerpt?, summary? }`. Features: F-1 Bookmark schema registration; F-2 AddFromSnapshot operation (snapshot → Bookmark in target db, title ← hints.ogTitle ?? source.title, excerpt ← hints.ogDescription ?? first 280 chars of selection text, image ← hints.ogImage, favicon ← source.favicon); F-3 page-action contribution (all http(s) URLs, snapshot extractor, popup+page contexts); F-4 surfaces (Card + Article rendering title/image/excerpt/summary with a link to the source). Acceptance tests: T-1 fromSnapshot field mapping with hints; T-2 fromSnapshot fallbacks without hints; T-3 AddFromSnapshot persists a Bookmark.
 
 - [ ] **Step 2: CHECKPOINT — present the PLUGIN.mdl to the user for approval before writing any plugin code.** Commit after approval: `docs(plugin-bookmarks): plugin specification`.
 
@@ -1603,7 +1603,6 @@ describe('Bookmark.fromSnapshot', () => {
     expect(bookmark.excerpt).toBe('A description.');
     expect(bookmark.image).toBe('https://example.com/og.png');
     expect(bookmark.favicon).toBe('https://example.com/favicon.ico');
-    expect(bookmark.createdAt).toBe('2026-06-09T12:00:00.000Z');
   });
 
   test('falls back to tab title and selection text', ({ expect }) => {
@@ -1645,7 +1644,6 @@ export const Bookmark = Schema.Struct({
   image: Schema.optional(Schema.String),
   excerpt: Schema.optional(Schema.String),
   summary: Schema.optional(Schema.String),
-  createdAt: Schema.String,
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
@@ -1666,7 +1664,6 @@ export const fromSnapshot = (snapshot: PageAction.Snapshot): Bookmark =>
     favicon: snapshot.source.favicon,
     image: snapshot.hints?.ogImage,
     excerpt: snapshot.hints?.ogDescription ?? snapshot.selection?.text?.slice(0, EXCERPT_LENGTH) ?? undefined,
-    createdAt: snapshot.source.clippedAt,
   });
 ```
 
@@ -1839,7 +1836,7 @@ export const BookmarkArticle = ({ role, subject }: BookmarkArticleProps) => {
 export default BookmarkArticle;
 ```
 
-`BookmarkCard.tsx` — use the `Card` 3-slot pattern from composer-ui (heading = title, body = excerpt, optional media = image). Each container directory's `index.ts` bridges named → default export; `containers/index.ts` uses `lazy(() => import('./X'))` with `: ComponentType<any>` annotations (copy the shape from `plugin-chess/src/containers/index.ts`). Stories: basic, building the ECHO subject inside `render` via `useMemo` (NEVER module-level args — see memory `feedback_echo_ownership_stories`), e.g. `Bookmark.make({ title: 'DXOS', url: 'https://dxos.org', excerpt: '…', createdAt: new Date().toISOString() })` wrapped per the echo testing memory if reactive access is needed.
+`BookmarkCard.tsx` — use the `Card` 3-slot pattern from composer-ui (heading = title, body = excerpt, optional media = image). Each container directory's `index.ts` bridges named → default export; `containers/index.ts` uses `lazy(() => import('./X'))` with `: ComponentType<any>` annotations (copy the shape from `plugin-chess/src/containers/index.ts`). Stories: basic, building the ECHO subject inside `render` via `useMemo` (NEVER module-level args — see memory `feedback_echo_ownership_stories`), e.g. `Bookmark.make({ title: 'DXOS', url: 'https://dxos.org', excerpt: '…' })` wrapped per the echo testing memory if reactive access is needed.
 
 - [ ] **Step 3:** `capabilities/react-surface.tsx` (pattern: `plugin-commerce/src/capabilities/react-surface.tsx`):
 

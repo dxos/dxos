@@ -103,45 +103,53 @@ const decodeExtractResult = (value: unknown): { ok: true; inputs: unknown } | { 
  * deliver the invoke request to Composer.
  */
 export const runPageAction = async ({ actionId, tabId }: { actionId: string; tabId: number }): Promise<InvokeAck> => {
-  const { actions } = await getRegistry();
-  const action = actions.find((candidate) => candidate.id === actionId);
-  if (!action) {
-    return { version: 1, id: '', ok: false, error: 'unknownAction' };
-  }
-
-  let tab: browser.Tabs.Tab;
-  let extracted: unknown;
+  // The function backs a runtime-message response, so it must always resolve
+  // with a well-formed ack — a rejection would skip the caller's notification
+  // fallback and leave the user without feedback.
   try {
-    tab = await browser.tabs.get(tabId);
-    extracted = await browser.tabs.sendMessage(tabId, {
-      type: PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
-      name: action.extractor.name,
-      params: action.extractor.params,
-    });
+    const { actions } = await getRegistry();
+    const action = actions.find((candidate) => candidate.id === actionId);
+    if (!action) {
+      return { version: 1, id: '', ok: false, error: 'unknownAction' };
+    }
+
+    let tab: browser.Tabs.Tab;
+    let extracted: unknown;
+    try {
+      tab = await browser.tabs.get(tabId);
+      extracted = await browser.tabs.sendMessage(tabId, {
+        type: PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
+        name: action.extractor.name,
+        params: action.extractor.params,
+      });
+    } catch (err) {
+      // No reachable content script in the tab — closed tab, restricted page, or
+      // an orphaned script after an extension reload. Distinct from a real
+      // extractor failure so the popup can suggest reloading the page.
+      log.catch(err);
+      return { version: 1, id: '', ok: false, error: 'tabUnavailable' };
+    }
+
+    const result = decodeExtractResult(extracted);
+    if (!result.ok) {
+      return { version: 1, id: '', ok: false, error: result.error };
+    }
+
+    // Best-effort thumbnail: the background worker can fetch og-images whose
+    // hosts block cross-origin embedding in the Composer page.
+    const inputs = await enrichSnapshotWithThumbnail(result.inputs);
+
+    const request: InvokeRequest = {
+      version: 1,
+      id: nextId(),
+      actionId: action.id,
+      page: { url: tab.url ?? '', title: tab.title ?? '' },
+      inputs,
+      invokedFrom: 'popup',
+    };
+    return await deliverInvoke(request);
   } catch (err) {
-    // No reachable content script in the tab — closed tab, restricted page, or
-    // an orphaned script after an extension reload. Distinct from a real
-    // extractor failure so the popup can suggest reloading the page.
     log.catch(err);
-    return { version: 1, id: '', ok: false, error: 'tabUnavailable' };
+    return { version: 1, id: '', ok: false, error: 'internal' };
   }
-
-  const result = decodeExtractResult(extracted);
-  if (!result.ok) {
-    return { version: 1, id: '', ok: false, error: result.error };
-  }
-
-  // Best-effort thumbnail: the background worker can fetch og-images whose
-  // hosts block cross-origin embedding in the Composer page.
-  const inputs = await enrichSnapshotWithThumbnail(result.inputs);
-
-  const request: InvokeRequest = {
-    version: 1,
-    id: nextId(),
-    actionId: action.id,
-    page: { url: tab.url ?? '', title: tab.title ?? '' },
-    inputs,
-    invokedFrom: 'popup',
-  };
-  return deliverInvoke(request);
 };

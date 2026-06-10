@@ -33,10 +33,28 @@ export const blobToDataUrl = async (blob: Blob): Promise<string> => {
  */
 export const captureThumbnail = async (url: string): Promise<string | undefined> => {
   try {
+    // The URL is page-controlled (og:image), so gate it before fetching:
+    // public http(s) only, never loopback — a malicious page must not be able
+    // to direct extension-origin requests at local services.
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return undefined;
+    }
+    const { hostname } = parsed;
+    if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.startsWith('127.') || hostname === '[::1]') {
+      return undefined;
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
+    let response: Response;
+    try {
+      response = await fetch(parsed.toString(), { signal: controller.signal });
+    } finally {
+      // The timer holds the service worker alive and would fire a stray abort
+      // if fetch rejects first; always clear it.
+      clearTimeout(timer);
+    }
     if (!response.ok) {
       return undefined;
     }

@@ -49,7 +49,16 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
     <div className='flex'>
       <Box
         className={mx('flex py-0.5 select-none text-sm cursor-pointer', classNames)}
+        role='button'
+        tabIndex={0}
+        aria-expanded={open}
         onClick={() => setOpen((open) => !open)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setOpen((open) => !open);
+          }
+        }}
       >
         {label}
       </Box>

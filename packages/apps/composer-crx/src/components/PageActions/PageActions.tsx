@@ -55,6 +55,11 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
   // Filter cached actions by URL, then by lazy DOM predicate on the tab.
   useEffect(() => {
     let cancelled = false;
+    // Clear stale state up-front so actions from a previous tab context are
+    // not interactive while the async predicate filtering is in flight.
+    setActions([]);
+    setStates({});
+    setMessage(null);
     void (async () => {
       const candidates = await getActionsForUrl(tabUrl, 'popup');
       const visible: PageActionDescriptor[] = [];

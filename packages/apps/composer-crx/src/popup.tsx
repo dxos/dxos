@@ -138,7 +138,11 @@ declare global {
 }
 
 const main = async () => {
-  globalThis.__composerPopupRoot ??= createRoot(document.getElementById('root')!);
+  const container = document.getElementById('root');
+  if (!container) {
+    throw new Error('Popup root element #root not found.');
+  }
+  globalThis.__composerPopupRoot ??= createRoot(container);
   globalThis.__composerPopupRoot.render(<Root />);
 };
 
