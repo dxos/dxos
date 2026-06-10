@@ -7,14 +7,14 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { isExtensionAvailable, pingExtension } from './pingExtension';
 
-const PING_EVENT = 'composer:search-proxy:ping';
-const PING_ACK_EVENT = 'composer:search-proxy:ping:ack';
+const PING_EVENT = 'composer:proxy:ping';
+const PING_ACK_EVENT = 'composer:proxy:ping:ack';
 
 const setAvailable = (available: boolean) => {
   if (available) {
-    document.documentElement.dataset.composerSearchProxy = '1';
+    document.documentElement.dataset.composerProxy = '1';
   } else {
-    delete document.documentElement.dataset.composerSearchProxy;
+    delete document.documentElement.dataset.composerProxy;
   }
 };
 

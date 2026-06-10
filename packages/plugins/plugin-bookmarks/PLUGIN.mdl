@@ -1,0 +1,176 @@
+---
+id: org.dxos.plugin.bookmarks
+name: BookmarksPlugin
+version: 0.1.0
+---
+
+Manages a list of clipped web pages. Bookmarks are created primarily via the
+Composer browser extension's "Add bookmark" page action: the extension captures
+a snapshot of the current page (title, URL, og metadata, selection) and this
+plugin materializes it as a `Bookmark` object in the active space, with a link
+back to the original page. Bookmarks render with existing UI components (card
+and article surfaces) and can later be enriched with an AI-generated summary
+(best-effort, not load-bearing for creation).
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term   | URI                            |
+|--------|--------------------------------|
+| `type` | `org.dxos.mdl.type@1.0`        |
+| `feat` | `org.dxos.mdl.feat@1.0`        |
+| `test` | `org.dxos.mdl.test@1.0`        |
+
+## Types
+
+```mdl
+type Bookmark
+  desc: |
+    A saved web page. All optional fields are best-effort: a bookmark is
+    created even when the page exposes no metadata.
+  fields:
+    title: string                # hints.ogTitle ?? source.title
+    url: string                  # the bookmarked page URL
+    favicon?: string             # source.favicon
+    image?: string               # hints.ogImage
+    excerpt?: string             # hints.ogDescription ?? first 280 chars of selection text
+    summary?: string             # optional AI summary (future; not set at creation)
+    createdAt: string            # ISO timestamp, from snapshot source.clippedAt
+```
+
+## Features
+
+```mdl
+feat F-1: Bookmark Schema
+
+  req F-1.1:
+    when: plugin is activated
+    then: the Bookmark ECHO type is registered with the schema module
+
+  req F-1.2:
+    when: a Bookmark is rendered anywhere typed labels are used
+    then: its label is the `title` field and its icon is the bookmark icon
+```
+
+```mdl
+feat F-2: AddFromSnapshot Operation
+
+  req F-2.1:
+    when: the operation is invoked with { snapshot, target }
+    then: |
+      a Bookmark is created in the target database with best-effort fields:
+        title     ← snapshot.hints.ogTitle ?? snapshot.source.title
+        url       ← snapshot.source.url
+        favicon   ← snapshot.source.favicon
+        image     ← snapshot.hints.ogImage
+        excerpt   ← snapshot.hints.ogDescription ?? first 280 chars of selection.text
+        createdAt ← snapshot.source.clippedAt
+      and the operation returns { id } of the created object.
+
+  req F-2.2:
+    when: the snapshot carries no hints and no selection
+    then: the Bookmark is still created (title falls back to the tab title)
+```
+
+```mdl
+feat F-3: Page Action Contribution
+
+  req F-3.1:
+    when: plugin is activated
+    then: |
+      a page action "Add bookmark" is contributed under the plugin-crx
+      PageAction capability with:
+        urlPatterns: all http(s) URLs
+        extractor:   snapshot
+        contexts:    popup, page
+        operation:   AddFromSnapshot
+
+  req F-3.2:
+    when: the browser extension lists page actions
+    then: the action appears in the extension popup on any http(s) page
+```
+
+```mdl
+feat F-4: Surfaces
+
+  req F-4.1:
+    when: a Bookmark is the subject of an article surface
+    then: |
+      a panel renders the title, image (when present), excerpt, summary
+      (when present), and a button that opens the source URL in a new tab
+
+  req F-4.2:
+    when: a Bookmark is the subject of a card surface
+    then: a card renders the title, excerpt, and image (when present)
+```
+
+## Acceptance
+
+```mdl
+test T-1: Snapshot mapping prefers og hints
+  given: a snapshot with ogTitle, ogDescription, ogImage, favicon, clippedAt
+  when: Bookmark.fromSnapshot is applied
+  then:
+    - title === ogTitle
+    - excerpt === ogDescription
+    - image === ogImage
+    - favicon === source.favicon
+    - createdAt === source.clippedAt
+```
+
+```mdl
+test T-2: Snapshot mapping falls back without hints
+  given: a snapshot with no hints and a long text selection
+  when: Bookmark.fromSnapshot is applied
+  then:
+    - title === source.title (the tab title)
+    - excerpt is the first 280 characters of the selection text
+    - image is unset
+```
+
+```mdl
+test T-3: AddFromSnapshot persists a Bookmark
+  given: an in-memory database
+  when: AddFromSnapshot is invoked with { snapshot, target }
+  then:
+    - a Bookmark object exists in the database
+    - the operation returns the object's id
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```

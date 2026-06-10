@@ -2503,6 +2503,9 @@ importers:
       '@dxos/plugin-conductor':
         specifier: workspace:*
         version: link:../../plugins/plugin-conductor
+      '@dxos/plugin-crm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-crm
       '@dxos/plugin-crx':
         specifier: workspace:*
         version: link:../../plugins/plugin-crx
@@ -2680,6 +2683,9 @@ importers:
       '@dxos/plugin-trip':
         specifier: workspace:*
         version: link:../../plugins/plugin-trip
+      '@dxos/plugin-video':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-video
       '@dxos/plugin-voxel':
         specifier: workspace:*
         version: link:../../plugins/plugin-voxel
@@ -2707,6 +2713,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing
@@ -2785,6 +2794,9 @@ importers:
       codemirror:
         specifier: 'catalog:'
         version: 6.0.2
+      crc-32:
+        specifier: 'catalog:'
+        version: 1.2.2
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -9219,9 +9231,24 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -9231,10 +9258,16 @@ importers:
       effect:
         specifier: 3.21.3
         version: 3.21.3
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
     devDependencies:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -15399,6 +15432,133 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.6(react@19.2.6)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-video:
+    dependencies:
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.3
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.6.0
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.0
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../../ui/ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.14)(react@19.2.6)
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+    devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(esbuild@0.28.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(prettier@3.6.2)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0))
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14

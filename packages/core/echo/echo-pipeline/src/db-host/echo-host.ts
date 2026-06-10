@@ -4,9 +4,8 @@
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
-import * as Effect from 'effect/Effect';
 
-import { asyncTimeout, DeferredTask, sleep } from '@dxos/async';
+import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -44,14 +43,6 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
-
-/**
- * Executes "PRAGMA quick_check;" on SQLite database on startup.
- *
- * NOTE: Keep DISABLED in production, "quick" check is O(dbSize) which took 6 seconds for my relatively-small profile.
- *
- */
-const RUN_SQLITE_QUICK_CHECK_ON_STARTUP = false;
 
 export type EchoHostProps = {
   peerIdProvider?: PeerIdProvider;
@@ -229,13 +220,6 @@ export class EchoHost extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    // Timeout needs to be outside effect runtime to catch the layer hanging on startup.
-    await asyncTimeout(
-      RuntimeProvider.runPromise(this._runtime)(testSqlite()),
-      15_000,
-      new Error('SQLite quick check timed out'),
-    );
-
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
     log('echo-host: index engine migration done');
@@ -556,44 +540,3 @@ export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
 };
-
-/**
- * Sqlite health check on startup.
- *
- * Always runs a cheap schema-level probe (`PRAGMA schema_version` + a read from
- * `sqlite_schema`). These do not walk user data, but they fail fast if the DB
- * file header or schema root page is unreadable.
- *
- * Additionally runs `PRAGMA quick_check` when `RUN_SQLITE_QUICK_CHECK_ON_STARTUP`
- * is enabled. That walks every page and is O(dbSize) — slow on OPFS.
- */
-const testSqlite = () =>
-  Effect.gen(function* () {
-    log('begin sqlite health check');
-    const sql = yield* SqlClient.SqlClient;
-    const databases = yield* sql<{ seq: number; name: string; file: string }>`PRAGMA database_list`;
-    log('SQLite databases', { databases });
-
-    // Cheap header/schema probe: forces SQLite to read the file header and
-    // schema root page. Catches catastrophic corruption (bad header,
-    // unreadable schema) without walking user data.
-    const [schemaVersion] = yield* sql<{ schema_version: number }>`PRAGMA schema_version`;
-    const [schemaCount] = yield* sql<{ n: number }>`SELECT count(*) AS n FROM sqlite_schema`;
-    log('sqlite schema probe passed', {
-      schemaVersion: schemaVersion.schema_version,
-      objectCount: schemaCount.n,
-    });
-
-    if (RUN_SQLITE_QUICK_CHECK_ON_STARTUP) {
-      // NOTE: This is slow on non-trivial databases: O(dbSize).
-      log('starting sqlite quick_check');
-      const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
-      if (result.quick_check !== 'ok') {
-        throw new Error('SQLite quick check failed');
-      }
-      log('sqlite quick_check passed');
-    } else {
-      log('sqlite quick_check skipped');
-    }
-    log('sqlite health check complete');
-  });

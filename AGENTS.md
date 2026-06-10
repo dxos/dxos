@@ -48,9 +48,11 @@
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
 - Error handling: use Effect-TS patterns.
 - JSDoc comments for public functions, all comments end with period.
+- Comments state _why the code is necessary_ (the invariant or constraint it satisfies), concise and self-contained. Never narrate the fix, reference this conversation, or use before/after framing ("rather than X we now do Y", "this used to…"). State the constraint that makes the code correct; drop the history.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
+- Avoid default exports unless required.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.

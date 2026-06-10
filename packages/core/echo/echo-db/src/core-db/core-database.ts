@@ -989,6 +989,14 @@ export class CoreDatabase {
     return core;
   }
 
+  /**
+   * Whether every local strong dependency is loaded and satisfied.
+   * Query paths require this before surfacing an object.
+   */
+  areStrongDepsSatisfied(core: ObjectCore): boolean {
+    return this._areDepsSatisfied(core);
+  }
+
   private _areDepsSatisfied(core: ObjectCore, seen?: Set<EntityId>): boolean {
     seen ??= new Set<EntityId>();
     const deps = core.getStrongDependencies();

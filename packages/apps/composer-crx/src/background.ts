@@ -9,14 +9,14 @@ import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
 import { deliverClip, openComposerTab } from './bridge';
-import type { Clip } from './clip/types';
+import type { Clip } from './clip';
 import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   PAGE_ACTION_RUN_MESSAGE_TYPE,
   refreshRegistry,
   runPageAction,
 } from './page-actions';
-import { installSearchProxy } from './search-proxy';
+import { installSearchProxy } from './proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 

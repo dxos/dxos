@@ -172,8 +172,21 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       }
       const documentUrl = this._getLinkedDocumentUrl(objectId);
       if (documentUrl == null) {
+        // The id has no entry in the space directory (neither inline nor
+        // link) — a dangling reference as far as the current state is
+        // concerned. Surface "unavailable" right away so dependents (e.g.
+        // query hydration waiting on strong deps) resolve instead of
+        // hanging. Keep the pending entry: if a link arrives later via
+        // root-doc sync, `onObjectLinksUpdated` loads it and
+        // `onObjectDocumentLoaded` clears the unavailable mark.
         this._objectsPendingDocumentLoad.set(objectId, opts);
-        log('loading delayed until object links are initialized', { objectId });
+        const isInline = DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), objectId) != null;
+        if (!isInline && this.onObjectUnavailable.listenerCount() > 0) {
+          log('object absent from space directory, marking unavailable', { objectId });
+          this.onObjectUnavailable.emit({ objectId });
+        } else {
+          log('loading delayed until object links are initialized', { objectId });
+        }
       } else {
         urlsToLoad[objectId] = documentUrl;
         hasUrlsToLoad = true;
@@ -419,7 +432,8 @@ export interface ObjectDocumentLoaded {
 }
 
 export interface ObjectUnavailable {
-  handle: DocHandleProxy<DatabaseDirectory>;
+  /** Absent when the object id has no entry in the space directory (dangling reference) — there is no document to attach a handle to. */
+  handle?: DocHandleProxy<DatabaseDirectory>;
   objectId: string;
 }
 

@@ -41,7 +41,7 @@ import {
   decodePingRequest,
   decodeRenderAck,
   decodeRenderRequest,
-} from './search-proxy';
+} from './proxy';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
@@ -163,9 +163,9 @@ const emitPingAck = (ack: PingAck): void => {
 
 /**
  * Page-side relay for the search render-proxy. Installed only on Composer
- * origins: listen for the page's `composer:search-proxy:render` CustomEvent,
+ * origins: listen for the page's `composer:proxy:render` CustomEvent,
  * validate it, forward it to the background worker, and re-emit the decoded
- * ack as `composer:search-proxy:render:ack` (correlated by `id`).
+ * ack as `composer:proxy:render:ack` (correlated by `id`).
  *
  * On non-Composer pages the relay is never installed, so the page's events
  * are inert.
@@ -184,7 +184,7 @@ const installSearchProxyRelay = async (): Promise<void> => {
     const detail = 'detail' in event ? event.detail : undefined;
     const request = decodeRenderRequest(detail);
     if (!request) {
-      log.warn('search-proxy relay: ignoring malformed render request');
+      log.warn('proxy relay: ignoring malformed render request');
       return;
     }
 
@@ -208,7 +208,7 @@ const installSearchProxyRelay = async (): Promise<void> => {
     const detail = 'detail' in event ? event.detail : undefined;
     const request = decodePingRequest(detail);
     if (!request) {
-      log.warn('search-proxy relay: ignoring malformed ping request');
+      log.warn('proxy relay: ignoring malformed ping request');
       return;
     }
 

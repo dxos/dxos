@@ -122,6 +122,7 @@ export class AutomergeDataSource implements IndexDataSource {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
             }
+            const storedCreatedAt = structure.system?.createdAt;
             objects.push({
               spaceId,
               documentId,
@@ -129,6 +130,7 @@ export class AutomergeDataSource implements IndexDataSource {
               queueNamespace: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
+              createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
             });
           }
@@ -161,6 +163,9 @@ const inspectDocChanges = (
   existingCursor: string | undefined,
 ): { changedObjectIds: Set<string> | null; updatedAt: number } => {
   if (!existingCursor) {
+    // On first indexing we don't have a prior cursor so we can't isolate per-object
+    // change timestamps.  Fall back to the current wall-clock time so that freshly
+    // indexed objects sort "recent" in `Order.updated` queries.
     return { changedObjectIds: null, updatedAt: Date.now() };
   }
 

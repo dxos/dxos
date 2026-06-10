@@ -103,6 +103,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -251,6 +254,9 @@
     },
     {
       "path": "../../plugins/plugin-conductor"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
     },
     {
       "path": "../../plugins/plugin-crx"
@@ -428,6 +434,9 @@
     },
     {
       "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../plugins/plugin-video"
     },
     {
       "path": "../../plugins/plugin-voxel"

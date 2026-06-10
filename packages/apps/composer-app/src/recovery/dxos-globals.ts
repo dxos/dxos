@@ -6,6 +6,7 @@ import { type DevtoolsHook, mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type CompactDocumentsResult } from '@dxos/migrations';
 
 import { type RecoveryDiagnosticsResult } from './diagnostics';
+import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics';
 
 /** Static devtools globals only — no Client until {@link bootRecoveryClient}. */
 export const installDxosGlobals = (): DevtoolsHook => {
@@ -27,6 +28,8 @@ export type RecoveryHelpers = {
   /** @deprecated Use {@link startClient}. */
   boot: () => Promise<unknown>;
   diagnostics: () => Promise<RecoveryDiagnosticsResult>;
+  /** OPFS pool + SQLite only — no client boot (safe when feed open hangs). */
+  sqlDiagnostics: () => Promise<SqlStorageDiagnosticsResult>;
   /** Raw OPFS SQLite export (`DXOS.sqlite`). */
   exportProfile: () => Promise<{ byteLength: number }>;
   downloadLogs: () => Promise<{ byteLength: number }>;
@@ -44,7 +47,6 @@ export type RecoveryHelpers = {
   inspectOpfsPool: () => Promise<
     Array<{ name: string; associatedPath: string; totalBytes: number; payloadBytes: number }>
   >;
-  opfsExportViaWorker: () => Promise<{ byteLength: number }>;
 };
 
 export const attachRecoveryHelpers = (helpers: RecoveryHelpers): void => {
