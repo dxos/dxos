@@ -13,8 +13,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { HeyGenProvider, type GenerationOption, type GenerationProvider } from '#services';
-import { type Generation, GeneratorCapabilities } from '#types';
+import { createProvider, type GenerationOption, type GenerationProvider } from '#services';
+import { Generation, GeneratorCapabilities } from '#types';
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -43,8 +43,9 @@ export const GenerationProperties = ({ subject }: GenerationPropertiesProps) => 
   const { t } = useTranslation(meta.id);
   const [generation] = useObject(subject);
   const settings = useAtomCapability(GeneratorCapabilities.Settings);
-  const apiKey = settings?.apiKey;
-  const provider = useGenerationProvider();
+  const providerId = Generation.getProvider(generation);
+  const apiKey = settings?.providers?.[providerId]?.apiKey;
+  const provider = useGenerationProvider(providerId);
   const [{ avatars, voices }, setOptions] = useState<Options>(EMPTY_OPTIONS);
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string>();
@@ -127,6 +128,19 @@ export const GenerationProperties = ({ subject }: GenerationPropertiesProps) => 
     [avatars, voices, placeholder, status, generation.avatarId, generation.voiceId, t],
   );
 
+  // Providers like Gemini have no concept of avatars / voices — once we know the
+  // lists are empty AND the object isn't already carrying values for them there's
+  // nothing useful to render, so skip the surface entirely.
+  const hasAvatarOrVoice =
+    status !== 'ready' ||
+    avatars.length > 0 ||
+    voices.length > 0 ||
+    Boolean(generation.avatarId) ||
+    Boolean(generation.voiceId);
+  if (!hasAvatarOrVoice) {
+    return null;
+  }
+
   return (
     <Form.Root
       schema={PropertiesSchema}
@@ -152,5 +166,6 @@ const makeOptions = (options: GenerationOption[], current?: string): Array<{ val
   return [{ value: current, label: current }, ...base];
 };
 
-// TODO(burdon): Move to capability.
-const useGenerationProvider = (): GenerationProvider => useMemo(() => new HeyGenProvider(), []);
+// TODO(burdon): Move to capability so the same provider instance is shared across surfaces.
+const useGenerationProvider = (providerId: Generation.ProviderId): GenerationProvider =>
+  useMemo(() => createProvider(providerId), [providerId]);
