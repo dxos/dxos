@@ -4,6 +4,16 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-10 — plugin-crx (CrxSettings, page actions)
+
+### Prefer `IconButton` over `Button` + `Icon`
+
+- For an icon-plus-label button use `IconButton` (`@dxos/react-ui`) with `icon`/`label` props, not `<Button><Icon …/>{label}</Button>` with manual `mie-2` spacing (user corrected `CrxSettings.tsx`; same applies to the composer-crx popup `PageActions.tsx`).
+
+### Stories that exercise an extension/relay round-trip install a fake relay
+
+- A component calling `pingExtension` (or any page↔extension CustomEvent contract) always fails in storybook ("Extension not detected") — add a story `Decorator` that sets the readiness dataset marker and acks the request events (see `CrxSettings.stories.tsx` `withFakeExtension`), plus an explicit `NotDetected` story. Export the event-name constants from the util module so test + story don't re-declare them.
+
 ## 2026-06-08 — plugin-video (new plugin: Video type, EDGE transcribe op, embed player)
 
 ### `Format.URL` rejects query strings — don't use it for URL fields

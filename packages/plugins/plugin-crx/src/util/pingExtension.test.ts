@@ -5,10 +5,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { isExtensionAvailable, pingExtension } from './pingExtension';
-
-const PING_EVENT = 'composer:proxy:ping';
-const PING_ACK_EVENT = 'composer:proxy:ping:ack';
+import { PING_ACK_EVENT, PING_EVENT, isExtensionAvailable, pingExtension } from './pingExtension';
 
 const setAvailable = (available: boolean) => {
   if (available) {

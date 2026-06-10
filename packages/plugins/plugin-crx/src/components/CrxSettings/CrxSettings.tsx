@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -51,26 +51,31 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
       </SettingsForm.Section>
 
       <SettingsForm.Section title={t('test.title')}>
-        <div className='flex items-center gap-2'>
-          <Button onClick={handleTest} disabled={test.kind === 'pending'}>
-            <Icon icon='ph--plug--regular' size={4} classNames='mie-2' />
-            {t('test.button.label')}
-          </Button>
+        <div className='flex gap-2'>
+          <IconButton
+            disabled={test.kind === 'pending'}
+            icon='ph--plug--regular'
+            label={t('test.button.label')}
+            onClick={handleTest}
+          />
+
           {/* role=status + aria-live so screen readers announce the async outcome. */}
-          <span
-            role='status'
-            aria-live='polite'
-            className={
-              test.kind === 'ok'
-                ? 'text-sm text-success'
-                : test.kind === 'error'
-                  ? 'text-sm text-error'
-                  : 'text-sm text-description'
-            }
-          >
-            {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
-            {test.kind === 'pending' ? t('test.pending.message') : ''}
-          </span>
+          <div className='flex items-center'>
+            <span
+              role='status'
+              aria-live='polite'
+              className={
+                test.kind === 'ok'
+                  ? 'text-sm text-success'
+                  : test.kind === 'error'
+                    ? 'text-sm text-error'
+                    : 'text-sm text-description'
+              }
+            >
+              {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
+              {test.kind === 'pending' ? t('test.pending.message') : ''}
+            </span>
+          </div>
         </div>
       </SettingsForm.Section>
     </SettingsForm.Viewport>

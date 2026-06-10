@@ -11,9 +11,22 @@
  * package.
  */
 
-const PING_EVENT = 'composer:proxy:ping';
-const PING_ACK_EVENT = 'composer:proxy:ping:ack';
-const RENDER_READY_DATASET_KEY = 'composerProxy';
+/**
+ * Window CustomEvent name the page dispatches to probe the extension. Exported so tests and
+ * stories can stand in for the extension's content relay.
+ */
+export const PING_EVENT = 'composer:proxy:ping';
+
+/**
+ * Window CustomEvent name the extension's content relay dispatches with the ping ack.
+ */
+export const PING_ACK_EVENT = 'composer:proxy:ping:ack';
+
+/**
+ * `documentElement` dataset key the extension's content relay sets once it is listening.
+ */
+export const RENDER_READY_DATASET_KEY = 'composerProxy';
+
 const DEFAULT_PING_TIMEOUT_MS = 4_000;
 
 export type ExtensionInfo = {
