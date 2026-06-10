@@ -111,24 +111,28 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
     return null;
   }
 
+  // Toolbar-embeddable: ghost icon-only buttons matching the chat toolbar's
+  // clip button, with a compact inline status. No wrapper chrome of its own so
+  // it never displaces the surrounding UI.
   return (
-    <div className='flex flex-col gap-1 p-2'>
-      <div className='flex flex-wrap gap-2'>
-        {actions.map((action) => (
-          <IconButton
-            key={action.id}
-            disabled={states[action.id] === 'pending'}
-            icon={action.icon}
-            label={action.label}
-            onClick={() => handleRun(action)}
-          />
-        ))}
-      </div>
+    <>
+      {actions.map((action) => (
+        <IconButton
+          key={action.id}
+          variant='ghost'
+          iconOnly
+          disabled={states[action.id] === 'pending'}
+          icon={action.icon}
+          iconClassNames={states[action.id] === 'pending' ? 'animate-pulse' : undefined}
+          label={action.label}
+          onClick={() => handleRun(action)}
+        />
+      ))}
       {message && (
-        <span role='status' aria-live='polite' className='text-sm text-description'>
+        <span role='status' aria-live='polite' className='self-center px-1 text-xs text-description truncate'>
           {message}
         </span>
       )}
-    </div>
+    </>
   );
 };

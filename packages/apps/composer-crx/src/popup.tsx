@@ -104,20 +104,25 @@ const Root = () => {
     window.close();
   }, []);
 
+  // Embedded in the chat's toolbar so the chat input stays the first row of
+  // the popup; rendered standalone only when the chat is absent.
+  const pageActions = tabId !== undefined && tabUrl ? <PageActions tabId={tabId} tabUrl={tabUrl} /> : null;
+  const showChat = !thumbnailUrl && !!host;
+
   return (
     <ErrorBoundary name='popup'>
       <Container classNames={mx(rootClasses)}>
-        {tabId !== undefined && tabUrl && <PageActions tabId={tabId} tabUrl={tabUrl} />}
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
-        {!thumbnailUrl && host && (
+        {showChat && (
           // Chat lives behind its own ErrorBoundary: the chat-agent endpoint
           // can be unreachable (e.g., dev worker not running) and a fetch
           // failure inside useAgentChat would otherwise take down the whole
           // popup — including the Clip flow, which is independent of chat.
           <ErrorBoundary name='popup/chat' fallbackRender={() => null}>
-            <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} onClip={handleClip} />
+            <Chat host={host} url={tabUrl ?? undefined} onPing={handlePing} onClip={handleClip} actions={pageActions} />
           </ErrorBoundary>
         )}
+        {!showChat && pageActions && <div className='flex items-center p-1'>{pageActions}</div>}
       </Container>
     </ErrorBoundary>
   );
