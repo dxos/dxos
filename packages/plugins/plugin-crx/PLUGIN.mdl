@@ -112,6 +112,22 @@ type ClipAck
     error?: string              # stable error code when ok = false
 ```
 
+```mdl
+type PageActionDescriptor
+  desc: |
+    Serializable descriptor for a plugin-contributed page action, synced to
+    the extension's registry cache. Invocation is correlated by `id`.
+  fields:
+    id: string                  # stable plugin-scoped action id
+    label: string               # human-readable action name
+    icon: string                # phosphor icon identifier
+    urlPatterns: string[]       # match patterns the action applies to
+    predicate?: { exists: string }  # lazy DOM condition (CSS selector)
+    extractor: { name: string, params?: unknown }  # extension-bundled extractor
+    contexts: string[]          # surfaces: popup | page | selection | link
+    operation: string           # operation key, display/diagnostics only
+```
+
 ## Features
 
 ```mdl
@@ -241,6 +257,19 @@ feat F-7: User Feedback
   req F-7.2:
     when: creation fails
     then: an error toast is shown with the stable error code
+```
+
+```mdl
+feat F-8: Page Actions Registry & Invocation
+  desc: |
+    Plugins contribute page actions (serializable descriptor + target
+    operation) under a plugin-scoped capability. This plugin answers the
+    extension's registry-list requests (`composer:page-actions:list`) with
+    descriptors and executes invoke requests (`composer:page-action:invoke`)
+    by resolving the active space and invoking the target operation with
+    `{ snapshot, target }`. Every request is acked with stable error codes
+    (invalidPayload, unsupportedVersion, unknownAction, noSpace,
+    operationFailed); outcomes surface as toasts.
 ```
 
 ## Acceptance

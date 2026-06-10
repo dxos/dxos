@@ -6,4 +6,5 @@ import { Capability } from '@dxos/app-framework';
 
 export const CrxSettings = Capability.lazy('CrxSettings', () => import('./settings'));
 export const InstallClipListener = Capability.lazy('InstallClipListener', () => import('./install-clip-listener'));
+export const InstallPageActions = Capability.lazy('InstallPageActions', () => import('./install-page-actions'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

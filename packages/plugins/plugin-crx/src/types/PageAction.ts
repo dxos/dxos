@@ -70,7 +70,7 @@ export type Descriptor = Schema.Schema.Type<typeof Descriptor>;
  * `{ snapshot: Snapshot, target: Database }` and return `{ id: string }`.
  */
 export type PageAction = Omit<Descriptor, 'operation'> & {
-  operation: Operation.Definition<any, any>;
+  operation: Operation.Definition.Any;
 };
 
 export const toDescriptor = (action: PageAction): Descriptor => ({
@@ -108,6 +108,7 @@ export type PageInfo = Schema.Schema.Type<typeof PageInfo>;
  * Loose first-pass decode so newer versions get `unsupportedVersion`.
  */
 export const Envelope = Schema.Struct({ version: Schema.Number });
+export type Envelope = Schema.Schema.Type<typeof Envelope>;
 
 export const InvokeRequest = Schema.Struct({
   version: Schema.Literal(1),
