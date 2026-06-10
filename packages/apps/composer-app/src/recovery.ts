@@ -4,6 +4,7 @@
 
 import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
+import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import {
   bootRecoveryClient,
@@ -19,7 +20,6 @@ import { downloadRecoveryLogs } from './recovery/download-logs';
 import { attachRecoveryHelpers, getDxos, installDxosGlobals, type RecoveryHelpers } from './recovery/dxos-globals';
 import { importProfileFromUrl, importSqliteInRecovery } from './recovery/import-sqlite';
 import { downloadProfileArchiveExport, exportOpfsSqlite } from './recovery/opfs-export';
-import { listOpfsPoolFiles } from './recovery/opfs-pool';
 import { resetComposerStorage } from './recovery/reset-storage';
 import { runSqlStorageDiagnostics } from './recovery/sql-storage-diagnostics';
 
@@ -131,7 +131,7 @@ const recoveryHelpers: RecoveryHelpers = {
     booted: isRecoveryClientBooted(),
     hasClient: Boolean(getDxos().client),
   }),
-  inspectOpfsPool: listOpfsPoolFiles,
+  inspectOpfsPool: OpfsPool.listFiles,
   compactDocuments: async (options) => {
     print('Compacting linked Automerge documents (epoch migration)…');
     const started = performance.now();

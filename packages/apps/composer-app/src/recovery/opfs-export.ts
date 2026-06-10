@@ -3,16 +3,16 @@
 //
 
 import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
+import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import { verifyOpfsSqliteImport } from './opfs-import-verify';
-import { readOpfsSqliteDatabase, writeOpfsSqliteDatabase } from './opfs-pool';
 
 const DB_NAME = OPFS_SQLITE_DB_FILENAME;
 
 /**
  * Read the OPFS `DXOS` SQLite payload directly (no SQLite worker).
  */
-export const exportOpfsSqlite = async (): Promise<Uint8Array> => readOpfsSqliteDatabase(DB_NAME);
+export const exportOpfsSqlite = async (): Promise<Uint8Array> => OpfsPool.readDatabase(DB_NAME);
 
 /**
  * Export OPFS SQLite as a CBOR `.dxprofile` archive with a SQLITE_DATABASE entry.
@@ -28,7 +28,7 @@ export const exportOpfsProfileArchive = async (options?: { origin?: string }): P
  * wa-sqlite exposes no backup API, so a direct byte-exact pool write is the reliable path.
  */
 export const importOpfsSqlite = async (bytes: Uint8Array): Promise<number> => {
-  await writeOpfsSqliteDatabase(bytes, DB_NAME);
+  await OpfsPool.writeDatabase(bytes, DB_NAME);
   return verifyOpfsSqliteImport(bytes);
 };
 

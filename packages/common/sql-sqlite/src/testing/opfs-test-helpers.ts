@@ -7,7 +7,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { isValidSqliteDatabase, OPFS_SQLITE_DB_FILENAME, readOpfsSqliteDatabase, writeOpfsSqliteDatabase } from '../internal/opfs-pool-async';
+import * as OpfsPool from '../OpfsPool';
 import * as SqliteClient from '../SqliteClient';
 
 const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite.wasm', import.meta.url).href;
@@ -134,8 +134,9 @@ export const TEST_HALO_CONTROL_FEED_KEY =
   '04aab642ba5cbfc0c0ec503233c904b02dfb32e5b87290beaabfe9b5ac9913f09ff06496f1240c6153b87f3464f73c51e703afb745ba6312a7833e15b306c28f4c';
 
 /**
- * Seed a profile-like schema, export via async pool read, re-import via raw pool write,
- * then open a fresh layerOpfs worker and write hypercore_files (Composer boot path).
+ * Seed a profile-like schema, export via async pool read, wipe the pool (recovery
+ * reset), re-import via raw pool write, then open a fresh layerOpfs worker and write
+ * hypercore_files (Composer boot path).
  */
 export const seedExportPoolImportAndHypercoreWrite = async (): Promise<unknown> => {
   const seedWorker = spawnInWorkerTestRunner();
@@ -146,12 +147,15 @@ export const seedExportPoolImportAndHypercoreWrite = async (): Promise<unknown> 
     terminateInWorkerTestRunner(seedWorker);
   }
 
-  const exported = await readOpfsSqliteDatabase(OPFS_SQLITE_DB_FILENAME);
-  if (!isValidSqliteDatabase(exported)) {
+  const exported = await OpfsPool.readDatabase();
+  if (!OpfsPool.isValidSqliteDatabase(exported)) {
     throw new Error('Exported OPFS payload is not a valid SQLite database');
   }
 
-  await writeOpfsSqliteDatabase(exported, OPFS_SQLITE_DB_FILENAME);
+  // Production recovery wipes origin storage before importing — the import must leave
+  // the pool with spare files or the next boot cannot create journal/WAL files.
+  await OpfsPool.wipe();
+  await OpfsPool.writeDatabase(exported);
 
   const writeWorker = spawnInWorkerTestRunner();
   try {
@@ -201,5 +205,3 @@ export const runWithOpfsSqliteClient = <A, E>(
 
     return yield* program.pipe(Effect.provide(layer));
   }).pipe(Effect.scoped, Effect.runPromise);
-
-export { isValidSqliteDatabase };

@@ -6,13 +6,12 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, test } from 'vitest';
 import * as Effect from 'effect/Effect';
 
-import { OPFS_SQLITE_DB_FILENAME, readOpfsSqliteDatabase, writeOpfsSqliteDatabase } from '../internal/opfs-pool-async';
+import * as OpfsPool from '../OpfsPool';
 import * as SqliteClient from '../SqliteClient';
 
 import {
   copySqliteSnapshot,
   createSerializedDatabase,
-  isValidSqliteDatabase,
   runWithOpfsSqliteClient,
   seedExportPoolImportAndHypercoreWrite,
 } from './opfs-test-helpers';
@@ -44,7 +43,7 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
 
         const snapshot = yield* sql.export;
         expect(snapshot.byteLength).toBeGreaterThan(100);
-        expect(isValidSqliteDatabase(snapshot)).toBe(true);
+        expect(OpfsPool.isValidSqliteDatabase(snapshot)).toBe(true);
       }),
     );
   });
@@ -73,7 +72,7 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
         yield* sql`INSERT INTO roundtrip_probe (value) VALUES ('roundtrip')`;
 
         const snapshot = yield* sql.export;
-        expect(isValidSqliteDatabase(snapshot)).toBe(true);
+        expect(OpfsPool.isValidSqliteDatabase(snapshot)).toBe(true);
 
         yield* sql`DROP TABLE roundtrip_probe`;
         const empty = yield* sql`SELECT name FROM sqlite_schema WHERE type = 'table' AND name = 'roundtrip_probe'`;
@@ -102,8 +101,8 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
     );
 
     // 2. Export: raw async OPFS read (no SQLite, no worker).
-    const exported = await readOpfsSqliteDatabase(OPFS_SQLITE_DB_FILENAME);
-    expect(isValidSqliteDatabase(exported)).toBe(true);
+    const exported = await OpfsPool.readDatabase();
+    expect(OpfsPool.isValidSqliteDatabase(exported)).toBe(true);
     expect(exported.byteLength).toBeGreaterThan(0);
 
     // 3. Diverge the database so the import has something to restore.
@@ -117,10 +116,10 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
     );
 
     // 4. Import: raw async OPFS write of the exported snapshot.
-    await writeOpfsSqliteDatabase(exported, OPFS_SQLITE_DB_FILENAME);
+    await OpfsPool.writeDatabase(exported);
 
     // The pool payload must be byte-exact.
-    const reread = await readOpfsSqliteDatabase(OPFS_SQLITE_DB_FILENAME);
+    const reread = await OpfsPool.readDatabase();
     expect(reread.byteLength).toBe(exported.byteLength);
     expect(reread).toEqual(exported);
 
@@ -138,7 +137,7 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
   test('imports an external snapshot via raw pool write and reads it back', async () => {
     const source = await createSerializedDatabase('pool-import-e2e');
 
-    await writeOpfsSqliteDatabase(copySqliteSnapshot(source), OPFS_SQLITE_DB_FILENAME);
+    await OpfsPool.writeDatabase(copySqliteSnapshot(source));
 
     await runWithOpfsSqliteClient(
       Effect.gen(function* () {

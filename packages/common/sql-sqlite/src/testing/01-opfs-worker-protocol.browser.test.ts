@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
+import * as OpfsPool from '../OpfsPool';
+
 import {
   createSerializedDatabase,
-  isValidSqliteDatabase,
   runSqlOnWorker,
   shutdownWorker,
   spawnOpfsWorker,
@@ -58,7 +59,7 @@ describe('opfs-worker protocol browser test', { timeout: 60_000, sequential: tru
       const [, exportError, snapshot] = await exportPromise;
       expect(exportError).toBeUndefined();
       expect(snapshot).toBeInstanceOf(Uint8Array);
-      expect(isValidSqliteDatabase(snapshot as Uint8Array)).toBe(true);
+      expect(OpfsPool.isValidSqliteDatabase(snapshot as Uint8Array)).toBe(true);
     } finally {
       await shutdownWorker(worker);
     }

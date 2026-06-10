@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
+import * as OpfsPool from '../OpfsPool';
+
 import {
   createSerializedDatabase,
-  isValidSqliteDatabase,
   runInWorkerTestCase,
   seedExportPoolImportAndHypercoreWrite,
   spawnInWorkerTestRunner,
@@ -40,7 +41,7 @@ describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequent
 
   test('imports snapshot inside worker via SqliteClient.layerOpfs', async () => {
     const source = await createSerializedDatabase('in-worker-import');
-    expect(isValidSqliteDatabase(source)).toBe(true);
+    expect(OpfsPool.isValidSqliteDatabase(source)).toBe(true);
 
     const worker = spawnInWorkerTestRunner();
     try {

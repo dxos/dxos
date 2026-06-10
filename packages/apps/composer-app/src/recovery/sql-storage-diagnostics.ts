@@ -8,11 +8,11 @@ import { isValidSqliteDatabase, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-ser
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
 import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import CRC32 from 'crc-32';
 
 import { exportOpfsSqlite } from './opfs-export';
-import { listOpfsPoolFiles } from './opfs-pool';
 
 const EchoMetadataCodec = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 
@@ -30,7 +30,7 @@ export type HaloFeedSummary = {
 
 export type SqlStorageDiagnosticsResult = {
   elapsedMs: number;
-  opfsPool: Awaited<ReturnType<typeof listOpfsPoolFiles>>;
+  opfsPool: OpfsPool.FileSummary[];
   asyncExportBytes?: number;
   validSqliteHeader?: boolean;
   integrity?: string;
@@ -117,7 +117,7 @@ export const runSqlStorageDiagnostics = async (
   log('');
 
   log('OPFS pool');
-  const opfsPool = await listOpfsPoolFiles();
+  const opfsPool = await OpfsPool.listFiles();
   for (const file of opfsPool) {
     log(
       `  ${file.name}  path=${file.associatedPath || '(unassigned)'}  payload=${file.payloadBytes.toLocaleString()} bytes`,

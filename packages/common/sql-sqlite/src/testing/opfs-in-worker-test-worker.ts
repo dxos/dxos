@@ -9,8 +9,10 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import * as OpfsPool from '../OpfsPool';
 import * as SqliteClient from '../SqliteClient';
-import { isValidSqliteDatabase, TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers';
+
+import { TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers';
 
 const DB_NAME = 'DXOS';
 
@@ -43,7 +45,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         const snapshot = yield* sql.export;
         return {
           byteLength: snapshot.byteLength,
-          valid: isValidSqliteDatabase(snapshot),
+          valid: OpfsPool.isValidSqliteDatabase(snapshot),
         };
       }
       case 'import': {

@@ -9,12 +9,7 @@ import * as WaSqlite from '@dxos/wa-sqlite';
 // @ts-expect-error - No type declarations for this module.
 import SQLiteESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite.mjs';
 
-import {
-  isValidSqliteDatabase,
-  listOpfsPoolFiles,
-  OPFS_SQLITE_DB_FILENAME,
-  readOpfsSqliteDatabase,
-} from '../internal/opfs-pool-async';
+import * as OpfsPool from '../OpfsPool';
 
 const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite.wasm', import.meta.url).href;
 
@@ -80,16 +75,16 @@ const writeViaPoolWorker = async (database: Uint8Array): Promise<void> => {
 describe('opfs-pool-sync browser test', { timeout: 60_000 }, () => {
   test('writePoolSqlitePayload round-trips via async OPFS read', async () => {
     const source = await createSerializedDatabase();
-    expect(isValidSqliteDatabase(source)).toBe(true);
+    expect(OpfsPool.isValidSqliteDatabase(source)).toBe(true);
 
     await writeViaPoolWorker(source);
 
-    const payload = await readOpfsSqliteDatabase(OPFS_SQLITE_DB_FILENAME);
-    expect(isValidSqliteDatabase(payload)).toBe(true);
+    const payload = await OpfsPool.readDatabase(OpfsPool.DEFAULT_DB_FILENAME);
+    expect(OpfsPool.isValidSqliteDatabase(payload)).toBe(true);
     expect(payload.byteLength).toBeGreaterThanOrEqual(source.byteLength);
 
-    const pool = await listOpfsPoolFiles();
-    const dxos = pool.find((entry) => entry.associatedPath === `/${OPFS_SQLITE_DB_FILENAME}`);
+    const pool = await OpfsPool.listFiles();
+    const dxos = pool.find((entry) => entry.associatedPath === `/${OpfsPool.DEFAULT_DB_FILENAME}`);
     expect(dxos).toBeDefined();
     expect(dxos!.payloadBytes).toBeGreaterThanOrEqual(source.byteLength);
   });
