@@ -2,33 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isValidSqliteDatabase, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
-import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { SpaceState } from '@dxos/client/echo';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
 
 import { bootRecoveryClient, destroyRecoveryClient, isRecoveryClientBooted } from './boot-client';
 import { getDxos } from './dxos-globals';
-import { exportOpfsSqlite } from './opfs-export';
+import { type SqlStorageDiagnosticsResult, runSqlStorageDiagnostics } from './sql-storage-diagnostics';
 
 export type RecoverySpaceSummary = {
   id: string;
   state: string;
 };
 
-export type RecoveryStorageSummary = {
-  origin: string;
-  opfsDatabase: string;
-  sqliteBytes?: number;
-  validSqlite?: boolean;
-  error?: string;
-};
-
 export type RecoveryDiagnosticsResult = {
   clientStarted: boolean;
   clientError?: string;
   elapsedMs: number;
-  storage: RecoveryStorageSummary;
-  sqliteBytes?: number;
+  sql: SqlStorageDiagnosticsResult;
   identity?: {
     identityKey: string;
     deviceKey?: string;
@@ -39,35 +29,8 @@ export type RecoveryDiagnosticsResult = {
 
 const formatSpaceState = (state: SpaceState): string => SpaceState[state] ?? String(state);
 
-const readStorageBytes = async (): Promise<Uint8Array> => exportOpfsSqlite();
-
-const printStorageDiagnostics = async (log: (message: string) => void): Promise<RecoveryStorageSummary> => {
-  const summary: RecoveryStorageSummary = {
-    origin: window.location.origin,
-    opfsDatabase: OPFS_SQLITE_DB_FILENAME,
-  };
-
-  log('Storage');
-  log(`  origin:  ${summary.origin}`);
-  log(`  opfs db: ${summary.opfsDatabase}`);
-
-  try {
-    const started = performance.now();
-    const bytes = await readStorageBytes();
-    summary.sqliteBytes = bytes.byteLength;
-    summary.validSqlite = isValidSqliteDatabase(bytes);
-    log(`  sqlite:  ${summary.sqliteBytes.toLocaleString()} bytes (${(performance.now() - started).toFixed(0)} ms)`);
-    log(`  header:  ${summary.validSqlite ? 'valid SQLite 3' : 'invalid or empty'}`);
-  } catch (error) {
-    summary.error = error instanceof Error ? error.message : String(error);
-    log(`  error:   ${summary.error}`);
-  }
-
-  return summary;
-};
-
 /**
- * Inspect OPFS storage, then boot the recovery client and collect identity and spaces.
+ * Inspect OPFS + SQLite (no client boot), then boot the recovery client for identity and spaces.
  */
 export const runRecoveryDiagnostics = async (log: (message: string) => void): Promise<RecoveryDiagnosticsResult> => {
   const started = performance.now();
@@ -81,10 +44,10 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
     log('');
   }
 
-  const storage = await printStorageDiagnostics(log);
+  const sql = await runSqlStorageDiagnostics(log);
 
   log('');
-  log('Client');
+  log('Client (may hang if feed storage is broken — use sqlDiagnostics() to skip this step)');
 
   const clientAlreadyBooted = isRecoveryClientBooted();
   let clientStarted = false;
@@ -156,8 +119,7 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
     clientStarted,
     clientError,
     elapsedMs: performance.now() - started,
-    storage,
-    sqliteBytes: storage.sqliteBytes,
+    sql,
     identity,
     spaces,
   };

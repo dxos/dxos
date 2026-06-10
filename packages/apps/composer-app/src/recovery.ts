@@ -21,6 +21,7 @@ import { importProfileFromUrl, importSqliteInRecovery } from './recovery/import-
 import { downloadProfileArchiveExport, exportOpfsSqlite } from './recovery/opfs-export';
 import { listOpfsPoolFiles } from './recovery/opfs-pool';
 import { resetComposerStorage } from './recovery/reset-storage';
+import { runSqlStorageDiagnostics } from './recovery/sql-storage-diagnostics';
 
 const logEl = document.getElementById('log')!;
 const exportProfileButton = document.getElementById('export-profile') as HTMLButtonElement;
@@ -67,6 +68,7 @@ if (window.location.protocol === 'https:') {
 }
 print('After opening Debug Port:');
 print('  node composer-recovery.js --session <id> "return dxos.recovery.status()"');
+print('  node composer-recovery.js --session <id> "return await dxos.recovery.sqlDiagnostics()"');
 
 let debugAbort: AbortController | undefined;
 
@@ -94,6 +96,17 @@ const recoveryHelpers: RecoveryHelpers = {
   boot: async () => recoveryHelpers.startClient(),
   diagnostics: async () => {
     const result = await runRecoveryDiagnostics(print);
+    attachRecoveryHelpers(recoveryHelpers);
+    return result;
+  },
+  sqlDiagnostics: async () => {
+    if (isRecoveryClientBooted()) {
+      print('Stopping recovery client before OPFS read…');
+      await destroyRecoveryClient();
+      mountDevtoolsHooks({});
+      print('');
+    }
+    const result = await runSqlStorageDiagnostics(print);
     attachRecoveryHelpers(recoveryHelpers);
     return result;
   },

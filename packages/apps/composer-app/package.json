@@ -161,6 +161,7 @@
     "@tauri-apps/plugin-os": "catalog:",
     "@xstate/react": "catalog:",
     "codemirror": "catalog:",
+    "crc-32": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
     "isomorphic-fetch": "catalog:",
