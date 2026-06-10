@@ -204,7 +204,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
     }
   } else if ('$id' in root) {
-    switch (root.$id as string) {
+    switch (decodeURIComponent(root.$id as string)) {
       case '/schemas/any': {
         result = anyToEffectSchema(root as JSONSchema.JsonSchema7Any);
         break;
@@ -215,7 +215,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
       case '/schemas/{}':
       case '/schemas/object': {
-        result = Schema.Object;
+        result = Schema.Struct({});
         break;
       }
       // Custom ECHO object reference.
