@@ -6,7 +6,7 @@ import React, { forwardRef, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, useThemeContext } from '@dxos/react-ui';

@@ -180,7 +180,7 @@ export const QueryComposerLogs = Operation.make({
       - First/last occurrence per source file:
         { "groupBy": "file", "aggregate": "firstLast" }
       - Sample three entries per debugLabel from query traces:
-        { "filters": ["echo-db:debug"], "groupBy": "context.debugLabel",
+        { "filters": ["echo-client:debug"], "groupBy": "context.debugLabel",
           "aggregate": "sample", "sampleSize": 3 }
       - RPC noise excluded, plain text output:
         { "filters": ["debug,!rpc"], "format": "pretty", "limit": 100 }

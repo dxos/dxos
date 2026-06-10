@@ -37,7 +37,7 @@ export type TypeId = typeof TypeId;
  * or share a single instance across spaces depending on the use case.
  *
  * The concrete implementation (and the `makeRegistry` / `registryLayer` factories) lives in
- * `@dxos/echo-db`; this module declares only the interface so that the `@dxos/echo` API surface
+ * `@dxos/echo-client`; this module declares only the interface so that the `@dxos/echo` API surface
  * stays free of query-matching dependencies.
  */
 export interface Registry {
@@ -120,7 +120,7 @@ export const isRegistry = (obj: unknown): obj is Registry =>
   obj != null && typeof obj === 'object' && TypeId in obj && (obj as { [TypeId]?: unknown })[TypeId] === TypeId;
 
 /**
- * Options for the registry factory (`makeRegistry` in `@dxos/echo-db`).
+ * Options for the registry factory (`makeRegistry` in `@dxos/echo-client`).
  */
 export type Options = {
   /**

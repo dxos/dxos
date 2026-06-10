@@ -70,6 +70,6 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
 
 /**
  * Creates a Feed.FeedService Effect layer backed by a QueueFactory.
- * This bridges the Feed public API (in echo) to the queue implementation (in echo-db).
+ * This bridges the Feed public API (in echo) to the queue implementation (in echo-client).
  */
 export const createFeedServiceLayer = (queues: QueueAPI) => Layer.succeed(Feed.FeedService, makeFeedService(queues));

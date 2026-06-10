@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Mailbox } from '@dxos/plugin-inbox';
 

@@ -6,7 +6,7 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
-import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-db';
+import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
 import { type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';

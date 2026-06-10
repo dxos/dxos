@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 
 import { Context } from '@dxos/context';
-import { type DocAccessor } from '@dxos/echo-db';
+import { type DocAccessor } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';

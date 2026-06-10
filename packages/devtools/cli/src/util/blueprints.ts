@@ -9,7 +9,7 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-db';
+import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/blueprints` and `/types`) so the CLI's
 // `bun run --conditions=source` only walks plugin source files that are free of
 // React-component imports. The plugin root barrels re-export the whole tree

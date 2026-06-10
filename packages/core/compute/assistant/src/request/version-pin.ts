@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Obj } from '@dxos/echo';
-import { type ObjectVersion, getVersion } from '@dxos/echo-db';
+import { type ObjectVersion, getVersion } from '@dxos/echo-client';
 import { EntityId } from '@dxos/keys';
 import { type ContentBlock } from '@dxos/types';
 
