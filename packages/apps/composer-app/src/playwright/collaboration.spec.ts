@@ -77,8 +77,12 @@ test.describe('Collaboration tests', () => {
       const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(plank.locator);
       await expect(guestMarkdownDoc).toHaveText('Hello from the host', { timeout: 15_000 });
 
-      // Verify URLs and object links match between host and guest.
-      expect(host.page.url()).toEqual(guest.page.url());
+      // Verify both host and guest are viewing the same object.
+      // Host navigates via Collections (old URL format /<space>/<type>/<id>),
+      // guest navigates via Types section (new URL format /<space>/types/<type>/all/<id>),
+      // so compare only the object ID (last path segment) rather than the full URL.
+      const getObjectId = (url: string) => url.split('/').at(-1);
+      expect(getObjectId(host.page.url())).toEqual(getObjectId(guest.page.url()));
     }
   });
 
