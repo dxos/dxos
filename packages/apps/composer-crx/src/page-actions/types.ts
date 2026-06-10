@@ -145,7 +145,12 @@ export type InvokeAck =
  */
 export type Snapshot = {
   source: { url: string; title: string; favicon?: string; clippedAt: string };
-  selection?: { text: string; html?: string; htmlTruncated?: boolean };
+  selection?: {
+    text: string;
+    html?: string;
+    htmlTruncated?: boolean;
+    rect?: { x: number; y: number; width: number; height: number };
+  };
   hints?: {
     ogTitle?: string;
     ogDescription?: string;
