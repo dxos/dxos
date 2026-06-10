@@ -200,7 +200,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   system: options.systemPrompt,
                   mcpServers: options.getMcpServers?.(),
                 })
-                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
+                .pipe(
+                  Effect.onExit((exit) =>
+                    Trace.write(AgentRequestEnd, {
+                      status: Exit.isSuccess(exit) ? 'success' : Exit.isInterrupted(exit) ? 'interrupted' : 'error',
+                      error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                    }),
+                  ),
+                );
               log('end request');
               yield* AgentEventsKey.set(inputQueue);
 

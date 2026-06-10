@@ -776,4 +776,11 @@ describe('reference', () => {
       version: Type.getVersion(TestSchema.Person),
     });
   });
+
+  test('empty struct round-trips as TypeLiteral', () => {
+    const schema = Schema.Struct({});
+    const jsonSchema = toJsonSchema(schema);
+    const deserialized = toEffectSchema(jsonSchema);
+    expect(deserialized.ast._tag).toBe('TypeLiteral');
+  });
 });
