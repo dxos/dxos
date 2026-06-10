@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dx
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { EID, URI } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -106,23 +106,8 @@ export const RefField = (props: RefFieldProps) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
         const uri = isRef ? value.uri : value['/'];
-        // Direct match: option ids are named URIs (dxn: for keyed, EID for unkeyed).
-        const direct = options.find((option) => option.id === uri);
-        if (direct) {
-          return direct;
-        }
-        // EID normalisation: local (`echo:/<id>`), qualified (`echo://<space>/<id>`), and
-        // legacy DXN forms all carry the same entity id in the final segment.
-        const eid = EID.tryParse(uri);
-        if (eid) {
-          const entityId = EID.getEntityId(eid);
-          return options.find((option) => {
-            const optEid = EID.tryParse(option.id);
-            return optEid && EID.getEntityId(optEid) === entityId;
-          });
-        }
+        return options.find((option) => option.id === uri);
       }
-
       return undefined;
     };
 
