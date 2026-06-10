@@ -19,6 +19,18 @@ import {
 type ActionState = 'idle' | 'pending' | 'ok' | 'error';
 
 /**
+ * User-facing hints for the stable ack error codes; unknown codes fall back to
+ * the raw code so new failures stay diagnosable.
+ */
+const ERROR_HINTS: Record<string, string> = {
+  tabUnavailable: 'cannot reach this page — reload the tab and try again',
+  extractorFailed: 'could not read the page',
+  timeout: 'Composer did not respond',
+  noSpace: 'open a space in Composer first',
+  unknownAction: 'action not recognized — update Composer or the extension',
+};
+
+/**
  * Whether a content-script predicate response reports a DOM match. The
  * response crosses an extension messaging boundary, so it is narrowed
  * structurally rather than trusted.
@@ -84,7 +96,8 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
         const ack = decodeInvokeAck(response);
         const ok = ack?.ok === true;
         setStates((current) => ({ ...current, [action.id]: ok ? 'ok' : 'error' }));
-        setMessage(ok ? `${action.label}: done` : `${action.label}: ${ack && !ack.ok ? ack.error : 'failed'}`);
+        const error = ack && !ack.ok ? (ERROR_HINTS[ack.error] ?? ack.error) : 'failed';
+        setMessage(ok ? `${action.label}: done` : `${action.label}: ${error}`);
       } catch (err) {
         log.catch(err);
         setStates((current) => ({ ...current, [action.id]: 'error' }));

@@ -118,8 +118,11 @@ export const runPageAction = async ({ actionId, tabId }: { actionId: string; tab
       params: action.extractor.params,
     });
   } catch (err) {
+    // No reachable content script in the tab — closed tab, restricted page, or
+    // an orphaned script after an extension reload. Distinct from a real
+    // extractor failure so the popup can suggest reloading the page.
     log.catch(err);
-    return { version: 1, id: '', ok: false, error: 'extractorFailed' };
+    return { version: 1, id: '', ok: false, error: 'tabUnavailable' };
   }
 
   const result = decodeExtractResult(extracted);
