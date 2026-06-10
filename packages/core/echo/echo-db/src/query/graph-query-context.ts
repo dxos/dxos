@@ -346,6 +346,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
     return (
+      this._database.coreDatabase.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
       filterMatchObject(filter, {
         id: core.id,
