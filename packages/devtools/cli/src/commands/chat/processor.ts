@@ -16,7 +16,7 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
 import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';

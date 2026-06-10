@@ -4,7 +4,7 @@
 
 import { Resource } from '@dxos/context';
 import { type Database } from '@dxos/echo';
-import { type CoreDatabase, type EchoClient, type EchoDatabaseImpl } from '@dxos/echo-db';
+import { type CoreDatabase, type EchoClient, type EchoDatabaseImpl } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 

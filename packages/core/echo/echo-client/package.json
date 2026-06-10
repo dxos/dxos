@@ -1,7 +1,8 @@
 {
-  "name": "@dxos/echo-db",
+  "name": "@dxos/echo-client",
   "version": "0.8.3",
-  "description": "ECHO database.",
+  "private": true,
+  "description": "ECHO client-side database runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

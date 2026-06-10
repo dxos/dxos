@@ -3,7 +3,7 @@
 //
 
 import { type Obj, Type } from '@dxos/echo';
-import { type SerializedSpace } from '@dxos/echo-db';
+import { type SerializedSpace } from '@dxos/echo-client';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { URI } from '@dxos/keys';

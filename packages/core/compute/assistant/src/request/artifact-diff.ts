@@ -4,7 +4,7 @@
 
 import * as Context from 'effect/Context';
 
-import { type ObjectVersion } from '@dxos/echo-db';
+import { type ObjectVersion } from '@dxos/echo-client';
 import { type EntityId } from '@dxos/keys';
 
 /**

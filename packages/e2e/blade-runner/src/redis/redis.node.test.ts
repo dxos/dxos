@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { type TaggedType } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';
+import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';

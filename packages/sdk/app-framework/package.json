@@ -128,7 +128,7 @@
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",

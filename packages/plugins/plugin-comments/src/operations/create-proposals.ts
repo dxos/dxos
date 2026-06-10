@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import { computeDiffsWithCursors } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { ThreadOperation } from '../types';

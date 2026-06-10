@@ -70,7 +70,7 @@ export const DEFAULT_PACKAGES = [
 
   // packages/core/echo
   '@dxos/echo',
-  '@dxos/echo-db',
+  '@dxos/echo-client',
   '@dxos/echo-host',
   '@dxos/echo-protocol',
   '@dxos/echo-query',
