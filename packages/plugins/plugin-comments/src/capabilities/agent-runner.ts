@@ -13,7 +13,7 @@ import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver } from '@dxos/compute';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor, getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-db';
+import { createDocAccessor, getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message } from '@dxos/types';

@@ -16,7 +16,7 @@ import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Credential, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { type Database, Feed, type Key, Registry } from '@dxos/echo';
-import { registryLayer } from '@dxos/echo-db';
+import { registryLayer } from '@dxos/echo-client';
 import { credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =

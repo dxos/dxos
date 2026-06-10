@@ -9,8 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as NodeFs from 'node:fs';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
-import { type EchoDatabaseImpl, makeFeedService, type QueueFactory } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { type EchoDatabaseImpl, makeFeedService, type QueueFactory } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

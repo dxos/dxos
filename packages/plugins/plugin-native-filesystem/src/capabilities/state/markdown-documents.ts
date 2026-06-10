@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { updateText } from '@dxos/echo-db';
+import { updateText } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';

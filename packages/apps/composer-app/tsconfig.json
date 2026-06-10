@@ -103,6 +103,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -148,10 +151,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/echo/echo-protocol"

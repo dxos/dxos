@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { StateMap, TagIndex } from '@dxos/schema';

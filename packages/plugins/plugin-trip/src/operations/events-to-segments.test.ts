@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { type EchoDatabase } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Event } from '@dxos/types';
 
 import { Segment, Trip } from '../types';

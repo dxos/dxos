@@ -13,7 +13,7 @@ import {
   createCredentialSignerWithKey,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
-import { type Space } from '@dxos/echo-pipeline';
+import { type Space } from '@dxos/echo-host';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';

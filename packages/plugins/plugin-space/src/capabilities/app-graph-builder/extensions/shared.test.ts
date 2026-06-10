@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 

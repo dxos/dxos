@@ -4,7 +4,7 @@
 
 import { Routine } from '@dxos/compute';
 import { Ref, Type } from '@dxos/echo';
-import { createObject } from '@dxos/echo-db';
+import { createObject } from '@dxos/echo-client';
 import { PublicKey } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';

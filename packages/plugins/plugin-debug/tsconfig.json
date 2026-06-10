@@ -66,7 +66,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/protocols"

@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { createFeedServiceLayer, type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { Feed, Obj, Ref } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { type Queue } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
