@@ -24,9 +24,6 @@ import { TagTypeDXN } from './well-known-types';
  */
 export const ATTR_META = '@meta';
 
-// MetaId is defined in model-symbols (the canonical home for primitive entity symbols);
-// imported here for use as the property-accessor key below.
-
 //
 // EntityMeta
 //

@@ -7,8 +7,6 @@ import { DXN, EID, URI, type SpaceId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';
-// Import MetaId from model-symbols (a dependency-free primitive file) rather than from
-// meta.ts to avoid the circular import: api.ts → meta.ts → ref.ts → Database.ts → type-uri.ts → api.ts.
 import { MetaId } from '../common/types/model-symbols';
 import { type InternalObjectProps, ObjectDatabaseId } from './model';
 import { getObjectEchoUri } from './util';
