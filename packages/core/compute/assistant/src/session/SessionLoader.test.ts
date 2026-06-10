@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import { describe, expect, it } from 'vitest';
 
 import { Feed, Obj, Ref } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
@@ -36,7 +37,7 @@ const makeFeedLayer = (feedMap: Map<string, object[]>): Layer.Layer<Feed.FeedSer
   } as any);
 
 const run = <A>(effect: Effect.Effect<A, never, Feed.FeedService>, feedMap: Map<string, object[]>): Promise<A> =>
-  Effect.runPromise(effect.pipe(Effect.provide(makeFeedLayer(feedMap))));
+  EffectEx.runAndForwardErrors(effect.pipe(Effect.provide(makeFeedLayer(feedMap))));
 
 describe('SessionLoader', () => {
   it('returns original messages when no SessionLink exists in feed', async () => {
