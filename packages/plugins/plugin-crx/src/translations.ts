@@ -11,6 +11,11 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin.name': 'CRX',
+        'settings.title': 'Browser extension',
+        'test.title': 'Connection',
+        'test.button.label': 'Test connection',
+        'test.pending.message': 'Contacting extension…',
+        'test.connected.message': 'Connected to {{name}} v{{version}}.',
         'toast.person.title': 'Added person',
         'toast.organization.title': 'Added organization',
         'toast.note.title': 'Added note',
