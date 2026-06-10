@@ -9,7 +9,7 @@ import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext, SessionLink } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Message } from '@dxos/types';
