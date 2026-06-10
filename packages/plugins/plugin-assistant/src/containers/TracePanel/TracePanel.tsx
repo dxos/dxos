@@ -211,7 +211,7 @@ const getExecutionGraph = (
 
   const activeProcesses = pipe(
     processesAtom,
-    Atom.debounce(Duration.millis(100)),
+    Atom.debounce(Duration.millis(500)),
     Atom.map((processes) =>
       // `Data.array` does structural comparison on the array elements.
       Data.array(
@@ -239,7 +239,9 @@ const ProcessTreeContainer = ({
   onProcessTerminate,
 }: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
-  const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  const processes = useAtomValue(
+    useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
+  );
 
   // `processes` updates in bursts (about 14 updates per navigation).
   // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
