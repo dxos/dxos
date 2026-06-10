@@ -90,4 +90,22 @@ describe('page-actions', () => {
     );
     expect(ack).toMatchObject({ ok: false, error: 'operationFailed' });
   });
+
+  test('invoke echoes request id when payload is invalid', async ({ expect }) => {
+    const { page: _page, ...withoutPage } = request;
+    const ack = await handleInvokeEvent(withoutPage, deps());
+    expect(ack).toEqual({ version: 1, id: 'req-1', ok: false, error: 'invalidPayload' });
+  });
+
+  test('invoke maps a rejecting operation to operationFailed', async ({ expect }) => {
+    const ack = await handleInvokeEvent(
+      request,
+      deps({
+        invoke: async () => {
+          throw new Error('boom');
+        },
+      }),
+    );
+    expect(ack).toMatchObject({ ok: false, error: 'operationFailed' });
+  });
 });

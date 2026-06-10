@@ -279,10 +279,10 @@ const installPageActionsRelay = async (): Promise<void> => {
     if (!msg || msg.type !== PAGE_ACTIONS_LIST_MESSAGE_TYPE) {
       return undefined;
     }
-    const id = typeof msg.request?.id === 'string' ? msg.request.id : '';
-    return requestFromPage(PAGE_ACTIONS_LIST_EVENT, PAGE_ACTIONS_LIST_ACK_EVENT, msg.request, decodeListAck, {
+    const request = typeof msg.request?.id === 'string' ? msg.request : { id: '' };
+    return requestFromPage(PAGE_ACTIONS_LIST_EVENT, PAGE_ACTIONS_LIST_ACK_EVENT, request, decodeListAck, {
       version: 1,
-      id,
+      id: request.id,
       ok: false,
       error: 'timeout',
     });
@@ -292,10 +292,10 @@ const installPageActionsRelay = async (): Promise<void> => {
     if (!msg || msg.type !== PAGE_ACTION_INVOKE_MESSAGE_TYPE) {
       return undefined;
     }
-    const id = typeof msg.request?.id === 'string' ? msg.request.id : '';
-    return requestFromPage(PAGE_ACTION_INVOKE_EVENT, PAGE_ACTION_INVOKE_ACK_EVENT, msg.request, decodeInvokeAck, {
+    const request = typeof msg.request?.id === 'string' ? msg.request : { id: '' };
+    return requestFromPage(PAGE_ACTION_INVOKE_EVENT, PAGE_ACTION_INVOKE_ACK_EVENT, request, decodeInvokeAck, {
       version: 1,
-      id,
+      id: request.id,
       ok: false,
       error: 'timeout',
     });

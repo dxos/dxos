@@ -219,6 +219,26 @@ export const decodeDescriptor = (value: unknown): PageActionDescriptor | undefin
 };
 
 /**
+ * Validate and narrow an unknown value to a {@link PageActionsRegistry}.
+ * Storage content survives extension upgrades, so it is treated as untrusted
+ * input: malformed descriptor entries are DROPPED rather than failing the
+ * whole registry, and a structurally invalid value yields `undefined`.
+ */
+export const decodeRegistry = (value: unknown): PageActionsRegistry | undefined => {
+  if (!isRecord(value) || typeof value.fetchedAt !== 'string' || !Array.isArray(value.actions)) {
+    return undefined;
+  }
+  const actions: PageActionDescriptor[] = [];
+  for (const entry of value.actions) {
+    const descriptor = decodeDescriptor(entry);
+    if (descriptor) {
+      actions.push(descriptor);
+    }
+  }
+  return { fetchedAt: value.fetchedAt, actions };
+};
+
+/**
  * Validate and narrow an unknown value to a {@link ListAck}. On ok acks,
  * malformed descriptor entries are DROPPED rather than failing the whole ack
  * so one bad contribution cannot hide the rest.

@@ -8,9 +8,11 @@ import {
   type InvokeAck,
   type ListAck,
   type PageActionDescriptor,
+  type PageActionsRegistry,
   decodeDescriptor,
   decodeInvokeAck,
   decodeListAck,
+  decodeRegistry,
 } from './types';
 
 const fullDescriptor: PageActionDescriptor = {
@@ -135,5 +137,28 @@ describe('page-actions types', () => {
 
   test('decodeListAck rejects ok ack with non-array actions', ({ expect }) => {
     expect(decodeListAck({ version: 1, id: 'abc', ok: true, actions: 'nope' })).toBeUndefined();
+  });
+
+  test('decodeRegistry round-trips a valid registry', ({ expect }) => {
+    const registry: PageActionsRegistry = {
+      fetchedAt: '2026-06-09T00:00:00Z',
+      actions: [fullDescriptor, minimalDescriptor],
+    };
+    expect(decodeRegistry(registry)).toEqual(registry);
+  });
+
+  test('decodeRegistry drops corrupted entries instead of failing the registry', ({ expect }) => {
+    const stored = {
+      fetchedAt: '2026-06-09T00:00:00Z',
+      actions: [fullDescriptor, { id: 'broken' }, null],
+    };
+    expect(decodeRegistry(stored)).toEqual({ fetchedAt: '2026-06-09T00:00:00Z', actions: [fullDescriptor] });
+  });
+
+  test('decodeRegistry rejects structurally invalid values', ({ expect }) => {
+    expect(decodeRegistry(undefined)).toBeUndefined();
+    expect(decodeRegistry('garbage')).toBeUndefined();
+    expect(decodeRegistry({ fetchedAt: 1, actions: [] })).toBeUndefined();
+    expect(decodeRegistry({ fetchedAt: '2026-06-09T00:00:00Z', actions: 'nope' })).toBeUndefined();
   });
 });

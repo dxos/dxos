@@ -10,6 +10,12 @@ import { log } from '@dxos/log';
 import { createThumbnail } from './actions';
 import { deliverClip, openComposerTab } from './bridge';
 import type { Clip } from './clip/types';
+import {
+  PAGE_ACTIONS_READY_MESSAGE_TYPE,
+  PAGE_ACTION_RUN_MESSAGE_TYPE,
+  refreshRegistry,
+  runPageAction,
+} from './page-actions';
 import { installSearchProxy } from './search-proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
@@ -86,6 +92,28 @@ const main = async () => {
   // Render-proxy: lets Composer pages request a JS-rendered URL via a
   // background tab. Additive to the clip flow above.
   installSearchProxy();
+
+  // Page actions: refresh the registry when a Composer tab announces itself,
+  // and run actions on behalf of the popup.
+  browser.runtime.onMessage.addListener(
+    (msg: any, sender: browser.Runtime.MessageSender): undefined | Promise<unknown> => {
+      if (!msg || msg.type !== PAGE_ACTIONS_READY_MESSAGE_TYPE) {
+        return undefined;
+      }
+      return refreshRegistry(sender.tab?.id);
+    },
+  );
+  browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
+    if (!msg || msg.type !== PAGE_ACTION_RUN_MESSAGE_TYPE) {
+      return undefined;
+    }
+    if (typeof msg.actionId !== 'string' || typeof msg.tabId !== 'number') {
+      return Promise.resolve({ version: 1, id: '', ok: false, error: 'badRequest' });
+    }
+    return runPageAction({ actionId: msg.actionId, tabId: msg.tabId });
+  });
+  browser.runtime.onStartup?.addListener?.(() => void refreshRegistry());
+  void refreshRegistry();
 
   // Create the context menu item.
   browser.runtime.onInstalled.addListener(() => {

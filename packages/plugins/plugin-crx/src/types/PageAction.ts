@@ -111,9 +111,10 @@ export const PageInfo = Schema.Struct({
 export type PageInfo = Schema.Schema.Type<typeof PageInfo>;
 
 /**
- * Loose first-pass decode so newer versions get `unsupportedVersion`.
+ * Loose first-pass decode so newer versions get `unsupportedVersion` and
+ * malformed payloads can still echo the request id in their ack.
  */
-export const Envelope = Schema.Struct({ version: Schema.Number });
+export const Envelope = Schema.Struct({ version: Schema.Number, id: Schema.optional(Schema.String) });
 export type Envelope = Schema.Schema.Type<typeof Envelope>;
 
 export const InvokeRequest = Schema.Struct({

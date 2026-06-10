@@ -38,7 +38,10 @@ export const handleListEvent = (
   const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)(detail);
   if (Either.isLeft(decoded)) {
     log.info('rejected invalid page-actions list request');
-    return { version: 1, id: '', ok: false, error: 'invalidPayload' };
+    // Best-effort id echo so the extension can correlate the failure ack.
+    const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
+    const id = Either.isRight(envelope) ? (envelope.right.id ?? '') : '';
+    return { version: 1, id, ok: false, error: 'invalidPayload' };
   }
   return {
     version: 1,
@@ -59,15 +62,17 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
     log.info('rejected invalid page-action envelope');
     return { version: 1, id: '', ok: false, error: 'invalidPayload' };
   }
+  // Best-effort id echo so the extension can correlate failure acks.
+  const envelopeId = envelope.right.id ?? '';
   if (envelope.right.version !== 1) {
     log.info('rejected unsupported page-action version', { version: envelope.right.version });
-    return { version: 1, id: '', ok: false, error: 'unsupportedVersion' };
+    return { version: 1, id: envelopeId, ok: false, error: 'unsupportedVersion' };
   }
 
   const decoded = Schema.decodeUnknownEither(PageAction.InvokeRequest)(detail);
   if (Either.isLeft(decoded)) {
     log.info('rejected invalid page-action payload');
-    return { version: 1, id: '', ok: false, error: 'invalidPayload' };
+    return { version: 1, id: envelopeId, ok: false, error: 'invalidPayload' };
   }
   const request = decoded.right;
 
