@@ -6,13 +6,13 @@ import { describe, test } from 'vitest';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import {
-    AgentBlueprintHandlers,
-    AgentHandlers,
-    AgentWizardHandlers,
-    BlueprintManagerHandlers,
-    DatabaseHandlers,
-    DelegationHandlers,
-    WebSearchHandlers,
+  AgentBlueprintHandlers,
+  AgentHandlers,
+  AgentWizardHandlers,
+  BlueprintManagerHandlers,
+  DatabaseHandlers,
+  DelegationHandlers,
+  WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
