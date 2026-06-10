@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Chat, type ChatProps, Container, Thumbnail } from './components';
+import { Chat, type ChatProps, Container, PageActions, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
 
 // NOTE: Keep in sync with popup.html initial layout.
@@ -25,6 +25,7 @@ const rootClasses = 'flex flex-col w-[500px] opacity-0 [animation:popup-fade-in_
 const Root = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [tabUrl, setTabUrl] = useState<string | null>(null);
+  const [tabId, setTabId] = useState<number | undefined>(undefined);
 
   // Load config.
   const [host, setHost] = useState<string | null>(null);
@@ -35,13 +36,14 @@ const Root = () => {
     })();
   }, []);
 
-  // Load current tab URL.
+  // Load current tab URL and id.
   useEffect(() => {
     void (async () => {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       if (tab?.url) {
         setTabUrl(tab.url.replace(/\/$/, ''));
       }
+      setTabId(tab?.id);
     })();
   }, []);
 
@@ -105,6 +107,7 @@ const Root = () => {
   return (
     <ErrorBoundary name='popup'>
       <Container classNames={mx(rootClasses)}>
+        {tabId !== undefined && tabUrl && <PageActions tabId={tabId} tabUrl={tabUrl} />}
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
         {!thumbnailUrl && host && (
           // Chat lives behind its own ErrorBoundary: the chat-agent endpoint

@@ -110,7 +110,15 @@ const main = async () => {
     if (typeof msg.actionId !== 'string' || typeof msg.tabId !== 'number') {
       return Promise.resolve({ version: 1, id: '', ok: false, error: 'badRequest' });
     }
-    return runPageAction({ actionId: msg.actionId, tabId: msg.tabId });
+    // Notify on failure as well as returning the ack: opening a Composer tab
+    // steals focus and closes the popup, so the inline status may never render
+    // (mirrors the clip flow's notification fallback).
+    return runPageAction({ actionId: msg.actionId, tabId: msg.tabId }).then((ack) => {
+      if (!ack.ok) {
+        notify('Action failed', ack.error);
+      }
+      return ack;
+    });
   });
   browser.runtime.onStartup?.addListener?.(() => void refreshRegistry());
   void refreshRegistry();
