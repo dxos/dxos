@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 import * as Video from './Video';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): @wittjosiah extend and factor out?
 
 type NoHyphens<S extends string> = S extends `${string}-${string}` ? never : S;
 
@@ -39,7 +39,7 @@ export const Transcribe = Operation.make({
   input: Schema.Struct({
     video: Ref.Ref(Video.Video).annotations({ description: 'The video to transcribe.' }),
     lang: Schema.optional(Schema.String).annotations({
-      description: 'BCP-47 language code (defaults to "en").',
+      description: 'Language code (defaults to "en").',
     }),
   }),
   output: Schema.Struct({

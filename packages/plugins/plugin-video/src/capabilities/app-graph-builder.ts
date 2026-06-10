@@ -12,7 +12,12 @@ import { Obj, Ref } from '@dxos/echo';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+
+// Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also
+// evaluates `VideoOperation`, which pulls the `@dxos/ai` stack; importing that here would drag the
+// whole AI stack into early boot (this module activates on SetupAppGraph). The operations are
+// lazy-imported in the action handlers below, so `@dxos/ai` only loads when a menu item is invoked.
+import * as Video from '../types/Video';
 
 /**
  * Contributes the video operations to a Video object's app-graph node, so they appear in the
@@ -21,19 +26,24 @@ import { Video, VideoOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Lazy-load the operation definitions (and their `@dxos/ai` dependency) only at click time, so the
+    // AI stack stays out of early boot. Each action references its concrete operation (the three ops
+    // have distinct output types, so a name-indexed helper would not typecheck).
+    const loadOps = () => Effect.promise(() => import('../types/VideoOperation'));
+    const scope = (video: Video.Video) => ({ spaceId: Obj.getDatabase(video)?.spaceId });
+
     const extension = yield* GraphBuilder.createExtension({
-      id: `${meta.id}/video-actions`,
+      id: 'videoActions',
       match: (node) => (Obj.instanceOf(Video.Video, node.data) ? Option.some(node.data as Video.Video) : Option.none()),
       actions: (video) =>
         Effect.succeed([
           {
             id: `${video.id}-fetch-transcript`,
             data: () =>
-              Operation.invoke(
-                VideoOperation.FetchTranscript,
-                { video: Ref.make(video) },
-                { spaceId: Obj.getDatabase(video)?.spaceId },
-              ),
+              Effect.gen(function* () {
+                const ops = yield* loadOps();
+                return yield* Operation.invoke(ops.FetchTranscript, { video: Ref.make(video) }, scope(video));
+              }),
             properties: {
               label: ['fetch-transcript.label', { ns: meta.id }],
               icon: 'ph--closed-captioning--regular',
@@ -43,11 +53,10 @@ export default Capability.makeModule(
           {
             id: `${video.id}-transcribe`,
             data: () =>
-              Operation.invoke(
-                VideoOperation.Transcribe,
-                { video: Ref.make(video) },
-                { spaceId: Obj.getDatabase(video)?.spaceId },
-              ),
+              Effect.gen(function* () {
+                const ops = yield* loadOps();
+                return yield* Operation.invoke(ops.Transcribe, { video: Ref.make(video) }, scope(video));
+              }),
             properties: {
               label: ['transcribe.label', { ns: meta.id }],
               icon: 'ph--subtitles--regular',
@@ -57,11 +66,10 @@ export default Capability.makeModule(
           {
             id: `${video.id}-summarize`,
             data: () =>
-              Operation.invoke(
-                VideoOperation.Summarize,
-                { video: Ref.make(video) },
-                { spaceId: Obj.getDatabase(video)?.spaceId },
-              ),
+              Effect.gen(function* () {
+                const ops = yield* loadOps();
+                return yield* Operation.invoke(ops.Summarize, { video: Ref.make(video) }, scope(video));
+              }),
             properties: {
               label: ['summarize.label', { ns: meta.id }],
               icon: 'ph--text-align-left--regular',
