@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { type SupportOperation } from '@dxos/plugin-support';
@@ -82,6 +83,15 @@ export const ResetDialog = ({
     const timeout = setTimeout(() => setFeedbackSent(false), 3_000);
     return () => clearTimeout(timeout);
   }, [feedbackSent]);
+
+  // Tag any error that surfaces the fatal dialog so alerts can key off `fatal_dialog: true`.
+  // Logging routes through all processors (PostHog + OTEL/SigNoz) unlike captureException.
+  useEffect(() => {
+    if (!errorProp) {
+      return;
+    }
+    log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
+  }, [errorProp]);
 
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
