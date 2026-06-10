@@ -621,7 +621,7 @@ export type InspectIdentityResponse = {
   spaces: InspectSpaceResponse[];
 };
 
-/** Matches the SerializedSpace format from @dxos/echo-db, extended with spaceId. */
+/** Matches the SerializedSpace format from @dxos/echo-client, extended with spaceId. */
 export type SpaceExportPayload = {
   version: number;
   timestamp: string;

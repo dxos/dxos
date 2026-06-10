@@ -113,7 +113,7 @@ Subduction has a single documented fast-recovery escape hatch: `repo.shareConfig
 
 Empirically verified recovery behavior:
 
-- **`authorizeFetch` deny → allow on the holder**: kick via `client.shareConfigChanged()` on the **fetcher** recovers immediately. (The fetcher is where the failed-RPC entry lives.) See `'shareConfigChanged() retries after subductionPolicy denial flips to allow'` in `packages/core/echo/echo-pipeline/src/automerge/automerge-repo-subduction.test.ts`.
+- **`authorizeFetch` deny → allow on the holder**: kick via `client.shareConfigChanged()` on the **fetcher** recovers immediately. (The fetcher is where the failed-RPC entry lives.) See `'shareConfigChanged() retries after subductionPolicy denial flips to allow'` in `packages/core/echo/echo-host/src/automerge/automerge-repo-subduction.test.ts`.
 - **`authorizePut` deny → allow on the receiver**: `shareConfigChanged()` on either side does NOT recover. Cycling the transport via `reconnectAdapters` does NOT recover (per the SKILL doc's known fork gap, `lastSyncResult === 'all-failed'` is not retried on connection-generation bumps). The only reliable recovery is a **fresh commit on the holder** which enqueues a new outbound batch that sidesteps the stuck entry. See `F1: authorizePut deny → allow needs a fresh holder commit to recover`.
 
 Production implication: when flipping a client-side `authorizePut` gate from deny → allow (e.g. authorizing a new space), drive a no-op commit on any doc you want to pull through.
@@ -135,8 +135,8 @@ If you've read older internal docs claiming any of the following, they were wron
 
 ## Test suite
 
-The empirical findings above are pinned by `packages/core/echo/echo-pipeline/src/automerge/automerge-repo-subduction.test.ts` under `describe('subductionPolicy: characterizing client-only gates')` (Blocks A–H). Re-run the suite if you suspect bridge behavior has changed:
+The empirical findings above are pinned by `packages/core/echo/echo-host/src/automerge/automerge-repo-subduction.test.ts` under `describe('subductionPolicy: characterizing client-only gates')` (Blocks A–H). Re-run the suite if you suspect bridge behavior has changed:
 
 ```sh
-cd packages/core/echo/echo-pipeline && pnpm vitest run src/automerge/automerge-repo-subduction.test.ts
+cd packages/core/echo/echo-host && pnpm vitest run src/automerge/automerge-repo-subduction.test.ts
 ```

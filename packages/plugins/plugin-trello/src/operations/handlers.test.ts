@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
 import { Integration } from '@dxos/plugin-integration';

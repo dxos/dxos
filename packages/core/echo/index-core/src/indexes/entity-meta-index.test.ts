@@ -44,6 +44,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId,
@@ -80,6 +81,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectIdMatch,
@@ -95,6 +97,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectIdFalsePositive,
@@ -132,6 +135,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId1,
@@ -146,6 +150,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: null,
         documentId: 'doc-123',
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId2,
@@ -228,6 +233,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId1,
@@ -242,6 +248,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: objectId2,
@@ -256,6 +263,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: relationId,
@@ -352,6 +360,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: insertTimestamp,
         data: {
           id: objectId,
@@ -398,6 +407,7 @@ describe('EntityMetaIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          createdAt: null,
           updatedAt: earlyTimestamp,
           data: { id: objectId1, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
         },
@@ -410,6 +420,7 @@ describe('EntityMetaIndex', () => {
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
+          createdAt: null,
           updatedAt: lateTimestamp,
           data: { id: objectId2, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
         },
@@ -453,6 +464,7 @@ describe('EntityMetaIndex', () => {
         queueNamespace: 'trace',
         documentId: null,
         recordId: null,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: traceObjectId,

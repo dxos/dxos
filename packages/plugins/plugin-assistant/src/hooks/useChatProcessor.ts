@@ -14,7 +14,7 @@ import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { Credential, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref, Registry } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';

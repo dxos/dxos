@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocAccessor, fromCursor, toCursor } from '@dxos/echo-db';
+import { type DocAccessor, fromCursor, toCursor } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 
 import { type CursorConverter } from '../../util';

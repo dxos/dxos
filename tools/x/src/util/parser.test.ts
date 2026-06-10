@@ -31,7 +31,7 @@ packages/ui/react-appkit/src/hooks/useSafeSpaceKey.ts:13:90 - error TS2307: Cann
 Compiling TypeScript files for project "mesh-protocol"...
 Done compiling TypeScript files for project "mesh-protocol".
 
-> nx run echo-db:test --coverage=true --xmlReport=true
+> nx run echo-client:test --coverage=true --xmlReport=true
 
 Executing mocha...
 Running setup script.
@@ -64,7 +64,7 @@ Failed with exit code 1 in chromium
 
    Failed tasks:
    
-   - echo-db:test
+   - echo-client:test
 
    See Nx Cloud run details at https://cloud.nx.app/runs/1GzOpBzOXd
 `;

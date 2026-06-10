@@ -9,7 +9,7 @@ import { describe, expect } from 'vitest';
 import { AiSession, AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
 describe('AiSession', () => {
   const TestLayer = TestDatabaseLayer({

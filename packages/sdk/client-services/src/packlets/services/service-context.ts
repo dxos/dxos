@@ -15,10 +15,11 @@ import {
   EchoHost,
   type EdgeAutomergeReplicator,
   MeshEchoReplicator,
+  runSqliteHealthCheck,
   SqliteMetadataStore,
   SpaceManager,
   valueEncoding,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
@@ -249,6 +250,10 @@ export class ServiceContext extends Resource {
     );
 
     await this._checkStorageVersion();
+
+    log('running sqlite health check...');
+    await runSqliteHealthCheck(this._runtime);
+    log('sqlite health check passed');
 
     log('opening...');
 

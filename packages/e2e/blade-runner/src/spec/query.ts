@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 
-import { type QueryResult } from '@dxos/echo-db';
+import { type QueryResult } from '@dxos/echo-client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 

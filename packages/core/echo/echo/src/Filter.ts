@@ -412,7 +412,7 @@ export const childOf = (
     if (Ref.isRef(item)) {
       return EID.parse(item.uri);
     }
-    return internal.getUri(item);
+    return EID.parse(internal.getUri(item));
   });
   return new FilterClass({
     type: 'child-of',

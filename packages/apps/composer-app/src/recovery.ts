@@ -4,6 +4,7 @@
 
 import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
+import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 
 import {
   bootRecoveryClient,
@@ -19,8 +20,8 @@ import { downloadRecoveryLogs } from './recovery/download-logs';
 import { attachRecoveryHelpers, getDxos, installDxosGlobals, type RecoveryHelpers } from './recovery/dxos-globals';
 import { importProfileFromUrl, importSqliteInRecovery } from './recovery/import-sqlite';
 import { downloadProfileArchiveExport, exportOpfsSqlite } from './recovery/opfs-export';
-import { listOpfsPoolFiles } from './recovery/opfs-pool';
 import { resetComposerStorage } from './recovery/reset-storage';
+import { runSqlStorageDiagnostics } from './recovery/sql-storage-diagnostics';
 
 const logEl = document.getElementById('log')!;
 const exportProfileButton = document.getElementById('export-profile') as HTMLButtonElement;
@@ -67,6 +68,7 @@ if (window.location.protocol === 'https:') {
 }
 print('After opening Debug Port:');
 print('  node composer-recovery.js --session <id> "return dxos.recovery.status()"');
+print('  node composer-recovery.js --session <id> "return await dxos.recovery.sqlDiagnostics()"');
 
 let debugAbort: AbortController | undefined;
 
@@ -97,6 +99,17 @@ const recoveryHelpers: RecoveryHelpers = {
     attachRecoveryHelpers(recoveryHelpers);
     return result;
   },
+  sqlDiagnostics: async () => {
+    if (isRecoveryClientBooted()) {
+      print('Stopping recovery client before OPFS read…');
+      await destroyRecoveryClient();
+      mountDevtoolsHooks({});
+      print('');
+    }
+    const result = await runSqlStorageDiagnostics(print);
+    attachRecoveryHelpers(recoveryHelpers);
+    return result;
+  },
   exportProfile: async () => {
     const bytes = await exportProfileArchiveBytes();
     downloadProfileArchiveExport(bytes);
@@ -118,11 +131,7 @@ const recoveryHelpers: RecoveryHelpers = {
     booted: isRecoveryClientBooted(),
     hasClient: Boolean(getDxos().client),
   }),
-  inspectOpfsPool: listOpfsPoolFiles,
-  opfsExportViaWorker: async () => {
-    const bytes = await exportOpfsSqlite();
-    return { byteLength: bytes.byteLength };
-  },
+  inspectOpfsPool: OpfsPool.listFiles,
   compactDocuments: async (options) => {
     print('Compacting linked Automerge documents (epoch migration)…');
     const started = performance.now();

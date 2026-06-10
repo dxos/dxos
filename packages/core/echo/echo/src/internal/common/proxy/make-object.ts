@@ -8,7 +8,8 @@ import { EntityId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation/annotations';
 import { type AnyProperties, KindId, ParentId, SchemaKindId, StaticTypeSchemaSlot } from '../types';
-import { MetaId, type EntityMeta, EntityMetaSchema } from '../types/meta';
+import { type EntityMeta, EntityMetaSchema } from '../types/meta';
+import { MetaId } from '../types/model-symbols';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
