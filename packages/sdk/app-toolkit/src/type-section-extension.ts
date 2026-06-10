@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { Annotation, Filter, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, QueryResult, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { whenSpace } from './app-node-matcher';
@@ -61,7 +61,7 @@ export const createTypeSectionExtension = (
     id: typename,
     match: whenSpace,
     connector: (space, get) => {
-      const objects = get(space.db.query(filter).atom) as Obj.Unknown[];
+      const objects = get(QueryResult.atom(space.db, filter)) as Obj.Unknown[];
       if (objects.length === 0) {
         return Effect.succeed([]);
       }
