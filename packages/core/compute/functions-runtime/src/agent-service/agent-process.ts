@@ -23,11 +23,11 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Credential, McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
@@ -78,7 +78,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
         Operation.Service,
-        OperationRegistry.Service,
+        Registry.Service,
         StorageService.StorageService,
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,

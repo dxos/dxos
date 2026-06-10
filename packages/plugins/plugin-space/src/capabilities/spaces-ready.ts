@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -57,47 +58,59 @@ export default Capability.makeModule(
     // Personal space initialization — deferred until found.
     //
 
+    // Fiber for the one-shot personal-space init Effect; interrupted in cleanup
+    // so it cannot access the db after client.destroy() closes the repo.
+    let personalSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
     let personalSpaceInitialized = false;
-    const initializePersonalSpace = async (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) => {
+
+    const personalSpaceInitEffect = (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() => personalSpace.waitUntilReady());
+
+        if (fromCredential) {
+          setPersonalSpace(personalSpace);
+        }
+
+        // Check if deck state indicates we should switch to default space.
+        const layout = registry.get(layoutAtom);
+        if (layout.workspace === 'default') {
+          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
+        }
+
+        const queryResults = yield* Effect.promise(() =>
+          personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
+        );
+        if (!queryResults[0]) {
+          // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
+          //  Instead, we store order as an array of space ids.
+          try {
+            personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+          } catch (err) {
+            // The space may have been destroyed (e.g. during test teardown) between the query and the add.
+            log.warn('Failed to initialize spaces order, space may be closing', { err });
+          }
+        }
+      });
+
+    const startPersonalSpaceInit = (personalSpace: Space, opts: { fromCredential: boolean }) => {
       if (personalSpaceInitialized) {
         return;
       }
-      // Set before any await so concurrent subscribe callbacks don't start a second initialization.
+      // Set before forking so concurrent subscribe callbacks don't start a second initialization.
       personalSpaceInitialized = true;
-
-      await personalSpace.waitUntilReady();
-
-      if (fromCredential) {
-        setPersonalSpace(personalSpace);
-      }
-
-      // Check if deck state indicates we should switch to default space.
-      const layout = registry.get(layoutAtom);
-      if (layout.workspace === 'default') {
-        await invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) }).pipe(
-          Effect.runPromise,
-        );
-      }
-
-      const queryResults = await personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run();
-      const spacesOrder = queryResults[0];
-      if (!spacesOrder) {
-        // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-        //  Instead, we store order as an array of space ids.
-        personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
-      }
+      personalSpaceInitFiber = Effect.runFork(personalSpaceInitEffect(personalSpace, opts));
     };
 
     // Try to find the personal space now, or subscribe to find it later.
-    // Initialization is async (non-blocking) so subscriptions wire immediately.
+    // Initialization is non-blocking so subscriptions wire immediately.
     const resolved = resolvePersonalSpace(client);
     if (resolved) {
-      void initializePersonalSpace(resolved.space, resolved);
+      startPersonalSpaceInit(resolved.space, resolved);
     } else {
       const personalSpaceSub = client.spaces.subscribe(() => {
         const resolved = resolvePersonalSpace(client);
         if (resolved) {
-          void initializePersonalSpace(resolved.space, resolved);
+          startPersonalSpaceInit(resolved.space, resolved);
         }
       });
       subscriptions.add(() => personalSpaceSub.unsubscribe());
@@ -339,7 +352,10 @@ export default Capability.makeModule(
     }
 
     return Capability.contributes(Capabilities.Null, null, () =>
-      Effect.sync(() => {
+      Effect.gen(function* () {
+        if (personalSpaceInitFiber) {
+          yield* Fiber.interrupt(personalSpaceInitFiber);
+        }
         spaceSubscriptions.clear();
         subscriptions.clear();
       }),

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import type { Credential } from '@dxos/compute';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
-import { Event, ListEventsResponse } from './types';
+import { DateTime, Event, ListEventsResponse } from './types';
 
 /**
  * Google Calendar API.
@@ -78,4 +78,41 @@ export const listEventsByUpdated = Effect.fn(function* (
 export const getEvent = Effect.fn(function* (calendarId: string, eventId: string) {
   const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events', eventId]).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(Event)));
+});
+
+/**
+ * Request body for creating an event. A subset of the Google Calendar event resource.
+ * https://developers.google.com/calendar/api/v3/reference/events/insert
+ */
+export const CreateEventRequest = Schema.Struct({
+  summary: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  location: Schema.optional(Schema.String),
+  start: DateTime,
+  end: DateTime,
+  attendees: Schema.optional(
+    Schema.Array(Schema.Struct({ email: Schema.String, displayName: Schema.optional(Schema.String) })),
+  ),
+});
+
+export type CreateEventRequest = Schema.Schema.Type<typeof CreateEventRequest>;
+
+/**
+ * Creates an event on the specified calendar (requires the `calendar.events` scope).
+ * https://developers.google.com/calendar/api/v3/reference/events/insert
+ */
+export const createEvent = Effect.fn('createEvent')(function* (calendarId: string, event: CreateEventRequest) {
+  const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events']).toString();
+  return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify(event) }).pipe(
+    Effect.flatMap(Schema.decodeUnknown(Event)),
+  );
+});
+
+/**
+ * Deletes an event from the specified calendar (requires the `calendar.events` scope).
+ * https://developers.google.com/calendar/api/v3/reference/events/delete
+ */
+export const deleteEvent = Effect.fn('deleteEvent')(function* (calendarId: string, eventId: string) {
+  const url = createUrl([API_URL, 'calendars', encodeURIComponent(calendarId), 'events', eventId]).toString();
+  yield* makeGoogleApiRequest(url, { method: 'DELETE' });
 });

@@ -14,6 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode } from '../ViewMode';
+import { EventBodyEditor } from './EventBodyEditor';
 import { EventDetails } from './EventDetails';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
@@ -60,12 +61,13 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onNoteCreate'> & Pick<MenuRootProps, 'alwaysActive'>;
+type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onNoteCreate' | 'onOpen' | 'onSave' | 'onDelete'> &
+  Pick<MenuRootProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
-  ({ alwaysActive, onNoteCreate, ...props }, forwardedRef) => {
+  ({ alwaysActive, onNoteCreate, onOpen, onSave, onDelete, ...props }, forwardedRef) => {
     const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
-    const menuActions = useEventToolbarActions({ viewMode, setViewMode, onNoteCreate });
+    const menuActions = useEventToolbarActions({ viewMode, setViewMode, onNoteCreate, onOpen, onSave, onDelete });
 
     return (
       <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
@@ -103,16 +105,23 @@ const EVENT_HEADER_NAME = 'Event.Header';
 
 type EventHeaderProps = {
   db?: Database.Database;
+  /** When true, the title and date range become editable (used for draft events). */
+  editable?: boolean;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
 
-const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
+const EventHeader = ({ db, editable, onContactCreate }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator'>
+    <Card.Root
+      border={false}
+      fullWidth
+      // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
+      classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-1')}
+    >
       <Card.Body>
-        <EventDetails event={event} title='heading' db={db} onContactCreate={onContactCreate} />
+        <EventDetails event={event} title='heading' editable={editable} db={db} onContactCreate={onContactCreate} />
       </Card.Body>
     </Card.Root>
   );
@@ -126,10 +135,17 @@ EventHeader.displayName = EVENT_HEADER_NAME;
 
 const EVENT_BODY_NAME = 'Event.Body';
 
-type EventBodyProps = ThemedClassName<{}>;
+type EventBodyProps = ThemedClassName<{
+  /** Render the description as an editor bound to the event (used for draft events). */
+  editable?: boolean;
+}>;
 
-const EventBody = ({ classNames }: EventBodyProps) => {
+const EventBody = ({ classNames, editable }: EventBodyProps) => {
   const { event, viewMode } = useEventContext(EVENT_BODY_NAME);
+
+  if (editable) {
+    return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
+  }
 
   return event.description ? (
     <MarkdownViewer content={event.description} markdown={viewMode !== 'plain'} classNames={mx('p-3', classNames)} />

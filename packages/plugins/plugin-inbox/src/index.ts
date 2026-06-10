@@ -5,4 +5,5 @@
 export * from './blueprints';
 export * from './meta';
 export { parseFromHeader } from './operations';
+export { getCalendarRangeSelectionId } from './paths';
 export * from './types';

@@ -311,6 +311,13 @@ export type EntitySystem = {
    * Only for relations.
    */
   target?: EncodedReference;
+
+  /**
+   * Unix ms timestamp recorded at object creation time.
+   * Set once when the ObjectStructure is first written; never modified after that.
+   * Survives compaction / migrations (unlike automerge change timestamps).
+   */
+  createdAt?: number;
 };
 
 /**

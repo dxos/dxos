@@ -60,9 +60,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
         <div className='text-blue-500'>{String(error)}</div>
         {stack && (
           <div className='flex overflow-hidden'>
-            <pre role='none' className='overflow-x-auto text-sm opacity-75'>
-              {stack}
-            </pre>
+            <pre className='overflow-x-auto text-sm opacity-75'>{stack}</pre>
           </div>
         )}
       </div>

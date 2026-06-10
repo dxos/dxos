@@ -136,6 +136,7 @@ export class QueueDataSource implements IndexDataSource {
                 documentId: null,
                 recordId: null,
                 data,
+                createdAt: null,
                 updatedAt: block.timestamp,
               });
             } catch (err) {

@@ -12,13 +12,35 @@ export type UseEventToolbarActionsProps = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   onNoteCreate?: () => void;
+  /** Promote the event from a companion to the main view (shown only when displayed as a companion). */
+  onOpen?: () => void;
+  /** Push the (draft) event to Google Calendar (shown only when the event is draft). */
+  onSave?: () => void;
+  /** Delete the event (locally, and on Google Calendar when synced). */
+  onDelete?: () => void;
 };
 
-export const useEventToolbarActions = ({ viewMode, setViewMode, onNoteCreate }: UseEventToolbarActionsProps) => {
+export const useEventToolbarActions = ({
+  viewMode,
+  setViewMode,
+  onNoteCreate,
+  onOpen,
+  onSave,
+  onDelete,
+}: UseEventToolbarActionsProps) => {
   return useMenuBuilder(
     () =>
       MenuBuilder.make()
         .root({ label: ['event-toolbar.menu', { ns: meta.id }] })
+        .subgraph(
+          onOpen &&
+            ((b) =>
+              b.action(
+                'open',
+                { label: ['event-toolbar-open.menu', { ns: meta.id }], icon: 'ph--arrow-square-out--regular' },
+                onOpen,
+              )),
+        )
         .subgraph(viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'] }))
         .action(
           'createNote',
@@ -28,7 +50,25 @@ export const useEventToolbarActions = ({ viewMode, setViewMode, onNoteCreate }: 
           },
           () => onNoteCreate?.(),
         )
+        .subgraph(
+          onSave &&
+            ((b) =>
+              b.action(
+                'save',
+                { label: ['event-toolbar-save.menu', { ns: meta.id }], icon: 'ph--cloud-arrow-up--regular' },
+                onSave,
+              )),
+        )
+        .subgraph(
+          onDelete &&
+            ((b) =>
+              b.action(
+                'delete',
+                { label: ['event-toolbar-delete.menu', { ns: meta.id }], icon: 'ph--trash--regular' },
+                onDelete,
+              )),
+        )
         .build(),
-    [viewMode, setViewMode, onNoteCreate],
+    [viewMode, setViewMode, onNoteCreate, onOpen, onSave, onDelete],
   );
 };

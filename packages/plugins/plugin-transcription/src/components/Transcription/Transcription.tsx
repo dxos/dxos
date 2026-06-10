@@ -19,10 +19,7 @@ import {
 } from '@dxos/ui-editor';
 
 import { type SerializationModel } from '../../model';
-import { renderByline } from '../../util';
 import { transcription } from './transcription-extension';
-
-export { renderByline };
 
 export type TranscriptionProps = {
   transcript?: Transcript.Transcript;

@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
 import { deliverClip, openComposerTab } from './bridge';
-import type { Clip } from './clip/types';
-import { installSearchProxy } from './search-proxy';
+import type { Clip } from './clip';
+import { installSearchProxy } from './proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 
