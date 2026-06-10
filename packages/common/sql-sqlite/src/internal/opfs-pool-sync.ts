@@ -20,6 +20,14 @@ const SQLITE_OPEN_CREATE = 0x00000004;
 const SQLITE_OPEN_MAIN_DB = 0x00000100;
 const MAIN_DB_FLAGS = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_MAIN_DB;
 
+/**
+ * Mirrors AccessHandlePoolVFS DEFAULT_CAPACITY. The VFS only seeds the pool when the
+ * directory is empty on boot, so any pool we leave behind must already contain spare
+ * (unassociated) files for journal/WAL creation or SQLite writes fail with
+ * SQLITE_CANTOPEN ("cannot create file").
+ */
+const DEFAULT_POOL_CAPACITY = 6;
+
 const computeDigest = (corpus: Uint8Array): Uint32Array => {
   if (!corpus[0]) {
     return new Uint32Array([0xfecc5f80, 0xaccec037]);
@@ -119,6 +127,17 @@ export const writePoolSqlitePayload = async (dbFilename: string, payload: Uint8A
         writeAssociatedPath(file.accessHandle, '', 0);
         file.accessHandle.truncate(HEADER_OFFSET_DATA);
       }
+    }
+
+    // Top up to the VFS default capacity with unassociated spares so SQLite can create
+    // journal/WAL files on the next boot (see DEFAULT_POOL_CAPACITY).
+    for (let index = poolFiles.length; index < DEFAULT_POOL_CAPACITY; index++) {
+      const name = crypto.randomUUID().replaceAll('-', '').slice(0, 11);
+      const fileHandle = await directory.getFileHandle(name, { create: true });
+      const accessHandle = await fileHandle.createSyncAccessHandle();
+      poolFiles.push({ name, accessHandle, associatedPath: '' });
+      writeAssociatedPath(accessHandle, '', 0);
+      accessHandle.truncate(HEADER_OFFSET_DATA);
     }
   } finally {
     for (const file of poolFiles) {
