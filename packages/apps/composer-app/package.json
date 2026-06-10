@@ -72,7 +72,6 @@
     "@dxos/plugin-doctor": "workspace:*",
     "@dxos/plugin-duffel": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
-    "@dxos/plugin-extension": "workspace:*",
     "@dxos/plugin-feed": "workspace:*",
     "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-gallery": "workspace:*",

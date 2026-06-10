@@ -3,7 +3,7 @@
 //
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { isExtensionAvailable, pingExtension } from './pingExtension';
 
@@ -32,13 +32,13 @@ describe('pingExtension', () => {
   beforeEach(() => setAvailable(false));
   afterEach(() => setAvailable(false));
 
-  test('isExtensionAvailable reflects the dataset marker', () => {
+  test('isExtensionAvailable reflects the dataset marker', ({ expect }) => {
     expect(isExtensionAvailable()).toBe(false);
     setAvailable(true);
     expect(isExtensionAvailable()).toBe(true);
   });
 
-  test('resolves with the extension identity on a successful ack', async () => {
+  test('resolves with the extension identity on a successful ack', async ({ expect }) => {
     setAvailable(true);
     const uninstall = installFakeRelay((id) => ({
       version: 1,
@@ -51,19 +51,19 @@ describe('pingExtension', () => {
     uninstall();
   });
 
-  test('rejects when the extension is not detected', async () => {
+  test('rejects when the extension is not detected', async ({ expect }) => {
     setAvailable(false);
     await expect(pingExtension()).rejects.toThrow(/not detected/);
   });
 
-  test('rejects on a non-ok ack', async () => {
+  test('rejects on a non-ok ack', async ({ expect }) => {
     setAvailable(true);
     const uninstall = installFakeRelay((id) => ({ version: 1, id, ok: false, error: 'forbiddenOrigin' }));
     await expect(pingExtension()).rejects.toThrow(/forbiddenOrigin/);
     uninstall();
   });
 
-  test('rejects on timeout when no ack arrives', async () => {
+  test('rejects on timeout when no ack arrives', async ({ expect }) => {
     setAvailable(true);
     await expect(pingExtension(50)).rejects.toThrow(/did not respond/);
   });

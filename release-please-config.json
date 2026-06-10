@@ -630,11 +630,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-feed/package.json",
           "jsonpath": "$.version"
         },
