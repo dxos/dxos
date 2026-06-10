@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, Panel, ScrollArea } from '@dxos/react-ui';
+import { Card, Image, Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
@@ -53,17 +53,6 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
     () =>
       MenuBuilder.make()
         .action(
-          'openSource',
-          {
-            label: ['open-source.label', { ns: meta.id }],
-            icon: 'ph--arrow-square-out--regular',
-            disabled: !isExternalHttpUrl(bookmark.url),
-            disposition: 'toolbar',
-            testId: 'bookmark.toolbar.open-source',
-          },
-          () => handleOpenSource(),
-        )
-        .action(
           'summarize',
           {
             label: ['summarize.label', { ns: meta.id }],
@@ -73,6 +62,18 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
             testId: 'bookmark.toolbar.summarize',
           },
           () => handleSummarize(),
+        )
+        .separator()
+        .action(
+          'openSource',
+          {
+            label: ['open-source.label', { ns: meta.id }],
+            icon: 'ph--arrow-square-out--regular',
+            disabled: !isExternalHttpUrl(bookmark.url),
+            disposition: 'toolbar',
+            testId: 'bookmark.toolbar.open-source',
+          },
+          () => handleOpenSource(),
         )
         .build(),
     [bookmark.url, summarizing, handleOpenSource, handleSummarize],
@@ -85,28 +86,24 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content>
-          <ScrollArea.Root centered>
-            <ScrollArea.Viewport>
-              <Card.Root fullWidth border={false}>
-                <Card.Header>
-                  <Card.IconBlock>
-                    <img src={bookmark.favicon} alt={bookmark.title} />
-                  </Card.IconBlock>
-                  <Card.Title>{bookmark.title}</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                  <Card.Section>
-                    <Card.Text classNames='font-mono text-sm text-subdued'>{bookmark.url}</Card.Text>
-                    <Card.Text>{bookmark.excerpt}</Card.Text>
-                  </Card.Section>
-                  {bookmark.image && imageLoads && (
-                    <Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />
-                  )}
-                </Card.Body>
-              </Card.Root>
-              {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+          <Card.Root fullWidth border={false}>
+            <Card.Header>
+              <Card.IconBlock>
+                <img src={bookmark.favicon} alt={bookmark.title} />
+              </Card.IconBlock>
+              <Card.Title>{bookmark.title}</Card.Title>
+            </Card.Header>
+            <Card.Body>
+              <Card.Section>
+                <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
+                  {bookmark.url}
+                </Card.Text>
+                <Card.Text>{bookmark.excerpt}</Card.Text>
+                {bookmark.image && imageLoads && <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />}
+              </Card.Section>
+            </Card.Body>
+          </Card.Root>
+          {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
         </Panel.Content>
       </Panel.Root>
     </Menu.Root>
