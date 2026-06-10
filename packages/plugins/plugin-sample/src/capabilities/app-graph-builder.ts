@@ -14,7 +14,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
+import { Filter, QueryResult } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -66,7 +66,7 @@ export default Capability.makeModule(
         id: 'section',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const items = get(space.db.query(Filter.type(SampleItem.SampleItem)).atom);
+          const items = get(QueryResult.atom(space.db, Filter.type(SampleItem.SampleItem)));
           if (items.length === 0) {
             return Effect.succeed([]);
           }
@@ -94,7 +94,7 @@ export default Capability.makeModule(
           return node.type === SAMPLE_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const items = get(space.db.query(Filter.type(SampleItem.SampleItem)).atom);
+          const items = get(QueryResult.atom(space.db, Filter.type(SampleItem.SampleItem)));
           return Effect.succeed(
             items
               .map((item) => createObjectNode({ db: space.db, object: item }))

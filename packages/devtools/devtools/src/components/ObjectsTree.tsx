@@ -14,7 +14,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import React from 'react';
 
 import { raise } from '@dxos/debug';
-import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, QueryResult, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -236,7 +236,8 @@ class ObjectsTreeModel {
     if (typeof anchor === 'string') {
       invariant(EntityId.isValid(anchor));
 
-      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
+      const entities: Atom.Atom<Entity.Unknown[]> = QueryResult.atom(
+        this.#database,
         Query.all(
           Query.select(Filter.id(anchor)).children(),
           Query.select(Filter.id(anchor)).sourceOf(),
@@ -248,7 +249,7 @@ class ObjectsTreeModel {
             deleted: 'include',
           })
           .from(this.#database),
-      ).atom;
+      );
 
       return Atom.make((get) =>
         pipe(
@@ -261,9 +262,10 @@ class ObjectsTreeModel {
     } else if (this.#root !== null) {
       return Entity.atom(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
     } else {
-      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
+      const entities: Atom.Atom<Entity.Unknown[]> = QueryResult.atom(
+        this.#database,
         Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database),
-      ).atom;
+      );
 
       return Atom.make((get) =>
         pipe(

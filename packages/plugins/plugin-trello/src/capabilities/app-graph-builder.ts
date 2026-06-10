@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, QueryResult, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
@@ -43,7 +43,7 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          const integrations = get(db.query(Filter.type(Integration.Integration)).atom);
+          const integrations = get(QueryResult.atom(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
               (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === kanban.id,
