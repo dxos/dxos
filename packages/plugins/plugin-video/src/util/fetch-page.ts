@@ -106,6 +106,11 @@ const ANDROID_USER_AGENT = `com.google.android.youtube/${ANDROID_CLIENT_VERSION}
  * Fetch a YouTube video's player response (caption tracks, video details) via the InnerTube `player`
  * endpoint, through the EDGE CORS proxy. Returns the parsed JSON; callers narrow it with the
  * `youtube` parsers.
+ *
+ * The browser forces an `Origin: <app>` header onto the cross-origin POST, and YouTube's InnerTube
+ * API rejects a foreign origin with 403. We can't strip `Origin` from a browser `fetch`, so we use
+ * the CORS proxy's `x-cors-proxy-*` override mechanism to replace the upstream `Origin` (and set the
+ * ANDROID `User-Agent`, which the browser also forbids setting directly) before it reaches YouTube.
  */
 export const fetchYouTubePlayer = (videoId: string): Effect.Effect<unknown, FetchError> =>
   Effect.tryPromise({
@@ -114,7 +119,11 @@ export const fetchYouTubePlayer = (videoId: string): Effect.Effect<unknown, Fetc
       target.searchParams.set('key', ANDROID_API_KEY);
       const response = await proxyFetchLegacy(target, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'user-agent': ANDROID_USER_AGENT },
+        headers: {
+          'content-type': 'application/json',
+          'x-cors-proxy-origin': 'https://www.youtube.com',
+          'x-cors-proxy-user-agent': ANDROID_USER_AGENT,
+        },
         body: JSON.stringify({
           context: {
             client: { clientName: 'ANDROID', clientVersion: ANDROID_CLIENT_VERSION, androidSdkVersion: 30, hl: 'en', gl: 'US' },
