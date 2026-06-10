@@ -20,26 +20,26 @@
 /**
  * Window CustomEvent name the page dispatches to request a render.
  */
-export const RENDER_EVENT = 'composer:search-proxy:render';
+export const RENDER_EVENT = 'composer:proxy:render';
 
 /**
  * Window CustomEvent name the content script dispatches with the ack.
  */
-export const RENDER_ACK_EVENT = 'composer:search-proxy:render:ack';
+export const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 
 /**
  * Runtime message `type` discriminator the content script forwards to the
  * background worker.
  */
-export const RENDER_MESSAGE_TYPE = 'composer-crx:search-proxy:render';
+export const RENDER_MESSAGE_TYPE = 'composer-crx:proxy:render';
 
 /**
  * `documentElement` dataset key the content relay sets once it is listening on
- * a Composer page (`document.documentElement.dataset.composerSearchProxy`).
+ * a Composer page (`document.documentElement.dataset.composerProxy`).
  * Lets the page detect render-proxy availability synchronously rather than
  * waiting for a request to time out.
  */
-export const RENDER_READY_DATASET_KEY = 'composerSearchProxy';
+export const RENDER_READY_DATASET_KEY = 'composerProxy';
 
 /**
  * Default ceiling for a single render before it is aborted.
@@ -169,17 +169,17 @@ export const decodeRenderAck = (value: unknown): RenderAck | undefined => {
 /**
  * Window CustomEvent name the page dispatches to probe the extension.
  */
-export const PING_EVENT = 'composer:search-proxy:ping';
+export const PING_EVENT = 'composer:proxy:ping';
 
 /**
  * Window CustomEvent name the content script dispatches with the ping ack.
  */
-export const PING_ACK_EVENT = 'composer:search-proxy:ping:ack';
+export const PING_ACK_EVENT = 'composer:proxy:ping:ack';
 
 /**
  * Runtime message `type` discriminator the content script forwards for a ping.
  */
-export const PING_MESSAGE_TYPE = 'composer-crx:search-proxy:ping';
+export const PING_MESSAGE_TYPE = 'composer-crx:proxy:ping';
 
 /**
  * Health-check round-trip: the page asks the extension to identify itself. Exercises the same

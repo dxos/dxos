@@ -13,14 +13,14 @@ const proxyFetchLegacy = vi.fn(
 
 vi.mock('@dxos/edge-client', () => ({ proxyFetchLegacy }));
 
-const RENDER_EVENT = 'composer:search-proxy:render';
-const RENDER_ACK_EVENT = 'composer:search-proxy:render:ack';
+const RENDER_EVENT = 'composer:proxy:render';
+const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 
 const setAvailable = (available: boolean) => {
   if (available) {
-    document.documentElement.dataset.composerSearchProxy = '1';
+    document.documentElement.dataset.composerProxy = '1';
   } else {
-    delete document.documentElement.dataset.composerSearchProxy;
+    delete document.documentElement.dataset.composerProxy;
   }
 };
 

@@ -8,12 +8,12 @@ import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.extension'),
-  name: 'Extension',
+  name: 'Browser Extension',
   author: 'DXOS',
   description: trim`
-    Extension exposes user settings for the composer-crx browser extension. The extension can both
+    Browser Extension exposes user settings for the composer-crx browser extension. The extension can both
     clip DOM subtrees into Composer and act as a search render-proxy — fetching and JS-rendering
-    pages in a real browser tab so plugins (e.g. product search) can scrape client-rendered or
+    pages in a real browser tab so plugins (e.g., product search) can scrape client-rendered or
     anti-bot sites a plain HTTP proxy cannot read.
 
     The settings surface contributes toggles and values that govern the render-proxy: a master
