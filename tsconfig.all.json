@@ -316,6 +316,9 @@
       "path": "packages/plugins/plugin-board/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-bookmarks/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {

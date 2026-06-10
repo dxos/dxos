@@ -71,19 +71,21 @@ export const Default: Story = {
 };
 
 export const Readonly: Story = {
+  decorators: [withFakeExtension],
   args: {
     readonly: true,
   },
-  decorators: [withFakeExtension],
 };
 
 /**
  * No fake relay — the connection test talks to the real composer-crx extension. For development:
  * load the dev extension (`moon run composer-crx:build`, load unpacked from `out/composer-crx`),
  * then add this storybook's origin (e.g. `http://localhost:9009/*`) to the extension's Composer
- * URLs in its options page so the content relay installs here. The extension's content script
- * runs only in the top frame, so the story must be opened OUTSIDE the storybook manager's
- * preview iframe: `http://localhost:9009/iframe.html?id=plugins-plugin-crx-crxsettings--live`.
+ * URLs in its options page so the content relay installs here.
+ *
+ * NOTE: The extension's content script runs only in the top frame,
+ * so the story must be opened OUTSIDE the storybook manager's preview iframe:
+ * `http://localhost:9009/iframe.html?id=plugins-plugin-crx-crxsettings--live`.
  * Without that setup the test reports "Extension not detected".
  */
 export const Live: Story = {};
