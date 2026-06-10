@@ -25,7 +25,9 @@ import {
 export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
 const DEFAULT_LEADER_HEARTBEAT_INTERVAL = 1_000;
-const DEFAULT_LEADER_STALE_TIMEOUT = 2_500;
+// ~5 missed heartbeats: tolerant of main-thread jank (GC pauses, heavy renders) on the leader tab,
+// since the heartbeat runs on the leader's main thread while data work runs in the worker.
+const DEFAULT_LEADER_STALE_TIMEOUT = 5_000;
 const DEFAULT_LEADER_PORT_TIMEOUT = 3_000;
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
@@ -82,6 +84,8 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   #lastLeaderHeartbeat = 0;
   // Timestamp (ms) of the last steal attempt; gates against thrashing re-election.
   #lastStealAttempt = 0;
+  // Resolves the leader-lock hold; woken on close, worker termination, or when our lock is stolen.
+  #leaderDone: Trigger | undefined;
 
   #initialConnection = new Trigger<void>();
   #isInitialConnection = true;
@@ -172,6 +176,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
 
           this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
           const done = new Trigger();
+          this.#leaderDone = done;
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
             log('dedicated-worker-client-services: leader session closed', { hasError: !!error });
@@ -190,12 +195,28 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
             log('dedicated-worker-client-services: leader session done');
           } finally {
             clearInterval(heartbeat);
+            this.#leaderDone = undefined;
           }
         });
         log('dedicated-worker-client-services: leader lock released');
       } catch (error: any) {
         if (isAbortError(error)) {
-          log('dedicated-worker-client-services: leader watch aborted');
+          if (this._ctx.disposed) {
+            // Normal shutdown: the leader-lock request was aborted because the resource is closing.
+            log('dedicated-worker-client-services: leader watch aborted (closing)');
+            return;
+          }
+          // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
+          // callback keeps running per spec, so explicitly tear down our leader session (terminating
+          // the worker so it stops contending for shared storage) and re-enter the election.
+          log.warn('dedicated-worker-client-services: leader lock stolen, tearing down and re-watching', {
+            clientId: this.#clientId,
+          });
+          this.#leaderDone?.wake();
+          const session = this.#leaderSession;
+          this.#leaderSession = undefined;
+          await session?.close();
+          this.#watchLeader();
           return;
         }
         log.catch(error);
@@ -476,6 +497,9 @@ class LeaderSession extends Resource {
           break;
         case 'provide-port':
           // noop
+          break;
+        case 'leader-heartbeat':
+          // Broadcast by leaders (including ourselves) for follower liveness tracking; ignore here.
           break;
         case 'request-port':
           this.#sendMessage({ type: 'start-session', clientId: msg.clientId });
