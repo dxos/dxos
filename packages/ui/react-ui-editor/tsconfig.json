@@ -56,9 +56,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {

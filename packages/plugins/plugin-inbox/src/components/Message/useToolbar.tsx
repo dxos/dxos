@@ -14,20 +14,28 @@ export type UseMessageToolbarActionsProps = {
   message: Message.Message;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  /** Whether remote images are currently loaded inline. */
+  loadRemoteImages: boolean;
+  /** Toggle the remote-image loading setting. */
+  onToggleLoadImages: () => void;
   onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  onDelete?: () => void;
 };
 
 export const useMessageActions = ({
   message,
   viewMode,
   setViewMode,
+  loadRemoteImages,
+  onToggleLoadImages,
   onOpen,
   onReply,
   onReplyAll,
   onForward,
+  onDelete,
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
 
@@ -59,6 +67,18 @@ export const useMessageActions = ({
           setViewMode,
           modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
         }),
+      )
+      .subgraph((b) =>
+        b.action(
+          'load-images',
+          {
+            label: ['message-toolbar-load-images.menu', { ns: meta.id }],
+            icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
+            iconOnly: true,
+            checked: loadRemoteImages,
+          },
+          onToggleLoadImages,
+        ),
       )
       .separator('gap')
       .subgraph(
@@ -96,6 +116,18 @@ export const useMessageActions = ({
               },
               onForward,
             )),
+      )
+      .subgraph(
+        onDelete &&
+          ((b) =>
+            b.action(
+              'delete',
+              {
+                label: ['message-toolbar-delete.menu', { ns: meta.id }],
+                icon: 'ph--trash--regular',
+              },
+              onDelete,
+            )),
       );
 
     if (extractorActions.length > 0) {
@@ -116,5 +148,17 @@ export const useMessageActions = ({
     }
 
     return builder.build();
-  }, [viewMode, setViewMode, enrichedAvailable, onOpen, onReply, onReplyAll, onForward, extractorActions]);
+  }, [
+    viewMode,
+    setViewMode,
+    loadRemoteImages,
+    onToggleLoadImages,
+    enrichedAvailable,
+    onOpen,
+    onReply,
+    onReplyAll,
+    onForward,
+    onDelete,
+    extractorActions,
+  ]);
 };

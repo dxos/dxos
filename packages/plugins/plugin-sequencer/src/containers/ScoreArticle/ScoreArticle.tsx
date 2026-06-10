@@ -8,9 +8,9 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
+import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, useMenuBuilder, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
-import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';

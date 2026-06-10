@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Feed, Filter, Tag, TagIndex } from '@dxos/echo';
+import { Feed, Filter, Tag } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
+import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { Builder } from '../testing/builder';
@@ -27,7 +28,7 @@ describe('Mailbox tags', () => {
 
   test('applyTag creates a Tag object and indexes the immutable message', async ({ expect }) => {
     const { db, queues } = await builder.createDatabase({
-      types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message],
+      types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
     });
     const mailbox = db.add(Mailbox.make());
     await db.flush();
@@ -35,14 +36,16 @@ describe('Mailbox tags', () => {
 
     const { messages } = new Builder().createMessages(1).build();
     const [message] = messages;
-    await runAndForwardErrors(Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(queues))));
+    await EffectEx.runAndForwardErrors(
+      Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+    );
 
     // Applying a tag creates a Tag object and indexes the message under its uri.
     const tagUri = await Mailbox.applyTag(mailbox, { label: 'Urgent' }, message, db);
     const tagObjects = await db.query(Filter.type(Tag.Tag)).run();
     expect(tagObjects.map((tag) => tag.label)).toContain('Urgent');
     expect(Mailbox.getTagsForMessage(mailbox, message)).toEqual([tagUri]);
-    expect([...TagIndex.bind(mailbox, 'tags').objects(tagUri)]).toEqual([message.id]);
+    expect([...TagIndex.bind(mailbox.tags!.target!).objects(tagUri)]).toEqual([message.id]);
 
     // Idempotent: applying the same label (case-insensitive) reuses the Tag object.
     const tagUriAgain = await Mailbox.applyTag(mailbox, { label: 'urgent' }, message, db);

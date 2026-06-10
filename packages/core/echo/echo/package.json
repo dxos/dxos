@@ -144,7 +144,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
   },
   "publishConfig": {
     "access": "public"

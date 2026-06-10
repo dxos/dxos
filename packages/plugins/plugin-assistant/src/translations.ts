@@ -53,6 +53,9 @@ export const translations: Resource[] = [
       },
       [Type.getTypename(Chat.Chat)]: {
         'typename.label': 'AI Chat',
+        'typename.label_zero': 'AI Chats',
+        'typename.label_one': 'AI Chat',
+        'typename.label_other': 'AI Chats',
         'object-name.placeholder': 'New AI Chat',
         'add-object.label': 'Add AI chat',
         'rename-object.label': 'Rename AI Chat',
@@ -119,6 +122,7 @@ export const translations: Resource[] = [
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
+        'create-chat.label': 'New AI Chat',
 
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
@@ -152,6 +156,7 @@ export const translations: Resource[] = [
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
+        'ai-service-error.label': 'AI service error',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',

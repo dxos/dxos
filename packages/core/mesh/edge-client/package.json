@@ -41,6 +41,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",

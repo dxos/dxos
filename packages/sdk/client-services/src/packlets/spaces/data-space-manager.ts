@@ -23,7 +23,7 @@ import {
   type EchoHost,
   type EdgeAutomergeReplicator,
   type MeshEchoReplicator,
-  type MetadataStore,
+  type IMetadataStore,
   type Space,
   type SpaceManager,
   type SpaceProtocol,
@@ -34,7 +34,7 @@ import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protoco
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
@@ -104,8 +104,8 @@ export type AdmitMemberOptions = {
 
 export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
-  metadataStore: MetadataStore;
-  keyring: Keyring;
+  metadataStore: IMetadataStore;
+  keyring: KeyringApi;
   signingContext: SigningContext;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
@@ -145,8 +145,8 @@ export class DataSpaceManager extends Resource {
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
   private readonly _spaceManager: SpaceManager;
-  private readonly _metadataStore: MetadataStore;
-  private readonly _keyring: Keyring;
+  private readonly _metadataStore: IMetadataStore;
+  private readonly _keyring: KeyringApi;
   private readonly _signingContext: SigningContext;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _echoHost: EchoHost;

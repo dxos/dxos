@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 
 import { Mailbox } from '#types';
@@ -32,6 +32,8 @@ export const initializeMailbox = async (space: Space, count = 0): Promise<Mailbo
   }
 
   const { messages } = new Builder().createMessages(count, { links: { space }, threads: 10 }).build();
-  await runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.queues))));
+  await EffectEx.runAndForwardErrors(
+    Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.queues))),
+  );
   return mailbox;
 };

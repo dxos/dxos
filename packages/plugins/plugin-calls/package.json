@@ -76,6 +76,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -103,8 +108,9 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-audio": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

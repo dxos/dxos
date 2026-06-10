@@ -5,7 +5,6 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
@@ -16,8 +15,8 @@ import {
   InvalidOperationInputError,
   InvalidOperationOutputError,
   Operation,
-  OperationRegistry,
   Trace,
+  byokHeaderLayer,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
@@ -29,9 +28,9 @@ import {
   type QueueFactory,
 } from '@dxos/echo-db';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
@@ -112,7 +111,7 @@ export const wrapFunctionHandler = (
         let result: any = await func.handler(dataWithDecodedRefs);
 
         if (Effect.isEffect(result)) {
-          result = await runAndForwardErrors(
+          result = await EffectEx.runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),
@@ -208,16 +207,12 @@ class FunctionContext extends Resource {
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
-      ? InternalAiServiceLayer(this.context.services.functionsAiService)
+      ? InternalAiServiceLayer(this.context.services.functionsAiService).pipe(Layer.provide(credentials))
       : AiService.notAvailable;
 
     const operationServiceLayer = this.context.services.functionsService
       ? makeOperationServiceLayer(this.context.services.functionsService)
       : unavailableOperationServiceLayer;
-
-    const operationRegistryLayer = this.context.services.functionsService
-      ? makeOperationRegistryLayer(this.context.services.functionsService, this.context.spaceId as SpaceId | undefined)
-      : emptyOperationRegistryLayer;
 
     const traceWriterLayer = this.context.services.traceService
       ? makeTraceWriterLayer(this.context.services.traceService)
@@ -242,7 +237,6 @@ class FunctionContext extends Resource {
       feedLayer,
       credentials,
       operationServiceLayer,
-      operationRegistryLayer,
       aiLayer,
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
@@ -276,22 +270,18 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
     },
   });
 
-/**
- * AI service layer that proxies HTTP requests through the EDGE-provided `FunctionsAiService`.
- */
-const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) =>
-  AiModelResolver.AiModelResolver.buildAiService.pipe(
-    Layer.provide(
-      AnthropicResolver.make().pipe(
-        Layer.provide(
-          AnthropicClient.layer({
-            // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
-            apiUrl: 'http://internal/provider/anthropic',
-          }).pipe(Layer.provide(FunctionsAiHttpClient.layer(functionsAiService))),
-        ),
-      ),
-    ),
+/** Proxies Anthropic requests through the EDGE-provided `FunctionsAiService`, BYOK-wrapped. */
+const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) => {
+  // `apiUrl` is a sentinel — the request gets re-routed by the AI gateway in EDGE.
+  const httpClient = byokHeaderLayer('anthropic.com').pipe(
+    Layer.provide(FunctionsAiHttpClient.layer(functionsAiService)),
   );
+  const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://internal/provider/anthropic' }).pipe(
+    Layer.provide(httpClient),
+  );
+  const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
+  return AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+};
 
 /**
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation
@@ -349,27 +339,6 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
     error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
   }),
 } as Operation.OperationService);
-
-/**
- * Backs `OperationRegistry.Service` with the EDGE-provided `FunctionsService.query`. Returns
- * the first persistent operation matching the requested key, or `Option.none()` when not found.
- */
-const makeOperationRegistryLayer = (
-  functionsService: EdgeFunctionEnv.FunctionsService,
-  spaceId: SpaceId | undefined,
-): Layer.Layer<OperationRegistry.Service> =>
-  Layer.succeed(OperationRegistry.Service, {
-    resolve: (key: string) =>
-      Effect.gen(function* () {
-        const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
-        const match = (records as Operation.PersistentOperation[]).find((record) => Operation.getKey(record) === key);
-        return match ? Option.some(Operation.deserialize(match)) : Option.none();
-      }),
-  });
-
-const emptyOperationRegistryLayer = Layer.succeed(OperationRegistry.Service, {
-  resolve: () => Effect.succeed(Option.none()),
-});
 
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
   if (value == null) {

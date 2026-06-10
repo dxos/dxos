@@ -19,7 +19,7 @@ import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } 
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
@@ -285,7 +285,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.succeed(false)),
     Match.exhaustive,
-    runAndForwardErrors,
+    EffectEx.runPromise,
   );
 
   // Detect mobile operating systems (phones only, not tablets).
@@ -300,7 +300,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
     Match.exhaustive,
-    runAndForwardErrors,
+    EffectEx.runPromise,
   );
 
   // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
@@ -329,12 +329,12 @@ const main = async () => {
         : defs.Runtime.Client.ServicesMode.HOST
       : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
-  // Host mode uses OPFS SQLite in a dedicated worker; worker modes run their own in-memory SQLite
-  // (OPFS does not yet work from inside a SharedWorker per the TODO in `worker-runtime.ts`).
+  // Host and dedicated worker use OPFS-backed SQLite. SharedWorker still uses in-memory SQLite
+  // because OPFS is not available there (see `onconnect.ts`).
   const sqliteMode =
-    servicesMode === defs.Runtime.Client.ServicesMode.HOST
-      ? defs.Runtime.Client.Storage.SqliteMode.OPFS
-      : defs.Runtime.Client.Storage.SqliteMode.MEMORY;
+    servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
+      ? defs.Runtime.Client.Storage.SqliteMode.MEMORY
+      : defs.Runtime.Client.Storage.SqliteMode.OPFS;
 
   config = new Config(
     {
@@ -403,7 +403,7 @@ const main = async () => {
   bootStatus('Loading plugins…');
   const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isPwa, isTauri);
-  const remotePluginsResult = await runAndForwardErrors(
+  const remotePluginsResult = await EffectEx.runPromise(
     UrlLoader.preload({
       cache: assetCache,
       onPluginLoaded: (loaded, total) => {

@@ -50,6 +50,8 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
  * Pass a builder thunk and a dependency list — the hook memoizes `Atom.make(build)` and threads
  * it through `useMenuActions`. Saves the `useMemo(() => Atom.make(...), deps)` boilerplate when
  * the action graph is composed from local state (e.g. a toolbar driven by component state).
+ *
+ * Read reactive state via `get` inside the builder; `deps` should hold only stable references.
  */
 export const useMenuBuilder = (build: (get: Atom.Context) => ActionGraphProps, deps: DependencyList): MenuActions => {
   // eslint-disable-next-line react-hooks/exhaustive-deps

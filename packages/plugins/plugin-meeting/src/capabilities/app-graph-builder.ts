@@ -9,10 +9,9 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Obj, Type } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CallsCapabilities } from '@dxos/plugin-calls';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -168,7 +167,7 @@ export default Capability.makeModule(
               id: 'transcript',
               label: ['transcript-companion.label', { ns: meta.id }],
               icon: 'ph--subtitles--regular',
-              data: get(AtomObj.make(meeting.transcript)),
+              data: get(Obj.atom(meeting.transcript)),
               position: 'first',
             }),
           ];
@@ -184,7 +183,7 @@ export default Capability.makeModule(
               id: 'transcript',
               label: ['transcript-companion.label', { ns: meta.id }],
               icon: 'ph--subtitles--regular',
-              data: get(AtomObj.make(meeting.transcript)),
+              data: get(Obj.atom(meeting.transcript)),
               position: 'first',
             }),
           ]),

@@ -18,6 +18,7 @@ import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
+import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
@@ -80,6 +81,7 @@ import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
+import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
@@ -114,6 +116,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
   [
     // Default
     AssistantPlugin.meta.id,
+    CommentsPlugin.meta.id,
     FilePlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
@@ -148,6 +151,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
+      VideoPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
   ]
@@ -177,6 +181,7 @@ export const getPlugins = ({
     BoardPlugin(),
     CallsPlugin(),
     ChessPlugin(),
+    CommentsPlugin(),
     ClientPlugin({
       config,
       services,
@@ -269,6 +274,7 @@ export const getPlugins = ({
     TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
+    VideoPlugin(),
     VoxelPlugin(),
     FilePlugin(),
     WnfsPlugin(),

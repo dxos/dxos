@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { SyncIssues } from './functions';
+import { SyncIssues } from './operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.linear';
 

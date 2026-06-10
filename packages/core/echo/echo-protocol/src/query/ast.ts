@@ -356,6 +356,12 @@ const Order_ = Schema.Union(
     kind: Schema.Literal('rank'),
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by system timestamp (createdAt / updatedAt) from the object meta index.
+    kind: Schema.Literal('timestamp'),
+    field: Schema.Literal('createdAt', 'updatedAt'),
+    direction: OrderDirection,
+  }),
 );
 
 export type Order = Schema.Schema.Type<typeof Order_>;

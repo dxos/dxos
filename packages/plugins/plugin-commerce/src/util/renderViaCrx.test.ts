@@ -5,7 +5,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 const proxyFetchLegacy = vi.fn(
   async () => new Response('PROXY_BODY', { status: 200, headers: { 'content-type': 'text/html' } }),
@@ -13,14 +13,14 @@ const proxyFetchLegacy = vi.fn(
 
 vi.mock('@dxos/edge-client', () => ({ proxyFetchLegacy }));
 
-const RENDER_EVENT = 'composer:search-proxy:render';
-const RENDER_ACK_EVENT = 'composer:search-proxy:render:ack';
+const RENDER_EVENT = 'composer:proxy:render';
+const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 
 const setAvailable = (available: boolean) => {
   if (available) {
-    document.documentElement.dataset.composerSearchProxy = '1';
+    document.documentElement.dataset.composerProxy = '1';
   } else {
-    delete document.documentElement.dataset.composerSearchProxy;
+    delete document.documentElement.dataset.composerProxy;
   }
 };
 
@@ -62,7 +62,7 @@ describe('renderViaCrx', () => {
       finalUrl: 'https://x',
     }));
 
-    const html = await runAndForwardErrors(renderViaCrx('https://example.com'));
+    const html = await EffectEx.runAndForwardErrors(renderViaCrx('https://example.com'));
     expect(html).toEqual('<html>RENDERED</html>');
     uninstall();
   });
@@ -70,14 +70,14 @@ describe('renderViaCrx', () => {
   test('renderViaCrx fails when the extension is unavailable', async () => {
     setAvailable(false);
     const { renderViaCrx } = await import('./renderViaCrx');
-    await expect(runAndForwardErrors(renderViaCrx('https://example.com'))).rejects.toThrow(/not available/);
+    await expect(EffectEx.runAndForwardErrors(renderViaCrx('https://example.com'))).rejects.toThrow(/not available/);
   });
 
   test('renderViaCrx fails on a non-ok ack', async () => {
     setAvailable(true);
     const { renderViaCrx } = await import('./renderViaCrx');
     const uninstall = installFakeRelay((id) => ({ version: 1, id, ok: false, error: 'forbiddenOrigin' }));
-    await expect(runAndForwardErrors(renderViaCrx('https://example.com'))).rejects.toThrow(/forbiddenOrigin/);
+    await expect(EffectEx.runAndForwardErrors(renderViaCrx('https://example.com'))).rejects.toThrow(/forbiddenOrigin/);
     uninstall();
   });
 });
@@ -90,14 +90,16 @@ describe('fetchPage routing', () => {
 
   test('uses the edge proxy when rendering is not requested', async () => {
     const { fetchPage } = await import('./fetch');
-    const body = await runAndForwardErrors(fetchPage({ method: 'GET', url: 'https://example.com' }));
+    const body = await EffectEx.runAndForwardErrors(fetchPage({ method: 'GET', url: 'https://example.com' }));
     expect(body).toEqual('PROXY_BODY');
     expect(proxyFetchLegacy).toHaveBeenCalledTimes(1);
   });
 
   test('falls back to the edge proxy when render is requested but the extension is absent', async () => {
     const { fetchPage } = await import('./fetch');
-    const body = await runAndForwardErrors(fetchPage({ method: 'GET', url: 'https://example.com' }, { render: true }));
+    const body = await EffectEx.runAndForwardErrors(
+      fetchPage({ method: 'GET', url: 'https://example.com' }, { render: true }),
+    );
     expect(body).toEqual('PROXY_BODY');
     expect(proxyFetchLegacy).toHaveBeenCalledTimes(1);
   });
@@ -106,7 +108,9 @@ describe('fetchPage routing', () => {
     setAvailable(true);
     const { fetchPage } = await import('./fetch');
     const uninstall = installFakeRelay((id) => ({ version: 1, id, ok: true, html: 'RENDERED', finalUrl: 'https://x' }));
-    const body = await runAndForwardErrors(fetchPage({ method: 'GET', url: 'https://example.com' }, { render: true }));
+    const body = await EffectEx.runAndForwardErrors(
+      fetchPage({ method: 'GET', url: 'https://example.com' }, { render: true }),
+    );
     expect(body).toEqual('RENDERED');
     expect(proxyFetchLegacy).not.toHaveBeenCalled();
     uninstall();
@@ -115,7 +119,7 @@ describe('fetchPage routing', () => {
   test('never renders a POST request (uses the proxy)', async () => {
     setAvailable(true);
     const { fetchPage } = await import('./fetch');
-    const body = await runAndForwardErrors(
+    const body = await EffectEx.runAndForwardErrors(
       fetchPage({ method: 'POST', url: 'https://example.com', body: 'x' }, { render: true }),
     );
     expect(body).toEqual('PROXY_BODY');

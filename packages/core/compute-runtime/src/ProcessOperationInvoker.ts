@@ -18,7 +18,7 @@ import * as Stream from 'effect/Stream';
 
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
@@ -273,7 +273,7 @@ export const make = (opts: {
     ...args: any[]
   ): Promise<{ data?: O; error?: Error }> => {
     try {
-      const data = await runAndForwardErrors(invoke(op, ...args) as Effect.Effect<O, Error>);
+      const data = await EffectEx.runAndForwardErrors(invoke(op, ...args) as Effect.Effect<O, Error>);
       return { data };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error(String(error)) };

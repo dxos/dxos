@@ -22,4 +22,6 @@ export * from './plugin';
 export * from './native-passkey';
 export * from './personal-space';
 export * from './type-options';
+export * from './type-section-extension';
+export * from './type-section-resolver';
 export * from './translations';

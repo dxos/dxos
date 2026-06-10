@@ -14,10 +14,14 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
+import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
 import { removeQueryParamByValue } from '../../../util';
 import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
+import { useForceDarkTheme } from '../hooks';
 import { meta } from '../meta';
+import { WelcomeOperation } from '../operations';
+import { translations } from '../translations';
 import { Welcome, WelcomeState } from './Welcome';
 
 export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
@@ -34,6 +38,9 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
+
+  // The welcome screen always renders dark, regardless of the system theme.
+  useForceDarkTheme();
 
   const handleLogin = useCallback(
     async (email: string) => {
@@ -83,7 +90,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         }
         // No inline token: either no Account for this email or production env
         // mailed the link out-of-band. Show the same "check your email" UI in
-        // both cases so the response stays enumeration-safe.
+        // both cases so the response stays enumeration-safe. When no Account
+        // exists hub-service silently submits the email to the waitlist.
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
         log.catch(err);
@@ -106,6 +114,34 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const handleRecoverIdentity = useCallback(async () => {
     await invokePromise(ClientOperation.RecoverIdentity);
   }, [invokePromise]);
+
+  const handleRecoverWithOAuth = useCallback(
+    async (provider: string, loginHint?: string) => {
+      if (pendingRef.current) {
+        return;
+      }
+      if (error) {
+        setError(false);
+      }
+      pendingRef.current = true;
+      try {
+        // Opens the provider auth in a new tab. Because atproto nullifies window.opener, the flow
+        // can't relay back via postMessage; kms-service redirects the tab to /redirect/oauth-recovery,
+        // where the welcome OAuthRecoveryRedirect module redeems the recovery proof and admits this
+        // device. This call returns once the tab is open — completion happens out-of-band.
+        const result = await invokePromise(WelcomeOperation.RedeemOAuthRecovery, { provider, loginHint });
+        if (result.error) {
+          throw result.error;
+        }
+      } catch (err) {
+        log.catch(err);
+        setError(true);
+      } finally {
+        pendingRef.current = false;
+      }
+    },
+    [invokePromise, error],
+  );
 
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
@@ -200,6 +236,41 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     [hubUrl, identity, client, invokePromise, error],
   );
 
+  const handleCreateAccountWithOAuth = useCallback(
+    async ({ code, provider, loginHint }: { code: string; provider: string; loginHint?: string }) => {
+      if (pendingRef.current) {
+        return;
+      }
+      if (error) {
+        setError(false);
+      }
+      pendingRef.current = true;
+      try {
+        // Opens the provider auth in a new tab (OAuth-first: no local identity yet). Because atproto
+        // nullifies window.opener, the flow can't relay back via postMessage; the invitation code +
+        // hub URL are persisted, then kms-service redirects the tab to /redirect/oauth-recovery. The
+        // welcome OAuthRecoveryRedirect module then creates the identity, completes registration, and
+        // redeems this invitation code with the provider-verified email. This call returns once the
+        // tab is open — completion happens out-of-band.
+        const result = await invokePromise(WelcomeOperation.RegisterOAuthRecovery, {
+          provider,
+          loginHint,
+          code,
+          hubUrl,
+        });
+        if (result.error) {
+          throw result.error;
+        }
+      } catch (err) {
+        log.catch(err);
+        setError(true);
+      } finally {
+        pendingRef.current = false;
+      }
+    },
+    [hubUrl, invokePromise, error],
+  );
+
   const handleJoinWaitlist = useCallback(
     async (email: string) => {
       if (pendingRef.current) {
@@ -225,19 +296,23 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   return (
-    <Welcome
-      state={state}
-      error={error}
-      identity={identity}
-      onEmailLogin={handleLogin}
-      onPasskey={!identity ? handlePasskey : undefined}
-      onJoinIdentity={!identity ? handleJoinIdentity : undefined}
-      onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
-      onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
-      onCreateAccount={!identity ? handleCreateAccount : undefined}
-      onJoinWaitlist={handleJoinWaitlist}
-      onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
-      onGoToLogin={handleGoToLogin}
-    />
+    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={translations}>
+      <Welcome
+        state={state}
+        error={error}
+        identity={identity}
+        onEmailLogin={handleLogin}
+        onPasskey={!identity ? handlePasskey : undefined}
+        onJoinIdentity={!identity ? handleJoinIdentity : undefined}
+        onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
+        onRecoverWithOAuth={!identity ? handleRecoverWithOAuth : undefined}
+        onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
+        onCreateAccount={!identity ? handleCreateAccount : undefined}
+        onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
+        onJoinWaitlist={handleJoinWaitlist}
+        onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
+        onGoToLogin={handleGoToLogin}
+      />
+    </ThemeProvider>
   );
 };

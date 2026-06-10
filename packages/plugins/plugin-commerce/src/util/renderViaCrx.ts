@@ -11,13 +11,13 @@ import { FetchError } from './fetch';
  *
  * The extension renders a URL in a real background tab and returns the rendered HTML, letting us
  * scrape client-rendered / anti-bot SPA targets a plain HTTP proxy cannot read. The wire shapes and
- * event names mirror `packages/apps/composer-crx/src/search-proxy/types.ts` (the source of truth);
- * they are re-declared here because the plugin must not depend on the extension app package.
+ * event names mirror `packages/apps/composer-crx/src/proxy/types.ts` (the source of truth); they are
+ * re-declared here because the plugin must not depend on the extension app package.
  */
 
-const RENDER_EVENT = 'composer:search-proxy:render';
-const RENDER_ACK_EVENT = 'composer:search-proxy:render:ack';
-const RENDER_READY_DATASET_KEY = 'composerSearchProxy';
+const RENDER_EVENT = 'composer:proxy:render';
+const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
+const RENDER_READY_DATASET_KEY = 'composerProxy';
 const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 
 type RenderRequest = {

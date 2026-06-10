@@ -21,7 +21,7 @@ import {
 } from '@dxos/assistant';
 import { Template, Trace, Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
@@ -30,7 +30,7 @@ import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 
-const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
+const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-6';
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
@@ -79,7 +79,7 @@ export default AgentPrompt.pipe(
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
-          systemText += `\n\n${data.systemInstructions}`;
+          systemText += `\n${data.systemInstructions}`;
         }
 
         const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
@@ -100,7 +100,7 @@ export default AgentPrompt.pipe(
         });
 
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>
           session.context.bind({

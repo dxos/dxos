@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -100,7 +100,7 @@ export const reactive = (
       ),
     ),
   );
-  const getHandlers = () => (cached ??= runAndForwardErrors(compute));
+  const getHandlers = () => (cached ??= EffectEx.runAndForwardErrors(compute));
   return {
     [TypeId]: TypeId,
     getHandlers,

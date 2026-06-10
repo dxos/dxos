@@ -30,6 +30,10 @@ const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 const DEBUG_TIMEOUT_MS = 3_600_000;
 
+// Node-only Vitest NDJSON file sink (@dxos/vite-plugin-log/vitest). Relative paths avoid a moon dep cycle.
+const VITEST_LOG_GLOBAL_SETUP = new URL('./tools/vite-plugin-log/src/vitest/global-setup.ts', import.meta.url).pathname;
+const VITEST_LOG_SETUP = new URL('./tools/vite-plugin-log/src/vitest/setup.ts', import.meta.url).pathname;
+
 // Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
 // `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level
 // `await` cannot be rewrapped by esbuild's dep pre-bundler. Composer-app's
@@ -159,11 +163,7 @@ const createBrowserProject = ({
 
       testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
-      poolOptions: {
-        threads: {
-          singleThread: true,
-        },
-      },
+      maxWorkers: 1,
 
       browser: {
         enabled: true,
@@ -209,7 +209,8 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
-      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
+      globalSetup: [VITEST_LOG_GLOBAL_SETUP],
+      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui

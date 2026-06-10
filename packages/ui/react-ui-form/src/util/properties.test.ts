@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { findNode, getArrayElementType } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 import { getFormProperties } from './properties';
 
@@ -85,7 +85,7 @@ describe('getFormProperties', () => {
     // Drill as the form does: getFormProperties at each level, descending via the property type
     // (array element / type literal) returned by the previous level.
     const findTypeLiteralWith = (ast: SchemaAST.AST, prop: string) =>
-      findNode(
+      SchemaEx.findNode(
         ast,
         (node) => SchemaAST.isTypeLiteral(node) && SchemaAST.getPropertySignatures(node).some((p) => p.name === prop),
       )!;
@@ -93,11 +93,14 @@ describe('getFormProperties', () => {
 
     const detailsType = propType(Type.getSchema(TestSchema).ast, 'details');
     const roadTypeLiteral = findTypeLiteralWith(detailsType, 'routes');
-    const routeTypeLiteral = findNode(
-      getArrayElementType(propType(roadTypeLiteral, 'routes'))!,
+    const routeTypeLiteral = SchemaEx.findNode(
+      SchemaEx.getArrayElementType(propType(roadTypeLiteral, 'routes'))!,
       SchemaAST.isTypeLiteral,
     )!;
-    const legTypeLiteral = findNode(getArrayElementType(propType(routeTypeLiteral, 'legs'))!, SchemaAST.isTypeLiteral)!;
+    const legTypeLiteral = SchemaEx.findNode(
+      SchemaEx.getArrayElementType(propType(routeTypeLiteral, 'legs'))!,
+      SchemaAST.isTypeLiteral,
+    )!;
 
     const names = getFormProperties(legTypeLiteral).map((prop) => prop.name);
     expect(names).toContain('distance');

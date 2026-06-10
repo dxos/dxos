@@ -27,7 +27,6 @@ import {
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, PublicKey, URI } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -544,6 +543,44 @@ describe('Query', () => {
       expect(ids).not.toContain(early.id);
     });
 
+    test('orderBy(Order.created(desc)) returns most-recently-created first', async () => {
+      const { db } = await builder.createDatabase();
+      const first = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+      // createdAt is sourced from Automerge change time (1-second resolution); gaps must exceed 1s.
+      await sleep(1100);
+      const second = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+      await sleep(1100);
+      const third = db.add(createTestObject({ value: 3 }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.everything()).orderBy(Order.created('desc'))).run();
+      expect(objects.map((obj) => obj.id)).to.deep.equal([third.id, second.id, first.id]);
+    });
+
+    test('orderBy(Order.updated(desc)).limit(3) returns the most-recently-updated', async () => {
+      const { db } = await builder.createDatabase();
+      const objects = range(5).map((index) => db.add(createTestObject({ value: index })));
+      await db.flush();
+
+      // Touch objects in a known order; each mutation bumps updatedAt. The index derives updatedAt
+      // from Automerge change time, which has 1-second resolution, so gaps must exceed 1s.
+      const touchOrder = [objects[1], objects[4], objects[0]];
+      for (const object of touchOrder) {
+        await sleep(1100);
+        Obj.update(object, (object: any) => {
+          object.value = (object.value ?? 0) + 100;
+        });
+        await db.flush();
+      }
+
+      const recent = await db.query(Query.select(Filter.everything()).orderBy(Order.updated('desc')).limit(3)).run();
+      expect(recent).to.have.length(3);
+      // Most-recently-touched first.
+      expect(recent.map((obj) => obj.id)).to.deep.equal([objects[0].id, objects[4].id, objects[1].id]);
+    });
+
     test('not(updated) throws clear error', async () => {
       const { db } = await builder.createDatabase();
       db.add(createTestObject({ value: 1 }));
@@ -687,7 +724,7 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
               Scope.feed(queue1.uri),
             ]),
           )
@@ -701,7 +738,7 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
               Scope.feed(queue2.uri),
             ]),
           )
@@ -715,7 +752,7 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
               Scope.feed(queue1.uri),
               Scope.feed(queue2.uri),
             ]),
@@ -1074,7 +1111,7 @@ describe('Query', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
@@ -1084,7 +1121,7 @@ describe('Query', () => {
     }
 
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, root);
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
     }
@@ -1102,7 +1139,7 @@ describe('Query', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -1118,7 +1155,7 @@ describe('Query', () => {
     }
 
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(1);
@@ -1175,7 +1212,6 @@ describe('Query', () => {
   });
 
   test('query immediately after delete and indexing works', async () => {
-    const kv = createTestLevel();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -1183,7 +1219,7 @@ describe('Query', () => {
       await builder.close();
     });
 
-    const peer = await builder.createPeer({ kv });
+    const peer = await builder.createPeer();
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 

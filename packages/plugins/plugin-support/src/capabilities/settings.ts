@@ -16,9 +16,7 @@ export default Capability.makeModule(() =>
     const settingsAtom = createKvsStore({
       key: meta.id,
       schema: Settings.Settings,
-      defaultValue: () => ({
-        showWelcome: true,
-      }),
+      defaultValue: () => ({}),
     });
 
     return [

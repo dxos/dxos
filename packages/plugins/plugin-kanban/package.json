@@ -112,7 +112,6 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",

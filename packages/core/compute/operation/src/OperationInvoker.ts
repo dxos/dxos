@@ -10,8 +10,7 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
 import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
-import { DynamicRuntime, unwrapExit } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { DynamicRuntime, EffectEx, Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -51,6 +50,12 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, NoHandlerError>;
+  invokePromise: <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
+  ) => Promise<{ data?: O; error?: Error }>;
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent operation completes.
@@ -62,12 +67,6 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<void>;
-  invokePromise: <I, O>(
-    op: Operation.Definition<I, O>,
-    ...args: void extends I
-      ? [input?: I, options?: Operation.InvokeOptions]
-      : [input: I, options?: Operation.InvokeOptions]
-  ) => Promise<{ data?: O; error?: Error }>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
   /** Number of pending followup operations. */
@@ -187,7 +186,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const effect = this.invoke(op, ...args);
     const exit = await this._managedRuntime.runPromiseExit(effect);
     try {
-      const data = unwrapExit(exit);
+      const data = EffectEx.unwrapExit(exit);
       return { data };
     } catch (error) {
       log.catch(error as Error);

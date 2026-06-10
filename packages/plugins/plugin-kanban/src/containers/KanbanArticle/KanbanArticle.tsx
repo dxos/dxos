@@ -9,7 +9,6 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { useObject, useType } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
@@ -53,7 +52,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
       return null;
     }
     const query = tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
-    return AtomQuery.make(db, query);
+    return db.query(query).atom;
   }, [db, baseFilter, tag]);
 
   const projection = useProjectionModel(cardSchema, object, registry);
@@ -133,7 +132,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
       Atom.make((get) => {
         const out: Obj.Unknown[] = [];
         for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
-          const target = get(AtomObj.make(ref));
+          const target = get(Obj.atom(ref));
           if (target == null) {
             continue;
           }

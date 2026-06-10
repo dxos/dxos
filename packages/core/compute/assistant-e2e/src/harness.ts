@@ -15,7 +15,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref, Tag } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -46,7 +46,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Routine.MakeOptions, 'name' | 'blueprints' | 'input' | 'output'> {
+interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints' | 'input' | 'output'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
@@ -135,7 +135,8 @@ const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: Mo
 
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
-    options.model ?? (options.inferenceProvider === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
+    options.model ??
+    (options.inferenceProvider === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
   const prompt = Routine.make({
     name: options.name,
@@ -160,7 +161,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
 
         const { personalSpace } = yield* Effect.promise(() =>
-          runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+          EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
         if (options.expect === 'failure') {

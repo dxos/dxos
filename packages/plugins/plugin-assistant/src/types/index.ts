@@ -14,6 +14,7 @@ export * as AssistantCapabilities from './AssistantCapabilities';
 export * as AssistantEvents from './AssistantEvents';
 
 // TODO(wittjosiah): Namespace.
+export * from './preset';
 export * from './service';
 
 export interface AssistantPluginOptions {

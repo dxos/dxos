@@ -30,6 +30,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -51,6 +54,18 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -58,6 +73,18 @@
     },
     {
       "path": "../plugin-integration"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

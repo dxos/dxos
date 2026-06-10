@@ -7,10 +7,10 @@ import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { runAndForwardErrors } from '@dxos/effect';
-import { EID } from '@dxos/keys';
+import { EffectEx } from '@dxos/effect';
+import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from '../testing';
@@ -41,7 +41,7 @@ describe('Feed', () => {
       yield* Feed.append(feed, [alice, bob]);
 
       yield* Feed.remove(feed, [alice]);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('query feeds by kind', async ({ expect }) => {
@@ -61,7 +61,7 @@ describe('Feed', () => {
       );
       expect(notificationFeeds).toHaveLength(2);
       expect(notificationFeeds.map((feed) => feed.name).sort()).toEqual(['notifications', 'other-notifications']);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('query items in a feed', async ({ expect }) => {
@@ -80,7 +80,7 @@ describe('Feed', () => {
       const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(results).toHaveLength(2);
       expect(results.map((item: any) => item.name).sort()).toEqual(['alice', 'bob']);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('feed objects have database returned with Obj.getDatabase', async ({ expect }) => {
@@ -102,7 +102,7 @@ describe('Feed', () => {
       const objDb = Obj.getDatabase(feedObject);
       expect(objDb).toBeDefined();
       expect(objDb?.spaceId).toEqual(db.spaceId);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('getParent returns Feed object for appended items', async ({ expect }) => {
@@ -120,7 +120,7 @@ describe('Feed', () => {
       const parent = Obj.getParent(alice);
       expect(parent).toBeDefined();
       expect(parent).toBe(feed);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('getParent returns Feed object for queried items', async ({ expect }) => {
@@ -143,7 +143,7 @@ describe('Feed', () => {
         expect(parent).toBeDefined();
         expect(parent).toBe(feed);
       }
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('query.subscribe fires with current results when fire: true', async ({ expect }) => {
@@ -168,7 +168,7 @@ describe('Feed', () => {
       expect(queryResult.results).toHaveLength(2);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
       unsubscribe();
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('query.subscribe fires when items are appended', async ({ expect }) => {
@@ -195,7 +195,7 @@ describe('Feed', () => {
       expect(queryResult.results).toHaveLength(2);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
       unsubscribe();
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('sync flushes the feed without throwing', async ({ expect }) => {
@@ -215,7 +215,7 @@ describe('Feed', () => {
 
       const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(results).toHaveLength(1);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   // TODO(wittjosiah): Implement when queue retention is supported.
@@ -235,7 +235,7 @@ describe('Feed', () => {
       const post = Obj.make(TestSchema.Person, { name: 'alice' });
       yield* Feed.append(feed, [post]);
 
-      // Re-query to obtain a queue-decoded proxy (matches the curate-magazine path).
+      // Re-query to obtain a queue-decoded proxy (cross-db ref resolution path).
       const items = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(items).toHaveLength(1);
       const queuePost = items[0];
@@ -260,7 +260,58 @@ describe('Feed', () => {
       // The ref must still resolve to the queue item.
       const resolved = yield* Effect.promise(() => ref.load());
       expect((resolved as any).name).toBe('alice');
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('ref.load resolves queue item when feed queue is not in knownQueues', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({
+      types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
+    });
+    await using db1 = await peer.createDatabase(spaceKey);
+    const queues1 = peer.client.constructQueueFactory(db1.spaceId);
+    const testLayer1 = Layer.merge(Database.layer(db1), createFeedServiceLayer(queues1));
+
+    let postRefUri = '';
+    let containerId = '';
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'posts' }));
+      const post = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [post]);
+
+      const container = yield* Database.add(Obj.make(TestSchema.Container, {}));
+      Obj.update(container, (container) => {
+        const mutable = container as Obj.Mutable<typeof container>;
+        mutable.objects = [Ref.make(post)];
+      });
+      postRefUri = container.objects![0]!.uri;
+      containerId = container.id;
+      yield* Database.flush({ indexes: true });
+    }).pipe(Effect.provide(testLayer1), EffectEx.runAndForwardErrors);
+
+    // Fresh client: empty knownQueues cache (exercises cold cross-db ref resolution).
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
+    const queues2 = client2.constructQueueFactory(db2.spaceId);
+    expect([...queues2.knownQueues()]).toHaveLength(0);
+
+    const [container] = await db2.query(Filter.id(containerId)).run();
+    const postRef = container.objects![0]!;
+    expect(postRef.uri).toBe(postRefUri);
+
+    const resolved = await postRef.load();
+    expect((resolved as TestSchema.Person).name).toBe('alice');
+
+    const postId = EID.getEntityId(postRef.uri)!;
+    const indexed = await db2.query(Query.select(Filter.id(postId)).from(db2, { includeFeeds: true })).run();
+    expect(indexed).toHaveLength(1);
+    expect((indexed[0] as TestSchema.Person).name).toBe('alice');
+
+    const traversed = await db2
+      .query(Query.select(Filter.id(containerId)).reference('objects').from(db2, { includeFeeds: true }))
+      .run();
+    expect(traversed).toHaveLength(1);
+    expect((traversed[0] as TestSchema.Person).name).toBe('alice');
   });
 
   describe('feed namespaces', () => {
@@ -278,7 +329,7 @@ describe('Feed', () => {
 
         yield* Feed.append(dataFeed, [Obj.make(TestSchema.Person, { name: 'data-item' })]);
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
-      }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
       const feeds = await peer.host.getAllFeedsForSpace(db.spaceId);
 
@@ -312,7 +363,7 @@ describe('Feed', () => {
         const results = yield* Feed.runQuery(traceFeed, Filter.type(TestSchema.Person));
         expect(results).toHaveLength(1);
         expect((results[0] as TestSchema.Person).name).toBe('trace-item');
-      }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
       const feeds = await peer.host.getAllFeedsForSpace(db.spaceId);
       expect(
@@ -337,7 +388,7 @@ describe('Feed', () => {
       await Effect.gen(function* () {
         traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
-      }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
       const traceResult = await peer.host.queuesService.queryQueue({
         query: {

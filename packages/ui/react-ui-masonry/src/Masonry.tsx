@@ -118,7 +118,7 @@ const MasonryContent = MasonryContentInner as (
 
 type MasonryViewportProps<Item> = ThemedClassName<{
   /** Items to render in the masonry grid. */
-  items: Item[];
+  items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
 }>;
@@ -171,7 +171,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
           {...composableProps(props)}
           ref={forwardedRef}
           style={{ gap: `${gutter}rem` }}
-          data={items}
+          data={items as any[]}
           columnCount={columnCount}
           ItemContent={TileAdapter}
         />

@@ -104,7 +104,7 @@ export const useStoryAppendSegments = (
 //
 
 export type UseStoryTranscriberOptions = Pick<
-  TranscriptionCapabilities.GetTranscriberProps,
+  TranscriptionCapabilities.TranscriberProviderProps,
   'transcriberConfig' | 'recorderConfig' | 'onSegments'
 > & {
   audioStreamTrack?: MediaStreamTrack;

@@ -24,7 +24,7 @@ import * as Struct from 'effect/Struct';
 import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
-import { causeToError } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -259,7 +259,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       if (this.timeControl === 'natural') {
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
           Effect.tapErrorCause((cause) => {
-            const error = causeToError(cause);
+            const error = EffectEx.causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
             registry.update(
@@ -396,7 +396,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         log.error('trigger execution failure', {
           triggerId: trigger.id,
           cooldownUntil: until,
-          error: causeToError(result.cause),
+          error: EffectEx.causeToError(result.cause),
         });
       }
       registry.update(

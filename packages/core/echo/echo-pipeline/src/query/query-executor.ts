@@ -18,7 +18,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
-import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { EffectEx, type RuntimeProvider } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type EntityMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
@@ -77,6 +77,13 @@ type QueryItem = {
    * Defaults to 1 for non-ranked queries (predicate matches).
    */
   rank: number;
+
+  /**
+   * System timestamps from the object meta index (unix ms), used for `timestamp` ordering.
+   * Null when the index has not recorded a timestamp for the item.
+   */
+  createdAt: number | null;
+  updatedAt: number | null;
 };
 
 const QueryItem = Object.freeze({
@@ -376,6 +383,28 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   return scopes;
 };
 
+/** True when any select step (including those nested in UnionStep/SetDifferenceStep subplans) scopes the owning space with {@link QueryAST.SpaceScope.includeAllFeeds}. */
+const extractIncludeAllFeeds = (plan: QueryPlan.Plan): boolean => {
+  for (const step of plan.steps) {
+    if (step._tag === 'SelectStep') {
+      for (const scope of step.scope) {
+        if (scope._tag === 'space' && scope.includeAllFeeds === true) {
+          return true;
+        }
+      }
+    } else if (step._tag === 'UnionStep') {
+      if (step.plans.some((subplan) => extractIncludeAllFeeds(subplan))) {
+        return true;
+      }
+    } else if (step._tag === 'SetDifferenceStep') {
+      if (extractIncludeAllFeeds(step.source) || extractIncludeAllFeeds(step.exclude)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
   const [smaller, larger]: [ReadonlySet<T>, ReadonlySet<T>] = a.size <= b.size ? [a, b] : [b, a];
   for (const item of smaller) {
@@ -414,6 +443,7 @@ export class QueryExecutor extends Resource {
 
   private _plan: QueryPlan.Plan;
   #scopes: QueryScopes;
+  readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
 
@@ -432,6 +462,7 @@ export class QueryExecutor extends Resource {
     const queryPlanner = new QueryPlanner();
     this._plan = queryPlanner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
+    this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }
 
   get queryId(): string {
@@ -626,6 +657,18 @@ export class QueryExecutor extends Resource {
       case 'IdSelector': {
         const beginLoad = performance.now();
 
+        if (allQueuesFromSpaces && spaces.length > 0) {
+          const objectIds = step.selector.objectIds.filter((id) => EntityId.isValid(id));
+          if (objectIds.length > 0) {
+            const metas = await this._runInRuntime(this._indexEngine.queryObjectIds({ spaceIds: spaces, objectIds }));
+            const results = await this._loadDocumentsAfterSqlQuery(metas);
+            trace.documentLoadTime += performance.now() - beginLoad;
+            workingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = workingSet.length;
+            break;
+          }
+        }
+
         const items = await Promise.all(
           step.selector.objectIds.map((id) => {
             if (!EntityId.isValid(id)) {
@@ -775,6 +818,8 @@ export class QueryExecutor extends Resource {
                 doc: null,
                 data: snapshot as Obj.JSON,
                 rank: rankMap.get(result.recordId) ?? 1,
+                createdAt: result.createdAt,
+                updatedAt: result.updatedAt,
               };
             })
             .filter(isNonNullable);
@@ -1043,7 +1088,7 @@ export class QueryExecutor extends Resource {
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, spaceId }) => this._loadReferencedTarget(ref, { sourceSpaceId: spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -1312,6 +1357,14 @@ export class QueryExecutor extends Resource {
         const comparison = a.rank - b.rank;
         return order.direction === 'desc' ? -comparison : comparison;
       }
+      case 'timestamp': {
+        // Order by the system createdAt/updatedAt timestamp from the meta index.
+        // Missing timestamps sort as oldest (0).
+        const aValue = (order.field === 'updatedAt' ? a.updatedAt : a.createdAt) ?? 0;
+        const bValue = (order.field === 'updatedAt' ? b.updatedAt : b.createdAt) ?? 0;
+        const comparison = aValue - bValue;
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       default:
         // Should never reach here with proper TypeScript types.
         return 0;
@@ -1359,8 +1412,8 @@ export class QueryExecutor extends Resource {
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     const runtimeProvider = this._runtime;
     invariant(runtimeProvider, 'SQL runtime is required.');
-    const runtime = await runAndForwardErrors(runtimeProvider);
-    return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+    const runtime = await EffectEx.runAndForwardErrors(runtimeProvider);
+    return await EffectEx.unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   }
 
   private async _queryAllFromSqlIndex(
@@ -1383,11 +1436,19 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  private static _anchorTargetDxn(item: QueryItem): EID.EID {
+    // Queue items are indexed with fully-qualified DXNs; local `echo:/<id>` anchors miss them.
+    if (item.queueId != null) {
+      return EID.make({ spaceId: item.spaceId, entityId: item.objectId });
+    }
+    return EID.make({ entityId: item.objectId });
+  }
+
   private async _queryIncomingReferencesFromSqlIndex(
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
-    const anchorDxns = workingSet.map((item) => EID.make({ entityId: item.objectId }));
+    const anchorDxns = workingSet.map((item) => QueryExecutor._anchorTargetDxn(item));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
@@ -1518,6 +1579,8 @@ export class QueryExecutor extends Resource {
       doc: null,
       data: snapshot as Obj.JSON,
       rank: 1,
+      createdAt: meta.createdAt,
+      updatedAt: meta.updatedAt,
     };
   }
 
@@ -1549,7 +1612,43 @@ export class QueryExecutor extends Resource {
       doc: object,
       data: null,
       rank: 1,
+      createdAt: meta.createdAt,
+      updatedAt: meta.updatedAt,
     };
+  }
+
+  /**
+   * Loads the target of an outgoing reference traversal.
+   * Space-db objects load from Automerge; with `includeAllFeeds` scope, queue items resolve via the SQL index.
+   */
+  private async _loadReferencedTarget(
+    dxn: URI.URI,
+    { sourceSpaceId }: { sourceSpaceId: SpaceId },
+  ): Promise<QueryItem | null> {
+    const fromSpace = await this._loadFromDXN(dxn, { sourceSpaceId });
+    if (fromSpace) {
+      return fromSpace;
+    }
+    if (!this.#includeAllFeeds) {
+      return null;
+    }
+
+    const parsedEchoUri = EID.tryParse(dxn);
+    const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
+    const spaceId = (parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined) ?? sourceSpaceId;
+    if (!objectId || !spaceId) {
+      return null;
+    }
+
+    const metas = await this._runInRuntime(
+      this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
+    );
+    if (metas.length === 0) {
+      return null;
+    }
+
+    const [item] = await this._loadDocumentsAfterSqlQuery(metas);
+    return item ?? null;
   }
 
   private async _loadFromDXN(dxn: URI.URI, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
@@ -1589,6 +1688,9 @@ export class QueryExecutor extends Resource {
         data: null,
         doc: inlineObject,
         rank: 1,
+        // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
+        createdAt: null,
+        updatedAt: null,
       };
     }
 
@@ -1618,6 +1720,9 @@ export class QueryExecutor extends Resource {
       data: null,
       doc: object,
       rank: 1,
+      // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
+      createdAt: null,
+      updatedAt: null,
     };
   }
 

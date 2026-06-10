@@ -107,7 +107,7 @@ export const Inner: Story = {
 
 export const Error: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+    <Outer asChild classNames='p-2 border border-green-500 rounded'>
       <Middle asChild>
         <Simple>Simple</Simple>
       </Middle>

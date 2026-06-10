@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { useSettingsState, usePluginManager } from '@dxos/app-framework/ui';
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { RegistrySettings } from '../../components';
 import { type RegistrySettings as RegistrySettingsType } from '../../types';
@@ -30,7 +30,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
 
   const onEnableDev = useCallback(
     async (url: string) => {
-      await runAndForwardErrors(
+      await EffectEx.runAndForwardErrors(
         Effect.gen(function* () {
           const plugin = yield* manager.add(url);
           yield* manager.enable(plugin.meta.id);
@@ -42,7 +42,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
 
   const onDisableDev = useCallback(
     async (id: string) => {
-      await runAndForwardErrors(manager.remove(id));
+      await EffectEx.runAndForwardErrors(manager.remove(id));
     },
     [manager],
   );

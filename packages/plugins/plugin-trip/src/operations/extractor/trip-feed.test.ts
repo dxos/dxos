@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { ExtractedFrom } from '@dxos/plugin-inbox';
@@ -143,7 +143,7 @@ describe('trip extraction over a message feed', () => {
           ),
         )
         .pipe(Effect.either)
-        .pipe(runAndForwardErrors);
+        .pipe(EffectEx.runAndForwardErrors);
       await db.flush();
     }
 

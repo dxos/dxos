@@ -42,6 +42,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/assistant-toolkit"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -51,10 +54,10 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -87,6 +90,9 @@
       "path": "../../ui/react-ui-masonry"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
@@ -94,6 +100,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-attention"

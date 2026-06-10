@@ -199,9 +199,6 @@
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-atom/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-db/tsconfig.json"
     },
     {
@@ -329,6 +326,9 @@
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-comments/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
@@ -532,6 +532,9 @@
       "path": "packages/plugins/plugin-trip/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-video/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {
@@ -637,6 +640,9 @@
       "path": "packages/ui/react-ui-attention/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-audio/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-board/tsconfig.json"
     },
     {
@@ -662,6 +668,9 @@
     },
     {
       "path": "packages/ui/react-ui-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-experimental/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-form/tsconfig.json"
@@ -704,9 +713,6 @@
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-sfx/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-stack/tsconfig.json"

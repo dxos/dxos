@@ -6,11 +6,11 @@ import platform from 'platform';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
-import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { type IMetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
@@ -67,8 +67,8 @@ export type CreateIdentityOptions = {
 };
 
 export type IdentityManagerProps = {
-  metadataStore: MetadataStore;
-  keyring: Keyring;
+  metadataStore: IMetadataStore;
+  keyring: KeyringApi;
   feedStore: FeedStore<FeedMessage>;
   spaceManager: SpaceManager;
   edgeConnection?: EdgeConnection;
@@ -82,8 +82,8 @@ export type IdentityManagerProps = {
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
-  private readonly _metadataStore: MetadataStore;
-  private readonly _keyring: Keyring;
+  private readonly _metadataStore: IMetadataStore;
+  private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _spaceManager: SpaceManager;
   private readonly _devicePresenceAnnounceInterval: number;

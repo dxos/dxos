@@ -19,13 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/display-name"
-    },
-    {
-      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -34,40 +28,19 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -76,13 +49,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -91,28 +64,13 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-thread"
     },
     {
-      "path": "../../ui/ui-editor"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -121,19 +79,10 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-observability"
-    },
-    {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

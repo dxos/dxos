@@ -109,6 +109,9 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-comments"
+    },
+    {
       "path": "../../plugins/plugin-deck"
     },
     {
@@ -217,6 +220,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-experimental"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -226,13 +232,13 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/react-ui-stack"

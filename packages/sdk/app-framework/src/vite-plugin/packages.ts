@@ -70,7 +70,6 @@ export const DEFAULT_PACKAGES = [
 
   // packages/core/echo
   '@dxos/echo',
-  '@dxos/echo-atom',
   '@dxos/echo-db',
   '@dxos/echo-pipeline',
   '@dxos/echo-protocol',
@@ -134,6 +133,7 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-hooks',
   '@dxos/react-ui',
   '@dxos/react-ui-attention',
+  '@dxos/react-ui-audio',
   '@dxos/react-ui-board',
   '@dxos/react-ui-calendar',
   '@dxos/react-ui-canvas',
@@ -143,6 +143,7 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-components',
   '@dxos/react-ui-dnd',
   '@dxos/react-ui-editor',
+  '@dxos/react-ui-experimental',
   '@dxos/react-ui-form',
   '@dxos/react-ui-gameboard',
   '@dxos/react-ui-geo',
@@ -155,7 +156,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-mosaic',
   '@dxos/react-ui-pickers',
   '@dxos/react-ui-list',
-  '@dxos/react-ui-sfx',
   '@dxos/react-ui-stack',
   '@dxos/react-ui-syntax-highlighter',
   '@dxos/react-ui-table',

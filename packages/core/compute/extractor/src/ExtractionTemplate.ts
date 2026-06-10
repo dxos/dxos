@@ -74,7 +74,7 @@ export const ExtractionTemplate = Schema.Struct({
 });
 export interface ExtractionTemplate extends Schema.Schema.Type<typeof ExtractionTemplate> {}
 
-export const DEFAULT_MODEL: ModelName = '@anthropic/claude-haiku-4-5';
+export const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-haiku-4-5';
 
 /**
  * Code-side wiring for a template extractor. The LLM produces a payload validated against

@@ -14,7 +14,8 @@ import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
 import { DatabaseBlueprint, DiscordBlueprint, MemoryBlueprint } from '../index';
-import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
+import { BlueprintManagerHandlers } from './operations';
+import { EnableBlueprints, QueryBlueprints } from './operations/definitions';
 
 EntityId.dangerouslyDisableRandomness();
 

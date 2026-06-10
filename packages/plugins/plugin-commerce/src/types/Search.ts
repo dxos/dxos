@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, type Database, DXN, Feed, Filter, Obj, Ref, Tag, TagIndex, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Feed, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { TagIndex } from '@dxos/schema';
 
 import { Provider } from './Provider';
 
@@ -21,7 +22,7 @@ export const Search = Schema.Struct({
   /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
-  tags: TagIndex.field(),
+  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
   /**
    * Timestamp of the last run; persisted metadata, hidden from forms.
    * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
@@ -45,13 +46,17 @@ export const make = (
   } = {},
 ): Search => {
   const feed = Feed.make();
+  const tags = TagIndex.make();
   const search = Obj.make(Search, {
     ...props,
     providers: props.providers ?? [],
     params: props.params ?? {},
     feed: Ref.make(feed),
+    tags: Ref.make(tags),
   });
   Obj.setParent(feed, search);
+  // Tag index is a child: cascade-deleted with the search.
+  Obj.setParent(tags, search);
   return search;
 };
 
@@ -62,8 +67,10 @@ export const findStarredUri = async (db: Pick<Database.Database, 'query'>): Prom
 };
 
 /** Whether a Result is starred in this Search (pure; resolve the uri first via {@link findStarredUri}). */
-export const isStarred = (search: Search, resultId: string, starredUri: string | undefined): boolean =>
-  starredUri ? TagIndex.bind(search, 'tags').objects(starredUri).includes(resultId) : false;
+export const isStarred = (search: Search, resultId: string, starredUri: string | undefined): boolean => {
+  const tagIndex = search.tags.target;
+  return !!(tagIndex && starredUri) && TagIndex.bind(tagIndex).objects(starredUri).includes(resultId);
+};
 
 /** Sets/clears the `starred` tag on a Result in this Search (find-or-creates the Tag object). Async. */
 export const setStarred = async (
@@ -74,7 +81,11 @@ export const setStarred = async (
 ): Promise<void> => {
   const tag = await Tag.findOrCreate(db, { key: STARRED_TAG, label: 'Starred', hue: 'amber' });
   const uri = Obj.getURI(tag).toString();
-  const tags = TagIndex.bind(search, 'tags');
+  const tagIndex = search.tags.target;
+  if (!tagIndex) {
+    return;
+  }
+  const tags = TagIndex.bind(tagIndex);
   if (value) {
     tags.setTag(uri, resultId);
   } else {

@@ -13,6 +13,11 @@ import { SpaceId } from '@dxos/keys';
  */
 export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
 
+/**
+ * HTTP header sent on every Edge request to provide a BYOK (Bring Your Own Key) for AI services.
+ */
+export const BYOK_HEADER = 'X-BYOK';
+
 // TODO(burdon): Rename EdgerRouterEndpoint.
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
@@ -217,6 +222,12 @@ export type RecoverIdentityRequest = {
   lookupKey?: string;
   signature?: RecoverIdentitySignature;
   token?: string;
+  /**
+   * One-time proof minted by kms-service after a successful OAuth recovery flow.
+   * When provided, db-service redeems the proof to obtain the bound identityKey directly
+   * and `lookupKey`/`signature` are not required.
+   */
+  recoveryProof?: string;
 };
 
 export type RecoverIdentityResponseBody = {
@@ -335,8 +346,17 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   scopes: Schema.mutable(Schema.Array(Schema.String)),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
   noRefresh: Schema.optional(Schema.Boolean),
-  // Provider-specific (user handle or did for bluesky) hint for auth server resolution
+  // Provider-specific (user handle or did for atproto) hint for auth server resolution
   loginHint: Schema.optional(Schema.String),
+  // Return a 302 redirect to composer://oauth/callback instead of HTML.
+  // Required for ASWebAuthenticationSession (iOS) which blocks JavaScript redirects.
+  nativeAppRedirect: Schema.optional(Schema.Boolean),
+  // OAuth-based account recovery: when purpose === 'register', kms-service writes a
+  // recovery binding for `identityKey` after the OAuth flow completes; when 'recovery',
+  // kms-service mints a one-time `recoveryProof` the client forwards to db-service.
+  registerRecovery: Schema.optional(Schema.Boolean),
+  identityKey: Schema.optional(Schema.String),
+  purpose: Schema.optional(Schema.Literal('register', 'recovery')),
 });
 export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 
@@ -345,8 +365,28 @@ export type InitiateOAuthFlowResponse = {
 };
 
 export type OAuthFlowResult =
-  | { success: true; accessToken: string; accessTokenId: string }
+  | { success: true; accessToken: string; accessTokenId: string; recoveryProof?: string }
   | { success: false; reason: string };
+
+/**
+ * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
+ * into the personal space and writes the recovery binding.
+ */
+export type CompleteOAuthRegistrationRequest = {
+  registrationToken: string;
+  identityKey: string;
+  spaceKey: string;
+};
+
+export type CompleteOAuthRegistrationResponse = {
+  email?: string;
+  provider: OAuthProvider;
+  accessTokenId: string;
+  accessToken: string;
+  expiresInSeconds: number;
+  scopes: string[];
+  identifier: string;
+};
 
 export enum EdgeWebsocketProtocol {
   V0 = 'edge-ws-v0',

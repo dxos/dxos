@@ -7,14 +7,12 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { DXN, SpaceId } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge';
+import { createTestSqliteRuntime } from '../testing';
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
@@ -22,12 +20,12 @@ const OTHER_TYPE = DXN.make('com.example.type.other', '0.1.0');
 const PERSON_TYPE = DXN.make('com.example.type.person', '0.1.0');
 
 /**
- * Set up a real AutomergeHost with LevelDB storage.
+ * Set up a real AutomergeHost with SQLite storage.
  */
-const setupAutomergeHost = async (level: LevelDB): Promise<AutomergeHost> => {
-  const host = new AutomergeHost({
-    db: level,
-  });
+const setupAutomergeHost = async (): Promise<AutomergeHost> => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  onTestFinished(() => dispose());
+  const host = new AutomergeHost({ runtime });
   await host.open();
   onTestFinished(async () => {
     await host.close();
@@ -74,21 +72,17 @@ describe('AutomergeDataSource', () => {
   });
 
   test('returns empty when no documents exist', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
     expect(result.cursors).toHaveLength(0);
   });
 
   test('returns new documents that have no cursor', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     const handle = await createDatabaseDirectory(host, spaceKey, {
@@ -97,7 +91,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(1);
     expect(result.objects[0].documentId).toBe(handle.documentId);
@@ -109,9 +103,7 @@ describe('AutomergeDataSource', () => {
   });
 
   test('returns documents with changed heads', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     const handle1 = await createDatabaseDirectory(host, spaceKey, {
@@ -144,7 +136,7 @@ describe('AutomergeDataSource', () => {
       { indexName: 'fts', spaceId: null, sourceName: 'automerge', resourceId: handle2.documentId, cursor: doc2Heads },
     ];
 
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
 
     // Only doc1 changed.
     expect(result.objects).toHaveLength(1);
@@ -152,9 +144,7 @@ describe('AutomergeDataSource', () => {
   });
 
   test('skips documents with unchanged heads', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     const handle = await createDatabaseDirectory(host, spaceKey, {
@@ -175,16 +165,14 @@ describe('AutomergeDataSource', () => {
       },
     ];
 
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
 
     expect(result.objects).toHaveLength(0);
     expect(result.cursors).toHaveLength(0);
   });
 
   test('respects limit option', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     // Create 3 documents.
@@ -196,16 +184,16 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), [], { limit: 2 }));
+    const result = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), [], { limit: 2 }),
+    );
 
     expect(result.objects).toHaveLength(2);
     expect(result.cursors).toHaveLength(2);
   });
 
   test('extracts multiple objects from a document', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     await createDatabaseDirectory(host, spaceKey, {
@@ -215,7 +203,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(2);
     expect(result.objects.map((o) => o.data.id)).toContain('obj-1');
@@ -223,9 +211,7 @@ describe('AutomergeDataSource', () => {
   });
 
   test('skips outdated documents', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     // Create a document with outdated version.
@@ -243,15 +229,13 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
   });
 
   test('extracts object attributes correctly', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
     const spaceKey = SpaceId.random();
 
     await createDatabaseDirectory(host, spaceKey, {
@@ -263,7 +247,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(1);
     const obj = result.objects[0];
@@ -274,9 +258,7 @@ describe('AutomergeDataSource', () => {
   });
 
   test('skips documents without spaceKey', async () => {
-    const level = createTestLevel();
-    await openAndClose(level);
-    const host = await setupAutomergeHost(level);
+    const host = await setupAutomergeHost();
 
     // Create a document without access.spaceKey.
     const handle = await host.createDoc<DatabaseDirectory>({
@@ -292,7 +274,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
   });

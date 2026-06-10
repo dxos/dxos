@@ -6,7 +6,6 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
@@ -36,11 +35,11 @@ export function useKanbanBoardModel<T extends BaseKanbanItem = BaseKanbanItem>(
   registry: Registry.Registry,
 ): BoardModel<ColumnStructure, T> {
   // Source atoms: reactive reads from the kanban object; items come from the passed-in atom (e.g. AtomQuery or in-memory).
-  const arrangementAtom = useMemo(() => AtomObj.makeProperty(kanban, 'arrangement'), [kanban]);
+  const arrangementAtom = useMemo(() => Obj.atomProperty(kanban, 'arrangement'), [kanban]);
   const viewSnapshotAtom = useMemo(
     () =>
       kanban?.spec?.kind === 'view' && kanban.spec.view
-        ? AtomObj.make(kanban.spec.view)
+        ? Obj.atom(kanban.spec.view)
         : Atom.make<undefined>(() => undefined),
     [kanban?.spec],
   );

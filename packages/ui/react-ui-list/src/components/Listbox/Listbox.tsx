@@ -90,7 +90,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
   },
 );
 
-ListboxRoot.displayName = LISTBOX_NAME;
+ListboxRoot.displayName = 'Listbox.Root';
 
 //
 // Option — composes `Row`. Adds the listbox-specific styling and
@@ -123,7 +123,7 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
   },
 );
 
-ListboxOption.displayName = LISTBOX_OPTION_NAME;
+ListboxOption.displayName = 'Listbox.Option';
 
 // Reads selection state from RowList's context (via `useRowListSelection`)
 // and publishes it on the listbox-option scope so `OptionIndicator` can
@@ -155,7 +155,7 @@ const ListboxOptionLabel = forwardRef<HTMLDivElement, ThemedClassName<ComponentP
   },
 );
 
-ListboxOptionLabel.displayName = LISTBOX_OPTION_LABEL_NAME;
+ListboxOptionLabel.displayName = 'Listbox.OptionLabel';
 
 //
 // OptionIndicator — checkmark for the selected option.
@@ -183,7 +183,7 @@ const ListboxOptionIndicator = forwardRef<SVGSVGElement, ListboxOptionIndicatorP
   },
 );
 
-ListboxOptionIndicator.displayName = LISTBOX_OPTION_INDICATOR_NAME;
+ListboxOptionIndicator.displayName = 'Listbox.OptionIndicator';
 
 //
 // Listbox

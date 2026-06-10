@@ -151,7 +151,9 @@ If the repo uses a merge queue, this will enqueue the PR. If auto-merge is not a
 mcp__github__subscribe_pr_activity({ owner: "dxos", repo: "dxos", pullNumber: <number> })
 ```
 
-Then **end your turn** — do NOT poll or sleep. You will receive `<github-webhook-activity>` events.
+Then **end your turn** — do NOT actively poll.
+Use webhook-driven wakeups, plus the Step 9.5 background sleep alarm for merge-queue dequeue detection.
+You will receive `<github-webhook-activity>` events.
 
 On each event:
 
@@ -179,6 +181,43 @@ On each event:
 ### PR closed (not merged) event
 
 Ask the user what happened and whether to reopen.
+
+---
+
+## Step 9.5 — Poll the merge queue every 15 minutes
+
+Webhooks do **not** fire when a PR is automatically dequeued from the merge queue (e.g., due to a conflict or a failed queue CI run). You must poll for this yourself.
+
+After auto-merge is enabled, arm a 15-minute wakeup alarm using a background Bash sleep:
+
+```text
+Bash("sleep 900", { run_in_background: true })
+```
+
+This completes silently after 15 minutes and fires a task-completion notification that wakes this session. It requires no external service.
+
+On each wakeup (task-completion notification for the sleep):
+
+1. Call `mcp__github__pull_request_read` to get the current PR state.
+2. **If merged**: print success, unsubscribe, stop.
+3. **If closed**: ask the user what happened.
+4. **If open and auto_merge is null** (was dequeued):
+   a. Sync with `main`:
+   ```bash
+   git fetch origin main
+   git merge origin/main --no-edit
+   git push -u origin <headRefName>
+   ```
+   b. Resolve any conflicts that arise, commit, push.
+   c. Re-enable auto-merge:
+   ```text
+   mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
+   ```
+   d. Log: "PR was dequeued — re-synced with main and re-enabled auto-merge."
+   e. Re-arm the alarm: `Bash("sleep 900", { run_in_background: true })`.
+5. **If open and auto_merge is set** (still in queue): re-arm silently: `Bash("sleep 900", { run_in_background: true })`.
+
+Stop re-arming once the PR is merged or closed, or the user says to stop.
 
 ---
 

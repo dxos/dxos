@@ -10,7 +10,7 @@ import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
-import { type Credential, type Operation, type OperationRegistry, Trace } from '@dxos/compute';
+import { type Credential, type Operation, Trace } from '@dxos/compute';
 import {
   ComputeBeginEvent,
   ComputeCustomEvent,
@@ -30,8 +30,8 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { Database, Feed } from '@dxos/echo';
-import { unwrapExit } from '@dxos/effect';
+import type { Database, Feed, Registry } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -96,7 +96,7 @@ export type ComputeServices =
   | Feed.FeedService
   | Credential.CredentialsService
   | Operation.Service
-  | OperationRegistry.Service;
+  | Registry.Service;
 
 /**
  * Nodes that will automatically trigger the execution of the graph on startup.
@@ -268,7 +268,7 @@ export class ComputeGraphController extends Resource {
       executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
         Effect.gen(this, function* () {
           const scope = yield* Scope.make();
@@ -331,7 +331,7 @@ export class ComputeGraphController extends Resource {
         : this._graph.nodes.filter((node) => node.type != null && AUTO_TRIGGER_NODES.includes(node.type));
     const allAffectedNodes = [...new Set(triggerNodes.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
         Effect.gen(this, function* () {
           const scope = yield* Scope.make();

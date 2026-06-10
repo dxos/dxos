@@ -4,6 +4,57 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-08 — plugin-video (new plugin: Video type, EDGE transcribe op, embed player)
+
+### `Format.URL` rejects query strings — don't use it for URL fields
+
+- `Format.URL` (`@dxos/echo/internal`) applies a regex (`Format/string.ts`) that rejects `?query=` — so `Obj.make` throws on any real video/watch URL (`...?v=...`). Symptom: a storybook "Fatal Error / ParseError … Predicate refinement failure" at object creation. Use `Schema.String.pipe(Schema.annotations({...}), FormatAnnotation.set(TypeFormat.URL), Schema.optional)` to keep the URL form-input hint without the broken pattern. (Both exported from `@dxos/echo/internal`.) Matches the existing `// TODO: Format.URL breaks validation` notes in `@dxos/types` Organization/Person.
+
+### New-plugin skeleton checklist (things `moon run :build`/`:test` need beyond src)
+
+- `tsconfig.json` (extends `../../../tsconfig.base.json`, `references` per dep) — without it `:build` fails "No tsconfig.json found". References are auto-extended into `composer-app/tsconfig.json` + `release-please-config.json` by the postinstall sync.
+- `src/vite-env.d.ts` declaring `*.mdl?raw` (copy from plugin-chess) — needed for `import pluginSpec from '../PLUGIN.mdl?raw'`.
+- `vitest.config.ts` (`createConfig({ node: true, storybook: true })`) + a `.storybook/` dir (`main.mts`, `preview.mts`, and symlinks `manager-head.html`/`preview-head.html` → `tools/storybook/.storybook/*`) — without these `:test` fails "No projects matched filter 'node'" then storybook `MainFileMissingError`.
+- Register in `composer-app/src/plugin-defs.tsx`: import from `@dxos/plugin-foo/plugin`, add `FooPlugin()` to the instance list and `FooPlugin.meta.id` to a `getDefaults` list (Labs for experimental); add `@dxos/plugin-foo: workspace:*` to composer-app `package.json`.
+
+### Operations import from `@dxos/compute`, not `@dxos/operation`
+
+- In plugins, `Operation`/`OperationHandlerSet` come from `@dxos/compute` (the operations SKILL says `@dxos/operation` — wrong for plugin code). Handler reads input directly via `Effect.fn(function* ({ video, lang }) {...})`; resolve refs with `Database.load(ref)`, create with `Database.add(obj)`, mutate with `Obj.update`. Op needs `services: [Database.Service]`; the invoker scopes the space from the input ref (pass `Ref.make(liveObj)`), same as `plugin-assistant/operations/update-chat-name.ts`.
+- A client-side EDGE call with no auth is just `Effect.tryPromise(() => fetch(url))` in the handler — no EdgeHttpClient needed for a public worker on a distinct host.
+
+### create→navigate crash `Open` / `Database.Service space=<missing>` is a STALE-BRANCH symptom, not a plugin bug
+
+- Symptom: creating ANY object (reproduced with Sketch too) throws `ServiceNotAvailable: @dxos/echo/Database/Service (affinity=process) space=<missing>` from `LayoutOperation.Open` (deck `operations/open.ts`), crashing the create dialog + app boot (deck url-handler reopens the active subject). Root cause: an older `Open` declared `services: [Capability.Service, Database.Service]`; the create dialog/url-handler invoke it without `spaceId`, so the spawned process can't materialise the space-affinity `Database.Service`. Fixed on main by #11725 (dropped `Database.Service` from `Open`). **If a new-plugin branch hits this, it's behind main — merge `origin/main`.** Confirm with `git show origin/main:packages/sdk/app-toolkit/src/operations.ts | sed -n '/const Open/,/services/p'`.
+
+### Reuse `Text.Text` from `@dxos/schema` for text-body refs
+
+- A "transcript/notes text object" ref is `Ref.Ref(Text.Text)` (`@dxos/schema`), created with `Text.make({ name, content })`. Schema registration is deduped by URI across plugins (`plugin-client/capabilities/schema-defs.ts`), so registering `Text.Text` in your `addSchemaModule` alongside markdown is safe (idempotent).
+
+### `Schema.optional` must be LAST in a `.pipe()` after `FormatAnnotation.set`
+
+- Order is `Schema.String.pipe(Schema.annotations({...}), FormatAnnotation.set(TypeFormat.X), Schema.optional)`. Putting `Schema.optional(Schema.String)` first then piping `FormatAnnotation.set` fails build with TS2684 `'this' context of type 'optional<...>' is not assignable` — `FormatAnnotation.set` needs the bare (non-optional) schema. There is no `TypeFormat.Multiline`; use `TypeFormat.Text` for multiline plain text.
+
+### CRX render-proxy is re-declared per-consumer, not shared
+
+- To load a full cross-origin page (incl. anti-bot/consent-gated like a YouTube watch page) use the Composer extension render-proxy: dispatch `composer:proxy:render` window event, await `:render:ack`, probe availability via `document.documentElement.dataset.composerProxy === '1'`. Fall back to `proxyFetchLegacy(url)` from `@dxos/edge-client` (EDGE CORS proxy) when the extension is absent. Contract source of truth is `composer-crx/src/proxy/types.ts`; plugins MUST NOT depend on the extension app package, so each consumer re-declares the wire shapes locally (precedent: `plugin-commerce/src/util/renderViaCrx.ts`; copied into `plugin-video/src/util/fetch-page.ts`). YouTube's full description is in `ytInitialPlayerResponse.videoDetails.shortDescription` in the raw server HTML (no JS exec needed) — `og:description` is the truncated fallback. NOTE: YouTube `timedtext` caption URLs from the watch page are `pot`-token gated (return empty); fetch caption tracks via the InnerTube `player` endpoint (ANDROID client) through the CORS proxy with an `x-cors-proxy-origin: https://www.youtube.com` override (the browser's localhost `Origin` triggers a 403) — see `plugin-video/src/util/fetch-page.ts` `fetchYouTubePlayer`.
+
+## 2026-06-05 — plugin-comments (factored from plugin-thread), react-ui-thread
+
+### No plugin → plugin deps when factoring a feature out
+
+- When splitting a feature into a new plugin, the new plugin MUST NOT import the donor plugin. Push shared UI down into a `react-ui-*` package and shared schema into `@dxos/types`; both plugins depend only on those. plugin-comments was carved out of plugin-thread with zero dep on it.
+- Cross-plugin runtime sharing (operations, state atoms) does NOT cross the plugin boundary — each plugin owns its own ops/state. The comment ops + `State`/`ViewState` + agent stack moved wholesale into plugin-comments; chat ops stayed in plugin-thread.
+
+### Story sample data: real schema + @dxos/schema/testing generator
+
+- Stories use the real `@dxos/types` schema (`Message.Message`) generated via `@dxos/schema/testing` (`createGenerator(random as ValueGenerator, Message.Message).createObjects(n)`), NOT bespoke `*Entity` testing types. The generator leaves union-array fields (e.g. `blocks`) empty — enrich after generation with `Obj.update(m, …)` to set a `{ _tag: 'text', text }` block. `Obj.update` returns void; return the object from `.map`.
+
+### react-ui-thread is a pure presentational layer
+
+- `Message.*` / `Thread.*` are radix-composite namespaces; `Thread.Messages` renders message tiles via `react-ui-mosaic` `Mosaic.VirtualStack` (`draggable={false}`, inside `Mosaic.Container` + `ScrollArea`). `Thread.Root` provides a `ThreadContextValue` (getMetadata / components.Object / callbacks) via `@radix-ui/react-context`; tiles read it (a Mosaic `Tile` only receives `{id,data,location}`, so per-tile config must come from context).
+- Object/`reference` message blocks need `Surface` (app-framework) which CANNOT live in a `react-ui-*` package — inject it via `Thread.Root` `components={{ Object }}`; each plugin supplies a one-line Surface tile.
+- A message tile must be self-contained (`grid grid-cols-[var(--dx-rail-size)_1fr]`), NOT `grid-cols-subgrid col-span-2` — subgrid breaks inside a virtual stack where each tile is in its own positioned wrapper.
+
 ## 2026-06-03 — plugin-feed (Magazine routine + inline form), react-ui-form, compute
 
 ### Inline a referenced object in a Form

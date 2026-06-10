@@ -110,7 +110,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
       id: Capability.getModuleTag(AppGraphBuilder),
-      activatesOn: AppActivationEvents.SetupAppGraph,
+      activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
   ),

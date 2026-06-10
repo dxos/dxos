@@ -4,11 +4,12 @@
 
 import '@fontsource/poiret-one';
 
-import React, { type KeyboardEvent, type ReactNode, useCallback, useRef, useState } from 'react';
+import React, { type KeyboardEvent, type ReactNode, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { supportsNativePasskeys } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -17,11 +18,21 @@ import { type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode 
 
 const supportsPasskeys = (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
 
+/** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
+const ATMOSPHERE_PROVIDER = 'atproto';
+
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
+// Underline tab style (overrides the react-ui Tabs.Tab button chrome) to match the prior look:
+// flat, full-width tabs with a bottom border that highlights the active one.
+const TAB_CLASSNAMES =
+  'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
+  'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
+  'data-[state=active]:border-white data-[state=active]:text-white';
+
 type Tab = 'login' | 'signup';
-type LoginMethod = 'passkey' | 'email';
+type LoginMethod = 'passkey' | 'email' | 'atproto';
 type SignupMode = 'code' | 'waitlist';
 type SignupStep = 'collect' | 'auth';
 
@@ -33,8 +44,10 @@ export const Welcome = ({
   onPasskey,
   onJoinIdentity,
   onRecoverIdentity,
+  onRecoverWithOAuth,
   onValidateInvitationCode,
   onCreateAccount,
+  onCreateAccountWithOAuth,
   onJoinWaitlist,
   onSpaceInvitation,
   onGoToLogin,
@@ -47,18 +60,31 @@ export const Welcome = ({
   // Tab + sub-state. Live in component state since they're transient UI.
   const [tab, setTab] = useState<Tab>('login');
   const [loginPrimary, setLoginPrimary] = useState<LoginMethod>(defaultLoginPrimary);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [signupMode, setSignupMode] = useState<SignupMode>('code');
   const [signupStep, setSignupStep] = useState<SignupStep>('collect');
 
   // Inputs.
+  const rootRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [waitlistEmail, setWaitlistEmail] = useState('');
+  // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
+  const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+
+  // The react-ui-tabs `Tabs` focuses its active region on mount (master-detail behavior), which
+  // paints a focus ring around the whole card on load. Drop that initial focus grab on the tab
+  // chrome so the screen opens unfocused; keyboard navigation still focuses elements on interaction.
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    const role = active?.getAttribute('role');
+    if (active instanceof HTMLElement && rootRef.current?.contains(active) && (role === 'tabpanel' || role === 'tab')) {
+      active.blur();
+    }
+  }, []);
 
   //
   // Login handlers
@@ -136,6 +162,40 @@ export const Welcome = ({
     }
   }, [waitlistEmail, onJoinWaitlist]);
 
+  // Wrap the OAuth flows so `pending` is set for their full duration. The OAuth popup flow is async
+  // and `pending` drives `submitDisabled`, so this keeps the Continue button disabled while the
+  // popup is open — preventing a second click from opening a duplicate popup (which clobbers the
+  // first and trips "OAuth popup closed before completing").
+  const handleCreateAccountWithOAuth = useCallback(
+    async (args: { code: string; provider: string; loginHint?: string }) => {
+      if (pending) {
+        return;
+      }
+      setPending(true);
+      try {
+        await onCreateAccountWithOAuth?.(args);
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, onCreateAccountWithOAuth],
+  );
+
+  const handleRecoverWithOAuth = useCallback(
+    async (provider: string, loginHint?: string) => {
+      if (pending) {
+        return;
+      }
+      setPending(true);
+      try {
+        await onRecoverWithOAuth?.(provider, loginHint);
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, onRecoverWithOAuth],
+  );
+
   const handleCodeKeyDown = useCallback(
     (ev: KeyboardEvent<HTMLInputElement>) => {
       if (ev.key === 'Enter') {
@@ -168,17 +228,11 @@ export const Welcome = ({
   //
 
   return (
-    // `dark` class forces the welcome surface into dark mode regardless of the
-    // system theme. The gradient backdrop is fixed-dark and text colors inside
-    // (text-description, theme-aware input/button tokens) need the .dark
-    // ancestor to resolve to the light-on-dark variant. AlertDialog's overlay
-    // already carries `dark` in OVERLAY_CLASSES, but its content may be
-    // portaled outside that ancestor chain, so we anchor it here too.
     <div
+      ref={rootRef}
       className={mx(
-        'dark',
-        'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
-        'rounded-xl shadow-md lg:translate-x-[-40%]',
+        'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
+        'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
       )}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
@@ -190,119 +244,157 @@ export const Welcome = ({
         </h1>
 
         {state === WelcomeState.INIT && (
-          <div className='flex flex-col gap-6'>
-            {/* Tabs */}
-            <div className='flex gap-1 border-b border-neutral-700'>
-              <TabButton active={tab === 'login'} onClick={() => setTab('login')}>
-                {t('login-tab.label')}
-              </TabButton>
-              <TabButton
-                active={tab === 'signup'}
-                onClick={() => {
-                  setTab('signup');
-                  setSignupStep('collect');
-                  setSignupMode('code');
-                }}
-              >
-                {t('signup-tab.label')}
-              </TabButton>
-            </div>
+          <Tabs.Root
+            classNames='shrink-0'
+            orientation='horizontal'
+            defaultActivePart='list'
+            value={tab}
+            onValueChange={(value) => {
+              const next = value as Tab;
+              setTab(next);
+              if (next === 'signup') {
+                setSignupStep('collect');
+                setSignupMode('code');
+              }
+            }}
+          >
+            <Tabs.Viewport classNames='flex flex-col gap-6'>
+              <Tabs.Tablist classNames='p-0 gap-1 border-b border-neutral-700'>
+                <Tabs.Tab value='login' classNames={TAB_CLASSNAMES}>
+                  {t('login-tab.label')}
+                </Tabs.Tab>
+                <Tabs.Tab value='signup' classNames={TAB_CLASSNAMES}>
+                  {t('signup-tab.label')}
+                </Tabs.Tab>
+              </Tabs.Tablist>
 
-            {tab === 'login' && (
-              <LoginTab
-                t={t}
-                identity={identity}
-                primary={loginPrimary}
-                setPrimary={(method) => {
-                  setLoginPrimary(method);
-                  setMoreOpen(false);
-                }}
-                moreOpen={moreOpen}
-                setMoreOpen={setMoreOpen}
-                emailValue={email}
-                setEmailValue={setEmail}
-                emailRef={emailRef}
-                emailError={error}
-                pending={pending}
-                onPasskey={onPasskey}
-                onSendSignInLink={handleSendSignInLink}
-                onEmailKeyDown={handleEmailKeyDown}
-                onJoinIdentity={onJoinIdentity}
-                onRecoverIdentity={onRecoverIdentity}
-              />
-            )}
-
-            {tab === 'signup' && signupStep === 'collect' && signupMode === 'code' && (
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col gap-2'>
-                  <h2 className='text-2xl'>{t('signup-code.title')}</h2>
-                  <p className='text-description'>{t('signup-code.description')}</p>
-                </div>
-                <InlineForm
-                  inputProps={{
-                    autoFocus: true,
-                    ref: codeRef,
-                    classNames: 'font-mono uppercase tracking-widest',
-                    placeholder: 'XXXX-XXXX',
-                    value: code,
-                    onChange: (ev) => setCode(ev.target.value.trim()),
-                    onKeyDown: handleCodeKeyDown,
-                  }}
-                  submitLabel={t('continue-button.label')}
-                  submitDisabled={!validInvitationCode(code) || pending}
-                  onSubmit={handleValidateCode}
-                  validation={codeError}
+              <Tabs.Panel value='login'>
+                <LoginTab
+                  t={t}
+                  identity={identity}
+                  primary={loginPrimary}
+                  setPrimary={setLoginPrimary}
+                  emailValue={email}
+                  setEmailValue={setEmail}
+                  emailRef={emailRef}
+                  emailError={error}
+                  pending={pending}
+                  onPasskey={onPasskey}
+                  onSendSignInLink={handleSendSignInLink}
+                  onEmailKeyDown={handleEmailKeyDown}
+                  onJoinIdentity={onJoinIdentity}
+                  onRecoverIdentity={onRecoverIdentity}
+                  onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
                 />
-                <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
-              </div>
-            )}
+              </Tabs.Panel>
 
-            {tab === 'signup' && signupStep === 'collect' && signupMode === 'waitlist' && (
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col gap-2'>
-                  <h2 className='text-2xl'>{t('waitlist.title')}</h2>
-                  <p className='text-description'>{t('waitlist.description')}</p>
-                </div>
-                <InlineForm
-                  inputProps={{
-                    autoFocus: true,
-                    placeholder: t('email-input.placeholder'),
-                    value: waitlistEmail,
-                    onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
-                    onKeyDown: handleWaitlistEmailKeyDown,
-                  }}
-                  submitLabel={t('waitlist-submit-button.label')}
-                  submitDisabled={!validEmail(waitlistEmail) || pending}
-                  onSubmit={handleJoinWaitlist}
-                />
-                <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
-              </div>
-            )}
+              <Tabs.Panel value='signup'>
+                {signupStep === 'collect' && signupMode === 'code' && (
+                  <div className='flex flex-col gap-6'>
+                    <div className='flex flex-col gap-2'>
+                      <h2 className='text-2xl'>{t('signup-code.title')}</h2>
+                      <p className='text-description'>{t('signup-code.description')}</p>
+                    </div>
+                    <InlineForm
+                      inputProps={{
+                        autoFocus: true,
+                        ref: codeRef,
+                        classNames: 'font-mono uppercase tracking-widest',
+                        placeholder: 'XXXX-XXXX',
+                        value: code,
+                        onChange: (ev) => setCode(ev.target.value.trim()),
+                        onKeyDown: handleCodeKeyDown,
+                      }}
+                      submitLabel={t('continue-button.label')}
+                      submitDisabled={!validInvitationCode(code) || pending}
+                      onSubmit={handleValidateCode}
+                      validation={codeError}
+                    />
+                    <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
+                  </div>
+                )}
 
-            {tab === 'signup' && signupStep === 'auth' && (
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col gap-2'>
-                  <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
-                  <p className='text-description'>{t('signup-auth.description')}</p>
-                </div>
-                <InlineForm
-                  inputProps={{
-                    autoFocus: true,
-                    ref: emailRef,
-                    placeholder: t('email-input.placeholder'),
-                    value: email,
-                    onChange: (ev) => setEmail(ev.target.value.trim()),
-                    onKeyDown: handleAuthEmailKeyDown,
-                  }}
-                  submitLabel={t('continue-button.label')}
-                  submitDisabled={!validEmail(email) || pending}
-                  onSubmit={handleCreateAccount}
-                  validation={error ? t('email-error.message') : null}
-                />
-                <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
-              </div>
-            )}
-          </div>
+                {signupStep === 'collect' && signupMode === 'waitlist' && (
+                  <div className='flex flex-col gap-6'>
+                    <div className='flex flex-col gap-2'>
+                      <h2 className='text-2xl'>{t('waitlist.title')}</h2>
+                      <p className='text-description'>{t('waitlist.description')}</p>
+                    </div>
+                    <InlineForm
+                      inputProps={{
+                        autoFocus: true,
+                        placeholder: t('email-input.placeholder'),
+                        value: waitlistEmail,
+                        onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
+                        onKeyDown: handleWaitlistEmailKeyDown,
+                      }}
+                      submitLabel={t('waitlist-submit-button.label')}
+                      submitDisabled={!validEmail(waitlistEmail) || pending}
+                      onSubmit={handleJoinWaitlist}
+                    />
+                    <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
+                  </div>
+                )}
+
+                {signupStep === 'auth' && (
+                  <div className='flex flex-col gap-6'>
+                    <div className='flex flex-col gap-2'>
+                      <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
+                      <p className='text-description'>{t('signup-auth.description')}</p>
+                    </div>
+                    <InlineForm
+                      inputProps={{
+                        autoFocus: true,
+                        ref: emailRef,
+                        placeholder: t('email-input.placeholder'),
+                        value: email,
+                        onChange: (ev) => setEmail(ev.target.value.trim()),
+                        onKeyDown: handleAuthEmailKeyDown,
+                      }}
+                      submitLabel={t('continue-button.label')}
+                      submitDisabled={!validEmail(email) || pending}
+                      onSubmit={handleCreateAccount}
+                      validation={error ? t('email-error.message') : null}
+                    />
+                    {onCreateAccountWithOAuth && (
+                      <>
+                        <OrDivider>{t('or-divider.label')}</OrDivider>
+                        <div className='flex flex-col gap-2'>
+                          <p className='text-description'>{t('atmosphere-account-button.label')}</p>
+                          <InlineForm
+                            inputProps={{
+                              placeholder: t('atmosphere-handle-input.placeholder'),
+                              value: atmosphereHandle,
+                              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+                              onKeyDown: (ev) => {
+                                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                                  void handleCreateAccountWithOAuth({
+                                    code,
+                                    provider: ATMOSPHERE_PROVIDER,
+                                    loginHint: atmosphereHandle,
+                                  });
+                                }
+                              },
+                            }}
+                            submitLabel={t('continue-button.label')}
+                            submitDisabled={!atmosphereHandle || pending}
+                            onSubmit={() =>
+                              handleCreateAccountWithOAuth({
+                                code,
+                                provider: ATMOSPHERE_PROVIDER,
+                                loginHint: atmosphereHandle,
+                              })
+                            }
+                          />
+                        </div>
+                      </>
+                    )}
+                    <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
+                  </div>
+                )}
+              </Tabs.Panel>
+            </Tabs.Viewport>
+          </Tabs.Root>
         )}
 
         {state === WelcomeState.SPACE_INVITATION && (
@@ -338,7 +430,7 @@ export const Welcome = ({
         )}
 
         {state === WelcomeState.WAITLIST_SUBMITTED && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{t('waitlist-submitted.title')}</h1>
               <p className='text-description'>{t('waitlist-submitted.description')}</p>
@@ -346,7 +438,7 @@ export const Welcome = ({
           </div>
         )}
 
-        <div className='z-[11] flex flex-col h-full justify-end'>
+        <div className='z-[11] mt-auto flex flex-col'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
             <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
               <span className='text-description'>Powered by</span>
@@ -362,19 +454,6 @@ export const Welcome = ({
 //
 // Sub-components
 //
-
-const TabButton = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) => (
-  <button
-    type='button'
-    onClick={onClick}
-    className={mx(
-      'flex-1 px-4 py-2 text-sm border-b-2 -mb-px transition-colors',
-      active ? 'border-white text-white' : 'border-transparent text-description hover:text-white',
-    )}
-  >
-    {children}
-  </button>
-);
 
 /**
  * Small "swap" link used at the bottom of forms to switch between alternative
@@ -396,8 +475,6 @@ type LoginTabProps = {
   identity?: ReturnType<typeof Object> | null;
   primary: LoginMethod;
   setPrimary: (method: LoginMethod) => void;
-  moreOpen: boolean;
-  setMoreOpen: (open: boolean) => void;
   emailValue: string;
   setEmailValue: (value: string) => void;
   emailRef: React.Ref<HTMLInputElement>;
@@ -408,13 +485,14 @@ type LoginTabProps = {
   onEmailKeyDown: (ev: KeyboardEvent<HTMLInputElement>) => void;
   onJoinIdentity?: () => unknown;
   onRecoverIdentity?: () => unknown;
+  onRecoverWithOAuth?: (provider: string, loginHint?: string) => unknown;
 };
 
 /**
  * Login tab. The "primary" auth method (passkey or email) renders at the top;
  * other options live under "More ways to log in":
  *
- * - Picking the *other* primary method (passkey ↔ email) swaps it to primary.
+ * - Picking the *other* primary method (passkey ↔ email ↔ atmosphere) swaps it to primary.
  * - Picking `From another device` or `Recovery code` invokes their handler
  *   directly (those open dedicated dialogs and don't need a primary form).
  */
@@ -423,8 +501,6 @@ const LoginTab = ({
   identity,
   primary,
   setPrimary,
-  moreOpen,
-  setMoreOpen,
   emailValue,
   setEmailValue,
   emailRef,
@@ -435,7 +511,10 @@ const LoginTab = ({
   onEmailKeyDown,
   onJoinIdentity,
   onRecoverIdentity,
+  onRecoverWithOAuth,
 }: LoginTabProps) => {
+  const [atmosphereHandle, setAtmosphereHandle] = useState('');
+
   type MoreOption = {
     key: string;
     icon: string;
@@ -464,8 +543,18 @@ const LoginTab = ({
       onClick: () => setPrimary('email'),
     });
   }
+  // Atmosphere: swaps to primary like email/passkey do so only one form is shown at a time.
+  if (primary !== 'atproto' && onRecoverWithOAuth) {
+    moreOptions.push({
+      key: 'atproto',
+      icon: 'ph--cloud--regular',
+      label: t('login-atmosphere.label'),
+      description: t('login-atmosphere.description'),
+      onClick: () => setPrimary('atproto'),
+    });
+  }
   // Device + recovery: always direct-invoke (open their own dialogs) rather than
-  // swapping to primary like passkey/email.
+  // swapping to primary like passkey/email/atmosphere.
   // TODO(wittjosiah): Integrate the device-invitation and recovery-code flows into
   //   this Welcome layout (so they render as primary forms here instead of opening
   //   separate dialogs). Their UI is some of the oldest in Composer and should be
@@ -490,7 +579,7 @@ const LoginTab = ({
   }
 
   return (
-    <div role='none' className='flex flex-col gap-6'>
+    <div className='flex flex-col gap-6'>
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
 
       {/* Primary method */}
@@ -501,53 +590,75 @@ const LoginTab = ({
         </Button>
       )}
       {primary === 'email' && (
-        <InlineForm
-          inputProps={{
-            autoFocus: true,
-            ref: emailRef,
-            placeholder: t('email-input.placeholder'),
-            value: emailValue,
-            onChange: (ev) => setEmailValue(ev.target.value.trim()),
-            onKeyDown: onEmailKeyDown,
-          }}
-          submitLabel={t('send-link-button.label')}
-          submitDisabled={!validEmail(emailValue) || pending}
-          onSubmit={onSendSignInLink}
-          validation={emailError ? t('email-error.message') : null}
-        />
+        <div className='flex flex-col gap-2'>
+          <p className='text-sm text-description'>{t('login-email.description')}</p>
+          <InlineForm
+            inputProps={{
+              autoFocus: true,
+              ref: emailRef,
+              placeholder: t('email-input.placeholder'),
+              value: emailValue,
+              onChange: (ev) => setEmailValue(ev.target.value.trim()),
+              onKeyDown: onEmailKeyDown,
+            }}
+            submitLabel={t('send-link-button.label')}
+            submitDisabled={!validEmail(emailValue) || pending}
+            onSubmit={onSendSignInLink}
+            validation={emailError ? t('email-error.message') : null}
+          />
+        </div>
+      )}
+      {primary === 'atproto' && onRecoverWithOAuth && (
+        <div className='flex flex-col gap-2'>
+          <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
+          <InlineForm
+            inputProps={{
+              autoFocus: true,
+              placeholder: t('atmosphere-handle-input.placeholder'),
+              value: atmosphereHandle,
+              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+              onKeyDown: (ev) => {
+                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                  void onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle);
+                }
+              },
+            }}
+            submitLabel={t('continue-button.label')}
+            submitDisabled={!atmosphereHandle || pending}
+            onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
+          />
+        </div>
       )}
 
       {moreOptions.length > 0 && (
-        <div className='flex flex-col gap-2'>
-          <button
-            type='button'
-            onClick={() => setMoreOpen(!moreOpen)}
-            className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4'
-          >
-            <span>{t('more-ways-to-sign-in.label')}</span>
-            <Icon icon={moreOpen ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={4} />
-          </button>
-
-          {moreOpen && (
-            <div className='flex flex-col gap-1'>
-              {moreOptions.map((opt) => (
-                <button
-                  key={opt.key}
-                  type='button'
-                  onClick={opt.onClick}
-                  className='flex items-center gap-3 px-3 py-2 rounded-md border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/50 text-left'
-                >
-                  <Icon icon={opt.icon} size={5} />
-                  <div className='flex-1 flex flex-col'>
-                    <span className='text-sm'>{opt.label}</span>
-                    <span className='text-xs text-description'>{opt.description}</span>
-                  </div>
-                  <Icon icon='ph--caret-right--regular' size={4} />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type='button'
+              className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4'
+            >
+              <span>{t('more-ways-to-sign-in.label')}</span>
+              <Icon icon='ph--caret-down--regular' size={4} />
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
+                onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
+            <DropdownMenu.Content side='bottom' sideOffset={8} collisionPadding={16} classNames='!w-80 !z-50'>
+              <DropdownMenu.Viewport>
+                {moreOptions.map((opt) => (
+                  <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
+                    <Icon icon={opt.icon} size={4} classNames='shrink-0' />
+                    <div className='flex flex-col gap-0.5'>
+                      <span>{opt.label}</span>
+                      <span className='text-xs text-description font-normal'>{opt.description}</span>
+                    </div>
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Viewport>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       )}
     </div>
   );
@@ -610,6 +721,15 @@ const CompoundRow = ({ icon, onClick, children }: { icon: string; onClick?: () =
     <span className='flex-1'>{children}</span>
     <Icon icon='ph--caret-right--bold' size={4} />
   </button>
+);
+
+/** Horizontal "or" separator between alternative auth methods. */
+const OrDivider = ({ children }: { children: ReactNode }) => (
+  <div className='flex items-center gap-3 text-xs text-description'>
+    <div className='flex-1 border-t border-neutral-700' />
+    <span className='uppercase tracking-widest'>{children}</span>
+    <div className='flex-1 border-t border-neutral-700' />
+  </div>
 );
 
 export default Welcome;
