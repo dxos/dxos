@@ -14,6 +14,7 @@ import {
   createSerializedDatabase,
   isValidSqliteDatabase,
   runWithOpfsSqliteClient,
+  seedExportPoolImportAndHypercoreWrite,
 } from './opfs-test-helpers';
 
 describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true }, () => {
@@ -147,6 +148,11 @@ describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true 
         expect(rows[0].label).toBe('pool-import-e2e');
       }),
     );
+  });
+
+  test('writes hypercore_files via layerOpfs after raw pool import', async () => {
+    const result = (await seedExportPoolImportAndHypercoreWrite()) as { writtenBytes: number };
+    expect(result.writtenBytes).toBe(4);
   });
 
   test('persists data across worker restart', async () => {

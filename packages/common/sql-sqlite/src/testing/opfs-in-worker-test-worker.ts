@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as SqliteClient from '../SqliteClient';
-import { isValidSqliteDatabase } from '../internal/opfs-pool-async';
+import { isValidSqliteDatabase, TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers';
 
 const DB_NAME = 'DXOS';
 
@@ -84,6 +84,32 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         const client = yield* SqlClient.SqlClient;
         const rows = yield* client`SELECT marker FROM in_worker_persist ORDER BY rowid`;
         return { marker: rows[0]?.marker };
+      }
+      case 'seed-hypercore-profile': {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS hypercore_files (
+          path TEXT PRIMARY KEY,
+          data BLOB NOT NULL DEFAULT x''
+        )`;
+        const feedKey = TEST_HALO_CONTROL_FEED_KEY;
+        const seedPath = `/sqlite-feeds/feeds/${feedKey}/bitfield`;
+        const seedData = new Uint8Array([1, 2, 3, 4]);
+        yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${seedPath}, ${seedData})`;
+        const count = yield* sql<{ n: number }>`SELECT COUNT(*) AS n FROM hypercore_files`;
+        return { seeded: true, count: Number(count[0]?.n ?? 0) };
+      }
+      case 'hypercore-write-after-import': {
+        const sql = yield* SqlClient.SqlClient;
+        const feedKey = TEST_HALO_CONTROL_FEED_KEY;
+        const filePath = `/sqlite-feeds/feeds/${feedKey}/data`;
+        const existing = yield* sql<{ data: Uint8Array }>`SELECT data FROM hypercore_files WHERE path = ${filePath}`;
+        const data = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+        yield* sql`INSERT OR REPLACE INTO hypercore_files (path, data) VALUES (${filePath}, ${data})`;
+        const rows = yield* sql<{ data: Uint8Array }>`SELECT data FROM hypercore_files WHERE path = ${filePath}`;
+        return {
+          previousCount: existing.length,
+          writtenBytes: rows[0]?.data?.byteLength ?? 0,
+        };
       }
       default:
         return yield* Effect.fail(new Error(`Unknown in-worker test case: ${testCase}`));
