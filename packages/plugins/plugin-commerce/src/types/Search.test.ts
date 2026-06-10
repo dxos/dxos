@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Filter, Obj, Tag } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TagIndex } from '@dxos/schema';
 
 import { Result } from './Result';

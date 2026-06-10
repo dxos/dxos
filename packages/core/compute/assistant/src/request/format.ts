@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { type FunctionNotFoundError, type Operation, Template } from '@dxos/compute';
 import { type Database, Obj, type Registry } from '@dxos/echo';
-import { ObjectVersion } from '@dxos/echo-db';
+import { ObjectVersion } from '@dxos/echo-client';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';

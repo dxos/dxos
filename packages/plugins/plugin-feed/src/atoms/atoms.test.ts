@@ -7,7 +7,7 @@ import * as Data from 'effect/Data';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import { Magazine, Subscription } from '../types';

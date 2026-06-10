@@ -127,7 +127,7 @@
     "tauri-plugin-web-auth-api": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

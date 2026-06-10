@@ -42,7 +42,7 @@
       "path": "../../echo/echo"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../echo/echo-client"
     },
     {
       "path": "../../mesh/edge-client"

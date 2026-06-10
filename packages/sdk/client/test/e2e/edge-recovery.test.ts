@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { Obj, Filter, Database } from '@dxos/echo';
-import type { SpaceSyncState } from '@dxos/echo-db';
+import type { SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';

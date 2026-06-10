@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { registryLayer } from '@dxos/echo-db';
+import { registryLayer } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 
 import { FunctionNotFoundError } from './errors';
