@@ -26,7 +26,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
-    const space = getSpace(chat);
+    // Transient (pre-submit) chats have no database; fall back to the companion's space.
+    const space = getSpace(chat) ?? getSpace(companionTo);
     const runtime = useChatServices({ id: space?.id });
 
     const [online, setOnline] = useOnline();
