@@ -83,7 +83,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           Effect.gen(function* () {
             invariant(chat);
             yield* invoke(AssistantOperation.ForkChat, { chat }, { spaceId: db?.spaceId });
-          }).pipe(runAndForwardErrors),
+          }).pipe(EffectEx.runAndForwardErrors),
       );
 
     if (chats.length > 0) {
