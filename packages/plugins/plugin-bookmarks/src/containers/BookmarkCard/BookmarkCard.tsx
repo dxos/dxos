@@ -10,6 +10,8 @@ import { Card } from '@dxos/react-ui';
 
 import { type Bookmark } from '#types';
 
+import { useImageLoads } from '../useImageLoads';
+
 export type BookmarkCardProps = AppSurface.ObjectCardProps<Bookmark.Bookmark>;
 
 /**
@@ -19,10 +21,13 @@ export type BookmarkCardProps = AppSurface.ObjectCardProps<Bookmark.Bookmark>;
  */
 export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
   const [bookmark] = useObject(subject);
+  const imageLoads = useImageLoads(bookmark.image);
 
   return (
     <Card.Body>
-      {bookmark.image && <Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />}
+      {bookmark.image && imageLoads && (
+        <Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />
+      )}
       <Card.Row>
         <Card.Title classNames='line-clamp-2'>{bookmark.title}</Card.Title>
       </Card.Row>
