@@ -73,10 +73,7 @@ export class OtelLogs {
 
     const serviceName = this.options.resource.attributes[ATTR_SERVICE_NAME]?.toString() ?? '';
     const effectiveLogLevel = getStoredLogLevel(serviceName) ?? this.options.logLevel;
-    if (
-      entry.level < effectiveLogLevel ||
-      (!this.options.includeSharedWorkerLogs && entry.meta?.S?.remoteSessionId)
-    ) {
+    if (entry.level < effectiveLogLevel || (!this.options.includeSharedWorkerLogs && entry.meta?.S?.remoteSessionId)) {
       return;
     }
 
