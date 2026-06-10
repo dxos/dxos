@@ -6,14 +6,14 @@
  * Page side of the composer-crx extension's ping contract — a health-check round-trip that proves
  * the page → content-script → background messaging path and reports the extension's identity.
  *
- * The event names and wire shapes mirror `packages/apps/composer-crx/src/search-proxy/types.ts`
- * (the source of truth); they are re-declared here because the plugin must not depend on the
- * extension app package.
+ * The event names and wire shapes mirror `packages/apps/composer-crx/src/proxy/types.ts` (the source
+ * of truth); they are re-declared here because the plugin must not depend on the extension app
+ * package.
  */
 
-const PING_EVENT = 'composer:search-proxy:ping';
-const PING_ACK_EVENT = 'composer:search-proxy:ping:ack';
-const RENDER_READY_DATASET_KEY = 'composerSearchProxy';
+const PING_EVENT = 'composer:proxy:ping';
+const PING_ACK_EVENT = 'composer:proxy:ping:ack';
+const RENDER_READY_DATASET_KEY = 'composerProxy';
 const DEFAULT_PING_TIMEOUT_MS = 4_000;
 
 export type ExtensionInfo = {

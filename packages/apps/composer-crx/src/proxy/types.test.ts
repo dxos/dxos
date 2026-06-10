@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type RenderAck, type RenderRequest, decodeRenderAck, decodeRenderRequest } from './types';
 
-describe('search-proxy types', () => {
+describe('proxy types', () => {
   test('decodeRenderRequest round-trips a minimal request', ({ expect }) => {
     const request: RenderRequest = { version: 1, id: 'abc', url: 'https://example.com/' };
     expect(decodeRenderRequest(request)).toEqual(request);

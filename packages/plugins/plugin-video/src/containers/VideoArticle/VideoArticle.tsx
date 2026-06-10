@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -28,6 +28,9 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   const [video] = useObject(subject);
   const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);
+  // Resolve the transcript so summary regeneration can be gated on it actually having content.
+  useObject(subject.transcript);
+  const hasTranscript = (subject.transcript?.target?.content?.trim().length ?? 0) > 0;
 
   const handleOpenOriginal = useCallback(() => {
     if (isExternalHttpUrl(video.url)) {
@@ -35,9 +38,30 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
     }
   }, [video.url]);
 
+  // Auto-populate the description from the source page when empty (scraped via the FetchDescription
+  // op). `running` guards re-entrancy across the async gap before the reactive `video.description`
+  // field updates; on failure the deps are unchanged so it does not retry in a loop.
+  const fetchingDescriptionRef = useRef(false);
+  useEffect(() => {
+    if (!invokePromise || !video.url || video.description?.trim() || fetchingDescriptionRef.current) {
+      return;
+    }
+    fetchingDescriptionRef.current = true;
+    void invokePromise(
+      VideoOperation.FetchDescription,
+      { video: Ref.make(subject) },
+      {
+        spaceId: Obj.getDatabase(subject)?.spaceId,
+        notify: { error: ['fetch-description-error.message', { ns: meta.id }] },
+      },
+    ).finally(() => {
+      fetchingDescriptionRef.current = false;
+    });
+  }, [invokePromise, subject, video.url, video.description]);
+
   // Manual summary regeneration (the summary surface generates it automatically when first missing).
   const handleRegenerate = useCallback(() => {
-    if (!invokePromise || !video.transcript) {
+    if (!invokePromise || !hasTranscript) {
       return;
     }
     setSummarizing(true);
@@ -49,13 +73,13 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         notify: { error: ['summarize-error.message', { ns: meta.id }] },
       },
     ).finally(() => setSummarizing(false));
-  }, [invokePromise, subject, video.transcript]);
+  }, [invokePromise, subject, hasTranscript]);
 
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
         .action(
-          'open-original',
+          'openOriginal',
           {
             label: ['open-original.label', { ns: meta.id }],
             icon: 'ph--arrow-square-out--regular',
@@ -92,7 +116,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
             tab={tab}
             onTabChange={setTab}
             onRegenerate={handleRegenerate}
-            isRegenerateDisabled={!video.transcript || summarizing}
+            isRegenerateDisabled={!hasTranscript || summarizing}
             isSummarizing={summarizing}
           />
         </Panel.Content>

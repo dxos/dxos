@@ -44,7 +44,7 @@ export const installSearchProxy = (): void => {
       return (async (): Promise<RenderAck> => {
         const origin = sender.tab?.url ?? sender.url;
         if (!(await isComposerUrl(origin))) {
-          log.warn('search-proxy: rejected non-Composer origin', { origin });
+          log.warn('proxy: rejected non-Composer origin', { origin });
           return { version: 1, id: request.id, ok: false, error: 'forbiddenOrigin' };
         }
         return renderUrl(browser, request);
@@ -69,7 +69,7 @@ export const installSearchProxy = (): void => {
       return (async (): Promise<PingAck> => {
         const origin = sender.tab?.url ?? sender.url;
         if (!(await isComposerUrl(origin))) {
-          log.warn('search-proxy: rejected non-Composer ping origin', { origin });
+          log.warn('proxy: rejected non-Composer ping origin', { origin });
           return { version: 1, id: request.id, ok: false, error: 'forbiddenOrigin' };
         }
         const manifest = browser.runtime.getManifest();

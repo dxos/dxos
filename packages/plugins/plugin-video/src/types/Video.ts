@@ -22,9 +22,11 @@ export const Video = Schema.Struct({
     FormatAnnotation.set(TypeFormat.URL),
     Schema.optional,
   ),
-  description: Schema.optional(Schema.String).annotations({
-    description: 'Published description of the video.',
-  }),
+  description: Schema.String.pipe(
+    Schema.annotations({ title: 'Description', description: 'The full published description of the video.' }),
+    FormatAnnotation.set(TypeFormat.Text),
+    Schema.optional,
+  ),
   transcript: Ref.Ref(Text.Text).pipe(
     Schema.annotations({ description: 'Generated transcript.' }),
     FormInputAnnotation.set(false),
@@ -43,6 +45,6 @@ export const Video = Schema.Struct({
 
 export type Video = Type.InstanceType<typeof Video>;
 
-export type MakeProps = Partial<{ name: string; url: string }>;
+export type MakeProps = Partial<{ name: string; url: string; description: string }>;
 
-export const make = ({ name, url }: MakeProps = {}): Video => Obj.make(Video, { name, url });
+export const make = ({ name, url, description }: MakeProps = {}): Video => Obj.make(Video, { name, url, description });
