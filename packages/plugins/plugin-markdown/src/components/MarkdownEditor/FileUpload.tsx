@@ -15,14 +15,17 @@ export const IMAGE_FILES = ['.jpg', '.jpeg', '.png', '.gif'];
 export type FileUploadAction = () => void;
 
 export type FileUploadProps = {
-  editorView?: EditorView;
+  // Provided as a getter (not a value prop) so the live `EditorView` is never carried in a React prop
+  // that React 19.2's dev render-logger would walk into a cross-origin frame. See
+  // `react-ui-editor/.../controller.ts` for the full rationale.
+  getView?: () => EditorView | null;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 };
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Move to root? (support drag into document via dropzone).
 export const FileUpload = forwardRef<FileUploadAction, FileUploadProps>(
-  ({ editorView, onFileUpload }, forwardedRef) => {
+  ({ getView, onFileUpload }, forwardedRef) => {
     // https://react-dropzone.js.org
     const { acceptedFiles, open, inputRef } = useDropzone({
       disabled: !onFileUpload,
@@ -36,8 +39,12 @@ export const FileUpload = forwardRef<FileUploadAction, FileUploadProps>(
     useImperativeHandle(forwardedRef, () => open, []);
 
     useEffect(() => {
-      if (editorView && acceptedFiles.length && onFileUpload) {
+      if (acceptedFiles.length && onFileUpload) {
         requestAnimationFrame(async () => {
+          const editorView = getView?.();
+          if (!editorView) {
+            return;
+          }
           // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
           const f = acceptedFiles[0];
           const file = new File([f], f.name, {
@@ -52,7 +59,7 @@ export const FileUpload = forwardRef<FileUploadAction, FileUploadProps>(
           }
         });
       }
-    }, [editorView, acceptedFiles, onFileUpload]);
+    }, [getView, acceptedFiles, onFileUpload]);
 
     if (!onFileUpload) {
       return null;
