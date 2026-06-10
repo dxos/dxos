@@ -15,11 +15,17 @@ import * as Clip from './Clip';
  * browser extension surfaces on web pages (popup toolbar, context menu).
  * The extension caches serializable descriptors; invocation arrives over the
  * same window CustomEvent bridge as clips.
+ *
+ * The extension keeps a hand-validated mirror of these types at
+ * `packages/apps/composer-crx/src/page-actions/types.ts` which MUST be
+ * updated in lockstep with any change here.
  */
 
 /**
  * Generic page capture produced by the extension's `snapshot` extractor.
- * Reuses the Clip envelope's source/selection/hints shapes.
+ * Reuses the Clip envelope's source/selection/hints shapes. The mirror in
+ * composer-crx copies these shapes structurally, so any change to
+ * `Clip.Source`, `Clip.Selection`, or `Clip.Hints` propagates to the mirror too.
  */
 export const Snapshot = Schema.Struct({
   source: Clip.Source,

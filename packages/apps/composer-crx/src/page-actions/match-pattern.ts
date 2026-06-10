@@ -10,9 +10,35 @@
  * the popup. Invalid patterns or URLs never match.
  */
 
-const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const globToRegExp = (glob: string): RegExp => new RegExp(`^${glob.split('*').map(escapeRegExp).join('.*')}$`);
+/**
+ * Linear-time glob match (`*` wildcards only). A backtracking regex here is a
+ * ReDoS hazard: patterns come from untrusted descriptors and inputs from
+ * arbitrary page URLs, so matching must not be super-linear.
+ */
+const globMatches = (glob: string, input: string): boolean => {
+  let globIdx = 0;
+  let inputIdx = 0;
+  let starIdx = -1;
+  let backtrackIdx = 0;
+  while (inputIdx < input.length) {
+    if (globIdx < glob.length && glob[globIdx] === input[inputIdx]) {
+      globIdx++;
+      inputIdx++;
+    } else if (globIdx < glob.length && glob[globIdx] === '*') {
+      starIdx = globIdx++;
+      backtrackIdx = inputIdx;
+    } else if (starIdx >= 0) {
+      globIdx = starIdx + 1;
+      inputIdx = ++backtrackIdx;
+    } else {
+      return false;
+    }
+  }
+  while (globIdx < glob.length && glob[globIdx] === '*') {
+    globIdx++;
+  }
+  return globIdx === glob.length;
+};
 
 const matchesPattern = (url: URL, pattern: string): boolean => {
   if (pattern === '<all_urls>') {
@@ -29,18 +55,21 @@ const matchesPattern = (url: URL, pattern: string): boolean => {
     return false;
   }
 
-  if (host === '*') {
+  // Lowercase the pattern host before comparing: Chrome is case-insensitive,
+  // and URL.hostname is already lowercase.
+  const hostLower = host.toLowerCase();
+  if (hostLower === '*') {
     // Any host.
-  } else if (host.startsWith('*.')) {
-    const suffix = host.slice(2);
+  } else if (hostLower.startsWith('*.')) {
+    const suffix = hostLower.slice(2);
     if (url.hostname !== suffix && !url.hostname.endsWith(`.${suffix}`)) {
       return false;
     }
-  } else if (url.hostname !== host) {
+  } else if (url.hostname !== hostLower) {
     return false;
   }
 
-  return globToRegExp(path).test(url.pathname + url.search);
+  return globMatches(path, url.pathname + url.search);
 };
 
 /**

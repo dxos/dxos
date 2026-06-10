@@ -113,4 +113,27 @@ describe('page-actions types', () => {
   test('decodeInvokeAck rejects a version mismatch', ({ expect }) => {
     expect(decodeInvokeAck({ version: 2, id: 'abc', ok: true })).toBeUndefined();
   });
+
+  test('decodeDescriptor rejects invalid predicate shape', ({ expect }) => {
+    expect(decodeDescriptor({ ...fullDescriptor, predicate: { exists: 1 } })).toBeUndefined();
+    expect(decodeDescriptor({ ...fullDescriptor, predicate: 'video' })).toBeUndefined();
+  });
+
+  test('decodeDescriptor rejects non-array contexts', ({ expect }) => {
+    expect(decodeDescriptor({ ...fullDescriptor, contexts: 'popup' })).toBeUndefined();
+  });
+
+  test('decodeDescriptor rejects missing operation', ({ expect }) => {
+    const { operation: _op, ...withoutOp } = fullDescriptor;
+    expect(decodeDescriptor(withoutOp)).toBeUndefined();
+  });
+
+  test('decodeDescriptor rejects missing extractor', ({ expect }) => {
+    const { extractor: _ext, ...withoutExtractor } = fullDescriptor;
+    expect(decodeDescriptor(withoutExtractor)).toBeUndefined();
+  });
+
+  test('decodeListAck rejects ok ack with non-array actions', ({ expect }) => {
+    expect(decodeListAck({ version: 1, id: 'abc', ok: true, actions: 'nope' })).toBeUndefined();
+  });
 });
