@@ -737,13 +737,13 @@ describe('Query', () => {
       // Mutate in a known order. Automerge timestamps have 1-second precision, so each
       // mutation needs a >1 s gap so the index assigns distinct updatedAt values.
       await sleep(1100);
-      Obj.update(obj2, (obj: any) => {
-        obj.value = 20;
+      Obj.update(obj2, (obj2: any) => {
+        obj2.value = 20;
       });
       await db.flush();
       await sleep(1100);
-      Obj.update(obj1, (obj: any) => {
-        obj.value = 10;
+      Obj.update(obj1, (obj1: any) => {
+        obj1.value = 10;
       });
       await db.flush();
 
