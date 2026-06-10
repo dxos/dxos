@@ -3120,8 +3120,10 @@ describe('Query', () => {
       const { db: db2 } = await builder.createDatabase();
 
       const query = () => Query.select(Filter.type(TestSchema.Expando, { value: 100 }));
-      expect(db2.query(query())).not.toBe(db1.query(query()));
-      expect(db2.query(query()).atom).not.toBe(db1.query(query()).atom);
+      const result1 = db1.query(query());
+      const result2 = db2.query(query());
+      expect(result2).not.toBe(result1);
+      expect(result2.atom).not.toBe(result1.atom);
     });
 
     test('cached result stays reactive across a shared subscription', async () => {
