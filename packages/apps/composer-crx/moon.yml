@@ -5,3 +5,23 @@ tags:
   - typecheck
   - vite
   - storybook
+tasks:
+  # Point the main worktree's gitignored `dist` at this worktree's build output so Chrome's
+  # "Load unpacked" target stays at a fixed, worktree-independent path. No-op in the main worktree.
+  link-dist:
+    command: node scripts/link-dist.mjs
+    # Uncached so it always re-points the symlink; safe to run in CI where it is a no-op (the CI
+    # checkout is the main worktree, so the canonical dist path already is the build output).
+    options:
+      cache: false
+  # `build` here is typecheck-only (see .moon/tasks/tag-typecheck.yml); `bundle`/`serve` (tag-vite)
+  # are what actually emit `dist`. Hook all three so the symlink is (re)established for any of them.
+  build:
+    deps:
+      - link-dist
+  bundle:
+    deps:
+      - link-dist
+  serve:
+    deps:
+      - link-dist
