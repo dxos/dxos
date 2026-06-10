@@ -2,54 +2,122 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Column, IconButton, Image, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea } from '@dxos/react-ui';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { Summary } from '#components';
 import { meta } from '#meta';
-import { type Bookmark } from '#types';
+import { BookmarkOperation, type Bookmark } from '#types';
 
 import { useImageLoads } from '../useImageLoads';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
 
-export const BookmarkArticle = ({ role, subject }: BookmarkArticleProps) => {
-  const { t } = useTranslation(meta.id);
+export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticleProps) => {
+  const { invokePromise } = useOperationInvoker();
   const [bookmark] = useObject(subject);
   const imageLoads = useImageLoads(bookmark.image);
+  const [summarizing, setSummarizing] = useState(false);
+  // Resolve the summary's target so the editor mounts once the ref loads; `.target` isn't reactive on its own.
+  useObject(subject.summary);
+  const summary = subject.summary?.target;
+
+  const handleOpenSource = useCallback(() => {
+    if (isExternalHttpUrl(bookmark.url)) {
+      window.open(bookmark.url, '_blank', 'noopener,noreferrer');
+    }
+  }, [bookmark.url]);
+
+  const handleSummarize = useCallback(() => {
+    if (!invokePromise) {
+      return;
+    }
+    setSummarizing(true);
+    void invokePromise(
+      BookmarkOperation.Summarize,
+      { bookmark: Ref.make(subject) },
+      {
+        spaceId: Obj.getDatabase(subject)?.spaceId,
+        notify: { error: ['summarize-error.message', { ns: meta.id }] },
+      },
+    ).finally(() => setSummarizing(false));
+  }, [invokePromise, subject]);
+
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'openSource',
+          {
+            label: ['open-source.label', { ns: meta.id }],
+            icon: 'ph--arrow-square-out--regular',
+            disabled: !isExternalHttpUrl(bookmark.url),
+            disposition: 'toolbar',
+            testId: 'bookmark.toolbar.open-source',
+          },
+          () => handleOpenSource(),
+        )
+        .action(
+          'summarize',
+          {
+            label: ['summarize.label', { ns: meta.id }],
+            icon: 'ph--sparkle--regular',
+            disabled: summarizing || !isExternalHttpUrl(bookmark.url),
+            disposition: 'toolbar',
+            testId: 'bookmark.toolbar.summarize',
+          },
+          () => handleSummarize(),
+        )
+        .build(),
+    [bookmark.url, summarizing, handleOpenSource, handleSummarize],
+  );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <IconButton
-            icon='ph--arrow-square-out--regular'
-            label={t('open-source.button')}
-            onClick={() => window.open(bookmark.url, '_blank', 'noopener,noreferrer')}
-          />
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
-        <ScrollArea.Root centered>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2'>
-            <Column.Root>
-              <Column.Row>
-                {(bookmark.favicon && <img src={bookmark.favicon} alt={bookmark.title} />) || <div />}
-                <h1 className='text-xl'>{bookmark.title}</h1>
-              </Column.Row>
-              <Column.Center>
-                <pre className='text-sm text-subdued'>{bookmark.url}</pre>
-                {bookmark.excerpt && <p className='text-description'>{bookmark.excerpt}</p>}
-                {bookmark.image && imageLoads && <Image src={bookmark.image} alt={bookmark.title} />}
-                {bookmark.summary && <p>{bookmark.summary}</p>}
-              </Column.Center>
-            </Column.Root>
-            {/* <pre>{JSON.stringify(bookmark, null, 2)}</pre> */}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
-    </Panel.Root>
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <ScrollArea.Root centered>
+            <ScrollArea.Viewport>
+              <Card.Root fullWidth border={false}>
+                <Card.Header>
+                  <Card.IconBlock>
+                    <img src={bookmark.favicon} alt={bookmark.title} />
+                  </Card.IconBlock>
+                  <Card.Title>{bookmark.title}</Card.Title>
+                </Card.Header>
+                <Card.Body>
+                  <Card.Section>
+                    <Card.Text classNames='font-mono text-sm text-subdued'>{bookmark.url}</Card.Text>
+                    <Card.Text>{bookmark.excerpt}</Card.Text>
+                  </Card.Section>
+                  {bookmark.image && imageLoads && (
+                    <Card.Poster alt={bookmark.title} image={bookmark.image} fit='cover' classNames='rounded-t-xs' />
+                  )}
+                </Card.Body>
+              </Card.Root>
+              {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Menu.Root>
   );
+};
+
+const isExternalHttpUrl = (value?: string): boolean => {
+  try {
+    const { protocol } = new URL(value ?? '');
+    return protocol === 'https:' || protocol === 'http:';
+  } catch {
+    return false;
+  }
 };

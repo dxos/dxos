@@ -6,9 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { type PageAction } from '@dxos/plugin-crx/types';
+import { Text } from '@dxos/schema';
 
 const EXCERPT_LENGTH = 280;
 
@@ -19,7 +20,11 @@ export const Bookmark = Schema.Struct({
   favicon: Schema.optional(Schema.String),
   image: Schema.optional(Schema.String),
   excerpt: Schema.optional(Schema.String),
-  summary: Schema.optional(Schema.String),
+  summary: Ref.Ref(Text.Text).pipe(
+    Schema.annotations({ description: 'Generated summary.' }),
+    FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),

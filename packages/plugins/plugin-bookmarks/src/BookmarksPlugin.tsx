@@ -4,6 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Text } from '@dxos/schema';
 
 import { OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -14,7 +15,7 @@ import { Bookmark } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Bookmark.Bookmark] }),
+  AppPlugin.addSchemaModule({ schema: [Bookmark.Bookmark, Text.Text] }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({
     id: 'page-action',

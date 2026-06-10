@@ -36,7 +36,7 @@ type Bookmark
     favicon?: string             # source.favicon
     image?: string               # imageData (extension-captured thumbnail data URL) ?? hints.ogImage
     excerpt?: string             # hints.ogDescription ?? first 280 chars of selection text
-    summary?: string             # optional AI summary (future; not set at creation)
+    summary?: Ref<Text>          # generated summary (AI), via Summarize
 ```
 
 ## Features
@@ -103,6 +103,39 @@ feat F-4: Surfaces
   req F-4.2:
     when: a Bookmark is the subject of a card surface
     then: a card renders the title, excerpt, and image (when present)
+
+  req F-4.3:
+    when: the article toolbar is rendered
+    then: |
+      it uses the standard menu toolbar (MenuBuilder) with two actions:
+        open-source: opens the bookmarked URL in a new tab (disabled when
+                     the URL is not a valid http(s) URL)
+        summarize:   invokes the Summarize operation (disabled while a
+                     summarization is already running)
+```
+
+```mdl
+feat F-5: Summarize Operation
+
+  req F-5.1:
+    when: the operation is invoked with { bookmark }
+    then: |
+      the bookmarked page's HTML is fetched via the Composer extension's
+      render-proxy (falling back to the EDGE CORS proxy when the extension
+      is unavailable), readable text is extracted from the HTML, a markdown
+      summary is generated via the assistant AI stack and stored as a linked
+      Text object, and the operation returns { summary } (a Ref to the
+      created Text object).
+
+  req F-5.2:
+    when: the summary Text object is created
+    then: the bookmark's `summary` field references it and the article
+          surface renders its markdown content
+
+  req F-5.3:
+    when: the fetch, extraction, or generation fails
+    then: the failure surfaces as an error toast and the bookmark is left
+          unmodified
 ```
 
 ## Acceptance

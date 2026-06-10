@@ -19,7 +19,9 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Bookmarks',
-        'open-source.button': 'Open page',
+        'open-source.label': 'Open page',
+        'summarize.label': 'Summarize page',
+        'summarize-error.message': 'Summarization failed.',
       },
     },
   },
