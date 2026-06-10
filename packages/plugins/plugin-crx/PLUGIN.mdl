@@ -7,7 +7,9 @@ version: 0.2.0
 Coordinates with the `@dxos/composer-crx` browser extension. Owns both the
 user-facing settings surface and the receiver bridge that materializes
 incoming clippings as `Person`, `Organization`, or `Note` objects in the
-active space.
+active space. Also owns the render-proxy settings (absorbed from the retired
+plugin-extension) that govern how other plugins may use the extension to
+fetch and JS-render pages in a real browser tab.
 
 The extension discovers this tab via `chrome.tabs.query` over a configured list
 of URLs and delivers the payload as a same-origin `window` `CustomEvent`. The
@@ -38,6 +40,11 @@ type Settings
                                  # bridge ignores incoming clips.
     autoOpenAfterClip?: boolean  # default: false. Navigate to the created
                                  # object after a successful clip.
+    renderProxyEnabled?: boolean  # default: true. Master switch: when false,
+                                  # plugins use the edge HTTP proxy instead.
+    renderTimeout?: number        # default: 20000. Max ms to wait for a render.
+    renderActiveTab?: boolean     # default: false. Render in a focused tab.
+    developerMode?: boolean       # default: false. Verbose logging / previews.
 ```
 
 ```mdl
@@ -130,6 +137,18 @@ feat F-2: Settings Surface
     then: |
       a form is shown with switches for `enabled` and `autoOpenAfterClip`,
       wired to the Settings atom and persisted on change.
+```
+
+```mdl
+feat F-2b: Render-Proxy Settings
+  desc: |
+    Settings governing the extension's search render-proxy (page rendering for
+    plugins that scrape client-rendered sites), absorbed from the retired
+    plugin-extension. Includes a connection-test button that pings the
+    extension over the page → content-script → background path.
+  req:
+    - The settings surface renders all merged fields plus a Test connection button.
+    - The ping round-trip reports the extension's name and version on success.
 ```
 
 ```mdl

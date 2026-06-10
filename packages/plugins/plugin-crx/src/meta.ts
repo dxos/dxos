@@ -22,6 +22,9 @@ export const meta = Plugin.makeMeta({
 
     Settings let you switch clipping on or off and choose whether Composer jumps straight to a
     newly saved item, so you can review captures immediately or keep browsing without interruption.
+    Settings also control whether other features may use the extension to load pages in the
+    background — with a time limit you can adjust and an option to open them in a visible tab
+    instead — as well as a developer mode for troubleshooting if something isn't working as expected.
   `,
   icon: 'ph--browser--regular',
   iconHue: 'neutral',
