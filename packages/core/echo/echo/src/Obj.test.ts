@@ -152,6 +152,16 @@ describe('Obj', () => {
       const snapshot = Obj.getSnapshot(obj);
       expect(Obj.getURI(snapshot, { prefer: 'relative' })).toBe(Obj.getURI(obj, { prefer: 'relative' }));
     });
+
+    test("prefer: 'named' works the same on snapshot as on reactive (meta.key is preserved)", ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, {
+        [Obj.Meta]: { key: 'com.example.foo' },
+        name: 'Alice',
+      });
+      const snapshot = Obj.getSnapshot(obj);
+      expect(Obj.getURI(snapshot, { prefer: 'named' })).toBe(Obj.getURI(obj, { prefer: 'named' }));
+      expect(Obj.getURI(snapshot, { prefer: 'named' })).toBe('dxn:com.example.foo');
+    });
   });
 
   describe('snapshotOf', () => {
