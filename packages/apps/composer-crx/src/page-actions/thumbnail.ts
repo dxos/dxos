@@ -41,7 +41,12 @@ export const captureThumbnail = async (url: string): Promise<string | undefined>
       return undefined;
     }
     const { hostname } = parsed;
-    if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.startsWith('127.') || hostname === '[::1]') {
+    if (
+      hostname === 'localhost' ||
+      hostname.endsWith('.localhost') ||
+      hostname.startsWith('127.') ||
+      hostname === '[::1]'
+    ) {
       return undefined;
     }
 

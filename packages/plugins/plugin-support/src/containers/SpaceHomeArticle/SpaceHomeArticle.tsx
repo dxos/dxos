@@ -377,14 +377,6 @@ type RecentObjectTileProps = {
 
 const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   const { invokePromise } = useOperationInvoker();
-
-  const handleClick = useCallback(() => {
-    if (!space) {
-      return;
-    }
-    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
-  }, [invokePromise, object, space]);
-
   const { t } = useTranslation(meta.id);
   const typename = Obj.getTypename(object);
   const label = toLocalizedString(
@@ -395,11 +387,18 @@ const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
+  const handleClick = useCallback(() => {
+    if (!space) {
+      return;
+    }
+    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
+  }, [invokePromise, object, space]);
+
   // TODO(wittjosiah): Use AppSurface.Card once card previews are consistently good for all object types.
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Toolbar.IconButton variant='ghost' label={label} icon={icon} iconOnly iconClassNames={iconStyles?.text} />
+        <Card.Icon icon={icon} classNames={iconStyles?.text} />
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>
