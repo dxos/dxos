@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dx
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { DXN, URI } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -32,10 +32,9 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { 
     // Keyed entities (blueprints, operations) use a DXN key URI as the primary id so that
     // registry refs resolve against picker options. The EID is kept as an alias so that
     // EID-based refs still match via the alias check in `handleGetValue`.
-    const key = Entity.isEntity(result) ? Entity.getMeta(result).key : undefined;
-    const dxnId = key ? (DXN.tryMake(`dxn:${key}`) ?? key) : undefined;
-    const id = dxnId ?? eid;
-    const aliases: string[] | undefined = dxnId != null ? [eid] : undefined;
+    const namedId = Entity.isEntity(result) ? Obj.getURI(result as Obj.Unknown, { prefer: 'named' }) : undefined;
+    const id = (namedId !== eid ? namedId : undefined) ?? eid;
+    const aliases: string[] | undefined = namedId !== eid ? [eid] : undefined;
 
     const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);

@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EntityId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -498,15 +498,56 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
+/**
+ * Controls the URI form returned by `Obj.getURI`.
+ *
+ * - `'named'`    — Registry key URI (`dxn:<meta.key>`) when the object has a key; falls back to the default EID.
+ * - `'absolute'` — Fully-qualified EID with space id (`echo://<spaceId>/<entityId>`); falls back when no space is available.
+ * - `'relative'` — Local EID without space id (`echo:/<entityId>`).
+ *
+ * Omitting `prefer` preserves the existing behaviour.
+ */
+export type GetURIOptions = {
+  prefer?: 'named' | 'absolute' | 'relative';
+};
+
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical URI of the object. Returns `URI.URI` (today always an EID,
- * but future entity kinds may surface other URI schemes — narrow with
- * `EID.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
+ * Get the URI of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link GetURIOptions}).
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => {
+export const getURI = (entity: Unknown | Snapshot, options?: GetURIOptions): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
+
+  const prefer = options?.prefer;
+
+  if (prefer === 'named') {
+    const key = internal.getMetaChecked(entity).key;
+    if (key) {
+      return (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
+    }
+    return internal.getUri(entity);
+  }
+
+  if (prefer === 'relative') {
+    const eid = internal.getUri(entity);
+    const entityId = EID.getEntityId(eid);
+    return entityId ? EID.make({ entityId }) : eid;
+  }
+
+  if (prefer === 'absolute') {
+    const eid = internal.getUri(entity);
+    const entityId = EID.getEntityId(eid);
+    if (!entityId) {
+      return eid;
+    }
+    // Prefer the live database's space id; fall back to any space id already in the stored EID.
+    const spaceId = internal.getDatabase(entity)?.spaceId ?? EID.getSpaceId(eid);
+    return spaceId ? EID.make({ spaceId, entityId }) : eid;
+  }
+
   return internal.getUri(entity);
 };
 
