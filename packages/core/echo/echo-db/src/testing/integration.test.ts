@@ -8,12 +8,12 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
-import { MeshEchoReplicator } from '@dxos/echo-pipeline';
+import { MeshEchoReplicator } from '@dxos/echo-host';
 import {
   TestReplicationNetwork,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
-} from '@dxos/echo-pipeline/testing';
+} from '@dxos/echo-host/testing';
 import { Ref, getTypeAnnotation } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';

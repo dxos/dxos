@@ -2879,9 +2879,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../core/echo/echo-pipeline
+        version: link:../../core/echo/echo-host
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -5275,9 +5275,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../echo/echo-db
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../echo/echo-pipeline
+        version: link:../../echo/echo-host
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol
@@ -5624,9 +5624,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../echo-pipeline
+        version: link:../echo-host
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
@@ -5723,7 +5723,7 @@ importers:
         specifier: workspace:*
         version: link:../../../common/random
 
-  packages/core/echo/echo-pipeline:
+  packages/core/echo/echo-host:
     dependencies:
       '@automerge/automerge':
         specifier: 3.3.0-fragments.1
@@ -7058,9 +7058,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../core/echo/echo-pipeline
+        version: link:../../core/echo/echo-host
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -7459,9 +7459,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../core/echo/echo-pipeline
+        version: link:../../core/echo/echo-host
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -9386,9 +9386,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../core/echo/echo-pipeline
+        version: link:../../core/echo/echo-host
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -16402,9 +16402,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../core/echo/echo-pipeline
+        version: link:../../core/echo/echo-host
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -16568,9 +16568,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-pipeline':
+      '@dxos/echo-host':
         specifier: workspace:*
-        version: link:../../core/echo/echo-pipeline
+        version: link:../../core/echo/echo-host
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -49670,7 +49670,7 @@ snapshots:
       parse-semver: 1.1.1
       read: 1.0.7
       secretlint: 10.2.2
-      semver: 7.7.4
+      semver: 7.8.1
       tmp: 0.2.5
       typed-rest-client: 1.8.11
       url-join: 4.0.1
@@ -52694,7 +52694,7 @@ snapshots:
       require-package-name: 2.0.1
       resolve: 1.22.10
       resolve-from: 5.0.0
-      semver: 7.7.4
+      semver: 7.8.1
       yargs: 16.2.0
     transitivePeerDependencies:
       - supports-color
@@ -53278,7 +53278,7 @@ snapshots:
       eslint-import-context: 0.1.9(unrs-resolver@1.11.1)
       is-glob: 4.0.3
       minimatch: 10.2.5
-      semver: 7.7.4
+      semver: 7.8.1
       stable-hash-x: 0.2.0
       unrs-resolver: 1.11.1
     transitivePeerDependencies:
@@ -57659,7 +57659,7 @@ snapshots:
     dependencies:
       growly: 1.3.0
       is-wsl: 2.2.0
-      semver: 7.7.4
+      semver: 7.8.1
       shellwords: 0.1.1
       uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
       which: 2.0.2
@@ -60238,7 +60238,7 @@ snapshots:
       detect-libc: 2.1.2
       node-addon-api: 6.1.0
       prebuild-install: 7.1.3
-      semver: 7.7.4
+      semver: 7.8.1
       simple-get: 4.0.1
       tar-fs: 3.1.1
       tunnel-agent: 0.6.0
@@ -60250,7 +60250,7 @@ snapshots:
     dependencies:
       color: 4.2.3
       detect-libc: 2.1.2
-      semver: 7.7.4
+      semver: 7.8.1
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.33.5
       '@img/sharp-darwin-x64': 0.33.5
@@ -61465,7 +61465,7 @@ snapshots:
       obug: 2.1.1
       rolldown: 1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
-      semver: 7.7.4
+      semver: 7.8.1
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tree-kill: 1.2.2
@@ -61493,7 +61493,7 @@ snapshots:
       obug: 2.1.1
       rolldown: 1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
-      semver: 7.7.4
+      semver: 7.8.1
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tree-kill: 1.2.2

@@ -67,7 +67,7 @@
       "path": "../echo"
     },
     {
-      "path": "../echo-pipeline"
+      "path": "../echo-host"
     },
     {
       "path": "../echo-protocol"

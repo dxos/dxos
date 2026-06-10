@@ -19,7 +19,7 @@ import {
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
 
-// TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
+// TODO(dmaretskyi): Move out of @dxos/echo-host.
 
 /**
  * Used to replicate with other peers over the network.

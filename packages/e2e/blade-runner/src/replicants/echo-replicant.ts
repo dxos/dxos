@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
-import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
+import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

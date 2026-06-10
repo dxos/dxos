@@ -9,8 +9,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
-import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-pipeline/testing';
+import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-host';
+import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -6,8 +6,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
-import { createTestSqliteRuntime } from '@dxos/echo-pipeline/testing';
+import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-host';
+import { createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';

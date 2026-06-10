@@ -33,7 +33,7 @@ const QueryComposerLogsInput = Schema.Struct({
         or "!<pattern>" to exclude. Tokens within one entry combine like @dxos/log
         shouldLog (include/exclude); multiple entries OR.
       `,
-      examples: [['info'], ['warn', 'echo-pipeline:debug'], ['debug,!rpc']],
+      examples: [['info'], ['warn', 'echo-host:debug'], ['debug,!rpc']],
     }),
   ),
   grep: Schema.optional(
@@ -172,7 +172,7 @@ export const QueryComposerLogs = Operation.make({
       - Last 20 errors and warnings:
         { "filters": ["warn"], "order": "desc", "limit": 20 }
       - Recent ECHO query activity:
-        { "filters": ["echo-pipeline:debug"], "messageRegex": "Query", "limit": 50 }
+        { "filters": ["echo-host:debug"], "messageRegex": "Query", "limit": 50 }
       - Top 10 noisiest messages in the last 5 minutes:
         { "since": <now-300000>, "groupBy": "message", "topK": 10 }
       - Counts by log level for triage:

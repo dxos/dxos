@@ -34,7 +34,7 @@ export class DatabaseRoot {
   /**
    * @param _query - Live `DocumentQuery` for the root doc. Carries both the
    * `DocHandle` (synchronously created with the query) and the actual
-   * readiness state. See `getHandleState` in `@dxos/echo-pipeline` for why
+   * readiness state. See `getHandleState` in `@dxos/echo-host` for why
    * we read liveness off the query rather than `DocHandle.*` predicates.
    */
   constructor(private readonly _query: DocumentQuery<DatabaseDirectory>) {}
