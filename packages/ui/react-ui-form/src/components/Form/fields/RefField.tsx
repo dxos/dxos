@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dx
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { URI } from '@dxos/keys';
+import { EID, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -27,18 +27,10 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
-    const eid = Entity.getURI(result);
-
-    // Keyed entities (blueprints, operations) use a DXN key URI as the primary id so that
-    // registry refs resolve against picker options. The EID is kept as an alias so that
-    // EID-based refs still match via the alias check in `handleGetValue`.
-    const namedId = Entity.isEntity(result) ? Obj.getURI(result as Obj.Unknown, { prefer: 'named' }) : undefined;
-    const id = (namedId !== eid ? namedId : undefined) ?? eid;
-    const aliases: string[] | undefined = namedId !== eid ? [eid] : undefined;
-
+    const id = Entity.getURI(result, { prefer: 'named' });
     const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
-    return { id, label: label ?? id, aliases };
+    return { id, label: label ?? id };
   });
 
 const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
@@ -109,23 +101,25 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
-    // Match against options by the bare entity id rather than the full URI string, since
-    // local EIDs (`echo:/<id>`), qualified EIDs (`echo://<space>/<id>`), and DXN snapshots
-    // (`dxn:echo:…:<id>`) all encode the same ULID in the final delimiter-separated segment.
-    const dxnToEntityId = (dxn: string): string => dxn.split(/[:/]/).filter(Boolean).pop() ?? dxn;
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
-        const dxnString = isRef ? value.uri : value['/'];
-        const objectId = dxnToEntityId(dxnString);
-        const matchingOption =
-          options.find((option) => dxnToEntityId(option.id) === objectId) ??
-          // For keyed entities the primary option id is a DXN key URI; the stored ref may
-          // still carry an EID-based URI. Check aliases so those refs still resolve.
-          options.find((option) => option.aliases?.some((alias) => dxnToEntityId(alias) === objectId));
-        if (matchingOption) {
-          return matchingOption;
+        const uri = isRef ? value.uri : value['/'];
+        // Direct match: option ids are named URIs (dxn: for keyed, EID for unkeyed).
+        const direct = options.find((option) => option.id === uri);
+        if (direct) {
+          return direct;
+        }
+        // EID normalisation: local (`echo:/<id>`), qualified (`echo://<space>/<id>`), and
+        // legacy DXN forms all carry the same entity id in the final segment.
+        const eid = EID.tryParse(uri);
+        if (eid) {
+          const entityId = EID.getEntityId(eid);
+          return options.find((option) => {
+            const optEid = EID.tryParse(option.id);
+            return optEid && EID.getEntityId(optEid) === entityId;
+          });
         }
       }
 

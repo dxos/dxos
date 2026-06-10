@@ -30,7 +30,7 @@ export type GetURIOptions = {
  * Get the URI of an entity.
  * Accepts both reactive entities and snapshots.
  */
-export const getUri = (entity: AnyEntity, options?: GetURIOptions): EID.EID | URI.URI => {
+export const getUri = (entity: AnyEntity, options?: GetURIOptions): URI.URI => {
   const prefer = options?.prefer;
 
   if (prefer === 'named') {

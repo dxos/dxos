@@ -18,12 +18,6 @@ export type RefOption = {
   id: string;
   label: string;
   hue?: Palette;
-  /**
-   * Additional URIs that address the same entity.
-   * Used by {@link RefField} when the primary `id` is a DXN key URI and the
-   * stored ref may still carry an EID-based URI (e.g. from `Ref.make`).
-   */
-  aliases?: string[];
 };
 
 export type ObjectPickerContentProps = ThemedClassName<{
