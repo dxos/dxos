@@ -46,9 +46,7 @@ describe('extractor registry', () => {
     document.body.innerHTML = '<p>Hello</p>';
 
     const result = await runExtractor('snapshot', { document });
-    expect(result).toBeDefined();
-    const snapshot = result as Awaited<ReturnType<typeof snapshotExtractor.run>>;
-    expect(snapshot.source.title).toBe('Registry Test');
+    expect(result).toMatchObject({ source: { title: 'Registry Test' } });
   });
 
   test('runExtractor rejects with an error mentioning the name for unknown extractors', async ({ expect }) => {
