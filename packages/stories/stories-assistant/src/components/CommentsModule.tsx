@@ -10,6 +10,7 @@ import { Filter } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { useQuery } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 
 import { type ModuleProps } from './types';
 
@@ -23,5 +24,11 @@ export const CommentsModule = ({ space }: ModuleProps) => {
     return null;
   }
 
-  return <Surface.Surface type={AppSurface.Article} data={data} />;
+  return (
+    <Panel.Root>
+      <Panel.Content>
+        <Surface.Surface type={AppSurface.Article} data={data} />
+      </Panel.Content>
+    </Panel.Root>
+  );
 };

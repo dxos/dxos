@@ -21,7 +21,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
-import { mapAst } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
@@ -342,10 +342,10 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
       return SoftRef.ast;
     }
 
-    return mapAst(ast, (child) => go(child, visited));
+    return SchemaEx.mapAst(ast, (child) => go(child, visited));
   };
 
-  return Schema.make<any, any, never>(mapAst(schema.ast, (ast) => go(ast))).pipe(
+  return Schema.make<any, any, never>(SchemaEx.mapAst(schema.ast, (ast) => go(ast))).pipe(
     Schema.omit('id'),
     Schema.extend(
       Schema.Struct({

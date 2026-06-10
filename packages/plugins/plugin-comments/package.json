@@ -145,7 +145,6 @@
     "@effect/ai": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui": "workspace:*",

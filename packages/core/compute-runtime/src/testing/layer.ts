@@ -11,11 +11,11 @@ import * as NodeFs from 'node:fs';
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { type EchoDatabaseImpl, makeFeedService, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
+const testBuilder = EffectEx.acquireReleaseResource(() => new EchoTestBuilder());
 
 export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => {
   return `/tmp/dxos-${name}`;

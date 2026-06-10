@@ -4,9 +4,6 @@
 
 export * from './activation-events';
 export * as CollectionModel from './CollectionModel';
-export * as StateMap from './StateMap';
-export * as TagIndex from './TagIndex';
-export * as Tagging from './Tagging';
 export * from './annotations';
 export * from './active-space';
 export * as AppNode from './app-node';
@@ -25,4 +22,6 @@ export * from './plugin';
 export * from './native-passkey';
 export * from './personal-space';
 export * from './type-options';
+export * from './type-section-extension';
+export * from './type-section-resolver';
 export * from './translations';

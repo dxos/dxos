@@ -9,6 +9,8 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
   AnchorSort,
+  AppGraphBuilder,
+  NavigationResolver,
   CommentConfig,
   ComputeGraphRegistry,
   CreateObject,
@@ -26,6 +28,8 @@ import { Sheet } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

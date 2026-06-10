@@ -9,7 +9,6 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, View } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
@@ -24,7 +23,7 @@ export default Capability.makeModule(
       match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
-        const target = presentationRef ? get(AtomObj.make(presentationRef)) : undefined;
+        const target = presentationRef ? get(Obj.atom(presentationRef)) : undefined;
         if (!Obj.instanceOf(Map.Map, target)) {
           return Effect.succeed([]);
         }

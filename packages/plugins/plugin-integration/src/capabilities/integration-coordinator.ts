@@ -12,7 +12,7 @@ import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -312,7 +312,7 @@ export default Capability.makeModule(
       });
 
     const handleMessage = (event: MessageEvent): void => {
-      void runAndForwardErrors(handleOAuthPostMessage(event));
+      void EffectEx.runAndForwardErrors(handleOAuthPostMessage(event));
     };
 
     window.addEventListener('message', handleMessage);

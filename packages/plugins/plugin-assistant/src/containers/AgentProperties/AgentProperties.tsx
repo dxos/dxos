@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
+import { Agent, AgentWizardOperations } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -22,7 +22,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const syncTriggers = useSpaceCallback(
     spaceId,
     [] as const,
-    () => Operation.invoke(SyncTriggers, { agent: Ref.make(agent) }),
+    () => Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) }),
     [agent],
   );
 

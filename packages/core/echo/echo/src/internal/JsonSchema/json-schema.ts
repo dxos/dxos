@@ -11,7 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { mapAst } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -157,7 +157,7 @@ const withEchoRefinements = (
     }
   } else if (SchemaAST.isTypeLiteral(ast)) {
     // Add property order annotations
-    recursiveResult = mapAst(ast, (ast, key) =>
+    recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
       withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
     );
     recursiveResult = addJsonSchemaFields(recursiveResult, {
@@ -167,7 +167,7 @@ const withEchoRefinements = (
     // Ignore undefined keyword that appears in the optional fields.
     return ast;
   } else {
-    recursiveResult = mapAst(ast, (ast, key) =>
+    recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
       withEchoRefinements(
         ast,
         path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,

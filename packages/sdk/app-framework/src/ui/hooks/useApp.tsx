@@ -9,7 +9,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
@@ -299,7 +299,7 @@ export const useApp = ({
           activeModules: manager.getActive(),
           pendingReset: manager.getPendingReset(),
         });
-        void runAndForwardErrors(Fiber.interrupt(fiber));
+        void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
         setError(new Error(`Startup timed out after ${timeout}ms`));
       }
     }, timeout);
@@ -307,9 +307,9 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
-      void runAndForwardErrors(Fiber.interrupt(fiber));
+      void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
-        void runAndForwardErrors(manager.shutdown());
+        void EffectEx.runAndForwardErrors(manager.shutdown());
       }
     };
   }, [manager]);

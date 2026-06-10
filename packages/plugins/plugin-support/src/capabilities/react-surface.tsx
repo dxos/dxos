@@ -6,8 +6,12 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Annotation } from '@dxos/echo';
+import { useClient } from '@dxos/react-client';
+import { useObject } from '@dxos/react-client/echo';
 
 import { SupportSettings } from '#components';
 import {
@@ -17,14 +21,15 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
+  SpaceHomeArticle,
   SupportArticle,
   SupportCompanion,
-  WelcomeArticle,
 } from '#containers';
 import { meta } from '#meta';
-import { type Settings, Support } from '#types';
+import { Support } from '#types';
 
-import { SHORTCUTS_DIALOG, WELCOME_NODE_ID } from '../constants';
+import { WelcomeDismissedAnnotation } from '../annotations';
+import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -40,9 +45,12 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'welcomeArticle',
-        filter: AppSurface.literal(AppSurface.Article, WELCOME_NODE_ID),
-        component: ({ role }) => <WelcomeArticle role={role} />,
+        id: 'spaceHome',
+        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
+        component: ({ data, role }) => {
+          const space = useActiveSpace();
+          return <SpaceHomeArticle role={role} attendableId={data.attendableId} space={space} />;
+        },
       }),
       Surface.create({
         id: 'feedback',
@@ -90,9 +98,20 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <SupportSettings settings={settings} onSettingsChange={updateSettings} />;
+        component: () => {
+          const client = useClient();
+          const { invokePromise } = useOperationInvoker();
+          const personal = getPersonalSpace(client);
+          const [, updateProperties] = useObject(personal?.properties);
+          const handleShowWelcome = () => {
+            if (!personal) {
+              return;
+            }
+            updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
+            const workspace = getSpacePath(personal.id);
+            void invokePromise(LayoutOperation.Open, { subject: [`${workspace}/${SPACE_HOME_NODE_ID}`], workspace });
+          };
+          return <SupportSettings onShowWelcome={handleShowWelcome} />;
         },
       }),
     ]),

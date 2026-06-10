@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -15,10 +15,10 @@ import * as Record from 'effect/Record';
 import * as Runtime from 'effect/Runtime';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
+import { type Blueprint, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -46,7 +46,7 @@ export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
   /** @effect-atom/atom-react Registry for reactive state. */
-  registry?: Registry.Registry;
+  registry?: AtomRegistry.Registry;
 };
 
 /**
@@ -115,7 +115,7 @@ export class Session extends Resource {
   makeToolExecutionServices(): Layer.Layer<
     ToolExecutionService | ToolResolverService,
     never,
-    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | OperationRegistry.Service
+    OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | Registry.Service
   > {
     return ToolExecutionServices.pipe(
       Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) })),
@@ -215,7 +215,7 @@ export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Ser
         Layer.scoped(
           Service,
           Effect.gen(function* () {
-            const session = yield* acquireReleaseResource(() => new Session(options));
+            const session = yield* EffectEx.acquireReleaseResource(() => new Session(options));
             return session;
           }),
         ),

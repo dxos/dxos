@@ -430,7 +430,7 @@ export const Welcome = ({
         )}
 
         {state === WelcomeState.WAITLIST_SUBMITTED && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{t('waitlist-submitted.title')}</h1>
               <p className='text-description'>{t('waitlist-submitted.description')}</p>
@@ -579,7 +579,7 @@ const LoginTab = ({
   }
 
   return (
-    <div role='none' className='flex flex-col gap-6'>
+    <div className='flex flex-col gap-6'>
       <h2 className='text-2xl'>{identity ? t('existing-identity.title') : t('welcome-back.title')}</h2>
 
       {/* Primary method */}

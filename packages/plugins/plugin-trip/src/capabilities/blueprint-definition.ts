@@ -9,11 +9,11 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Blueprint } from '@dxos/compute';
 
-import { BookingBlueprint } from '../blueprints';
+import { TripBlueprint } from '../blueprints';
 
 const blueprintDefinition = Capability.makeModule<
   [],
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, BookingBlueprint)]));
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, TripBlueprint)]));
 
 export default blueprintDefinition;

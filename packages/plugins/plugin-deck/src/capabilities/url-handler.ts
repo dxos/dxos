@@ -15,7 +15,7 @@ import {
   toUrlPath,
 } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
@@ -129,7 +129,7 @@ export default Capability.makeModule(
       }
     });
 
-    const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
+    const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(handleNavigation()));
 
     // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
@@ -178,7 +178,7 @@ export default Capability.makeModule(
         unlistenDeepLink = yield* Effect.promise(() =>
           onOpenUrl((urls) => {
             for (const urlString of urls) {
-              void runAndForwardErrors(provideServices(handleDeepLink(urlString, handleNavigation)));
+              void EffectEx.runAndForwardErrors(provideServices(handleDeepLink(urlString, handleNavigation)));
             }
           }),
         );

@@ -20,16 +20,7 @@ import {
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
-import {
-  type JsonPath,
-  type JsonProp,
-  findAnnotation,
-  getAnnotation,
-  getProperties,
-  isArrayType,
-  isNestedType,
-  runAndForwardErrors,
-} from '@dxos/effect';
+import { EffectEx, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -76,9 +67,9 @@ export const make = ({
   });
   projection.normalizeView();
   const effectSchema = toEffectSchema(jsonSchema);
-  const properties = getProperties(effectSchema.ast);
+  const properties = SchemaEx.getProperties(effectSchema.ast);
   for (const property of properties) {
-    const name = property.name.toString() as JsonProp;
+    const name = property.name.toString() as SchemaEx.JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
     if (!include) {
       continue;
@@ -86,7 +77,7 @@ export const make = ({
 
     const format = Format.FormatAnnotation.getFromAst(property.type);
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if ((isNestedType(property.type) && Option.isNone(format)) || isArrayType(property.type)) {
+    if ((SchemaEx.isNestedType(property.type) && Option.isNone(format)) || SchemaEx.isArrayType(property.type)) {
       continue;
     }
 
@@ -150,9 +141,9 @@ export const makeWithReferences = async ({
     change: createEchoChangeCallback(view, type),
   });
   const effectSchema = toEffectSchema(jsonSchema);
-  const properties = getProperties(effectSchema.ast);
+  const properties = SchemaEx.getProperties(effectSchema.ast);
   for (const property of properties) {
-    const name = property.name.toString() as JsonProp;
+    const name = property.name.toString() as SchemaEx.JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
     if (!include) {
       continue;
@@ -166,7 +157,7 @@ export const makeWithReferences = async ({
 
     await Effect.gen(function* () {
       const referenceDXN = yield* Function.pipe(
-        findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
+        SchemaEx.findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
         Option.fromNullable,
         Option.map((ref) => DXN.make(ref.typename, ref.version)),
       );
@@ -182,15 +173,16 @@ export const makeWithReferences = async ({
 
       if (referenceSchema && referencePath) {
         const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
-        const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
+        const title =
+          SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(property.type) ?? String.capitalize(name);
         projection.setFieldProjection({
           field: {
             id: fieldId,
-            path: property.name as JsonPath,
-            referencePath: referencePath as JsonPath,
+            path: property.name as SchemaEx.JsonPath,
+            referencePath: referencePath as SchemaEx.JsonPath,
           },
           props: {
-            property: property.name as JsonProp,
+            property: property.name as SchemaEx.JsonProp,
             type: TypeEnum.Ref,
             format: Format.TypeFormat.Ref,
             referenceSchema: Type.getTypename(referenceSchema),
@@ -203,7 +195,7 @@ export const makeWithReferences = async ({
         (error) => error._tag === 'NoSuchElementException',
         () => Effect.succeed('Recovering from NoSuchElementException'),
       ),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }
 

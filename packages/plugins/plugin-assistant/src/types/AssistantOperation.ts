@@ -9,28 +9,13 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
-import { SpaceSchema } from '@dxos/client/echo';
 import { Routine, Operation } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
-
-export const OnCreateSpace = Operation.make({
-  meta: {
-    key: makeKey('onCreateSpace'),
-    name: 'On Create Space',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Type.getSchema(Collection.Collection),
-  }),
-  output: Schema.Void,
-});
 
 export const CreateChat = Operation.make({
   meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular' },
@@ -55,6 +40,8 @@ export const UpdateChatName = Operation.make({
   services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
+    /** Initial user message text; used when the feed has no history yet (e.g. auto-rename on first send). */
+    prompt: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });

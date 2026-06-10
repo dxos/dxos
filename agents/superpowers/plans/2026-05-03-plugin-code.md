@@ -362,9 +362,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
                 extensions={extensions}
               />
             ) : (
-              <div role='none' className='flex items-center justify-center text-description p-4'>
-                {t('code view placeholder')}
-              </div>
+              <div className='flex items-center justify-center text-description p-4'>{t('code view placeholder')}</div>
             )}
           </Panel.Content>
         </Panel.Root>

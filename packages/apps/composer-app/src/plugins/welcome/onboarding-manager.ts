@@ -90,6 +90,8 @@ export class OnboardingManager {
     this._accountInvitationCode = accountInvitationCode;
     this._email = email;
 
+    this._identity = this._client.halo.identity.get();
+
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
         if (this._destroyed) {

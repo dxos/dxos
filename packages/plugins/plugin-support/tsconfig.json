@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -46,9 +49,6 @@
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-atom"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -88,6 +88,9 @@
     },
     {
       "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-theme"

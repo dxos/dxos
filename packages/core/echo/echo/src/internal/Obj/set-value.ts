@@ -6,14 +6,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import {
-  type SchemaProperty,
-  getArrayElementType,
-  getBaseType,
-  getProperties,
-  isArrayType,
-  isNestedType,
-} from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { type Mutable } from '../common/proxy';
@@ -38,7 +31,7 @@ export const setValue = (obj: Mutable<any>, path: readonly (string | number)[], 
     const key = typeof part === 'number' ? part : String(part);
     if (parent[key] === undefined) {
       const propertyAST = getPropertyAST(currentAST, String(part));
-      const shouldBeArray = propertyAST ? isArrayType(propertyAST) : false;
+      const shouldBeArray = propertyAST ? SchemaEx.isArrayType(propertyAST) : false;
 
       if (shouldBeArray) {
         // Create array.
@@ -73,16 +66,16 @@ const getPropertyAST = (ast: SchemaAST.AST | undefined, propertyName: string): S
     return undefined;
   }
 
-  if (isNestedType(ast)) {
-    const properties = getProperties(ast);
+  if (SchemaEx.isNestedType(ast)) {
+    const properties = SchemaEx.getProperties(ast);
     const property = properties.find((p) => p.name.toString() === propertyName);
     if (property) {
-      return getBaseType(property).type;
+      return SchemaEx.getBaseType(property).type;
     }
   }
 
-  if (isArrayType(ast)) {
-    const elementType = getArrayElementType(ast);
+  if (SchemaEx.isArrayType(ast)) {
+    const elementType = SchemaEx.getArrayElementType(ast);
     return elementType;
   }
 
@@ -96,17 +89,17 @@ const getPropertyAST = (ast: SchemaAST.AST | undefined, propertyName: string): S
  * @param ast - Schema AST to inspect.
  * @returns Array of required properties with their types.
  */
-const getRequiredProperties = (ast: SchemaAST.AST | undefined): SchemaProperty[] => {
+const getRequiredProperties = (ast: SchemaAST.AST | undefined): SchemaEx.SchemaProperty[] => {
   if (!ast) {
     return [];
   }
 
   // Only objects/structs have properties with optional/required distinction.
-  if (!isNestedType(ast)) {
+  if (!SchemaEx.isNestedType(ast)) {
     return [];
   }
 
-  const properties = getProperties(ast);
+  const properties = SchemaEx.getProperties(ast);
 
   // Filter to only required properties (where isOptional === false).
   return properties.filter((p) => !p.isOptional);
@@ -156,7 +149,7 @@ const createObjectWithDefaults = (ast: SchemaAST.AST | undefined): any => {
     const defaultValue = getDefaultValueForType(prop.type);
     if (defaultValue !== undefined) {
       obj[prop.name] = defaultValue;
-    } else if (isNestedType(prop.type)) {
+    } else if (SchemaEx.isNestedType(prop.type)) {
       obj[prop.name] = createObjectWithDefaults(prop.type);
     }
   }

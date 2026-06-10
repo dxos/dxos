@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
 import { useCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ObservabilityCapabilities } from '@dxos/plugin-observability';
 import { useConfig } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -46,7 +46,7 @@ export const FeedbackPanel = () => {
       const available = await observability.isAvailable('feedback').pipe(
         Effect.catchAll(() => Effect.succeed(false)),
         Effect.catchAllDefect(() => Effect.succeed(false)),
-        runAndForwardErrors,
+        EffectEx.runAndForwardErrors,
       );
       if (!controller.signal.aborted) {
         setFeedbackAvailable(available);

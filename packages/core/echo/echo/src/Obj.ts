@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
@@ -23,6 +23,7 @@ import * as Err from './Err';
 import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
+import * as ObjAtoms from './internal/ObjAtoms';
 import * as Ref from './Ref';
 import type * as Tag from './Tag';
 import * as Type from './Type';
@@ -387,7 +388,7 @@ export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallb
  * ```
  */
 export const getValue = (obj: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return internal.getValue(obj, createJsonPath(path));
+  return SchemaEx.getValue(obj, SchemaEx.createJsonPath(path));
 };
 
 /**
@@ -911,3 +912,11 @@ export const decodeVersion = internal.decodeVersion;
  * Accepts both reactive objects and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom = ObjAtoms.make;
+export const atomReactive = ObjAtoms.makeWithReactive;
+export const atomProperty = ObjAtoms.makeProperty;

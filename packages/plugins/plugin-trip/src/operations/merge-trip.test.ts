@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { Booking, Segment, Trip } from '../types';
 import mergeTripHandler from './merge-trip';
@@ -36,7 +36,7 @@ describe('MergeTrip', () => {
   };
 
   const merge = (trip: Trip.Trip) =>
-    mergeTripHandler.handler({ trip }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    mergeTripHandler.handler({ trip }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
   test('merges a trip into the nearest trip within the gap and deletes it', async ({ expect }) => {
     const segA = Segment.make({ details: { _tag: 'flight', number: 'AA-1', departAt: '2026-06-01T10:00:00.000Z' } });

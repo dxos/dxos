@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -129,6 +129,7 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
+        recovery: path.resolve(dirname, './recovery.html'),
       },
       // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
@@ -149,6 +150,105 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
+    // List deeply-imported dep entrypoints so vite's optimize-deps phase
+    // pre-bundles them up front. Without this, vite discovers them mid-load
+    // (when a dynamic import unwraps a new subpath), which forces a full page
+    // reload with the "Discovered new dependencies" banner — ~10 s of wasted
+    // dev time per discovery cycle and the most common cause of HMR appearing
+    // to hang. The pre-bundle cost is amortized after the first `vite serve`.
+    //
+    // IMPORTANT: every entry must be resolvable from this app's root. If even
+    // one is not, vite aborts the *entire* dependency scan ("Failed to run
+    // dependency scan. Skipping dependency pre-bundling.") and pre-bundles
+    // nothing — worse than an empty list. Several entries below (@automerge/*,
+    // @atlaskit/pragmatic-drag-and-drop*, @effect/ai*, @opentelemetry/*,
+    // xstate, @xstate/react, react-qr-rounded) are only transitive deps of
+    // `@dxos/*` packages; they are listed as direct deps of composer-app in
+    // package.json *specifically* so they resolve from root and can be
+    // pre-bundled here — each one was observed triggering a mid-session
+    // "discovered new dependencies" reload before being added.
+    include: [
+      // React.
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      // Effect (with subpath imports).
+      'effect',
+      'effect/Effect',
+      'effect/Array',
+      'effect/Ref',
+      'effect/Option',
+      'effect/Cause',
+      'effect/Exit',
+      'effect/Layer',
+      'effect/Runtime',
+      'effect/Fiber',
+      'effect/Deferred',
+      'effect/Function',
+      'effect/HashSet',
+      'effect/PubSub',
+      'effect/Schema',
+      'effect/Context',
+      'effect/Stream',
+      'effect/Console',
+      '@effect/platform',
+      '@effect/platform-browser',
+      // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
+      '@effect-atom/atom',
+      '@effect-atom/atom/Registry',
+      // Effect AI (with submodule exports).
+      '@effect/ai',
+      '@effect/ai/AiError',
+      '@effect/ai/Chat',
+      '@effect/ai/LanguageModel',
+      '@effect/ai/Prompt',
+      '@effect/ai/Response',
+      '@effect/ai/Tool',
+      '@effect/ai/Toolkit',
+      '@effect/ai-anthropic',
+      '@effect/ai-anthropic/AnthropicClient',
+      '@effect/ai-anthropic/AnthropicLanguageModel',
+      '@effect/ai-anthropic/AnthropicTool',
+      '@effect/ai-openai',
+      '@effect/ai-openai/OpenAiClient',
+      '@effect/ai-openai/OpenAiLanguageModel',
+      // Automerge (CRDT; deeply imported via @dxos/echo).
+      '@automerge/automerge',
+      '@automerge/automerge-repo',
+      // OpenTelemetry (loaded eagerly via @dxos/observability).
+      '@opentelemetry/api',
+      '@opentelemetry/api-logs',
+      '@opentelemetry/exporter-logs-otlp-http',
+      '@opentelemetry/exporter-metrics-otlp-http',
+      '@opentelemetry/sdk-logs',
+      '@opentelemetry/sdk-metrics',
+      // XState + QR (HALO invitation flow via @dxos/shell).
+      'xstate',
+      '@xstate/react',
+      'react-qr-rounded',
+      // Atlaskit drag-and-drop (mosaic / dnd).
+      '@atlaskit/pragmatic-drag-and-drop',
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+      // CodeMirror (many files in HAR).
+      'codemirror',
+      '@codemirror/state',
+      '@codemirror/view',
+      '@codemirror/language',
+      '@codemirror/commands',
+      '@codemirror/autocomplete',
+      '@codemirror/lang-javascript',
+      '@codemirror/lang-json',
+      '@codemirror/lang-markdown',
+      '@codemirror/theme-one-dark',
+      // Radix (many requests in HAR).
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-context-menu',
+    ],
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -166,6 +266,7 @@ export default defineConfig((env) => ({
       './internal.html',
       './devtools.html',
       './reset.html',
+      './recovery.html',
       path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
@@ -234,6 +335,25 @@ export default defineConfig((env) => ({
             res.statusCode = 502;
             res.end(String(error));
           }
+        });
+      },
+    },
+
+    // Dev-only: serve forensics test profile for recovery import testing.
+    {
+      name: 'recovery-test-fixture',
+      configureServer(server) {
+        const fixturePath =
+          process.env.COMPOSER_TEST_DXPROFILE ??
+          '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
+        server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
+          if (!existsSync(fixturePath)) {
+            res.statusCode = 404;
+            res.end(`Test profile not found at ${fixturePath}`);
+            return;
+          }
+          res.setHeader('Content-Type', 'application/octet-stream');
+          createReadStream(fixturePath).pipe(res);
         });
       },
     },

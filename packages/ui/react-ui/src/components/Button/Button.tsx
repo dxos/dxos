@@ -79,7 +79,7 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
     const elevation = useElevationContext(propsElevation);
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp role='none' {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
+      <Comp {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
         <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
       </Comp>
     );

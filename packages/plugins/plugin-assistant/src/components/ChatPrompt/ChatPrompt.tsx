@@ -17,13 +17,13 @@ import { mx } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat/events';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
-import { type ChatPresetsProps } from './ChatPresets';
 import { ChatReferences } from './ChatReferences';
 import { ChatStatusIndicator } from './ChatStatusIndicator';
 
@@ -33,24 +33,23 @@ export type ChatPromptProps = ThemedClassName<
       outline?: boolean;
       settings?: boolean;
       expandable?: boolean;
-      chat?: Chat.Chat;
       db?: Database.Database;
+      chat?: Chat.Chat;
       processor: AiChatProcessor;
       event: Event<ChatEvent>;
       online?: boolean;
       placeholder?: ChatEditorProps['placeholder'];
       onOnlineChange?: (online: boolean) => void;
-      onPresetChange?: ChatPresetsProps['onChange'];
     },
-    Omit<ChatPresetsProps, 'onChange'>
+    ChatPresetProps
   >
 >;
 
 export const ChatPrompt = ({
   classNames,
   outline,
-  chat,
   db,
+  chat,
   processor,
   event,
   online,
@@ -123,7 +122,7 @@ export const ChatPrompt = ({
       className={mx(
         'flex flex-col w-full dx-density-md',
         outline &&
-          'bg-group-surface rounded-sm! border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'bg-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
       )}
     >
@@ -165,7 +164,6 @@ export const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
-            {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online-switch.label')}</Input.Label>

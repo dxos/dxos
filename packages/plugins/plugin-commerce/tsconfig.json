@@ -48,9 +48,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -67,6 +64,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"

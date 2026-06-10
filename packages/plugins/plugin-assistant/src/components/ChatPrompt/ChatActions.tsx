@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ChatEvent } from '../Chat';
+import { type ChatEvent } from '../Chat/events';
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
@@ -63,7 +63,7 @@ export const ChatActions = ({
       )}
 
       <IconButton
-        disabled={!processing}
+        // disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         variant='ghost'
         icon='ph--x--regular'
         iconOnly

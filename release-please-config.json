@@ -20,6 +20,11 @@
         },
         {
           "type": "json",
+          "path": ".agents/skills/composer-forensics/scripts/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "docs/package.json",
           "jsonpath": "$.version"
         },
@@ -346,11 +351,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-atom/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -915,6 +915,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-video/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-voxel/package.json",
           "jsonpath": "$.version"
         },
@@ -1090,6 +1095,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-audio/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-board/package.json",
           "jsonpath": "$.version"
         },
@@ -1131,6 +1141,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-experimental/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1201,11 +1216,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-search/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-sfx/package.json",
           "jsonpath": "$.version"
         },
         {

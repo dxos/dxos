@@ -6,15 +6,9 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
-import { AtomRef } from '@dxos/echo-atom';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import {
-  type JsonPath,
-  ReferenceAnnotationId,
-  type ReferenceAnnotationValue,
-  splitJsonPath,
-} from '@dxos/echo/internal';
-import { findAnnotation } from '@dxos/effect';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -49,7 +43,7 @@ export const InlineRefField = (props: RefFieldProps) => {
 
   const reference = getValue() as Ref.Ref<any> | undefined;
   const typename = useMemo(
-    () => (type ? findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
+    () => (type ? SchemaEx.findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
     [type],
   );
 
@@ -96,7 +90,7 @@ type InlineFormProps = {
 };
 
 const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: InlineFormProps) => {
-  const target = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
+  const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const typename = target ? (Obj.getTypename(target) ?? undefined) : undefined;
   const typeFromRegistry = useType(db, typename);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;
@@ -111,17 +105,17 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
   // boundary mirrors `ObjectProperties`. Each changed path is written back to the
   // live target via `Obj.setValue`.
   const handleChange = useCallback(
-    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
+    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<SchemaEx.JsonPath, boolean> }) => {
       if (!isValid || !target) {
         return;
       }
-      const changedPaths = (Object.keys(changed) as JsonPath[]).filter((path) => changed[path]);
+      const changedPaths = (Object.keys(changed) as SchemaEx.JsonPath[]).filter((path) => changed[path]);
       if (changedPaths.length === 0) {
         return;
       }
       Obj.update(target, () => {
         for (const path of changedPaths) {
-          const parts = splitJsonPath(path);
+          const parts = SchemaEx.splitJsonPath(path);
           Obj.setValue(target, parts, Obj.getValue(values, parts));
         }
       });

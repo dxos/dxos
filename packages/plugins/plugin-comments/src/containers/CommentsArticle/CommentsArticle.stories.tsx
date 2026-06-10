@@ -20,7 +20,6 @@ import {
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -155,7 +154,7 @@ const StoryGraphPlugin = Plugin.define(
             if (!space) {
               return [];
             }
-            const docs = get(AtomQuery.make(space.db, Filter.type(Markdown.Document)));
+            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
             return docs
               .map((object) => createObjectNode({ db: space.db, object, droppable: false }))
               .filter(isNonNullable);

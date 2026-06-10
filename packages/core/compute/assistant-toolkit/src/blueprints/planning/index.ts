@@ -3,4 +3,4 @@
 //
 
 export { default as PlanningBlueprint } from './blueprint';
-export { UpdateTasks as PlanningUpdateTasks, PlanningHandlers } from './functions';
+export { PlanningHandlers, PlanningOperations } from './operations';

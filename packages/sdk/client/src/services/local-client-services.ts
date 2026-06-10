@@ -30,6 +30,24 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
+const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
+  new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      worker.removeEventListener('message', onMessage);
+      resolve();
+    }, timeoutMs);
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.[0] === 'closed') {
+        clearTimeout(timeout);
+        worker.removeEventListener('message', onMessage);
+        resolve();
+      }
+    };
+
+    worker.addEventListener('message', onMessage);
+  });
+
 export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'> & {
   createOpfsWorker?: () => Worker;
   /**
@@ -267,9 +285,12 @@ export class LocalClientServices implements ClientServicesProvider {
     log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
     await this._runtime?.dispose();
     this._runtime = undefined;
-    // Clean up OPFS worker and runtime.
-    this._opfsWorker?.terminate();
-    this._opfsWorker = undefined;
+    // Runtime dispose posts `close` to the OPFS worker; wait for flush before terminate.
+    if (this._opfsWorker) {
+      await waitForOpfsWorkerClosed(this._opfsWorker);
+      this._opfsWorker.terminate();
+      this._opfsWorker = undefined;
+    }
 
     this._isOpen = false;
   }

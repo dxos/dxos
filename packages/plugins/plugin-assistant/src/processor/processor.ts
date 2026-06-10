@@ -3,7 +3,10 @@
 //
 
 import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
+import * as AiError from '@effect/ai/AiError';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -21,15 +24,9 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import {
-  type Credential,
-  Operation,
-  type OperationRegistry,
-  type ServiceNotAvailableError,
-  Trace,
-} from '@dxos/compute';
+import { type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
-import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -57,7 +54,7 @@ export type SpaceServices =
   | Credential.CredentialsService
   | AiService.AiService
   | AgentService.AgentService
-  | OperationRegistry.Service
+  | Registry.Service
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
@@ -70,17 +67,10 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
-  /**
-   * Probability of automatically updating chat name after each request.
-   * Chat name is always updated if it has no name.
-   * @default 0.1 (10%)
-   */
-  autoUpdateNameChance?: number;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  autoUpdateNameChance: 0.1,
 };
 
 export type ProcessorRequestOptions = {};
@@ -88,6 +78,33 @@ export type ProcessorRequestOptions = {};
 export type ProcessorRequest = {
   message: string;
   options?: ProcessorRequestOptions;
+};
+
+/**
+ * Maps a failure from the agent fiber to an error suitable for display.
+ * {@link AiError}s originate from the AI service and are actionable by the user
+ * (e.g., "model 'x' not found", "Connection refused"), so their detail is propagated.
+ * Any other failure is treated as an internal/unexpected error and reported generically
+ * to avoid leaking implementation detail.
+ */
+const parseError = (err: unknown): Error => {
+  let message: string | undefined;
+  if (AiError.isAiError(err)) {
+    message = err.description?.trim() || err.message;
+  } else if (typeof err === 'string') {
+    // TODO(burdon): This is brittle.
+    // UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found
+    const [, model] = err.match(/model\s+'([^']+)'\s+not\s+found/i) || [];
+    if (model) {
+      message = `The model is not available: ${model}`;
+    }
+  }
+
+  if (!message) {
+    message = 'An unexpected error occurred.';
+  }
+
+  return new Error(message, { cause: err });
 };
 
 /**
@@ -226,31 +243,40 @@ export class AiChatProcessor {
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(requestProp.message);
         log('chat processor submitPrompt returned, waiting for agent', {});
+
+        // On the first message (no name yet), schedule rename immediately so it
+        // runs concurrently with the AI response rather than waiting for completion.
+        if (!this._options.chat?.target?.name) {
+          yield* this.#updateChatName(requestProp.message);
+        }
+
         yield* session.waitForCompletion();
         log.info('session complete');
 
         this.#flushStreaming();
-
-        yield* this.#maybeUpdateChatName();
       });
 
       this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
 
-      try {
-        await this._runtime.runPromise(Fiber.join(this.#requestFiber));
-      } catch (err: any) {
-        if (err._tag === 'InterruptedException' || err.message?.includes('interrupted')) {
+      // Inspect the fiber's exit so the underlying failure (e.g. "model 'x' not found") is
+      // preserved as a clean Error rather than an opaque FiberFailure.
+      const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
+      if (Exit.isFailure(exit)) {
+        if (Cause.isInterruptedOnly(exit.cause)) {
           return;
         }
-        throw err;
+
+        throw EffectEx.causeToError(exit.cause);
       }
 
       this.#registry.set(this.error, Option.none());
       this.#lastRequest = undefined;
       this.#requestFiber = undefined;
     } catch (err) {
+      // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
+      // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
-      this.#registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+      this.#registry.set(this.error, Option.some(parseError(err)));
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
@@ -262,12 +288,15 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await runAndForwardErrors(
+    await EffectEx.runAndForwardErrors(
       Effect.gen(this, function* () {
+        log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-      }),
+        const session = yield* AgentService.getSession(this._feed);
+        yield* session.terminate();
+      }).pipe(Effect.provide(this._spaceLayer)),
     );
 
     this.#requestFiber = undefined;
@@ -298,7 +327,7 @@ export class AiChatProcessor {
     if (!spaceId) {
       return;
     }
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._runtime.runPromiseExit(
         Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
           Effect.provide(this._spaceLayer),
@@ -374,18 +403,12 @@ export class AiChatProcessor {
   }
 
   /**
-   * Conditionally schedule chat name update in detached fork mode.
-   * Updates if chat has no name OR based on random chance (default 10%).
+   * Schedule a chat name update as a detached (fire-and-forget) operation.
+   * Called automatically on the first message; can also be invoked manually via the toolbar.
    */
-  #maybeUpdateChatName(): Effect.Effect<void, never, Operation.Service> {
+  #updateChatName(prompt?: string): Effect.Effect<void, never, Operation.Service> {
     const chat = this._options.chat?.target;
     if (!chat) {
-      return Effect.void;
-    }
-
-    const chance = this._options.autoUpdateNameChance ?? defaultOptions.autoUpdateNameChance ?? 0.1;
-    const shouldUpdate = !chat.name || Math.random() < chance;
-    if (!shouldUpdate) {
       return Effect.void;
     }
 
@@ -394,7 +417,7 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(AssistantOperation.UpdateChatName, { chat }, { spaceId });
+    log.info('scheduling chat name update');
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
   }
 }

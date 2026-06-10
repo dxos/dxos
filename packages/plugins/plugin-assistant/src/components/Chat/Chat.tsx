@@ -12,12 +12,13 @@ import { Event } from '@dxos/async';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { meta } from '#meta';
 
 import {
   ChatStatus,
@@ -36,7 +37,7 @@ export { useChatContext };
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'chat' | 'processor'> & {
     feed?: Feed.Feed;
     onEvent?: (event: ChatEvent) => void;
   }
@@ -48,7 +49,10 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
-  const db = props.db ?? (chat && Obj.getDatabase(chat));
+  const db = chat && Obj.getDatabase(chat);
+
+  // Event sink.
+  const event = useMemo(() => new Event<ChatEvent>(), []);
 
   const feedMessages = useQuery(
     db,
@@ -62,7 +66,14 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
 
   const dump = useDebug({ processor });
 
-  const event = useMemo(() => new Event<ChatEvent>(), []);
+  // Surface processor failures (e.g., AI service unavailable) to subscribers via the event bus.
+  const error = useAtomValue(processor.error);
+  useEffect(() => {
+    if (Option.isSome(error)) {
+      event.emit({ type: 'error', error: error.value });
+    }
+  }, [event, error]);
+
   useEffect(() => {
     return event.on((ev) => {
       switch (ev.type) {
@@ -95,8 +106,8 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
         }
 
         case 'cancel': {
+          void processor.cancel();
           if (streaming) {
-            void processor.cancel();
             if (lastPrompt.current) {
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
             }
@@ -146,18 +157,21 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
-  companionTo?: Obj.Unknown;
-};
+type ChatToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> &
+  PropsWithChildren<{
+    companionTo?: Obj.Unknown;
+  }>;
 
 const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ attendableId, companionTo, ...props }, forwardedRef) => {
+  ({ children, attendableId, alwaysActive, companionTo, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+          {children}
+        </Menu.Toolbar>
       </Menu.Root>
     );
   },
@@ -192,11 +206,13 @@ const CHAT_THREAD_NAME = 'Chat.Thread';
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
+  const { t } = useTranslation(meta.id);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
-  const debugView = viewType === 'debug';
+  const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-  const extensions = useChatKeymapExtensions({ event });
+  const [toastError, setToastError] = useState<Error | undefined>(undefined);
+  const debugView = viewType === 'debug';
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
   useEffect(() => {
@@ -211,6 +227,9 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
           break;
         case 'nav-next':
           controllerRef.current?.navigateNext();
+          break;
+        case 'error':
+          setToastError(event.error);
           break;
       }
     });
@@ -228,17 +247,31 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
   }
 
   return (
-    <NaturalChatThread
-      {...props}
-      identity={identity}
-      messages={messages}
-      error={error}
-      debug={debugProp ?? (debug || debugView)}
-      viewType={viewType}
-      extensions={extensions}
-      onEvent={handleEvent}
-      ref={controllerRef}
-    />
+    <>
+      <NaturalChatThread
+        {...props}
+        identity={identity}
+        messages={messages}
+        error={error}
+        debug={debugProp ?? (debug || debugView)}
+        viewType={viewType}
+        extensions={extensions}
+        onEvent={handleEvent}
+        ref={controllerRef}
+      />
+
+      <Toast.Root
+        type='foreground'
+        open={!!toastError}
+        duration={20_000}
+        onOpenChange={(open) => !open && setToastError(undefined)}
+      >
+        <Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
+          {t('ai-service-error.label')}
+        </Toast.Title>
+        <Toast.Description>{toastError?.message}</Toast.Description>
+      </Toast.Root>
+    </>
   );
 };
 

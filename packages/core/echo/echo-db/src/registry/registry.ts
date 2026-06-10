@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -315,6 +316,21 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
       return () => {};
     }
     return this.#registry.changed.on(() => callback(this));
+  }
+
+  #atom: Atom.Atom<T[]> | undefined = undefined;
+
+  get atom(): Atom.Atom<T[]> {
+    if (!this.#atom) {
+      this.#atom = Atom.make((get) => {
+        const unsubscribe = this.subscribe(() => {
+          get.setSelf(this.runSync());
+        });
+        get.addFinalizer(unsubscribe);
+        return this.runSync();
+      });
+    }
+    return this.#atom;
   }
 }
 

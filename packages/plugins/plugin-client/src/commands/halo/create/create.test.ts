@@ -11,7 +11,7 @@ import {} from '@dxos/app-framework';
 import { fromPlugins } from '@dxos/app-framework/testing';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 
 import { ClientPlugin } from '#plugin';
@@ -35,7 +35,7 @@ describe.skip('halo create', () => {
         identityDid: client.halo.identity.get()?.did,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
-    }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(layer), Effect.scoped, EffectEx.runAndForwardErrors));
 
   test('should create an identity with a display name', ({ expect }) =>
     Effect.gen(function* () {
@@ -49,5 +49,5 @@ describe.skip('halo create', () => {
         identityDid: client.halo.identity.get()?.did,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
-    }).pipe(Effect.provide(layer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(layer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

@@ -37,7 +37,7 @@ export type UseEditorMenu = {
  * const { groupsRef, extension, ...menuProps } = useEditorMenu();
  * const { parentRef, viewRef } = useTextEditor({ extensions: [extension] });
  * return (
- *   <EditorMenuProvider view={viewRef.current} groups={groupsRef.current} {...menuProps}>
+ *   <EditorMenuProvider getView={() => viewRef.current} groups={groupsRef.current} {...menuProps}>
  *     <div ref={parentRef} />
  *   </EditorMenuProvider>
  * );

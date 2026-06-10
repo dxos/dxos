@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { Database, Feed, Obj } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type Message } from '@dxos/types';
 
 import { createMessageGenerator } from './test-generator';
@@ -58,7 +58,7 @@ describe('createMessageGenerator', () => {
     // The streaming step is the third entry (index 2) — earlier indices are the initial
     // user prompt and an assistant message with an Organization link (which requires
     // `Database.Service`, unavailable in this unit-test layer).
-    await runAndForwardErrors(
+    await EffectEx.runAndForwardErrors(
       createMessageGenerator()[2]!.pipe(
         Effect.provide(Layer.mergeAll(Feed.ContextFeedService.layer(feed), recording.layer, Database.notAvailable)),
       ),

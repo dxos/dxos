@@ -10,7 +10,7 @@ import { spaceLayer } from '@dxos/cli-util';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Task } from '@dxos/types';
 
 import { handler } from './query';
@@ -30,7 +30,7 @@ describe('spaces query', () => {
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       expect(TestConsole.extractJsonString(logs[0])).toEqual('[]');
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 
   it('should query space for objects', () =>
     Effect.gen(function* () {
@@ -49,5 +49,5 @@ describe('spaces query', () => {
       expect(logs).toHaveLength(1);
       const formattedObjects = TestConsole.parseJson(logs[0]);
       expect(formattedObjects).toHaveLength(2);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

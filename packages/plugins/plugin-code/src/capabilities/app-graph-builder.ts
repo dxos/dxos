@@ -9,7 +9,6 @@ import { Capability, Plugin, type Plugin as PluginNS } from '@dxos/app-framework
 import { AppActivationEvents, AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
-import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -80,7 +79,7 @@ export default Capability.makeModule(
         id: 'codeProjectsSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const projects = get(AtomQuery.make(space.db, Filter.type(CodeProject.CodeProject)));
+          const projects = get(space.db.query(Filter.type(CodeProject.CodeProject)).atom);
           if (projects.length === 0) {
             return Effect.succeed([]);
           }
@@ -107,11 +106,11 @@ export default Capability.makeModule(
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const projects = get(AtomQuery.make(space.db, Filter.type(CodeProject.CodeProject)));
+          const projects = get(space.db.query(Filter.type(CodeProject.CodeProject)).atom);
 
           return Effect.succeed(
             projects.map((project: CodeProject.CodeProject) => {
-              const spec = get(AtomRef.make(project.spec));
+              const spec = get(project.spec.atom);
               return Node.make({
                 id: project.id,
                 type: Type.getTypename(CodeProject.CodeProject),

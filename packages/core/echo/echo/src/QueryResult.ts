@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -106,6 +107,12 @@ export interface QueryResult<T> {
    * Subscribes to changes in query results.
    */
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: SubscriptionOptions): CleanupFn;
+
+  /**
+   * Self-updating atom. Updates automatically when query results change.
+   * Memoized per QueryResult instance — repeated accesses return the same Atom.
+   */
+  readonly atom: Atom.Atom<T[]>;
 }
 
 /**

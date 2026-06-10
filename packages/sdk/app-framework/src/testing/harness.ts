@@ -9,7 +9,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 
 import { type Operation } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { ActivationEvents, Capabilities } from '../common';
@@ -127,7 +127,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
 
   if (autoStart) {
     try {
-      await runAndForwardErrors(
+      await EffectEx.runAndForwardErrors(
         Effect.all([
           ...setupEvents.map((event) => manager.activate(event)),
           manager.activate(ActivationEvents.SetupReactSurface),
@@ -135,7 +135,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
         ]),
       );
     } catch (err) {
-      await runAndForwardErrors(manager.shutdown()).catch(() => undefined);
+      await EffectEx.runAndForwardErrors(manager.shutdown()).catch(() => undefined);
       throw err;
     }
   }
@@ -155,11 +155,11 @@ class TestHarnessImpl implements TestHarness {
   }
 
   fire(event: ActivationEvent.ActivationEvent | string): Promise<boolean> {
-    return runAndForwardErrors(this.manager.activate(event));
+    return EffectEx.runAndForwardErrors(this.manager.activate(event));
   }
 
   reset(event: ActivationEvent.ActivationEvent | string): Promise<boolean> {
-    return runAndForwardErrors(this.manager.reset(event));
+    return EffectEx.runAndForwardErrors(this.manager.reset(event));
   }
 
   get<T>(iface: Capability.InterfaceDef<T>): T {
@@ -172,7 +172,7 @@ class TestHarnessImpl implements TestHarness {
 
   waitForCapability<T>(iface: Capability.InterfaceDef<T>, opts?: { timeout?: number }): Promise<T> {
     const timeout = opts?.timeout ?? DEFAULT_TIMEOUT_MS;
-    return runAndForwardErrors(
+    return EffectEx.runAndForwardErrors(
       this.manager.capabilities.waitFor(iface).pipe(
         Effect.timeoutFail({
           duration: Duration.millis(timeout),
@@ -207,7 +207,7 @@ class TestHarnessImpl implements TestHarness {
       }),
     );
 
-    return runAndForwardErrors(program);
+    return EffectEx.runAndForwardErrors(program);
   }
 
   async invoke<I, O>(op: Operation.Definition<I, O>, ...args: [input?: I]): Promise<O> {
@@ -228,15 +228,15 @@ class TestHarnessImpl implements TestHarness {
   }
 
   enable(id: string): Promise<boolean> {
-    return runAndForwardErrors(this.manager.enable(id));
+    return EffectEx.runAndForwardErrors(this.manager.enable(id));
   }
 
   disable(id: string): Promise<boolean> {
-    return runAndForwardErrors(this.manager.disable(id));
+    return EffectEx.runAndForwardErrors(this.manager.disable(id));
   }
 
   async dispose(): Promise<void> {
-    await runAndForwardErrors(this.manager.shutdown());
+    await EffectEx.runAndForwardErrors(this.manager.shutdown());
   }
 
   [Symbol.asyncDispose](): Promise<void> {
