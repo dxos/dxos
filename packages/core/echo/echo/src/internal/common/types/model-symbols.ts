@@ -79,3 +79,11 @@ export const RelationTargetId: unique symbol = Symbol.for('@dxos/echo/RelationTa
  * Used to access relation target DXN on live ECHO objects.
  */
 export const RelationTargetDXNId: unique symbol = Symbol.for('@dxos/echo/RelationTargetDXN');
+
+/**
+ * Symbol carrying the entity metadata (EntityMeta) on live ECHO entities.
+ * Must be importable by both meta.ts (which depends on the Ref schema) and
+ * Entity/api.ts (which is transitively imported by the Ref schema), so it
+ * cannot live in either of those files without creating an import cycle.
+ */
+export const MetaId = Symbol.for('@dxos/echo/Meta');

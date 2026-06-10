@@ -381,8 +381,11 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  * Get the canonical URI of the relation. Returns `URI.URI` — today always an EID,
  * but future entity kinds may surface other URI schemes; narrow with `EID.parse(uri)`
  * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
+export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI =>
+  internal.getUri(entity, options);
 
 /**
  * @returns The DXN of the relation's type.

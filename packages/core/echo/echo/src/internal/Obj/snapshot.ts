@@ -20,7 +20,7 @@ import {
   TypeEntityId,
   TypeId,
 } from '../common/types';
-import { MetaId } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.
@@ -99,6 +99,8 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
     keys: [...(meta?.keys ?? [])],
     tags: [...(meta?.tags ?? [])],
+    ...(meta?.key != null ? { key: meta.key } : {}),
+    ...(meta?.version != null ? { version: meta.version } : {}),
     ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
   }));
 

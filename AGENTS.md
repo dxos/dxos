@@ -48,6 +48,7 @@
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
 - Error handling: use Effect-TS patterns.
 - JSDoc comments for public functions, all comments end with period.
+- Comments state _why the code is necessary_ (the invariant or constraint it satisfies), concise and self-contained. Never narrate the fix, reference this conversation, or use before/after framing ("rather than X we now do Y", "this used to…"). State the constraint that makes the code correct; drop the history.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.

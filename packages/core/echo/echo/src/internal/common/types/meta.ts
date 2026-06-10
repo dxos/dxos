@@ -9,24 +9,19 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
-import type * as Entity from '../../../Entity';
 import type * as Tag from '../../../Tag';
 import { Dictionary } from '../../Annotation/dictionary';
 // `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
 // Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
 import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
 import { type AnyProperties } from './base';
+import { MetaId } from './model-symbols';
 import { TagTypeDXN } from './well-known-types';
 
 /**
  * Property name for meta when object is serialized to JSON.
  */
 export const ATTR_META = '@meta';
-
-/**
- * Metadata section.
- */
-export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 
 //
 // EntityMeta
