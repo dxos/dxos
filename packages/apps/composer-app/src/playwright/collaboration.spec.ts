@@ -65,10 +65,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(1, { timeout: 15_000 });
     await navigateToNewDocument(guest);
 
     {
@@ -77,12 +74,8 @@ test.describe('Collaboration tests', () => {
       const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(plank.locator);
       await expect(guestMarkdownDoc).toHaveText('Hello from the host', { timeout: 15_000 });
 
-      // Verify both host and guest are viewing the same object.
-      // Host navigates via Collections (old URL format /<space>/<type>/<id>),
-      // guest navigates via Types section (new URL format /<space>/types/<type>/all/<id>),
-      // so compare only the object ID (last path segment) rather than the full URL.
-      const getObjectId = (url: string) => url.split('/').at(-1);
-      expect(getObjectId(host.page.url())).toEqual(getObjectId(guest.page.url()));
+      // Verify URLs and object links match between host and guest.
+      expect(host.page.url()).toEqual(guest.page.url());
     }
   });
 
@@ -100,10 +93,7 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(1, { timeout: 15_000 });
     await navigateToNewDocument(guest);
 
     // Find the plank in the guest.
@@ -153,10 +143,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(1, { timeout: 15_000 });
     await navigateToNewDocument(guest);
 
     // Get guest's markdown planks and find the locator for the shared document
@@ -214,10 +201,7 @@ test.describe('Collaboration tests', () => {
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
-    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await expect(guest.getObjectLinks()).toHaveCount(1, { timeout: 15_000 });
     await navigateToNewDocument(guest);
 
     const guestPlank = guest.deck.plank();
