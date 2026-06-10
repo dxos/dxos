@@ -12,14 +12,14 @@ import { log } from '@dxos/log';
  *
  * The extension renders a URL in a real browser tab and returns the rendered HTML, letting us read
  * pages a plain HTTP proxy cannot (anti-bot / consent-gated / client-rendered targets). The wire
- * shapes and event names mirror `packages/apps/composer-crx/src/search-proxy/types.ts` (the source
- * of truth); they are re-declared here because the plugin must not depend on the extension app
- * package. See `plugin-commerce/src/util/renderViaCrx.ts` for the analogous declaration.
+ * shapes and event names mirror `packages/apps/composer-crx/src/proxy/types.ts` (the source of
+ * truth); they are re-declared here because the plugin must not depend on the extension app package.
+ * See `plugin-commerce/src/util/renderViaCrx.ts` for the analogous declaration.
  */
 
-const RENDER_EVENT = 'composer:search-proxy:render';
-const RENDER_ACK_EVENT = 'composer:search-proxy:render:ack';
-const RENDER_READY_DATASET_KEY = 'composerSearchProxy';
+const RENDER_EVENT = 'composer:proxy:render';
+const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
+const RENDER_READY_DATASET_KEY = 'composerProxy';
 const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 
 export class FetchError extends Error {}
@@ -66,17 +66,22 @@ export const isCrxRenderAvailable = (): boolean =>
  */
 export const fetchPage = (url: string): Effect.Effect<string, FetchError> => {
   if (!isCrxRenderAvailable()) {
-    return fetchViaProxy(url);
+    return fetchResource(url);
   }
   return renderViaCrx(url).pipe(
     Effect.catchAll((error) => {
       log.info('render-proxy failed; falling back to edge proxy', { url, error: error.message });
-      return fetchViaProxy(url);
+      return fetchResource(url);
     }),
   );
 };
 
-const fetchViaProxy = (url: string): Effect.Effect<string, FetchError> =>
+/**
+ * Fetch a raw resource body as text through the EDGE CORS proxy. Use this (rather than {@link
+ * fetchPage}) for data endpoints — e.g. a caption timed-text URL — where the rendered-DOM result of
+ * the CRX render-proxy would corrupt a non-HTML response.
+ */
+export const fetchResource = (url: string): Effect.Effect<string, FetchError> =>
   Effect.tryPromise({
     try: async () => {
       const response = await proxyFetchLegacy(new URL(url), { method: 'GET' });

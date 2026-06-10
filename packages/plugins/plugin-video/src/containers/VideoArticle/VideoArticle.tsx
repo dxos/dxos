@@ -29,6 +29,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);
   const [fetchingDescription, setFetchingDescription] = useState(false);
+  const [fetchingTranscript, setFetchingTranscript] = useState(false);
 
   const handleOpenOriginal = useCallback(() => {
     if (isExternalHttpUrl(video.url)) {
@@ -50,6 +51,23 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         notify: { error: ['fetch-description-error.message', { ns: meta.id }] },
       },
     ).finally(() => setFetchingDescription(false));
+  }, [invokePromise, subject, video.url]);
+
+  // Retrieve the transcript from the video's published captions via the CRX render-proxy. An
+  // alternative to the EDGE-based auto-transcription that TranscriptSection triggers on first view.
+  const handleFetchTranscript = useCallback(() => {
+    if (!invokePromise || !video.url) {
+      return;
+    }
+    setFetchingTranscript(true);
+    void invokePromise(
+      VideoOperation.FetchTranscript,
+      { video: Ref.make(subject) },
+      {
+        spaceId: Obj.getDatabase(subject)?.spaceId,
+        notify: { error: ['fetch-transcript-error.message', { ns: meta.id }] },
+      },
+    ).finally(() => setFetchingTranscript(false));
   }, [invokePromise, subject, video.url]);
 
   // Manual summary regeneration (the summary surface generates it automatically when first missing).
@@ -93,8 +111,26 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           },
           () => handleFetchDescription(),
         )
+        .action(
+          'fetch-transcript',
+          {
+            label: ['fetch-transcript.label', { ns: meta.id }],
+            icon: 'ph--closed-captioning--regular',
+            disabled: !video.url || fetchingTranscript,
+            disposition: 'toolbar',
+            testId: 'video.toolbar.fetch-transcript',
+          },
+          () => handleFetchTranscript(),
+        )
         .build(),
-    [video.url, fetchingDescription, handleOpenOriginal, handleFetchDescription],
+    [
+      video.url,
+      fetchingDescription,
+      fetchingTranscript,
+      handleOpenOriginal,
+      handleFetchDescription,
+      handleFetchTranscript,
+    ],
   );
 
   return (

@@ -4,7 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { parseYouTubeDescription } from './youtube';
+import {
+  type CaptionTrack,
+  formatTranscriptMarkdown,
+  parseTimedText,
+  parseYouTubeCaptionTracks,
+  parseYouTubeDescription,
+  selectCaptionTrack,
+} from './youtube';
 
 describe('parseYouTubeDescription', () => {
   test('extracts the full shortDescription from ytInitialPlayerResponse', ({ expect }) => {
@@ -30,5 +37,113 @@ describe('parseYouTubeDescription', () => {
 
   test('returns undefined when no description is present', ({ expect }) => {
     expect(parseYouTubeDescription('<html><body>nothing here</body></html>')).toBeUndefined();
+  });
+});
+
+describe('parseYouTubeCaptionTracks', () => {
+  test('extracts caption tracks from ytInitialPlayerResponse', ({ expect }) => {
+    const player = {
+      captions: {
+        playerCaptionsTracklistRenderer: {
+          captionTracks: [
+            { baseUrl: 'https://yt/api/timedtext?lang=en', languageCode: 'en', name: { simpleText: 'English' } },
+            {
+              baseUrl: 'https://yt/api/timedtext?lang=en&kind=asr',
+              languageCode: 'en',
+              kind: 'asr',
+              name: { runs: [{ text: 'English (auto-generated)' }] },
+            },
+          ],
+        },
+      },
+    };
+    const html = `<script>ytInitialPlayerResponse = ${JSON.stringify(player)};</script>`;
+    const tracks = parseYouTubeCaptionTracks(html);
+    expect(tracks).toEqual([
+      { baseUrl: 'https://yt/api/timedtext?lang=en', languageCode: 'en', kind: undefined, name: 'English' },
+      {
+        baseUrl: 'https://yt/api/timedtext?lang=en&kind=asr',
+        languageCode: 'en',
+        kind: 'asr',
+        name: 'English (auto-generated)',
+      },
+    ]);
+  });
+
+  test('returns empty array when no captions are present', ({ expect }) => {
+    expect(parseYouTubeCaptionTracks('<html><body>no captions</body></html>')).toEqual([]);
+  });
+});
+
+describe('selectCaptionTrack', () => {
+  const manualEn: CaptionTrack = { baseUrl: 'm-en', languageCode: 'en' };
+  const asrEn: CaptionTrack = { baseUrl: 'a-en', languageCode: 'en', kind: 'asr' };
+  const manualFr: CaptionTrack = { baseUrl: 'm-fr', languageCode: 'fr' };
+
+  test('prefers a human-authored track in the requested language', ({ expect }) => {
+    expect(selectCaptionTrack([asrEn, manualEn], 'en')).toBe(manualEn);
+  });
+
+  test('matches the primary subtag (en against en-US)', ({ expect }) => {
+    const usEn: CaptionTrack = { baseUrl: 'm-en-us', languageCode: 'en-US' };
+    expect(selectCaptionTrack([manualFr, usEn], 'en')).toBe(usEn);
+  });
+
+  test('falls back to an auto-generated track when no manual match exists', ({ expect }) => {
+    expect(selectCaptionTrack([manualFr, asrEn], 'en')).toBe(asrEn);
+  });
+
+  test('falls back to the first track when nothing matches', ({ expect }) => {
+    expect(selectCaptionTrack([manualFr], 'de')).toBe(manualFr);
+  });
+
+  test('returns undefined for an empty track list', ({ expect }) => {
+    expect(selectCaptionTrack([], 'en')).toBeUndefined();
+  });
+});
+
+describe('parseTimedText', () => {
+  test('parses timed-text cues and decodes entities', ({ expect }) => {
+    const xml =
+      '<?xml version="1.0" encoding="utf-8"?><transcript>' +
+      '<text start="0" dur="1.5">Hello &amp; welcome</text>' +
+      '<text start="2.75" dur="2">it&#39;s great</text>' +
+      '<text start="5"></text>' +
+      '</transcript>';
+    expect(parseTimedText(xml)).toEqual([
+      { start: 0, text: 'Hello & welcome' },
+      { start: 2.75, text: "it's great" },
+    ]);
+  });
+
+  test('returns empty array for empty XML', ({ expect }) => {
+    expect(parseTimedText('<transcript></transcript>')).toEqual([]);
+  });
+});
+
+describe('formatTranscriptMarkdown', () => {
+  test('formats segments as timestamp-link lines', ({ expect }) => {
+    const url = 'https://www.youtube.com/watch?v=abc';
+    const content = formatTranscriptMarkdown(
+      [
+        { start: 0, text: 'First line.' },
+        { start: 75, text: 'Second line.' },
+        { start: 3661, text: 'After an hour.' },
+      ],
+      url,
+    );
+    expect(content).toBe(
+      [
+        '[0:00](https://www.youtube.com/watch?v=abc&t=0s) First line.',
+        '[1:15](https://www.youtube.com/watch?v=abc&t=75s) Second line.',
+        '[1:01:01](https://www.youtube.com/watch?v=abc&t=3661s) After an hour.',
+      ].join('\n'),
+    );
+  });
+
+  test('uses ? when the url has no query string', ({ expect }) => {
+    expect(formatTranscriptMarkdown([{ start: 5, text: 'Hi.' }], 'https://youtu.be/abc')).toBe(
+      '[0:05](https://youtu.be/abc?t=5s) Hi.',
+    );
   });
 });

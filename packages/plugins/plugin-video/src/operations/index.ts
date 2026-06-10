@@ -11,4 +11,5 @@ export const VideoOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./transcribe'),
   () => import('./summarize'),
   () => import('./fetch-description'),
+  () => import('./fetch-transcript'),
 );

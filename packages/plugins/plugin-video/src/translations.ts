@@ -27,6 +27,8 @@ export const translations = [
         'transcribe.label': 'Transcribe',
         'fetch-description.label': 'Fetch description',
         'fetch-description-error.message': 'Failed to fetch description.',
+        'fetch-transcript.label': 'Fetch transcript (captions)',
+        'fetch-transcript-error.message': 'Failed to fetch transcript from captions.',
         'transcribe-error.message': 'Transcription failed.',
         'transcribe-retry.label': 'Retry',
         'summarize.label': 'Summarize',

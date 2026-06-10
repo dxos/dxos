@@ -61,6 +61,32 @@ export const Summarize = Operation.make({
 });
 
 /**
+ * Fetch a video's transcript directly from its published caption tracks: load the watch page (via the
+ * Composer extension's CRX render-proxy) to discover the timed-text tracks, download the best-matching
+ * track, and link the formatted transcript onto the video. An alternative to {@link Transcribe} (which
+ * uses the remote EDGE transcription service) for videos that already publish captions — no
+ * server-side ASR round-trip.
+ */
+export const FetchTranscript = Operation.make({
+  meta: {
+    key: makeKey('fetch-transcript'),
+    name: 'Fetch Video Transcript',
+    description: "Loads a video's caption tracks via the CRX proxy and links the transcript.",
+    icon: 'ph--closed-captioning--regular',
+  },
+  input: Schema.Struct({
+    video: Ref.Ref(Video.Video).annotations({ description: 'The video to fetch the transcript for.' }),
+    lang: Schema.optional(Schema.String).annotations({
+      description: 'Preferred BCP-47 language code (defaults to "en").',
+    }),
+  }),
+  output: Schema.Struct({
+    transcript: Ref.Ref(Text.Text).annotations({ description: 'The generated transcript text object.' }),
+  }),
+  services: [Database.Service],
+});
+
+/**
  * Fetch the full published description for a video by loading its watch page (via the Composer
  * extension's CRX render-proxy, falling back to the EDGE CORS proxy) and parsing the description
  * out of the page HTML. The description is written back onto the video.
