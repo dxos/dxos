@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type IdbLogStore } from '@dxos/log-store-idb';
 import { log } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { type SupportOperation } from '@dxos/plugin-support';
 import { FeedbackForm } from '@dxos/plugin-support/components';
