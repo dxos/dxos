@@ -96,10 +96,12 @@ export const CreateObjectDialog = ({
   // Synthesize entries for database-persisted object schemas that have no registered capability.
   const createObjectEntries = useMemo(() => {
     const registeredIds = new Set(capabilityEntries.map((e) => e.id));
-    const dbEntries = allTypes
-      .filter((type) => Type.isObject(type) && Type.getDatabase(type) != null)
+    // allTypesQuery returns meta-schema entities which may be any entity kind at runtime,
+    // but the query's TypeScript type is conservatively AnyType[]; widen to enable kind narrowing below.
+    const dbEntries = (allTypes as Type.AnyEntity[])
+      .filter((type): type is Type.AnyObj => Type.isObject(type) && Type.getDatabase(type) != null)
       .filter((type) => !registeredIds.has(Type.getTypename(type)))
-      .map((type) => makeCreateObjectEntryForDatabaseType(type as Type.AnyObj));
+      .map((type) => makeCreateObjectEntryForDatabaseType(type));
     return [...capabilityEntries, ...dbEntries];
   }, [capabilityEntries, allTypes]);
 

@@ -36,6 +36,9 @@ export type TypeOption = {
   label?: string;
 };
 
+/**
+ * Filters discovered types by location and kind, deduplicates by typename, and returns stable options sorted by typename.
+ */
 export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: TypeInputOptions): TypeOption[] => {
   const includeRuntime = annotation.location.includes('runtime');
   const includeDatabase = annotation.location.includes('database');
