@@ -8,4 +8,4 @@ import { meta } from './meta';
 
 export const CommentsPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
-export { ThreadOperationHandlerSet } from './operations';
+export { CommentOperationHandlerSet } from './operations';

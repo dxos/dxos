@@ -10,9 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
-import { ThreadOperation } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.RestoreMessage> = ThreadOperation.RestoreMessage.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.RestoreMessage> = CommentOperation.RestoreMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, message, messageIndex }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;

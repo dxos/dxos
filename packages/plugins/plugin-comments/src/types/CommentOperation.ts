@@ -17,7 +17,7 @@ import { meta } from '#meta';
 const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Thread', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('create'), name: 'Create Comment Thread', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -28,14 +28,14 @@ export const Create = Operation.make({
 });
 
 export const DeleteOutput = Schema.Struct({
-  thread: Type.getSchema(Thread.Thread).annotations({ description: 'The deleted thread.' }),
+  thread: Type.getSchema(Thread.Thread).annotations({ description: 'The deleted comment thread.' }),
   anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The deleted anchor.' }),
 }).pipe(Schema.partial);
 
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
 export const Delete = Operation.make({
-  meta: { key: makeKey('delete'), name: 'Delete Thread', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('delete'), name: 'Delete Comment Thread', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -46,7 +46,7 @@ export const Delete = Operation.make({
 });
 
 export const Select = Operation.make({
-  meta: { key: makeKey('select'), name: 'Select Thread', icon: 'ph--check--regular' },
+  meta: { key: makeKey('select'), name: 'Select Comment Thread', icon: 'ph--check--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     // Optional so callers can clear the active thread (e.g. after delete/close).
@@ -69,7 +69,7 @@ export const ToggleResolved = Operation.make({
 });
 
 export const AddMessage = Operation.make({
-  meta: { key: makeKey('addMessage'), name: 'Add Message', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('addMessage'), name: 'Add Comment', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
@@ -82,7 +82,7 @@ export const AddMessage = Operation.make({
 
 export const DeleteMessageOutput = Schema.partial(
   Schema.Struct({
-    message: Type.getSchema(Message.Message).annotations({ description: 'The deleted message.' }),
+    message: Type.getSchema(Message.Message).annotations({ description: 'The deleted comment message.' }),
     messageIndex: Schema.Number.annotations({ description: 'The index the message was at.' }),
   }),
 );
@@ -90,7 +90,7 @@ export const DeleteMessageOutput = Schema.partial(
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
 export const DeleteMessage = Operation.make({
-  meta: { key: makeKey('deleteMessage'), name: 'Delete Message', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('deleteMessage'), name: 'Delete Comment', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -101,34 +101,34 @@ export const DeleteMessage = Operation.make({
 });
 
 /**
- * Restore a deleted thread (inverse of Delete).
+ * Restore a deleted comment thread (inverse of Delete).
  */
 export const Restore = Operation.make({
   meta: {
     key: makeKey('restore'),
-    name: 'Restore Thread',
+    name: 'Restore Comment Thread',
     icon: 'ph--clock-counter-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    thread: Type.getSchema(Thread.Thread).annotations({ description: 'The thread to restore.' }),
+    thread: Type.getSchema(Thread.Thread).annotations({ description: 'The comment thread to restore.' }),
     anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor relation to restore.' }),
   }),
   output: Schema.Void,
 });
 
 /**
- * Restore a deleted message (inverse of DeleteMessage).
+ * Restore a deleted comment message (inverse of DeleteMessage).
  */
 export const RestoreMessage = Operation.make({
   meta: {
     key: makeKey('restoreMessage'),
-    name: 'Restore Message',
+    name: 'Restore Comment',
     icon: 'ph--clock-counter-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor of the thread.' }),
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor of the comment thread.' }),
     message: Type.getSchema(Message.Message).annotations({ description: 'The message to restore.' }),
     messageIndex: Schema.Number.annotations({ description: 'The index to restore the message at.' }),
   }),
@@ -138,13 +138,13 @@ export const RestoreMessage = Operation.make({
 export const RespondToThread = Operation.make({
   meta: {
     key: makeKey('respondToThread'),
-    name: 'Respond to Thread',
-    description: 'Runs one comment-thread agent turn against the given thread + subject.',
+    name: 'Respond to Comment Thread',
+    description: 'Runs one comment-thread agent turn against the given comment thread + subject.',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The thread to respond to.' }),
-    subject: Ref.Ref(Obj.Unknown).annotations({ description: 'The object the thread is anchored to.' }),
+    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The comment thread to respond to.' }),
+    subject: Ref.Ref(Obj.Unknown).annotations({ description: 'The object the comment thread is anchored to.' }),
   }),
   output: Schema.Void,
 });
@@ -157,7 +157,7 @@ export const SetAgentConfig = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The thread to configure.' }),
+    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The comment thread to configure.' }),
     config: Schema.optional(Thread.AgentConfig).annotations({
       description: 'New agent config; omit to disable.',
     }),

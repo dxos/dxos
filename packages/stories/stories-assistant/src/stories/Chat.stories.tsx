@@ -22,7 +22,7 @@ import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessOperation } from '@dxos/plugin-chess';
-import { ThreadBlueprint } from '@dxos/plugin-comments/blueprints';
+import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { MapBlueprint } from '@dxos/plugin-map';
@@ -292,7 +292,7 @@ export const WithMarkdown: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, ThreadBlueprint.key],
+    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, CommentBlueprint.key],
   },
 };
 
