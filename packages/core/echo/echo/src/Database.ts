@@ -344,20 +344,6 @@ export const runQuery: {
     Effect.withSpan('Database.runQuery'),
   );
 
-/**
- * Executes the query once and returns the first result as or None.
- * @deprecated Use `yield* query(...).first` instead.
- */
-export const runQueryFirst: {
-  <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
-  <F extends Filter.Any>(filter: F): Effect.Effect<Option.Option<Filter.Type<F>>, never, Service>;
-} = (queryOrFilter: Query.Any | Filter.Any) =>
-  query(queryOrFilter as any).pipe(
-    Effect.flatMap((queryResult) =>
-      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
-    ),
-    Effect.withSpan('Database.runQueryFirst'),
-  );
 
 const makeQueryResultEffect = <T>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
