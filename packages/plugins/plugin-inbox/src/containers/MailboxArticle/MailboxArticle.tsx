@@ -3,7 +3,7 @@
 //
 
 import { useAtomSet } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -38,7 +38,6 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
 >;
 
 export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: MailboxArticleProps) => {
-  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
   const settingsAtom = useCapability(InboxCapabilities.Settings);
@@ -236,39 +235,31 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [db, id, mailbox.id, subject, sortedMessages, invokePromise, showItem],
   );
 
+  const handleSaveFilter = useCallback(() => {
+    if (filter) {
+      handleAction({ type: 'save', filter: filterText });
+    }
+  }, [filter, filterText, handleAction]);
+
   return (
     <Panel.Root>
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} attendableId={id}>
           <Panel.Toolbar asChild>
-            {/* Connect (no integration) or pull-sync action for this mailbox. */}
             <Menu.Toolbar>
               <InitializeMailboxAction mailbox={subject} />
               {!isEmpty && (
-                <>
-                  <QueryEditor
-                    classNames='grow min-w-0 ps-1'
-                    db={db}
-                    tags={tagMap}
-                    value={filterText}
-                    onChange={setFilterText}
-                    ref={filterEditorRef}
-                  />
-                  <IconButton
-                    disabled={!filter}
-                    icon='ph--folder-plus--regular'
-                    iconOnly
-                    label={t('mailbox-toolbar-save-button.label')}
-                    onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
-                    ref={filterSaveButtonRef}
-                  />
-                  <IconButton
-                    icon='ph--x--regular'
-                    iconOnly
-                    label={t('mailbox-toolbar-clear-button.label')}
-                    onClick={handleClear}
-                  />
-                </>
+                <MailboxFilter
+                  db={db}
+                  tags={tagMap}
+                  value={filterText}
+                  filter={filter}
+                  onChange={setFilterText}
+                  onSave={handleSaveFilter}
+                  onClear={handleClear}
+                  editorRef={filterEditorRef}
+                  saveButtonRef={filterSaveButtonRef}
+                />
               )}
             </Menu.Toolbar>
           </Panel.Toolbar>
@@ -289,6 +280,55 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
         )}
       </Panel.Content>
     </Panel.Root>
+  );
+};
+
+type MailboxFilterProps = {
+  db?: Database.Database;
+  tags: Tag.Map;
+  value: string;
+  /** Parsed filter; save is enabled only when the text parses. */
+  filter?: Filter.Any;
+  onChange: (value: string) => void;
+  onSave: () => void;
+  onClear: () => void;
+  editorRef: Ref<EditorController>;
+  saveButtonRef: Ref<HTMLButtonElement>;
+};
+
+/** Filter row slotted into the mailbox toolbar (query editor + save/clear actions). */
+const MailboxFilter = ({
+  db,
+  tags,
+  value,
+  filter,
+  onChange,
+  onSave,
+  onClear,
+  editorRef,
+  saveButtonRef,
+}: MailboxFilterProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <>
+      <QueryEditor
+        classNames='grow min-w-0 ps-1'
+        db={db}
+        tags={tags}
+        value={value}
+        onChange={onChange}
+        ref={editorRef}
+      />
+      <IconButton
+        disabled={!filter}
+        icon='ph--folder-plus--regular'
+        iconOnly
+        label={t('mailbox-toolbar-save-button.label')}
+        onClick={onSave}
+        ref={saveButtonRef}
+      />
+      <IconButton icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
+    </>
   );
 };
 
