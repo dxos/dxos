@@ -5,6 +5,7 @@
 export * from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 export * from './auth';
+export * from './cors-proxy';
 export * from './defs';
 export * from './edge-client';
 export * from './errors';

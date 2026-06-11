@@ -17,13 +17,13 @@ import { type SelectionManager, type SelectionMode, defaultSelection } from '@dx
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { ThreadOperation } from '#types';
-import { ThreadCapabilities, type ThreadState } from '#types';
+import { CommentOperation } from '#types';
+import { CommentCapabilities, type CommentState } from '#types';
 
 import { getAnchor } from '../util';
 
 type CommentDisabledParams = {
-  stateAtom: Atom.Atom<Atom.Writable<ThreadState>[]>;
+  stateAtom: Atom.Atom<Atom.Writable<CommentState>[]>;
   selectionManager: SelectionManager;
   objectId: string;
   commentsType: string;
@@ -96,7 +96,7 @@ export default Capability.makeModule(
         actions: (matched, get) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
-          const stateAtom = capabilities.atom(ThreadCapabilities.State);
+          const stateAtom = capabilities.atom(CommentCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
 
@@ -119,7 +119,7 @@ export default Capability.makeModule(
                 const anchor =
                   (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
                 const name = config.getAnchorLabel?.(object, anchor);
-                yield* Operation.invoke(ThreadOperation.Create, {
+                yield* Operation.invoke(CommentOperation.Create, {
                   anchor,
                   name,
                   subject: object,

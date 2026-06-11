@@ -68,7 +68,9 @@ export const PlankComponent = memo(
     const canResize = layoutMode === 'multi';
     const { findFirstFocusable } = useFocusFinders();
     const isCompanion = companioned === 'companion';
-    const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
+    // Companions share attention with their primary; non-companions key attention to their own id.
+    const attentionId = isCompanion ? (primary?.id ?? id) : id;
+    const attentionAttrs = useAttentionAttributes(attentionId);
     const orderId = isCompanion ? primary?.id : id;
     const index = orderId && active ? active.findIndex((entryId) => entryId === orderId) : -1;
     const length = active?.length ?? 1;
@@ -126,10 +128,13 @@ export const PlankComponent = memo(
     const isAttendable =
       (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'multi' && part === 'multi');
 
+    // Companions share attention with their primary, so they attend to the primary's id
+    // (matching the plank's attention container, which keys to `primary?.id ?? id`).
+    const attendableId = isCompanion ? (primary?.id ?? id) : id;
     const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
         node && {
-          attendableId: id,
+          attendableId,
           subject: node.data,
           companionTo: primary?.data,
           properties: node.properties,
@@ -137,7 +142,7 @@ export const PlankComponent = memo(
           path,
           popoverAnchorId,
         },
-      [node, node?.data, node?.properties, path, popoverAnchorId, primary?.data, variant],
+      [node, node?.data, node?.properties, path, popoverAnchorId, primary?.data, variant, attendableId],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.

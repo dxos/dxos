@@ -8,7 +8,7 @@ import { Text } from '@dxos/schema';
 
 import { Fetch } from './operations/definitions';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.webSearch';
 
 const make = () =>
   Blueprint.make({

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 
 /**
  * Generic location shape. Embedded inline — not an ECHO Type.makeObject.

@@ -18,6 +18,7 @@ export const translations = [
         'settings.dev-mode.label': 'Developer Mode',
         'settings.space-mode.label': 'Space Mode',
         'settings.space-id.label': 'Space ID',
+        'settings.composer-urls.label': 'Composer URLs',
       },
     },
   },

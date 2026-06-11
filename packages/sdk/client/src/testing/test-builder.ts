@@ -37,6 +37,7 @@ import { Client } from '../client';
 import {
   ClientServicesProxy,
   DedicatedWorkerClientServices,
+  type LeaderTimeoutOptions,
   LocalClientServices,
   MemoryWorkerCoordiantor,
 } from '../services';
@@ -160,7 +161,9 @@ export class TestBuilder {
    * Create dedicated worker client services.
    * All services share the same worker factory and coordinator.
    */
-  createDedicatedWorkerClientServices(): DedicatedWorkerClientServices {
+  createDedicatedWorkerClientServices(options?: {
+    leaderTimeouts?: LeaderTimeoutOptions;
+  }): DedicatedWorkerClientServices {
     // Shared coordinator for leader election across all services.
     if (!this._coordinator) {
       this._coordinator = new MemoryWorkerCoordiantor();
@@ -176,6 +179,7 @@ export class TestBuilder {
     const services = new DedicatedWorkerClientServices({
       createWorker: () => this._workerFactory!.make(),
       createCoordinator: () => this._coordinator!,
+      leaderTimeouts: options?.leaderTimeouts,
     });
 
     this._ctx.onDispose(() => services.close());

@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
 import { type Key, Type } from '@dxos/echo';
-import { getTypeAnnotation } from '@dxos/echo/internal';
+import { getTypeAnnotation } from '@dxos/echo/Annotation';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
 

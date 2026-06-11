@@ -9,7 +9,7 @@ import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
 
 /**

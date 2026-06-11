@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 
 import { meta } from '#meta';
-import { ThreadOperation } from '#types';
+import { CommentOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Capabilities.UndoMapping, [
       UndoMapping.make({
-        operation: ThreadOperation.Delete,
-        inverse: ThreadOperation.Restore,
+        operation: CommentOperation.Delete,
+        inverse: CommentOperation.Restore,
         deriveContext: (_input, output) => {
           if (!output.thread || !output.anchor) {
             return;
@@ -27,8 +27,8 @@ export default Capability.makeModule(
         message: ['thread-deleted.label', { ns: meta.id }],
       }),
       UndoMapping.make({
-        operation: ThreadOperation.DeleteMessage,
-        inverse: ThreadOperation.RestoreMessage,
+        operation: CommentOperation.DeleteMessage,
+        inverse: CommentOperation.RestoreMessage,
         deriveContext: (input, output) => {
           if (!output.message || output.messageIndex === undefined) {
             return;

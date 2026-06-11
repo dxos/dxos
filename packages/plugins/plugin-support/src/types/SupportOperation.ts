@@ -74,8 +74,8 @@ export const SupportRequest = Schema.Struct({
   severity: Severity,
   image: Schema.Boolean.pipe(
     Schema.annotations({
-      title: 'Attach screenshot',
-      description: 'Capture the current view and attach it to the report. Form fields are obscured for privacy.',
+      title: 'Attach screenshot (GitHub only)',
+      description: 'Capture the current view and attach it to the GitHub issue. Form fields are obscured for privacy.',
     }),
     Schema.optional,
   ),

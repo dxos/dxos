@@ -6,8 +6,8 @@ import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { updateText } from '@dxos/echo-db';
-import { HiddenAnnotation } from '@dxos/echo/internal';
+import { updateText } from '@dxos/echo-client';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 

@@ -59,6 +59,26 @@ const Failing = Operation.make({
 });
 
 /**
+ * Child used by {@link ParentInvoker} to exercise the parent-child SUCCEEDED state invariant.
+ */
+const ChildPassthrough = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.childPassthrough'), name: 'ChildPassthrough' },
+  input: Schema.Number,
+  output: Schema.Number,
+});
+
+/**
+ * Parent that invokes {@link ChildPassthrough} via `Operation.invoke` (blocking await).
+ * Used to reproduce the DX-999 race where a late child-exit notification can clobber
+ * a parent's SUCCEEDED status.
+ */
+const ParentInvoker = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.parentInvoker'), name: 'ParentInvoker' },
+  input: Schema.Number,
+  output: Schema.Number,
+});
+
+/**
  * Per-test gate for {@link SlowChild}; set in the repro test before spawning the parent.
  */
 const SlowChildGate = {
@@ -99,6 +119,20 @@ const handlers = OperationHandlerSet.make(
         yield* Queue.offer(SlowChildGate.taskSignal, undefined);
         yield* Deferred.await(SlowChildGate.completeDeferred);
         return value;
+      }),
+    ),
+  ),
+  ChildPassthrough.pipe(
+    Operation.withHandler(
+      Effect.fn(function* (input) {
+        return input;
+      }),
+    ),
+  ),
+  ParentInvoker.pipe(
+    Operation.withHandler(
+      Effect.fn(function* (input) {
+        return yield* Operation.invoke(ChildPassthrough, input);
       }),
     ),
   ),
@@ -411,6 +445,26 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([22]);
+      expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'parent process remains SUCCEEDED after child completes — requestChildEvent race (DX-999)',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+
+      const handle = yield* manager.spawn(Process.fromOperation(ParentInvoker, handlers));
+      const outputs = yield* handle.runAndExit({ inputs: [7] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+
+      // Drain any background child-cleanup callbacks. Without the fix in
+      // ProcessHandle.requestChildEvent, the late child-exit notification would
+      // re-enter #runHandler after the parent set #finished=true, clobbering
+      // SUCCEEDED with RUNNING and leaving the process permanently stuck.
+      yield* Effect.yieldNow();
+      yield* Effect.yieldNow();
+
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );

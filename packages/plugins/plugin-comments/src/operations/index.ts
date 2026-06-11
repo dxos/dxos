@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
+export const CommentOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-message'),
   () => import('./create'),
   () => import('./create-proposals'),

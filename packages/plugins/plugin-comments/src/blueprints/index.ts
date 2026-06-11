@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as ThreadBlueprint } from './thread-blueprint';
+export { default as CommentBlueprint } from './comment-blueprint';

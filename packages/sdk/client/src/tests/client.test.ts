@@ -7,8 +7,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { Filter, Obj } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';

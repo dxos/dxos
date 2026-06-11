@@ -73,6 +73,10 @@ export default defineConfig({
         path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
+      // Page-action descriptor icons are contributed by Composer plugins at
+      // runtime; those sources are never imported by the extension bundle, so
+      // they are scanned eagerly by convention (capabilities/page-action*.ts).
+      scanPaths: [path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts')],
     }),
 
     // TODO(burdon): Document.

@@ -66,9 +66,9 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
         resolveFunction: (key: string) =>
           Effect.gen(function* () {
             // Try to resolve operation from database.
-            const [dbRecord] = yield* Database.runQuery(
+            const [dbRecord] = yield* Database.query(
               Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))),
-            );
+            ).run;
             const operationDef = dbRecord ? Operation.deserialize(dbRecord) : null;
             if (operationDef) {
               return operationDef;

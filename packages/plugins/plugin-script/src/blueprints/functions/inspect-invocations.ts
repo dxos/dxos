@@ -18,7 +18,7 @@ export default InspectInvocations.pipe(
       const loaded = yield* Database.load(fn);
       const maxResults = limit ?? 20;
 
-      const [properties] = yield* Database.runQuery(Query.type(SpaceProperties));
+      const [properties] = yield* Database.query(Query.type(SpaceProperties)).run;
       if (!properties?.invocationTraceFeed) {
         return { invocations: [], total: 0 };
       }

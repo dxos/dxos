@@ -84,6 +84,10 @@ export default Capability.makeModule(
             if (prevOperationKeys.has(key)) {
               continue;
             }
+            if (handler.meta.skipRegistry) {
+              prevOperationKeys.add(key);
+              continue;
+            }
             try {
               batch.push(Operation.serialize(handler));
             } catch {

@@ -79,7 +79,7 @@ describe('update', () => {
         yield* agent.submitPrompt('Create a document with a cookie recipe.');
         yield* agent.waitForCompletion();
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -95,7 +95,7 @@ describe('update', () => {
         yield* agent.submitPrompt('Add a section with a holiday-themed variation.');
         yield* agent.waitForCompletion();
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -140,7 +140,7 @@ describe('update', () => {
         yield* agent.waitForCompletion();
 
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
@@ -187,7 +187,7 @@ describe('update', () => {
         yield* agent.waitForCompletion();
 
         {
-          const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+          const docs = yield* Database.query(Query.type(Markdown.Document)).run;
           if (docs.length !== 1) {
             throw new Error(`Expected 1 document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }

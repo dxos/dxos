@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
-import { useCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { ObservabilityCapabilities } from '@dxos/plugin-observability';
 import { useConfig } from '@dxos/react-client';
@@ -14,6 +14,7 @@ import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { type FeedbackPluginOption, FeedbackForm } from '#components';
+import { SupportCapabilities } from '#types';
 
 import { DiscordAction } from './DiscordAction';
 import { DownloadLogsAction } from './DownloadLogsAction';
@@ -23,6 +24,7 @@ import { GitHubAction } from './GitHubAction';
 /** Renders the feedback form, disabling the PostHog/Discord submit paths when the survey is unavailable. */
 export const FeedbackPanel = () => {
   const observability = useCapability(ObservabilityCapabilities.Observability);
+  const settings = useAtomCapability(SupportCapabilities.Settings);
   const [feedbackAvailable, setFeedbackAvailable] = useState(false);
   const config = useConfig();
   const manager = usePluginManager();
@@ -40,6 +42,7 @@ export const FeedbackPanel = () => {
   );
 
   const hidden = useMemo(() => ({ version }), [version]);
+  const excludeImage = useMemo(() => !settings?.enableGitHubIssues, [settings?.enableGitHubIssues]);
 
   useAsyncEffect(
     async (controller) => {
@@ -61,12 +64,12 @@ export const FeedbackPanel = () => {
         <FeedbackForm.Root hidden={hidden} plugins={plugins}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet />
+              <Form.FieldSet exclude={excludeImage ? (props) => props.filter((p) => p.name !== 'image') : undefined} />
               <DownloadLogsAction />
               {/* GH only opens a prefilled URL — independent of PostHog feedback availability. */}
               {/* PostHog + Discord both call `CaptureUserFeedback`, so they share the gate. */}
               <FeedbackSubmitAction disabled={!feedbackAvailable} />
-              <GitHubAction />
+              {settings?.enableGitHubIssues && <GitHubAction />}
               <DiscordAction disabled={!feedbackAvailable} />
             </Form.Content>
           </Form.Viewport>

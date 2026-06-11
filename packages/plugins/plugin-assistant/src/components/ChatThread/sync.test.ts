@@ -9,7 +9,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { createMessage } from '#testing';

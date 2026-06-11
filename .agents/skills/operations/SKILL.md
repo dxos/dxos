@@ -19,7 +19,7 @@ Key properties:
 - **Serializable definitions**: Definitions carry no runtime logic and can be shared across packages, serialized to ECHO, or sent over the wire.
 - **Lazy-loadable handlers**: Handler modules use dynamic `import()` so code is loaded only when invoked.
 
-Import: `import { Operation, OperationHandlerSet } from '@dxos/operation';`
+Import: `import { Operation, OperationHandlerSet } from '@dxos/compute';`
 
 ## Naming
 
@@ -31,7 +31,7 @@ Import: `import { Operation, OperationHandlerSet } from '@dxos/operation';`
 Use `Operation.make` to create a definition. Definitions live in a separate file from handlers.
 
 ```ts
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import * as Schema from 'effect/Schema';
 
 export const MyOperation = Operation.make({
@@ -87,7 +87,7 @@ Use this when handlers may be deployed to EDGE. Each handler file default-export
 ```ts
 // handler-a.ts
 import * as Effect from 'effect/Effect';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { MyOperation } from './definitions';
 
 export default MyOperation.pipe(
@@ -105,7 +105,7 @@ When the handler needs helpers, keep the `export default` **at the top** (after 
 
 ```ts
 // index.ts
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 export * from './definitions';
 
 export const MyHandlers = OperationHandlerSet.lazy(
@@ -119,7 +119,7 @@ export const MyHandlers = OperationHandlerSet.lazy(
 When handlers don't need individual files (e.g. tests, local-only logic), create the `OperationHandlerSet` directly with `OperationHandlerSet.make(...)`. No need to define individual handler variables — build the set inline:
 
 ```ts
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 
 const Handlers = OperationHandlerSet.make(
   Operation.withHandler(
@@ -162,6 +162,20 @@ export default MyOp.pipe(
 
 Note: Services need to be explicitly listed in the operation definition.
 
+### Preferred handler form: typed const
+
+Existing plugin handlers (plugin-chess, plugin-space, plugin-bookmarks) preempt TS2742 by annotating a const with the definition's handler type instead of piping `opaqueHandler`:
+
+```ts
+const handler: Operation.WithHandler<typeof MyOp> = MyOp.pipe(
+  Operation.withHandler(Effect.fn(function* (input) { ... })),
+);
+
+export default handler;
+```
+
+Prefer this form for new handlers; reach for `opaqueHandler` only when the annotation itself cannot be named.
+
 ### Troubleshooting: TS2742 on `export default`
 
 If the build fails with **TS2742** ("The inferred type of 'default' cannot be named without a reference to ..."), it means the handler's inferred type includes service tags (e.g. `TraceService`) whose module path isn't directly imported in the handler file. Fix this by piping through `Operation.opaqueHandler` as the last step, which erases the complex service types to `Operation.WithHandler<Definition.Any>`:
@@ -190,7 +204,7 @@ my-operations/
 ### `definitions.ts` — Pure definitions, no runtime logic
 
 ```ts
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import * as Schema from 'effect/Schema';
 
 export const OpA = Operation.make({
@@ -212,7 +226,7 @@ Put `export default OpA.pipe(Operation.withHandler(...))` right after imports. I
 
 ```ts
 import * as Effect from 'effect/Effect';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { OpA } from './definitions';
 
 export default OpA.pipe(
@@ -231,7 +245,7 @@ const formatResult = (n: number) => String(n);
 Export definitions and create a lazy handler set. See `packages/plugins/plugin-markdown/src/blueprints/functions/` for reference.
 
 ```ts
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './definitions';
 
@@ -256,7 +270,7 @@ Whenever you need to pass around a collection of handlers (test layers, registra
 | `OperationHandlerSet.merge(...)` | Combine multiple sets into one.               |
 
 ```ts
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 // Merge multiple sets.
 const AllHandlers = OperationHandlerSet.merge(FeatureAHandlers, FeatureBHandlers);
@@ -308,7 +322,7 @@ export const myFunc = defineFunction({
 
 ```ts
 // definitions.ts
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import * as Schema from 'effect/Schema';
 
 export const MyFunc = Operation.make({
@@ -325,7 +339,7 @@ export const MyFunc = Operation.make({
 ```ts
 // my-func.ts
 import * as Effect from 'effect/Effect';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { MyFunc } from './definitions';
 
 export default MyFunc.pipe(

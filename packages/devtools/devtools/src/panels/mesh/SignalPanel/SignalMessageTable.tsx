@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';

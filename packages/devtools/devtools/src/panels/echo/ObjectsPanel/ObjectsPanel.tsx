@@ -6,7 +6,7 @@ import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
-import { checkoutVersion, getEditHistory } from '@dxos/echo-db';
+import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
 import { EID, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

@@ -18,6 +18,7 @@ This repo already ships the full pipeline; do not reinvent it.
 - Third-party plugin code hosted inside Composer imports `@dxos/log` from the host, so its logs land in the same `app.log`.
 - Query the log with `node scripts/query-logs.mjs packages/apps/composer-app/app.log -q <filter> -g <regex>`. See the `logging` skill for the full filter syntax (levels, `path:level`, `!exclude`, `-q` OR / `-g` AND).
 - Node-side code (tests, CLI, server): `@dxos/log` works identically; set `LOG_FILTER=debug` for stdout capture in vitest runs.
+- Composer runs client services in a **dedicated worker per tab** (a coordinator handles cross-tab exclusivity; there is no long-lived SharedWorker hosting services — `DX_SHARED_WORKER` is an opt-in exception). A plain page reload therefore picks up newly instrumented worker-side code; do NOT ask the user to close all tabs first. Worker-side logs land in the same `app.log` (the log plugin handles `?worker_file` / `?sharedworker_file` entries).
 
 You instrument by adding `log('[DEBUG H1] …', { ctx })` calls inside `#region DEBUG` markers, ask the user to reproduce, then grep for `[DEBUG H` in `app.log`. The `f`/`n` fields in each NDJSON record give you file:line; the `c` field carries structured context; `o` carries scope.
 

@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
-import { DecimalPrecision, type JsonSchemaType, SelectOption, TypeEnum } from '@dxos/echo/internal';
+import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
 
 /**

@@ -456,9 +456,9 @@ export const findKanbanForBoard: (
   boardId: string,
 ) => Effect.Effect<Kanban.Kanban | undefined, never, Database.Service> = Effect.fn('findKanbanForBoard')(
   function* (boardId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Kanban.Kanban, [{ source: TRELLO_SOURCE, id: boardId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Kanban.Kanban) : undefined;
   },
 );

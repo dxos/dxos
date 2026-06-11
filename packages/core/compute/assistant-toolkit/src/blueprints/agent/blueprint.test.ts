@@ -226,9 +226,9 @@ describe('Agent', () => {
 
         yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(
+        const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.timer'),
-        );
+        ).run;
         const timerTriggers = triggers.filter(
           (trigger) => trigger.spec?.kind === 'timer' && trigger.spec.cron === cron,
         );
@@ -328,9 +328,9 @@ describe('Agent', () => {
 
         yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggers = yield* Database.runQuery(
+        const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.toggle-enabled'),
-        );
+        ).run;
         expect(triggers.every((trigger) => trigger.enabled === false)).toBe(true);
 
         Obj.update(agent, (agent) => {
@@ -339,9 +339,9 @@ describe('Agent', () => {
         yield* Database.flush();
         yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
 
-        const triggersAfter = yield* Database.runQuery(
+        const triggersAfter = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.after'),
-        );
+        ).run;
         expect(triggersAfter).toHaveLength(triggers.length);
         expect(triggersAfter.every((trigger) => trigger.enabled === true)).toBe(true);
       },

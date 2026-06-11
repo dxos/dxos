@@ -5,7 +5,7 @@
 import type * as SchemaAST from 'effect/SchemaAST';
 
 import { Ref } from '@dxos/echo';
-import { type ReferenceAnnotationValue, ReferenceAnnotationId } from '@dxos/echo/internal';
+import { type ReferenceAnnotationValue, ReferenceAnnotationId } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 
 type RefProps = {

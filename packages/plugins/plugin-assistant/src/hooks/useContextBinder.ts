@@ -8,7 +8,7 @@ import { useContext, useState } from 'react';
 
 import { AiContext } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
