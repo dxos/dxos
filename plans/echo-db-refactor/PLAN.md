@@ -378,7 +378,7 @@ MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism
 ### S12 — Explicit lifecycle states + shell cores (G2, step 2)
 
 - Discriminated state on entity-core: `detached | loading | requesting | unavailable |
-  attached` (GOAL.md G2), each state carrying exactly its own data (`detached` holds
+attached` (GOAL.md G2), each state carrying exactly its own data (`detached` holds
   the local doc + link refs; `attached` holds docHandle + mountPath).
 - Shell cores: `loadObjectCoreById`/doc-link discovery creates the core immediately in
   `loading`; the loader maps from S10 (`_objectsPendingDocumentLoad`,
@@ -578,34 +578,34 @@ MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism
 
 ## Risks & watchpoints
 
-| Risk | Stage | Mitigation |
-| --- | --- | --- |
-| Rename fallout in configs/CI/docs not caught by TS | S1/S2 | repo-wide literal grep is an exit criterion |
-| Publishing gap for renamed packages | S0–S2 | user decision frontloaded (S0) |
-| Shell cores leak into working-set semantics | S12 | S9 characterization tests; `attached`-state filtering |
-| Dep cycles hang resolution | S13 | S9 cycle test; visited-set resolution |
-| Event-bus batching differs from `_updateEvent` throttling | S13 | S9 batching test; reuse existing throttle implementation |
-| `prohibitSignalActions` reentrancy in query updates | S13/S16 | keep the guard at source-update boundaries; query suite gates |
-| Feed construction-order contract (`SpaceProxy` builds queues pre-open) | S19 | characterization test before rewiring |
-| `@dxos/echo` proxy-utils shared with typed-handler | S20 | typed-handler suites gate; stop at fixed-member prototype if needed |
+| Risk                                                                   | Stage   | Mitigation                                                          |
+| ---------------------------------------------------------------------- | ------- | ------------------------------------------------------------------- |
+| Rename fallout in configs/CI/docs not caught by TS                     | S1/S2   | repo-wide literal grep is an exit criterion                         |
+| Publishing gap for renamed packages                                    | S0–S2   | user decision frontloaded (S0)                                      |
+| Shell cores leak into working-set semantics                            | S12     | S9 characterization tests; `attached`-state filtering               |
+| Dep cycles hang resolution                                             | S13     | S9 cycle test; visited-set resolution                               |
+| Event-bus batching differs from `_updateEvent` throttling              | S13     | S9 batching test; reuse existing throttle implementation            |
+| `prohibitSignalActions` reentrancy in query updates                    | S13/S16 | keep the guard at source-update boundaries; query suite gates       |
+| Feed construction-order contract (`SpaceProxy` builds queues pre-open) | S19     | characterization test before rewiring                               |
+| `@dxos/echo` proxy-utils shared with typed-handler                     | S20     | typed-handler suites gate; stop at fixed-member prototype if needed |
 
 ## Stage → goal coverage
 
-| Stage | Goals |
-| --- | --- |
-| S1–S2 | G12 (renames) |
-| S3 | G1 (surface), DatabaseImpl rename |
-| S4 | G12 (ObjectCore hidden) |
-| S5 | G8 |
-| S6 | G4 |
-| S7 | G6.1 |
-| S8 | G3 (mechanical) |
-| S9 | enables G2/G7 safely |
-| S10 | G1 (loader merge) |
-| S11–S13 | G2, G7 |
-| S14 | G9, G3 (semantic) |
-| S15 | G1 (entity-manager), G7 |
-| S16 | G5 |
-| S17–S18 | G6.2 / G6.3 |
-| S19 | G11, D1 seams |
-| S20 | G10 |
+| Stage   | Goals                             |
+| ------- | --------------------------------- |
+| S1–S2   | G12 (renames)                     |
+| S3      | G1 (surface), DatabaseImpl rename |
+| S4      | G12 (ObjectCore hidden)           |
+| S5      | G8                                |
+| S6      | G4                                |
+| S7      | G6.1                              |
+| S8      | G3 (mechanical)                   |
+| S9      | enables G2/G7 safely              |
+| S10     | G1 (loader merge)                 |
+| S11–S13 | G2, G7                            |
+| S14     | G9, G3 (semantic)                 |
+| S15     | G1 (entity-manager), G7           |
+| S16     | G5                                |
+| S17–S18 | G6.2 / G6.3                       |
+| S19     | G11, D1 seams                     |
+| S20     | G10                               |
