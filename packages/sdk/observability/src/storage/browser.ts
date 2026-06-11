@@ -96,17 +96,4 @@ export const storeOtelLogLevel = async (namespace: string, value: string | null)
   } catch (err) {
     log.catch('Failed to store OTEL log level', err);
   }
-  // Mirror to localStorage so the synchronous check in OtelLogs picks it up immediately on the main thread.
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const key = `${namespace}/${OTEL_LOG_LEVEL_KEY}`;
-      if (value === null) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, value);
-      }
-    }
-  } catch {
-    // localStorage not available (e.g., in workers).
-  }
 };
