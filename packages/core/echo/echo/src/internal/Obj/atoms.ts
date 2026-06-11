@@ -10,15 +10,15 @@ import * as Option from 'effect/Option';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Entity from '../Entity';
-import type * as Obj from '../Obj';
-import type * as Ref from '../Ref';
-import type * as Relation from '../Relation';
-import { subscribe } from './common/proxy/reactive';
-import { isEntity, getDatabase } from './Entity';
-import { getSnapshot } from './Obj';
-import { loadRefTarget } from './ref-utils';
-import { RefTypeId } from './Ref/ref';
+import type * as Entity from '../../Entity';
+import type * as Obj from '../../Obj';
+import type * as Ref from '../../Ref';
+import type * as Relation from '../../Relation';
+import { subscribe } from '../common/proxy/reactive';
+import { isEntity, getDatabase } from '../Entity';
+import { RefTypeId } from '../Ref/ref';
+import { loadRefTarget } from '../Ref/utils';
+import { getSnapshot } from './snapshot';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>
   obj != null && typeof obj === 'object' && RefTypeId in (obj as object);
@@ -135,7 +135,7 @@ const objectWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(obj: T): At
 const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
   const effect = (get: Atom.Context) =>
     Effect.gen(function* () {
-      const snapshot = get(make(ref));
+      const snapshot = get(makeAtom(ref));
       if (snapshot == null) {
         return undefined;
       }
@@ -186,7 +186,7 @@ const relationFamily = Atom.family(<T extends Relation.Unknown>(relation: T): At
  * Updates automatically when the object is mutated.
  * For refs, subscribes to target object changes after loading.
  */
-export const make: {
+export const makeAtom: {
   <T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>>;
   <T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined>;
 } = (objOrRef: Obj.Unknown | Ref.Ref<any>): Atom.Atom<any> => {
@@ -209,8 +209,8 @@ export const makeProperty = <T extends Obj.Unknown, K extends keyof T>(obj: T, k
 };
 
 /**
- * Like `make` but returns the live reactive object instead of a snapshot.
- * Prefer `make` (snapshot) unless you need the live Obj for generic mutations.
+ * Like `makeAtom` but returns the live reactive object instead of a snapshot.
+ * Prefer `makeAtom` (snapshot) unless you need the live Obj for generic mutations.
  */
 export const makeWithReactive: {
   <T extends Obj.Unknown>(obj: T): Atom.Atom<T>;

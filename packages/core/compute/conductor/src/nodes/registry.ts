@@ -241,7 +241,7 @@ export const registry: Record<NodeType, Executable> = {
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
             const schemaTypename = getTypenameFromQuery(container.query.ast);
-            const types = yield* Database.runQuery(Filter.type(Type.Type));
+            const types = yield* Database.query(Filter.type(Type.Type)).run;
             const type = types.find((t) => Type.getTypename(t) === schemaTypename);
             invariant(type, `Schema not found: ${schemaTypename}`);
             invariant(Type.isObject(type), `Schema is not an object schema: ${schemaTypename}`);

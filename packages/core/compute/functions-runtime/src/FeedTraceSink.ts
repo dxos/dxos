@@ -139,7 +139,7 @@ export const layerLiveWithDirectSink: Layer.Layer<
 > = layerDirect.pipe(Layer.provideMerge(layerLive));
 
 export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* () {
-  const feeds = yield* Database.runQuery(query);
+  const feeds = yield* Database.query(query).run;
   if (feeds.length > 0) {
     return feeds[0];
   }

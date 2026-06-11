@@ -9,7 +9,6 @@ import * as Option from 'effect/Option';
 import { type CleanupFn } from '@dxos/async';
 
 import type * as Entity from './Entity';
-import * as QueryAtoms from './internal/QueryAtoms';
 
 /**
  * Individual query result entry.
@@ -128,15 +127,6 @@ export interface QueryResult<T> {
 export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
   run: Effect.Effect<T[], E, R>;
   first: Effect.Effect<Option.Option<T>, E, R>;
-}
 
-/**
- * Memoized query atom for a Queryable (Database, Queue, Registry), keyed by the
- * queryable's identifier and the serialized query AST. The same queryable + query/filter always
- * returns the same atom instance and shares a single subscription.
- *
- * Use this — not the per-instance {@link QueryResult.atom} getter — anywhere the query is rebuilt
- * on every run (graph-builder connectors/actions, atom computes), where the getter would leak a
- * subscription per evaluation. To wrap a QueryResult you already hold stable, use its `.atom` getter.
- */
-export const atom = QueryAtoms.make;
+  // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.
+}

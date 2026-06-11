@@ -23,7 +23,7 @@ export const stats = Command.make(
   () =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
-      const objects = yield* Database.runQuery(Query.select(Filter.everything()));
+      const objects = yield* Database.query(Query.select(Filter.everything())).run;
       const stats = Function.pipe(
         objects,
         Array.groupBy((obj) => Obj.getTypename(obj) ?? '<empty>'),

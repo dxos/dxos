@@ -117,10 +117,10 @@ export default Commentary.pipe(
         log.info('commentary', { commentary });
 
         // TODO(wittjosiah): Functions currently don't support traversals.
-        // const docs = yield* Database.runQuery(
+        // const docs = yield* Database.query(
         //   Query.select(Filter.id(chessGame.id)).targetOf(HasSubject.HasSubject).source(),
-        // ).pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
-        const docs = yield* Database.runQuery(Filter.type(HasSubject.HasSubject)).pipe(
+        // ).run.pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
+        const docs = yield* Database.query(Filter.type(HasSubject.HasSubject)).run.pipe(
           Effect.map((relations) =>
             relations.filter((relation) => {
               // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
@@ -158,7 +158,7 @@ export default Commentary.pipe(
         let document: Markdown.Document;
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
+          const [properties] = yield* Database.query(Filter.typename('org.dxos.type.spaceProperties')).run;
           const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
           const rootCollection = rootCollectionRef
             ? yield* Database.load<Collection.Collection>(rootCollectionRef)

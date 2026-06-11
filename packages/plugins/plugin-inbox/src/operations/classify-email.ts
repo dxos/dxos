@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
 
         log.info('classify message', { message });
 
-        const tags = yield* Database.runQuery(Filter.type(Tag.Tag));
+        const tags = yield* Database.query(Filter.type(Tag.Tag)).run;
         log.info('tags', { count: tags.length });
 
         if (tags.length === 0) {
@@ -88,7 +88,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }
 
-        const mailboxes = yield* Database.runQuery(Filter.type(Mailbox.Mailbox));
+        const mailboxes = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
         if (mailboxes.length === 0) {
           return yield* Effect.fail(new Error('No mailbox found in database'));
         }

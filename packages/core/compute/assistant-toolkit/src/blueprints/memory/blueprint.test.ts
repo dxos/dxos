@@ -46,7 +46,7 @@ describe('Memory Blueprint', () => {
         });
         yield* agent.submitPrompt('Remember that my favorite programming language is TypeScript.');
         yield* agent.waitForCompletion();
-        const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
+        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
         expect(memories.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
@@ -98,7 +98,7 @@ describe('Memory Blueprint', () => {
         });
         yield* agent.submitPrompt('Delete the memory about "Outdated fact".');
         yield* agent.waitForCompletion();
-        const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
+        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
         const found = memories.find((memory) => memory.title === 'Outdated fact');
         expect(found).toBeUndefined();
       },
@@ -120,7 +120,7 @@ describe('Memory Blueprint', () => {
           "I'm going to LA next week. Find me some good hotels and remember the recommendations.",
         );
         yield* agent.waitForCompletion();
-        const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
+        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
         expect(memories.length).toBeGreaterThanOrEqual(1);
         const hasLAMemory = memories.some(
           (memory) =>
