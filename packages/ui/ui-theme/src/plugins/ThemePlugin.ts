@@ -4,10 +4,11 @@
 
 /* eslint-disable no-console */
 
-import tailwindcss from '@tailwindcss/postcss';
+import tailwindcssPostcss from '@tailwindcss/postcss';
+import tailwindcssVite from '@tailwindcss/vite';
 import autoprefixer from 'autoprefixer';
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';
@@ -40,8 +41,9 @@ export type ThemePluginOptions = {
 
 /**
  * Vite plugin to configure theme.
+ * Returns the official Tailwind Vite plugin (persistent incremental scanner) alongside the theme plugin.
  */
-export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
+export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
   // Prefer source CSS if available (monorepo dev), fall back to dist for installed package.
   const srcThemePath = resolve(import.meta.dirname, ROOT, 'src/main.css');
   const distThemePath = resolve(import.meta.dirname, '../main.css');
@@ -59,9 +61,6 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     verbose: options.verbose,
   };
 
-  // Derive project root from the source location so Tailwind scans all packages.
-  const base = isMonorepo ? resolve(dirname(srcThemePath), ROOT) : undefined;
-
   if (process.env.DEBUG || options.verbose) {
     console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
   }
@@ -69,7 +68,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
   // Trailing-edge debounce handle for theme CSS reloads (see `handleHotUpdate`).
   let themeReloadTimer: ReturnType<typeof setTimeout> | undefined;
 
-  return {
+  const themePlugin: Plugin = {
     name: 'vite-plugin-dxos-ui-theme',
     config: (): UserConfig => {
       return {
@@ -112,12 +111,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
             // vite-plugin-log's `app.log` in the app root), which are appended
             // continuously at runtime and must never feed back into the
             // watcher.
-            ignored: [
-              '**/dist/**',
-              '**/out/**',
-              '**/*.log',
-              ...(base !== undefined ? [`${resolve(base, '.claude')}/**`] : []),
-            ],
+            ignored: ['**/dist/**', '**/out/**', '**/*.log', `${resolve(import.meta.dirname, ROOT, '.claude')}/**`],
           },
         },
         css: {
@@ -127,9 +121,11 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
               postcssImport(),
               // Processes CSS nesting syntax.
               postcssNesting(),
-              // Processes Tailwind directives and generates utilities from scanned content.
-              // base points to project root so all packages are scanned (not just ui-theme).
-              tailwindcss(base !== undefined ? { base } : {}),
+              // Resolves @reference/@apply in `.pcss` files (e.g. lit-grid, lit-ui), which the
+              // @tailwindcss/vite plugin skips — its transform filter only matches `.css`.
+              // Theme `.css` files are compiled by @tailwindcss/vite first (enforce: 'pre'),
+              // so this plugin's quick-bail check passes them through untouched.
+              tailwindcssPostcss(),
               // Adds vendor prefixes.
               autoprefixer,
             ],
@@ -208,4 +204,10 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
       return [darkModeTag, layersTag, criticalTag];
     },
   };
+
+  // The Tailwind Vite plugins are `enforce: 'pre'`, so they compile theme CSS (resolving
+  // `@import 'tailwindcss'`, @source, @plugin, @theme) before the postcss chain runs —
+  // postcss-import never sees the raw Tailwind directives. Scan roots come from the @source
+  // directives in main.css (relative to that file); no project-root base is needed.
+  return [...tailwindcssVite(), themePlugin];
 };
