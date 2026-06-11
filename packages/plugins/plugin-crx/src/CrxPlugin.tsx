@@ -5,13 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import {
-  CrxSettings,
-  InstallPageActions,
-  OperationHandler,
-  PageActionProvider,
-  ReactSurface,
-} from '#capabilities';
+import { CrxSettings, InstallPageActions, OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 

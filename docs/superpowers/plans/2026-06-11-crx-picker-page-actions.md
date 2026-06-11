@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-06-11-crx-picker-page-actions-design.md`
 
 **Conventions (read first):**
+
 - Run tests with `moon run <project>:test` where project ∈ `plugin-crx`, `plugin-bookmarks`, `composer-crx`. Run a single file with `moon run <project>:test -- path/to/file.test.ts`. Ignore `DEPOT_TOKEN` warnings.
 - All paths below are relative to the repo root (the worktree). NEVER touch the bare repo outside this worktree.
 - No `as` casts to silence type errors (see project CLAUDE.md). `as const` is fine.
@@ -22,6 +23,7 @@
 ### Task 1: plugin-crx protocol — `'picker'` context + Snapshot owns its structs
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-crx/src/types/PageAction.ts`
 - Modify: `packages/plugins/plugin-crx/src/types/Clip.ts`
 - Modify: `packages/plugins/plugin-crx/src/page-actions.test.ts`
@@ -133,6 +135,7 @@ git commit -m "feat(plugin-crx): add picker context to page-action protocol"
 ### Task 2: plugin-crx — retype mapping to Snapshot, add operations + picker page actions
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-crx/src/mapping.ts`
 - Modify: `packages/plugins/plugin-crx/src/mapping.test.ts`
 - Create: `packages/plugins/plugin-crx/src/types/CrxOperation.ts`
@@ -151,6 +154,7 @@ git commit -m "feat(plugin-crx): add picker context to page-action protocol"
 - [ ] **Step 1: Update mapping tests first (TDD — drive the retype)**
 
 In `packages/plugins/plugin-crx/src/mapping.test.ts`:
+
 - Change the import `import { Clip } from '#types';` → `import { Clip, PageAction } from '#types';`.
 - Retype the fixtures: `baseSource: PageAction.Source`, `baseSelection: PageAction.Selection` (shapes unchanged).
 - Add a snapshot factory next to `makeClip` and switch the `toPerson`/`toOrganization`/`toNote` calls to it (keep `makeClip` only for the `mapClip` test):
@@ -186,6 +190,7 @@ Expected: FAIL — type errors (`toPerson` expects `Clip.Clip`).
 - [ ] **Step 3: Retype mapping.ts**
 
 In `packages/plugins/plugin-crx/src/mapping.ts`:
+
 - Change the types import to `import { type Clip, type PageAction } from '#types';`.
 - Retype the three mappers to `(snapshot: PageAction.Snapshot)` and make selection access optional. The bodies become (doc comments unchanged except `Clip` → `snapshot` wording):
 
@@ -493,6 +498,7 @@ git commit -m "feat(plugin-crx): contribute person/org/note picker page actions"
 ### Task 3: plugin-crx — delete the clip channel
 
 **Files:**
+
 - Delete: `packages/plugins/plugin-crx/src/listener.ts`
 - Delete: `packages/plugins/plugin-crx/src/capabilities/install-clip-listener.ts`
 - Delete: `packages/plugins/plugin-crx/src/types/Clip.ts`
@@ -529,6 +535,7 @@ Keep: `invalidPayload`, `unsupportedVersion`, `noSpace`, `unknownAction`, `opera
 - [ ] **Step 4: Update Settings wording**
 
 In `packages/plugins/plugin-crx/src/types/Settings.ts`, update the user-facing strings that mention clips (the schema fields stay — they are persisted):
+
 - `enabled` annotations → `title: 'Accept extension actions'`, `description: 'When off, actions sent from the composer-crx browser extension are ignored.'`
 - `autoOpenAfterClip` annotations → `description: 'Navigate to the created object when the extension creates one.'` (keep the field name — it is a persisted settings key).
 - Update the file-top doc comment sentence "both the clip bridge and the render-proxy" → "both the page-actions bridge and the render-proxy".
@@ -558,6 +565,7 @@ git commit -m "refactor(plugin-crx): remove legacy composer:clip channel"
 ### Task 4: plugin-bookmarks — picker context + excerpt precedence
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-bookmarks/src/capabilities/page-action.ts`
 - Modify: `packages/plugins/plugin-bookmarks/src/types/Bookmark.ts`
 - Test: `packages/plugins/plugin-bookmarks/src/types/Bookmark.test.ts` (extend if it exists; create otherwise — check first)
@@ -639,6 +647,7 @@ git commit -m "feat(plugin-bookmarks): surface add-bookmark in the picker, prefe
 ### Task 5: composer-crx — protocol mirror
 
 **Files:**
+
 - Modify: `packages/apps/composer-crx/src/page-actions/types.ts`
 - Modify: `packages/apps/composer-crx/src/page-actions/types.test.ts`
 
@@ -710,6 +719,7 @@ git commit -m "feat(composer-crx): mirror picker context in page-action protocol
 ### Task 6: composer-crx — background deliver handler
 
 **Files:**
+
 - Create: `packages/apps/composer-crx/src/page-actions/deliver.ts`
 - Create: `packages/apps/composer-crx/src/page-actions/deliver.test.ts`
 - Modify: `packages/apps/composer-crx/src/page-actions/index.ts` (re-export — match how `invoke.ts`/`registry.ts` are exported)
@@ -870,6 +880,7 @@ git commit -m "feat(composer-crx): background delivery for picker snapshots"
 ### Task 7: composer-crx — registry-driven picker
 
 **Files:**
+
 - Modify: `packages/apps/composer-crx/src/picker/picker.ts`
 - Modify: `packages/apps/composer-crx/src/picker/index.ts`
 - Modify: `packages/apps/composer-crx/src/picker/harvest.ts`
@@ -894,6 +905,7 @@ Expected: PASS (shapes are structurally identical).
 - [ ] **Step 2: Parameterize the picker toolbar**
 
 In `packages/apps/composer-crx/src/picker/picker.ts`:
+
 - Remove `import { type ClipKind } from '../clip';` and `import { CLIP_KINDS, type ClipKindDef } from './kinds';`.
 - Add:
 
@@ -995,19 +1007,21 @@ NOTE: `registry.ts` reads `browser.storage.local` — available to content scrip
 - [ ] **Step 4: Generalize the debug preview**
 
 In `packages/apps/composer-crx/src/picker/debug-preview.ts`:
+
 - Remove the Clip import; change the signature to:
 
 ```ts
 export const showDebugPreview = (title: string, payload: unknown): Promise<boolean> => {
 ```
 
-- Replace `title.textContent = \`Debug: Clip preview (${clip.kind})\`;` with `title.textContent = \`Debug: ${title}\`;` — rename the inner `title` DOM element variable to `heading` to avoid shadowing the new parameter.
+- Replace `title.textContent = \`Debug: Clip preview (${clip.kind})\`;`with`title.textContent = \`Debug: ${title}\`;`— rename the inner`title`DOM element variable to`heading` to avoid shadowing the new parameter.
 - Replace `JSON.stringify(clip, null, 2)` with `JSON.stringify(payload, null, 2)`.
 - Update the doc comment (payload preview, not Clip preview).
 
 - [ ] **Step 5: Rewire the content script's start-picker handler**
 
 In `packages/apps/composer-crx/src/content.ts`:
+
 - Replace the `pickAndHarvest` import with `pickSnapshot`, and add `PAGE_ACTION_DELIVER_MESSAGE_TYPE` to the `./page-actions` import.
 - Replace the `onMessage('start-picker', ...)` handler with:
 
@@ -1075,6 +1089,7 @@ git commit -m "feat(composer-crx): registry-driven picker delivering page-action
 ### Task 8: composer-crx — delete clip machinery
 
 **Files:**
+
 - Delete: `packages/apps/composer-crx/src/clip/` (whole directory: `index.ts`, `pipeline.ts`, `types.ts`)
 - Modify: `packages/apps/composer-crx/src/bridge/sender.ts`
 - Modify: `packages/apps/composer-crx/src/content.ts`
@@ -1127,6 +1142,7 @@ git commit -m "refactor(composer-crx): remove legacy clip channel"
 ```bash
 grep -rn "composer:clip\|deliver-clip\|deliverClip\|CLIP_KINDS\|ClipKind\|installClipListener\|runClipPipeline" packages --include="*.ts*"
 ```
+
 Expected: no output.
 
 - [ ] **Step 2: Cast audit (required by project CLAUDE.md)**
@@ -1134,6 +1150,7 @@ Expected: no output.
 ```bash
 git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'
 ```
+
 Expected: no NEW casts introduced by this branch (pre-existing moved lines excepted — justify each remaining hit in the summary).
 
 - [ ] **Step 3: Build, test, lint the three packages + dependents**
@@ -1143,11 +1160,13 @@ moon run plugin-crx:build plugin-bookmarks:build composer-crx:build
 moon run plugin-crx:test plugin-bookmarks:test composer-crx:test
 moon run plugin-crx:lint plugin-bookmarks:lint composer-crx:lint
 ```
+
 Expected: PASS. Then check nothing else in the repo imported the deleted symbols:
 
 ```bash
 moon exec --on-failure continue --quiet :build
 ```
+
 Expected: PASS (filter out DEPOT_TOKEN warnings).
 
 - [ ] **Step 4: Run prettier**
