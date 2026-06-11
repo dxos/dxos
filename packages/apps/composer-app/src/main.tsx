@@ -170,7 +170,25 @@ const main = async () => {
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
-  (window as any).composer = { profiler };
+  const otel = {
+    /** Enable debug-level OTEL log export for this device (persisted across reloads, works in workers). */
+    enableDebugLogs: () => {
+      void Observability.storeOtelLogLevel(APP_KEY, 'debug');
+      log.info('otel debug log level enabled — reload to apply');
+    },
+    /** Remove the debug override and revert to the default INFO log level. */
+    disableDebugLogs: () => {
+      void Observability.storeOtelLogLevel(APP_KEY, null);
+      log.info('otel debug log level override removed — reload to apply');
+    },
+    /** Return the active OTEL log level override, or null if using the default. */
+    getLogLevel: async (): Promise<string | null> => {
+      const level = await Observability.getOtelLogLevel(APP_KEY);
+      log.info('otel log level', { level: level ?? 'default (INFO)' });
+      return level;
+    },
+  };
+  (window as any).composer = { profiler, otel };
 
   Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 

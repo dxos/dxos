@@ -228,11 +228,16 @@ export class ItemManager {
   }
 
   /**
-   * Drag this item to a column's scroll bottom, hold to trigger auto-scroll,
-   * then wait for the drop target to become visible and drop on it.
+   * Drag this item to a column's scroll bottom, using auto-scroll when needed,
+   * then drop on the target item.
+   *
+   * When the target is already visible in the viewport (no scrolling needed), the
+   * item is dragged directly to the target. When the target is below the viewport,
+   * the mouse is held near the footer to trigger pragmatic auto-scroll until the
+   * target scrolls into view.
    *
    * @param holdTarget - The footer element; mouse is held ~20px above it to trigger auto-scroll.
-   * @param dropTarget - The element to drop on once it scrolls into view.
+   * @param dropTarget - The element to drop on.
    * @param dropOffset - Offset from the drop target center.
    */
   async dragToEndWithAutoScroll(holdTarget: Locator, dropTarget: Locator, dropOffset = { x: 0, y: 0 }): Promise<void> {
@@ -246,10 +251,32 @@ export class ItemManager {
     const holdX = holdBox.x + holdBox.width / 2;
     const holdY = holdBox.y - 20;
 
+    // Check if drop target is already visible before starting the drag.
+    // Items may fit in the viewport without scrolling, in which case auto-scroll
+    // is not needed and the loop's exit condition would never be satisfied.
+    const preDropBox = await dropTarget.boundingBox();
+    const needsScroll = !preDropBox || preDropBox.y >= holdBox.y;
+
     await handle.hover();
     await this._page.mouse.down();
     // Allow the drag monitor to register the grab before moving.
     await this._page.waitForTimeout(100);
+
+    if (!needsScroll) {
+      // Target is already visible — drag directly without auto-scroll.
+      await this._page.mouse.move(holdX, holdY, { steps: 4 });
+      const dropBox = await dropTarget.boundingBox();
+      if (dropBox) {
+        const dropX = dropOffset.x + dropBox.x + dropBox.width / 2;
+        const dropY = dropOffset.y + dropBox.y + dropBox.height / 2;
+        await this._page.mouse.move(dropX, dropY, { steps: 8 });
+        await this._page.waitForTimeout(200);
+        await this._page.mouse.up();
+        return;
+      }
+      await this._page.mouse.up();
+      return;
+    }
 
     // Move to hold position above the footer to trigger auto-scroll.
     await this._page.mouse.move(holdX, holdY, { steps: 4 });

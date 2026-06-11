@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Template } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
 import { StateMap } from '@dxos/schema';
 

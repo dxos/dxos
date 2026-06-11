@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * Task item — fixture ECHO type used to verify symbol extraction against

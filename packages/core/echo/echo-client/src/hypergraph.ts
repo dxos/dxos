@@ -13,7 +13,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoDatabaseImpl } from './proxy-db';
+import { type DatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
@@ -32,7 +32,7 @@ const TRACE_REF_RESOLUTION = false;
  * Manages cross-space database interactions.
  */
 export class HypergraphImpl implements Hypergraph.Hypergraph {
-  private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
+  private readonly _databases = new Map<SpaceId, DatabaseImpl>();
   private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
 
   // TODO(burdon): Space dependency?
@@ -44,7 +44,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
-  // serialized query. Covers both graph and database queries since `EchoDatabaseImpl.query`
+  // serialized query. Covers both graph and database queries since `DatabaseImpl.query`
   // normalizes scope and delegates here.
   //
   // Replaced (not mutated) on every database registration change: each `QueryResultImpl` embeds
@@ -73,7 +73,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   _registerDatabase(
     spaceId: SpaceId,
     /** @deprecated Use spaceId */
-    database: EchoDatabaseImpl,
+    database: DatabaseImpl,
     owningObject?: unknown,
   ): void {
     this._databases.set(spaceId, database);
@@ -156,7 +156,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return ref;
   }
 
-  getDatabase(spaceId: SpaceId): EchoDatabaseImpl | undefined {
+  getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
     return this._databases.get(spaceId);
   }
 
@@ -510,6 +510,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const context of this._queryContexts.values()) {
       context.addQuerySource(provider.create());
     }
+    this.#queryResultCache = new QueryResultCache();
   }
 
   /**
@@ -520,6 +521,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (index !== -1) {
       this._querySourceProviders.splice(index, 1);
     }
+    this.#queryResultCache = new QueryResultCache();
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent): void {

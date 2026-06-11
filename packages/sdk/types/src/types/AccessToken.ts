@@ -7,7 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { Format, LabelAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Format } from '@dxos/echo/Format';
 
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({

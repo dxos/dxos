@@ -54,6 +54,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

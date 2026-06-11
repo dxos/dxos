@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';

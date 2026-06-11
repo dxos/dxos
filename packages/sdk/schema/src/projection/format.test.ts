@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo';
-import { TypeEnum } from '@dxos/echo/internal';
+import { TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 

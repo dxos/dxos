@@ -11,8 +11,8 @@ import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Entity, Filter, Obj, Query, QueryResult, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/internal';
+import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
@@ -22,6 +22,7 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities } from '#types';
 
+import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   BLOCK_REORDER_ABOVE,
@@ -79,7 +80,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Persisted types live in the space db; static/runtime types live in the shared registry.
         // Fan across both so the space's own types appear without leaking other spaces' types.
         const allSchemas = get(
-          QueryResult.atom(space.db, Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())),
+          space.db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).atom,
         );
 
         const userSchemas = allSchemas.filter((type) => {
@@ -106,7 +107,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             return true;
           }
           const typename = Type.getTypename(schema);
-          const objects = get(QueryResult.atom(space.db, Filter.typename(typename)));
+          const objects = get(space.db.query(Filter.typename(typename)).atom);
           if (ViewAnnotation.has(schema)) {
             return objects.some((obj) => !viewIndex.isView(obj));
           }
@@ -126,7 +127,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(QueryResult.atom(client.graph.registry, Filter.type(Type.Type))) : [];
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
         const typename = Type.getTypename(schema);
 
@@ -177,9 +178,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, typename }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(QueryResult.atom(client.graph.registry, Filter.type(Type.Type))) : [];
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
-        const objects = get(QueryResult.atom(space.db, Filter.typename(typename))).filter(
+        const objects = get(space.db.query(Filter.typename(typename)).atom).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
 
@@ -212,7 +213,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(QueryResult.atom(client.graph.registry, Filter.type(Type.Type))) : [];
+        const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
         const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
@@ -312,8 +313,13 @@ const createSchemaActions = ({
   const createEntry = capabilities
     .getAll(SpaceCapabilities.CreateObjectEntry)
     .find((entry: SpaceCapabilities.CreateObjectEntry) => entry.id === typename);
-  const createObjectFn = createEntry?.createObject;
-  const inputSchema = createEntry?.inputSchema;
+
+  // For database-persisted object schemas without a dedicated capability, synthesize a generic entry.
+  const resolvedEntry: SpaceCapabilities.CreateObjectEntry | undefined =
+    createEntry ??
+    (Type.getDatabase(type) != null && Type.isObject(type) ? makeCreateObjectEntryForDatabaseType(type) : undefined);
+  const createObjectFn = resolvedEntry?.createObject;
+  const inputSchema = resolvedEntry?.inputSchema;
 
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(createObjectFn
@@ -339,7 +345,7 @@ const createSchemaActions = ({
               }
             }),
             properties: {
-              label: getDynamicLabel('add object label', typename),
+              label: getDynamicLabel('add-object.label', typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -388,7 +394,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: getDynamicLabel('delete object label', Type.getTypename(Type.Type)),
+        label: getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

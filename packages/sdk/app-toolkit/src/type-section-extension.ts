@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { Annotation, Filter, Obj, Query, QueryResult, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { whenSpace } from './app-node-matcher';
@@ -60,6 +60,7 @@ export const createTypeSectionExtension = (
   // the runtime accepts any schema with a typename annotation.
   const filter = Filter.type(type as any) as Filter.Any;
   const defaultQuery = Query.select(filter);
+  const testId = `${typename}.section`;
 
   const label = getDynamicLabel('typename.label', typename, { count: 2 });
 
@@ -67,7 +68,7 @@ export const createTypeSectionExtension = (
     id: typename,
     match: whenSpace,
     connector: (space, get) => {
-      const objects = get(QueryResult.atom(space.db, options?.query ?? defaultQuery)) as Obj.Unknown[];
+      const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
       if (objects.length === 0) {
         return Effect.succeed([]);
       }
@@ -77,7 +78,7 @@ export const createTypeSectionExtension = (
       const typeEntity = space.db.graph.registry
         .list()
         .filter(Type.isType)
-        .find((t) => Type.getTypename(t) === typename);
+        .find((entry) => Type.getTypename(entry) === typename);
       const registeredSchema = typeEntity ? Type.getSchema(typeEntity) : undefined;
       const annotation = (() => {
         try {
@@ -100,6 +101,7 @@ export const createTypeSectionExtension = (
             ...(iconHue ? { iconHue } : {}),
             role: 'branch',
             space,
+            testId,
             ...(options?.position ? { position: options.position } : {}),
           },
           nodes: objects

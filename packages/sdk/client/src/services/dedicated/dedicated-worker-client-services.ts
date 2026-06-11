@@ -334,6 +334,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
 
       if (this.#isInitialConnection) {
         log('dedicated-worker-client-services: initial connection complete');
+        performance.mark('dedicated-worker:session-ready');
         this.#isInitialConnection = false;
         this.#initialConnection.wake();
       } else {
@@ -432,6 +433,7 @@ class LeaderSession extends Resource {
   protected override async _open(_ctx: Context): Promise<void> {
     log('creating worker');
     this.#worker = this.#createWorker();
+    performance.mark('dedicated-worker:spawned');
     const listening = new Trigger();
     const ready = new Trigger<DedicatedWorkerReadyMessage>();
     this.#worker!.onmessage = (event: MessageEvent<DedicatedWorkerMessage>) => {

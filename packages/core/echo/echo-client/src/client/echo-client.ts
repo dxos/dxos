@@ -12,7 +12,7 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { HypergraphImpl } from '../hypergraph';
-import { EchoDatabaseImpl } from '../proxy-db';
+import { DatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
 import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
 
@@ -58,7 +58,7 @@ export class EchoClient extends Resource {
   private readonly _graph = new HypergraphImpl();
 
   // TODO(burdon): This already exists in Hypergraph.
-  private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
+  private readonly _databases = new Map<SpaceId, DatabaseImpl>();
   private readonly _queues = new Map<SpaceId, QueueFactory>();
 
   private _dataService: DataService | undefined = undefined;
@@ -75,7 +75,7 @@ export class EchoClient extends Resource {
     return this._graph;
   }
 
-  get openDatabases(): Iterable<EchoDatabaseImpl> {
+  get openDatabases(): Iterable<DatabaseImpl> {
     return this._databases.values();
   }
 
@@ -134,10 +134,10 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
-  }: ConstructDatabaseProps): EchoDatabaseImpl {
+  }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
-    const db = new EchoDatabaseImpl({
+    const db = new DatabaseImpl({
       dataService: this._dataService!,
       queryService: this._queryService!,
       graph: this._graph,

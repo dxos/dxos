@@ -4896,6 +4896,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -9328,6 +9331,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/compute/functions

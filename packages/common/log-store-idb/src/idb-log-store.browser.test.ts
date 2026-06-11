@@ -34,6 +34,50 @@ const drop = (dbName: string): Promise<void> =>
     req.onblocked = () => resolve();
   });
 
+/** Count raw records in the store (chunks, not lines). */
+const countRecords = (dbName: string): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const openReq = indexedDB.open(dbName);
+    openReq.onsuccess = () => {
+      const db = openReq.result;
+      const countReq = db.transaction('logs', 'readonly').objectStore('logs').count();
+      countReq.onsuccess = () => {
+        db.close();
+        resolve(countReq.result);
+      };
+      countReq.onerror = () => {
+        db.close();
+        reject(countReq.error);
+      };
+    };
+    openReq.onerror = () => reject(openReq.error);
+  });
+
+/** Create a database with the v1 schema (one row per line, autoincrement keyPath). */
+const createV1Database = (dbName: string, lines: string[]): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const openReq = indexedDB.open(dbName, 1);
+    openReq.onupgradeneeded = () => {
+      openReq.result.createObjectStore('logs', { keyPath: 'seq', autoIncrement: true });
+    };
+    openReq.onsuccess = () => {
+      const db = openReq.result;
+      const tx = db.transaction('logs', 'readwrite');
+      for (const line of lines) {
+        tx.objectStore('logs').add({ line });
+      }
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => {
+        db.close();
+        reject(tx.error);
+      };
+    };
+    openReq.onerror = () => reject(openReq.error);
+  });
+
 describe('IdbLogStore', () => {
   let store: IdbLogStore | undefined;
   let dbName = '';
@@ -151,6 +195,22 @@ describe('IdbLogStore', () => {
     expect(jsonl).toContain('persisted');
   });
 
+  test('each flush writes a single chunk record', async ({ expect }) => {
+    store = new IdbLogStore({ dbName, flushInterval: 60_000 });
+    for (let i = 0; i < 5; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `first-${i}`));
+    }
+    await store.flush();
+    for (let i = 0; i < 3; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `second-${i}`));
+    }
+    await store.flush();
+
+    expect(await countRecords(dbName)).toBe(2);
+    const jsonl = await store.export();
+    expect(jsonl.split('\n')).toHaveLength(8);
+  });
+
   test('eviction trims down to maxRecords', async ({ expect }) => {
     store = new IdbLogStore({
       dbName,
@@ -158,16 +218,57 @@ describe('IdbLogStore', () => {
       maxRecords: 5,
       evictionInterval: 0, // disable timer; trigger manually
     });
+    // Flush per entry so eviction (whole chunks) can trim at line granularity.
     for (let i = 0; i < 12; i++) {
       store.processor(fakeConfig, makeEntry(LogLevel.INFO, `msg-${i}`));
+      await store.flush();
     }
-    await store.flush();
     await store.evictNow();
     const jsonl = await store.export();
     const lines = jsonl.split('\n').filter((line) => line.length > 0);
     expect(lines.length).toBe(5);
     // The newest line must always survive eviction.
     expect(JSON.parse(lines[lines.length - 1]).m).toBe('msg-11');
+  });
+
+  test('eviction drops whole chunks and always keeps the newest chunk', async ({ expect }) => {
+    store = new IdbLogStore({
+      dbName,
+      flushInterval: 10,
+      maxRecords: 5,
+      evictionInterval: 0,
+    });
+    // Older chunk of 3 lines, then a newest chunk of 12 lines (exceeds the budget alone).
+    for (let i = 0; i < 3; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `old-${i}`));
+    }
+    await store.flush();
+    for (let i = 0; i < 12; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `new-${i}`));
+    }
+    await store.flush();
+
+    await store.evictNow();
+    const messages = (await store.export())
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line).m);
+    // The newest chunk is never split or dropped; the older chunk is evicted.
+    expect(messages).toHaveLength(12);
+    expect(messages[0]).toBe('new-0');
+    expect(messages[11]).toBe('new-11');
+  });
+
+  test('upgrades a v1 database, discarding old single-line rows', async ({ expect }) => {
+    await createV1Database(dbName, ['{"m":"legacy"}']);
+
+    store = new IdbLogStore({ dbName, flushInterval: 10 });
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'fresh'));
+    await store.flush();
+
+    const jsonl = await store.export();
+    expect(jsonl).not.toContain('legacy');
+    expect(jsonl).toContain('fresh');
   });
 
   test('multiple stores against the same db preserve all writes', async ({ expect }) => {

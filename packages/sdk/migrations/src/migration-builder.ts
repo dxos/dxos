@@ -46,11 +46,10 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.internal.db.coreDatabase._repo;
-    // TODO(wittjosiah): Accessing private API.
-    this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
-      .getSpaceRootDocHandle()
-      .doc() as Doc<DatabaseDirectory>;
+    this._repo = this._space.internal.db._repo;
+    const rootDoc = this._space.internal.db._getSpaceRootDocHandle().doc();
+    invariant(rootDoc, 'Space root document must be available when creating MigrationBuilder');
+    this._rootDoc = rootDoc;
   }
 
   async findObject(id: string): Promise<EntityStructure | undefined> {

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Obj } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { random } from '@dxos/random';
 import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';

@@ -17,8 +17,9 @@ import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import type { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { type SpaceId } from '@dxos/keys';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 
 import { SpaceCapabilities } from '#types';
 
@@ -51,7 +52,7 @@ export const add: Command.Command<
         return entry ?? undefined;
       };
 
-      const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
+      const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
       const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
       const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
 
@@ -90,7 +91,8 @@ const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
   const { db } = yield* Database.Service;
-  const allTypes = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
+    .run;
   const types = allTypes
     .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)

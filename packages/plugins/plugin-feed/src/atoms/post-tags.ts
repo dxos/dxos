@@ -4,7 +4,7 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { type Database, Filter, Obj, QueryResult, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { TagIndex } from '@dxos/schema';
 
 import { Subscription } from '../types';
@@ -26,7 +26,7 @@ const uriForTag = (tags: readonly Tag.Tag[], key: { source: string; id: string }
  * Tag set changes (rare — on first star/archive). Shared by every per-Post tag slice.
  */
 const tagUrisAtom = Atom.family((db: Database.Database) =>
-  QueryResult.atom(db, Filter.type(Tag.Tag)).pipe(
+  db.query(Filter.type(Tag.Tag)).atom.pipe(
     Atom.map((tags) => ({
       starredUri: uriForTag(tags, Subscription.SYSTEM_TAGS.starred.key),
       archivedUri: uriForTag(tags, Subscription.SYSTEM_TAGS.archived.key),

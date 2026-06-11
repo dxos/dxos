@@ -56,9 +56,9 @@ describe('Feed', () => {
 
       yield* Database.flush();
 
-      const notificationFeeds = yield* Database.runQuery(
+      const notificationFeeds = yield* Database.query(
         Filter.type(Feed.Feed, { kind: 'org.dxos.plugin.notifications.v1' }),
-      );
+      ).run;
       expect(notificationFeeds).toHaveLength(2);
       expect(notificationFeeds.map((feed) => feed.name).sort()).toEqual(['notifications', 'other-notifications']);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
@@ -254,7 +254,7 @@ describe('Feed', () => {
       expect(EID.getEntityId(EID.parse(ref.uri))).toBe((queuePost as any).id);
 
       // The queue item must NOT have been added to space.db.
-      const dbResults = yield* Database.runQuery(Filter.type(TestSchema.Person));
+      const dbResults = yield* Database.query(Filter.type(TestSchema.Person)).run;
       expect(dbResults).toHaveLength(0);
 
       // The ref must still resolve to the queue item.

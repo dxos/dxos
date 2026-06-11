@@ -7,7 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormatAnnotation, FormInputAnnotation, LabelAnnotation, TypeFormat } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { FormatAnnotation, TypeFormat } from '@dxos/echo/Format';
 import { Text } from '@dxos/schema';
 
 /**

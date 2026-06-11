@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';
-import { Obj, Query, QueryResult } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { getSpace, isSpace } from '@dxos/react-client/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';
@@ -45,7 +45,7 @@ export const usePipelineBoardModel = (
         if (!queryTarget) {
           return [];
         }
-        const raw = get(QueryResult.atom(queryTarget, query));
+        const raw = get(queryTarget.query(query).atom);
         return isSpace(queryTarget) ? raw : [...raw].reverse();
       }),
     );
