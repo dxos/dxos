@@ -29,7 +29,16 @@ export const WebToolkit = Toolkit.make(
 
 export const layer = WebToolkit.toLayer({
   WebFetch: Effect.fnUntraced(function* ({ url }) {
-    const response = yield* Effect.promise(() => proxyFetchLegacy(new URL(url)).then((response) => response.text()));
-    return response;
+    return yield* Effect.tryPromise({
+      try: async (): Promise<string> => {
+        const response = await proxyFetchLegacy(new URL(url));
+        if (!response.ok) {
+          const body = await response.text();
+          return `Fetch failed with status ${response.status}: ${body.slice(0, 256)}`;
+        }
+        return await response.text();
+      },
+      catch: (cause) => new Error(String(cause)),
+    }).pipe(Effect.catchAll((err) => Effect.succeed(err.message)));
   }),
 });
