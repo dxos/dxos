@@ -1,7 +1,6 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import {
