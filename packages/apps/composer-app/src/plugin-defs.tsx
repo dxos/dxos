@@ -14,6 +14,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
+import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -29,7 +30,6 @@ import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
-import { ExtensionPlugin } from '@dxos/plugin-extension/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
@@ -137,6 +137,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
+      BookmarksPlugin.meta.id,
       CallsPlugin.meta.id,
       CodePlugin.meta.id,
       DuffelPlugin.meta.id,
@@ -181,6 +182,7 @@ export const getPlugins = ({
     AttentionPlugin(),
     AutomationPlugin(),
     BoardPlugin(),
+    BookmarksPlugin(),
     CallsPlugin(),
     ChessPlugin(),
     CommentsPlugin(),
@@ -207,7 +209,6 @@ export const getPlugins = ({
     DoctorPlugin(),
     DuffelPlugin(),
     ExplorerPlugin(),
-    !isTauri && ExtensionPlugin(),
     FeedPlugin(),
     GamePlugin(),
     GeneratorPlugin(),

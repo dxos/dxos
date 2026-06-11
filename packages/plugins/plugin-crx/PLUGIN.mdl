@@ -7,7 +7,9 @@ version: 0.2.0
 Coordinates with the `@dxos/composer-crx` browser extension. Owns both the
 user-facing settings surface and the receiver bridge that materializes
 incoming clippings as `Person`, `Organization`, or `Note` objects in the
-active space.
+active space. Also owns the render-proxy settings (absorbed from the retired
+plugin-extension) that govern how other plugins may use the extension to
+fetch and JS-render pages in a real browser tab.
 
 The extension discovers this tab via `chrome.tabs.query` over a configured list
 of URLs and delivers the payload as a same-origin `window` `CustomEvent`. The
@@ -38,6 +40,11 @@ type Settings
                                  # bridge ignores incoming clips.
     autoOpenAfterClip?: boolean  # default: false. Navigate to the created
                                  # object after a successful clip.
+    renderProxyEnabled?: boolean  # default: true. Master switch: when false,
+                                  # plugins use the edge HTTP proxy instead.
+    renderTimeout?: number        # default: 20000. Max ms to wait for a render.
+    renderActiveTab?: boolean     # default: false. Render in a focused tab.
+    developerMode?: boolean       # default: false. Verbose logging / previews.
 ```
 
 ```mdl
@@ -105,6 +112,22 @@ type ClipAck
     error?: string              # stable error code when ok = false
 ```
 
+```mdl
+type PageActionDescriptor
+  desc: |
+    Serializable descriptor for a plugin-contributed page action, synced to
+    the extension's registry cache. Invocation is correlated by `id`.
+  fields:
+    id: string                  # stable plugin-scoped action id
+    label: string               # human-readable action name
+    icon: string                # phosphor icon identifier
+    urlPatterns: string[]       # match patterns the action applies to
+    predicate?: { exists: string }  # lazy DOM condition (CSS selector)
+    extractor: { name: string, params?: unknown }  # extension-bundled extractor
+    contexts: string[]          # surfaces: popup | page | selection | link
+    operation: string           # operation key, display/diagnostics only
+```
+
 ## Features
 
 ```mdl
@@ -130,6 +153,18 @@ feat F-2: Settings Surface
     then: |
       a form is shown with switches for `enabled` and `autoOpenAfterClip`,
       wired to the Settings atom and persisted on change.
+```
+
+```mdl
+feat F-2b: Render-Proxy Settings
+  desc: |
+    Settings governing the extension's search render-proxy (page rendering for
+    plugins that scrape client-rendered sites), absorbed from the retired
+    plugin-extension. Includes a connection-test button that pings the
+    extension over the page → content-script → background path.
+  req:
+    - The settings surface renders all merged fields plus a Test connection button.
+    - The ping round-trip reports the extension's name and version on success.
 ```
 
 ```mdl
@@ -222,6 +257,19 @@ feat F-7: User Feedback
   req F-7.2:
     when: creation fails
     then: an error toast is shown with the stable error code
+```
+
+```mdl
+feat F-8: Page Actions Registry & Invocation
+  desc: |
+    Plugins contribute page actions (serializable descriptor + target
+    operation) under a plugin-scoped capability. This plugin answers the
+    extension's registry-list requests (`composer:page-actions:list`) with
+    descriptors and executes invoke requests (`composer:page-action:invoke`)
+    by resolving the active space and invoking the target operation with
+    `{ snapshot, target }`. Every request is acked with stable error codes
+    (invalidPayload, unsupportedVersion, unknownAction, noSpace,
+    operationFailed); outcomes surface as toasts.
 ```
 
 ## Acceptance
