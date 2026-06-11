@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { byokHeaderLayer } from './byok';
 export * from './errors';
 
 export * as Blueprint from './Blueprint';
