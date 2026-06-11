@@ -32,7 +32,7 @@ const Handlers = OperationHandlerSet.make(
   Operation.withHandler(
     OrganizationList,
     Effect.fnUntraced(function* () {
-      const organizations = yield* Database.runQuery(Query.type(Organization.Organization));
+      const organizations = yield* Database.query(Query.type(Organization.Organization)).run;
       return organizations.map((organization) => organization.name ?? '<no org>');
     }),
   ),

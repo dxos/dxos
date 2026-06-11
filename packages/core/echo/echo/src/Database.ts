@@ -331,20 +331,6 @@ export const query: {
     makeQueryResultEffect,
   );
 
-/**
- * Executes the query once and returns the results.
- * @deprecated Use `yield* query(...).run` instead.
- */
-export const runQuery: {
-  <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
-  <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
-} = (queryOrFilter: Query.Any | Filter.Any) =>
-  query(queryOrFilter as any).pipe(
-    Effect.flatMap((queryResult) => EffectEx.promiseWithCauseCapture(() => queryResult.run())),
-    Effect.withSpan('Database.runQuery'),
-  );
-
-
 const makeQueryResultEffect = <T>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
 ): QueryResult.QueryResultEffect<T, never, Service> => {

@@ -28,7 +28,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   } else if (hidden) {
     yield* Database.add(object);
   } else {
-    const objects = yield* Database.runQuery(Query.type(SpaceProperties));
+    const objects = yield* Database.query(Query.type(SpaceProperties)).run;
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Obj.Any = objects[0];
 

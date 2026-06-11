@@ -44,7 +44,7 @@ export const add = Command.make(
         return entry ?? undefined;
       };
 
-      const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
+      const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
       const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
       const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
 
@@ -83,7 +83,7 @@ const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
   const { db } = yield* Database.Service;
-  const allTypes = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
   const types = allTypes
     .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)

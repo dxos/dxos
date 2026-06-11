@@ -52,9 +52,9 @@ export const importCommand = Command.make(
       }
 
       // Query database for existing functions with the same key
-      const existingFunctions = yield* Database.runQuery(
+      const existingFunctions = yield* Database.query(
         Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(selectedKey)),
-      );
+      ).run;
 
       let updatedFunctions: Operation.PersistentOperation[];
       if (existingFunctions.length > 0) {
@@ -71,7 +71,7 @@ export const importCommand = Command.make(
 
       // Get status for display (after update/add, function should be up-to-date)
       // Re-query to get the updated state
-      const updatedDbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+      const updatedDbFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const status = getFunctionStatus(fn, updatedDbFunctions);
 
       if (json) {

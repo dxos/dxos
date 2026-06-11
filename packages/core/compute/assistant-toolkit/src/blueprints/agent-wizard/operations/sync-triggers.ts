@@ -46,9 +46,9 @@ const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
  */
 const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
-    const triggers = yield* Database.runQuery(
+    const triggers = yield* Database.query(
       Filter.foreignKeys(Trigger.Trigger, [{ source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id }]),
-    );
+    ).run;
 
     // Remove all existing triggers — they will be recreated with the current config.
     // This ensures operation, concurrency, and enabled stay in sync when agent fields change.

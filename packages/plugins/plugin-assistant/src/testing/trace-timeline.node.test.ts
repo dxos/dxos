@@ -34,7 +34,7 @@ const queryTraceMessages = Effect.gen(function* () {
   yield* FeedTraceSink.flush();
   yield* Database.flush();
   const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
-  return yield* Database.runQuery(Query.select(Filter.type(Trace.Message)).from(feed));
+  return yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
 });
 
 const TestLayer = AssistantTestLayerWithTriggers({

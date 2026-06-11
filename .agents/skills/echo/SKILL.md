@@ -64,7 +64,7 @@ import * as Database from '@dxos/echo/Database';
 import { Effect } from 'effect';
 
 const program = Effect.gen(function* () {
-  const objects = yield* Database.runQuery(SomeFilter);
+  const objects = yield* Database.query(SomeFilter).run;
   return objects;
 });
 

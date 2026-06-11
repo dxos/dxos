@@ -126,9 +126,9 @@ export const findChannelForConversation: (
   conversationId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForConversation')(
   function* (conversationId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Channel.Channel, [{ source: SLACK_SOURCE, id: conversationId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );

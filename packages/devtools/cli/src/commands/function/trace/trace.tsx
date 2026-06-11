@@ -47,7 +47,7 @@ export const trace = Command.make(
       log.info('trace: command starting', { spaceId, functionId, localTriggers });
 
       // Query for SpaceProperties to get the invocation trace feed.
-      const objects = yield* Database.runQuery(Filter.type(SpaceProperties));
+      const objects = yield* Database.query(Filter.type(SpaceProperties)).run;
       const properties = objects.at(0);
       invariant(properties, 'SpaceProperties not found');
       const traceFeed = properties.invocationTraceFeed?.target;
