@@ -270,6 +270,7 @@ export default CrmOperation.AttachImage.pipe(
         );
       }
 
+      // [DX-1002] TODO: (dmaretskyi): image-service-main.dxos.workers.dev raw image content, not a JSON with a URL.
       const { url: uploadedUrl } = (yield* Effect.promise(() => uploadRes.json())) as { url?: string };
       if (!uploadedUrl || uploadedUrl.length === 0 || !isAbsoluteHttpUrl(uploadedUrl)) {
         return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
