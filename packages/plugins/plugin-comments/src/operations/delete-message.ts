@@ -10,9 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
-import { ThreadOperation } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.DeleteMessage> = ThreadOperation.DeleteMessage.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = CommentOperation.DeleteMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, messageId }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.DeleteMessage> = Thr
 
       if (msgIndex === 0 && thread.messages.length === 1) {
         // TODO(wittjosiah): This doesn't support restoring the thread.
-        yield* Operation.invoke(ThreadOperation.Delete, { subject, anchor });
+        yield* Operation.invoke(CommentOperation.Delete, { subject, anchor });
         return { messageIndex: -1 };
       }
 

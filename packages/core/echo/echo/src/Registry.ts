@@ -143,7 +143,7 @@ export class Service extends Context.Tag('@dxos/echo/Registry/Service')<Service,
 
 /**
  * Executes a query against the registry and returns the results.
- * Analogous to {@link Database.runQuery} for the in-process registry.
+ * Analogous to {@link Database.query} `.run` for the in-process registry.
  */
 export const runQuery: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;

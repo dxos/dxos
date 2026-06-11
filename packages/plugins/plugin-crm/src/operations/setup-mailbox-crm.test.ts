@@ -37,7 +37,7 @@ describe('SetupMailboxCrm operation', () => {
       yield* setupMailboxCrmHandler.handler({ mailboxUri });
 
       // Assert: exactly one Routine exists, named after the mailbox.
-      const routines = yield* Database.runQuery(Filter.type(Routine.Routine));
+      const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
       expect(routines).toHaveLength(1);
 
       const routine = routines[0];
@@ -46,7 +46,7 @@ describe('SetupMailboxCrm operation', () => {
       expect(routine?.blueprints).toHaveLength(BLUEPRINT_COUNT);
 
       // Assert: exactly one disabled feed Trigger exists.
-      const triggers = yield* Database.runQuery(Query.select(Filter.type(Trigger.Trigger)));
+      const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
       expect(triggers).toHaveLength(1);
 
       const trigger = triggers[0];
@@ -72,7 +72,7 @@ describe('SetupMailboxCrm operation', () => {
 
       yield* setupMailboxCrmHandler.handler({ mailboxUri: Obj.getURI(mailbox) });
 
-      const triggers = yield* Database.runQuery(Query.select(Filter.type(Trigger.Trigger)));
+      const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
       const mailboxFeedUri = mailbox.feed.uri;
 
       // Apply the same identity predicate used by useCrmRoutine.

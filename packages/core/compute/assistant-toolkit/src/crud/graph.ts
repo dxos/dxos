@@ -101,7 +101,7 @@ export const LocalSearchToolkit = Toolkit.make(
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {
-    const objects = yield* Database.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const objects = yield* Database.query(Query.select(Filter.text(query, { type: 'vector' }))).run;
     const results = [...objects];
 
     const feedOption = yield* Effect.serviceOption(Feed.ContextFeedService);

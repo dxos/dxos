@@ -9,11 +9,11 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Blueprint } from '@dxos/compute';
 
-import { ThreadBlueprint } from '#blueprints';
+import { CommentBlueprint } from '#blueprints';
 
 const blueprintDefinition = Capability.makeModule<
   [],
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, ThreadBlueprint)]));
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, CommentBlueprint)]));
 
 export default blueprintDefinition;

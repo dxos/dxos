@@ -6,7 +6,7 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Text } from '@dxos/schema';
 
-import { OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
+import { CommentConfig, OperationHandler, PageActionProvider, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Bookmark } from '#types';
@@ -15,6 +15,7 @@ import { Bookmark } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BookmarksPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addSchemaModule({ schema: [Bookmark.Bookmark, Text.Text] }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({

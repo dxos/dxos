@@ -14,7 +14,7 @@ import { type Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type ThreadState, type ViewStore } from '../types';
+import { type CommentState, type ViewStore } from '../types';
 
 export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
 
@@ -22,8 +22,8 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
 export type CommentConfig = AppCapabilities.CommentConfig;
 export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
 
-/** Thread state (drafts, toolbar state, current selection). */
-export const State = Capability.make<Atom.Writable<ThreadState>>(`${meta.id}.capability.state`);
+/** Comment state (drafts, toolbar state, current selection). */
+export const State = Capability.make<Atom.Writable<CommentState>>(`${meta.id}.capability.state`);
 
 /** Per-subject view state (e.g., showResolvedThreads). */
 export const ViewState = Capability.make<Atom.Writable<ViewStore>>(`${meta.id}.capability.view-state`);
