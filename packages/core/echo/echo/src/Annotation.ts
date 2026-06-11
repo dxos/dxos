@@ -20,7 +20,6 @@ export {
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,
-  getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   setDescriptionWithSchema,
