@@ -270,8 +270,18 @@ export default CrmOperation.AttachImage.pipe(
         );
       }
 
-      // [DX-1002] TODO: (dmaretskyi): image-service-main.dxos.workers.dev raw image content, not a JSON with a URL.
-      const { url: uploadedUrl } = (yield* Effect.promise(() => uploadRes.json())) as { url?: string };
+      // Derive the canonical hosted URL from the upload response.
+      // JSON-speaking services return { url: "https://..." }; services that return raw image
+      // bytes (like the current default worker) expose the hosted URL as the final response URL
+      // after any redirects (response.url). DX-1002 tracks aligning on a single contract.
+      const responseContentType = uploadRes.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+      let uploadedUrl: string | undefined;
+      if (responseContentType === 'application/json') {
+        const json = (yield* Effect.promise(() => uploadRes.json())) as { url?: string };
+        uploadedUrl = json.url;
+      } else {
+        uploadedUrl = uploadRes.url;
+      }
       if (!uploadedUrl || uploadedUrl.length === 0 || !isAbsoluteHttpUrl(uploadedUrl)) {
         return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
       }
