@@ -263,13 +263,13 @@ export const resolve: {
 
 /**
  * Loads an object reference.
- * 
+ *
  * Catching not found error:
- * 
+ *
  * ```ts
  * yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
  * ```
- * 
+ *
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {

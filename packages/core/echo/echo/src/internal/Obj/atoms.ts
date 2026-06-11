@@ -16,8 +16,8 @@ import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
 import { subscribe } from '../common/proxy/reactive';
 import { isEntity, getDatabase } from '../Entity';
-import { loadRefTarget } from '../Ref/utils';
 import { RefTypeId } from '../Ref/ref';
+import { loadRefTarget } from '../Ref/utils';
 import { getSnapshot } from './snapshot';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>

@@ -4,8 +4,8 @@
 
 import * as Atom from '@effect-atom/atom/Atom';
 
-import { loadRefTarget } from './utils';
 import type { Ref } from './ref';
+import { loadRefTarget } from './utils';
 
 /**
  * Atom family for ECHO refs.

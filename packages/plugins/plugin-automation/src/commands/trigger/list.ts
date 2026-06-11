@@ -24,9 +24,8 @@ export const list = Command.make(
     const { json } = yield* CommandConfig;
 
     // Fetch local triggers
-    const triggers = yield* Database.query(
-      Query.select(Filter.type(Trigger.Trigger)).debugLabel('cli.trigger.list'),
-    ).run;
+    const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger)).debugLabel('cli.trigger.list'))
+      .run;
 
     // Fetch remote cron triggers to check availability
     const remoteCronIds = yield* Effect.gen(function* () {
