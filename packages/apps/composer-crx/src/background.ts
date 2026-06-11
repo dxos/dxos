@@ -8,7 +8,7 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
-import { deliverClip, openComposerTab } from './bridge';
+import { deliverClip, focusOrOpenComposerTab } from './bridge';
 import type { Clip } from './clip';
 import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
@@ -86,7 +86,7 @@ const main = async () => {
   });
 
   onMessage('open-composer', async () => {
-    await openComposerTab();
+    await focusOrOpenComposerTab();
   });
 
   // Render-proxy: lets Composer pages request a JS-rendered URL via a

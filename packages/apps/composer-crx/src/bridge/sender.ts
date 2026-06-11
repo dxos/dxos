@@ -139,6 +139,22 @@ const matchPatternToUrl = (pattern: string): string | undefined => {
 };
 
 /**
+ * Focus an existing Composer tab, or open a new one if none is open.
+ */
+export const focusOrOpenComposerTab = async (): Promise<void> => {
+  const tab = await findComposerTab();
+  if (tab?.id !== undefined) {
+    await browser.tabs.update(tab.id, { active: true });
+    if (tab.windowId !== undefined) {
+      await browser.windows.update(tab.windowId, { focused: true });
+    }
+    lastUsedTabId = tab.id;
+    return;
+  }
+  await openComposerTab();
+};
+
+/**
  * Open a new Composer tab using the first configured URL that parses into a
  * valid `http(s)` URL. Used by the popup when no Composer tab is open.
  */
