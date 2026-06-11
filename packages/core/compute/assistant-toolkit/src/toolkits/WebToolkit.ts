@@ -8,7 +8,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { proxyFetchLegacy } from '@dxos/edge-client';
+import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 
 // TODO(dmaretskyi): Testing only.
 export const WebToolkit = Toolkit.make(

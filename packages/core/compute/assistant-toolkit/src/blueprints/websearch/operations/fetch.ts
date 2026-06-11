@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { proxyFetchLegacy } from '@dxos/edge-client';
+import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 
 import { Fetch } from './definitions';
 

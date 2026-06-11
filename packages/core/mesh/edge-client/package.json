@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./cors-proxy": {
+      "source": "./src/cors-proxy.ts",
+      "types": "./dist/types/src/cors-proxy.d.ts",
+      "default": "./dist/lib/neutral/cors-proxy.mjs"
+    },
     "./muxer": {
       "source": "./src/edge-ws-muxer.ts",
       "types": "./dist/types/src/edge-ws-muxer.d.ts",

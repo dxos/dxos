@@ -7,6 +7,7 @@ tags:
 tasks:
   compile:
     args:
+      - '--entryPoint=src/cors-proxy.ts'
       - '--entryPoint=src/edge-ws-muxer.ts'
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
