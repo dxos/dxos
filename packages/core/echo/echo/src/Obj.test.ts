@@ -14,6 +14,26 @@ import * as Relation from './Relation';
 import { TestSchema } from './testing';
 
 describe('Obj', () => {
+  describe('make', () => {
+    test('generates a random id when none is provided', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      expect(obj.id).toBeDefined();
+      expect(obj.id.length).toBeGreaterThan(0);
+    });
+
+    test('uses the provided id at creation time', ({ expect }) => {
+      const a = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const b = Obj.make(TestSchema.Person, { name: 'Bob', id: a.id });
+      expect(b.id).toBe(a.id);
+    });
+
+    test('rejects an invalid id format', ({ expect }) => {
+      expect(() => Obj.make(TestSchema.Person, { name: 'Alice', id: 'not-a-ulid' })).toThrow(
+        /Invalid object id format/,
+      );
+    });
+  });
+
   describe('getSnapshot', () => {
     test('getSnapshot returns an immutable snapshot with SnapshotKindId', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });

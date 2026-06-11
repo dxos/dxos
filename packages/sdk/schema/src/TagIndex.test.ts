@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { createFeedServiceLayer, getObjectCore } from '@dxos/echo-client';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { createFeedServiceLayer } from '@dxos/echo-client';
+import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 
