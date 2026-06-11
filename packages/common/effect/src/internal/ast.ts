@@ -448,9 +448,7 @@ export const getDiscriminatedType = (
  * If a property signature is optional (T | undefined), returns the inner non-undefined AST node.
  * Otherwise returns the property signature unchanged, preserving its annotations.
  */
-export const unwrapOptional = (
-  property: SchemaAST.PropertySignature,
-): SchemaAST.PropertySignature | SchemaAST.AST => {
+export const unwrapOptional = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature | SchemaAST.AST => {
   if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
     return property;
   }

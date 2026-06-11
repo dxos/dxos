@@ -10,8 +10,8 @@ import { DXN, Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 import * as Person from './Person';
 import * as Project from './Project';

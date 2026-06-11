@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
-import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 

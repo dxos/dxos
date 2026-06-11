@@ -8,11 +8,11 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
+import { Format } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
-import { Format } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
+import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
 import { Ref } from '@dxos/echo/Ref';
 import { SchemaEx } from '@dxos/effect';
