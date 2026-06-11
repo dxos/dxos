@@ -147,7 +147,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         'create-event',
         { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--calendar-plus--regular' },
         handleCreate,
-      );
+      )
+      .separator();
     if (draftEvents.length > 0) {
       builder = builder.action(
         'sync-draft',
@@ -185,7 +186,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         <Panel.Root>
           <Menu.Root {...menuActions} attendableId={id}>
             <Panel.Toolbar asChild>
-              {/* Connect (no integration) or pull-sync (integration present) action for this calendar. */}
               <Menu.Toolbar>
                 <InitializeCalendarAction calendar={subject} />
               </Menu.Toolbar>

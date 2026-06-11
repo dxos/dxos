@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './errors';
 export { byokHeaderLayer } from './byok';
+export * from './errors';
 
 export * as Blueprint from './Blueprint';
 export * as Credential from './Credential';

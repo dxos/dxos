@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { useAtomSet } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -23,7 +23,7 @@ import { Message } from '@dxos/types';
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox, type Settings } from '#types';
+import { InboxCapabilities, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -56,12 +56,50 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({
-    db,
-    mailbox: subject,
-    sortDescending: sortDescending.atom,
-    settings: settingsAtom,
-  });
+  const setSettings = useAtomSet(settingsAtom);
+  const loadRemoteImages = settings.loadRemoteImages ?? false;
+
+  const handleCompose = useCallback(() => {
+    if (db) {
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox: subject });
+    }
+  }, [db, invokePromise, subject]);
+
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: ['mailbox-toolbar.title', { ns: meta.id }] })
+        .action(
+          'sortAscending',
+          {
+            type: 'sortDescending',
+            icon: sortDescending.value ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
+            label: ['mailbox-toolbar-sort.menu', { ns: meta.id }],
+          },
+          () => sortDescending.set((value) => !value),
+        )
+        .action(
+          'loadImages',
+          {
+            type: 'loadImages',
+            icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
+            label: ['message-toolbar-load-images.menu', { ns: meta.id }],
+            checked: loadRemoteImages,
+          },
+          () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
+        )
+        .action(
+          'composeEmail',
+          {
+            type: 'composeEmail',
+            icon: 'ph--paper-plane-right--regular',
+            label: ['compose-email.label', { ns: meta.id }],
+          },
+          handleCompose,
+        )
+        .build(),
+    [sortDescending, loadRemoteImages, setSettings, handleCompose],
+  );
 
   const tagMap = useTags(db);
 
@@ -269,57 +307,5 @@ const useTags = (db: Database.Database | undefined): Tag.Map => {
         return acc;
       }, {}),
     [tags],
-  );
-};
-
-type UseMailboxActionsProps = {
-  db?: Database.Database;
-  mailbox?: Mailbox.Mailbox;
-  sortDescending: Atom.Writable<boolean>;
-  settings: Atom.Writable<Settings.Settings>;
-};
-
-const useMailboxActions = ({ db, mailbox, sortDescending, settings }: UseMailboxActionsProps) => {
-  const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
-
-  return useMenuBuilder(
-    (context) => {
-      const loadRemoteImages = context.get(settings).loadRemoteImages ?? false;
-      return MenuBuilder.make()
-        .root({
-          label: t('mailbox-toolbar.title'),
-        })
-        .action(
-          'sortAscending',
-          {
-            type: 'sortDescending',
-            icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-            label: t('mailbox-toolbar-sort.menu'),
-          },
-          () => context.set(sortDescending, !context.get(sortDescending)),
-        )
-        .action(
-          'loadImages',
-          {
-            type: 'loadImages',
-            icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
-            label: t('message-toolbar-load-images.menu'),
-            checked: loadRemoteImages,
-          },
-          () => context.set(settings, { ...context.get(settings), loadRemoteImages: !loadRemoteImages }),
-        )
-        .action(
-          'composeEmail',
-          {
-            type: 'composeEmail',
-            icon: 'ph--paper-plane-right--regular',
-            label: t('compose-email.label'),
-          },
-          () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
-        )
-        .build();
-    },
-    [t, sortDescending, settings, invokePromise, db, mailbox],
   );
 };
