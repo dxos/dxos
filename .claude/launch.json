@@ -25,6 +25,15 @@
       "autoPort": true
     },
     {
+      "name": "composer-dev-hmr",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5273 --strictPort --debug hmr"
+      ],
+      "port": 5273
+    },
+    {
       "name": "testbench-app",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "testbench-app:serve"],
