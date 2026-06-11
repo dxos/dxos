@@ -5,7 +5,7 @@
 import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { type SerializedSpace } from '@dxos/echo-db';
+import { type SerializedSpace } from '@dxos/echo-client';
 import { EntityId, SpaceId, URI } from '@dxos/keys';
 import {
   FEED_ARCHIVE_BLOCKS_PER_CHUNK,

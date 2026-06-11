@@ -9,7 +9,7 @@ import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { createObject } from '@dxos/echo-db';
+import { createObject } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { useObject } from './useObject';

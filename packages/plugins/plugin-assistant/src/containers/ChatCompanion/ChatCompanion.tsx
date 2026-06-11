@@ -16,7 +16,6 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery, useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type ChatEvent } from '#components';
 import { useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
 
@@ -30,33 +29,30 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     const space = getSpace(companionTo);
     useBlueprints({ subject: chat, companionTo });
 
-    // Persist chat on first submit.
-    const handleEvent = useCallback(
-      async (event: ChatEvent) => {
-        if (!space || !chat) {
-          return;
-        }
+    // Persist (and flush) a transient chat before the first request so the agent can resolve
+    // the now-durable conversation feed; subsequent submits are a no-op once persisted.
+    const handleSubmit = useCallback(async () => {
+      if (!space || !chat || Obj.getDatabase(chat)) {
+        return;
+      }
 
-        if (event.type === 'submit' && !Obj.getDatabase(chat)) {
-          await invokePromise(SpaceOperation.AddObject, {
-            object: chat,
-            target: space.db,
-            hidden: true,
-          });
-          await invokePromise(SpaceOperation.AddRelation, {
-            db: space.db,
-            schema: Chat.CompanionTo,
-            source: chat,
-            target: companionTo,
-          });
-          await invokePromise(AssistantOperation.SetCurrentChat, {
-            companionTo,
-            chat,
-          });
-        }
-      },
-      [space, chat, companionTo, invokePromise],
-    );
+      await invokePromise(SpaceOperation.AddObject, {
+        object: chat,
+        target: space.db,
+        hidden: true,
+      });
+      await invokePromise(SpaceOperation.AddRelation, {
+        db: space.db,
+        schema: Chat.CompanionTo,
+        source: chat,
+        target: companionTo,
+      });
+      await invokePromise(AssistantOperation.SetCurrentChat, {
+        companionTo,
+        chat,
+      });
+      await space.db.flush();
+    }, [space, chat, companionTo, invokePromise]);
 
     return (
       <ChatArticle
@@ -64,7 +60,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         subject={chat}
         attendableId={attendableId}
         companionTo={companionTo}
-        onEvent={handleEvent}
+        onSubmit={handleSubmit}
         ref={forwardedRef}
       />
     );

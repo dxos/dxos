@@ -33,7 +33,8 @@ import {
   TypeId,
   type Version,
 } from '../common/types';
-import { type ATTR_META, type MetaId, type EntityMeta } from '../common/types/meta';
+import { type ATTR_META, type EntityMeta } from '../common/types/meta';
+import { type MetaId } from '../common/types/model-symbols';
 
 export {
   ATTR_DELETED,

@@ -28,7 +28,8 @@ const deleteDatabase = (name: string): Promise<void> =>
     request.onerror = () => reject(request.error);
   });
 
-// Doesn't work yet.
+// Deferred: IDBBatchAtomicVFS fails on open (undefined flags in vfs.close). Composer uses
+// AccessHandlePoolVFS via OPFS worker — not on the recovery-import critical path.
 describe.skip('wa-sqlite with IDBBatchAtomicVFS', () => {
   let sqlite3: ReturnType<typeof WaSqlite.Factory>;
   let vfs: any;

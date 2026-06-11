@@ -21,7 +21,7 @@ import {
   performInvitation,
 } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { MetadataStore } from '@dxos/echo-pipeline';
+import { MetadataStore } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';

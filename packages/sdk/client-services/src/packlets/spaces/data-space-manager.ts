@@ -29,7 +29,7 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
   findInlineObjectOfType,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';

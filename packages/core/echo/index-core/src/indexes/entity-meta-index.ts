@@ -305,7 +305,10 @@ export class EntityMetaIndex implements Index {
               // Parent (nullable).
               const parent = castData[ATTR_PARENT] ?? null;
 
-              const sourceTimestamp = object.updatedAt;
+              const updatedAtTimestamp = object.updatedAt;
+              // Prefer the creation timestamp stored in the document (survives compaction/migrations).
+              // Fall back to the automerge-derived updatedAt for legacy objects that predate this field.
+              const createdAtTimestamp = object.createdAt ?? updatedAtTimestamp;
 
               if (existing.length > 0) {
                 yield* sql`
@@ -318,7 +321,7 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
-                    updatedAt = ${sourceTimestamp}
+                    updatedAt = ${updatedAtTimestamp}
                   WHERE recordId = ${existing[0].recordId}
                 `;
               } else {
@@ -331,7 +334,7 @@ export class EntityMetaIndex implements Index {
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${version},
-                    ${sourceTimestamp}, ${sourceTimestamp}
+                    ${createdAtTimestamp}, ${updatedAtTimestamp}
                   )
                 `;
               }

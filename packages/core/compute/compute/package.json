@@ -49,7 +49,7 @@
     "@effect/platform": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

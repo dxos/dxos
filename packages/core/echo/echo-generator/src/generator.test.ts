@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { DXN, Obj, Type } from '@dxos/echo';
-import { getObjectCore } from '@dxos/echo-db';
+import { getObjectCore } from '@dxos/echo-client';
 import { random } from '@dxos/random';
 
 import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data';

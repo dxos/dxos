@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { DocAccessor, createDocAccessor } from '@dxos/echo-client';
 
 import { MarkdownOperation } from '../types';
 

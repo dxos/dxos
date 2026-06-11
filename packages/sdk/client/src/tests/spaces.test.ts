@@ -9,7 +9,7 @@ import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Serializer, getObjectCore } from '@dxos/echo-db';
+import { Serializer, getObjectCore } from '@dxos/echo-client';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';

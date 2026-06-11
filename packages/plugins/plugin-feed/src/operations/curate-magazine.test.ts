@@ -5,7 +5,7 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
 import { Magazine, Subscription } from '../types';

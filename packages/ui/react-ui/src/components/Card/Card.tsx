@@ -311,7 +311,13 @@ CardRow.displayName = CARD_ROW_NAME;
 
 const CARD_TEXT_NAME = 'Card.Text';
 
-type CardTextProps = { truncate?: boolean; variant?: 'default' | 'description' };
+// `onClick` is opted in explicitly: `ComposableProps` deliberately excludes event handlers, but the
+// part spreads rest props onto its element, so the handler is forwarded at runtime.
+type CardTextProps = {
+  truncate?: boolean;
+  variant?: 'default' | 'description';
+  onClick?: MouseEventHandler<HTMLDivElement>;
+};
 
 const CardText = slottable<HTMLDivElement, CardTextProps>(
   ({ children, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {

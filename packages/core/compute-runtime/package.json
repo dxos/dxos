@@ -51,7 +51,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/kv-store": "workspace:*",
     "@dxos/types": "workspace:*",
     "@effect/vitest": "catalog:",

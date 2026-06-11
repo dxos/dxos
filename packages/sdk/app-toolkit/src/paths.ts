@@ -35,6 +35,16 @@ export const Segments = {
 export const getSpacePath = (spaceId: string): string => `${Node.RootId}/${spaceId}`;
 
 /**
+ * Well-known local segment name for the per-space virtual Home node.
+ */
+export const SPACE_HOME_SEGMENT = 'home';
+
+/**
+ * Canonical qualified path to the virtual Home node of a space.
+ */
+export const getSpaceHomePath = (spaceId: string): string => `${getSpacePath(spaceId)}/${SPACE_HOME_SEGMENT}`;
+
+/**
  * Extract the space ID segment from a qualified graph path.
  */
 export const getSpaceIdFromPath = (qualifiedPath: string) => {

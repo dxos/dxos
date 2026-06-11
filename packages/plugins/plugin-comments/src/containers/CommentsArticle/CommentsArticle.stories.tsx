@@ -19,8 +19,8 @@ import {
 } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
+import { Filter, Obj, Query, QueryResult, Ref, Relation } from '@dxos/echo';
+import { createDocAccessor, toCursorRange } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -154,7 +154,7 @@ const StoryGraphPlugin = Plugin.define(
             if (!space) {
               return [];
             }
-            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+            const docs = get(QueryResult.atom(space.db, Filter.type(Markdown.Document)));
             return docs
               .map((object) => createObjectNode({ db: space.db, object, droppable: false }))
               .filter(isNonNullable);

@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { AuthStatus, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { AuthStatus, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-host';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';

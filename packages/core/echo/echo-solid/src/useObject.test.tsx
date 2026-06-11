@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { Entity } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
-import { createObject } from '@dxos/echo-db';
+import { createObject } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 import { Registry } from '@dxos/effect-atom-solid';
 import { RegistryProvider } from '@dxos/effect-atom-solid';
