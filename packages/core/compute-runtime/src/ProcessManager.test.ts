@@ -58,6 +58,13 @@ const Failing = Operation.make({
   output: Schema.Void,
 });
 
+// Carries an arbitrary live reference (e.g. a model/handle) that is not JSON-serializable.
+const WithLiveRef = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.withLiveRef'), name: 'WithLiveRef' },
+  input: Schema.Struct({ ref: Schema.Any }),
+  output: Schema.Number,
+});
+
 /**
  * Child used by {@link ParentInvoker} to exercise the parent-child SUCCEEDED state invariant.
  */
@@ -107,6 +114,13 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* () {
         return yield* Effect.die('Test Error');
+      }),
+    ),
+  ),
+  WithLiveRef.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ ref }) {
+        return ref.value;
       }),
     ),
   ),
@@ -292,6 +306,20 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const result = yield* Operation.invoke(Double, { value: 5 });
       expect(result).toEqual(10);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'invokes an operation whose input is not JSON-serializable',
+    Effect.fn(function* ({ expect }) {
+      // Operations may carry live references in their input (e.g. a model or handle).
+      // The durable process store JSON-serializes the input event; a non-serializable
+      // value (here, a cycle) must not fail the invocation. The handler still runs with
+      // the original value — persistence degrades to a best-effort null.
+      const ref: { value: number; self?: unknown } = { value: 42 };
+      ref.self = ref;
+      const result = yield* Operation.invoke(WithLiveRef, { ref });
+      expect(result).toEqual(42);
     }, Effect.provide(TestLayer)),
   );
 
