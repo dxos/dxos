@@ -88,6 +88,7 @@ export type Clip = Schema.Schema.Type<typeof Clip>;
  * Stable error codes:
  *   - `invalidPayload`       : schema decoding failed
  *   - `unsupportedVersion`   : envelope version not supported
+ *   - `disabled`             : extension actions are disabled in settings
  *   - `unsupportedKind`      : kind not recognized (future kinds)
  *   - `noSpace`              : no active space to write into
  *   - `internal`             : unexpected error during creation

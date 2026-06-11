@@ -42,6 +42,7 @@ const request = {
 
 const deps = (overrides: Partial<Parameters<typeof handleInvokeEvent>[1]> = {}) => ({
   getActions: () => [action],
+  getSettings: () => ({}),
   getTarget: () => ({}) as any, // Stub database; never dereferenced by the handler.
   invoke: async () => ({ data: { id: 'obj-1' }, error: undefined }),
   ...overrides,
@@ -66,6 +67,27 @@ describe('page-actions', () => {
   test('invoke happy path returns objectId', async ({ expect }) => {
     const ack = await handleInvokeEvent(request, deps());
     expect(ack).toEqual({ version: 1, id: 'req-1', ok: true, objectId: 'obj-1' });
+  });
+
+  test('invoke is ignored when extension actions are disabled', async ({ expect }) => {
+    let invoked = false;
+    const ack = await handleInvokeEvent(
+      request,
+      deps({
+        getSettings: () => ({ enabled: false }),
+        invoke: async () => {
+          invoked = true;
+          return { data: { id: 'obj-1' }, error: undefined };
+        },
+      }),
+    );
+    expect(ack).toEqual({ version: 1, id: 'req-1', ok: false, error: 'disabled' });
+    expect(invoked).toBe(false);
+  });
+
+  test('invoke honors an explicit enabled=true', async ({ expect }) => {
+    const ack = await handleInvokeEvent(request, deps({ getSettings: () => ({ enabled: true }) }));
+    expect(ack).toMatchObject({ ok: true, objectId: 'obj-1' });
   });
 
   test('invoke rejects unsupported version', async ({ expect }) => {

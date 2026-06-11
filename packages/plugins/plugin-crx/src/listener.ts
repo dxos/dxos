@@ -5,13 +5,13 @@
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
-import { type Capabilities, type CapabilityManager } from '@dxos/app-framework';
+import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { getActiveSpace } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { Clip } from '#types';
+import { Clip, CrxCapabilities, Settings } from '#types';
 
 import { mapClip } from './mapping';
 
@@ -38,6 +38,14 @@ export const handleClipEvent = async (
   capabilities: CapabilityManager.CapabilityManager,
   invoker: Invoker,
 ): Promise<Clip.Ack> => {
+  // Master toggle: when off, the bridge acks (so the extension does not time
+  // out) but ignores all extension-initiated actions.
+  const settingsAtom = capabilities.get(CrxCapabilities.Settings);
+  if (!Settings.withDefaults(capabilities.get(Capabilities.AtomRegistry).get(settingsAtom)).enabled) {
+    log.info('ignored clip: extension actions disabled in settings');
+    return { ok: false, error: 'disabled' };
+  }
+
   const envelope = Schema.decodeUnknownEither(Clip.Envelope)(detail);
   if (Either.isLeft(envelope)) {
     // Do NOT log `detail` — it can contain clipped page text/HTML which we
