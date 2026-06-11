@@ -13,7 +13,7 @@ import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Card, Icon, Message as MessageHint, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { getParentId, useAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -79,7 +79,6 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
-  const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
   const stateAtom = useCapability(CommentCapabilities.State);
@@ -130,7 +129,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [registry, viewStoreAtom, subjectId],
   );
 
-  const { hasAttention, isAncestor, isRelated } = useAttention(parentId);
+  const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
   const isAttended = hasAttention || isAncestor || isRelated;
   const currentId = isAttended ? state.current : undefined;
 
@@ -143,15 +142,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
         // Scroll plank into view (deck handler).
-        void invokePromise(LayoutOperation.ScrollIntoView, { subject: parentId });
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
 
         // Scroll within content to anchor (comment config per typename).
-        if (anchor.anchor && parentId) {
+        if (anchor.anchor && attendableId) {
           const typename = Obj.getTypename(subject);
           const commentConfig = commentConfigs.find(({ id }) => id === typename);
           if (commentConfig?.scrollToAnchor) {
             void invokePromise(commentConfig.scrollToAnchor, {
-              subject: parentId,
+              subject: attendableId,
               cursor: anchor.anchor,
               ref: threadId,
             });
@@ -159,7 +158,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         }
       }
     },
-    [state.current, invokePromise, registry, stateAtom, parentId, subject, commentConfigs],
+    [state.current, invokePromise, registry, stateAtom, attendableId, subject, commentConfigs],
   );
 
   const handleComment = useCallback(
