@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { LayoutOperation, getPersonalSpace, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
@@ -26,7 +26,7 @@ import {
   SupportCompanion,
 } from '#containers';
 import { meta } from '#meta';
-import { Support } from '#types';
+import { Support, type Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
@@ -98,11 +98,12 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: () => {
+        component: ({ data: { subject } }) => {
           const client = useClient();
           const { invokePromise } = useOperationInvoker();
           const personal = getPersonalSpace(client);
           const [, updateProperties] = useObject(personal?.properties);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const handleShowWelcome = () => {
             if (!personal) {
               return;
@@ -111,7 +112,9 @@ export default Capability.makeModule(() =>
             const workspace = getSpacePath(personal.id);
             void invokePromise(LayoutOperation.Open, { subject: [getSpaceHomePath(personal.id)], workspace });
           };
-          return <SupportSettings onShowWelcome={handleShowWelcome} />;
+          return (
+            <SupportSettings settings={settings} onSettingsChange={updateSettings} onShowWelcome={handleShowWelcome} />
+          );
         },
       }),
     ]),
