@@ -13,7 +13,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -241,36 +241,36 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} attendableId={id}>
           <Panel.Toolbar asChild>
-            {isEmpty ? (
-              <Toolbar.Root>
-                <InitializeMailboxAction mailbox={subject} />
-              </Toolbar.Root>
-            ) : (
-              <Menu.Toolbar>
-                <QueryEditor
-                  classNames='grow min-w-0 ps-1'
-                  db={db}
-                  tags={tagMap}
-                  value={filterText}
-                  onChange={setFilterText}
-                  ref={filterEditorRef}
-                />
-                <IconButton
-                  disabled={!filter}
-                  icon='ph--folder-plus--regular'
-                  iconOnly
-                  label={t('mailbox-toolbar-save-button.label')}
-                  onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
-                  ref={filterSaveButtonRef}
-                />
-                <IconButton
-                  icon='ph--x--regular'
-                  iconOnly
-                  label={t('mailbox-toolbar-clear-button.label')}
-                  onClick={handleClear}
-                />
-              </Menu.Toolbar>
-            )}
+            {/* Connect (no integration) or pull-sync action for this mailbox. */}
+            <Menu.Toolbar>
+              <InitializeMailboxAction mailbox={subject} />
+              {!isEmpty && (
+                <>
+                  <QueryEditor
+                    classNames='grow min-w-0 ps-1'
+                    db={db}
+                    tags={tagMap}
+                    value={filterText}
+                    onChange={setFilterText}
+                    ref={filterEditorRef}
+                  />
+                  <IconButton
+                    disabled={!filter}
+                    icon='ph--folder-plus--regular'
+                    iconOnly
+                    label={t('mailbox-toolbar-save-button.label')}
+                    onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                    ref={filterSaveButtonRef}
+                  />
+                  <IconButton
+                    icon='ph--x--regular'
+                    iconOnly
+                    label={t('mailbox-toolbar-clear-button.label')}
+                    onClick={handleClear}
+                  />
+                </>
+              )}
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>
