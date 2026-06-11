@@ -2,40 +2,50 @@
 // Copyright 2026 DXOS.org
 //
 
-import { runClipPipeline } from '../clip/pipeline';
-import { type Clip } from '../clip/types';
+import { getActionsForUrl } from '../page-actions/registry';
+import { type Snapshot } from '../page-actions/types';
 import { harvestFavicon, harvestHints, harvestSelection } from './harvest';
 import { startPicker } from './picker';
 
 export * from './picker';
 export * from './harvest';
 
+export type PickedSnapshot = {
+  actionId: string;
+  snapshot: Snapshot;
+};
+
 /**
- * Run the full picker → harvest → pipeline flow in the active tab.
- * Returns the finished Clip, or `null` if the user cancels.
+ * Run the picker → harvest flow in the active tab. The toolbar offers the
+ * cached picker-context page actions for this URL; the chosen action id and
+ * the harvested snapshot are returned for delivery. Returns `null` when the
+ * user cancels or no picker actions are registered yet.
  */
-export const pickAndHarvest = async (): Promise<Clip | null> => {
-  const result = await startPicker();
+export const pickSnapshot = async (): Promise<PickedSnapshot | null> => {
+  const actions = await getActionsForUrl(window.location.href, 'picker');
+  if (actions.length === 0) {
+    return null;
+  }
+
+  const result = await startPicker(actions.map(({ id, label, icon }) => ({ id, label, icon })));
   if (result.status !== 'picked') {
     return null;
   }
 
   const selection = harvestSelection(result.element);
-  const hints = harvestHints(document);
-  const favicon = harvestFavicon(document);
-
-  const clip: Clip = {
-    version: 1,
-    kind: result.kind,
-    source: {
-      url: window.location.href,
-      title: document.title,
-      favicon,
-      clippedAt: new Date().toISOString(),
+  return {
+    actionId: result.actionId,
+    snapshot: {
+      source: {
+        url: window.location.href,
+        title: document.title,
+        favicon: harvestFavicon(document),
+        clippedAt: new Date().toISOString(),
+      },
+      // An empty-text selection would defeat downstream excerpt fallbacks, so
+      // it is omitted entirely (mirrors the popup snapshot extractor's guard).
+      selection: selection.text.trim().length > 0 ? selection : undefined,
+      hints: harvestHints(document),
     },
-    selection,
-    hints,
   };
-
-  return runClipPipeline(clip);
 };
