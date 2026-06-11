@@ -157,7 +157,7 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
 // TODO(dmaretskyi): Remove.
 export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service | Database.Service> =>
   Effect.gen(function* () {
-    const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
+    const local = yield* Database.query(Filter.and(Filter.type(Blueprint), Filter.key(key))).run;
     if (local.length > 0) {
       return local[0];
     }

@@ -152,7 +152,7 @@ const selectPostIds = (
     };
     const topic = (yield* Effect.promise(() => magazine.instructions.source.load())).content ?? '';
     // Resolve the base methodology blueprint from the registry by its key and hold it by value. A
-    // bare `Ref.fromURI(registryURI(key))` is unhydrated — AgentPrompt's `Database.loadOption` can't
+    // bare `Ref.fromURI(registryURI(key))` is unhydrated — `Database.load` fails with EntityNotFoundError
     // resolve it ("Resolver is not set") — so we resolve to the object and let `Ref.make` carry it.
     const blueprint = yield* Blueprint.resolve(Magazine.BLUEPRINT_KEY).pipe(Effect.option);
     const routine = Routine.make({

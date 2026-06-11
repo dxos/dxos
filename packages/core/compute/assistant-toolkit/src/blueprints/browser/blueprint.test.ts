@@ -48,9 +48,9 @@ describe('Browser', { tags: ['llm'] }, () => {
           Create Markdown document for each article.
         `);
         yield* agent.waitForCompletion();
-        const people = yield* Database.runQuery(Query.type(Person.Person));
+        const people = yield* Database.query(Query.type(Person.Person)).run;
         log.info(`people`, { people });
-        const documents = yield* Database.runQuery(Query.type(Markdown.Document));
+        const documents = yield* Database.query(Query.type(Markdown.Document)).run;
         log.info(`documents`, { documents });
       },
       WithProperties,

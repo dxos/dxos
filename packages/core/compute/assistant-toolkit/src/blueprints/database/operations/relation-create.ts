@@ -14,9 +14,8 @@ export default RelationCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, source, target, properties }) {
       const { db } = yield* Database.Service;
-      const types = yield* Database.runQuery(
-        Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
-      );
+      const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
+        .run;
       const foundSchema = types.find((t) => Type.getTypename(t) === typename);
       invariant(foundSchema, `Schema not found: ${typename}`);
       invariant(Type.isRelation(foundSchema), 'Schema is not a relation schema');

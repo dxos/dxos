@@ -7,12 +7,12 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { URI } from '@dxos/keys';
 import { WeakDictionary } from '@dxos/util';
 
-import * as Database from '../Database';
-import type * as Entity from '../Entity';
-import type * as Filter from '../Filter';
-import * as Query from '../Query';
-import type * as QueryResult from '../QueryResult';
-import * as Registry from '../Registry';
+import * as Database from '../../Database';
+import type * as Entity from '../../Entity';
+import type * as Filter from '../../Filter';
+import * as Query from '../../Query';
+import type * as QueryResult from '../../QueryResult';
+import * as Registry from '../../Registry';
 
 // Keyed by queryable identifier. Holds the Queryable weakly so it is collected with its space.
 const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
@@ -90,7 +90,7 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
  * If the queryable is garbage-collected (no longer referenced externally), the returned atom
  * produces an empty array rather than throwing.
  */
-export const make = <T extends Entity.Unknown>(
+export const makeAtom = <T extends Entity.Unknown>(
   queryable: Database.Queryable,
   queryOrFilter: Query.Query<T> | Filter.Filter<T>,
 ): Atom.Atom<T[]> => {

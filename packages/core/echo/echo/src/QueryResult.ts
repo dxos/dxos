@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { type CleanupFn } from '@dxos/async';
 
 import type * as Entity from './Entity';
-import * as QueryAtoms from './internal/QueryAtoms';
+import * as queryInternal from './internal/Query';
 
 /**
  * Individual query result entry.
@@ -128,6 +128,8 @@ export interface QueryResult<T> {
 export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
   run: Effect.Effect<T[], E, R>;
   first: Effect.Effect<Option.Option<T>, E, R>;
+
+  // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.
 }
 
 /**
@@ -139,4 +141,4 @@ export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>
  * on every run (graph-builder connectors/actions, atom computes), where the getter would leak a
  * subscription per evaluation. To wrap a QueryResult you already hold stable, use its `.atom` getter.
  */
-export const atom = QueryAtoms.make;
+export const atom = queryInternal.makeAtom;
