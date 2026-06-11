@@ -96,7 +96,25 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
             // HMR. Vite concatenates these patterns with its built-in ignores
             // (`**/node_modules/**`, `**/.git/**`, …), so this is purely
             // additive.
-            ignored: ['**/dist/**', '**/out/**'],
+            //
+            // `<root>/.claude/**` covers agent worktrees checked out under the
+            // repo root (`.claude/worktrees/<name>/packages/**`): they are full
+            // source copies, so the glob re-expansion above sweeps them in and
+            // every agent-side edit burst or checkout invalidates the theme in
+            // the user's dev server. The pattern is anchored at the resolved
+            // repo root (not `**/.claude/**`) because chokidar matches against
+            // absolute paths — a bare pattern would match *everything* when the
+            // dev server itself runs from inside a worktree whose path contains
+            // a `.claude` segment. `*.log` covers runtime log sinks (e.g.
+            // vite-plugin-log's `app.log` in the app root), which are appended
+            // continuously at runtime and must never feed back into the
+            // watcher.
+            ignored: [
+              '**/dist/**',
+              '**/out/**',
+              '**/*.log',
+              ...(base !== undefined ? [`${resolve(base, '.claude')}/**`] : []),
+            ],
           },
         },
         css: {
