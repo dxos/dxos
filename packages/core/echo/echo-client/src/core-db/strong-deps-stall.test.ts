@@ -290,22 +290,8 @@ describe('Query pipeline strong-dependency stalls', () => {
     expect(results.some((object) => object.id === mainObjectId)).toBe(false);
   });
 
-  // Reproduces the Composer stall from 2026-06-10: objects whose strong dep
-  // (dynamic schema object) id is ABSENT from the space directory — no inline
-  // entry, no link. `loadObjectDocument` used to park such ids in
-  // `_objectsPendingDocumentLoad` ("loading delayed until object links are
-  // initialized") forever: the dep was never loaded NOR marked unavailable,
-  // so `_areDepsResolved` never became true and query hydration hung until
-  // an external timeout dropped the hit. Now the loader emits
-  // `onObjectUnavailable` for directory-absent ids immediately, so dependents
-  // resolve promptly and queries exclude the broken object without stalling.
-  // Reproduces the companion chat-history bug (2026-06-11): an object's id is probed via a
-  // `diskOnly` load while the object is still transient — absent from the space directory — which
-  // marks the id `_unavailableObjects`. The object is then persisted LOCALLY (added + flushed), but
-  // the unavailable mark is only cleared via `_onObjectDocumentLoaded` (a doc arriving over
-  // disk/network), NOT when the object becomes locally present. So `loadObjectCoreById({ diskOnly:
-  // true })` keeps short-circuiting to `undefined`, and index-query hydration drops the row until a
-  // reload rebuilds the database. A reactive query therefore never surfaces the just-created object.
+  // A prior `diskOnly` probe marks an id unavailable while the object is transient; after local
+  // `db.add() + flush()` the mark must be cleared so index-query hydration surfaces the object.
   test('diskOnly load surfaces a locally-persisted object whose id was probed while still absent', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
@@ -330,6 +316,9 @@ describe('Query pipeline strong-dependency stalls', () => {
     expect(resolved!.id).toEqual(object.id);
   });
 
+  // A dep id absent from the space directory was never loaded nor marked unavailable, so
+  // `_areDepsResolved` stayed false and query hydration hung until an external timeout dropped the
+  // hit. Now directory-absent ids are marked unavailable immediately.
   test('query completes promptly and excludes objects whose strong dep is absent from the space directory', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
