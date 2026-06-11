@@ -23,7 +23,7 @@ const TEST_USERS: { fullName: string; emails: { value: string }[] }[] = [
   { fullName: 'Erin Brockovich', emails: [{ value: 'erin@example.com' }] },
   { fullName: 'Frank Zappa', emails: [{ value: 'frank@example.com' }] },
   { fullName: 'Grace Hopper', emails: [{ value: 'grace@navy.mil' }] },
-  { fullName: 'Heidi Klum', emails: [{ value: 'heidi@example.com' }] },
+  { fullName: 'Heidi Klum', emails: [{ value: 'xxx@example.com' }] },
 ];
 
 const meta = {
@@ -70,6 +70,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     autoFocus: true,
+  },
+};
+
+export const ActivateOnTyping: Story = {
+  args: {
+    autoFocus: true,
+    activateOnTyping: true,
   },
 };
 

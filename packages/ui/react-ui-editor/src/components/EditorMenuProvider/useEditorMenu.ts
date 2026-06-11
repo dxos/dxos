@@ -25,7 +25,7 @@ export type GetMenuContext = {
 export type UseEditorMenuProps = {
   filter?: boolean;
   getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
-} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
+} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping'>;
 
 export type UseEditorMenu = {
   groupsRef: RefObject<EditorMenuGroup[]>;
@@ -47,6 +47,7 @@ export const useEditorMenu = ({
   trigger,
   triggerKey,
   placeholder,
+  activateOnTyping,
   filter = true,
   getMenu,
 }: UseEditorMenuProps): UseEditorMenu => {
@@ -134,6 +135,7 @@ export const useEditorMenu = ({
       trigger,
       triggerKey,
       placeholder,
+      activateOnTyping,
       onClose: ({ view }) => handleOpenChange({ view, open: false }),
       onEnter: ({ view }) => {
         if (currentRef.current) {
@@ -165,7 +167,7 @@ export const useEditorMenu = ({
         refresh({});
       },
     });
-  }, [handleOpenChange, getMenuOptions, serializedTrigger, placeholder]);
+  }, [handleOpenChange, getMenuOptions, serializedTrigger, placeholder, activateOnTyping]);
 
   return {
     groupsRef,

@@ -326,6 +326,16 @@ const styles = EditorView.theme({
   '.cm-line': {
     lineHeight,
   },
+  // Match the standard Input block size (md density): 2.5rem, 2rem on pointer-fine devices.
+  '.cm-scroller': {
+    alignItems: 'center',
+    minHeight: '2.5rem',
+  },
+  '@media (pointer: fine)': {
+    '.cm-scroller': {
+      minHeight: '2rem',
+    },
+  },
 });
 
 /**

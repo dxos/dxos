@@ -30,18 +30,21 @@ export type ActorListProps = ThemedClassName<
     db?: Database.Database;
     value?: string;
     readonly?: boolean;
+    /** Open the typeahead while typing (the `@` trigger remains available but is not required). */
+    activateOnTyping?: boolean;
   } & Omit<EditorViewProps, 'initialValue'> &
     Pick<EditorMenuProviderProps, 'numItems'>
 >;
 
 /**
- * Single-line input for a list of actors (people). Typing `@` opens a typeahead menu that matches
- * a person's name or one of their email addresses; selecting inserts an `@<id>` reference. Tokens
- * are whitespace-separated and each is either a person reference or a well-formed email address.
- * References render as tags with the person's name; emails render as neutral tags.
+ * Single-line input for a list of actors (people). Typing `@` (or any text, with
+ * `activateOnTyping`) opens a typeahead menu that matches a person's name or one of their email
+ * addresses; selecting a person inserts an `@<id>` reference, selecting an email completes the
+ * address. Tokens are whitespace-separated and each is either a person reference or a well-formed
+ * email address. References render as tags with the person's name; emails render as neutral tags.
  */
 export const ActorList = forwardRef<EditorController, ActorListProps>(
-  ({ db, value, readonly, numItems = 8, ...props }, forwardedRef) => {
+  ({ db, value, readonly, activateOnTyping, numItems = 8, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
 
@@ -89,10 +92,23 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
           );
         });
 
+        // Known email addresses matching the query, offered as raw-email completions.
+        const emails = query
+          ? [
+              ...new Set(
+                people.flatMap((person) =>
+                  (person.emails ?? [])
+                    .map(({ value }) => value)
+                    .filter((email) => email.toLowerCase().includes(query)),
+                ),
+              ),
+            ]
+          : [];
+
         return [
           {
             id: 'actors',
-            items: matches.slice(0, numItems * 2).map((person) => {
+            items: matches.slice(0, numItems).map((person) => {
               const label = getActorLabel(person);
               const email = person.emails?.[0]?.value;
               return {
@@ -104,6 +120,15 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
               };
             }),
           },
+          {
+            id: 'emails',
+            items: emails.slice(0, numItems).map((email) => ({
+              id: `email-${email}`,
+              label: email,
+              icon: 'ph--envelope-simple--regular',
+              onSelect: ({ view, head }: { view: EditorView; head: number }) => insertAtCursor(view, head, `${email} `),
+            })),
+          },
         ];
       },
       [people, numItems],
@@ -113,7 +138,13 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
     // empty-state hint are a single message; a second basic-extension placeholder would stack with it.
     // Must be referentially stable: the menu extension is memoized on it, and a new extension
     // identity destroys and recreates the editor on every keystroke.
-    const placeholder = useMemo(() => ({ content: t('actor-list.placeholder'), focusOnly: false }), [t]);
+    const placeholder = useMemo(
+      () => ({
+        content: t(activateOnTyping ? 'actor-list-auto.placeholder' : 'actor-list.placeholder'),
+        focusOnly: false,
+      }),
+      [t, activateOnTyping],
+    );
 
     const extensions = useMemo<Extension[]>(
       () => [
@@ -141,7 +172,11 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
         extensions={extensions}
         numItems={numItems}
         trigger='@'
+        activateOnTyping={activateOnTyping}
         placeholder={placeholder}
+        // The menu owns its own matching (names AND emails); the built-in label filter would
+        // drop email-matched people whose label doesn't start with the query.
+        filter={false}
         getMenu={getMenu}
       >
         <Editor.View {...props} initialValue={value} selectionEnd />

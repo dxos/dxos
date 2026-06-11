@@ -224,7 +224,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* Always-blank row for adding the next attendee. */}
       <Card.Row icon='ph--user-plus--regular' classNames='items-center'>
-        <ActorList db={db} onChange={handleAttendeesChange} ref={actorListRef} />
+        <ActorList db={db} activateOnTyping onChange={handleAttendeesChange} ref={actorListRef} />
       </Card.Row>
     </>
   );

@@ -53,6 +53,7 @@ export const useEventToolbarActions = ({
           },
           () => onNoteCreate?.(),
         )
+        .separator()
         .subgraph(
           onSave &&
             ((b) =>
