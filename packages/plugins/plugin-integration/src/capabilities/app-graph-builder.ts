@@ -16,11 +16,8 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import { INTEGRATIONS_SECTION_ID } from '../constants';
+import { INTEGRATIONS_SECTION_ID, INTEGRATIONS_SECTION_TYPE } from '../constants';
 import { Integration } from '../types';
-
-/** Type for the per-space "Integrations" container node. */
-const INTEGRATIONS_SECTION_TYPE = `${meta.id}.space-settings`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -77,36 +74,31 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Per-space integrations folder; kept empty until an Integration exists.
-      // Separate listing extension so graph reacts when targets are deleted.
+      // Per-space integrations section under the space Settings node.
+      // Always visible so the user can discover and add integrations even when none exist yet.
+      // Separate listing extension so the graph reacts when integrations are added or removed.
       GraphBuilder.createExtension({
         id: 'integrationsSection',
-        match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
-          if (integrations.length === 0) {
-            return Effect.succeed([]);
-          }
-          return Effect.succeed([
+        match: AppNodeMatcher.whenSpaceSettings,
+        connector: (space) =>
+          Effect.succeed([
             Node.make({
               id: INTEGRATIONS_SECTION_ID,
               type: INTEGRATIONS_SECTION_TYPE,
-              data: null,
+              data: INTEGRATIONS_SECTION_TYPE,
               properties: {
                 label: ['space-panel.name', { ns: meta.id }],
                 icon: 'ph--plugs--regular',
-                iconHue: 'cyan',
-                role: 'branch',
+                iconHue: 'indigo',
                 draggable: false,
                 droppable: false,
                 space,
               },
             }),
-          ]);
-        },
+          ]),
       }),
 
-      // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
+      // Integration objects listed under the integrations section node.
       GraphBuilder.createExtension({
         id: 'integrationListing',
         match: (node) => {
