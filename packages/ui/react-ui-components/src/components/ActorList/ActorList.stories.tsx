@@ -31,7 +31,10 @@ const generatePeople = async (db: Database.Database, count: number) => {
   const people = await createObjectFactory(db, generator)([{ type: Person.Person, count }]);
   people.forEach((person, index) => {
     Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
-      const slug = (person.fullName ?? 'user').toLowerCase().replace(/[^a-z0-9]+/g, '.');
+      const slug = (person.fullName ?? 'user')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '.')
+        .replace(/^\.+|\.+$/g, '');
       person.emails = [
         { value: `${slug}@example.com` },
         ...(index % 2 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
