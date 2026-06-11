@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { Annotation, Filter, Obj, QueryResult, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -146,7 +146,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
 
   if (viewSchemas.length > 0) {
     const filter = Filter.or(...viewSchemas.map((schema) => Filter.type(schema)));
-    const viewObjects = get(QueryResult.atom(space.db, filter));
+    const viewObjects = get(space.db.query(filter).atom);
 
     for (const viewObject of viewObjects) {
       if (!Obj.isObject(viewObject)) {
