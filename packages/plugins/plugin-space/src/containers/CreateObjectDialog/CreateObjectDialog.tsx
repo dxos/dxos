@@ -17,13 +17,15 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
+
+import { getSpaceDisplayName } from '../../util';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
@@ -56,6 +58,11 @@ export const CreateObjectDialog = ({
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, allTypesQuery);
+  const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
+  const spaceLabel = useMemo(
+    () => space && toLocalizedString(getSpaceDisplayName(space, { personal: space.id === getPersonalSpace(client)?.id }), t),
+    [space, client, t],
+  );
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -128,9 +135,10 @@ export const CreateObjectDialog = ({
             icon: iconAnnotation?.icon,
             iconHue: iconAnnotation?.hue,
             plugin: pluginNameByEntryId.get(entry.id),
+            description: isDatabase ? spaceLabel : undefined,
           };
         }),
-    [createObjectEntries, views, viewTypenames, typeByTypename, t, pluginNameByEntryId],
+    [createObjectEntries, views, viewTypenames, typeByTypename, t, pluginNameByEntryId, spaceLabel],
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(

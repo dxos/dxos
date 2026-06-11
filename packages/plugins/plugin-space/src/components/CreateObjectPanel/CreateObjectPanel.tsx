@@ -27,7 +27,10 @@ export type CreateObjectOption = {
   label: string;
   icon?: string;
   iconHue?: string;
+  /** Plugin name shown as "{{plugin}} Plugin" subtitle. */
   plugin?: string;
+  /** Generic subtitle shown when plugin is not set. */
+  description?: string;
 };
 
 export type Metadata = SpaceCapabilities.CreateObjectEntry;
@@ -176,9 +179,11 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
-              {option.plugin && (
+              {(option.plugin || option.description) && (
                 <span className='truncate text-description text-xs'>
-                  {t('plugin-subtitle.label', { plugin: option.plugin })}
+                  {option.plugin
+                    ? t('plugin-subtitle.label', { plugin: option.plugin })
+                    : option.description}
                 </span>
               )}
             </div>
