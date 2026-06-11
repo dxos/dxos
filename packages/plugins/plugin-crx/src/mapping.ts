@@ -99,4 +99,3 @@ export const toNote = (snapshot: PageAction.Snapshot) => {
     content,
   });
 };
-
