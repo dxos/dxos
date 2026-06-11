@@ -147,17 +147,21 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       if (actors.length > 0) {
         update((event) => {
-          // Skip duplicates (same contact or email).
-          const next = actors.filter(
-            (actor) =>
-              !event.attendees.some(
-                (attendee) =>
-                  (actor.contact &&
-                    attendee.contact &&
-                    refEntityId(attendee.contact.uri.toString()) === refEntityId(actor.contact.uri.toString())) ||
-                  (actor.email && attendee.email === actor.email),
-              ),
-          );
+          // Skip duplicates (same contact or email), including duplicates within this batch.
+          const actorKeys = (actor: Actor.Actor): string[] =>
+            [
+              actor.contact && `contact:${refEntityId(actor.contact.uri.toString())}`,
+              actor.email && `email:${actor.email.toLowerCase()}`,
+            ].filter((key): key is string => !!key);
+          const seen = new Set(event.attendees.flatMap(actorKeys));
+          const next = actors.filter((actor) => {
+            const keys = actorKeys(actor);
+            if (keys.length === 0 || keys.some((key) => seen.has(key))) {
+              return false;
+            }
+            keys.forEach((key) => seen.add(key));
+            return true;
+          });
           if (next.length > 0) {
             event.attendees = [...event.attendees, ...next];
           }

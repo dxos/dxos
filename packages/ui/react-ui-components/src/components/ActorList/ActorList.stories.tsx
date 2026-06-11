@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -23,17 +24,40 @@ random.seed(7);
 
 /**
  * Generate Person objects into the space. The generator does not populate array fields, so derive
- * an email address from each person's name (the typeahead matches names AND emails).
+ * email addresses from each person's name (every other person gets a second work alias so the
+ * email-mode picker shows multiple entries per person).
  */
 const generatePeople = async (db: Database.Database, count: number) => {
   const people = await createObjectFactory(db, generator)([{ type: Person.Person, count }]);
-  people.forEach((person) => {
+  people.forEach((person, index) => {
     Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
       const slug = (person.fullName ?? 'user').toLowerCase().replace(/[^a-z0-9]+/g, '.');
-      person.emails = [{ value: `${slug}@example.com` }];
+      person.emails = [
+        { value: `${slug}@example.com` },
+        ...(index % 2 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
+      ];
     });
   });
   return people;
+};
+
+/**
+ * Dense reference grid of the generated people and their email addresses.
+ */
+const PeopleGrid = ({ db }: { db?: Database.Database }) => {
+  const people = useQuery(db, Filter.type(Person.Person));
+  return (
+    <div className='grid grid-cols-[max-content_1fr] gap-x-4 text-xs text-description'>
+      {people.flatMap((person) =>
+        (person.emails ?? []).map(({ value }) => (
+          <Fragment key={`${person.id}-${value}`}>
+            <span className='truncate'>{person.fullName}</span>
+            <span className='truncate'>{value}</span>
+          </Fragment>
+        )),
+      )}
+    </div>
+  );
 };
 
 const meta = {
@@ -53,6 +77,7 @@ const meta = {
         />
 
         <JsonHighlighter data={{ value }} classNames='text-xs' />
+        <PeopleGrid db={space?.db} />
       </div>
     );
   },
@@ -86,6 +111,14 @@ export const Default: Story = {
 export const ActivateOnTyping: Story = {
   args: {
     autoFocus: true,
+    activateOnTyping: true,
+  },
+};
+
+export const EmailMode: Story = {
+  args: {
+    autoFocus: true,
+    mode: 'email',
     activateOnTyping: true,
   },
 };

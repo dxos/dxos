@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { Fragment, useMemo } from 'react';
 
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { createObject } from '@dxos/react-client/echo';
+import { createObject, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -27,13 +27,35 @@ random.seed(7);
  */
 const generatePeople = async (db: Database.Database, count: number) => {
   const people = await createObjectFactory(db, generator)([{ type: Person.Person, count }]);
-  people.forEach((person) => {
+  people.forEach((person, index) => {
     Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
       const slug = (person.fullName ?? 'user').toLowerCase().replace(/[^a-z0-9]+/g, '.');
-      person.emails = [{ value: `${slug}@example.com` }];
+      person.emails = [
+        { value: `${slug}@example.com` },
+        ...(index % 2 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
+      ];
     });
   });
   return people;
+};
+
+/**
+ * Dense reference grid of the generated people and their email addresses.
+ */
+const PeopleGrid = ({ db }: { db?: Database.Database }) => {
+  const people = useQuery(db, Filter.type(Person.Person));
+  return (
+    <div className='grid grid-cols-[max-content_1fr] gap-x-4 p-2 text-xs text-description'>
+      {people.flatMap((person) =>
+        (person.emails ?? []).map(({ value }) => (
+          <Fragment key={`${person.id}-${value}`}>
+            <span className='truncate'>{person.fullName}</span>
+            <span className='truncate'>{value}</span>
+          </Fragment>
+        )),
+      )}
+    </div>
+  );
 };
 
 // `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
@@ -66,6 +88,7 @@ const DefaultStory = ({ editable }: { editable?: boolean }) => {
       <Event.Viewport>
         <Event.Body editable={editable} />
       </Event.Viewport>
+      <PeopleGrid db={space?.db} />
     </Event.Root>
   );
 };

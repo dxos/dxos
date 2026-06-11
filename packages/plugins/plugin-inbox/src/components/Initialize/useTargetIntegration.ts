@@ -21,9 +21,14 @@ export const useTargetIntegration = <T extends Obj.Any>(
   const integrations = useQuery(db, Filter.type(Integration.Integration));
   const integration = target
     ? integrations.find((candidate) =>
-        candidate.targets.some(
-          (entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === target.id,
-        ),
+        candidate.targets.some((entry) => {
+          if (!entry.object) {
+            return false;
+          }
+          // Guard against malformed stored URIs (tryParse returns undefined).
+          const eid = EID.tryParse(entry.object.uri);
+          return eid ? EID.getEntityId(eid) === target.id : false;
+        }),
       )
     : undefined;
   return { integration };

@@ -22,7 +22,7 @@ import { getHashHue } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { type ActorInfo, actorList, actorListRedecorate } from './actor-extension';
+import { type ActorInfo, type ActorListMode, actorList, actorListRedecorate, formatMailbox } from './actor-extension';
 
 export type ActorListProps = ThemedClassName<
   {
@@ -30,6 +30,15 @@ export type ActorListProps = ThemedClassName<
     db?: Database.Database;
     value?: string;
     readonly?: boolean;
+    /**
+     * Content model:
+     * - `'ref'` (default): the picker only matches existing Person objects; selection inserts an
+     *   `@<id>` reference (raw email tokens are still accepted).
+     * - `'email'`: the picker shows one item per (person, email) pair and selection captures the
+     *   email address; the value is an RFC 5322 mailbox list (`Name <email>, ...`) with the comma
+     *   separators hidden inside the tags.
+     */
+    mode?: ActorListMode;
     /** Open the typeahead while typing (the `@` trigger remains available but is not required). */
     activateOnTyping?: boolean;
   } & Omit<EditorViewProps, 'initialValue'> &
@@ -39,12 +48,11 @@ export type ActorListProps = ThemedClassName<
 /**
  * Single-line input for a list of actors (people). Typing `@` (or any text, with
  * `activateOnTyping`) opens a typeahead menu that matches a person's name or one of their email
- * addresses; selecting a person inserts an `@<id>` reference, selecting an email completes the
- * address. Tokens are whitespace-separated and each is either a person reference or a well-formed
- * email address. References render as tags with the person's name; emails render as neutral tags.
+ * addresses. The content model depends on {@link ActorListProps.mode}. Resolved entries render as
+ * atomic tags with the person's name; bare emails render as neutral tags.
  */
 export const ActorList = forwardRef<EditorController, ActorListProps>(
-  ({ db, value, readonly, activateOnTyping, numItems = 8, ...props }, forwardedRef) => {
+  ({ db, value, readonly, mode = 'ref', activateOnTyping, numItems = 8, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
 
@@ -82,6 +90,31 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
     const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
       async ({ text }) => {
         const query = (text ?? '').replace(/^@/, '').toLowerCase();
+
+        if (mode === 'email') {
+          // One item per (person, email) pair; selection captures the email as an RFC 5322 mailbox.
+          const mailboxes = people
+            .flatMap((person) => (person.emails ?? []).map(({ value: email }) => ({ person, email })))
+            .filter(
+              ({ person, email }) =>
+                !query || getActorLabel(person).toLowerCase().includes(query) || email.toLowerCase().includes(query),
+            );
+
+          return [
+            {
+              id: 'mailboxes',
+              items: mailboxes.slice(0, numItems * 2).map(({ person, email }) => ({
+                id: `${person.id}-${email}`,
+                label: `${getActorLabel(person)} (${email})`,
+                icon: 'ph--user--regular',
+                onSelect: ({ view, head }: { view: EditorView; head: number }) =>
+                  insertMailbox(view, head, formatMailbox(getActorLabel(person), email)),
+              })),
+            },
+          ];
+        }
+
+        // 'ref' mode: only match existing Person objects.
         const matches = people.filter((person) => {
           if (!query) {
             return true;
@@ -92,23 +125,10 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
           );
         });
 
-        // Known email addresses matching the query, offered as raw-email completions.
-        const emails = query
-          ? [
-              ...new Set(
-                people.flatMap((person) =>
-                  (person.emails ?? [])
-                    .map(({ value }) => value)
-                    .filter((email) => email.toLowerCase().includes(query)),
-                ),
-              ),
-            ]
-          : [];
-
         return [
           {
             id: 'actors',
-            items: matches.slice(0, numItems).map((person) => {
+            items: matches.slice(0, numItems * 2).map((person) => {
               const label = getActorLabel(person);
               const email = person.emails?.[0]?.value;
               return {
@@ -120,18 +140,9 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
               };
             }),
           },
-          {
-            id: 'emails',
-            items: emails.slice(0, numItems).map((email) => ({
-              id: `email-${email}`,
-              label: email,
-              icon: 'ph--envelope-simple--regular',
-              onSelect: ({ view, head }: { view: EditorView; head: number }) => insertAtCursor(view, head, `${email} `),
-            })),
-          },
         ];
       },
-      [people, numItems],
+      [people, numItems, mode],
     );
 
     // NOTE: The placeholder is supplied via the popover (Editor.Root) so the trigger hint and the
@@ -150,7 +161,7 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false }),
         createThemeExtensions({ themeMode, slots: { scroller: { className: 'scrollbar-none' } } }),
-        actorList({ getActor: (id) => actorsRef.current.get(id) }),
+        actorList({ mode, getActor: (id) => actorsRef.current.get(id) }),
         Prec.highest(
           keymap.of([
             {
@@ -163,7 +174,7 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
           ]),
         ),
       ],
-      [readonly, themeMode],
+      [readonly, themeMode, mode],
     );
 
     return (
@@ -193,4 +204,20 @@ ActorList.displayName = 'ActorList';
  */
 const getActorLabel = (person: Person.Person): string => {
   return Obj.getLabel(person) ?? person.emails?.[0]?.value ?? person.id;
+};
+
+/**
+ * Insert an RFC 5322 mailbox, replacing the in-progress segment (anything typed after the last
+ * comma — multi-word queries can leave words outside the popover's completion range).
+ */
+const insertMailbox = (view: EditorView, head: number, mailbox: string) => {
+  const line = view.state.doc.lineAt(head);
+  const before = line.text.slice(0, head - line.from);
+  const lastComma = before.lastIndexOf(',');
+  const from = line.from + (lastComma === -1 ? 0 : lastComma + 1);
+  const insert = `${lastComma === -1 ? '' : ' '}${mailbox}, `;
+  view.dispatch({
+    changes: { from, to: head, insert },
+    selection: { anchor: from + insert.length, head: from + insert.length },
+  });
 };

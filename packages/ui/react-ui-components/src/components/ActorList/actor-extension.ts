@@ -16,7 +16,17 @@ export type ActorInfo = {
   hue?: string;
 };
 
+/**
+ * Content model:
+ * - `'ref'`: whitespace-separated tokens; `@<id>` references to existing Person objects
+ *   (and well-formed raw email tokens).
+ * - `'email'`: comma-separated RFC 5322 mailboxes (`Name <email>` or bare `email`); the comma
+ *   separators are consumed into the atomic tags so they are not visible.
+ */
+export type ActorListMode = 'ref' | 'email';
+
 export type ActorListOptions = {
+  mode?: ActorListMode;
   /** Resolve an actor (person) id referenced as `@<id>` to display info. */
   getActor?: (id: string) => ActorInfo | undefined;
 };
@@ -27,6 +37,12 @@ export const ACTOR_REF_REGEX = /^@([A-Za-z0-9]+)$/;
 /** Matches a well-formed email address token. */
 export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
+/** Matches an RFC 5322 name-addr (`Name <email>`); group 1 = display name, group 2 = addr-spec. */
+export const NAME_ADDR_REGEX = /^(.*?)\s*<([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})>$/;
+
+/** Formats an RFC 5322 mailbox (`Name <email>`). */
+export const formatMailbox = (name: string | undefined, email: string): string => (name ? `${name} <${email}>` : email);
+
 /**
  * Effect dispatched when actor data changes out-of-band (e.g. people finish loading) so that
  * already-rendered reference decorations re-resolve without a document change.
@@ -34,12 +50,15 @@ export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 export const actorListRedecorate = StateEffect.define<null>();
 
 /**
- * CodeMirror extension rendering actor-list tokens as tags: `@<id>` references resolve to the
- * person's name (via {@link ActorListOptions.getActor}); well-formed email tokens render as
- * neutral tags. Tags are atomic: the cursor cannot enter them and deletion removes the whole token.
+ * CodeMirror extension rendering actor-list tokens as tags. Tags are atomic: the cursor cannot
+ * enter them and deletion removes the whole token.
+ * - `'ref'` mode: `@<id>` references resolve to the person's name (via
+ *   {@link ActorListOptions.getActor}); well-formed email tokens render as neutral tags.
+ * - `'email'` mode: RFC 5322 mailboxes render as tags labelled with the display name (falling
+ *   back to the address); the trailing comma separator is hidden inside the tag's atomic range.
  */
-export const actorList = ({ getActor }: ActorListOptions = {}): Extension => {
-  const buildDecorations = (state: EditorState) => {
+export const actorList = ({ mode = 'ref', getActor }: ActorListOptions = {}): Extension => {
+  const buildRefDecorations = (state: EditorState) => {
     const deco = new RangeSetBuilder<Decoration>();
     const text = state.doc.toString();
     const tokenRegex = /\S+/g;
@@ -79,6 +98,51 @@ export const actorList = ({ getActor }: ActorListOptions = {}): Extension => {
 
     return deco.finish();
   };
+
+  const buildEmailDecorations = (state: EditorState) => {
+    const deco = new RangeSetBuilder<Decoration>();
+    const text = state.doc.toString();
+    // Segments are comma-separated; a segment's atomic range includes its trailing comma (and
+    // following whitespace) so the separator never renders.
+    const segmentRegex = /[^,]+(?:,\s*)?|,\s*/g;
+    let match: RegExpExecArray | null;
+    while ((match = segmentRegex.exec(text))) {
+      const segment = match[0];
+      const commaIndex = segment.indexOf(',');
+      const content = (commaIndex === -1 ? segment : segment.slice(0, commaIndex)).trim();
+      if (!content) {
+        continue;
+      }
+      const leading = segment.length - segment.trimStart().length;
+      const from = match.index + leading;
+      const to = match.index + segment.length;
+
+      const nameAddr = content.match(NAME_ADDR_REGEX);
+      if (nameAddr) {
+        deco.add(
+          from,
+          to,
+          Decoration.widget({
+            widget: new ActorWidget(nameAddr[1] || nameAddr[2], getHashHue(nameAddr[2])),
+            atomic: true,
+          }),
+        );
+      } else if (EMAIL_REGEX.test(content)) {
+        deco.add(
+          from,
+          to,
+          Decoration.widget({
+            widget: new EmailWidget(content),
+            atomic: true,
+          }),
+        );
+      }
+    }
+
+    return deco.finish();
+  };
+
+  const buildDecorations = mode === 'email' ? buildEmailDecorations : buildRefDecorations;
 
   return [
     styles,
@@ -123,7 +187,7 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
 };
 
 /**
- * Resolved actor reference (`@<id>`), rendered as the person's name.
+ * Resolved actor (person reference or RFC 5322 mailbox), rendered as the person's name.
  */
 class ActorWidget extends WidgetType {
   constructor(
