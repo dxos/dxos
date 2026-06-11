@@ -12,11 +12,11 @@ import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
   FunctionError,
+  Header,
   InvalidOperationInputError,
   InvalidOperationOutputError,
   Operation,
   Trace,
-  byokHeaderLayer,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
@@ -273,7 +273,7 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
 /** Proxies Anthropic requests through the EDGE-provided `FunctionsAiService`, BYOK-wrapped. */
 const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) => {
   // `apiUrl` is a sentinel — the request gets re-routed by the AI gateway in EDGE.
-  const httpClient = byokHeaderLayer('anthropic.com').pipe(
+  const httpClient = Header.byokLayer('anthropic.com').pipe(
     Layer.provide(FunctionsAiHttpClient.layer(functionsAiService)),
   );
   const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://internal/provider/anthropic' }).pipe(
