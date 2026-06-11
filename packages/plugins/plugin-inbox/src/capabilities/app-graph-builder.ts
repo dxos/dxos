@@ -90,7 +90,7 @@ export default Capability.makeModule(
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
-              const feed = get(mailboxSnapshot.feed.atom);
+              const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
               const messages = feed
                 ? get(QueryResult.atom(space.db, Query.select(Filter.type(Message.Message)).from(feed)))
                 : [];
@@ -148,9 +148,11 @@ export default Capability.makeModule(
                           data: () =>
                             Effect.sync(() => {
                               const index = mailboxSnapshot.filters.findIndex((f: any) => f.name === name);
-                              Obj.update(mailbox, (mailbox) => {
-                                mailbox.filters.splice(index, 1);
-                              });
+                              if (index >= 0) {
+                                Obj.update(mailbox, (mailbox) => {
+                                  mailbox.filters.splice(index, 1);
+                                });
+                              }
                             }),
                           properties: {
                             label: ['delete-filter.label', { ns: meta.id }],
