@@ -53,10 +53,10 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
   const darkModeScriptPath = resolve(pluginsDir, 'dark-mode.ts');
   const mainCssPath = resolve(pluginsDir, 'main.css');
 
-  const config: ThemePluginOptions = {
-    srcCssPath: isMonorepo ? srcThemePath : distThemePath,
-    virtualFileId: '@dxos-theme',
-    ...options,
+  const config = {
+    srcCssPath: options.srcCssPath ?? (isMonorepo ? srcThemePath : distThemePath),
+    virtualFileId: options.virtualFileId ?? '@dxos-theme',
+    verbose: options.verbose,
   };
 
   // Derive project root from the source location so Tailwind scans all packages.
@@ -65,6 +65,9 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
   if (process.env.DEBUG || options.verbose) {
     console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
   }
+
+  // Trailing-edge debounce handle for theme CSS reloads (see `handleHotUpdate`).
+  let themeReloadTimer: ReturnType<typeof setTimeout> | undefined;
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
@@ -138,6 +141,42 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
       if (id === config.virtualFileId) {
         return config.srcCssPath;
       }
+    },
+    hotUpdate({ type, file, modules }) {
+      // Direct edits to CSS (the theme source or its imports) keep Vite's
+      // default immediate update for instant feedback while authoring styles.
+      if (this.environment.name !== 'client' || type !== 'update' || file.endsWith('.css')) {
+        return;
+      }
+
+      // Every content file Tailwind scans is registered as a dependency of the
+      // theme CSS — Vite models it as a file-only entry node whose importer is
+      // `main.css` — so each source-file save invalidates `main.css` and
+      // re-runs the monorepo-wide Tailwind scan. During an edit wave that
+      // serializes one full scan per save. Drop the theme-dep entries from the
+      // update (the changed module itself still hot-updates immediately) and
+      // reload the theme CSS once on the trailing edge of a quiet window, so a
+      // wave costs at most one scan.
+      const isThemeDep = (mod: (typeof modules)[number]): boolean =>
+        mod.file === config.srcCssPath ||
+        (mod.id === null &&
+          mod.importers.size > 0 &&
+          [...mod.importers].every((importer) => importer.file === config.srcCssPath));
+      if (!modules.some(isThemeDep)) {
+        return;
+      }
+
+      const environment = this.environment;
+      clearTimeout(themeReloadTimer);
+      themeReloadTimer = setTimeout(() => {
+        for (const mod of environment.moduleGraph.getModulesByFile(config.srcCssPath) ?? []) {
+          environment.reloadModule(mod).catch(() => {
+            // Server may be mid-restart; the next edit reschedules the reload.
+          });
+        }
+      }, 300);
+
+      return modules.filter((mod) => !isThemeDep(mod));
     },
     transformIndexHtml: () => {
       // Apply .dark class to <html> synchronously before any scripts run, so that
