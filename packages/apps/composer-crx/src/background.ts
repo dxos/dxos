@@ -73,8 +73,7 @@ const main = async () => {
       return Promise.resolve({ version: 1, id: '', ok: false, error: 'badRequest' });
     }
     // Notify on failure as well as returning the ack: opening a Composer tab
-    // steals focus and closes the popup, so the inline status may never render
-    // (mirrors the clip flow's notification fallback).
+    // steals focus and closes the popup, so the inline status may never render.
     return runPageAction({ actionId: msg.actionId, tabId: msg.tabId }).then((ack) => {
       if (!ack.ok) {
         notify('Action failed', ack.error);
