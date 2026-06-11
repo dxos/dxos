@@ -8,9 +8,9 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
+import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
 
-import { meta } from '../meta';
 import { installPageActionListeners } from '../page-actions';
 
 export default Capability.makeModule(

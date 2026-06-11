@@ -90,7 +90,7 @@ describe('installSearchProxy', () => {
   });
 
   test('ignores unrelated messages', ({ expect }) => {
-    const result = send({ type: 'composer-crx:deliver-clip' }, { tab: { url: COMPOSER_URL } });
+    const result = send({ type: 'composer-crx:unrelated-message' }, { tab: { url: COMPOSER_URL } });
     expect(result).toBeUndefined();
   });
 });

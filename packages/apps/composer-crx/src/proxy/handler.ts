@@ -20,7 +20,7 @@ import {
 /**
  * Register the background-side render-proxy listeners.
  *
- * Additive to the clip flow: separate `runtime.onMessage` handlers keyed on
+ * Separate `runtime.onMessage` handlers keyed on
  * {@link RENDER_MESSAGE_TYPE} (render a URL in a background tab) and
  * {@link PING_MESSAGE_TYPE} (identify the extension) that ignore every other
  * message. Both decode the payload and origin-guard the sender against the
