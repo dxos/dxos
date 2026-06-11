@@ -277,7 +277,10 @@ export default CrmOperation.AttachImage.pipe(
       const responseContentType = uploadRes.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
       let uploadedUrl: string | undefined;
       if (responseContentType === 'application/json') {
-        const json = (yield* Effect.promise(() => uploadRes.json())) as { url?: string };
+        const json = (yield* Effect.tryPromise({
+          try: () => uploadRes.json(),
+          catch: (cause) => new Error(`Failed to parse image service response: ${String(cause)}`),
+        })) as { url?: string };
         uploadedUrl = json.url;
       } else {
         uploadedUrl = uploadRes.url;
