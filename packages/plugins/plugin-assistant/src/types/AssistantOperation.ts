@@ -117,6 +117,8 @@ export const ForkChat = Operation.make({
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
+    /** When provided, the forked chat is set as the companion for this object rather than opened standalone. */
+    companionTo: Schema.optional(Obj.Unknown),
   }),
   output: Schema.Struct({
     object: Type.getSchema(Chat.Chat),

@@ -533,6 +533,10 @@ export class CoreDatabase {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
+
+    // A prior `diskOnly` probe (e.g. resolving this object by ref before it was added) may have
+    // marked the id unavailable; it is now locally present, so clear the mark and wake dependents.
+    this._markObjectAvailable(core.id);
   }
 
   removeCore(core: ObjectCore): void {
@@ -900,9 +904,7 @@ export class CoreDatabase {
     // arrived (e.g. a peer eventually delivered them); clear the mark so
     // any new `loadObjectCoreById` waiters for this object — or for its
     // dependents — see a fresh resolution.
-    if (this._unavailableObjects.delete(objectId)) {
-      this._scheduleThrottledUpdate([objectId, ...(this._strongDepsIndex.get(objectId) ?? [])]);
-    }
+    this._markObjectAvailable(objectId);
 
     // Skip objects that were already materialized locally.
     if (this._objects.has(objectId)) {
@@ -965,6 +967,8 @@ export class CoreDatabase {
     const core = new ObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
+    // Clear any stale unavailable mark: the object is now materialized in a document.
+    this._markObjectAvailable(objectId);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     core.bind({
       db: this,
@@ -1051,6 +1055,19 @@ export class CoreDatabase {
       }
       return this._areDepsResolved(depCore, seen);
     });
+  }
+
+  /**
+   * Clears a stale `_unavailableObjects` mark once an object becomes available and wakes its
+   * dependents so any `loadObjectCoreById` waiter — or query hydration that dropped the object —
+   * re-evaluates. The mark is set when an id is probed (`diskOnly`) while absent from the space
+   * directory; an object later materialized locally (added) or whose document arrives must clear
+   * it, otherwise `diskOnly` loads keep short-circuiting to `undefined` until the database is rebuilt.
+   */
+  private _markObjectAvailable(objectId: string): void {
+    if (this._unavailableObjects.delete(objectId)) {
+      this._scheduleThrottledUpdate([objectId, ...(this._strongDepsIndex.get(objectId) ?? [])]);
+    }
   }
 
   private _onObjectUnavailable({ objectId }: ObjectUnavailable): void {

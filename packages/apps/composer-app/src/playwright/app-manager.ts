@@ -262,32 +262,10 @@ export class AppManager {
     return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
   }
 
-  toggleCollectionsSection(delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId('spacePlugin.collectionsSection')
-      .getByRole('button')
-      .first()
-      .click({ delay });
-  }
-
-  toggleTypesSection(delay = 100): Promise<void> {
-    return this.currentWorkspace.getByTestId('spacePlugin.typesSection').getByRole('button').first().click({ delay });
-  }
-
-  toggleSchemaNode(typename: string, delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId(`spacePlugin.schemaNode.${typename}`)
-      .getByRole('button')
-      .first()
-      .click({ delay });
-  }
-
-  toggleTypeCollectionAll(typename: string, delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId(`spacePlugin.typeCollectionAll.${typename}`)
-      .getByRole('button')
-      .first()
-      .click({ delay });
+  async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
+    const section = this.currentWorkspace.getByTestId(testId);
+    await section.waitFor({ state: 'attached', timeout });
+    await section.getByRole('button').first().click({ delay });
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {

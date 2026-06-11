@@ -90,6 +90,12 @@ export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
 };
 
+const cellEditorSlots: GridCellEditorProps['slots'] = {
+  content: {
+    className: '!py-(--dx-grid-cell-editor-padding-block)',
+  },
+};
+
 export const TableCellEditor = ({
   __gridScope,
   model,
@@ -245,11 +251,7 @@ export const TableCellEditor = ({
       <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
       <GridCellEditor
         extensions={extensions}
-        slots={{
-          content: {
-            className: '!py-(--dx-grid-cell-editor-padding-block)',
-          },
-        }}
+        slots={cellEditorSlots}
         getCellContent={getCellContent}
         onBlur={handleBlur}
       />

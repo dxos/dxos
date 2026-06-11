@@ -510,6 +510,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const context of this._queryContexts.values()) {
       context.addQuerySource(provider.create());
     }
+    this.#queryResultCache = new QueryResultCache();
   }
 
   /**
@@ -520,6 +521,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (index !== -1) {
       this._querySourceProviders.splice(index, 1);
     }
+    this.#queryResultCache = new QueryResultCache();
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent): void {

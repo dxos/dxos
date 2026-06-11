@@ -16,6 +16,10 @@ export const translations = [
         'typename.label_zero': 'Tic-Tac-Toe games',
         'typename.label_one': 'Tic-Tac-Toe game',
         'typename.label_other': 'Tic-Tac-Toe games',
+        'object-name.placeholder': 'New tic-tac-toe game',
+        'add-object.label': 'Add tic-tac-toe game',
+        'rename-object.label': 'Rename tic-tac-toe game',
+        'delete-object.label': 'Delete tic-tac-toe game',
       },
       [meta.id]: {
         'plugin.name': 'Tic-Tac-Toe',

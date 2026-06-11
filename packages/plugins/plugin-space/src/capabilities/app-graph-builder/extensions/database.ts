@@ -22,6 +22,7 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities } from '#types';
 
+import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   BLOCK_REORDER_ABOVE,
@@ -312,8 +313,13 @@ const createSchemaActions = ({
   const createEntry = capabilities
     .getAll(SpaceCapabilities.CreateObjectEntry)
     .find((entry: SpaceCapabilities.CreateObjectEntry) => entry.id === typename);
-  const createObjectFn = createEntry?.createObject;
-  const inputSchema = createEntry?.inputSchema;
+
+  // For database-persisted object schemas without a dedicated capability, synthesize a generic entry.
+  const resolvedEntry: SpaceCapabilities.CreateObjectEntry | undefined =
+    createEntry ??
+    (Type.getDatabase(type) != null && Type.isObject(type) ? makeCreateObjectEntryForDatabaseType(type) : undefined);
+  const createObjectFn = resolvedEntry?.createObject;
+  const inputSchema = resolvedEntry?.inputSchema;
 
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
     ...(createObjectFn
@@ -339,7 +345,7 @@ const createSchemaActions = ({
               }
             }),
             properties: {
-              label: getDynamicLabel('add object label', typename),
+              label: getDynamicLabel('add-object.label', typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -388,7 +394,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: getDynamicLabel('delete object label', Type.getTypename(Type.Type)),
+        label: getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
