@@ -25,7 +25,7 @@ export type GetMenuContext = {
 export type UseEditorMenuProps = {
   filter?: boolean;
   getMenu?: (context: GetMenuContext) => MaybePromise<EditorMenuGroup[]>;
-} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
+} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder' | 'activateOnTyping'>;
 
 export type UseEditorMenu = {
   groupsRef: RefObject<EditorMenuGroup[]>;
@@ -47,6 +47,7 @@ export const useEditorMenu = ({
   trigger,
   triggerKey,
   placeholder,
+  activateOnTyping,
   filter = true,
   getMenu,
 }: UseEditorMenuProps): UseEditorMenu => {
@@ -134,11 +135,14 @@ export const useEditorMenu = ({
       trigger,
       triggerKey,
       placeholder,
+      activateOnTyping,
       onClose: ({ view }) => handleOpenChange({ view, open: false }),
       onEnter: ({ view }) => {
         if (currentRef.current) {
           handleSelect({ view, item: currentRef.current });
+          return true;
         }
+        return false;
       },
       onArrowUp: () => {
         setCurrentItem((currentItem) => {
@@ -160,12 +164,17 @@ export const useEditorMenu = ({
         if (firstItem) {
           setCurrentItem(firstItem.id);
           currentRef.current = firstItem;
+        } else {
+          // No matches: clear the selection so Enter falls through instead of
+          // selecting a stale item from a previous query.
+          setCurrentItem(undefined);
+          currentRef.current = null;
         }
 
         refresh({});
       },
     });
-  }, [handleOpenChange, getMenuOptions, serializedTrigger, placeholder]);
+  }, [handleOpenChange, getMenuOptions, serializedTrigger, placeholder, activateOnTyping]);
 
   return {
     groupsRef,

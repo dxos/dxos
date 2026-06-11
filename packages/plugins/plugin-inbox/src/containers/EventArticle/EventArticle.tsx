@@ -14,7 +14,7 @@ import { Panel } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps } from '#components';
+import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
 import { useShadowObject } from '#hooks';
 import { InboxOperation, DraftEvent } from '#types';
 
@@ -32,6 +32,8 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
   const notes = shadowedEvent?.notes?.target;
   // A draft event (locally created, not yet synced) is editable and savable.
   const draft = DraftEvent.instanceOf(event);
+  // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
+  const { integration } = useTargetIntegration(calendar);
 
   const handleNoteCreate = useCallback(async () => {
     invariant(db);
@@ -59,18 +61,20 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
   }, [invokePromise, event]);
 
   // Push this draft event to Google Calendar.
+  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
+  // (Database/Feed/Credentials) can materialize.
   const handleSave = useCallback(() => {
     if (calendar) {
-      void invokePromise(InboxOperation.SyncDraftEvents, { calendar, event });
+      void invokePromise(InboxOperation.SyncDraftEvents, { calendar, event }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, calendar, event]);
+  }, [invokePromise, calendar, event, db]);
 
   // Delete the event (locally if draft, otherwise on Google Calendar too).
   const handleDelete = useCallback(() => {
     if (calendar) {
-      void invokePromise(InboxOperation.DeleteEvent, { calendar, event });
+      void invokePromise(InboxOperation.DeleteEvent, { calendar, event }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, calendar, event]);
+  }, [invokePromise, calendar, event, db]);
 
   return (
     <Event.Root event={event}>
@@ -81,6 +85,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
             onNoteCreate={handleNoteCreate}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
+            saveDisabled={!integration}
             onDelete={calendar ? handleDelete : undefined}
           />
         </Panel.Toolbar>
