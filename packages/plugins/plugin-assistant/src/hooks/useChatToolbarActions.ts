@@ -27,10 +27,6 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   // Stable references in deps avoid circular reference issues.
   return useMenuBuilder(
     (get) => {
-      // Reading the query atom inside the builder keeps the menu reactive to the set of companion
-      // chats: when one is persisted the atom recomputes and the history dropdown appears, without a
-      // React-level re-render round-trip. `QueryResult.atom` memoizes by db + query AST so the
-      // subscription is shared rather than leaked on each recompute.
       const chats =
         companionTo && db
           ? get(db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).atom)
@@ -99,6 +95,8 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               // TODO(wittjosiah): This should be the default sort order.
               .toSorted((a, b) => a.id.localeCompare(b.id))
               .forEach((chat) => {
+                get(Obj.atomProperty(chat, 'name'));
+
                 builder.action(
                   chat.id,
                   {
