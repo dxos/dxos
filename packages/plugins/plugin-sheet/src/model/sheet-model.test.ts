@@ -68,7 +68,7 @@ describe('SheetModel', () => {
     const sheet = Sheet.make({ rows: 10, columns: 5 });
     const model = new SheetModel(graph, sheet);
     await model.open();
-    onTestFinished(() => model.close());
+    onTestFinished(() => void model.close());
 
     // Column A: rows 0..2 = 123, 789, 567; row 3 = SUM(A0:A2).
     model.setValue({ col: 0, row: 0 }, 123);
