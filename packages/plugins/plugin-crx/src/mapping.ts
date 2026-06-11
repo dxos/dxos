@@ -5,7 +5,7 @@
 import { Markdown } from '@dxos/plugin-markdown';
 import { Organization, Person } from '@dxos/types';
 
-import { type Clip } from '#types';
+import { type Clip, type PageAction } from '#types';
 
 const MAX_NOTES_LENGTH = 4000;
 
@@ -35,41 +35,41 @@ const truncate = (text: string | undefined, max: number): string | undefined => 
 };
 
 /**
- * Best-effort mapping from an incoming Clip to a Person.
+ * Best-effort mapping from an incoming page snapshot to a Person.
  * Every field is optional on the schema, so an empty name is acceptable.
  */
-export const toPerson = (clip: Clip.Clip) => {
-  const hints = clip.hints ?? {};
-  const fullName = hints.h1 ?? hints.ogTitle ?? firstLine(clip.selection.text);
+export const toPerson = (snapshot: PageAction.Snapshot) => {
+  const hints = snapshot.hints ?? {};
+  const fullName = hints.h1 ?? hints.ogTitle ?? firstLine(snapshot.selection?.text);
   return Person.make({
     fullName,
     image: hints.ogImage,
-    notes: truncate(clip.selection.text, MAX_NOTES_LENGTH),
+    notes: truncate(snapshot.selection?.text, MAX_NOTES_LENGTH),
     urls: [
       {
-        label: clip.source.title || clip.source.url,
-        value: clip.source.url,
+        label: snapshot.source.title || snapshot.source.url,
+        value: snapshot.source.url,
       },
     ],
   });
 };
 
 /**
- * Best-effort mapping from an incoming Clip to an Organization.
+ * Best-effort mapping from an incoming page snapshot to an Organization.
  */
-export const toOrganization = (clip: Clip.Clip) => {
-  const hints = clip.hints ?? {};
-  const name = hints.ogTitle ?? hints.h1 ?? firstLine(clip.selection.text);
+export const toOrganization = (snapshot: PageAction.Snapshot) => {
+  const hints = snapshot.hints ?? {};
+  const name = hints.ogTitle ?? hints.h1 ?? firstLine(snapshot.selection?.text);
   return Organization.make({
     name,
-    description: hints.ogDescription ?? truncate(clip.selection.text, MAX_NOTES_LENGTH),
+    description: hints.ogDescription ?? truncate(snapshot.selection?.text, MAX_NOTES_LENGTH),
     image: hints.ogImage,
-    website: clip.source.url,
+    website: snapshot.source.url,
   });
 };
 
 /**
- * Best-effort mapping from an incoming Clip to a Markdown document.
+ * Best-effort mapping from an incoming page snapshot to a Markdown document.
  *
  * Builds a small prelude (title + source link + date) followed by the
  * picked subtree's rendered text. We deliberately don't attempt HTML →
@@ -78,17 +78,17 @@ export const toOrganization = (clip: Clip.Clip) => {
  * (where a future agent stage can take over) rather than baked into the
  * receiver.
  */
-export const toNote = (clip: Clip.Clip) => {
-  const hints = clip.hints ?? {};
-  const title = hints.h1 ?? hints.ogTitle ?? firstLine(clip.selection.text) ?? clip.source.title;
-  const body = truncate(clip.selection.text, MAX_NOTE_BODY_LENGTH) ?? '';
+export const toNote = (snapshot: PageAction.Snapshot) => {
+  const hints = snapshot.hints ?? {};
+  const title = hints.h1 ?? hints.ogTitle ?? firstLine(snapshot.selection?.text) ?? snapshot.source.title;
+  const body = truncate(snapshot.selection?.text, MAX_NOTE_BODY_LENGTH) ?? '';
 
-  const sourceLabel = clip.source.title || clip.source.url;
-  const clippedAt = clip.source.clippedAt;
+  const sourceLabel = snapshot.source.title || snapshot.source.url;
+  const clippedAt = snapshot.source.clippedAt;
   const preludeLines = [
     title ? `# ${title}` : undefined,
     '',
-    `_Clipped from [${sourceLabel}](${clip.source.url}) on ${clippedAt}._`,
+    `_Clipped from [${sourceLabel}](${snapshot.source.url}) on ${clippedAt}._`,
     '',
     body,
   ].filter((line): line is string => line !== undefined);
