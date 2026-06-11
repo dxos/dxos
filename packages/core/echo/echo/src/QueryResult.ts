@@ -128,6 +128,8 @@ export interface QueryResult<T> {
 export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
   run: Effect.Effect<T[], E, R>;
   first: Effect.Effect<Option.Option<T>, E, R>;
+
+  // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.
 }
 
 /**
