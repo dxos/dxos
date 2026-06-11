@@ -10,7 +10,7 @@ import Redis from 'ioredis';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
-import { type EchoDatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-client';
+import { type DatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-client';
 import { EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
@@ -33,7 +33,7 @@ export class EchoReplicant {
   private readonly _ctx = new Context();
 
   private _testPeer?: EchoTestPeer = undefined;
-  private _db?: EchoDatabaseImpl = undefined;
+  private _db?: DatabaseImpl = undefined;
 
   private readonly _connections = new Map<string, TestReplicatorConnection>();
   private _replicator?: TestReplicator = undefined;
