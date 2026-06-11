@@ -209,11 +209,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._cellUpdateCounter = Atom.make<number>(0);
 
     // Create derived atom for persisted sort from view.query.ast.
-    this._persistedSort = Atom.make((_get) => {
-      // The view is loaded asynchronously in _open() and torn down on disposal; this atom can be
-      // recomputed in either window, so read the target directly and bail rather than going through
-      // the `view` getter (which throws when the target is absent).
-      const view = this._object.view.target;
+    this._persistedSort = Atom.make((get) => {
+      // Subscribe to the view ref's atom so this recomputes once the reference resolves; the view
+      // is loaded asynchronously in _open() and is absent before then (and after disposal).
+      const view = get(this._object.view.atom);
       if (!view) {
         return undefined;
       }

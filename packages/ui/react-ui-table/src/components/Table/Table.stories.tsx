@@ -283,11 +283,6 @@ export const ArrayOfObjects: StoryObj = {
   },
 };
 
-// Regression test for DX-997: a required field must not prevent adding a new row.
-// The bug: opening the editor on an empty required cell ran validation, whose re-render
-// rebuilt the CodeMirror view (an unstable `slots` prop), and the teardown blur closed the
-// editor before the user could type. The play function opens the editor on the empty cell,
-// confirms it survives the (failing) validation pass, then types a value and commits the row.
 export const RequiredSchema: StoryObj = {
   render: DefaultStory,
   decorators: [
@@ -324,20 +319,17 @@ export const RequiredSchema: StoryObj = {
     const draftCell = await canvas.findByTestId('frozenRowsEnd.0.0');
     await userEvent.click(draftCell);
 
-    // Open the editor on the empty required cell (Enter), rather than typing to open — the
-    // latter would route the first character into dx-grid's `initialContent` and race the
-    // editor mount. The empty value fails validation; the editor must stay open regardless
-    // (this is the DX-997 regression — the editor used to close itself here).
+    // Open the editor with Enter rather than typing to open — the latter routes the first
+    // character into dx-grid's `initialContent` and races the editor mount. The empty value
+    // fails validation; the editor must stay open so the value below can be entered.
     await userEvent.keyboard('{Enter}');
     await canvas.findByTestId('grid.cell-editor');
 
-    // The editor is focused (autoFocus); type the required value and commit. On the regression
-    // the empty value's validation re-render closed the editor before this could be entered, so
-    // the row below never committed.
+    // The editor is focused (autoFocus); type the required value and commit.
     await userEvent.keyboard('Alice');
     await userEvent.keyboard('{Enter}');
 
-    // Draft row is committed; the real row should appear in the grid with the typed value.
+    // The draft row is committed and appears in the grid with the typed value.
     await waitFor(async () => {
       const cell = canvas.getByTestId('grid.0.0');
       const text = cell.querySelector('.dx-grid__cell__content')?.textContent;
