@@ -53,8 +53,8 @@ export const filterTypeOptions = (
       continue;
     }
 
-    // A type-kind entity is a persisted (database) schema; otherwise it is a code-shipped (runtime) type.
-    const isDatabase = Type.isTypeKind(type);
+    // A schema attached to a database is persisted (user-defined); one without a database is code-shipped (runtime).
+    const isDatabase = Type.getDatabase(type) != null;
     if (isDatabase ? !includeDatabase : !includeRuntime) {
       continue;
     }

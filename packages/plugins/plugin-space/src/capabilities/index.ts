@@ -6,6 +6,7 @@ import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './app-graph-builder';
+export { makeCreateObjectEntryForDatabaseType } from './make-create-entry';
 
 export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));

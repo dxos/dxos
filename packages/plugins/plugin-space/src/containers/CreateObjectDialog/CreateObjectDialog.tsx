@@ -9,18 +9,19 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { allTypesQuery, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { PluginRegistryButton, useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
+import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
@@ -54,17 +55,20 @@ export const CreateObjectDialog = ({
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-  // TODO(wittjosiah): Support database schemas.
-  const schemas = db
-    ? db.graph.registry
-        .list()
-        .filter(Type.isType)
-        .filter((t) => !Type.isTypeKind(t))
-    : undefined;
+  const allTypes = useQuery(db, allTypesQuery);
+
+  // Index all types by typename for label/icon lookups.
+  const typeByTypename = useMemo(() => {
+    const map = new Map<string, Type.AnyEntity>();
+    for (const type of allTypes) {
+      map.set(Type.getTypename(type), type);
+    }
+    return map;
+  }, [allTypes]);
 
   const entriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 
-  const { createObjectEntries, pluginNameByEntryId } = useMemo(() => {
+  const { capabilityEntries, pluginNameByEntryId } = useMemo(() => {
     const entries: SpaceCapabilities.CreateObjectEntry[] = [];
     const pluginByEntryId = new Map<string, string>();
     const plugins = manager.getPlugins();
@@ -77,8 +81,18 @@ export const CreateObjectDialog = ({
         }
       }
     }
-    return { createObjectEntries: entries, pluginNameByEntryId: pluginByEntryId };
+    return { capabilityEntries: entries, pluginNameByEntryId: pluginByEntryId };
   }, [entriesByModule, manager]);
+
+  // Synthesize entries for database-persisted object schemas that have no registered capability.
+  const createObjectEntries = useMemo(() => {
+    const registeredIds = new Set(capabilityEntries.map((e) => e.id));
+    const dbEntries = allTypes
+      .filter((type) => Type.isObject(type) && Type.getDatabase(type) != null)
+      .filter((type) => !registeredIds.has(Type.getTypename(type)))
+      .map((type) => makeCreateObjectEntryForDatabaseType(type as Type.AnyObj));
+    return [...capabilityEntries, ...dbEntries];
+  }, [capabilityEntries, allTypes]);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (id) => createObjectEntries.find((entry) => entry.id === id),
@@ -90,31 +104,33 @@ export const CreateObjectDialog = ({
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
-    for (const schema of schemas ?? []) {
-      if (ViewAnnotation.has(schema)) {
-        set.add(Type.getTypename(schema));
+    for (const [name, type] of typeByTypename) {
+      if (ViewAnnotation.has(type)) {
+        set.add(name);
       }
     }
     return set;
-  }, [schemas]);
+  }, [typeByTypename]);
 
   const options = useMemo<CreateObjectOption[]>(
     () =>
       createObjectEntries
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => {
-          const type = schemas?.find((s) => Type.getTypename(s) === entry.id);
+          const type = typeByTypename.get(entry.id);
           const schema = type && Type.getSchema(type);
           const iconAnnotation = schema ? Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined) : undefined;
+          const isDatabase = type ? Type.getDatabase(type) != null : false;
           return {
             id: entry.id,
-            label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
+            label: (isDatabase && type ? Type.getLabel(type) : undefined) ??
+              t('typename.label', { ns: entry.id, defaultValue: entry.id }),
             icon: iconAnnotation?.icon,
             iconHue: iconAnnotation?.hue,
             plugin: pluginNameByEntryId.get(entry.id),
           };
         }),
-    [createObjectEntries, views, viewTypenames, schemas, t, pluginNameByEntryId],
+    [createObjectEntries, views, viewTypenames, typeByTypename, t, pluginNameByEntryId],
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(

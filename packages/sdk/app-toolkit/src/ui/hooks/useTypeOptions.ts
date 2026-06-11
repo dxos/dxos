@@ -21,11 +21,11 @@ export const useTypeOptions = ({ db, annotation }: { db?: Database.Database; ann
   return useMemo(
     () =>
       options
-        .map(({ typename, label }) => ({
+        .map(({ typename, label }): { value: string; label: string } => ({
           value: typename,
           // Use the entity's label (e.g. the `name` field on persisted schemas) when available;
           // fall back to i18n with the typename as the namespace key for code-shipped types.
-          label: label ?? t('typename.label', { ns: typename, defaultValue: typename }),
+          label: label ?? t('typename.label', { ns: typename, defaultValue: typename }) ?? typename,
         }))
         .toSorted((a, b) => a.label.localeCompare(b.label)),
     [t, options],
