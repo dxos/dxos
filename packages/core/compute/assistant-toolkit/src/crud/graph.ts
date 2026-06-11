@@ -14,7 +14,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Database, Entity, Feed, Filter, Obj, Query, Relation, Scope, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { ReferenceAnnotationId, getTypeAnnotation, getTypeIdentifierAnnotation } from '@dxos/echo/Annotation';
-import { createObject } from '@dxos/echo/Obj';
+import { createObject } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

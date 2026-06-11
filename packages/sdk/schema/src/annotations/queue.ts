@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/Annotation';
+import { createAnnotationHelper } from '@dxos/echo/internal';
 
 /**
  * Identifies a schema as an object with a canonical queue reference

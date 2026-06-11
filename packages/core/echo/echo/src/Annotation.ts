@@ -27,13 +27,6 @@ export {
   setLabelWithSchema,
   IconAnnotation,
   IconFromRefAnnotation,
-  PropertyMeta,
-  PropertyMetaAnnotationId,
-  type PropertyMetaAnnotation,
-  getPropertyMetaAnnotation,
-  unwrapOptional,
-  createAnnotationHelper,
-  type AnnotationHelper,
 } from './internal/Annotation';
 
 import * as Function from 'effect/Function';

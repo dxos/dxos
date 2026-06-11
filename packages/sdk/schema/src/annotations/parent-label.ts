@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/Annotation';
+import { createAnnotationHelper } from '@dxos/echo/internal';
 
 /**
  * When set on a Type.Ref field, instructs the form to display the parent object's label

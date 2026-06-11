@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useMemo, useState } from 'react';
 
-import { type AnyProperties } from '@dxos/echo/Obj';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

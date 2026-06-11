@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { isLive as isProxy } from '@dxos/echo/Obj';
+import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';

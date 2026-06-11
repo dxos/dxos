@@ -21,10 +21,8 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as Err from './Err';
 import * as internal from './internal';
-import { batchEvents } from './internal/common/proxy/event-batch';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
-import { createObject as _createObject, type CreateObjectProps } from './internal/Obj/create-object';
 import * as ObjAtoms from './internal/ObjAtoms';
 import * as Ref from './Ref';
 import type * as Tag from './Tag';
@@ -924,45 +922,3 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 export const atom = ObjAtoms.make;
 export const atomReactive = ObjAtoms.makeWithReactive;
 export const atomProperty = ObjAtoms.makeProperty;
-
-//
-// Reactive primitives
-//
-
-/**
- * Returns true if the value is a live reactive ECHO object (backed by a database).
- * Returns false for plain objects and snapshots.
- */
-export const isLive = isProxy;
-
-/**
- * Batch multiple mutations into a single notification.
- * All reactive subscribers are notified once after the callback returns.
- */
-export const batch = batchEvents;
-
-/**
- * An object with arbitrary string-keyed properties (not necessarily a live ECHO entity).
- * Less strict than `Obj.Unknown` — use when working with plain data objects or
- * when the entity brand is not required.
- */
-export type AnyProperties = internal.AnyProperties;
-
-/**
- * Extracts the string-valued property keys of T, excluding `id`.
- */
-export type PropertyKey<T extends AnyProperties> = internal.PropertyKey<T>;
-
-/**
- * Mutable entity metadata type (keys, tags, annotations).
- * Returned by `Obj.getMeta` inside an `Obj.update` callback.
- */
-export type EntityMeta = internal.EntityMeta;
-
-export { type CreateObjectProps };
-
-/**
- * Creates a new object instance from a schema and data, without signal reactivity.
- * For reactive objects stored in the database, use `Obj.make` instead.
- */
-export const createObject: typeof _createObject = _createObject;

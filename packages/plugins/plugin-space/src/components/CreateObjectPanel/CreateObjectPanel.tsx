@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Collection, type Database, Obj } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/Obj';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Column, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';

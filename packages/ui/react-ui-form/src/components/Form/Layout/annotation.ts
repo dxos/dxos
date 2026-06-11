@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/Annotation';
+import { createAnnotationHelper } from '@dxos/echo/internal';
 
 /**
  * Annotation carrying one or more named `FormLayout` DSL templates that

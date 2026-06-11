@@ -146,11 +146,6 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 export const getKind = internal.getEntityKind;
 
 /**
- * Typename used when a reference field accepts any ECHO object type.
- */
-export const ANY_OBJECT_TYPENAME = internal.ANY_OBJECT_TYPENAME;
-
-/**
  * Property that accesses metadata for an entity.
  */
 export const Meta: unique symbol = internal.MetaId as any;

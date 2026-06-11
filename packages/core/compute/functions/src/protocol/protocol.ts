@@ -27,7 +27,7 @@ import {
   makeRegistry,
   type QueueFactory,
 } from '@dxos/echo-client';
-import { refFromEncodedReference } from '@dxos/echo/Ref';
+import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
