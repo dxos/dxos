@@ -130,4 +130,3 @@ export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>
 
   // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.
 }
-

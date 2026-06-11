@@ -72,8 +72,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
     const orderAtom = Atom.make<string[]>([]);
 
     // Source of truth for which columns exist; subscribed to ECHO query.
-    const columnsAtom =
-      space?.db != null ? space.db.query(Filter.type(TestColumn)).atom : Atom.make<TestColumn[]>([]);
+    const columnsAtom = space?.db != null ? space.db.query(Filter.type(TestColumn)).atom : Atom.make<TestColumn[]>([]);
 
     // If orderAtom is empty, use Echo order as-is; else sort by orderAtom and append new columns.
     const orderedColumnsAtom = Atom.make((get) => {
