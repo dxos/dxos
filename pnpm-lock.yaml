@@ -19562,6 +19562,12 @@ importers:
       '@codemirror/lang-xml':
         specifier: 'catalog:'
         version: 6.1.0
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.6.0
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -19616,6 +19622,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor

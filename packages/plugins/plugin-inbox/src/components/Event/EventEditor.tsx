@@ -8,8 +8,8 @@ import React, { useCallback, useRef } from 'react';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
-import { ACTOR_REF_REGEX, ActorList, EMAIL_REGEX } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { ACTOR_REF_REGEX, ActorList, EMAIL_REGEX } from '@dxos/react-ui-form';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';

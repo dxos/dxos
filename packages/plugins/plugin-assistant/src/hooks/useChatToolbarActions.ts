@@ -12,9 +12,10 @@ import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { useChatContext } from '#components';
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
+
+import { useChatContext } from '../components/Chat/context';
 
 export type ChatToolbarActionsProps = {
   chat?: Chat.Chat;

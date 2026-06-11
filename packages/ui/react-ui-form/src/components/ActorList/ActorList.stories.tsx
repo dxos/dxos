@@ -38,6 +38,7 @@ const generatePeople = async (db: Database.Database, count: number) => {
       person.emails = [
         { value: `${slug}@example.com` },
         ...(index % 2 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
+        ...(index % 4 === 0 ? [{ label: 'private', value: `${random.lorem.word()}@gmail.com` }] : []),
       ];
     });
   });
@@ -50,7 +51,7 @@ const generatePeople = async (db: Database.Database, count: number) => {
 const PeopleGrid = ({ db }: { db?: Database.Database }) => {
   const people = useQuery(db, Filter.type(Person.Person));
   return (
-    <div className='grid grid-cols-[max-content_1fr] gap-x-4 text-xs text-description'>
+    <div className='grid grid-cols-[max-content_1fr] gap-x-4 text-sm text-description'>
       {people.flatMap((person) =>
         (person.emails ?? []).map(({ value }) => (
           <Fragment key={`${person.id}-${value}`}>
@@ -64,7 +65,7 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-components/ActorList',
+  title: 'ui/react-ui-form/ActorList',
   component: ActorList,
   render: (args: ActorListProps) => {
     const { space } = useClientStory();
@@ -72,13 +73,7 @@ const meta = {
 
     return (
       <div className='flex flex-col gap-2'>
-        <ActorList
-          {...args}
-          classNames='p-2 border border-subdued-separator rounded-xs'
-          db={space?.db}
-          onChange={setValue}
-        />
-
+        <ActorList {...args} db={space?.db} onChange={setValue} classNames='border' />
         <JsonHighlighter data={{ value }} classNames='text-xs' />
         <PeopleGrid db={space?.db} />
       </div>

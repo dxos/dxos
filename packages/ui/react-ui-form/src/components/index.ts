@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './ActorList';
 export * from './FieldEditor';
 export * from './Form';
 export * from './ObjectForm';

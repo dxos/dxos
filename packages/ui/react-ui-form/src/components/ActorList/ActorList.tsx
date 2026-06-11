@@ -179,7 +179,6 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
 
     return (
       <Editor.Root
-        ref={composedRef}
         extensions={extensions}
         numItems={numItems}
         trigger='@'
@@ -189,6 +188,7 @@ export const ActorList = forwardRef<EditorController, ActorListProps>(
         // drop email-matched people whose label doesn't start with the query.
         filter={false}
         getMenu={getMenu}
+        ref={composedRef}
       >
         <Editor.View {...props} initialValue={value} selectionEnd />
       </Editor.Root>
