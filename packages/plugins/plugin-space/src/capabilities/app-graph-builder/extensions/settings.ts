@@ -9,7 +9,6 @@ import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
-import { whenSpaceSettings } from '../../../app-node-matcher';
 
 //
 // Extension Factory
@@ -44,7 +43,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
 
   const childrenExtension = yield* GraphBuilder.createExtension({
     id: 'settingsSections',
-    match: whenSpaceSettings,
+    match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) => {
       const personal = isPersonalSpace(space);
       return Effect.succeed([
