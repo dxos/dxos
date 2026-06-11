@@ -28,14 +28,12 @@ import {
   DelegationHandlers,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint } from '@dxos/compute';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import { AssistantBlueprint } from '#blueprints';
 
-// TODO(dmaretskyi): Force this type for all Capability.makeModule calls.
-const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]> = Capability.makeModule(() =>
+// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
+const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]> = () =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, BrowserBlueprint),
@@ -62,7 +60,6 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
     Capability.contributes(AutomationCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
-  ]),
-);
+  ]);
 
 export default blueprintDefinition;
