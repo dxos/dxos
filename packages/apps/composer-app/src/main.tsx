@@ -174,20 +174,17 @@ const main = async () => {
     /** Enable debug-level OTEL log export for this device (persisted across reloads, works in workers). */
     enableDebugLogs: () => {
       void Observability.storeOtelLogLevel(APP_KEY, 'debug');
-      // eslint-disable-next-line no-console
-      console.info('[otel] Debug log level enabled — reload to apply. All debug logs will be sent to SignOz.');
+      log.info('otel debug log level enabled — reload to apply');
     },
     /** Remove the debug override and revert to the default INFO log level. */
     disableDebugLogs: () => {
       void Observability.storeOtelLogLevel(APP_KEY, null);
-      // eslint-disable-next-line no-console
-      console.info('[otel] Debug log level override removed — reload to apply. Reverted to INFO.');
+      log.info('otel debug log level override removed — reload to apply');
     },
     /** Return the active OTEL log level override, or null if using the default. */
     getLogLevel: async (): Promise<string | null> => {
       const level = await Observability.getOtelLogLevel(APP_KEY);
-      // eslint-disable-next-line no-console
-      console.info(`[otel] Log level: ${level ?? 'default (INFO)'}`);
+      log.info('otel log level', { level: level ?? 'default (INFO)' });
       return level;
     },
   };
