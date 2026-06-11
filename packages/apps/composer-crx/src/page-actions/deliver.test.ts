@@ -10,7 +10,7 @@ import { describe, test, vi } from 'vitest';
 // stand-in suffices (same pattern as `invoke.test.ts`).
 vi.mock('webextension-polyfill', () => ({ default: {} }));
 
-import { deliverPickedSnapshot } from './deliver';
+import { decodeDeliverPayload, deliverPickedSnapshot } from './deliver';
 import { type InvokeBridgeApi } from './invoke';
 import { type Snapshot } from './types';
 
@@ -73,5 +73,66 @@ describe('deliverPickedSnapshot', () => {
     };
     const ack = await deliverPickedSnapshot({ actionId: 'a-1', snapshot }, api);
     expect(ack).toMatchObject({ ok: false, error: 'noSpace' });
+  });
+});
+
+describe('decodeDeliverPayload', () => {
+  const validMsg = {
+    type: 'composer-crx:page-action:deliver',
+    actionId: 'a-1',
+    snapshot: {
+      source: { url: 'https://example.com/', title: 'Example', clippedAt: '2026-06-11T00:00:00.000Z' },
+      selection: { text: 'hello', html: '<p>hello</p>', htmlTruncated: false },
+      hints: { ogTitle: 'OG Title', ogDescription: 'desc', h1: 'Heading', firstImage: 'https://img.example.com/1.jpg' },
+    },
+  };
+
+  test('accepts a valid full payload and preserves snapshot fields', ({ expect }) => {
+    const result = decodeDeliverPayload(validMsg);
+    expect(result).toBeDefined();
+    expect(result!.actionId).toBe('a-1');
+    expect(result!.snapshot.source.url).toBe('https://example.com/');
+    expect(result!.snapshot.source.title).toBe('Example');
+    expect(result!.snapshot.selection?.text).toBe('hello');
+    expect(result!.snapshot.selection?.html).toBe('<p>hello</p>');
+    expect(result!.snapshot.hints?.ogTitle).toBe('OG Title');
+    expect(result!.snapshot.hints?.h1).toBe('Heading');
+  });
+
+  test('rejects when actionId is missing', ({ expect }) => {
+    const { actionId: _removed, ...noActionId } = validMsg;
+    expect(decodeDeliverPayload(noActionId)).toBeUndefined();
+  });
+
+  test('rejects when snapshot is missing', ({ expect }) => {
+    const { snapshot: _removed, ...noSnapshot } = validMsg;
+    expect(decodeDeliverPayload(noSnapshot)).toBeUndefined();
+  });
+
+  test('rejects when snapshot.source is missing', ({ expect }) => {
+    const msg = { ...validMsg, snapshot: { selection: { text: 'x' } } };
+    expect(decodeDeliverPayload(msg)).toBeUndefined();
+  });
+
+  test('rejects when source.url is missing', ({ expect }) => {
+    const msg = {
+      ...validMsg,
+      snapshot: { source: { title: 'No URL', clippedAt: '2026-06-11T00:00:00.000Z' } },
+    };
+    expect(decodeDeliverPayload(msg)).toBeUndefined();
+  });
+
+  test('rejects when source.title is missing', ({ expect }) => {
+    const msg = {
+      ...validMsg,
+      snapshot: { source: { url: 'https://example.com/', clippedAt: '2026-06-11T00:00:00.000Z' } },
+    };
+    expect(decodeDeliverPayload(msg)).toBeUndefined();
+  });
+
+  test('rejects a non-record value', ({ expect }) => {
+    expect(decodeDeliverPayload(null)).toBeUndefined();
+    expect(decodeDeliverPayload('string')).toBeUndefined();
+    expect(decodeDeliverPayload(42)).toBeUndefined();
   });
 });

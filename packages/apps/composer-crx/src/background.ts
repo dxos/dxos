@@ -14,6 +14,7 @@ import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_RUN_MESSAGE_TYPE,
+  decodeDeliverPayload,
   deliverPickedSnapshot,
   refreshRegistry,
   runPageAction,
@@ -126,12 +127,13 @@ const main = async () => {
     if (!msg || msg.type !== PAGE_ACTION_DELIVER_MESSAGE_TYPE) {
       return undefined;
     }
-    if (typeof msg.actionId !== 'string' || typeof msg.snapshot !== 'object' || msg.snapshot === null) {
+    const payload = decodeDeliverPayload(msg);
+    if (!payload) {
       return Promise.resolve({ version: 1, id: '', ok: false, error: 'badRequest' });
     }
     // Notify on failure: the popup has already closed by pick time, so a
     // browser notification is the only feedback channel (mirrors the run flow).
-    return deliverPickedSnapshot({ actionId: msg.actionId, snapshot: msg.snapshot }).then((ack) => {
+    return deliverPickedSnapshot(payload).then((ack) => {
       if (!ack.ok) {
         notify('Action failed', ack.error);
       }
