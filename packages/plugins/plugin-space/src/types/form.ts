@@ -3,7 +3,6 @@
 //
 
 export {
-  getTypenames,
   TypeInputOptions,
   TypeInputOptionsAnnotation,
   TypeInputOptionsAnnotationId,

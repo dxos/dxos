@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,7 +33,10 @@ export const Binding = Schema.Struct({
     added: Schema.Array(Ref.Ref(Obj.Unknown)),
     removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
+}).pipe(
+  Annotation.HiddenAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')),
+);
 
 export type Binding = Type.InstanceType<typeof Binding>;
 export type BindingProps = Partial<{
