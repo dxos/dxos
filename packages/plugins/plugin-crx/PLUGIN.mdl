@@ -209,6 +209,24 @@ feat F-2: Settings Surface
 ```
 
 ```mdl
+feat F-2c: Settings Enforcement
+
+  req F-2c.1:
+    when: `enabled` is false and a page-action invoke arrives
+    then: |
+      no object is created; the request is still acked (so the extension does
+      not time out) with the stable error code `disabled`
+
+  req F-2c.2:
+    when: `autoOpenAfterClip` is true and a page action succeeds
+    then: the created object is opened via LayoutOperation.Open
+
+  req F-2c.3:
+    when: `autoOpenAfterClip` is false (default)
+    then: focus is not moved; only the success toast is shown
+```
+
+```mdl
 feat F-3: Page Action Contributions
   desc: |
     Plugins contribute `PageAction[]` under the plugin-scoped
@@ -341,6 +359,19 @@ feat F-7: User Feedback
   req F-7.2:
     when: an invoke ack is produced with ok = false
     then: an error toast is shown naming the stable error code
+```
+
+```mdl
+feat F-8: Page Actions Registry & Invocation
+  desc: |
+    Plugins contribute page actions (serializable descriptor + target
+    operation) under a plugin-scoped capability. This plugin answers the
+    extension's registry-list requests (`composer:page-actions:list`) with
+    descriptors and executes invoke requests (`composer:page-action:invoke`)
+    by resolving the active space and invoking the target operation with
+    `{ snapshot, target }`. Every request is acked with stable error codes
+    (invalidPayload, unsupportedVersion, disabled, unknownAction, noSpace,
+    operationFailed); outcomes surface as toasts.
 ```
 
 ## Acceptance

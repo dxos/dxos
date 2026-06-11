@@ -5,13 +5,13 @@
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
-import { type Capabilities, type CapabilityManager } from '@dxos/app-framework';
+import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { getActiveSpace } from '@dxos/app-toolkit';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { CrxCapabilities, PageAction } from '#types';
+import { CrxCapabilities, PageAction, Settings } from '#types';
 
 /**
  * Dependencies for the invoke handler, injected so the handler can be
@@ -20,6 +20,7 @@ import { CrxCapabilities, PageAction } from '#types';
  */
 export type InvokeDeps = {
   getActions: () => PageAction.PageAction[];
+  getSettings: () => Settings.Settings;
   getTarget: () => Database.Database | undefined;
   invoke: (
     operation: PageAction.PageAction['operation'],
@@ -61,6 +62,14 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
   }
   // Best-effort id echo so the extension can correlate failure acks.
   const envelopeId = envelope.right.id ?? '';
+
+  // Master toggle: when off, the bridge acks (so the extension does not time
+  // out) but ignores all extension-initiated actions.
+  if (!Settings.withDefaults(deps.getSettings()).enabled) {
+    log.info('ignored page action: extension actions disabled in settings');
+    return { version: 1, id: envelopeId, ok: false, error: 'disabled' };
+  }
+
   if (envelope.right.version !== 1) {
     log.info('rejected unsupported page-action version', { version: envelope.right.version });
     return { version: 1, id: envelopeId, ok: false, error: 'unsupportedVersion' };
@@ -119,6 +128,7 @@ export const installPageActionListeners = (
     const detail = (event as CustomEvent).detail;
     const deps: InvokeDeps = {
       getActions,
+      getSettings: () => capabilities.get(Capabilities.AtomRegistry).get(capabilities.get(CrxCapabilities.Settings)),
       getTarget: () => {
         const client = capabilities.get(ClientCapabilities.Client);
         return getActiveSpace(client, capabilities)?.db;

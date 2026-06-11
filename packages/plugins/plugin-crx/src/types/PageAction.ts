@@ -175,6 +175,7 @@ export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
  * Stable error codes:
  *   - `invalidPayload`     : schema decoding failed
  *   - `unsupportedVersion` : envelope version not supported
+ *   - `disabled`           : extension actions are disabled in settings
  *   - `unknownAction`      : no registered action with that id
  *   - `noSpace`            : no active space to write into
  *   - `operationFailed`    : the target operation returned an error
