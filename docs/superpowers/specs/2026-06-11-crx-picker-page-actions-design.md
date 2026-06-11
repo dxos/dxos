@@ -41,7 +41,8 @@ Files: `packages/plugins/plugin-crx/src/types/PageAction.ts` and `packages/apps/
 
 ### 3. plugin-bookmarks
 
-- Add `'picker'` to the contexts of the existing `add-bookmark` page action (`src/capabilities/page-action.ts`). No other change: `Bookmark.fromSnapshot` already maps `selection.text` → `excerpt` (280 chars) with og-hint fallbacks.
+- Add `'picker'` to the contexts of the existing `add-bookmark` page action (`src/capabilities/page-action.ts`).
+- Flip `excerpt` precedence in `Bookmark.fromSnapshot`: `selection.text` (explicit user intent — only present when the user selected or picked something) wins over `hints.ogDescription`, which becomes the fallback. Without this, the picked extract would be ignored on any page that declares an og:description.
 
 ### 4. plugin-crx: person / org / note become picker actions
 
