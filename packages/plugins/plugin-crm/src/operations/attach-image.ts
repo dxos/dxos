@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
+import { proxyFetchLegacy } from '@dxos/edge-client';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
@@ -166,7 +167,7 @@ const isAbsoluteHttpUrl = (raw: string): boolean => {
   }
 };
 
-const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOperation.AttachImage.pipe(
+export default CrmOperation.AttachImage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, url, imageServiceUrl }) {
       const serviceUrl = getImageServiceUrl(imageServiceUrl);
@@ -177,7 +178,7 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
       });
 
       const downloaded = yield* Effect.tryPromise({
-        try: () => fetch(validatedSource.toString(), { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
+        try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
         catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
       });
       if (!downloaded.ok) {
@@ -288,6 +289,5 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
       return { imageUrl: uploadedUrl };
     }),
   ),
+  Operation.opaqueHandler,
 );
-
-export default handler;

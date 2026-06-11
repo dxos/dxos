@@ -8,6 +8,8 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { proxyFetchLegacy } from '@dxos/edge-client';
+
 // TODO(dmaretskyi): Testing only.
 export const WebToolkit = Toolkit.make(
   AnthropicTool.WebSearch_20250305({}).pipe(
@@ -27,7 +29,9 @@ export const WebToolkit = Toolkit.make(
 
 export const layer = WebToolkit.toLayer({
   WebFetch: Effect.fnUntraced(function* ({ url }) {
-    const response = yield* Effect.promise(() => fetch(url).then((response) => response.text()));
+    const response = yield* Effect.promise(() =>
+      proxyFetchLegacy(new URL(url)).then((response) => response.text()),
+    );
     return response;
   }),
 });
