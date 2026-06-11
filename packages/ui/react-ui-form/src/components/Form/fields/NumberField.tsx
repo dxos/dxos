@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Input, type TextInputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
@@ -24,6 +24,16 @@ export const NumberField = ({
     const v = getValue();
     return v !== undefined ? String(v) : '';
   });
+
+  // Sync display when an external change updates the committed value (e.g. reactive form
+  // calculations). Only overwrite raw when the external value differs from what raw parses
+  // to, preserving partial edits like "1." which correctly parse to 1.
+  const externalValue = getValue();
+  useEffect(() => {
+    if (externalValue !== safeParseFloat(raw)) {
+      setRaw(externalValue !== undefined ? String(externalValue) : '');
+    }
+  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
     (event) => {
