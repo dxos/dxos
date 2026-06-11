@@ -1,20 +1,26 @@
 ---
 id: org.dxos.plugin.crx
 name: CrxPlugin
-version: 0.2.0
+version: 0.3.0
 ---
 
-Coordinates with the `@dxos/composer-crx` browser extension. Owns both the
-user-facing settings surface and the receiver bridge that materializes
-incoming clippings as `Person`, `Organization`, or `Note` objects in the
-active space. Also owns the render-proxy settings (absorbed from the retired
-plugin-extension) that govern how other plugins may use the extension to
-fetch and JS-render pages in a real browser tab.
+Coordinates with the `@dxos/composer-crx` browser extension. Owns the Composer
+side of the page-actions bridge: plugins contribute page actions (serializable
+descriptor + target operation) under a plugin-scoped capability; the extension
+caches the descriptors in its registry and invokes them over same-origin
+`window` `CustomEvent`s. This plugin answers registry-list requests, validates
+invoke requests, resolves the active space, executes the target operation, and
+surfaces outcomes as toasts. It also contributes three picker actions
+(Person, Organization, Note) whose operations map a page snapshot to an ECHO
+object, and owns the user-facing settings surface — including the render-proxy
+settings (absorbed from the retired plugin-extension) for the extension's
+page-rendering facility.
 
-The extension discovers this tab via `chrome.tabs.query` over a configured list
-of URLs and delivers the payload as a same-origin `window` `CustomEvent`. The
-extension owns the DOM picker and bridge sender; this plugin owns envelope
-validation, clip → ECHO object mapping, and user feedback (toast).
+The extension owns the DOM picker, popup toolbar, extractors, and bridge
+sender; this plugin owns envelope validation, snapshot → ECHO object mapping,
+and user feedback (toast). The extension keeps a hand-validated mirror of the
+wire types at `packages/apps/composer-crx/src/page-actions/types.ts` which
+must be updated in lockstep.
 
 ## Extensions
 
@@ -32,33 +38,22 @@ Each extension is defined in the Appendix or resolved via its URI.
 ```mdl
 type Settings
   desc: |
-    User preferences that govern extension ↔ Composer coordination. Persisted
-    via the app-framework settings store. All fields are optional; defaults
-    are documented per field.
+    User preferences for extension ↔ Composer coordination, persisted via the
+    app-framework settings store. Only user-set values are stored; defaults
+    are applied by consumers when reading the atom. All fields are optional.
+    The fields are a configuration surface; enforcement is owned by whichever
+    consumer reads the atom.
   fields:
-    enabled?: boolean            # default: true. Master switch: when false, the
-                                 # bridge ignores incoming clips.
-    autoOpenAfterClip?: boolean  # default: false. Navigate to the created
-                                 # object after a successful clip.
-    renderProxyEnabled?: boolean  # default: true. Master switch: when false,
-                                  # plugins use the edge HTTP proxy instead.
+    enabled?: boolean             # default: true. "Accept extension actions" preference.
+    autoOpenAfterClip?: boolean   # default: false. "Open after action" preference.
+    renderProxyEnabled?: boolean  # default: true. "Use extension to render pages" preference.
     renderTimeout?: number        # default: 20000. Max ms to wait for a render.
     renderActiveTab?: boolean     # default: false. Render in a focused tab.
     developerMode?: boolean       # default: false. Verbose logging / previews.
 ```
 
 ```mdl
-type ClipKind
-  supported: person | organization | note
-  note: |
-    At runtime, `Clip.kind` is modeled as `string` so new kinds can ship
-    from the extension without breaking envelope decoding. The receiver
-    accepts `person`, `organization`, and `note` only; any other value is
-    rejected with `unsupportedKind`.
-```
-
-```mdl
-type ClipSource
+type Source
   fields:
     url: string
     title: string
@@ -67,7 +62,7 @@ type ClipSource
 ```
 
 ```mdl
-type ClipSelection
+type Selection
   fields:
     text: string                # innerText of the picked subtree
     html?: string               # outerHTML, possibly truncated
@@ -76,10 +71,11 @@ type ClipSelection
 ```
 
 ```mdl
-type ClipHints
+type Hints
   desc: |
-    Cheap signals harvested from the whole page at pick time. MVP uses a subset
-    (og:title, og:image) as fallbacks; a future agent stage may interpret all of them.
+    Cheap signals harvested from the whole page at capture time. The mappings
+    use a subset (h1, og:title, og:description, og:image) as fallbacks; a
+    future agent stage may interpret all of them.
   fields:
     ogTitle?: string
     ogDescription?: string
@@ -90,26 +86,18 @@ type ClipHints
 ```
 
 ```mdl
-type Clip
+type Snapshot
   desc: |
-    The on-the-wire envelope is intentionally permissive so that older
-    receivers can read newer versions just far enough to respond with
-    `unsupportedVersion`. Version-specific validation runs after the
-    envelope decode succeeds.
+    Generic page capture produced by the extension's `snapshot` extractor.
+    Travels as the `inputs` of an invoke request.
   fields:
-    version: number             # runtime check: only 1 is supported
-    kind: string                # runtime check against ClipKind.supported
-    source: ClipSource
-    selection: ClipSelection
-    hints?: ClipHints
-```
-
-```mdl
-type ClipAck
-  fields:
-    ok: boolean
-    id?: string                 # ID of the created object when ok = true
-    error?: string              # stable error code when ok = false
+    source: Source
+    selection?: Selection
+    hints?: Hints
+    imageData?: string          # downscaled primary-image thumbnail (data URL),
+                                # captured by the extension's background worker
+    html?: string
+    htmlTruncated?: boolean
 ```
 
 ```mdl
@@ -124,8 +112,66 @@ type PageActionDescriptor
     urlPatterns: string[]       # match patterns the action applies to
     predicate?: { exists: string }  # lazy DOM condition (CSS selector)
     extractor: { name: string, params?: unknown }  # extension-bundled extractor
-    contexts: string[]          # surfaces: popup | page | selection | link
+    contexts: string[]          # surfaces: popup | page | selection | link | picker
     operation: string           # operation key, display/diagnostics only
+```
+
+```mdl
+type PageAction
+  desc: |
+    A live page-action contribution: the descriptor fields plus the actual
+    operation definition (serialized to its key string when listed). The
+    target operation must accept `{ snapshot: Snapshot, target: Database }`
+    and return `{ id: string }`.
+```
+
+```mdl
+type ListRequest
+  desc: |
+    Sent by the extension as `composer:page-actions:list`; acked as
+    `composer:page-actions:list:ack`.
+  fields:
+    version: number             # runtime check: only 1 is supported
+    id: string                  # correlation id, echoed in the ack
+```
+
+```mdl
+type ListAck
+  fields:
+    version: number             # always 1
+    id: string
+    ok: boolean
+    actions?: PageActionDescriptor[]  # when ok = true
+    error?: string              # stable error code when ok = false
+```
+
+```mdl
+type InvokeRequest
+  desc: |
+    Sent by the extension as `composer:page-action:invoke`; acked as
+    `composer:page-action:invoke:ack`. Decoded in two passes: a loose
+    envelope ({ version, id? }) first, so newer versions yield
+    `unsupportedVersion` rather than the generic `invalidPayload` and
+    malformed payloads can still echo the request id.
+  fields:
+    version: number             # runtime check: only 1 is supported
+    id: string                  # correlation id, echoed in the ack
+    actionId: string            # id of the registered action to invoke
+    page: { url: string, title: string, favicon?: string }
+    inputs: unknown             # extractor output; `snapshot` yields Snapshot
+    invokedFrom: popup | contextMenu | picker
+```
+
+```mdl
+type InvokeAck
+  fields:
+    version: number             # always 1
+    id: string
+    ok: boolean
+    objectId?: string           # ID of the created object when ok = true
+    error?: string              # stable error code when ok = false:
+                                #   invalidPayload | unsupportedVersion |
+                                #   unknownAction | noSpace | operationFailed
 ```
 
 ## Features
@@ -151,125 +197,150 @@ feat F-2: Settings Surface
   req F-2.1:
     when: the app-framework settings panel renders the CRX section
     then: |
-      a form is shown with switches for `enabled` and `autoOpenAfterClip`,
-      wired to the Settings atom and persisted on change.
+      a schema-driven form is shown covering all Settings fields, wired to
+      the Settings atom and persisted on change.
+
+  req F-2.2:
+    when: the user presses the Test connection button
+    then: |
+      a ping round-trips over the page → content-script → background path and
+      reports the extension's name and version on success, or the failure
+      reason otherwise.
 ```
 
 ```mdl
-feat F-2b: Render-Proxy Settings
+feat F-3: Page Action Contributions
   desc: |
-    Settings governing the extension's search render-proxy (page rendering for
-    plugins that scrape client-rendered sites), absorbed from the retired
-    plugin-extension. Includes a connection-test button that pings the
-    extension over the page → content-script → background path.
-  req:
-    - The settings surface renders all merged fields plus a Test connection button.
-    - The ping round-trip reports the extension's name and version on success.
-```
-
-```mdl
-feat F-3: Clip Ingestion Listener
+    Plugins contribute `PageAction[]` under the plugin-scoped
+    `CrxCapabilities.PageAction` capability. Other plugins contribute their
+    own actions the same way (e.g. plugin-bookmarks contributes
+    "Add bookmark").
 
   req F-3.1:
     when: plugin is activated
-    then: a single window event listener for `composer:clip` is registered
+    then: |
+      three picker-only actions are contributed — Person, Organization, and
+      Note — each matching `http(s)://*/*`, using the extension-bundled
+      `snapshot` extractor, and targeting the corresponding
+      AddPersonFromSnapshot / AddOrganizationFromSnapshot /
+      AddNoteFromSnapshot operation.
 
   req F-3.2:
-    when: the page unloads or the plugin is disabled
-    then: the listener is removed cleanly
-
-  req F-3.3:
-    when: any payload arrives
-    then: a `composer:clip:ack` CustomEvent is dispatched on `window` carrying ClipAck
+    when: the extension lists actions
+    then: |
+      contributions are resolved per-request, so actions from
+      late-activating plugins are included.
 ```
 
 ```mdl
-feat F-4: Envelope Validation
+feat F-4: Registry Listing
 
   req F-4.1:
-    when: a `composer:clip` event is received
-    then: the `detail` is decoded against the Clip schema
+    when: plugin is activated
+    then: |
+      window event listeners for `composer:page-actions:list` and
+      `composer:page-action:invoke` are installed, and a
+      `composer:page-actions:ready` event is dispatched so the extension
+      relay can refresh its registry even when Composer boots after the
+      content script has already installed.
 
   req F-4.2:
-    when: the payload fails schema decoding
-    then: ack is { ok: false, error: 'invalidPayload' } and no object is created
+    when: a valid list request arrives
+    then: |
+      the ack carries the currently contributed actions as serializable
+      descriptors, with `operation` serialized to the operation's key string.
 
   req F-4.3:
-    when: the payload has a version other than 1
-    then: ack is { ok: false, error: 'unsupportedVersion' }
+    when: a list request fails schema decoding
+    then: |
+      the ack is { ok: false, error: 'invalidPayload' } with a best-effort
+      echo of the request id so the extension can correlate the failure.
 ```
 
 ```mdl
-feat F-5: Clip → Object Mapping
+feat F-5: Invoke Validation & Dispatch
 
   req F-5.1:
-    when: kind = 'person'
+    when: an invoke request's envelope fails decoding
+    then: ack is { ok: false, error: 'invalidPayload' } and nothing is invoked
+
+  req F-5.2:
+    when: the envelope has a version other than 1
+    then: |
+      ack is { ok: false, error: 'unsupportedVersion' } with the request id
+      echoed when present.
+
+  req F-5.3:
+    when: the strict payload fails decoding
+    then: ack is { ok: false, error: 'invalidPayload' }
+
+  req F-5.4:
+    when: `actionId` matches no registered action
+    then: ack is { ok: false, error: 'unknownAction' }
+
+  req F-5.5:
+    when: the active space cannot be determined
+    then: nothing is invoked; ack is { ok: false, error: 'noSpace' }
+
+  req F-5.6:
+    when: the request resolves to an action and an active space
+    then: |
+      the action's operation is invoked with
+      { snapshot: inputs, target: activeSpace.db }; on success the ack is
+      { ok: true, objectId } carrying the created object's id.
+
+  req F-5.7:
+    when: the operation returns an error or throws
+    then: ack is { ok: false, error: 'operationFailed' }
+```
+
+```mdl
+feat F-6: Snapshot → Object Mapping
+  desc: |
+    Each contributed operation maps a Snapshot to an ECHO object and adds it
+    to the target database via SpaceOperation.AddObject.
+
+  req F-6.1:
+    when: AddPersonFromSnapshot is invoked
     then: |
       a Person is created with best-effort fields:
         fullName  ← hints.h1 ?? hints.ogTitle ?? firstLine(selection.text)
         image     ← hints.ogImage
-        notes     ← selection.text (truncated to a reasonable size)
-        urls      ← [{ label: source.title, value: source.url }]
+        notes     ← selection.text (truncated to 4000 chars)
+        urls      ← [{ label: source.title || source.url, value: source.url }]
 
-  req F-5.2:
-    when: kind = 'organization'
+  req F-6.2:
+    when: AddOrganizationFromSnapshot is invoked
     then: |
       an Organization is created with best-effort fields:
         name        ← hints.ogTitle ?? hints.h1 ?? firstLine(selection.text)
-        description ← hints.ogDescription
+        description ← hints.ogDescription ?? selection.text (truncated)
         image       ← hints.ogImage
         website     ← source.url
 
-  req F-5.3:
-    when: kind = 'note'
+  req F-6.3:
+    when: AddNoteFromSnapshot is invoked
     then: |
-      a Markdown document is created with a small prelude (title, source link,
-      timestamp) followed by the picked subtree's rendered text.
+      a Markdown document is created with a small prelude (title, source
+      link, timestamp) followed by the selection's rendered text (truncated
+      to 50000 chars). The title falls back through
+      hints.h1 ?? hints.ogTitle ?? firstLine(selection.text) ?? source.title.
 
-  req F-5.4:
+  req F-6.4:
     when: there is no name/title candidate
     then: the object is still created; empty name is acceptable
-
-  req F-5.5:
-    when: kind is unknown (future kinds)
-    then: ack is { ok: false, error: 'unsupportedKind' } and no object is created
-```
-
-```mdl
-feat F-6: Space Resolution
-
-  req F-6.1:
-    when: the active space cannot be determined
-    then: no object is created; ack is { ok: false, error: 'noSpace' }
-
-  req F-6.2:
-    when: the active space is resolved
-    then: the object is added via SpaceOperation.AddObject with target = space.db
 ```
 
 ```mdl
 feat F-7: User Feedback
 
   req F-7.1:
-    when: an object is created successfully
-    then: a success toast is shown naming the kind and (when present) its label
+    when: an invoke ack is produced with ok = true
+    then: a success toast is shown
 
   req F-7.2:
-    when: creation fails
-    then: an error toast is shown with the stable error code
-```
-
-```mdl
-feat F-8: Page Actions Registry & Invocation
-  desc: |
-    Plugins contribute page actions (serializable descriptor + target
-    operation) under a plugin-scoped capability. This plugin answers the
-    extension's registry-list requests (`composer:page-actions:list`) with
-    descriptors and executes invoke requests (`composer:page-action:invoke`)
-    by resolving the active space and invoking the target operation with
-    `{ snapshot, target }`. Every request is acked with stable error codes
-    (invalidPayload, unsupportedVersion, unknownAction, noSpace,
-    operationFailed); outcomes surface as toasts.
+    when: an invoke ack is produced with ok = false
+    then: an error toast is shown naming the stable error code
 ```
 
 ## Acceptance
@@ -279,8 +350,9 @@ test T-1: Settings atom registered
   given: plugin activated
   then:
     - the Settings capability is available via Capability.get
-    - the default atom value is { enabled: true, autoOpenAfterClip: false }
-      (applied through the schema's optional defaults)
+    - the default atom value is { enabled: true, autoOpenAfterClip: false,
+      renderProxyEnabled: true, renderTimeout: 20000, renderActiveTab: false,
+      developerMode: false }
 ```
 
 ```mdl
@@ -291,49 +363,93 @@ test T-2: Toggling enabled persists
 ```
 
 ```mdl
-test T-3: Valid person clip creates Person
-  given: plugin active, a default space present
-  when: window dispatches `composer:clip` with kind=person, hints.h1='Jane Doe'
+test T-3: List request returns descriptors
+  given: contributed picker actions (Person, Organization, Note)
+  when: handleListEvent receives { version: 1, id: 'r1' }
   then:
-    - a Person is created with fullName='Jane Doe'
-    - an ack event carries { ok: true, id: <non-empty> }
+    - ack is { ok: true, id: 'r1' }
+    - ack.actions contains one descriptor per action with `operation`
+      serialized to the operation key string
+```
+
+```mdl
+test T-4: Invalid list request is rejected
+  given: page-actions listeners installed
+  when: handleListEvent receives a malformed detail (missing id)
+  then: ack is { ok: false, error: 'invalidPayload' }
+```
+
+```mdl
+test T-5: Valid person invoke creates Person
+  given: a registered add-person action and an active space
+  when: |
+    handleInvokeEvent receives { version: 1, actionId: <add-person>,
+    inputs: snapshot } with snapshot.hints.h1 = 'Jane Doe'
+  then:
+    - a Person is created with fullName = 'Jane Doe'
+    - ack is { ok: true, objectId: <non-empty> }
     - a success toast is shown
 ```
 
 ```mdl
-test T-4: Organization mapping falls back to og:title
-  given: plugin active
-  when: clip arrives with kind=organization, hints.ogTitle='DXOS', hints.h1 undefined
+test T-6: Organization mapping falls back to og:title
+  given: a snapshot with hints.ogTitle = 'DXOS' and hints.h1 undefined
+  when: AddOrganizationFromSnapshot is invoked
   then:
     - Organization.name === 'DXOS'
     - Organization.website === source.url
 ```
 
 ```mdl
-test T-5: Invalid payload is rejected
-  given: plugin active
-  when: window dispatches `composer:clip` with a malformed detail (missing kind)
-  then:
-    - no object is created
-    - ack is { ok: false, error: 'invalidPayload' }
-```
-
-```mdl
-test T-6: Missing name is allowed
-  given: plugin active
-  when: clip arrives with kind=person and no hints and empty selection.text
+test T-7: Missing name is allowed
+  given: a snapshot with no hints and empty selection text
+  when: the add-person action is invoked
   then:
     - a Person is created (empty fullName)
-    - ack is { ok: true, id: <non-empty> }
+    - ack is { ok: true, objectId: <non-empty> }
 ```
 
 ```mdl
-test T-7: Unsupported envelope version
-  given: plugin active
-  when: clip arrives with version=2
+test T-8: Unsupported envelope version
+  given: page-actions listeners installed
+  when: handleInvokeEvent receives { version: 2, id: 'r2', ... }
   then:
-    - no object is created
-    - ack is { ok: false, error: 'unsupportedVersion' }
+    - nothing is invoked
+    - ack is { ok: false, id: 'r2', error: 'unsupportedVersion' }
+```
+
+```mdl
+test T-9: Invalid invoke payload is rejected
+  given: page-actions listeners installed
+  when: handleInvokeEvent receives a version-1 detail missing `actionId`
+  then:
+    - nothing is invoked
+    - ack is { ok: false, error: 'invalidPayload' } with the envelope id echoed
+```
+
+```mdl
+test T-10: Unknown action
+  given: no action registered with id 'nope'
+  when: handleInvokeEvent receives a valid request with actionId = 'nope'
+  then: ack is { ok: false, error: 'unknownAction' }
+```
+
+```mdl
+test T-11: No active space
+  given: the active space cannot be resolved
+  when: a valid invoke request arrives
+  then:
+    - nothing is invoked
+    - ack is { ok: false, error: 'noSpace' }
+```
+
+```mdl
+test T-12: Operation failure
+  given: the target operation returns an error (or throws)
+  when: a valid invoke request arrives
+  then:
+    - ack is { ok: false, error: 'operationFailed' }
+    - an error toast is shown
 ```
 
 ---

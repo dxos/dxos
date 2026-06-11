@@ -20,11 +20,10 @@ export const meta = Plugin.makeMeta({
     with a link back to the original page. If something can't be saved, the extension tells you
     exactly why so you can try again.
 
-    Settings let you enable or disable extension actions and choose whether Composer jumps straight to a
-    newly saved item, so you can review captures immediately or keep browsing without interruption.
-    Settings also control whether other features may use the extension to load pages in the
-    background — with a time limit you can adjust and an option to open them in a visible tab
-    instead — as well as a developer mode for troubleshooting if something isn't working as expected.
+    Settings cover how the extension and Composer work together: extension actions, whether Composer
+    jumps straight to a newly saved item, loading pages in the background — with an adjustable time
+    limit and an option to use a visible tab instead — and a developer mode for troubleshooting.
+    A connection test confirms the extension is installed and reachable.
   `,
   icon: 'ph--browser--regular',
   iconHue: 'neutral',
