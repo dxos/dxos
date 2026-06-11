@@ -8,8 +8,8 @@ import React, { useCallback, useRef } from 'react';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { Filter } from '@dxos/echo';
-import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
+import { Filter, Ref } from '@dxos/echo';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
@@ -74,8 +74,8 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       node.value = value;
       node.function = Ref.make(fn);
-      node.inputSchema = fn.inputSchema ? getSnapshot(fn.inputSchema) : undefined;
-      node.outputSchema = fn.outputSchema ? getSnapshot(fn.outputSchema) : undefined;
+      node.inputSchema = fn.inputSchema;
+      node.outputSchema = fn.outputSchema;
     },
     [client, node],
   );

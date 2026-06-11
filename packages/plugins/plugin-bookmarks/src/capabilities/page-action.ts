@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
         icon: 'ph--bookmark-simple--regular',
         urlPatterns: ['http://*/*', 'https://*/*'],
         extractor: { name: 'snapshot' },
-        contexts: ['popup', 'page'],
+        contexts: ['popup', 'page', 'picker'],
         operation: BookmarkOperation.AddFromSnapshot,
       },
     ];

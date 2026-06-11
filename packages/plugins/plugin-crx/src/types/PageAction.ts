@@ -8,29 +8,60 @@ import * as Schema from 'effect/Schema';
 
 import { type Operation } from '@dxos/compute';
 
-import * as Clip from './Clip';
-
 /**
  * Page actions: operations contributed by plugins that the composer-crx
  * browser extension surfaces on web pages (popup toolbar, context menu).
- * The extension caches serializable descriptors; invocation arrives over the
- * same window CustomEvent bridge as clips.
+ * The extension caches serializable descriptors; invocation arrives over a
+ * window CustomEvent bridge.
  *
  * The extension keeps a hand-validated mirror of these types at
  * `packages/apps/composer-crx/src/page-actions/types.ts` which MUST be
  * updated in lockstep with any change here.
  */
 
+export const Rect = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+  width: Schema.Number,
+  height: Schema.Number,
+});
+
+export const Source = Schema.Struct({
+  url: Schema.String,
+  title: Schema.String,
+  favicon: Schema.optional(Schema.String),
+  clippedAt: Schema.String,
+});
+export type Source = Schema.Schema.Type<typeof Source>;
+
+export const Selection = Schema.Struct({
+  text: Schema.String,
+  html: Schema.optional(Schema.String),
+  htmlTruncated: Schema.optional(Schema.Boolean),
+  rect: Schema.optional(Rect),
+});
+export type Selection = Schema.Schema.Type<typeof Selection>;
+
+export const Hints = Schema.Struct({
+  ogTitle: Schema.optional(Schema.String),
+  ogDescription: Schema.optional(Schema.String),
+  ogImage: Schema.optional(Schema.String),
+  jsonLd: Schema.optional(Schema.Array(Schema.Unknown)),
+  h1: Schema.optional(Schema.String),
+  firstImage: Schema.optional(Schema.String),
+});
+export type Hints = Schema.Schema.Type<typeof Hints>;
+
 /**
  * Generic page capture produced by the extension's `snapshot` extractor.
- * Reuses the Clip envelope's source/selection/hints shapes. The mirror in
- * composer-crx copies these shapes structurally, so any change to
- * `Clip.Source`, `Clip.Selection`, or `Clip.Hints` propagates to the mirror too.
+ * The extension keeps a hand-validated mirror of these types at
+ * `packages/apps/composer-crx/src/page-actions/types.ts` which MUST be
+ * updated in lockstep with any change here.
  */
 export const Snapshot = Schema.Struct({
-  source: Clip.Source,
-  selection: Schema.optional(Clip.Selection),
-  hints: Schema.optional(Clip.Hints),
+  source: Source,
+  selection: Schema.optional(Selection),
+  hints: Schema.optional(Hints),
   /**
    * Downscaled thumbnail of the page's primary image as a data URL, captured
    * by the extension's background worker (which can fetch images whose hosts
@@ -57,7 +88,7 @@ export const ExtractorRef = Schema.Struct({
 });
 export type ExtractorRef = Schema.Schema.Type<typeof ExtractorRef>;
 
-export const Context = Schema.Literal('popup', 'page', 'selection', 'link');
+export const Context = Schema.Literal('popup', 'page', 'selection', 'link', 'picker');
 export type Context = Schema.Schema.Type<typeof Context>;
 
 /**
@@ -136,7 +167,7 @@ export const InvokeRequest = Schema.Struct({
   actionId: Schema.String,
   page: PageInfo,
   inputs: Schema.Unknown,
-  invokedFrom: Schema.Literal('popup', 'contextMenu'),
+  invokedFrom: Schema.Literal('popup', 'contextMenu', 'picker'),
 });
 export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
 
@@ -144,6 +175,7 @@ export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
  * Stable error codes:
  *   - `invalidPayload`     : schema decoding failed
  *   - `unsupportedVersion` : envelope version not supported
+ *   - `disabled`           : extension actions are disabled in settings
  *   - `unknownAction`      : no registered action with that id
  *   - `noSpace`            : no active space to write into
  *   - `operationFailed`    : the target operation returned an error

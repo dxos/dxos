@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 

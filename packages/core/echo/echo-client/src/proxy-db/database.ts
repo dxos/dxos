@@ -10,6 +10,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -34,6 +35,7 @@ import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxo
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
+import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
   EchoReactiveHandler,
@@ -55,9 +57,6 @@ export interface EchoDatabase extends Database.Database {
 
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
-
-  /** @deprecated */
-  readonly coreDatabase: CoreDatabase;
 
   /** @deprecated */
   get spaceKey(): PublicKey;
@@ -85,6 +84,38 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the sync progress with other peers.
    */
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+
+  /**
+   * Returns ids for all objects in the space (both loaded and unloaded).
+   */
+  getAllObjectIds(): string[];
+
+  /**
+   * Returns the number of objects stored inline in the space root document.
+   */
+  getNumberOfInlineObjects(): number;
+
+  /**
+   * Fires when the space root document changes.
+   */
+  readonly rootChanged: ReadOnlyEvent<void>;
+
+  /**
+   * Returns the loaded automerge document handles.
+   */
+  getLoadedDocumentHandles(): DocHandleProxy<any>[];
+
+  /**
+   * Migration-scoped accessor to the automerge repo.
+   * Will be moved to a dedicated internal entrypoint in a future stage.
+   */
+  readonly _repo: RepoProxy;
+
+  /**
+   * Returns the space root document handle for migration tools.
+   * Will be moved to a dedicated internal entrypoint in a future stage.
+   */
+  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
 
   /**
    * Insert new objects.
@@ -122,10 +153,10 @@ export type EchoDatabaseProps = {
 };
 
 /**
- * API for the database.
+ * User-facing API for the space database.
  * Implements EchoDatabase interface.
  */
-export class EchoDatabaseImpl extends Resource implements EchoDatabase {
+export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly [Database.TypeId]: typeof Database.TypeId = Database.TypeId;
 
   /**
@@ -496,6 +527,30 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.subscribeToSyncState(ctx, callback);
   }
 
+  getAllObjectIds(): string[] {
+    return this._coreDatabase.getAllObjectIds();
+  }
+
+  getNumberOfInlineObjects(): number {
+    return this._coreDatabase.getNumberOfInlineObjects();
+  }
+
+  get rootChanged(): ReadOnlyEvent<void> {
+    return this._coreDatabase.rootChanged;
+  }
+
+  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
+    return this._coreDatabase.getLoadedDocumentHandles();
+  }
+
+  get _repo(): RepoProxy {
+    return this._coreDatabase._repo;
+  }
+
+  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+    return this._coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+  }
+
   /**
    * Update service references after reconnection.
    */
@@ -535,6 +590,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * @deprecated
+   * Direct access to the core database layer. Only valid within @dxos/echo-client; external consumers
+   * must use the named API methods (getAllObjectIds, getNumberOfInlineObjects, rootChanged, etc.).
    */
   get coreDatabase(): CoreDatabase {
     return this._coreDatabase;

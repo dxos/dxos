@@ -125,9 +125,9 @@ export const findChannelForDiscordChannel: (
   discordChannelId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForDiscordChannel')(
   function* (discordChannelId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Channel.Channel, [{ source: DISCORD_SOURCE, id: discordChannelId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );

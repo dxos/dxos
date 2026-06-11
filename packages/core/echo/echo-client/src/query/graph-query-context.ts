@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
-import { type EchoDatabaseImpl } from '../proxy-db';
+import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
@@ -169,7 +169,7 @@ export class SpaceQuerySource implements QuerySource {
   private _query: QueryAST.Query | undefined = undefined;
   private _results?: QueryResult.EntityEntry<Obj.Any>[] = undefined;
 
-  constructor(private readonly _database: EchoDatabaseImpl) {}
+  constructor(private readonly _database: DatabaseImpl) {}
 
   get spaceId() {
     return this._database.spaceId;

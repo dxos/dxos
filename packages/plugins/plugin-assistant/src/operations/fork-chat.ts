@@ -4,21 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext, SessionLink } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = AssistantOperation.ForkChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ chat }) {
+    Effect.fnUntraced(function* ({ chat, companionTo }) {
       const { db } = yield* Database.Service;
       const sourceFeed = chat.feed.target;
       invariant(sourceFeed, 'Chat feed not found.');
@@ -39,7 +41,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         .sort((a, b) => a.created.localeCompare(b.created));
 
       // Create a new chat, then apply source bindings and session link.
-      const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
+      const sourceName = Obj.getLabel(chat);
+      const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
+        db,
+        name: sourceName ? `${sourceName} (fork)` : undefined,
+      });
       const newFeed = newChat.feed.target;
       invariant(newFeed, 'New chat feed not found.');
 
@@ -80,9 +86,23 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         ]).pipe(Effect.provide(feedServiceLayer));
       }
 
-      // Navigate to the forked chat.
-      const chatPath = getObjectPathFromObject(newChat);
-      yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
+      if (companionTo) {
+        // Wire the forked chat as a companion and switch to it without navigating away.
+        yield* Operation.invoke(SpaceOperation.AddRelation, {
+          db,
+          schema: Chat.CompanionTo,
+          source: newChat,
+          target: companionTo,
+        });
+        const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
+        yield* Effect.promise(() =>
+          operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: newChat }),
+        );
+      } else {
+        // Navigate to the forked chat as a standalone plank.
+        const chatPath = getObjectPathFromObject(newChat);
+        yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
+      }
 
       return { object: newChat };
     }),

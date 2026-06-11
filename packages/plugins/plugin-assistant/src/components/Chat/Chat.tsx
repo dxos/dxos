@@ -30,8 +30,6 @@ import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 
-export { useChatContext };
-
 //
 // Root
 //

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { Device, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 

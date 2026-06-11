@@ -26,7 +26,7 @@ import { Message } from '@dxos/types';
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
-import { isAiServiceUnavailable } from '../../extractor/ai-gate';
+import { isAiServiceUnavailable } from '../../extractor';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -73,7 +73,10 @@ const collectMailboxRefsFromIntegration = (
       if (!target.object) {
         continue;
       }
-      const loaded = yield* Database.loadOption(target.object);
+      const loaded = yield* Database.load(target.object).pipe(
+        Effect.map(Option.some),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
+      );
       if (Option.isSome(loaded) && Mailbox.instanceOf(loaded.value)) {
         refs.push(Ref.make(loaded.value));
       }

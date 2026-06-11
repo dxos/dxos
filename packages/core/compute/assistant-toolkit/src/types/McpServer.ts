@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { McpServer as McpServerSpec } from '@dxos/compute';
 import { DXN, Annotation, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * MCP server configuration stored as a space-level ECHO object.

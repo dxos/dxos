@@ -49,9 +49,9 @@ export const syncObjects: (
 
       const type = Obj.getType(obj) ?? failedInvariant('No type.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
-      const [existing] = yield* Database.runQuery(
+      const [existing] = yield* Database.query(
         Query.select(Filter.foreignKeys(type, [{ source: foreignKeyId, id: foreignId }])),
-      );
+      ).run;
       log('sync object', {
         type: Obj.getTypename(obj),
         foreignId,

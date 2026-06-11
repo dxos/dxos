@@ -51,11 +51,17 @@ export default AgentPrompt.pipe(
         // are persisted to the conversation feed, and registry-only blueprints have no space-DB
         // identity, so an EID ref would not resolve when the binding is re-read.
         const blueprintRefs = yield* Effect.filter(prompt.blueprints, (ref) =>
-          Database.loadOption(ref).pipe(Effect.map(Option.isSome)),
+          Database.load(ref).pipe(
+            Effect.as(true),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+          ),
         );
 
         const objectRefs = yield* Effect.filter(prompt.context, (ref) =>
-          Database.loadOption(ref).pipe(Effect.map(Option.isSome)),
+          Database.load(ref).pipe(
+            Effect.as(true),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+          ),
         );
 
         const promptInstructions = yield* Database.load(prompt.instructions);

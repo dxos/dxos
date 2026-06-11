@@ -6,7 +6,8 @@ import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { type Database, Type } from '@dxos/echo';
-import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 
 const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
   Array.from(

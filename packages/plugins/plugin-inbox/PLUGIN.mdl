@@ -115,7 +115,10 @@ component CalendarArticle
   desc: |
     Day/week view of a Calendar. Overlays synced (feed) Events and draft (local) Events on the
     grid and event list. Toolbar (toolbar idiom) offers "Create event" and, when any draft events
-    exist, "Save events to calendar".
+    exist, "Save events to calendar" (disabled unless an Integration targets the Calendar). The
+    toolbar also slots the connect/sync action (InitializeCalendarAction): "Connect" auth Surface
+    when no Integration targets the Calendar, pull-sync button when one does. Selecting an event in
+    the list scrolls its date into view on the month grid (CalendarController.scrollTo).
   props:
     subject: Calendar
   state:
@@ -123,9 +126,9 @@ component CalendarArticle
     selectedDate?: Date          # default date for newly created events
     range: { from: Date; to: Date }
   actions:
-    selectEvent(event: Event)
+    selectEvent(event: Event)    # selects, opens companion, and scrolls the grid to the event date
     createEvent()                # creates a draft Event (db, parented to Calendar) and focuses it
-    syncDraft()             # op:syncDraftEvents for all draft events on this Calendar
+    syncDraft()             # op:syncDraftEvents (spaceId-scoped) for all draft events on this Calendar
     sync()
 ```
 
@@ -133,9 +136,14 @@ component CalendarArticle
 component EventArticle
   desc: |
     Event detail (companion to a Calendar). When the event is draft the header is an editable form
-    (title · all-day toggle · start · end-or-duration) and the body is a markdown editor; the toolbar
-    shows a Save action. Toolbar (toolbar idiom): Open (promote from companion), Create note, Save
-    (draft only), Delete. Editing resolves the live db object (useQuery by id) so inputs stay reactive.
+    (title · all-day toggle · start · end-or-duration · attendees) and the body is a markdown editor;
+    the toolbar shows a Save action (disabled unless an Integration targets the Calendar). The
+    attendee list always ends with a blank ActorList row (react-ui-components): typing `@` opens a
+    typeahead against Person names/emails; each completed token (an `@<id>` reference or a
+    well-formed email) is committed as an attendee. Toolbar (toolbar idiom): Open (promote from
+    companion), Create note, Save (draft only), Delete. Editing resolves the live db object
+    (useQuery by id) so inputs stay reactive. Operations are invoked with the calendar db's spaceId
+    so their space-affinity services (Database/Feed/Credentials) materialize.
   props:
     subject: Event
     companionTo?: Calendar
@@ -145,8 +153,9 @@ component EventArticle
     endMode: explicit | duration # specify an explicit end DateTime or a duration preset (end = start + d)
   actions:
     open()                       # op:layoutOpen — promote from companion to main view
-    save()                       # op:syncDraftEvents for this event
-    delete()                     # op:deleteEvent
+    save()                       # op:syncDraftEvents (spaceId-scoped) for this event
+    delete()                     # op:deleteEvent (spaceId-scoped)
+    addAttendee(actor: Actor)    # via the blank ActorList row (Person reference or email)
 ```
 
 ```mdl
