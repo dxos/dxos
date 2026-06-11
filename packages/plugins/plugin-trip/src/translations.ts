@@ -16,12 +16,16 @@ export const translations = [
         'typename.label_zero': 'Trips',
         'typename.label_one': 'Trip',
         'typename.label_other': 'Trips',
+        'add-object.label': 'Add trip',
+        'delete-object.label': 'Delete trip',
       },
       [Type.getTypename(Booking.Booking)]: {
         'typename.label': 'Booking',
         'typename.label_zero': 'Bookings',
         'typename.label_one': 'Booking',
         'typename.label_other': 'Bookings',
+        'add-object.label': 'Add booking',
+        'delete-object.label': 'Delete booking',
       },
       [meta.id]: {
         'plugin.name': 'Trip',

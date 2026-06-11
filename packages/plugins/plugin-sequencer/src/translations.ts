@@ -16,6 +16,8 @@ export const translations = [
         'typename.label_zero': 'Scores',
         'typename.label_one': 'Score',
         'typename.label_other': 'Scores',
+        'add-object.label': 'Add score',
+        'delete-object.label': 'Delete score',
       },
       [meta.id]: {
         'plugin.name': 'Sequencer',

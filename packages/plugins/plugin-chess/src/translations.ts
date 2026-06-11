@@ -16,6 +16,8 @@ export const translations = [
         'typename.label_zero': 'Chess games',
         'typename.label_one': 'Chess game',
         'typename.label_other': 'Chess games',
+        'add-object.label': 'Add chess game',
+        'delete-object.label': 'Delete chess game',
       },
       [meta.id]: {
         'plugin.name': 'Chess',

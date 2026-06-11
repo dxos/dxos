@@ -17,6 +17,7 @@ export const translations = [
         'typename.label_one': 'Dream',
         'typename.label_other': 'Dreams',
         'object-name.placeholder': 'New dream',
+        'add-object.label': 'Add dream',
         'rename-object.label': 'Rename dream',
         'delete-object.label': 'Delete dream',
         'object-deleted.label': 'Dream deleted',
