@@ -20,8 +20,8 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
+import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
@@ -60,7 +60,9 @@ export const CreateObjectDialog = ({
   const allTypes = useQuery(db, allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
   const spaceLabel = useMemo(
-    () => space && toLocalizedString(getSpaceDisplayName(space, { personal: space.id === getPersonalSpace(client)?.id }), t),
+    () =>
+      space &&
+      toLocalizedString(getSpaceDisplayName(space, { personal: space.id === getPersonalSpace(client)?.id }), t),
     [space, client, t],
   );
 
@@ -130,7 +132,8 @@ export const CreateObjectDialog = ({
           const isDatabase = type ? Type.getDatabase(type) != null : false;
           return {
             id: entry.id,
-            label: (isDatabase && type ? Type.getLabel(type) : undefined) ??
+            label:
+              (isDatabase && type ? Type.getLabel(type) : undefined) ??
               t('typename.label', { ns: entry.id, defaultValue: entry.id }),
             icon: iconAnnotation?.icon,
             iconHue: iconAnnotation?.hue,

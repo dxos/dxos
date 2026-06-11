@@ -181,9 +181,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
                 <span className='truncate text-description text-xs'>
-                  {option.plugin
-                    ? t('plugin-subtitle.label', { plugin: option.plugin })
-                    : option.description}
+                  {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
             </div>

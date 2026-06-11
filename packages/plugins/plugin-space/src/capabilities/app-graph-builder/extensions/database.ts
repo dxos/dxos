@@ -316,7 +316,8 @@ const createSchemaActions = ({
 
   // For database-persisted object schemas without a dedicated capability, synthesize a generic entry.
   const resolvedEntry: SpaceCapabilities.CreateObjectEntry | undefined =
-    createEntry ?? (Type.getDatabase(type) != null && Type.isObject(type) ? makeCreateObjectEntryForDatabaseType(type) : undefined);
+    createEntry ??
+    (Type.getDatabase(type) != null && Type.isObject(type) ? makeCreateObjectEntryForDatabaseType(type) : undefined);
   const createObjectFn = resolvedEntry?.createObject;
   const inputSchema = resolvedEntry?.inputSchema;
 

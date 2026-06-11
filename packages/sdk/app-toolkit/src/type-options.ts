@@ -36,10 +36,7 @@ export type TypeOption = {
   label?: string;
 };
 
-export const filterTypeOptions = (
-  types: readonly Type.AnyEntity[],
-  annotation: TypeInputOptions,
-): TypeOption[] => {
+export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: TypeInputOptions): TypeOption[] => {
   const includeRuntime = annotation.location.includes('runtime');
   const includeDatabase = annotation.location.includes('database');
   const includeHiddenType = annotation.kind.includes('hidden');
