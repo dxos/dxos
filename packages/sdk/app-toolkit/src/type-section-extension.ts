@@ -60,6 +60,7 @@ export const createTypeSectionExtension = (
   // the runtime accepts any schema with a typename annotation.
   const filter = Filter.type(type as any) as Filter.Any;
   const defaultQuery = Query.select(filter);
+  const testId = `${typename}.section`;
 
   const label = getDynamicLabel('typename.label', typename, { count: 2 });
 
@@ -77,7 +78,7 @@ export const createTypeSectionExtension = (
       const typeEntity = space.db.graph.registry
         .list()
         .filter(Type.isType)
-        .find((t) => Type.getTypename(t) === typename);
+        .find((entry) => Type.getTypename(entry) === typename);
       const registeredSchema = typeEntity ? Type.getSchema(typeEntity) : undefined;
       const annotation = (() => {
         try {
@@ -100,6 +101,7 @@ export const createTypeSectionExtension = (
             ...(iconHue ? { iconHue } : {}),
             role: 'branch',
             space,
+            testId,
             ...(options?.position ? { position: options.position } : {}),
           },
           nodes: objects
