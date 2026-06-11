@@ -12,7 +12,7 @@ import { QueryDb } from './definitions';
 export default QueryDb.pipe(
   Operation.withHandler(
     Effect.fn(function* (data) {
-      const results = yield* Database.runQuery(EchoQuery.select(Filter.everything()));
+      const results = yield* Database.query(EchoQuery.select(Filter.everything())).run;
       return { count: results.length };
     }),
   ),

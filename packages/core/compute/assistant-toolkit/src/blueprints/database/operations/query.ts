@@ -20,9 +20,9 @@ export default Query.pipe(
           ...text.split(' ').map((term) => EchoQuery.select(Filter.text(term, { type: 'full-text' }))),
         );
         if (typename !== undefined) {
-          const types = yield* Database.runQuery(
+          const types = yield* Database.query(
             EchoQuery.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
-          );
+          ).run;
           const schema = types.find((t) => Type.getTypename(t) === typename);
           if (!schema) {
             return yield* Effect.fail(new Error(`Schema ${typename} not found`));
@@ -30,9 +30,9 @@ export default Query.pipe(
           query = query.select(Filter.type(schema));
         }
       } else if (typename) {
-        const types = yield* Database.runQuery(
+        const types = yield* Database.query(
           EchoQuery.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
-        );
+        ).run;
         const schema = types.find((t) => Type.getTypename(t) === typename);
         if (!schema) {
           return yield* Effect.fail(new Error(`Schema ${typename} not found`));
@@ -54,7 +54,7 @@ export default Query.pipe(
       }
 
       yield* Database.flush();
-      const results = yield* Database.runQuery(query);
+      const results = yield* Database.query(query).run;
       if (includeContent) {
         return results.map((obj) => Entity.toJSON(obj));
       } else {

@@ -37,8 +37,8 @@ export const layer: Layer.Layer<Service, never, Database.Service | OperationHand
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       return {
         resolve: (key: string) =>
-          Database.runQueryFirst(Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))))
-            .pipe(
+          Database.query(Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))))
+            .first.pipe(
               Effect.flatten,
               Effect.map(Operation.deserialize),
               Effect.catchTag('NoSuchElementException', () => OperationHandlerSet.getHandlerByKey(handlerSet, key)),

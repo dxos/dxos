@@ -5,7 +5,7 @@
 import { type UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
@@ -26,9 +26,11 @@ export type ChatProps = ThemedClassName<{
   onPing?: () => Promise<string | null>;
   onClip?: () => void;
   url?: string;
+  /** Extra toolbar items (e.g. page actions) rendered after the clip button. */
+  actions?: ReactNode;
 }>;
 
-export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
+export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
@@ -162,6 +164,7 @@ export const Chat = ({ classNames, host, url, onClip }: ChatProps) => {
               onClick={onClip}
             />
           )}
+          {actions}
         </Toolbar.Root>
       </div>
 

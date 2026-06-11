@@ -31,17 +31,17 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 
-        const persons = yield* Database.runQuery(Query.type(Person.Person));
+        const persons = yield* Database.query(Query.type(Person.Person)).run;
         console.log('people', {
           count: persons.length,
           people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const projects = yield* Database.runQuery(Query.type(Pipeline.Pipeline));
+        const projects = yield* Database.query(Query.type(Pipeline.Pipeline)).run;
         console.log('projects', {
           count: projects.length,
           projects: projects.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
-        const tasks = yield* Database.runQuery(Query.type(Task.Task));
+        const tasks = yield* Database.query(Query.type(Task.Task)).run;
         console.log('tasks', {
           count: tasks.length,
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),

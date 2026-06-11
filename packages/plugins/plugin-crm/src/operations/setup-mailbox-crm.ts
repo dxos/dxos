@@ -60,9 +60,9 @@ const handler: Operation.WithHandler<typeof CrmOperation.SetupMailboxCrm> = CrmO
 
       // 4. Ensure the AgentPrompt operation (key: org.dxos.function.prompt) is persisted.
       //    The trigger's `function` field must reference an in-space PersistentOperation.
-      const existingFns = yield* Database.runQuery(
+      const existingFns = yield* Database.query(
         Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.prompt')),
-      );
+      ).run;
       const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
 
       // 5. Load the mailbox's backing feed and create a feed trigger.

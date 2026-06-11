@@ -50,6 +50,15 @@ const pickBestTab = (tabs: browser.Tabs.Tab[]): browser.Tabs.Tab | undefined => 
 };
 
 /**
+ * Find the best currently-open Composer tab (highest score), if any.
+ */
+export const findComposerTab = async (): Promise<browser.Tabs.Tab | undefined> => {
+  const urls = await getComposerUrls();
+  const tabs = await browser.tabs.query({ url: urls });
+  return pickBestTab(tabs);
+};
+
+/**
  * Type guard — validate a ClipAck shape rather than trusting any object with
  * an `ok` property. Unknown responses fall through to `invalidAck`.
  */
@@ -68,9 +77,7 @@ const isClipAck = (response: unknown): response is ClipAck => {
  */
 export const deliverClip = async (clip: Clip, options: { timeoutMs?: number } = {}): Promise<DeliverResult> => {
   try {
-    const urls = await getComposerUrls();
-    const tabs = await browser.tabs.query({ url: urls });
-    const tab = pickBestTab(tabs);
+    const tab = await findComposerTab();
     if (!tab || tab.id === undefined) {
       return { status: 'no-tab' };
     }

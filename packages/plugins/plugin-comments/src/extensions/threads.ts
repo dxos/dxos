@@ -13,8 +13,8 @@ import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { ThreadOperation } from '#types';
-import { type ThreadState } from '#types';
+import { CommentOperation } from '#types';
+import { type CommentState } from '#types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
@@ -26,7 +26,7 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
 
 export type ThreadStore = {
   registry: Registry.Registry;
-  stateAtom: Atom.Writable<ThreadState>;
+  stateAtom: Atom.Writable<CommentState>;
 };
 
 /**
@@ -106,7 +106,7 @@ export const threads = (
       id: objectId,
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
-        void invokePromise(ThreadOperation.Create, {
+        void invokePromise(CommentOperation.Create, {
           anchor: cursor,
           name,
           subject: doc,
@@ -163,7 +163,7 @@ export const threads = (
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          void invokePromise(ThreadOperation.Select, { current });
+          void invokePromise(CommentOperation.Select, { current });
         }
       },
     }),
