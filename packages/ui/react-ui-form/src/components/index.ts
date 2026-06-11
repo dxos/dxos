@@ -8,5 +8,6 @@ export * from './ObjectForm';
 export * from './ObjectPicker';
 export * from './ObjectProperties';
 export * from './ObjectTree';
+export * from './RefEditor';
 export * from './Settings';
 export * from './ViewEditor';

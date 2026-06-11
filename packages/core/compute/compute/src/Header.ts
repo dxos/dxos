@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
@@ -15,7 +17,7 @@ import * as Credential from './Credential';
  * Wraps an `HttpClient` so outbound requests carry `X-BYOK: <apiKey>` whenever the active space
  * has an `AccessToken` for `providerHost`. Lookup failures pass the request through unchanged.
  */
-export const byokHeaderLayer = (
+export const byokLayer = (
   providerHost: string,
 ): Layer.Layer<HttpClient.HttpClient, never, HttpClient.HttpClient | Credential.CredentialsService> =>
   Layer.effect(
