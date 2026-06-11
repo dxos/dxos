@@ -60,6 +60,34 @@ describe('SheetModel', () => {
     expect(graph.context.info.invocations.TEST).to.eq(1);
   });
 
+  test('drop row shifts values and updates sum', async () => {
+    const space = await testBuilder.client.spaces.create();
+    const graph = testBuilder.registry.createGraph(space);
+    await graph.open();
+
+    const sheet = Sheet.make({ rows: 10, columns: 5 });
+    const model = new SheetModel(graph, sheet);
+    await model.open();
+    onTestFinished(() => model.close());
+
+    // Column A: rows 0..2 = 123, 789, 567; row 3 = SUM(A0:A2).
+    model.setValue({ col: 0, row: 0 }, 123);
+    model.setValue({ col: 0, row: 1 }, 789);
+    model.setValue({ col: 0, row: 2 }, 567);
+    model.setValue({ col: 0, row: 3 }, '=SUM(A1:A3)');
+
+    expect(model.getValue({ col: 0, row: 3 })).to.eq(123 + 789 + 567);
+
+    // Delete the middle row (789).
+    const rowId = sheet.rows[1];
+    model.dropRow(rowId);
+
+    // Values shift up: row 1 = 567, row 2 = SUM(123 + 567).
+    expect(model.getValue({ col: 0, row: 0 })).to.eq(123);
+    expect(model.getValue({ col: 0, row: 1 })).to.eq(567);
+    expect(model.getValue({ col: 0, row: 2 })).to.eq(123 + 567);
+  });
+
   test('formula', async () => {
     const space = await testBuilder.client.spaces.create();
     const graph = testBuilder.registry.createGraph(space);
