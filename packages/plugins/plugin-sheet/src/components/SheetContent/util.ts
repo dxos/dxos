@@ -148,8 +148,10 @@ export const useSheetModelDxGridProps = (
     if (dxGrid) {
       dxGrid.getCells = cellGetter(model);
     }
+    // Defer so this fires after synchronous operations (e.g. dropRow calls clear() then reset())
+    // complete, ensuring HyperFormula is fully rebuilt before the grid re-reads cell values.
     const handleCellsUpdate = () => {
-      dxGrid?.requestUpdate('initialCells');
+      queueMicrotask(() => dxGrid?.requestUpdate('initialCells'));
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
     const unsubscribe = model.graph.update.on(handleCellsUpdate);
