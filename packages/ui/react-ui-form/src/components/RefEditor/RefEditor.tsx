@@ -22,6 +22,8 @@ import { getHashHue } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import {
+  EMAIL_REGEX,
+  NAME_ADDR_REGEX,
   type RefEditorMode,
   type RefInfo,
   formatMailbox,
@@ -203,8 +205,23 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
           keymap.of([
             {
               key: 'Enter',
-              run: () => {
-                // Prevent newline.
+              // Commit the in-progress token when it matches (insert the mode's separator, the
+              // same gesture as typing it); always consume the key (single-line input).
+              run: (view) => {
+                const { head } = view.state.selection.main;
+                const line = view.state.doc.lineAt(head);
+                const before = line.text.slice(0, head - line.from);
+                if (mode === 'email') {
+                  const segment = before.slice(before.lastIndexOf(',') + 1).trim();
+                  if (NAME_ADDR_REGEX.test(segment) || (match ?? EMAIL_REGEX).test(segment)) {
+                    insertAtCursor(view, head, ', ');
+                  }
+                } else {
+                  const token = before.slice(before.search(/\S+$/));
+                  if (token && match?.test(token)) {
+                    insertAtCursor(view, head, ' ');
+                  }
+                }
                 return true;
               },
             },
@@ -216,7 +233,6 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
 
     return (
       <Editor.Root
-        ref={composedRef}
         extensions={extensions}
         numItems={numItems}
         trigger='@'
@@ -226,8 +242,15 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
         // drop value-matched objects whose label doesn't start with the query.
         filter={false}
         getMenu={getMenu}
+        ref={composedRef}
       >
-        <Editor.View {...props} initialValue={value} selectionEnd />
+        <Editor.View
+          // TOOD(burdon): Use same style as react-ui Input.
+          classNames='border border-separator rounded-xs px-2'
+          {...props}
+          initialValue={value}
+          selectionEnd
+        />
       </Editor.Root>
     );
   },

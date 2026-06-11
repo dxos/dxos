@@ -10,7 +10,7 @@ import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -145,10 +145,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       .root({ label: ['calendar-toolbar.menu', { ns: meta.id }] })
       .action(
         'create-event',
-        { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--calendar-plus--regular' },
+        { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--pen--regular' },
         handleCreate,
-      )
-      .separator();
+      );
     if (draftEvents.length > 0) {
       builder = builder.action(
         'sync-draft',
@@ -187,6 +186,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           <Menu.Root {...menuActions} attendableId={id}>
             <Panel.Toolbar asChild>
               <Menu.Toolbar>
+                <Toolbar.Separator />
                 <InitializeCalendarAction calendar={subject} />
               </Menu.Toolbar>
             </Panel.Toolbar>

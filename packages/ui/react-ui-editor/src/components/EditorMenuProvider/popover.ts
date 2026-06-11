@@ -36,7 +36,8 @@ export type PopoverOptions = {
   onClose?: (event: { view: EditorView }) => void;
 
   // Menu specific.
-  onEnter?: (event: { view: EditorView }) => void;
+  /** Returns true when the menu consumed the key (an item was selected); false falls through. */
+  onEnter?: (event: { view: EditorView }) => boolean | void;
   onArrowUp?: (event: { view: EditorView }) => void;
   onArrowDown?: (event: { view: EditorView }) => void;
 };
@@ -221,9 +222,10 @@ const popoverKeymap = (options: PopoverOptions) => {
         run: (view: EditorView) => {
           const range = view.state.field(popoverStateField)?.range;
           if (range) {
-            view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
-            options.onEnter?.({ view });
-            return true;
+            // The consumer deletes the range when it selects an item; when nothing is selectable
+            // (empty menu over an `activateOnTyping` range) the key must fall through so the
+            // typed text is preserved.
+            return options.onEnter?.({ view }) ?? false;
           }
 
           return false;

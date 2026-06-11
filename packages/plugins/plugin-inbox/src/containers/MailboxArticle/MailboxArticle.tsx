@@ -13,7 +13,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -91,7 +91,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           'composeEmail',
           {
             type: 'composeEmail',
-            icon: 'ph--paper-plane-right--regular',
+            icon: 'ph--pen--regular',
             label: ['compose-email.label', { ns: meta.id }],
           },
           handleCompose,
@@ -247,7 +247,6 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
         <Menu.Root {...menuActions} attendableId={id}>
           <Panel.Toolbar asChild>
             <Menu.Toolbar>
-              <InitializeMailboxAction mailbox={subject} />
               {!isEmpty && (
                 <MailboxFilter
                   db={db}
@@ -261,6 +260,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
                   saveButtonRef={filterSaveButtonRef}
                 />
               )}
+              <Toolbar.Separator />
+              <InitializeMailboxAction mailbox={subject} />
             </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>

@@ -140,7 +140,9 @@ export const useEditorMenu = ({
       onEnter: ({ view }) => {
         if (currentRef.current) {
           handleSelect({ view, item: currentRef.current });
+          return true;
         }
+        return false;
       },
       onArrowUp: () => {
         setCurrentItem((currentItem) => {
@@ -162,6 +164,11 @@ export const useEditorMenu = ({
         if (firstItem) {
           setCurrentItem(firstItem.id);
           currentRef.current = firstItem;
+        } else {
+          // No matches: clear the selection so Enter falls through instead of
+          // selecting a stale item from a previous query.
+          setCurrentItem(undefined);
+          currentRef.current = null;
         }
 
         refresh({});
