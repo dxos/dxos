@@ -108,4 +108,16 @@ describe('page-actions', () => {
     );
     expect(ack).toMatchObject({ ok: false, error: 'operationFailed' });
   });
+
+  test('invoke accepts picker-originated requests', async ({ expect }) => {
+    const ack = await handleInvokeEvent({ ...request, invokedFrom: 'picker' }, deps());
+    expect(ack).toEqual({ version: 1, id: 'req-1', ok: true, objectId: 'obj-1' });
+  });
+
+  test('list serializes picker contexts', ({ expect }) => {
+    const pickerAction: PageAction.PageAction = { ...action, contexts: ['picker'] };
+    const ack = handleListEvent({ version: 1, id: 'list-2' }, () => [pickerAction]);
+    expect(ack.ok).toBe(true);
+    expect(ack.ok && ack.actions[0].contexts).toEqual(['picker']);
+  });
 });

@@ -6,6 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Hints, Selection, Source } from './PageAction';
+
+export { Hints, Rect, Selection, Source } from './PageAction';
+
 /**
  * Shape of the JSON payload sent by the Composer browser extension over the
  * `window` `CustomEvent('composer:clip')` bridge.
@@ -15,38 +19,6 @@ import * as Schema from 'effect/Schema';
  * the extension can ship new kinds independently; the receiver rejects
  * unknown kinds with a stable error code.
  */
-export const Rect = Schema.Struct({
-  x: Schema.Number,
-  y: Schema.Number,
-  width: Schema.Number,
-  height: Schema.Number,
-});
-
-export const Source = Schema.Struct({
-  url: Schema.String,
-  title: Schema.String,
-  favicon: Schema.optional(Schema.String),
-  clippedAt: Schema.String,
-});
-export type Source = Schema.Schema.Type<typeof Source>;
-
-export const Selection = Schema.Struct({
-  text: Schema.String,
-  html: Schema.optional(Schema.String),
-  htmlTruncated: Schema.optional(Schema.Boolean),
-  rect: Schema.optional(Rect),
-});
-export type Selection = Schema.Schema.Type<typeof Selection>;
-
-export const Hints = Schema.Struct({
-  ogTitle: Schema.optional(Schema.String),
-  ogDescription: Schema.optional(Schema.String),
-  ogImage: Schema.optional(Schema.String),
-  jsonLd: Schema.optional(Schema.Array(Schema.Unknown)),
-  h1: Schema.optional(Schema.String),
-  firstImage: Schema.optional(Schema.String),
-});
-export type Hints = Schema.Schema.Type<typeof Hints>;
 
 export const Kind = Schema.Literal('person', 'organization', 'note');
 export type Kind = Schema.Schema.Type<typeof Kind>;
