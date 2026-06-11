@@ -5,26 +5,36 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
+import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { ActorList, type ActorListProps } from './ActorList';
 
-const TEST_USERS: { fullName: string; emails: { value: string }[] }[] = [
-  { fullName: 'Alice Carroll', emails: [{ value: 'alice@example.com' }] },
-  { fullName: 'Bob Marley', emails: [{ value: 'bob@example.com' }, { value: 'bob.marley@reggae.org' }] },
-  { fullName: 'Carol Danvers', emails: [{ value: 'carol@example.com' }] },
-  { fullName: 'David Bowie', emails: [{ value: 'david@example.com' }] },
-  { fullName: 'Erin Brockovich', emails: [{ value: 'erin@example.com' }] },
-  { fullName: 'Frank Zappa', emails: [{ value: 'frank@example.com' }] },
-  { fullName: 'Grace Hopper', emails: [{ value: 'grace@navy.mil' }] },
-  { fullName: 'Heidi Klum', emails: [{ value: 'xxx@example.com' }] },
-];
+const generator = random as any as ValueGenerator;
+
+random.seed(7);
+
+/**
+ * Generate Person objects into the space. The generator does not populate array fields, so derive
+ * an email address from each person's name (the typeahead matches names AND emails).
+ */
+const generatePeople = async (db: Database.Database, count: number) => {
+  const people = await createObjectFactory(db, generator)([{ type: Person.Person, count }]);
+  people.forEach((person) => {
+    Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
+      const slug = (person.fullName ?? 'user').toLowerCase().replace(/[^a-z0-9]+/g, '.');
+      person.emails = [{ value: `${slug}@example.com` }];
+    });
+  });
+  return people;
+};
 
 const meta = {
   title: 'ui/react-ui-components/ActorList',
@@ -53,8 +63,8 @@ const meta = {
       types: [Person.Person],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: ({ space }) => {
-        TEST_USERS.forEach((user) => space.db.add(Obj.make(Person.Person, user)));
+      onCreateSpace: async ({ space }) => {
+        await generatePeople(space.db, 8);
       },
     }),
   ],

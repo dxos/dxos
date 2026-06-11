@@ -77,6 +77,7 @@ export const translations = [
 
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',
+        'remove-attendee.label': 'Remove attendee',
 
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',

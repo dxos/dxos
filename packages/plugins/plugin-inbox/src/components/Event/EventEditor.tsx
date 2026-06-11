@@ -106,6 +106,15 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update],
   );
 
+  const handleAttendeeRemove = useCallback(
+    (index: number) => {
+      update((event) => {
+        event.attendees = event.attendees.filter((_, position) => position !== index);
+      });
+    },
+    [update],
+  );
+
   // Attendee input: commit each completed token (terminated by whitespace) as an attendee —
   // an `@<id>` reference resolves to a Person contact; otherwise it must be a well-formed email.
   // Committed tokens are removed from the input so the row reads as a blank "add attendee" slot.
@@ -219,7 +228,13 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       )}
 
       {data.attendees.map((attendee, index) => (
-        <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
+        <Header.PersonRow
+          key={attendee.email ?? index}
+          actor={attendee}
+          db={db}
+          onContactCreate={onContactCreate}
+          onRemove={() => handleAttendeeRemove(index)}
+        />
       ))}
 
       {/* Always-blank row for adding the next attendee. */}

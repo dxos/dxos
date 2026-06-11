@@ -140,10 +140,12 @@ type HeaderPersonRowProps = {
   actor: Actor.Actor;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
+  /** Render a trailing remove button (e.g. attendee rows in the editable event header). */
+  onRemove?: () => void;
 };
 
 /** A Card.Row rendering a person (sender, attendee) with a contact anchor icon. */
-const HeaderPersonRow = ({ actor, db, onContactCreate }: HeaderPersonRowProps) => {
+const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonRowProps) => {
   const { t } = useTranslation(meta.id);
   const contactDXN = useActorContact(db, actor);
 
@@ -166,6 +168,16 @@ const HeaderPersonRow = ({ actor, db, onContactCreate }: HeaderPersonRowProps) =
       }
     >
       <h3 className='truncate'>{actor.name || actor.email}</h3>
+      {/* Trailing action column. */}
+      {onRemove && (
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--x--regular'
+          label={t('remove-attendee.label')}
+          onClick={onRemove}
+        />
+      )}
     </Card.Row>
   );
 };

@@ -6,7 +6,6 @@ import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateFi
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/ui';
-import { focus, focusField } from '@dxos/ui-editor';
 import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 /**
@@ -37,12 +36,10 @@ export const actorListRedecorate = StateEffect.define<null>();
 /**
  * CodeMirror extension rendering actor-list tokens as tags: `@<id>` references resolve to the
  * person's name (via {@link ActorListOptions.getActor}); well-formed email tokens render as
- * neutral tags. The token under the cursor stays raw so it can be edited.
+ * neutral tags. Tags are atomic: the cursor cannot enter them and deletion removes the whole token.
  */
 export const actorList = ({ getActor }: ActorListOptions = {}): Extension => {
   const buildDecorations = (state: EditorState) => {
-    const hasFocus = state.field(focusField);
-    const { head } = state.selection.main;
     const deco = new RangeSetBuilder<Decoration>();
     const text = state.doc.toString();
     const tokenRegex = /\S+/g;
@@ -51,10 +48,6 @@ export const actorList = ({ getActor }: ActorListOptions = {}): Extension => {
       const token = match[0];
       const from = match.index;
       const to = from + token.length;
-      // Leave the token raw while the cursor is inside it so it can be edited.
-      if (hasFocus && head >= from && head <= to) {
-        continue;
-      }
 
       const refMatch = token.match(ACTOR_REF_REGEX);
       if (refMatch) {
@@ -88,12 +81,11 @@ export const actorList = ({ getActor }: ActorListOptions = {}): Extension => {
   };
 
   return [
-    focus,
     styles,
     StateField.define<DecorationSet>({
       create: (state) => buildDecorations(state),
       update: (deco, tr) => {
-        if (tr.docChanged || tr.newSelection || tr.effects.some((effect) => effect.is(actorListRedecorate))) {
+        if (tr.docChanged || tr.effects.some((effect) => effect.is(actorListRedecorate))) {
           return buildDecorations(tr.state);
         }
 

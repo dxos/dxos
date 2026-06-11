@@ -5,18 +5,42 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { type Database, Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { createObject } from '@dxos/react-client/echo';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Event as EventType } from '@dxos/types';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { Event as EventType, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { Event } from './Event';
 
+const generator = random as any as ValueGenerator;
+
+random.seed(7);
+
+/**
+ * Generate Person objects into the space (for the attendee typeahead). The generator does not
+ * populate array fields, so derive an email address from each person's name.
+ */
+const generatePeople = async (db: Database.Database, count: number) => {
+  const people = await createObjectFactory(db, generator)([{ type: Person.Person, count }]);
+  people.forEach((person) => {
+    Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
+      const slug = (person.fullName ?? 'user').toLowerCase().replace(/[^a-z0-9]+/g, '.');
+      person.emails = [{ value: `${slug}@example.com` }];
+    });
+  });
+  return people;
+};
+
 // `createObject` yields a live, reactive ECHO object so the editable inputs (useObject) and the
-// markdown body editor (createDocAccessor) work in the story.
+// markdown body editor (createDocAccessor) work in the story; the client space provides the
+// Person registry backing the attendee typeahead.
 const DefaultStory = ({ editable }: { editable?: boolean }) => {
+  const { space } = useClientStory();
   const event = useMemo(
     () =>
       createObject(
@@ -38,7 +62,7 @@ const DefaultStory = ({ editable }: { editable?: boolean }) => {
   return (
     <Event.Root event={event}>
       <Event.Toolbar alwaysActive onSave={editable ? () => {} : undefined} onDelete={editable ? () => {} : undefined} />
-      <Event.Header editable={editable} />
+      <Event.Header db={space?.db} editable={editable} />
       <Event.Viewport>
         <Event.Body editable={editable} />
       </Event.Viewport>
@@ -49,7 +73,18 @@ const DefaultStory = ({ editable }: { editable?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-inbox/components/Event',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    withClientProvider({
+      types: [Person.Person],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
+        await generatePeople(space.db, 8);
+      },
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,
