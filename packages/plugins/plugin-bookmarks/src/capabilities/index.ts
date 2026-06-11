@@ -4,6 +4,7 @@
 
 import { Capability } from '@dxos/app-framework';
 import { type AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
 import { type CrxCapabilities } from '@dxos/plugin-crx/types';
 

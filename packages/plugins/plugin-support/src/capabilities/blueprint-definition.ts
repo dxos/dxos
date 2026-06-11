@@ -6,18 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint } from '@dxos/compute';
 
 import { ComposerBlueprint, SupportBlueprint } from '#blueprints';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-const blueprintDefinition: () => Effect.Effect<
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[],
-  never,
-  Capability.Service
-> = () =>
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, SupportBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, ComposerBlueprint),
-  ]);
+  ]),
+);
 
 export default blueprintDefinition;

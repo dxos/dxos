@@ -3,15 +3,11 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint } from '@dxos/compute';
 import { OperationHandlerSet } from '@dxos/compute';
 
-// The contributed capability type references Blueprint types from @dxos/compute, so the lazy
-// wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
-export const BlueprintDefinition: Capability.LazyCapability<
-  void,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
-> = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const FileUploader = Capability.lazy('FileUploader', () => import('./file-uploader'));
 export const InlineBackend = Capability.lazy('InlineBackend', () => import('./inline-backend'));

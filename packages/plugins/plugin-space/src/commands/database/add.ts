@@ -5,33 +5,26 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
-import type * as Terminal from '@effect/platform/Terminal';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, RootCollectionAnnotation } from '@dxos/app-toolkit';
-import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
-import { type ClientService } from '@dxos/client';
+import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
-import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { type SpaceId } from '@dxos/keys';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 
 import { SpaceCapabilities } from '#types';
 
 import { printObject } from './util';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-export const add: Command.Command<
-  'add',
-  ClientService | CommandConfig | Operation.Service | Plugin.Service | Capability.Service | Terminal.Terminal,
-  Err.EntityNotFoundError | Error | SpaceNotFoundError,
-  { readonly spaceId: Option.Option<SpaceId>; readonly typename: Option.Option<string> }
-> = Command.make(
+export const add = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),

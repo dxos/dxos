@@ -3,7 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 import type { AssistantPluginOptions } from '#types';
 
