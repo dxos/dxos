@@ -339,7 +339,7 @@ const createSchemaActions = ({
               }
             }),
             properties: {
-              label: getDynamicLabel('add object label', typename),
+              label: getDynamicLabel('add-object.label', typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -388,7 +388,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: getDynamicLabel('delete object label', Type.getTypename(Type.Type)),
+        label: getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

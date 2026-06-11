@@ -304,7 +304,7 @@ const constructObjectActions = ({
           target: parentCollection,
         }),
       properties: {
-        label: getDynamicLabel('delete object label', typename, { defaultValue: 'Delete' }),
+        label: getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
