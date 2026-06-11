@@ -4,6 +4,18 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-10 — plugin-comments (Thread→Comment rename), plugin-bookmarks/plugin-video (comment-config)
+
+### plugin-comments namespaces are Comment\*, not Thread\*
+
+- plugin-comments exports `CommentCapabilities`/`CommentOperation` (`src/types/CommentCapabilities.ts`, `CommentOperation.ts`), `CommentBlueprint`, and the `CommentState` type — never reintroduce `ThreadCapabilities`/`ThreadOperation` there. plugin-thread keeps its OWN channel-scoped `ThreadCapabilities` (`ChannelBackend`) / `ThreadOperation` (`CreateChannel`) — distinct namespaces, do not merge.
+- The `Thread.Thread` ECHO schema (`@dxos/types`) is unchanged — comment threads are still Thread objects; only plugin-comments' namespace/wording changed.
+
+### CommentConfig contributions hit TS2883 — annotate the barrel export
+
+- `Capability.lazy('CommentConfig', () => import('./comment-config'))` fails `tsc` (TS2883, `Operation.Definition.Any` in the config type) in plugins that don't already deep-import compute types. Fix with the `LazyCapability` barrel annotation: `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.CommentConfig>>` (see plugin-bookmarks/plugin-video `capabilities/index.ts`); the unused `import type { Operation } from '@dxos/compute'` trick in the module file is NOT sufficient on its own.
+- `comments: 'unanchored'` works for any typename with zero extra plumbing; `'anchored'` needs selection publishing keyed by `Obj.getURI(subject)` + the comment-sync editor extension, which is `Markdown.Document`-only today (see SKILL.md worked example).
+
 ## 2026-06-10 — plugin-crx (CrxSettings, page actions)
 
 ### Prefer `IconButton` over `Button` + `Icon`

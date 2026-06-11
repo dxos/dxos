@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { Settings, ThreadCapabilities } from '#types';
+import { Settings, CommentCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
 
     return [
       // Expose atom directly for programmatic access.
-      Capability.contributes(ThreadCapabilities.Settings, settingsAtom),
+      Capability.contributes(CommentCapabilities.Settings, settingsAtom),
       // Contribute to common settings for UI discovery.
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,

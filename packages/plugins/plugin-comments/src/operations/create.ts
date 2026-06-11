@@ -12,14 +12,14 @@ import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { ThreadCapabilities } from '../types';
-import { ThreadOperation } from '../types';
+import { CommentCapabilities } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOperation.Create.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const stateAtom = yield* Capability.get(ThreadCapabilities.State);
+      const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const subjectId = Obj.getURI(subject);
 
       // Inherit the markdown plugin's `commentAgentMode` setting when the
@@ -52,7 +52,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOper
         },
       });
 
-      yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getURI(thread) });
+      yield* Operation.invoke(CommentOperation.Select, { current: Obj.getURI(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('comments'),
       });

@@ -16,5 +16,5 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const CommentsSettings = Capability.lazy('CommentsSettings', () => import('./settings'));
-export const ThreadState = Capability.lazy('ThreadState', () => import('./state'));
+export const CommentState = Capability.lazy('CommentState', () => import('./state'));
 export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

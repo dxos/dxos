@@ -21,8 +21,8 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { CommentThread } from '#components';
 import { meta } from '#meta';
-import { ThreadOperation } from '#types';
-import { ThreadCapabilities, type ViewState } from '#types';
+import { CommentOperation } from '#types';
+import { CommentCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
@@ -82,8 +82,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
-  const stateAtom = useCapability(ThreadCapabilities.State);
-  const viewStoreAtom = useCapability(ThreadCapabilities.ViewState);
+  const stateAtom = useCapability(CommentCapabilities.State);
+  const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
   const state = useAtomValue(stateAtom);
   const viewStore = useAtomValue(viewStoreAtom);
   const drafts = state.drafts[subjectId];
@@ -164,7 +164,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
-      await invokePromise(ThreadOperation.AddMessage, {
+      await invokePromise(CommentOperation.AddMessage, {
         anchor,
         subject,
         sender: { identityDid: identity?.did },
@@ -179,20 +179,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(ThreadOperation.ToggleResolved, {
+      invokePromise(CommentOperation.ToggleResolved, {
         thread: Relation.getSource(anchor) as Thread.Thread,
       }),
     [invokePromise],
   );
 
   const handleThreadDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) => invokePromise(ThreadOperation.Delete, { anchor, subject }),
+    (anchor: AnchoredTo.AnchoredTo) => invokePromise(CommentOperation.Delete, { anchor, subject }),
     [invokePromise, subject],
   );
 
   const handleMessageDelete = useCallback(
     (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
-      invokePromise(ThreadOperation.DeleteMessage, {
+      invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
         messageId,
@@ -215,7 +215,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(ThreadOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.ToggleResolved, { thread });
     },
     [invokePromise, subject],
   );

@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { ThreadOperation } from '#types';
+import { CommentOperation } from '#types';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.comments';
 
@@ -13,7 +13,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Comments',
-    tools: Blueprint.toolDefinitions({ operations: [ThreadOperation.CreateProposals] }),
+    tools: Blueprint.toolDefinitions({ operations: [CommentOperation.CreateProposals] }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.
       source: trim`
