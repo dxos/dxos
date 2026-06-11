@@ -138,6 +138,23 @@ feat F-5: Summarize Operation
           unmodified
 ```
 
+```mdl
+feat F-6: Comments
+
+  req F-6.1:
+    when: a Bookmark is the active subject
+    then: |
+      the comments companion is offered (via the comments plugin's
+      CommentConfig capability, comments: unanchored); comment threads
+      attach to the bookmark as a whole.
+
+  req F-6.2:
+    note: |
+      Anchored (text-range) comments into Bookmark.summary require the
+      comment-sync editor extension, which currently only targets
+      Markdown.Document content. Follow-up.
+```
+
 ## Acceptance
 
 ```mdl

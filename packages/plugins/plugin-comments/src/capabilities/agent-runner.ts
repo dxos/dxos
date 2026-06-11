@@ -19,7 +19,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AgentIdentity, ThreadCapabilities } from '../types';
+import { AgentIdentity, CommentCapabilities } from '../types';
 
 const DEFAULT_MODEL = 'ai.claude.model.claude-sonnet-4-5';
 
@@ -182,7 +182,7 @@ const normalizeRoles = (messages: readonly Message.Message[]): Message.Message[]
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const runner: ThreadCapabilities.AgentRunner = {
+    const runner: CommentCapabilities.AgentRunner = {
       run: ({ thread, subject }) =>
         Effect.gen(function* () {
           const db = Obj.getDatabase(thread);
@@ -281,6 +281,6 @@ export default Capability.makeModule(
         }),
     };
 
-    return Capability.contributes(ThreadCapabilities.AgentRunner, runner);
+    return Capability.contributes(CommentCapabilities.AgentRunner, runner);
   }),
 );
