@@ -17,7 +17,7 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
-import * as ObjAtoms from './internal/Obj/atoms';
+import * as objInternal from './internal/Obj';
 import * as Obj from './Obj';
 import type * as Ref from './Ref';
 import type * as Tag from './Tag';
@@ -581,4 +581,4 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom = ObjAtoms.makeRelation;
+export const atom = objInternal.makeRelation;

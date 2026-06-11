@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { type CleanupFn } from '@dxos/async';
 
 import type * as Entity from './Entity';
-import * as QueryAtoms from './internal/Query/atoms';
+import * as queryInternal from './internal/Query';
 
 /**
  * Individual query result entry.
@@ -139,4 +139,4 @@ export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>
  * on every run (graph-builder connectors/actions, atom computes), where the getter would leak a
  * subscription per evaluation. To wrap a QueryResult you already hold stable, use its `.atom` getter.
  */
-export const atom = QueryAtoms.make;
+export const atom = queryInternal.makeAtom;

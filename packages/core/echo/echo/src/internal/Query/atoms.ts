@@ -90,7 +90,7 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
  * If the queryable is garbage-collected (no longer referenced externally), the returned atom
  * produces an empty array rather than throwing.
  */
-export const make = <T extends Entity.Unknown>(
+export const makeAtom = <T extends Entity.Unknown>(
   queryable: Database.Queryable,
   queryOrFilter: Query.Query<T> | Filter.Filter<T>,
 ): Atom.Atom<T[]> => {
