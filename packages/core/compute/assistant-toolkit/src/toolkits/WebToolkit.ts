@@ -29,9 +29,7 @@ export const WebToolkit = Toolkit.make(
 
 export const layer = WebToolkit.toLayer({
   WebFetch: Effect.fnUntraced(function* ({ url }) {
-    const response = yield* Effect.promise(() =>
-      proxyFetchLegacy(new URL(url)).then((response) => response.text()),
-    );
+    const response = yield* Effect.promise(() => proxyFetchLegacy(new URL(url)).then((response) => response.text()));
     return response;
   }),
 });

@@ -12,9 +12,7 @@ import { Fetch } from './definitions';
 export default Fetch.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ url }) {
-      const response = yield* Effect.promise(() =>
-        proxyFetchLegacy(new URL(url)).then((response) => response.text()),
-      );
+      const response = yield* Effect.promise(() => proxyFetchLegacy(new URL(url)).then((response) => response.text()));
       return response;
     }),
   ),
