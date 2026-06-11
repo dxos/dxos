@@ -449,7 +449,7 @@ export const getDiscriminatedType = (
  * Otherwise returns the property signature unchanged, preserving its annotations.
  */
 export const unwrapOptional = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature | SchemaAST.AST => {
-  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
+  if (!property.isOptional || !isOption(property.type)) {
     return property;
   }
 

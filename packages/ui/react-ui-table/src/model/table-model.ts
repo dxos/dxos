@@ -692,6 +692,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const currentRow = this._registry.get(this._rows)[row];
       invariant(currentRow, 'Invalid row index');
 
+      // TableRow is a generic type; cast to Obj.Unknown for Echo introspection APIs.
       const snapshot = { ...getSnapshot(currentRow as unknown as Obj.Unknown) };
       SchemaEx.setValue(snapshot, field.path, transformedValue);
 
