@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { proxyFetchLegacy } from '@dxos/edge-client';
 import { Database, Entity, Obj } from '@dxos/echo';
+import { proxyFetchLegacy } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
@@ -18,7 +18,8 @@ import { CrmOperation } from '../types';
  * `DX_CRM_IMAGE_SERVICE_URL` environment variable. A per-space
  * `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
  */
-const DEFAULT_IMAGE_SERVICE_URL = 'https://images.dxos.org';
+// TODO(dmaretskyi): images.dxos.org does not resolve.
+const DEFAULT_IMAGE_SERVICE_URL = 'https://image-service-main.dxos.workers.dev';
 
 // SVG is intentionally excluded: inline <script>/event handlers make it a
 // stored-XSS risk for any downstream surface that renders the image via
