@@ -111,12 +111,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
             // vite-plugin-log's `app.log` in the app root), which are appended
             // continuously at runtime and must never feed back into the
             // watcher.
-            ignored: [
-              '**/dist/**',
-              '**/out/**',
-              '**/*.log',
-              `${resolve(import.meta.dirname, ROOT, '.claude')}/**`,
-            ],
+            ignored: ['**/dist/**', '**/out/**', '**/*.log', `${resolve(import.meta.dirname, ROOT, '.claude')}/**`],
           },
         },
         css: {
