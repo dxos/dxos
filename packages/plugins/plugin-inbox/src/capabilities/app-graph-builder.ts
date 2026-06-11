@@ -147,10 +147,10 @@ export default Capability.makeModule(
                           id: `filter-${kebabize(name)}-delete`,
                           data: () =>
                             Effect.sync(() => {
-                              Obj.update(mailbox, (draft) => {
-                                const index = draft.filters.findIndex((f: any) => f.name === name);
+                              Obj.update(mailbox, (mailbox) => {
+                                const index = mailbox.filters.findIndex((f: any) => f.name === name);
                                 if (index >= 0) {
-                                  draft.filters.splice(index, 1);
+                                  mailbox.filters.splice(index, 1);
                                 }
                               });
                             }),
