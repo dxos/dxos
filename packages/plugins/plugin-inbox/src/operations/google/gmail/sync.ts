@@ -26,7 +26,7 @@ import { Message } from '@dxos/types';
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
-import { isAiServiceUnavailable } from '../../extractor/ai-gate';
+import { isAiServiceUnavailable } from '../../extractor';
 import { mapMessage } from './mapper';
 
 type DateChunk = {

@@ -7,7 +7,6 @@ import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
 
 export const CrxSettings = Capability.lazy('CrxSettings', () => import('./settings'));
-export const InstallClipListener = Capability.lazy('InstallClipListener', () => import('./install-clip-listener'));
 export const InstallPageActions = Capability.lazy('InstallPageActions', () => import('./install-page-actions'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

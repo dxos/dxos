@@ -1089,7 +1089,7 @@ git rm -r packages/apps/composer-crx/src/clip
 
 - [ ] **Step 2: Strip the clip path from sender.ts**
 
-In `packages/apps/composer-crx/src/bridge/sender.ts`, remove: the `Clip`/`ClipAck` import, `DeliverResult`, `BRIDGE_MSG_TYPE`, `DEFAULT_TIMEOUT_MS`, `lastUsedTabId` (and its branch in `scoreTab`), `isClipAck`, and `deliverClip`. Keep `findComposerTab`, `pickBestTab`, `scoreTab` (now scoring only `active` + `lastAccessed`), `matchPatternToUrl`, `openComposerTab`. Remove the now-unused `log` import only if nothing else in the file uses it (`openComposerTab` uses `log.warn` — keep it).
+In `packages/apps/composer-crx/src/bridge/sender.ts`, remove: the `Clip`/`ClipAck` import, `DeliverResult`, `BRIDGE_MSG_TYPE`, `DEFAULT_TIMEOUT_MS`, `isClipAck`, and `deliverClip`. KEEP `lastUsedTabId` and its `scoreTab` branch — `focusOrOpenComposerTab` (added on this branch) sets it, so it is live. Keep `findComposerTab`, `pickBestTab`, `scoreTab`, `matchPatternToUrl`, `focusOrOpenComposerTab`, `openComposerTab`, and the `log` import (`openComposerTab` uses `log.warn`).
 
 - [ ] **Step 3: Remove the clip bridge from content.ts**
 
@@ -1097,7 +1097,7 @@ In `packages/apps/composer-crx/src/content.ts`: delete `installBridge` and its c
 
 - [ ] **Step 4: Remove the clip handler from background.ts**
 
-In `packages/apps/composer-crx/src/background.ts`: delete `handleIncomingClip`, the `BACKGROUND_CLIP_MSG_TYPE` constant and its `onMessage` listener, the `deliverClip` import (keep `openComposerTab`), and the `type Clip` import.
+In `packages/apps/composer-crx/src/background.ts`: delete `handleIncomingClip`, the `BACKGROUND_CLIP_MSG_TYPE` constant and its `onMessage` listener, the `deliverClip` import (keep `focusOrOpenComposerTab`, which the `open-composer` handler uses), and the `type Clip` import.
 
 - [ ] **Step 5: Fix the proxy test's foreign-message fixture**
 

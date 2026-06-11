@@ -11,8 +11,8 @@ import { type Operation } from '@dxos/compute';
 /**
  * Page actions: operations contributed by plugins that the composer-crx
  * browser extension surfaces on web pages (popup toolbar, context menu).
- * The extension caches serializable descriptors; invocation arrives over the
- * same window CustomEvent bridge as clips.
+ * The extension caches serializable descriptors; invocation arrives over a
+ * window CustomEvent bridge.
  *
  * The extension keeps a hand-validated mirror of these types at
  * `packages/apps/composer-crx/src/page-actions/types.ts` which MUST be

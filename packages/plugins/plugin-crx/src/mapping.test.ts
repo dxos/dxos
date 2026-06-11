@@ -2,13 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Clip, PageAction } from '#types';
+import { PageAction } from '#types';
 
-import { mapClip, toNote, toOrganization, toPerson } from './mapping';
+import { toNote, toOrganization, toPerson } from './mapping';
 
 const baseSource: PageAction.Source = {
   url: 'https://www.linkedin.com/in/ricburdon',
@@ -19,14 +17,6 @@ const baseSource: PageAction.Source = {
 const baseSelection: PageAction.Selection = {
   text: 'Rich Burdon\nFounder, DXOS\nBrooklyn, NY',
 };
-
-const makeClip = (overrides: Partial<Clip.Clip> = {}): Clip.Clip => ({
-  version: 1,
-  kind: 'person',
-  source: baseSource,
-  selection: baseSelection,
-  ...overrides,
-});
 
 const makeSnapshot = (overrides: Partial<PageAction.Snapshot> = {}): PageAction.Snapshot => ({
   source: baseSource,
@@ -73,17 +63,6 @@ describe('mapping', () => {
     expect(org.description).toBe('An example company.');
   });
 
-  test('mapClip dispatches on kind', ({ expect }) => {
-    const person = mapClip(makeClip({ kind: 'person', hints: { h1: 'Alice' } }));
-    expect((person as any)?.fullName).toBe('Alice');
-
-    const org = mapClip(makeClip({ kind: 'organization', hints: { ogTitle: 'Acme' } }));
-    expect((org as any)?.name).toBe('Acme');
-
-    const note = mapClip(makeClip({ kind: 'note', hints: { h1: 'Hello' } }));
-    expect((note as any)?.name).toBe('Hello');
-  });
-
   test('Note prefers h1 for title, then og:title, then first line, then source title', ({ expect }) => {
     const fromH1 = toNote(makeSnapshot({ hints: { h1: 'From H1', ogTitle: 'From OG' } }));
     expect(fromH1.name).toBe('From H1');
@@ -104,38 +83,5 @@ describe('mapping', () => {
 
     const note = toNote(makeSnapshot({ selection: undefined, hints: { h1: 'Title' } }));
     expect(note.content.target?.content).toContain('# Title');
-  });
-
-  test('mapClip returns undefined for unknown kind', ({ expect }) => {
-    // Unknown kinds are intentionally allowed by the envelope schema; the
-    // receiver rejects them with an `unsupportedKind` ack.
-    const result = mapClip(makeClip({ kind: 'place' as any }));
-    expect(result).toBeUndefined();
-  });
-});
-
-describe('envelope decode', () => {
-  // Guards against a regression where the full Clip decode rejects a
-  // `version: 2` payload as `invalidPayload` instead of letting the
-  // listener respond with `unsupportedVersion` (PR review #12).
-  test('Envelope accepts any numeric version', ({ expect }) => {
-    const v2 = Schema.decodeUnknownEither(Clip.Envelope)({ version: 2, junk: 'ok' });
-    expect(Either.isRight(v2)).toBe(true);
-    if (Either.isRight(v2)) {
-      expect(v2.right.version).toBe(2);
-    }
-  });
-
-  test('Envelope rejects non-object and non-numeric version', ({ expect }) => {
-    expect(Either.isLeft(Schema.decodeUnknownEither(Clip.Envelope)(null))).toBe(true);
-    expect(Either.isLeft(Schema.decodeUnknownEither(Clip.Envelope)({ version: '1' }))).toBe(true);
-    expect(Either.isLeft(Schema.decodeUnknownEither(Clip.Envelope)({}))).toBe(true);
-  });
-
-  test('SUPPORTED_KINDS matches mapping coverage', ({ expect }) => {
-    // If a kind is listed as supported, `mapClip` must produce an object.
-    for (const kind of Clip.SUPPORTED_KINDS) {
-      expect(mapClip(makeClip({ kind: kind as any }))).toBeDefined();
-    }
   });
 });

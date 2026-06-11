@@ -5,12 +5,12 @@
 import { Markdown } from '@dxos/plugin-markdown';
 import { Organization, Person } from '@dxos/types';
 
-import { type Clip, type PageAction } from '#types';
+import { type PageAction } from '#types';
 
 const MAX_NOTES_LENGTH = 4000;
 
 /**
- * Maximum length of the markdown body we write for a Note clip. Larger than
+ * Maximum length of the markdown body we write for a Note. Larger than
  * the embedded `notes` field on Person/Organization because a Markdown
  * document is the whole content, not a secondary annotation.
  */
@@ -100,19 +100,3 @@ export const toNote = (snapshot: PageAction.Snapshot) => {
   });
 };
 
-/**
- * Dispatch based on the clip's declared kind. Returns `undefined` for unknown
- * kinds so the caller can respond with an `unsupportedKind` error.
- */
-export const mapClip = (clip: Clip.Clip) => {
-  switch (clip.kind) {
-    case 'person':
-      return toPerson(clip);
-    case 'organization':
-      return toOrganization(clip);
-    case 'note':
-      return toNote(clip);
-    default:
-      return undefined;
-  }
-};

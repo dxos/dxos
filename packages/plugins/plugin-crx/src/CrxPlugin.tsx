@@ -7,7 +7,6 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   CrxSettings,
-  InstallClipListener,
   InstallPageActions,
   OperationHandler,
   PageActionProvider,
@@ -23,11 +22,6 @@ export const CrxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: CrxSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'install-crx-bridge',
-    activatesOn: ActivationEvents.ProcessManagerReady,
-    activate: InstallClipListener,
-  }),
   Plugin.addModule({
     id: 'install-page-actions',
     activatesOn: ActivationEvents.ProcessManagerReady,
