@@ -11015,6 +11015,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
