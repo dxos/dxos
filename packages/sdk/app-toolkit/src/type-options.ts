@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { type Database, Type } from '@dxos/echo';
+import { Filter, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { createAnnotationHelper } from '@dxos/echo/internal';
@@ -23,44 +23,61 @@ export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
 export const TypeInputOptionsAnnotationId = Symbol.for('@dxos/schema/annotation/TypeInputOptions');
 export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOptions>(TypeInputOptionsAnnotationId);
 
-// TODO(wittjosiah): This is too complicated and needs to be simplified.
-export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions; db?: Database.Database }) => {
+/**
+ * Discovers all types — persisted in the space (database) and code-shipped in the registry (runtime).
+ * Persisted schemas are never added to the shared graph registry, so the space scope is required to
+ * surface user-defined types.
+ */
+export const allTypesQuery = Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
+
+export type TypeOption = {
+  typename: string;
+  /** Human-readable label derived from the entity's LabelAnnotation fields (e.g. `name` on persisted schemas). */
+  label?: string;
+};
+
+/**
+ * Filters discovered types by location and kind, deduplicates by typename, and returns stable options sorted by typename.
+ */
+export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: TypeInputOptions): TypeOption[] => {
   const includeRuntime = annotation.location.includes('runtime');
   const includeDatabase = annotation.location.includes('database');
   const includeHiddenType = annotation.kind.includes('hidden');
   const includeUserType = annotation.kind.includes('user');
 
-  const runtimeTypenames =
-    includeRuntime && db
-      ? db.graph.registry
-          .list()
-          .filter(Type.isType)
-          .filter((t) => !Type.isTypeKind(t))
-          .filter((schema) => {
-            const effectSchema = Type.getSchema(schema);
-            const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
-            if (relation) {
-              return includeHiddenType;
-            }
+  const seen = new Set<string>();
+  const result: TypeOption[] = [];
 
-            const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
-            if (hidden) {
-              return includeHiddenType;
-            }
+  for (const type of types) {
+    if (!Type.isType(type)) {
+      continue;
+    }
 
-            return includeUserType;
-          })
-          .map((schema) => Type.getTypename(schema))
-      : [];
+    // A schema attached to a database is persisted (user-defined); one without a database is code-shipped (runtime).
+    const isDatabase = Type.getDatabase(type) != null;
+    if (isDatabase ? !includeDatabase : !includeRuntime) {
+      continue;
+    }
 
-  const databaseTypenames =
-    includeDatabase && db
-      ? db.graph.registry
-          .list()
-          .filter(Type.isType)
-          .filter((t) => Type.isTypeKind(t))
-          .map((schema) => Type.getTypename(schema))
-      : [];
+    const effectSchema = Type.getSchema(type);
+    const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
+    const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
+    if (relation || hidden) {
+      if (!includeHiddenType) {
+        continue;
+      }
+    } else if (!includeUserType) {
+      continue;
+    }
 
-  return Array.from(new Set<string>([...runtimeTypenames, ...databaseTypenames])).sort();
+    const typename = Type.getTypename(type);
+    if (seen.has(typename)) {
+      continue;
+    }
+    seen.add(typename);
+
+    result.push({ typename, label: Type.getLabel(type) });
+  }
+
+  return result.sort((a, b) => a.typename.localeCompare(b.typename));
 };

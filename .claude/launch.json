@@ -15,6 +15,16 @@
       "autoPort": true
     },
     {
+      "name": "composer-app-tw-debug",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DEBUG=1 moon run composer-app:serve -- --port 5181 --strictPort"
+      ],
+      "port": 5181,
+      "autoPort": true
+    },
+    {
       "name": "composer-app-proto",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -22,6 +32,16 @@
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5180 --strictPort"
       ],
       "port": 5180,
+      "autoPort": true
+    },
+    {
+      "name": "composer-dev-hmr",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5273 --strictPort --debug hmr"
+      ],
+      "port": 5273,
       "autoPort": true
     },
     {

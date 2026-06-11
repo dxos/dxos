@@ -61,13 +61,24 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onNoteCreate' | 'onOpen' | 'onSave' | 'onDelete'> &
+type EventToolbarProps = Pick<
+  UseEventToolbarActionsProps,
+  'onNoteCreate' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete'
+> &
   Pick<MenuRootProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
-  ({ alwaysActive, onNoteCreate, onOpen, onSave, onDelete, ...props }, forwardedRef) => {
+  ({ alwaysActive, onNoteCreate, onOpen, onSave, saveDisabled, onDelete, ...props }, forwardedRef) => {
     const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
-    const menuActions = useEventToolbarActions({ viewMode, setViewMode, onNoteCreate, onOpen, onSave, onDelete });
+    const menuActions = useEventToolbarActions({
+      viewMode,
+      setViewMode,
+      onNoteCreate,
+      onOpen,
+      onSave,
+      saveDisabled,
+      onDelete,
+    });
 
     return (
       <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>

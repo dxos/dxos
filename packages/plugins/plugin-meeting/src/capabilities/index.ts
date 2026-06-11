@@ -4,11 +4,15 @@
 
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { CallsCapabilities } from '@dxos/plugin-calls/types';
+import { type CallsCapabilities } from '@dxos/plugin-calls/types';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const CallExtension = Capability.lazy('CallExtension', () => import('./call-extension'));
+// The contributed capability is declared in @dxos/plugin-calls, so the lazy wrapper needs an
+// explicit annotation to keep the inferred type portable (TS2742/TS2883).
+export const CallExtension: Capability.LazyCapability<
+  void,
+  Capability.Capability<typeof CallsCapabilities.EventHandler>
+> = Capability.lazy('CallExtension', () => import('./call-extension'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client';
+import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client/internal';
 import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaURI } from '@dxos/echo/internal';
 import * as Type from '@dxos/echo/Type';
@@ -46,11 +46,10 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.internal.db.coreDatabase._repo;
-    // TODO(wittjosiah): Accessing private API.
-    this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
-      .getSpaceRootDocHandle()
-      .doc() as Doc<DatabaseDirectory>;
+    this._repo = this._space.internal.db._repo;
+    const rootDoc = this._space.internal.db._getSpaceRootDocHandle().doc();
+    invariant(rootDoc, 'Space root document must be available when creating MigrationBuilder');
+    this._rootDoc = rootDoc;
   }
 
   async findObject(id: string): Promise<EntityStructure | undefined> {

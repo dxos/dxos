@@ -4,6 +4,44 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-11 — TS2883 codemod (fake imports → annotations), RefEditor
+
+### TS2883 (d.ts can't name @dxos/compute types): annotate the export, no fake imports
+
+- PREFERRED fix (supersedes the fake-import trick below): drop `Capability.makeModule(...)` and annotate the export — `const activate: () => Effect.Effect<Capability.Capability<typeof AppCapabilities.X>, never, Capability.Service> = Effect.fnUntraced(...); export default activate;` with the comment `// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).` Annotations are copied verbatim into the d.ts; inferred types are expanded (which is what drags in unnameable compute types). Explicit type args on `makeModule<...>()` do NOT help.
+- Barrels: annotate the lazy export `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]>` (array when the module contributes several). `makeModule` is an inference-only identity helper — safe to drop when annotating.
+- Name the module activation fn `activate` (it is consumed as `Plugin.addModule({ activate })`), or `blueprintDefinition` for blueprint modules.
+- Fake imports remain ONLY where annotation is impractical: huge inferred schema types (`types/*.ts` with echo `View`/`QueryAST`), deep Effect pipelines (plugin-inbox Google `Credential` files, functions-runtime), and ambient-augmentation imports (plugin-support Tooltip react-floater/type-fest — different mechanism).
+- For hard cases, transcribe the exact type from the previously emitted `dist/types/**/*.d.ts` instead of guessing.
+
+### RefEditor (react-ui-form) is the generic reference token input
+
+- `RefEditor` (`react-ui-form/components/RefEditor/`) generalizes the former ActorList: pluggable `type` (ECHO type for `@<id>` refs), `match` RegExp for raw tokens (e.g. `EMAIL_REGEX`), `getLabel`/`getValues`, `mode: 'ref' | 'email'` (email mode = RFC 5322 mailbox list, commas hidden inside atomic tags). EventEditor/stories configure it for `Person`.
+- Storybook: never pass a proxied ECHO schema (e.g. `Person.Person`) via story `args` — Storybook's arg traversal mutates it and crashes ("Cannot modify object property 'id' outside of Obj.update()"). Supply it in `render`.
+
+## 2026-06-11 — plugin-inbox (calendar fixes), react-ui-components (ActorList)
+
+### UI-invoked space ops MUST pass `spaceId` in InvokeOptions
+
+- Any op whose `services` include space-affinity tags (`Database.Service`, `Feed.FeedService`, `Credential.CredentialsService`) fails with `ServiceNotAvailable` when invoked from a container without `{ spaceId: Obj.getDatabase(subject)?.spaceId }` — the spawn environment has no `space`, so the space slice never initializes. There is NO inference from ECHO objects in the input. Reference: `plugin-video` `SummarySection.tsx`.
+
+### Editor menu (`Editor.Root`) props must be referentially stable
+
+- `placeholder` (and `getMenu`) feed `useEditorMenu`'s extension `useMemo`; an inline object literal recreates the extension each render → `useTextEditor` destroys/recreates the editor per keystroke. Symptom: typed text vanishes, only a stray char survives. Memoize the `placeholder` object.
+- `trigger='@'` menus own their own filtering (`useEditorMenu` skips label filtering for '@'): filter inside `getMenu` using `text.slice(1)` (text includes the trigger char). Empty groups auto-hide the popover.
+
+### ActorList (react-ui-components) is the person/email token input
+
+- `ActorList` (`components/ActorList/`) mirrors `QueryEditor`: `Editor.Root` + trigger '@' typeahead against `Person` name/emails; content is whitespace-separated tokens `@<personId>` or emails; `actor-extension.ts` renders resolved refs/emails as Domino tag widgets (raw while cursor inside token); `actorListRedecorate` StateEffect re-resolves decorations when people load. EventEditor commits completed tokens into `event.attendees` (Actor with `contact: Ref.make(person)`) and clears the input via the controller.
+
+### Reactivity in shared row components
+
+- Shared presentational row fragments that read an ECHO object (e.g. `EventDetails`) must subscribe via `useObject(event)` and read from the snapshot — Mosaic tiles don't re-render on proxy mutation otherwise (stale title until click).
+
+### Zombie storybook ports from deleted worktrees
+
+- A storybook from a since-deleted worktree can still hold a port (responds 200 with `{"entries":{}}` and 500 ENOENT on iframe). `lsof -nP -iTCP:<port>` to identify; pick another port rather than killing other sessions' processes.
+
 ## 2026-06-10 — plugin-comments (Thread→Comment rename), plugin-bookmarks/plugin-video (comment-config)
 
 ### plugin-comments namespaces are Comment\*, not Thread\*
@@ -13,7 +51,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### CommentConfig contributions hit TS2883 — annotate the barrel export
 
-- `Capability.lazy('CommentConfig', () => import('./comment-config'))` fails `tsc` (TS2883, `Operation.Definition.Any` in the config type) in plugins that don't already deep-import compute types. Fix with the `LazyCapability` barrel annotation: `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.CommentConfig>>` (see plugin-bookmarks/plugin-video `capabilities/index.ts`); the unused `import type { Operation } from '@dxos/compute'` trick in the module file is NOT sufficient on its own.
+- (Superseded by the 2026-06-11 annotation rule above — module files now use the explicit `const activate` annotation instead of fake imports.) `Capability.lazy('CommentConfig', () => import('./comment-config'))` fails `tsc` (TS2883, `Operation.Definition.Any` in the config type) in plugins that don't already deep-import compute types. The barrel still needs `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.CommentConfig>>` (see plugin-bookmarks/plugin-video `capabilities/index.ts`).
 - `comments: 'unanchored'` works for any typename with zero extra plumbing; `'anchored'` needs selection publishing keyed by `Obj.getURI(subject)` + the comment-sync editor extension, which is `Markdown.Document`-only today (see SKILL.md worked example).
 
 ## 2026-06-10 — plugin-crx (CrxSettings, page actions)

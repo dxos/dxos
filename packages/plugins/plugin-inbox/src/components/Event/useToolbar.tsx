@@ -16,6 +16,8 @@ export type UseEventToolbarActionsProps = {
   onOpen?: () => void;
   /** Push the (draft) event to Google Calendar (shown only when the event is draft). */
   onSave?: () => void;
+  /** Disable the save action (e.g. when no integration is connected to sync against). */
+  saveDisabled?: boolean;
   /** Delete the event (locally, and on Google Calendar when synced). */
   onDelete?: () => void;
 };
@@ -26,6 +28,7 @@ export const useEventToolbarActions = ({
   onNoteCreate,
   onOpen,
   onSave,
+  saveDisabled,
   onDelete,
 }: UseEventToolbarActionsProps) => {
   return useMenuBuilder(
@@ -50,12 +53,17 @@ export const useEventToolbarActions = ({
           },
           () => onNoteCreate?.(),
         )
+        .separator()
         .subgraph(
           onSave &&
             ((b) =>
               b.action(
                 'save',
-                { label: ['event-toolbar-save.menu', { ns: meta.id }], icon: 'ph--cloud-arrow-up--regular' },
+                {
+                  label: ['event-toolbar-save.menu', { ns: meta.id }],
+                  icon: 'ph--cloud-arrow-up--regular',
+                  disabled: saveDisabled,
+                },
                 onSave,
               )),
         )
@@ -69,6 +77,6 @@ export const useEventToolbarActions = ({
               )),
         )
         .build(),
-    [viewMode, setViewMode, onNoteCreate, onOpen, onSave, onDelete],
+    [viewMode, setViewMode, onNoteCreate, onOpen, onSave, saveDisabled, onDelete],
   );
 };

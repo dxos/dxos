@@ -75,11 +75,13 @@ export const MessageArticle = ({
   const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
   // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).
+  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
+  // (Database/Feed/Credentials) can materialize.
   const handleDelete = useCallback(() => {
     if (mailbox) {
-      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message });
+      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, mailbox, message]);
+  }, [invokePromise, mailbox, message, db]);
 
   return (
     <Message.Root

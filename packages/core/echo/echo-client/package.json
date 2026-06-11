@@ -22,6 +22,11 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/neutral/testing/index.mjs"
+    },
+    "./internal": {
+      "source": "./src/internal/index.ts",
+      "types": "./dist/types/src/internal/index.d.ts",
+      "default": "./dist/lib/neutral/internal/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

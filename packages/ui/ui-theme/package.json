@@ -45,6 +45,7 @@
     "@radix-ui/react-slot": "catalog:",
     "@tailwindcss/forms": "catalog:",
     "@tailwindcss/postcss": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "autoprefixer": "catalog:",
     "esbuild-style-plugin": "catalog:",
     "globby": "catalog:",
