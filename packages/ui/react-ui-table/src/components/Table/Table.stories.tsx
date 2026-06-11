@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
@@ -279,6 +280,69 @@ export const ArrayOfObjects: StoryObj = {
   parameters: {
     layout: 'fullscreen',
     translations,
+  },
+};
+
+// Regression test for DX-997: a required field must not prevent adding a new row.
+// The bug: opening the editor on an empty required cell ran validation, whose re-render
+// rebuilt the CodeMirror view (an unstable `slots` prop), and the teardown blur closed the
+// editor before the user could type. The play function opens the editor on the empty cell,
+// confirms it survives the (failing) validation pass, then types a value and commits the row.
+export const RequiredSchema: StoryObj = {
+  render: DefaultStory,
+  decorators: [
+    withClientProvider({
+      types: [View.View, Table.Table, TestSchema.Person],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
+        // TestSchema.Person has a required `name: Schema.String` field.
+        // No pre-populated rows so the add-row flow is the first interaction.
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(TestSchema.Person),
+        });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
+      },
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...formTranslations],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 30 s covers ECHO client + space + table creation (the only inherently slow step).
+    const addRowButton = await canvas.findByTestId('table.toolbar.add-row', undefined, { timeout: 30_000 });
+
+    // Person.name is required, so db.add throws → useAddRow returns 'draft' →
+    // a draft row appears in frozenRowsEnd and focus is set to its first cell.
+    await userEvent.click(addRowButton);
+
+    const draftCell = await canvas.findByTestId('frozenRowsEnd.0.0');
+    await userEvent.click(draftCell);
+
+    // Open the editor on the empty required cell (Enter), rather than typing to open — the
+    // latter would route the first character into dx-grid's `initialContent` and race the
+    // editor mount. The empty value fails validation; the editor must stay open regardless
+    // (this is the DX-997 regression — the editor used to close itself here).
+    await userEvent.keyboard('{Enter}');
+    await canvas.findByTestId('grid.cell-editor');
+
+    // The editor is focused (autoFocus); type the required value and commit. On the regression
+    // the empty value's validation re-render closed the editor before this could be entered, so
+    // the row below never committed.
+    await userEvent.keyboard('Alice');
+    await userEvent.keyboard('{Enter}');
+
+    // Draft row is committed; the real row should appear in the grid with the typed value.
+    await waitFor(async () => {
+      const cell = canvas.getByTestId('grid.0.0');
+      const text = cell.querySelector('.dx-grid__cell__content')?.textContent;
+      await expect(text).toBe('Alice');
+    });
   },
 };
 
