@@ -32,7 +32,6 @@ export type OtelLogOptions = OtelOptions & {
 
 export class OtelLogs {
   private _loggerProvider: LoggerProvider;
-
   constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
     const logExporter = new OTLPLogExporter({
