@@ -22,7 +22,7 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities } from '#types';
 
-import { makeCreateObjectEntryForDatabaseType } from '../../make-create-entry';
+import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   BLOCK_REORDER_ABOVE,
