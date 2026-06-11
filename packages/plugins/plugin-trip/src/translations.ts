@@ -18,6 +18,7 @@ export const translations = [
         'typename.label_other': 'Trips',
         'object-name.placeholder': 'New trip',
         'add-object.label': 'Add trip',
+        'rename-object.label': 'Rename trip',
         'delete-object.label': 'Delete trip',
       },
       [Type.getTypename(Booking.Booking)]: {
@@ -27,6 +28,7 @@ export const translations = [
         'typename.label_other': 'Bookings',
         'object-name.placeholder': 'New booking',
         'add-object.label': 'Add booking',
+        'rename-object.label': 'Rename booking',
         'delete-object.label': 'Delete booking',
       },
       [meta.id]: {

@@ -18,6 +18,7 @@ export const translations = [
         'typename.label_other': 'Bookmarks',
         'object-name.placeholder': 'New bookmark',
         'add-object.label': 'Add bookmark',
+        'rename-object.label': 'Rename bookmark',
         'delete-object.label': 'Delete bookmark',
       },
       [meta.id]: {

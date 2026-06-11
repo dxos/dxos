@@ -18,6 +18,7 @@ export const translations = [
         'typename.label_other': 'Profiles',
         'object-name.placeholder': 'New profile',
         'add-object.label': 'Add profile',
+        'rename-object.label': 'Rename profile',
         'delete-object.label': 'Delete profile',
       },
       [Type.getTypename(Sidekick.Profile)]: {
@@ -27,6 +28,7 @@ export const translations = [
         'typename.label_other': 'Sidekicks',
         'object-name.placeholder': 'New sidekick',
         'add-object.label': 'Add sidekick',
+        'rename-object.label': 'Rename sidekick',
         'delete-object.label': 'Delete sidekick',
       },
       [meta.id]: {

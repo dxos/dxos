@@ -17,6 +17,7 @@ export const translations = [
         'typename.label_other': 'Scripts',
         'object-name.placeholder': 'New script',
         'add-object.label': 'Add script',
+        'rename-object.label': 'Rename script',
         'delete-object.label': 'Delete script',
       },
     },

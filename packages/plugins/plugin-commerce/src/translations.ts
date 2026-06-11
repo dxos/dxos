@@ -18,6 +18,7 @@ export const translations = [
         'typename.label_other': 'Searches',
         'object-name.placeholder': 'New search',
         'add-object.label': 'Add search',
+        'rename-object.label': 'Rename search',
         'delete-object.label': 'Delete search',
       },
       [Type.getTypename(Provider.Provider)]: {
@@ -25,6 +26,7 @@ export const translations = [
         'typename.label_other': 'Providers',
         'object-name.placeholder': 'New provider',
         'add-object.label': 'Add provider',
+        'rename-object.label': 'Rename provider',
         'delete-object.label': 'Delete provider',
       },
       [Type.getTypename(Result.Result)]: {
