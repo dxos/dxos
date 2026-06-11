@@ -86,16 +86,17 @@ invokedFrom: Schema.Literal('popup', 'contextMenu', 'picker'),
 In `packages/plugins/plugin-crx/src/types/Clip.ts`, delete the `Rect`, `Source`, `Selection`, `Hints` declarations (consts and their type aliases) and replace them with:
 
 ```ts
+// Transitional bridge while the Clip envelope is retired; this file is deleted once all consumers read the shapes from PageAction.
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import { Hints, Selection, Source } from './PageAction';
+
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 export { Hints, Rect, Selection, Source } from './PageAction';
 ```
 
-Then add a local import so the `Clip` struct still compiles — at the top:
-
-```ts
-import { Hints, Selection, Source } from './PageAction';
-```
-
 (The `Clip` struct body references `Source`, `Selection`, `Hints` by bare name and is otherwise unchanged.)
+
+The named re-export violates `@import-as-namespace` lint; suppress with targeted eslint-disable comments — the file is deleted in Task 3.
 
 - [ ] **Step 3: Add a picker round-trip test**
 

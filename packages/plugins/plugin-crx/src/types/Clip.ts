@@ -6,8 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
+// Transitional bridge while the Clip envelope is retired; this file is deleted once all consumers read the shapes from PageAction.
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 import { Hints, Selection, Source } from './PageAction';
 
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 export { Hints, Rect, Selection, Source } from './PageAction';
 
 /**

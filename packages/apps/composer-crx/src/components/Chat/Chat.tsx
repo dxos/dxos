@@ -165,6 +165,8 @@ export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
             />
           )}
           {actions}
+          <Toolbar.Separator />
+          <IconButton variant='ghost' icon='ph--user--regular' iconOnly label={t('user.button')} onClick={() => {}} />
         </Toolbar.Root>
       </div>
 
