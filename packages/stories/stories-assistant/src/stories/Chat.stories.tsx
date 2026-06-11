@@ -261,12 +261,12 @@ export const WithWebSearch: Story = {
 export const WithMarkdown: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
+      const [{ MarkdownPlugin }, { CommentsPlugin }] = await Promise.all([
         import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+        import('@dxos/plugin-comments/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), ThreadPlugin()],
+        plugins: [MarkdownPlugin(), CommentsPlugin()],
       };
     },
     config: config.remote, // TODO(burdon): Issue making persistent.
