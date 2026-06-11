@@ -62,7 +62,10 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
 
     for (const subscription of agent.subscriptions) {
-      const targetOption = yield* Database.loadOption(subscription);
+      const targetOption = yield* Database.load(subscription).pipe(
+        Effect.map(Option.some),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
+      );
       if (Option.isNone(targetOption)) {
         continue;
       }
@@ -73,7 +76,14 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         feedObj = target;
       } else if (hasFeedAnnotation(target)) {
         const feedRef = (target as Obj.Unknown & { feed?: Ref.Ref<Feed.Feed> }).feed;
-        feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
+        feedObj = feedRef
+          ? Option.getOrUndefined(
+              yield* Database.load(feedRef).pipe(
+                Effect.map(Option.some),
+                Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
+              ),
+            )
+          : undefined;
       }
 
       if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueUri(feedObj)) {
@@ -104,7 +114,10 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     }
 
     if ((agent.filterEvents ?? true) && agent.feed) {
-      const agentFeedOption = yield* Database.loadOption(agent.feed);
+      const agentFeedOption = yield* Database.load(agent.feed).pipe(
+        Effect.map(Option.some),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
+      );
       if (Option.isSome(agentFeedOption) && Feed.getQueueUri(agentFeedOption.value)) {
         yield* Database.add(
           Trigger.make({

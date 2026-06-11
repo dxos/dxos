@@ -263,6 +263,13 @@ export const resolve: {
 
 /**
  * Loads an object reference.
+ * 
+ * Catching not found error:
+ * 
+ * ```ts
+ * yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
+ * ```
+ * 
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
@@ -273,18 +280,6 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError,
     return object;
   },
 );
-
-/**
- * Loads an object reference option.
- */
-// TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
-export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(
-  'Database.loadOption',
-)(function* (ref) {
-  const object = yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
-
-  return Option.fromNullable(object);
-});
 
 /**
  * Adds an object or relation to the database.

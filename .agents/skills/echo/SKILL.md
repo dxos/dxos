@@ -55,7 +55,7 @@ The same logical operations are exposed as **Effects** that require **`Database.
 | [`schemaQuery`](../../../packages/core/echo/echo/src/Database.ts) / [`runSchemaQuery`](../../../packages/core/echo/echo/src/Database.ts)                                               | Schema registry queries.                                                                        |
 | [`add`](../../../packages/core/echo/echo/src/Database.ts) / [`remove`](../../../packages/core/echo/echo/src/Database.ts) / [`flush`](../../../packages/core/echo/echo/src/Database.ts) | Mutations / persistence.                                                                        |
 | [`resolve`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | Resolve `DXN` or `Ref` via graph.                                                               |
-| [`load`](../../../packages/core/echo/echo/src/Database.ts) / [`loadOption`](../../../packages/core/echo/echo/src/Database.ts)                                                          | Load `Ref`; `load` / `loadOption` do not require `Database.Service` (see signatures in source). |
+| [`load`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                             | Load `Ref`; use `Effect.catchTag('EntityNotFoundError', …)` when a missing target is acceptable. Does not require `Database.Service`. |
 
 **Wire-up pattern** (operations, agents, composable code):
 
