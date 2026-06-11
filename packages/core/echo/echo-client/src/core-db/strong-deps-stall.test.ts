@@ -6,8 +6,9 @@ import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -289,15 +290,35 @@ describe('Query pipeline strong-dependency stalls', () => {
     expect(results.some((object) => object.id === mainObjectId)).toBe(false);
   });
 
-  // Reproduces the Composer stall from 2026-06-10: objects whose strong dep
-  // (dynamic schema object) id is ABSENT from the space directory — no inline
-  // entry, no link. `loadObjectDocument` used to park such ids in
-  // `_objectsPendingDocumentLoad` ("loading delayed until object links are
-  // initialized") forever: the dep was never loaded NOR marked unavailable,
-  // so `_areDepsResolved` never became true and query hydration hung until
-  // an external timeout dropped the hit. Now the loader emits
-  // `onObjectUnavailable` for directory-absent ids immediately, so dependents
-  // resolve promptly and queries exclude the broken object without stalling.
+  // A prior `diskOnly` probe marks an id unavailable while the object is transient; after local
+  // `db.add() + flush()` the mark must be cleared so index-query hydration surfaces the object.
+  test('diskOnly load surfaces a locally-persisted object whose id was probed while still absent', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { db } = await testBuilder.createDatabase({ types: [TestSchema.Expando] });
+
+    // Mirror the transient companion chat: the object is resolved by id (e.g. graph-builder ref
+    // resolution / a reactive query) BEFORE it is added to the space. The diskOnly probe marks the
+    // id unavailable because it is absent from the space directory.
+    const object = Obj.make(TestSchema.Expando, { name: 'companion-chat' });
+    const probe = await asyncTimeout(db.coreDatabase.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
+    expect(probe, 'absent id resolves to undefined and is marked unavailable').toBeUndefined();
+
+    // Persist locally — mirrors SpaceOperation.AddObject + flush on first submit.
+    db.add(object);
+    await db.flush();
+
+    // The reactive index query now returns this object; client hydration uses the same diskOnly
+    // entry point (EchoClient._loadObjectFromDocument). It MUST resolve the now-present object
+    // rather than short-circuiting on the stale unavailable mark.
+    const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
+    expect(resolved, 'locally-persisted object must resolve despite a stale unavailable mark').toBeDefined();
+    expect(resolved!.id).toEqual(object.id);
+  });
+
+  // A dep id absent from the space directory was never loaded nor marked unavailable, so
+  // `_areDepsResolved` stayed false and query hydration hung until an external timeout dropped the
+  // hit. Now directory-absent ids are marked unavailable immediately.
   test('query completes promptly and excludes objects whose strong dep is absent from the space directory', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
