@@ -15,7 +15,7 @@ import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
-import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
+import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
 
 export type ExtensionsOptions = {
@@ -58,6 +58,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
   const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);
+  const storedLogLevel = yield* Effect.promise(() => getOtelLogLevel(serviceName));
+  const resolvedLogLevel =
+    storedLogLevel != null ? (LogLevel[storedLogLevel.toUpperCase() as keyof typeof LogLevel] ?? logLevel) : logLevel;
   const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
@@ -123,7 +126,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
-        logLevel,
+        logLevel: resolvedLogLevel,
       })
     : undefined;
 

@@ -25,7 +25,7 @@ export default QueryMemories.pipe(
       query = query.limit(limit);
 
       yield* Database.flush();
-      const results = yield* Database.runQuery(query);
+      const results = yield* Database.query(query).run;
       return results.map((obj) => Entity.toJSON(obj));
     }),
   ),

@@ -41,6 +41,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
@@ -76,6 +77,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
@@ -119,6 +121,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
@@ -160,6 +163,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
@@ -180,6 +184,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
@@ -214,6 +219,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
@@ -247,6 +253,7 @@ describe('ReverseRefIndex', () => {
         queueNamespace: null,
         documentId: 'doc-123',
         recordId: 1,
+        createdAt: null,
         updatedAt: Date.now(),
         data: {
           id: sourceObjectId,

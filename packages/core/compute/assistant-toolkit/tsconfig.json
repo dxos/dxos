@@ -63,6 +63,9 @@
       "path": "../../echo/echo-protocol"
     },
     {
+      "path": "../../mesh/edge-client"
+    },
+    {
       "path": "../ai"
     },
     {

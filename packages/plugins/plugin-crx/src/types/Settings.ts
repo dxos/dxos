@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 /**
  * User preferences that govern how Composer coordinates with the composer-crx
- * browser extension. All fields are optional; defaults are applied by
- * consumers when reading the atom.
+ * browser extension — both the clip bridge and the render-proxy. All fields
+ * are optional; defaults are applied by consumers when reading the atom.
  */
 export const Settings = Schema.mutable(
   Schema.Struct({
@@ -34,6 +34,48 @@ export const Settings = Schema.mutable(
         description: 'Navigate to the created object when a clip is received.',
       }),
     ),
+
+    /**
+     * Master toggle. When false, plugins fall back to the edge HTTP proxy instead of asking the
+     * extension to render pages. Defaults to `true`.
+     */
+    renderProxyEnabled: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Use extension to render pages',
+        description: 'Let plugins render pages via the browser extension to scrape client-rendered sites.',
+      }),
+    ),
+
+    /**
+     * Maximum time (ms) to wait for a page to render before aborting. Defaults to `20000`.
+     */
+    renderTimeout: Schema.optional(
+      Schema.Number.annotations({
+        title: 'Render timeout (ms)',
+        description: 'Maximum time to wait for a page to finish rendering before giving up.',
+      }),
+    ),
+
+    /**
+     * Render pages in a focused (foreground) tab. Helps sites that defer loading when backgrounded,
+     * at the cost of stealing focus. Defaults to `false`.
+     */
+    renderActiveTab: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Render in focused tab',
+        description: 'Render pages in a focused tab; helps sites that defer loading when backgrounded.',
+      }),
+    ),
+
+    /**
+     * Enable verbose logging and debug previews in the extension. Defaults to `false`.
+     */
+    developerMode: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Developer mode',
+        description: 'Enable verbose logging and debug previews in the browser extension.',
+      }),
+    ),
   }),
 );
 
@@ -48,6 +90,10 @@ export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 export const defaults: Required<Settings> = {
   enabled: true,
   autoOpenAfterClip: false,
+  renderProxyEnabled: true,
+  renderTimeout: 20_000,
+  renderActiveTab: false,
+  developerMode: false,
 };
 
 export const withDefaults = (settings: Settings): Required<Settings> => ({

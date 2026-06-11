@@ -269,7 +269,7 @@ export const HistoryTracker = Capability$.make<HistoryTracker>('org.dxos.app-fra
 
 /**
  * Get the current value of an atom capability.
- * @example const settings = yield* Capabilities.getAtomValue(ThreadCapabilities.Settings);
+ * @example const settings = yield* Capabilities.getAtomValue(CommentCapabilities.Settings);
  */
 export const getAtomValue = <T>(
   atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
@@ -282,7 +282,7 @@ export const getAtomValue = <T>(
 
 /**
  * Update an atom capability value (requires writable atom).
- * @example yield* Capabilities.updateAtomValue(ThreadCapabilities.Settings, (s) => ({ ...s, foo: true }));
+ * @example yield* Capabilities.updateAtomValue(CommentCapabilities.Settings, (s) => ({ ...s, foo: true }));
  */
 export const updateAtomValue = <T>(
   atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
@@ -296,7 +296,7 @@ export const updateAtomValue = <T>(
 
 /**
  * Subscribe to an atom capability.
- * @example const unsubscribe = yield* Capabilities.subscribeAtom(ThreadCapabilities.Settings, (value) => ...);
+ * @example const unsubscribe = yield* Capabilities.subscribeAtom(CommentCapabilities.Settings, (value) => ...);
  */
 export const subscribeAtom = <T>(
   atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,

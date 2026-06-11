@@ -13,7 +13,7 @@ import * as Type from '../../Type';
 import { getTypeURI, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
-import { MetaId } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import * as JsonSchema from '../JsonSchema';
 import { Ref, StaticRefResolver } from '../Ref';

@@ -61,6 +61,12 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
      */
     // TODO(dmaretskyi): Make required, but this complicates `make` to fill in defaults.
     readonly annotations?: Annotation.Dictionary;
+
+    /**
+     * When true, this operation is not serialized into the hypergraph registry.
+     * Use for UI-only operations that should not be discoverable by the AI agent.
+     */
+    readonly skipRegistry?: boolean;
   };
 
   /**

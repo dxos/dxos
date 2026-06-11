@@ -6,7 +6,7 @@ import platform from 'platform';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
-import { type IMetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { type IMetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-host';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';

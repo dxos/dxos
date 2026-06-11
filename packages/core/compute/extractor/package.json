@@ -40,7 +40,7 @@
     "@effect/ai": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

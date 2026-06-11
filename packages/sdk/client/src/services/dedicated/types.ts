@@ -75,6 +75,12 @@ export type WorkerCoordinatorMessage =
       leaderId: string;
     }
   | {
+      // Broadcast by a leader while it holds the leader lock so followers can distinguish a live
+      // (possibly slow-to-start) leader from a dead one before deciding to steal the lock.
+      type: 'leader-heartbeat';
+      leaderId: string;
+    }
+  | {
       type: 'request-port';
       clientId: string;
     }

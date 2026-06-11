@@ -10,6 +10,7 @@ import { compositeKey } from '@dxos/util';
 
 const OBSERVABILITY_DISABLED_KEY = 'observability-disabled';
 const OBSERVABILITY_GROUP_KEY = 'observability-group';
+const OTEL_LOG_LEVEL_KEY = 'otel-log-level';
 
 /** No-op in browser contexts. */
 export const showObservabilityBanner = () => {
@@ -67,5 +68,32 @@ export const storeObservabilityGroup = async (namespace: string, value: string) 
     await localForage.setItem(compositeKey(namespace, OBSERVABILITY_GROUP_KEY), value);
   } catch (err) {
     log.catch('Failed to store observability group', err);
+  }
+};
+
+/**
+ * @param namespace - localForage key prefix used to scope the observability state in browser storage.
+ */
+export const getOtelLogLevel = async (namespace: string): Promise<string | null> => {
+  try {
+    return await localForage.getItem<string>(compositeKey(namespace, OTEL_LOG_LEVEL_KEY));
+  } catch (err) {
+    log.catch('Failed to get OTEL log level', err);
+    return null;
+  }
+};
+
+/**
+ * @param namespace - localForage key prefix used to scope the observability state in browser storage.
+ */
+export const storeOtelLogLevel = async (namespace: string, value: string | null) => {
+  try {
+    if (value === null) {
+      await localForage.removeItem(compositeKey(namespace, OTEL_LOG_LEVEL_KEY));
+    } else {
+      await localForage.setItem(compositeKey(namespace, OTEL_LOG_LEVEL_KEY), value);
+    }
+  } catch (err) {
+    log.catch('Failed to store OTEL log level', err);
   }
 };

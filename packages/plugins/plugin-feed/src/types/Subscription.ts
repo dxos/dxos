@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { type Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
@@ -198,7 +198,10 @@ export const PostContent = Schema.Struct({
   imageUrl: Schema.optional(Schema.String),
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
+}).pipe(
+  Annotation.HiddenAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')),
+);
 
 export type PostContent = Type.InstanceType<typeof PostContent>;
 

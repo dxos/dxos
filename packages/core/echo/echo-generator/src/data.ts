@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { random } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';

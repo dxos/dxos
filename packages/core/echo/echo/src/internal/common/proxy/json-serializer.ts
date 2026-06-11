@@ -17,7 +17,8 @@ import {
   SelfURIId,
   TypeId,
 } from '../types';
-import { ATTR_META, type EntityMeta, MetaId } from '../types/meta';
+import { ATTR_META, type EntityMeta } from '../types/meta';
+import { MetaId } from '../types/model-symbols';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.

@@ -5,8 +5,8 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { Event } from '@dxos/types';
 

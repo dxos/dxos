@@ -19,11 +19,11 @@ export default {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Disallow Effect.runPromise; suggest runAndForwardErrors instead.',
+      description: 'Disallow Effect.runPromise; suggest EffectEx.runPromise instead.',
       recommended: true,
     },
     messages: {
-      noRunPromise: 'Use runAndForwardErrors from @dxos/effect instead of Effect.runPromise.',
+      noRunPromise: 'Use EffectEx.runPromise from @dxos/effect instead of Effect.runPromise.',
     },
     schema: [],
   },

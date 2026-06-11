@@ -40,7 +40,7 @@ import {
   type EchoDatabaseImpl,
   type QueueFactory,
   type SpaceSyncState,
-} from '@dxos/echo-db';
+} from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';

@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { SpaceProperties } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';

@@ -20,7 +20,7 @@ test.describe('Collection tests', () => {
 
   test('create collection', async () => {
     await host.createSpace();
-    await host.toggleCollectionsSection();
+    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await expect(host.getObject()).toContainText('New collection');
   });
@@ -30,7 +30,7 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.toggleCollectionsSection();
+    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await host.createObject({ type: 'Collection' });
     await host.renameObject('Collection 1', 0);
@@ -49,7 +49,7 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.toggleCollectionsSection();
+    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await host.createObject({ type: 'Collection' });
     await host.renameObject('Collection 1', 0);
@@ -64,7 +64,7 @@ test.describe('Collection tests', () => {
 
   test('delete a collection', async () => {
     await host.createSpace();
-    await host.toggleCollectionsSection();
+    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(0);
     // Create an item inside the collection.
@@ -78,7 +78,7 @@ test.describe('Collection tests', () => {
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
-    await host.toggleCollectionsSection();
+    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(0);
     // Create a collection inside the collection.

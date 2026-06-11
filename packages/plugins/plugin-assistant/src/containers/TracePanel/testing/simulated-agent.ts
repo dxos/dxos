@@ -105,7 +105,7 @@ export const SimulatedAgent = Process.make(
           }
 
           // Agent completes.
-          yield* writeAndFlush(AgentRequestEnd, {});
+          yield* writeAndFlush(AgentRequestEnd, { status: 'success' });
           ctx.succeed();
         }).pipe(Effect.orDie),
       onAlarm: () => Effect.void,

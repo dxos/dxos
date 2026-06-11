@@ -35,7 +35,7 @@ export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
 /**
  * Hook to get the current value of an atom capability.
  * Automatically subscribes to changes.
- * @example const settings = useAtomCapability(ThreadCapabilities.Settings);
+ * @example const settings = useAtomCapability(CommentCapabilities.Settings);
  */
 export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T => {
   const atom = useCapability(atomCapability);
@@ -45,7 +45,7 @@ export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Ato
 /**
  * Hook to get value and updater for an atom capability.
  * Returns [currentValue, updateFn] similar to useState.
- * @example const [settings, updateSettings] = useAtomCapabilityState(ThreadCapabilities.Settings);
+ * @example const [settings, updateSettings] = useAtomCapabilityState(CommentCapabilities.Settings);
  */
 export const useAtomCapabilityState = <T>(
   atomCapability: Capability.InterfaceDef<Atom.Writable<T>>,

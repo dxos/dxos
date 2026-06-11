@@ -8,16 +8,16 @@ import { describe, test } from 'vitest';
 import { ClassProcessor } from './class-processor';
 
 describe.skip('Code analysis', () => {
-  test.skip('traverses echo-db', () => {
+  test.skip('traverses echo-client', () => {
     const baseDir = join(process.cwd());
     console.log(baseDir);
 
     // prettier-ignore
     const processor = new ClassProcessor([
-      join(baseDir, 'packages/core/echo/echo-db/src/**/*.ts')
+      join(baseDir, 'packages/core/echo/echo-client/src/**/*.ts')
     ]);
 
-    processor.processFile(join(baseDir, 'packages/core/echo/echo-db/src/packlets/database/database.ts'));
+    processor.processFile(join(baseDir, 'packages/core/echo/echo-client/src/packlets/database/database.ts'));
   });
 
   test('traverses client', () => {
@@ -40,7 +40,7 @@ describe.skip('Code analysis', () => {
     // prettier-ignore
     const processor = new ClassProcessor([
       join(baseDir, 'packages/sdk/client-services/src/**/*.ts'),
-      join(baseDir, 'packages/core/echo/echo-db/src/**/*.ts')
+      join(baseDir, 'packages/core/echo/echo-client/src/**/*.ts')
     ]);
 
     processor.processFile(join(baseDir, 'packages/sdk/client-services/src/packlets/services/service-host.ts'));

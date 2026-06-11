@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 
 import { Client } from '../../client';
 import { TestBuilder } from '../../testing';
+import { LEADER_LOCK_KEY } from './dedicated-worker-client-services';
 
 describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
   test('open & close', async () => {
@@ -44,6 +45,42 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using client2 = await new Client({ services: services2 }).initialize();
 
     expect(client2.halo.identity.get()).toEqual(identity);
+  });
+
+  test('steals the leader lock from a stale (zombie) holder', { timeout: 5_000 }, async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    // Simulate a zombie leader: hold the leader lock but never run a session or emit heartbeats,
+    // mimicking a frozen/dead tab that the browser hasn't torn down.
+    const acquired = new Trigger();
+    const stolen = new Trigger();
+    const releaseZombie = new Trigger();
+    onTestFinished(() => {
+      releaseZombie.wake();
+    });
+    void navigator.locks
+      .request(LEADER_LOCK_KEY, { mode: 'exclusive' }, async () => {
+        acquired.wake();
+        await releaseZombie.wait();
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') {
+          stolen.wake();
+        }
+      });
+    await acquired.wait();
+
+    // A fresh client must detect the stale holder, steal the lock, become leader itself, and connect.
+    await using services = await testBuilder
+      .createDedicatedWorkerClientServices({
+        leaderTimeouts: { portTimeout: 200, staleTimeout: 100, heartbeatInterval: 50 },
+      })
+      .open();
+    await asyncTimeout(stolen.wait(), 4_000);
+
+    await using client = await new Client({ services }).initialize();
+    await client.halo.createIdentity();
   });
 
   // Flaky.

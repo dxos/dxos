@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import type { SpaceSyncState } from '@dxos/echo-db';
+import type { SpaceSyncState } from '@dxos/echo-client';
 
 import { JsonView } from '../../../components';
 

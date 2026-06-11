@@ -49,6 +49,7 @@ import {
 import { createUrl } from '@dxos/util';
 
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
+import { proxyFetchLegacy } from './cors-proxy';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client';
 
 export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client';
@@ -76,10 +77,6 @@ export type GetCronTriggersResponse = {
 };
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
-
-// TEMPORARY: legacy standalone CORS proxy used by `proxyFetch`.
-// See https://github.com/dxos/edge/pull/576.
-const LEGACY_CORS_PROXY_URL = 'https://cors-proxy.dxos.workers.dev';
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).
@@ -503,28 +500,3 @@ const getFileMimeType = (filename: string) =>
     : filename.endsWith('.wasm')
       ? 'application/wasm'
       : 'application/octet-stream';
-
-const remapAuthorizationForProxy = (headers: Headers): Headers => {
-  const callerAuth = headers.get('Authorization');
-  if (callerAuth !== null) {
-    headers.delete('Authorization');
-    headers.set('X-Cors-Proxy-Authorization', callerAuth);
-  }
-  return headers;
-};
-
-/**
- * Fetch through the legacy standalone open proxy at `cors-proxy.dxos.workers.dev`.
- * TEMPORARY — delete when the authenticated `/proxy/*` route on edge ships.
- */
-export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
-  const proxyUrl = new URL(`/${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
-  if (target.protocol === 'http:') {
-    proxyUrl.searchParams.set('scheme', 'http');
-  }
-  const requestHeaders = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
-  if (clientTag) {
-    requestHeaders.set(EDGE_CLIENT_TAG_HEADER, clientTag);
-  }
-  return fetch(proxyUrl, { ...init, headers: requestHeaders });
-};

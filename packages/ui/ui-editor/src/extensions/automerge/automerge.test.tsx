@@ -10,7 +10,7 @@ import { render, screen } from '@testing-library/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { beforeAll, describe, test } from 'vitest';
 
-import { type IDocHandle } from '@dxos/echo-db';
+import { type IDocHandle } from '@dxos/echo-client';
 import { getDeep } from '@dxos/util';
 
 import { automerge } from './automerge';
