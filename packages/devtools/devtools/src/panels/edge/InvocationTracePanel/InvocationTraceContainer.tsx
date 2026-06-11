@@ -10,7 +10,7 @@ import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Database, type Obj, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { type URI } from '@dxos/keys';

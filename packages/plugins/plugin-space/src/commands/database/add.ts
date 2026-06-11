@@ -17,7 +17,8 @@ import { SpaceProperties } from '@dxos/client/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 
 import { SpaceCapabilities } from '#types';
 

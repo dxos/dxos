@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, Obj, QueryAST, Ref, Type } from '@dxos/echo';
-import { OptionsAnnotationId, HiddenAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { OptionsAnnotationId } from '@dxos/echo/Format';
 import { EID } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
 

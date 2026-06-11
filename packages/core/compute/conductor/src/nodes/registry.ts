@@ -8,7 +8,7 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
-import { isInstanceOf } from '@dxos/echo/internal';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { getTypenameFromQuery } from '@dxos/schema';

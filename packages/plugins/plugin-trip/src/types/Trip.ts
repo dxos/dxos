@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import { TRIP_BLUEPRINT_KEY } from '../blueprints/keys';
 import * as Segment from './Segment';

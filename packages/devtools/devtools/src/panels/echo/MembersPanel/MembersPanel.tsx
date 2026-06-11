@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

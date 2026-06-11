@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * Root transcript object created when the user starts a transcription.

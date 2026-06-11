@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, EID, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
-import { Format, type Mutable } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
+import { type Mutable } from '@dxos/echo/Obj';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';

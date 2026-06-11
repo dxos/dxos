@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
 

@@ -7,8 +7,10 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { Format, Obj, Type, View } from '@dxos/echo';
-import { type JsonSchemaType, type Mutable, TypeEnum, formatToType, typeToFormat } from '@dxos/echo/internal';
+import { TypeEnum, formatToType, typeToFormat } from '@dxos/echo/Format';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

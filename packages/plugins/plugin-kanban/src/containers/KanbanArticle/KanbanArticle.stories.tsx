@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 // `/plugin` entrypoints used here for the same reason as `corePlugins()` —
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.

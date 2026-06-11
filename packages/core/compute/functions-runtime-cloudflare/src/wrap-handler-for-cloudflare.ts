@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { JsonSchemaType } from '@dxos/echo/internal';
+import type { JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
