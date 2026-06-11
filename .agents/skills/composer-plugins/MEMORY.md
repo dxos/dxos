@@ -14,6 +14,10 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 - When a `Capability.lazy(...)` module contributes a type declared in ANOTHER package (TS2883 "inferred type cannot be named / not portable"), annotate the barrel export as `Capability.LazyCapability<void, Capability.Capability<typeof OtherPlugin.TheCapability>>` — the `LazyCapability<Props, Value>` annotation on the barrel export is what fixes portability while keeping the module boundary intact (no eager import). This is the precedent in plugin-osrm, plugin-trip, and plugin-bookmarks (`PageActionProvider`). Prefer this over the eager re-export fallback already documented below.
 
+### Page-action icons must be literals in `capabilities/page-action*.ts`
+
+- The composer-crx popup renders descriptor icons from its own sprite; the extension build eager-scans `packages/plugins/*/src/capabilities/page-action*.ts` (IconsPlugin `scanPaths` in `composer-crx/vite.config.ts`) because plugin sources are outside its module graph. Write the `ph--…` icon name as a string literal in that file (no indirection through meta/constants from other files) or the icon renders blank in the popup.
+
 ### No `createdAt`/`updatedAt` data fields on schemas — ECHO meta provides them
 
 - Do not add a `createdAt` (or `updatedAt`) field to an ECHO type's data schema; the object's built-in meta carries creation/update timestamps (user corrected `Bookmark.ts` — field removed from schema, `fromSnapshot`, PLUGIN.mdl). Only model a timestamp as data when it differs semantically from object creation (e.g. an external event time).
