@@ -10,7 +10,7 @@ import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
@@ -79,12 +79,13 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when integrations are added or removed.
       GraphBuilder.createExtension({
         id: 'integrationsSection',
-        match: (node) => {
+        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        connector: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();
-        },
-        connector: (space) =>
-          Effect.succeed([
+          if (!space) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
             Node.make({
               id: INTEGRATIONS_SECTION_ID,
               type: INTEGRATIONS_SECTION_TYPE,
@@ -98,17 +99,19 @@ export default Capability.makeModule(
                 space,
               },
             }),
-          ]),
+          ]);
+        },
       }),
 
       // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
       GraphBuilder.createExtension({
         id: 'integrationListing',
-        match: (node) => {
+        match: NodeMatcher.whenNodeType(INTEGRATIONS_SECTION_TYPE),
+        connector: (node, get) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
-        },
-        connector: (space, get) => {
+          if (!space) {
+            return Effect.succeed([]);
+          }
           const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
           return Effect.succeed(
             integrations
