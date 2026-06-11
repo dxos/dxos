@@ -14,6 +14,8 @@ export const translations = [
 
         'query-editor.placeholder': 'Enter query (e.g., "#tag", "type")',
 
+        'actor-list.placeholder': "Type '@' to add a person, or enter an email",
+
         'picker-select.label': 'Select',
         'picker-none.label': 'None',
         'picker-type.placeholder': 'Type',

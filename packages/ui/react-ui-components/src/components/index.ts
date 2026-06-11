@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './ActorList';
 export * from './AnimatedBorder';
 export * from './Matrix';
 export * from './NumericTabs';

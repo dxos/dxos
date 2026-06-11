@@ -3,7 +3,7 @@
 //
 
 import { addHours, isSameDay, startOfHour } from 'date-fns';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -12,16 +12,16 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
-import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
+import { Calendar as NaturalCalendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Event } from '@dxos/types';
 
-import { EventStack, type EventStackActionHandler } from '#components';
+import { EventStack, type EventStackActionHandler, useTargetIntegration } from '#components';
 import { meta } from '#meta';
 import { type Calendar, InboxOperation, DraftEvent } from '#types';
 
 import { getCalendarRangeSelectionId } from '../../paths';
-import { InitializeCalendar } from './InitializeCalendar';
+import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -40,6 +40,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const calendarRef = useRef<CalendarController>(null);
+  // Syncing drafts to Google Calendar requires an integration targeting this calendar.
+  const { integration } = useTargetIntegration(subject);
 
   const feed = calendar.feed?.target;
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
@@ -83,6 +86,10 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleNavigate = useCallback(
     (eventId: string) => {
       const event = events.find((entry) => entry.id === eventId);
+      // Bring the event's date into view on the month grid.
+      if (event) {
+        calendarRef.current?.scrollTo(new Date(event.startDate));
+      }
       void showItem({
         contextId: id,
         selectionId: eventId,
@@ -127,9 +134,11 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   }, [db, subject, selectedDate, handleNavigate]);
 
   // Push all draft events for this calendar to Google Calendar.
+  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
+  // (Database/Feed/Credentials) can materialize.
   const handleSyncDraft = useCallback(() => {
-    void invokePromise(InboxOperation.SyncDraftEvents, { calendar });
-  }, [invokePromise, calendar]);
+    void invokePromise(InboxOperation.SyncDraftEvents, { calendar }, { spaceId: db?.spaceId });
+  }, [invokePromise, calendar, db]);
 
   const menuActions = useMenuBuilder(() => {
     let builder = MenuBuilder.make()
@@ -142,12 +151,17 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     if (draftEvents.length > 0) {
       builder = builder.action(
         'sync-draft',
-        { label: ['calendar-toolbar-sync.menu', { ns: meta.id }], icon: 'ph--cloud-arrow-up--regular' },
+        {
+          label: ['calendar-toolbar-sync.menu', { ns: meta.id }],
+          icon: 'ph--cloud-arrow-up--regular',
+          // Pushing drafts to Google Calendar requires an integration targeting this calendar.
+          disabled: !integration,
+        },
         handleSyncDraft,
       );
     }
     return builder.build();
-  }, [handleCreate, handleSyncDraft, draftEvents.length]);
+  }, [handleCreate, handleSyncDraft, draftEvents.length, integration]);
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
@@ -155,7 +169,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     <div role={role} className='@container dx-container overflow-hidden'>
       <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root className='hidden @3xl:block'>
-          <NaturalCalendar.Root>
+          <NaturalCalendar.Root ref={calendarRef}>
             <Panel.Toolbar asChild>
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
@@ -171,7 +185,10 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
         <Panel.Root>
           <Menu.Root {...menuActions} attendableId={id}>
             <Panel.Toolbar asChild>
-              <Menu.Toolbar />
+              {/* Connect (no integration) or pull-sync (integration present) action for this calendar. */}
+              <Menu.Toolbar>
+                <InitializeCalendarAction calendar={subject} />
+              </Menu.Toolbar>
             </Panel.Toolbar>
           </Menu.Root>
           <Panel.Content asChild>

@@ -101,7 +101,7 @@ const HeaderDateRow = ({ start, end }: HeaderDateRowProps) => {
     <Card.Row icon='ph--calendar--regular'>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-description'>{format(start, 'PPp')}</div>
-        {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
+        {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
       </div>
     </Card.Row>
   );

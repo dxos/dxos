@@ -3,12 +3,14 @@
 //
 
 import { addMinutes, differenceInMinutes, format } from 'date-fns';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 
-import { type Database } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
-import { type Actor, type Event as EventType } from '@dxos/types';
+import { ACTOR_REF_REGEX, ActorList, EMAIL_REGEX } from '@dxos/react-ui-components';
+import { type EditorController } from '@dxos/react-ui-editor';
+import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -104,6 +106,59 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update],
   );
 
+  // Attendee input: commit each completed token (terminated by whitespace) as an attendee —
+  // an `@<id>` reference resolves to a Person contact; otherwise it must be a well-formed email.
+  // Committed tokens are removed from the input so the row reads as a blank "add attendee" slot.
+  const actorListRef = useRef<EditorController | null>(null);
+  const people = useQuery(db, Filter.type(Person.Person));
+  const handleAttendeesChange = useCallback(
+    (value: string) => {
+      const endsWithSpace = /\s$/.test(value);
+      const tokens = value.split(/\s+/).filter(Boolean);
+      const tail = endsWithSpace ? undefined : tokens.pop();
+
+      const actors: Actor.Actor[] = [];
+      const remainder: string[] = [];
+      for (const token of tokens) {
+        const ref = token.match(ACTOR_REF_REGEX);
+        const person = ref ? people.find((person) => person.id === ref[1]) : undefined;
+        if (person) {
+          actors.push({
+            contact: Ref.make(person),
+            name: Obj.getLabel(person),
+            email: person.emails?.[0]?.value,
+          });
+        } else if (EMAIL_REGEX.test(token)) {
+          actors.push({ email: token });
+        } else {
+          // Incomplete/invalid tokens stay in the input.
+          remainder.push(token);
+        }
+      }
+
+      if (actors.length > 0) {
+        update((event) => {
+          // Skip duplicates (same contact or email).
+          const next = actors.filter(
+            (actor) =>
+              !event.attendees.some(
+                (attendee) =>
+                  (actor.contact &&
+                    attendee.contact &&
+                    refEntityId(attendee.contact.uri.toString()) === refEntityId(actor.contact.uri.toString())) ||
+                  (actor.email && attendee.email === actor.email),
+              ),
+          );
+          if (next.length > 0) {
+            event.attendees = [...event.attendees, ...next];
+          }
+        });
+        actorListRef.current?.setText([...remainder, tail].filter(Boolean).join(' '));
+      }
+    },
+    [update, people],
+  );
+
   const gridClasses = 'grid grid-cols-[1fr_8rem] gap-2';
 
   return (
@@ -166,6 +221,11 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       {data.attendees.map((attendee, index) => (
         <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
       ))}
+
+      {/* Always-blank row for adding the next attendee. */}
+      <Card.Row icon='ph--user-plus--regular' classNames='items-center'>
+        <ActorList db={db} onChange={handleAttendeesChange} ref={actorListRef} />
+      </Card.Row>
     </>
   );
 };
@@ -195,6 +255,12 @@ const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
     </Select.Root>
   );
 };
+
+/**
+ * Bare entity id from a ref URI. Refs to the same object can carry different URI schemes
+ * (`echo:/<id>`, `echo://<spaceId>/<id>`, `dxn:echo:<space>:<id>`), so compare trailing ids.
+ */
+const refEntityId = (uri: string): string | undefined => uri.split(/[:/]/).filter(Boolean).pop();
 
 /** Minimum event duration (minutes) enforced to keep the end after the start. */
 const MIN_DURATION_MINUTES = 15;
