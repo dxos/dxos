@@ -12,7 +12,9 @@ import { deliverClip, focusOrOpenComposerTab } from './bridge';
 import type { Clip } from './clip';
 import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
+  PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_RUN_MESSAGE_TYPE,
+  deliverPickedSnapshot,
   refreshRegistry,
   runPageAction,
 } from './page-actions';
@@ -114,6 +116,22 @@ const main = async () => {
     // steals focus and closes the popup, so the inline status may never render
     // (mirrors the clip flow's notification fallback).
     return runPageAction({ actionId: msg.actionId, tabId: msg.tabId }).then((ack) => {
+      if (!ack.ok) {
+        notify('Action failed', ack.error);
+      }
+      return ack;
+    });
+  });
+  browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
+    if (!msg || msg.type !== PAGE_ACTION_DELIVER_MESSAGE_TYPE) {
+      return undefined;
+    }
+    if (typeof msg.actionId !== 'string' || typeof msg.snapshot !== 'object' || msg.snapshot === null) {
+      return Promise.resolve({ version: 1, id: '', ok: false, error: 'badRequest' });
+    }
+    // Notify on failure: the popup has already closed by pick time, so a
+    // browser notification is the only feedback channel (mirrors the run flow).
+    return deliverPickedSnapshot({ actionId: msg.actionId, snapshot: msg.snapshot }).then((ack) => {
       if (!ack.ok) {
         notify('Action failed', ack.error);
       }
