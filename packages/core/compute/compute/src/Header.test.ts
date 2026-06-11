@@ -11,10 +11,10 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { byokHeaderLayer } from './byok';
 import * as Credential from './Credential';
+import * as Header from './Header';
 
-describe('byokHeaderLayer', () => {
+describe('Header.byokLayer', () => {
   test('attaches X-BYOK header when a credential is found for the provider host', async ({ expect }) => {
     const sink: { lastHeader?: string } = {};
 
@@ -25,7 +25,7 @@ describe('byokHeaderLayer', () => {
 
     const runnable = program.pipe(
       Effect.provide(
-        byokHeaderLayer('anthropic.com').pipe(
+        Header.byokLayer('anthropic.com').pipe(
           Layer.provide(captureHeaderClient(sink)),
           Layer.provide(credentialsLayer([{ service: 'anthropic.com', apiKey: 'sk-ant-user' }])),
         ),
@@ -46,7 +46,7 @@ describe('byokHeaderLayer', () => {
 
     const runnable = program.pipe(
       Effect.provide(
-        byokHeaderLayer('anthropic.com').pipe(
+        Header.byokLayer('anthropic.com').pipe(
           Layer.provide(captureHeaderClient(sink)),
           Layer.provide(credentialsLayer([])),
         ),
@@ -67,7 +67,7 @@ describe('byokHeaderLayer', () => {
 
     const runnable = program.pipe(
       Effect.provide(
-        byokHeaderLayer('anthropic.com').pipe(
+        Header.byokLayer('anthropic.com').pipe(
           Layer.provide(captureHeaderClient(sink)),
           Layer.provide(credentialsLayer([{ service: 'anthropic.com' }])),
         ),
@@ -97,7 +97,7 @@ describe('byokHeaderLayer', () => {
 
     const runnable = program.pipe(
       Effect.provide(
-        byokHeaderLayer('anthropic.com').pipe(
+        Header.byokLayer('anthropic.com').pipe(
           Layer.provide(captureHeaderClient(sink)),
           Layer.provide(failingCredentials),
         ),

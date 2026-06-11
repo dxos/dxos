@@ -10,7 +10,7 @@ import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { byokHeaderLayer } from '@dxos/compute';
+import { Header } from '@dxos/compute';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -52,8 +52,8 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
     };
 
     // `apiUrl` is a sentinel; `EdgeAiHttpClient` rewrites the request onto the EDGE
-    // `/ai/generate/anthropic` route. `byokHeaderLayer` wraps that client to inject `X-BYOK`.
-    const httpClient = byokHeaderLayer(ANTHROPIC_SOURCE).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient)));
+    // `/ai/generate/anthropic` route. `Header.byokLayer` wraps that client to inject `X-BYOK`.
+    const httpClient = Header.byokLayer(ANTHROPIC_SOURCE).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient)));
     const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://edge.internal' }).pipe(Layer.provide(httpClient));
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
