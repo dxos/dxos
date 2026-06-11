@@ -16,7 +16,7 @@ import {
   type IMetadataStore,
   type Space,
   createMappedFeedWriter,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';

@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EntityId, type URI } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -23,7 +23,6 @@ import * as Err from './Err';
 import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
-import * as ObjAtoms from './internal/ObjAtoms';
 import * as Ref from './Ref';
 import type * as Tag from './Tag';
 import * as Type from './Type';
@@ -498,16 +497,18 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
+export type { GetURIOptions } from './internal';
+
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical URI of the object. Returns `URI.URI` (today always an EID,
- * but future entity kinds may surface other URI schemes — narrow with
- * `EID.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
+ * Get the URI of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link GetURIOptions}).
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => {
+export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  return internal.getUri(entity);
+  return internal.getUri(entity, options);
 };
 
 /**
@@ -917,6 +918,6 @@ export const version = (entity: Unknown | Snapshot): Version => internal.version
 // Atoms
 //
 
-export const atom = ObjAtoms.make;
-export const atomReactive = ObjAtoms.makeWithReactive;
-export const atomProperty = ObjAtoms.makeProperty;
+export const atom = objInternal.makeAtom;
+export const atomReactive = objInternal.makeWithReactive;
+export const atomProperty = objInternal.makeProperty;

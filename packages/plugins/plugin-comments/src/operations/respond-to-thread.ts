@@ -10,12 +10,12 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { ThreadCapabilities, ThreadOperation } from '../types';
+import { CommentCapabilities, CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.RespondToThread> = ThreadOperation.RespondToThread.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = CommentOperation.RespondToThread.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ thread: threadRef, subject: subjectRef }) {
-      const runner = yield* Capability.get(ThreadCapabilities.AgentRunner);
+      const runner = yield* Capability.get(CommentCapabilities.AgentRunner);
       const thread = yield* Database.load(threadRef);
       const subject = yield* Database.load(subjectRef);
 

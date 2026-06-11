@@ -18,7 +18,7 @@ import {
   OperationHandler,
   UndoMappings,
   ReactSurface,
-  ThreadState,
+  CommentState,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -40,7 +40,7 @@ export const CommentsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: AppActivationEvents.SetupSettings,
-    activate: ThreadState,
+    activate: CommentState,
   }),
   Plugin.addModule({
     id: 'markdown',

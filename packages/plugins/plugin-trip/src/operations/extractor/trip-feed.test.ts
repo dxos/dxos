@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Relation } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';

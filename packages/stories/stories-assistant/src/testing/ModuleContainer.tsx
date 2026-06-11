@@ -11,7 +11,7 @@ import { AppCapabilities, getActiveSpaceId, getSpacePath } from '@dxos/app-toolk
 import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-db';
+import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';

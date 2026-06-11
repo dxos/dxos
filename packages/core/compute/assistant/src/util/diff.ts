@@ -4,7 +4,7 @@
 
 import { next as A, type Doc } from '@automerge/automerge';
 
-import { DocAccessor, toCursorRange } from '@dxos/echo-db';
+import { DocAccessor, toCursorRange } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 

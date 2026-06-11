@@ -31,7 +31,7 @@
     "@solid-primitives/utils": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@solidjs/testing-library": "catalog:",
     "solid-js": "catalog:",
     "vite-plugin-solid": "catalog:",

@@ -73,7 +73,10 @@ const collectMailboxRefsFromIntegration = (
       if (!target.object) {
         continue;
       }
-      const loaded = yield* Database.loadOption(target.object);
+      const loaded = yield* Database.load(target.object).pipe(
+        Effect.map(Option.some),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
+      );
       if (Option.isSome(loaded) && Mailbox.instanceOf(loaded.value)) {
         refs.push(Ref.make(loaded.value));
       }

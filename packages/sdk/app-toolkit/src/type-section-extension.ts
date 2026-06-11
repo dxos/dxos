@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { Annotation, Filter, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { whenSpace } from './app-node-matcher';
@@ -46,6 +46,11 @@ export const createTypeSectionExtension = (
   options?: {
     /** Position hint for the section in the sidebar. */
     position?: 'first' | 'last';
+    /**
+     * Override the default `Filter.type(type)` query.
+     * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).
+     */
+    query?: Query.Any;
   },
 ): Effect.Effect<GraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -54,6 +59,7 @@ export const createTypeSectionExtension = (
   // Filter.type's overload constraint (UnknownTypeSchema) is not publicly exported;
   // the runtime accepts any schema with a typename annotation.
   const filter = Filter.type(type as any) as Filter.Any;
+  const defaultQuery = Query.select(filter);
 
   const label = getDynamicLabel('typename.label', typename, { count: 2 });
 
@@ -61,7 +67,7 @@ export const createTypeSectionExtension = (
     id: typename,
     match: whenSpace,
     connector: (space, get) => {
-      const objects = get(space.db.query(filter).atom) as Obj.Unknown[];
+      const objects = get(space.db.query(options?.query ?? defaultQuery).atom) as Obj.Unknown[];
       if (objects.length === 0) {
         return Effect.succeed([]);
       }

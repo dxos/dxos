@@ -13,6 +13,13 @@ import { sleep } from './timeout';
 const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;
 
+/**
+ * Minimum duration a connection must stay up before it is considered stable and the backoff is
+ * reset. A connection that drops sooner keeps escalating the delay, so an endpoint that accepts
+ * then immediately closes the connection cannot produce a zero-delay reconnect loop.
+ */
+const STABLE_CONNECTION_THRESHOLD = 5000;
+
 export type PersistentLifecycleProps<T> = {
   /**
    * Create connection.
@@ -50,6 +57,7 @@ export class PersistentLifecycle<T> extends Resource {
   private _currentState: T | undefined = undefined;
   private _restartTask?: DeferredTask = undefined;
   private _restartAfter = 0;
+  private _connectedAt: number | undefined = undefined;
 
   constructor({ start, stop, onRestart, maxRestartDelay = DEFAULT_MAX_RESTART_DELAY }: PersistentLifecycleProps<T>) {
     super();
@@ -78,15 +86,17 @@ export class PersistentLifecycle<T> extends Resource {
       }
     });
 
-    this._currentState = await this._start().catch((err) => {
+    try {
+      this._currentState = await this._start();
+      this._connectedAt = Date.now();
+    } catch (err) {
       // Suppress noise when shutdown was requested while the initial start was in flight.
       if (this._ctx?.disposed) {
-        return undefined;
+        return;
       }
       log.warn('Start failed', { err });
       this._restartTask?.schedule();
-      return undefined;
-    });
+    }
   }
 
   protected override async _close(): Promise<void> {
@@ -97,6 +107,15 @@ export class PersistentLifecycle<T> extends Resource {
 
   private async _restart(): Promise<void> {
     log(`restarting in ${this._restartAfter}ms`, { state: this._lifecycleState });
+
+    // Reset the backoff only if the previous connection stayed up long enough to be considered
+    // stable. A connection that drops shortly after starting must keep escalating the delay,
+    // otherwise reconnects degenerate into a hot loop.
+    if (this._connectedAt !== undefined && Date.now() - this._connectedAt >= STABLE_CONNECTION_THRESHOLD) {
+      this._restartAfter = 0;
+    }
+    this._connectedAt = undefined;
+
     await this._stopCurrentState();
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
@@ -109,7 +128,7 @@ export class PersistentLifecycle<T> extends Resource {
       this._currentState = await this._start();
     });
 
-    this._restartAfter = 0;
+    this._connectedAt = Date.now();
     await this._onRestart?.();
   }
 

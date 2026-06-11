@@ -13,9 +13,9 @@ import * as TestClock from 'effect/TestClock';
 import { expect } from 'vitest';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { PartialBlock } from '@dxos/assistant';
+import { PartialBlock, SessionLink } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
@@ -438,6 +438,52 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
       { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 60_000 },
     );
   });
+
+  // Placed last so it does not perturb the shared deterministic ID stream of the tests above
+  // (memoized conversations are keyed per file and depend on prior execution order).
+  it.scoped(
+    'forks a conversation into a new feed and replays source history via a SessionLink',
+    Effect.fnUntraced(
+      function* (_) {
+        // Original conversation.
+        const source = yield* AgentService.createSession();
+        yield* source.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* source.waitForCompletion();
+
+        // Branch point: the last message of the source conversation.
+        const sourceMessages = (yield* Feed.runQuery(source.feed, Filter.type(Message.Message))).filter(
+          Obj.instanceOf(Message.Message),
+        );
+        const lastMessage = sourceMessages.sort((a, b) => a.created.localeCompare(b.created)).at(-1);
+        if (!lastMessage) {
+          return yield* Effect.dieMessage('source conversation produced no messages');
+        }
+
+        // Fork: a fresh session whose feed links back to the source via a SessionLink (mirrors the
+        // ForkChat operation). The forked agent has no messages of its own, so a context-dependent
+        // follow-up only resolves if the source history is replayed through the link.
+        const fork = yield* AgentService.createSession();
+        yield* Feed.append(fork.feed, [
+          Obj.make(SessionLink.SessionLink, {
+            feedRef: Ref.make(source.feed),
+            messageId: lastMessage.id,
+          }),
+        ]);
+
+        yield* fork.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+        yield* fork.waitForCompletion();
+
+        const forkText = (yield* Feed.runQuery(fork.feed, Filter.type(Message.Message)))
+          .filter(Obj.instanceOf(Message.Message))
+          .map(Message.extractText)
+          .join('\n');
+        expect(forkText.toLocaleLowerCase()).toContain('france');
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
 });
 
 /**

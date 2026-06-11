@@ -14,12 +14,12 @@ For **Effect** patterns (Layer, `Effect.gen`, services), read [.cursor/skills/ef
 
 ## Packages (where code lives)
 
-| Package                                                             | Role                                                                                                       |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [`@dxos/echo`](../../../packages/core/echo/echo/)                   | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
-| [`@dxos/echo-db`](../../../packages/core/echo/echo-db/)             | `EchoClient`, `EchoHost`, `EchoDatabaseImpl`, hypergraph, migrations, sync helpers                         |
-| [`@dxos/echo-react`](../../../packages/core/echo/echo-react/)       | `useQuery`, `useObject`, `useSchema`                                                                       |
-| [`@dxos/echo-pipeline`](../../../packages/core/echo/echo-pipeline/) | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
+| Package                                                       | Role                                                                                                       |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [`@dxos/echo`](../../../packages/core/echo/echo/)             | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
+| [`@dxos/echo-db`](../../../packages/core/echo/echo-db/)       | `EchoClient`, `EchoHost`, `EchoDatabaseImpl`, hypergraph, migrations, sync helpers                         |
+| [`@dxos/echo-react`](../../../packages/core/echo/echo-react/) | `useQuery`, `useObject`, `useSchema`                                                                       |
+| [`@dxos/echo-host`](../../../packages/core/echo/echo-host/)   | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
 
 ## Obtaining a `Database`
 
@@ -47,15 +47,15 @@ Use the object from `echo-db` / space. Primary entry: [`Database` interface](../
 
 The same logical operations are exposed as **Effects** that require **`Database.Service`** in context.
 
-| Export                                                                                                                                                                                 | Purpose                                                                                         |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [`Service`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | `Context.Tag` — `yield* Database.Service` → `{ db }`.                                           |
-| [`layer(db)`](../../../packages/core/echo/echo/src/Database.ts) / [`notAvailable`](../../../packages/core/echo/echo/src/Database.ts)                                                   | `Layer` for providing or stubbing DB.                                                           |
-| [`query`](../../../packages/core/echo/echo/src/Database.ts) / [`runQuery`](../../../packages/core/echo/echo/src/Database.ts)                                                           | Query with service.                                                                             |
-| [`schemaQuery`](../../../packages/core/echo/echo/src/Database.ts) / [`runSchemaQuery`](../../../packages/core/echo/echo/src/Database.ts)                                               | Schema registry queries.                                                                        |
-| [`add`](../../../packages/core/echo/echo/src/Database.ts) / [`remove`](../../../packages/core/echo/echo/src/Database.ts) / [`flush`](../../../packages/core/echo/echo/src/Database.ts) | Mutations / persistence.                                                                        |
-| [`resolve`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | Resolve `DXN` or `Ref` via graph.                                                               |
-| [`load`](../../../packages/core/echo/echo/src/Database.ts) / [`loadOption`](../../../packages/core/echo/echo/src/Database.ts)                                                          | Load `Ref`; `load` / `loadOption` do not require `Database.Service` (see signatures in source). |
+| Export                                                                                                                                                                                 | Purpose                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Service`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | `Context.Tag` — `yield* Database.Service` → `{ db }`.                                                                                 |
+| [`layer(db)`](../../../packages/core/echo/echo/src/Database.ts) / [`notAvailable`](../../../packages/core/echo/echo/src/Database.ts)                                                   | `Layer` for providing or stubbing DB.                                                                                                 |
+| [`query`](../../../packages/core/echo/echo/src/Database.ts) / [`runQuery`](../../../packages/core/echo/echo/src/Database.ts)                                                           | Query with service.                                                                                                                   |
+| [`schemaQuery`](../../../packages/core/echo/echo/src/Database.ts) / [`runSchemaQuery`](../../../packages/core/echo/echo/src/Database.ts)                                               | Schema registry queries.                                                                                                              |
+| [`add`](../../../packages/core/echo/echo/src/Database.ts) / [`remove`](../../../packages/core/echo/echo/src/Database.ts) / [`flush`](../../../packages/core/echo/echo/src/Database.ts) | Mutations / persistence.                                                                                                              |
+| [`resolve`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | Resolve `DXN` or `Ref` via graph.                                                                                                     |
+| [`load`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                             | Load `Ref`; use `Effect.catchTag('EntityNotFoundError', …)` when a missing target is acceptable. Does not require `Database.Service`. |
 
 **Wire-up pattern** (operations, agents, composable code):
 
@@ -64,7 +64,7 @@ import * as Database from '@dxos/echo/Database';
 import { Effect } from 'effect';
 
 const program = Effect.gen(function* () {
-  const objects = yield* Database.runQuery(SomeFilter);
+  const objects = yield* Database.query(SomeFilter).run;
   return objects;
 });
 

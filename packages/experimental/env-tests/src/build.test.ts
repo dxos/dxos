@@ -16,7 +16,7 @@ describe('build tests', () => {
         // NOTE: They also need to be added to package.json of this package.
         '@dxos/assistant-toolkit',
         '@dxos/assistant',
-        '@dxos/echo-db',
+        '@dxos/echo-client',
         '@dxos/echo',
         '@dxos/keys',
         '@dxos/log',
@@ -36,7 +36,7 @@ describe('build tests', () => {
 
   test('prohibit vitest in dist builds', async () => {
     await runEnvTest({
-      imports: ['@dxos/echo-db', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/functions'],
+      imports: ['@dxos/echo-client', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/functions'],
       conditions: ['browser'],
       external: ['*.wasm', 'node:async_hook'],
       forbid: [/vitest/, /rollup/],

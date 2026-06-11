@@ -28,9 +28,17 @@ const ICONS = {
     icon: 'ph--atom--regular',
     level: LogLevel.VERBOSE,
   },
-  agentRequestEnd: {
+  agentRequestEndSuccess: {
     icon: 'ph--atom--regular',
     level: LogLevel.INFO,
+  },
+  agentRequestEndError: {
+    icon: 'ph--atom--regular',
+    level: LogLevel.ERROR,
+  },
+  agentRequestEndInterrupted: {
+    icon: 'ph--atom--regular',
+    level: LogLevel.WARN,
   },
   userMessage: {
     icon: 'ph--user--regular',
@@ -162,6 +170,47 @@ interface EventPresentation {
   idSuffix?: string;
 }
 
+type AgentRequestEndData = Schema.Schema.Type<typeof AgentRequestEnd.schema>;
+
+/**
+ * Parses `AgentRequestEnd` payload, accepting legacy traces that omitted `status`.
+ */
+const parseAgentRequestEnd = (data: unknown): AgentRequestEndData | undefined => {
+  const validated = Schema.validateEither(AgentRequestEnd.schema)(data);
+  if (Either.isRight(validated)) {
+    return validated.right;
+  }
+  // Traces emitted before `status` was added wrote an empty object.
+  if (data != null && typeof data === 'object' && Object.keys(data).length === 0) {
+    return { status: 'success' };
+  }
+  log('invalid trace event', { type: AgentRequestEnd.key });
+  return undefined;
+};
+
+const presentAgentRequestEnd = (data: AgentRequestEndData): EventPresentation => {
+  switch (data.status) {
+    case 'error':
+      return {
+        icon: ICONS.agentRequestEndError.icon,
+        level: ICONS.agentRequestEndError.level,
+        message: data.error ? trimText(`Agent request failed: ${data.error}`) : 'Agent request failed',
+      };
+    case 'interrupted':
+      return {
+        icon: ICONS.agentRequestEndInterrupted.icon,
+        level: ICONS.agentRequestEndInterrupted.level,
+        message: 'Agent request interrupted',
+      };
+    default:
+      return {
+        icon: ICONS.agentRequestEndSuccess.icon,
+        level: ICONS.agentRequestEndSuccess.level,
+        message: 'Agent completed request',
+      };
+  }
+};
+
 const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
   if (Trace.isOfType(AgentRequestBegin, event)) {
     if (Either.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
@@ -175,15 +224,11 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     };
   }
   if (Trace.isOfType(AgentRequestEnd, event)) {
-    if (Either.isLeft(Schema.validateEither(AgentRequestEnd.schema)(event.data))) {
-      log('invalid trace event', { type: event.type });
+    const endData = parseAgentRequestEnd(event.data);
+    if (!endData) {
       return undefined;
     }
-    return {
-      icon: ICONS.agentRequestEnd.icon,
-      level: ICONS.agentRequestEnd.level,
-      message: 'Agent completed request',
-    };
+    return presentAgentRequestEnd(endData);
   }
   if (Trace.isOfType(CompleteBlock, event)) {
     if (Either.isLeft(Schema.validateEither(CompleteBlock.schema)(event.data))) {

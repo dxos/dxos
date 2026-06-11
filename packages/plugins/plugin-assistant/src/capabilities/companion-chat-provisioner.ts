@@ -72,6 +72,7 @@ export default Capability.makeModule(
 
       const db = Obj.getDatabase(object);
       if (!db) {
+        log.warn('No db for object', { plankId, companionUri });
         return false;
       }
 

@@ -110,7 +110,13 @@ export interface QueryResult<T> {
 
   /**
    * Self-updating atom. Updates automatically when query results change.
-   * Memoized per QueryResult instance — repeated accesses return the same Atom.
+   *
+   * Memoized per QueryResult instance — repeated accesses on the same instance return the same
+   * Atom. Safe only when the QueryResult is itself held stable across re-renders (e.g. behind a
+   * `useMemo`). It must NOT be used in graph-builder connectors/actions or other atom computes,
+   * where `db.query(...)` is called fresh on each re-evaluation: every run constructs a new
+   * QueryResult and so a new atom + subscription, leaking the previous ones. Use the memoized
+   * {@link atom} family there instead.
    */
   readonly atom: Atom.Atom<T[]>;
 }
@@ -121,4 +127,6 @@ export interface QueryResult<T> {
 export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
   run: Effect.Effect<T[], E, R>;
   first: Effect.Effect<Option.Option<T>, E, R>;
+
+  // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.
 }

@@ -9,7 +9,7 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-db';
+import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/blueprints` and `/types`) so the CLI's
 // `bun run --conditions=source` only walks plugin source files that are free of
 // React-component imports. The plugin root barrels re-export the whole tree
@@ -20,8 +20,8 @@ import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { Chess } from '@dxos/plugin-chess/types';
-import { ThreadBlueprint } from '@dxos/plugin-comments/blueprints';
-import { ThreadOperationHandlerSet } from '@dxos/plugin-comments/plugin';
+import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
+import { CommentOperationHandlerSet } from '@dxos/plugin-comments/plugin';
 import { Game } from '@dxos/plugin-game/types';
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
@@ -69,7 +69,7 @@ export const blueprintRegistry = makeRegistry({
     MarkdownBlueprint.make(),
     ScriptBlueprint.make(),
     TableBlueprint.make(),
-    ThreadBlueprint.make(),
+    CommentBlueprint.make(),
     TranscriptionBlueprint.make(),
   ],
 });
@@ -89,7 +89,7 @@ export const operationHandlers = OperationHandlerSet.merge(
   MarkdownOperationHandlerSet,
   ScriptOperationHandlerSet,
   TableOperationHandlerSet,
-  ThreadOperationHandlerSet,
+  CommentOperationHandlerSet,
   TranscriptionOperationHandlerSet,
 );
 

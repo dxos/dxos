@@ -12,11 +12,17 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref } from '@dxos/echo';
+import {
+  AgentPrompt,
+  AgentWizardBlueprint,
+  BlueprintManagerBlueprint,
+  DatabaseBlueprint,
+} from '@dxos/assistant-toolkit';
+import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
+import { AgentService } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -26,6 +32,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
 
+import { AssistantBlueprint } from './blueprints/assistant';
 import { meta } from './meta';
 
 EntityId.dangerouslyDisableRandomness();
@@ -145,6 +152,50 @@ describe('AssistantPlugin', () => {
         );
         expect(result).toEqual({ capital: 'paris' });
       }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+    );
+  });
+
+  test('smoke test for agent service with standard blueprints', { timeout: 120_000 }, async (ctx) => {
+    const { expect } = ctx;
+    await using harness = await createComposerTestApp({
+      plugins: [
+        ClientPlugin({}),
+        AssistantPlugin({
+          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+        }),
+        AutomationPlugin(),
+      ],
+    });
+
+    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+
+    const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
+      EffectEx.runAndForwardErrors,
+    );
+
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const blueprints = yield* Effect.forEach(
+          [DatabaseBlueprint, AssistantBlueprint, BlueprintManagerBlueprint, AgentWizardBlueprint],
+          (_) => Blueprint.resolve(_.key),
+        );
+
+        const agent = yield* AgentService.createSession({
+          blueprints,
+        });
+        yield* agent.submitPrompt('Hello');
+        yield* agent.waitForCompletion();
+      }).pipe(
+        Effect.provide(
+          ServiceResolver.provide(
+            { space: personalSpace.id },
+            Database.Service,
+            Feed.FeedService,
+            AgentService.AgentService,
+            Registry.Service,
+          ),
+        ),
+      ),
     );
   });
 });

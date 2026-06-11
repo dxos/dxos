@@ -208,7 +208,8 @@ const TestLayer = Layer.scoped(
   }),
 ).pipe(Layer.provideMerge(Reactivity.layer));
 
-// Doesn't work yet.
+// Deferred: same IDBBatchAtomicVFS open failure as sqlite-idb.browser.test.ts. OPFS worker
+// tests cover the Effect SqliteClient + persistent storage path used by Composer.
 describe.skip('effect SQLite with IDBBatchAtomicVFS', () => {
   it.effect(
     'basic CRUD operations',
