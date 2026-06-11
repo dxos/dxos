@@ -235,6 +235,9 @@
       "path": "../../plugins/plugin-board"
     },
     {
+      "path": "../../plugins/plugin-bookmarks"
+    },
+    {
       "path": "../../plugins/plugin-calls"
     },
     {
@@ -278,9 +281,6 @@
     },
     {
       "path": "../../plugins/plugin-explorer"
-    },
-    {
-      "path": "../../plugins/plugin-extension"
     },
     {
       "path": "../../plugins/plugin-feed"

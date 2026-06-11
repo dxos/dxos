@@ -17,6 +17,7 @@ import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -26,7 +27,7 @@ import { HelpOperation } from '#types';
 import { WelcomeDismissedAnnotation } from '../../annotations';
 
 /** Number of recently-modified objects to surface as cards. */
-const RECENT_LIMIT = 3;
+const RECENT_LIMIT = 10;
 
 /** Default starter prompts shown when the space has no recent objects yet. */
 const SUGGESTION_KEYS = [
@@ -46,6 +47,7 @@ export type SpaceHomeArticleProps = {
   space: Space | undefined;
 };
 
+// TODO(wittjosiah): Factor SpaceHomeArticle out of plugin-support into its own package or plugin-space.
 /**
  * Per-space home surface. On the personal space it shows the Welcome content at the top (until
  * dismissed). Below that are the most-recently-modified objects (of registered, non-hidden types),
@@ -78,6 +80,9 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
   );
   const recent = useQuery(filter && space ? space.db : undefined, query);
 
+  const assistantCapabilities = useCapabilities(AssistantCapabilities.State);
+  const assistantAvailable = assistantCapabilities.length > 0;
+
   const [dismissed, setDismissed] = useWelcomeDismissed(space);
   const isPersonal = !!space && isPersonalSpace(space);
   const showWelcome = isPersonal && !dismissed;
@@ -108,6 +113,13 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
     [space?.properties, isPersonal, t, handleStartTour, handleHideWelcome],
   );
 
+  // Tile adapter passed to Masonry.Root — closes over `space` so each card can navigate.
+  const RecentTile = useMemo(() => {
+    const Tile = ({ data }: { data: Obj.Unknown; index: number }) => <RecentObjectTile space={space} object={data} />;
+    Tile.displayName = 'RecentObjectTile';
+    return Tile;
+  }, [space]);
+
   return (
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
@@ -116,32 +128,48 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>
-        {/* Match the AI chat content width (`dx-document`): content at the top, prompt pinned at the bottom. */}
         <div className='flex flex-col bs-full min-bs-0'>
-          <ScrollArea.Root classNames='grow min-bs-0' orientation='vertical'>
-            <ScrollArea.Viewport classNames='dx-document flex flex-col gap-4 p-4'>
-              {/* Keep mounted on the personal space (hidden when dismissed) so the Stream iframe is not
-                  torn down and re-created on every show/hide — that remount was freezing the UI. */}
-              {isPersonal && (
-                <div className={showWelcome ? undefined : 'hidden'}>
-                  <WelcomePanel />
-                </div>
-              )}
+          {/* Keep mounted on the personal space (hidden when dismissed) so the Stream iframe is not
+              torn down and re-created on every show/hide — that remount was freezing the UI. */}
+          {isPersonal && (
+            <div className={showWelcome ? 'dx-document shrink-0 p-4 pb-0' : 'hidden'}>
+              <WelcomePanel />
+            </div>
+          )}
+          {(recent.length > 0 || assistantAvailable) && (
+            <div className='dx-document shrink-0 px-4 py-3'>
               <h2 className='text-sm font-medium text-description'>
                 {recent.length > 0 ? t('space-home.recent.heading') : t('space-home.suggestions.heading')}
               </h2>
-              <div className='flex flex-col gap-2'>
-                {recent.length > 0 ? (
-                  recent.map((object) => <RecentObjectCard key={object.id} space={space} object={object} />)
-                ) : (
-                  <SuggestionCards space={space} />
-                )}
-              </div>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-          <div className='dx-document px-4 pb-4'>
-            <SpaceHomePrompt space={space} />
-          </div>
+            </div>
+          )}
+          {recent.length > 0 ? (
+            // Outer div centers to document width with matching px-4 so tiles align with the heading.
+            // Masonry.Content fills the padded container and owns scroll.
+            <div className='dx-document grow min-bs-0 flex flex-col px-4'>
+              <Masonry.Root Tile={RecentTile}>
+                <Masonry.Content classNames='grow min-bs-0' padding={false}>
+                  <Masonry.Viewport classNames='py-2' items={recent} getId={(obj) => obj.id} />
+                </Masonry.Content>
+              </Masonry.Root>
+            </div>
+          ) : assistantAvailable ? (
+            <ScrollArea.Root classNames='grow min-bs-0' orientation='vertical'>
+              <ScrollArea.Viewport classNames='dx-document flex flex-col gap-2 px-4 pb-4'>
+                <SuggestionCards space={space} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          ) : (
+            // Assistant disabled and no recent objects: show a minimal placeholder.
+            <div className='dx-document grow flex items-center justify-center'>
+              <p className='text-sm text-description'>{t('space-home.empty.label')}</p>
+            </div>
+          )}
+          {assistantAvailable && (
+            <div className='dx-document px-4 pb-4 shrink-0'>
+              <SpaceHomePrompt space={space} />
+            </div>
+          )}
         </div>
       </Panel.Content>
     </Panel.Root>
@@ -343,22 +371,22 @@ const SuggestionCards = ({ space }: SpaceScopedProps) => {
   );
 };
 
-type RecentObjectCardProps = {
+type RecentObjectTileProps = {
   space?: Space;
   object: Obj.Unknown;
 };
 
-const RecentObjectCard = ({ space, object }: RecentObjectCardProps) => {
-  const { t } = useTranslation(meta.id);
+const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   const { invokePromise } = useOperationInvoker();
-
-  const typename = Obj.getTypename(object) ?? '';
-  const label =
-    Obj.getLabel(object) ??
-    toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: object.id }], t);
+  const { t } = useTranslation(meta.id);
+  const typename = Obj.getTypename(object);
+  const label = toLocalizedString(
+    Obj.getLabel(object) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
+    t,
+  );
   const iconAnnotation = Obj.getIcon(object);
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
-  const styles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
+  const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
   const handleClick = useCallback(() => {
     if (!space) {
@@ -367,10 +395,11 @@ const RecentObjectCard = ({ space, object }: RecentObjectCardProps) => {
     void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
   }, [invokePromise, object, space]);
 
+  // TODO(wittjosiah): Use AppSurface.Card once card previews are consistently good for all object types.
   return (
-    <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Toolbar.IconButton variant='ghost' label={label} icon={icon} iconOnly iconClassNames={styles?.fg} />
+        <Card.Icon icon={icon} classNames={iconStyles?.text} />
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

@@ -36,10 +36,11 @@ const waitForViewEditor = async () => {
 
 describe('ViewEditor', () => {
   afterEach(async () => {
-    // Flush pending React scheduler work before teardown to prevent
-    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
-    await act(async () => {});
-    cleanup();
+    // Wrap cleanup in async act() so React fully drains the scheduler
+    // (including setImmediate callbacks) before happy-dom tears down window.
+    await act(async () => {
+      cleanup();
+    });
   });
 
   test('renders view editor', async () => {

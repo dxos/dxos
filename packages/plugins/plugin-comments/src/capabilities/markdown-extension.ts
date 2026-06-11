@@ -11,7 +11,7 @@ import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
-import { ThreadCapabilities, ThreadOperation } from '#types';
+import { CommentCapabilities, CommentOperation } from '#types';
 
 import { threads } from '../extensions';
 
@@ -24,7 +24,7 @@ export default Capability.makeModule(
       ({ document: doc }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
-        const stateAtom = capabilities.get(ThreadCapabilities.State);
+        const stateAtom = capabilities.get(CommentCapabilities.State);
         return threads({ registry, stateAtom }, doc, invokePromise);
       },
       ({ document: doc }) => {
@@ -32,7 +32,7 @@ export default Capability.makeModule(
           return [];
         }
         const registry = capabilities.get(Capabilities.AtomRegistry);
-        const stateAtom = capabilities.get(ThreadCapabilities.State);
+        const stateAtom = capabilities.get(CommentCapabilities.State);
 
         return EditorView.updateListener.of((update) => {
           if (update.docChanged || update.selectionSet) {
@@ -58,7 +58,7 @@ export default Capability.makeModule(
               if (effect.is(commentClickedEffect)) {
                 // Select the clicked comment's thread (its id is the thread URI) so
                 // the companion highlights and scrolls to it, then open the companion.
-                void invokePromise(ThreadOperation.Select, { current: effect.value });
+                void invokePromise(CommentOperation.Select, { current: effect.value });
                 void invokePromise(LayoutOperation.UpdateCompanion, {
                   subject: linkedSegment('comments'),
                 });

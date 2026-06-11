@@ -12,9 +12,9 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-client';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { ThreadOperation } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.CreateProposals> = ThreadOperation.CreateProposals.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = CommentOperation.CreateProposals.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc, diffs }) {
       const object = yield* Database.load(doc);

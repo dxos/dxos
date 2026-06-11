@@ -15,7 +15,7 @@ import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { QueryResultImpl } from '../query';
+import { QueryResultCache, QueryResultImpl } from '../query';
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
 
@@ -127,6 +127,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _error: Error | null = null;
   private _refreshId = 0;
   private _querying = false;
+
+  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
+  // serialized query against this queue.
+  readonly #queryResultCache = new QueryResultCache();
 
   constructor(
     private readonly _service: FeedProtocol.QueueService,
@@ -261,7 +265,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from(Scope.space({ id: this._spaceId }), Scope.feed(this._echoUri));
-    return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
+    return this.#queryResultCache.getOrCreate(
+      queryWithScope,
+      () => new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope),
+    );
   }
 
   async sync({

@@ -205,6 +205,23 @@ feat F-5: View Transcript and Summary
     tags: [follow-up: comments anchored to the summary via the comments plugin]
 ```
 
+```mdl
+feat F-6: Comments
+
+  req F-6.1:
+    when: a Video is the active subject
+    then: |
+      the comments companion is offered (via the comments plugin's
+      CommentConfig capability, comments: unanchored); comment threads
+      attach to the video as a whole.
+
+  req F-6.2:
+    note: |
+      Anchored (text-range) comments into Video.transcript / Video.summary
+      require the comment-sync editor extension, which currently only
+      targets Markdown.Document content. Follow-up.
+```
+
 ## Acceptance
 
 ```mdl

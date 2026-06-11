@@ -22,7 +22,32 @@ import {
   type WorkerOrPort,
 } from './types';
 
-const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
+export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
+
+const DEFAULT_LEADER_HEARTBEAT_INTERVAL = 1_000;
+// ~5 missed heartbeats: tolerant of main-thread jank (GC pauses, heavy renders) on the leader tab,
+// since the heartbeat runs on the leader's main thread while data work runs in the worker.
+const DEFAULT_LEADER_STALE_TIMEOUT = 5_000;
+const DEFAULT_LEADER_PORT_TIMEOUT = 3_000;
+
+// Sentinel resolved when a follower gives up waiting for a port from the leader.
+const LEADER_TIMEOUT = Symbol('leader-timeout');
+
+export interface LeaderTimeoutOptions {
+  /**
+   * Interval at which a leader broadcasts liveness heartbeats while holding the lock.
+   */
+  heartbeatInterval?: number;
+  /**
+   * Duration without a heartbeat after which a lock-holding leader is considered stale
+   * and its lock may be stolen to force re-election.
+   */
+  staleTimeout?: number;
+  /**
+   * Duration a follower waits for a port from the leader before re-evaluating leadership.
+   */
+  portTimeout?: number;
+}
 
 export interface DedeciatedWorkerClientServicesOptions {
   createWorker: () => WorkerOrPort;
@@ -31,6 +56,11 @@ export interface DedeciatedWorkerClientServicesOptions {
    * Config to pass to the dedicated worker.
    */
   config?: Config;
+  /**
+   * Overrides for leader liveness/steal timeouts. Defaults are tuned for production; tests pass
+   * small values for determinism.
+   */
+  leaderTimeouts?: LeaderTimeoutOptions;
 }
 
 /**
@@ -46,6 +76,16 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   #coordinator: WorkerCoordinator | undefined = undefined;
   #connection: SharedWorkerConnection | undefined = undefined;
   readonly #clientId = `dedicated-worker-client-services-${crypto.randomUUID()}`;
+
+  readonly #leaderHeartbeatInterval: number;
+  readonly #leaderStaleTimeout: number;
+  readonly #leaderPortTimeout: number;
+  // Timestamp (ms) of the last heartbeat seen from any leader; 0 if none observed yet.
+  #lastLeaderHeartbeat = 0;
+  // Timestamp (ms) of the last steal attempt; gates against thrashing re-election.
+  #lastStealAttempt = 0;
+  // Resolves the leader-lock hold; woken on close, worker termination, or when our lock is stolen.
+  #leaderDone: Trigger | undefined;
 
   #initialConnection = new Trigger<void>();
   #isInitialConnection = true;
@@ -63,6 +103,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     this.#createWorker = options.createWorker;
     this.#createCoordinator = options.createCoordinator;
     this.#config = options.config;
+    this.#leaderHeartbeatInterval = options.leaderTimeouts?.heartbeatInterval ?? DEFAULT_LEADER_HEARTBEAT_INTERVAL;
+    this.#leaderStaleTimeout = options.leaderTimeouts?.staleTimeout ?? DEFAULT_LEADER_STALE_TIMEOUT;
+    this.#leaderPortTimeout = options.leaderTimeouts?.portTimeout ?? DEFAULT_LEADER_PORT_TIMEOUT;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -79,6 +122,13 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     log('dedicated-worker-client-services: creating coordinator');
     this.#coordinator = await this.#createCoordinator();
     log('dedicated-worker-client-services: coordinator created');
+    // Track leader liveness for the lifetime of the resource so the connect task can tell a live
+    // leader from a dead one before stealing the lock.
+    this.#coordinator.onMessage.on(this._ctx, (message) => {
+      if (message.type === 'leader-heartbeat') {
+        this.#lastLeaderHeartbeat = Date.now();
+      }
+    });
     this.#watchLeader();
     log('dedicated-worker-client-services: leader watch started');
     this.#connectTask.open();
@@ -115,8 +165,18 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           });
           invariant(this.#coordinator);
           invariant(!this.#leaderSession);
+
+          // Heartbeat for the full duration we hold the lock (starting before the worker is ready)
+          // so followers can distinguish a live, slow-to-start leader from a dead one and avoid
+          // stealing the lock from a healthy leader.
+          const sendHeartbeat = () =>
+            this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
+          sendHeartbeat();
+          const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
+
           this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
           const done = new Trigger();
+          this.#leaderDone = done;
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
             log('dedicated-worker-client-services: leader session closed', { hasError: !!error });
@@ -127,16 +187,36 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
               done.wake();
             }
           });
-          log('dedicated-worker-client-services: opening leader session');
-          await this.#leaderSession.open();
-          log('dedicated-worker-client-services: leader session opened');
-          await done.wait(); // Hold until the leader session is closed.
-          log('dedicated-worker-client-services: leader session done');
+          try {
+            log('dedicated-worker-client-services: opening leader session');
+            await this.#leaderSession.open();
+            log('dedicated-worker-client-services: leader session opened');
+            await done.wait(); // Hold until the leader session is closed.
+            log('dedicated-worker-client-services: leader session done');
+          } finally {
+            clearInterval(heartbeat);
+            this.#leaderDone = undefined;
+          }
         });
         log('dedicated-worker-client-services: leader lock released');
       } catch (error: any) {
         if (isAbortError(error)) {
-          log('dedicated-worker-client-services: leader watch aborted');
+          if (this._ctx.disposed) {
+            // Normal shutdown: the leader-lock request was aborted because the resource is closing.
+            log('dedicated-worker-client-services: leader watch aborted (closing)');
+            return;
+          }
+          // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
+          // callback keeps running per spec, so explicitly tear down our leader session (terminating
+          // the worker so it stops contending for shared storage) and re-enter the election.
+          log.warn('dedicated-worker-client-services: leader lock stolen, tearing down and re-watching', {
+            clientId: this.#clientId,
+          });
+          this.#leaderDone?.wake();
+          const session = this.#leaderSession;
+          this.#leaderSession = undefined;
+          await session?.close();
+          this.#watchLeader();
           return;
         }
         log.catch(error);
@@ -166,36 +246,56 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     try {
       log('trying to connect', { clientId: this.#clientId });
       log('dedicated-worker-client-services: requesting port from leader (waiting for provide-port)');
-      const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
-        WorkerCoordinatorMessage & { type: 'provide-port' }
-      >((resolve) => {
-        invariant(this.#coordinator);
+      const result = await new Promise<(WorkerCoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT>(
+        (resolve) => {
+          invariant(this.#coordinator);
 
-        const unsubscribe = this.#coordinator.onMessage.on((message) => {
-          if (message.type === 'provide-port' && message.clientId === this.#clientId) {
-            log('dedicated-worker-client-services: received provide-port from leader', {
-              leaderId: message.leaderId,
-            });
+          const unsubscribe = this.#coordinator.onMessage.on((message) => {
+            if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+              log('dedicated-worker-client-services: received provide-port from leader', {
+                leaderId: message.leaderId,
+              });
+              unsubscribe();
+              resolve(message);
+            } else if (message.type === 'new-leader') {
+              log('dedicated-worker-client-services: new leader announced, requesting port', {
+                leaderId: message.leaderId,
+              });
+              // New leader announced, request a port from them.
+              this.#coordinator?.sendMessage({
+                type: 'request-port',
+                clientId: this.#clientId,
+              });
+            }
+          });
+
+          // Re-evaluate leadership if no port arrives; an unbounded wait would hang the tab behind a
+          // dead leader that still holds the lock (e.g. a frozen/zombie tab).
+          const timer = setTimeout(() => {
             unsubscribe();
-            resolve(message);
-          } else if (message.type === 'new-leader') {
-            log('dedicated-worker-client-services: new leader announced, requesting port', {
-              leaderId: message.leaderId,
-            });
-            // New leader announced, request a port from them.
-            this.#coordinator?.sendMessage({
-              type: 'request-port',
-              clientId: this.#clientId,
-            });
-          }
-        });
+            resolve(LEADER_TIMEOUT);
+          }, this.#leaderPortTimeout);
+          ctx.onDispose(() => clearTimeout(timer));
 
-        // Send initial request in case leader is already ready.
-        this.#coordinator.sendMessage({
-          type: 'request-port',
+          // Send initial request in case leader is already ready.
+          this.#coordinator.sendMessage({
+            type: 'request-port',
+            clientId: this.#clientId,
+          });
+        },
+      );
+
+      if (result === LEADER_TIMEOUT) {
+        log.warn('dedicated-worker-client-services: timed out waiting for provide-port', {
           clientId: this.#clientId,
         });
-      });
+        await this.#maybeStealStaleLeader();
+        // Retry the connect; a fresh leader (this tab or another) is now being elected.
+        this.#connectTask.schedule();
+        return;
+      }
+
+      const { appPort, systemPort, leaderId, livenessLockKey } = result;
       log('connected to worker', { leaderId });
 
       queueMicrotask(async () => {
@@ -251,6 +351,56 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       this.#connectTask?.schedule();
     }
   });
+
+  /**
+   * Steal the leader lock when the current holder is unresponsive and shows no sign of life.
+   * The stolen holder's lock request rejects in its own context; releasing immediately lets queued
+   * requests (including this tab's own leader watcher) re-elect a healthy leader. This is safe
+   * because shared state lives behind the dedicated worker, not behind the lock itself.
+   */
+  async #maybeStealStaleLeader(): Promise<void> {
+    const sinceHeartbeat = Date.now() - this.#lastLeaderHeartbeat;
+    if (sinceHeartbeat < this.#leaderStaleTimeout) {
+      // A leader is alive (it heartbeats while holding the lock); it may just be slow to start.
+      log('dedicated-worker-client-services: leader unresponsive but alive, not stealing', { sinceHeartbeat });
+      return;
+    }
+
+    if (!(await this.#isLeaderLockHeld())) {
+      // No leader holds the lock; a normal election will elect one (this tab's watcher is queued).
+      log('dedicated-worker-client-services: no leader holds the lock, awaiting election');
+      return;
+    }
+
+    if (Date.now() - this.#lastStealAttempt < this.#leaderStaleTimeout) {
+      // Avoid thrashing: at most one steal per stale window.
+      log('dedicated-worker-client-services: steal on cooldown, awaiting re-election');
+      return;
+    }
+    this.#lastStealAttempt = Date.now();
+
+    log.warn('dedicated-worker-client-services: stealing stale leader lock', {
+      clientId: this.#clientId,
+      sinceHeartbeat,
+    });
+    try {
+      await navigator.locks.request(LEADER_LOCK_KEY, { steal: true }, async () => {
+        log.warn('dedicated-worker-client-services: stole stale leader lock, re-electing');
+      });
+    } catch (error: any) {
+      log.catch(error);
+    }
+  }
+
+  async #isLeaderLockHeld(): Promise<boolean> {
+    try {
+      const { held } = await navigator.locks.query();
+      return (held ?? []).some((lock) => lock.name === LEADER_LOCK_KEY);
+    } catch {
+      // If querying is unsupported, fall back to attempting the steal (gated by the heartbeat check).
+      return true;
+    }
+  }
 }
 
 /**
@@ -347,6 +497,9 @@ class LeaderSession extends Resource {
           break;
         case 'provide-port':
           // noop
+          break;
+        case 'leader-heartbeat':
+          // Broadcast by leaders (including ourselves) for follower liveness tracking; ignore here.
           break;
         case 'request-port':
           this.#sendMessage({ type: 'start-session', clientId: msg.clientId });

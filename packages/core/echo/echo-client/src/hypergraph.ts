@@ -17,6 +17,7 @@ import { type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
+  QueryResultCache,
   QueryResultImpl,
   type QuerySource,
   RegistryQuerySource,
@@ -41,6 +42,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
+
+  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
+  // serialized query. Covers both graph and database queries since `EchoDatabaseImpl.query`
+  // normalizes scope and delegates here.
+  //
+  // Replaced (not mutated) on every database registration change: each `QueryResultImpl` embeds
+  // a `GraphQueryContext` snapshot of the database set at creation time. Active (subscribed)
+  // results stay valid because `_registerDatabase` pushes new sources into `_queryContexts`.
+  // Idle (unsubscribed) cached results would not receive those updates and would miss newly
+  // registered databases, so we discard them on every topology change.
+  #queryResultCache = new QueryResultCache();
 
   constructor() {
     this._registry = makeRegistry();
@@ -83,6 +95,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const context of this._queryContexts.values()) {
       context.addQuerySource(new SpaceQuerySource(database));
     }
+    this.#queryResultCache = new QueryResultCache();
   }
 
   /**
@@ -91,6 +104,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   _unregisterDatabase(spaceId: SpaceId): void {
     // TODO(dmaretskyi): Remove db from query contexts.
     this._databases.delete(spaceId);
+    this.#queryResultCache = new QueryResultCache();
   }
 
   /**
@@ -119,7 +133,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return new QueryResultImpl(this._createLiveObjectQueryContext(), query);
+    return this.#queryResultCache.getOrCreate(
+      query,
+      () => new QueryResultImpl(this._createLiveObjectQueryContext(), query),
+    );
   }
 
   /**

@@ -77,6 +77,7 @@ export const translations = [
         'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
         'space-home.suggestion-data-type.label': 'Create a new data type',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
+        'space-home.empty.label': 'Create an object to get started.',
         'welcome.title': 'Welcome to Composer',
         'welcome.description':
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',

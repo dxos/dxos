@@ -77,9 +77,13 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           label: ['branch-thread.menu', { ns: meta.id }],
           icon: 'ph--git-branch--regular',
           type: 'branch',
-          disabled: true,
+          disabled: !chat || !db,
         },
-        () => {},
+        () =>
+          Effect.gen(function* () {
+            invariant(chat);
+            yield* invoke(AssistantOperation.ForkChat, { chat }, { spaceId: db?.spaceId });
+          }).pipe(EffectEx.runAndForwardErrors),
       );
 
     if (chats.length > 0) {

@@ -9,9 +9,9 @@ import { Obj } from '@dxos/echo';
 import { batch as batchEvents } from '@dxos/echo/Obj';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { ThreadOperation } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.Restore> = ThreadOperation.Restore.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.Restore> = CommentOperation.Restore.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ thread, anchor }) {
       const db = Obj.getDatabase(thread);

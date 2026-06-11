@@ -13,6 +13,8 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, PublicKey, URI } from '@dxos/keys';
 
+import { QueryResultCache } from '../query';
+
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
  *
@@ -41,6 +43,10 @@ export class RegistryImpl implements Registry.Registry {
    */
   readonly #entitiesByUri: Map<URI.URI, Entity.Unknown> = new Map();
   readonly #upstream: Registry.Registry | undefined;
+
+  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
+  // serialized query against this registry.
+  readonly #queryResultCache = new QueryResultCache();
 
   constructor(options: Registry.Options) {
     this.#upstream = options.upstream;
@@ -112,7 +118,7 @@ export class RegistryImpl implements Registry.Registry {
 
   private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
     const normalized: Query.Any = Query.is(query) ? query : Query.select(query as Filter.Any);
-    return new RegistryQueryResult<any>(this, normalized);
+    return this.#queryResultCache.getOrCreate(normalized, () => new RegistryQueryResult<any>(this, normalized));
   }
 
   getByURI(uri: string): Entity.Unknown | undefined {
