@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as NodeFs from 'node:fs';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
-import { type EchoDatabaseImpl, makeFeedService, type QueueFactory } from '@dxos/echo-client';
+import { type DatabaseImpl, makeFeedService, type QueueFactory } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
@@ -53,7 +53,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
 
       const peer = yield* Effect.promise(() => builder.createPeer({ types, storagePath, assignQueuePositions: true }));
 
-      let db: EchoDatabaseImpl | undefined;
+      let db: DatabaseImpl | undefined;
       let queues: QueueFactory | undefined;
 
       if (storagePath) {

@@ -65,7 +65,7 @@ export const AutomergePanel = (props: { space?: Space }) => {
       client.spaces
         .get()
         .find((s) => s.id === space.id)
-        ?.internal.db.coreDatabase?.getLoadedDocumentHandles()) ??
+        ?.internal.db.getLoadedDocumentHandles()) ??
     [];
 
   const [filter, setFilter] = useState('');

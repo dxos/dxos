@@ -4,7 +4,7 @@
 
 import { Resource } from '@dxos/context';
 import { type Database } from '@dxos/echo';
-import { type CoreDatabase, type EchoClient, type EchoDatabaseImpl } from '@dxos/echo-client';
+import { type DatabaseImpl, type EchoClient } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 
@@ -15,7 +15,7 @@ import { type QueuesAPI, QueuesAPIImpl } from './queues-api';
  * @deprecated
  */
 export class SpaceProxy extends Resource {
-  private _db?: EchoDatabaseImpl = undefined;
+  private _db?: DatabaseImpl = undefined;
   private _queuesApi: QueuesAPIImpl;
 
   constructor(
@@ -36,14 +36,6 @@ export class SpaceProxy extends Resource {
     return this._db;
   }
 
-  /**
-   * @deprecated Use db API.
-   */
-  get crud(): CoreDatabase {
-    invariant(this._db);
-    return this._db.coreDatabase;
-  }
-
   get queues(): QueuesAPI {
     return this._queuesApi;
   }
@@ -61,6 +53,7 @@ export class SpaceProxy extends Resource {
       owningObject: this,
     });
 
-    await this._db.coreDatabase.open(this._ctx, { rootUrl: meta.rootDocumentId });
+    await this._db.setSpaceRoot(meta.rootDocumentId);
+    await this._db.open(this._ctx);
   }
 }

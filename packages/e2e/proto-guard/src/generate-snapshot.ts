@@ -43,7 +43,7 @@ const seedData = async (client: Client) => {
     );
     await space.db.flush();
 
-    const promise = space.internal.db.coreDatabase.rootChanged.waitForCount(1);
+    const promise = space.internal.db.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();

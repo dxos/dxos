@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
-import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
+import { type DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 import { type CoreDatabase } from './core-database';
 
@@ -359,7 +359,7 @@ describe('CoreDatabase', () => {
   });
 });
 
-const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
+const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
   spaceRootHandle: db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(),
   linkedDocHandles: db.coreDatabase._automergeDocLoader.getLinkedDocHandles(),
 });
@@ -369,7 +369,7 @@ const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 const createClientDbInSpaceWithObject = async (
   object: Entity.Any,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
-): Promise<EchoDatabaseImpl> => {
+): Promise<DatabaseImpl> => {
   const tmpPath = createTmpPath();
 
   const testBuilder = new EchoTestBuilder();
