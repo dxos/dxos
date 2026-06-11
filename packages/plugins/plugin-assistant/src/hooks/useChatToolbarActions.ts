@@ -77,7 +77,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           () =>
             Effect.gen(function* () {
               invariant(chat);
-              yield* invoke(AssistantOperation.ForkChat, { chat }, { spaceId: db?.spaceId });
+              yield* invoke(AssistantOperation.ForkChat, { chat, companionTo }, { spaceId: db?.spaceId });
             }).pipe(EffectEx.runAndForwardErrors),
         );
 
