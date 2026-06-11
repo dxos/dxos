@@ -89,23 +89,19 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
-              // Reactively count messages newer than the mailbox's `viewedAt` cursor. Querying the feed here
-              // subscribes the connector to message changes, so the count updates after sync (new messages) and
-              // after the mailbox is viewed (cursor advances, see `Mailbox.markViewed`).
-              // `.atom` resolves to `Obj.Snapshot<Feed.Feed>`, which `Query.from` does not accept;
-              // the snapshot is structurally the feed for query purposes.
-              const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
+              const mailboxSnapshot = get(Obj.atom(mailbox));
+              const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
               const messages = feed
                 ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom)
                 : [];
-              const modifiedCount = Mailbox.getNewMessageCount(mailbox, messages);
+              const modifiedCount = Mailbox.getNewMessageCount(mailboxSnapshot, messages);
 
               return Node.make({
-                id: mailbox.id,
+                id: mailboxSnapshot.id,
                 type: Type.getTypename(Mailbox.Mailbox),
                 data: null,
                 properties: {
-                  label: mailbox.name ?? ['object-name.placeholder', { ns: Type.getTypename(Mailbox.Mailbox) }],
+                  label: mailboxSnapshot.name ?? ['object-name.placeholder', { ns: Type.getTypename(Mailbox.Mailbox) }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
@@ -135,7 +131,7 @@ export default Capability.makeModule(
                       mailbox,
                     },
                   }),
-                  ...(mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) =>
+                  ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) =>
                     Node.make({
                       id: `filter-${kebabize(name)}`,
                       type: FILTER_TYPE,
@@ -151,9 +147,11 @@ export default Capability.makeModule(
                           id: `filter-${kebabize(name)}-delete`,
                           data: () =>
                             Effect.sync(() => {
-                              const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                              Obj.update(mailbox, (mailbox: any) => {
-                                mailbox.filters.splice(index, 1);
+                              Obj.update(mailbox, (mailbox) => {
+                                const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                                if (index >= 0) {
+                                  mailbox.filters.splice(index, 1);
+                                }
                               });
                             }),
                           properties: {
