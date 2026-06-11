@@ -41,7 +41,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         .sort((a, b) => a.created.localeCompare(b.created));
 
       // Create a new chat, then apply source bindings and session link.
-      const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
+      const sourceName = Obj.getLabel(chat);
+      const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
+        db,
+        name: sourceName ? `${sourceName} (fork)` : undefined,
+      });
       const newFeed = newChat.feed.target;
       invariant(newFeed, 'New chat feed not found.');
 
