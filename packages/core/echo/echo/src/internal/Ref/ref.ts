@@ -29,7 +29,7 @@ import {
 } from '../Annotation/annotations';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
-import * as RefAtoms from '../RefAtoms';
+import * as RefAtoms from './atoms';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.

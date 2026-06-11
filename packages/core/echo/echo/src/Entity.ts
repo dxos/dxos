@@ -10,7 +10,7 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
-import * as ObjAtoms from './internal/ObjAtoms';
+import * as ObjAtoms from './internal/Obj/atoms';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import type * as Tag from './Tag';

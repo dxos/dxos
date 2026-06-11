@@ -17,7 +17,7 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
-import * as ObjAtoms from './internal/ObjAtoms';
+import * as ObjAtoms from './internal/Obj/atoms';
 import * as Obj from './Obj';
 import type * as Ref from './Ref';
 import type * as Tag from './Tag';

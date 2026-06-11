@@ -23,7 +23,7 @@ import * as Err from './Err';
 import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
-import * as ObjAtoms from './internal/ObjAtoms';
+import * as ObjAtoms from './internal/Obj/atoms';
 import * as Ref from './Ref';
 import type * as Tag from './Tag';
 import * as Type from './Type';

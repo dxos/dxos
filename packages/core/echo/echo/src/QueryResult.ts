@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { type CleanupFn } from '@dxos/async';
 
 import type * as Entity from './Entity';
-import * as QueryAtoms from './internal/QueryAtoms';
+import * as QueryAtoms from './internal/Query/atoms';
 
 /**
  * Individual query result entry.

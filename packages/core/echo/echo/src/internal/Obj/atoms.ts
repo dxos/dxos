@@ -10,15 +10,15 @@ import * as Option from 'effect/Option';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Entity from '../Entity';
-import type * as Obj from '../Obj';
-import type * as Ref from '../Ref';
-import type * as Relation from '../Relation';
-import { subscribe } from './common/proxy/reactive';
-import { isEntity, getDatabase } from './Entity';
-import { getSnapshot } from './Obj';
-import { loadRefTarget } from './ref-utils';
-import { RefTypeId } from './Ref/ref';
+import type * as Entity from '../../Entity';
+import type * as Obj from '../../Obj';
+import type * as Ref from '../../Ref';
+import type * as Relation from '../../Relation';
+import { subscribe } from '../common/proxy/reactive';
+import { isEntity, getDatabase } from '../Entity';
+import { loadRefTarget } from '../Ref/utils';
+import { RefTypeId } from '../Ref/ref';
+import { getSnapshot } from './snapshot';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>
   obj != null && typeof obj === 'object' && RefTypeId in (obj as object);
