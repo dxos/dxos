@@ -198,7 +198,10 @@ export const PostContent = Schema.Struct({
   imageUrl: Schema.optional(Schema.String),
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
+}).pipe(
+  Annotation.HiddenAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')),
+);
 
 export type PostContent = Type.InstanceType<typeof PostContent>;
 
