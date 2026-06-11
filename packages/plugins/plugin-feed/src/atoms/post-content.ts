@@ -4,7 +4,7 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { Obj, QueryResult } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 
 import { Subscription } from '../types';
 
@@ -24,7 +24,7 @@ export const postContentAtom = Atom.family((post: Subscription.Post) =>
     if (!db || !query) {
       return undefined;
     }
-    const entries = get(QueryResult.atom(db, query));
+    const entries = get(db.query(query).atom);
     return Subscription.pickLatestPostContent(entries);
   }).pipe(Atom.keepAlive),
 );

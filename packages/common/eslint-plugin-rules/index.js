@@ -12,7 +12,6 @@ import importAsNamespace from './rules/import-as-namespace.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
-import noQueryResultAtomGetter from './rules/no-query-result-atom-getter.js';
 import translationKeyFormat from './rules/translation-key-format.js';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
@@ -32,7 +31,6 @@ const plugin = {
     'no-bare-dot-imports': noBareDotImports,
     'no-effect-run-promise': noEffectRunPromise,
     'no-empty-promise-catch': noEmptyPromiseCatch,
-    'no-query-result-atom-getter': noQueryResultAtomGetter,
     'translation-key-format': translationKeyFormat,
   },
   configs: {
@@ -47,7 +45,6 @@ const plugin = {
         'dxos-plugin/no-bare-dot-imports': 'error',
         'dxos-plugin/no-effect-run-promise': 'error',
         'dxos-plugin/no-empty-promise-catch': 'error',
-        'dxos-plugin/no-query-result-atom-getter': 'error',
         // TODO(dmaretskyi): Turned off due to large number of errors and no auto-fix.
         // 'dxos-plugin/comment': 'error',
       },
