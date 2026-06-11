@@ -6,8 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { toEffectSchema } from '@dxos/echo/JsonSchema';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
 import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
