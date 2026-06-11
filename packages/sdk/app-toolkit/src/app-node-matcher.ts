@@ -14,11 +14,8 @@ import { isSpace, type Space } from '@dxos/client/echo';
  */
 const SPACE_NODE_TYPE = 'org.dxos.type.space';
 
-/**
- * Canonical type for the space-settings virtual section node. Mirrors
- * `SETTINGS_SECTION_TYPE` in `@dxos/plugin-space`.
- */
-const SETTINGS_SECTION_NODE_TYPE = 'org.dxos.plugin.space.settings';
+/** Canonical type for the space-settings virtual section node. */
+export const SETTINGS_SECTION_TYPE = 'org.dxos.plugin.space.settings';
 
 /**
  * Match space nodes and return the {@link Space} payload — saves callers from
@@ -53,5 +50,5 @@ export const whenSpace = (node: Node.Node): Option.Option<Space> =>
  */
 export const whenSpaceSettings = (node: Node.Node): Option.Option<Space> => {
   const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
-  return node.type === SETTINGS_SECTION_NODE_TYPE && space ? Option.some(space) : Option.none();
+  return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();
 };
