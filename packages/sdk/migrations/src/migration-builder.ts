@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client';
+import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client/internal';
 import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaURI } from '@dxos/echo/internal';
 import * as Type from '@dxos/echo/Type';
