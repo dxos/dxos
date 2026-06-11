@@ -37,9 +37,10 @@ type Settings
     are documented per field.
   fields:
     enabled?: boolean            # default: true. Master switch: when false, the
-                                 # bridge ignores incoming clips.
+                                 # bridge ignores incoming clips and page
+                                 # actions (acked with `disabled`).
     autoOpenAfterClip?: boolean  # default: false. Navigate to the created
-                                 # object after a successful clip.
+                                 # object after a successful clip or page action.
     renderProxyEnabled?: boolean  # default: true. Master switch: when false,
                                   # plugins use the edge HTTP proxy instead.
     renderTimeout?: number        # default: 20000. Max ms to wait for a render.
@@ -168,6 +169,24 @@ feat F-2b: Render-Proxy Settings
 ```
 
 ```mdl
+feat F-2c: Settings Enforcement
+
+  req F-2c.1:
+    when: `enabled` is false and a clip or page-action invoke arrives
+    then: |
+      no object is created; the request is still acked (so the extension does
+      not time out) with the stable error code `disabled`
+
+  req F-2c.2:
+    when: `autoOpenAfterClip` is true and a clip or page action succeeds
+    then: the created object is opened via LayoutOperation.Open
+
+  req F-2c.3:
+    when: `autoOpenAfterClip` is false (default)
+    then: focus is not moved; only the success toast is shown
+```
+
+```mdl
 feat F-3: Clip Ingestion Listener
 
   req F-3.1:
@@ -268,7 +287,7 @@ feat F-8: Page Actions Registry & Invocation
     descriptors and executes invoke requests (`composer:page-action:invoke`)
     by resolving the active space and invoking the target operation with
     `{ snapshot, target }`. Every request is acked with stable error codes
-    (invalidPayload, unsupportedVersion, unknownAction, noSpace,
+    (invalidPayload, unsupportedVersion, disabled, unknownAction, noSpace,
     operationFailed); outcomes surface as toasts.
 ```
 

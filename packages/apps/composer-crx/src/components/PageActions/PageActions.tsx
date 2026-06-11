@@ -27,6 +27,7 @@ const ERROR_HINTS: Record<string, string> = {
   extractorFailed: 'could not read the page',
   timeout: 'Composer did not respond',
   noSpace: 'open a space in Composer first',
+  disabled: 'extension actions are disabled in Composer settings',
   unknownAction: 'action not recognized — update Composer or the extension',
 };
 

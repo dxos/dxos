@@ -14,24 +14,24 @@ import * as Schema from 'effect/Schema';
 export const Settings = Schema.mutable(
   Schema.Struct({
     /**
-     * Master toggle. When false, the bridge plugin ignores incoming clips.
-     * Defaults to `true`.
+     * Master toggle. When false, the bridge plugin ignores incoming clips and
+     * page-action invocations. Defaults to `true`.
      */
     enabled: Schema.optional(
       Schema.Boolean.annotations({
-        title: 'Accept clips',
-        description: 'When off, clips sent from the composer-crx browser extension are ignored.',
+        title: 'Accept extension actions',
+        description: 'When off, clips and actions sent from the composer-crx browser extension are ignored.',
       }),
     ),
 
     /**
-     * Navigate to the created object after a successful clip. Defaults to
-     * `false` to avoid yanking focus during active work.
+     * Navigate to the created object after a successful clip or page action.
+     * Defaults to `false` to avoid yanking focus during active work.
      */
     autoOpenAfterClip: Schema.optional(
       Schema.Boolean.annotations({
         title: 'Open after clip',
-        description: 'Navigate to the created object when a clip is received.',
+        description: 'Navigate to the created object when a clip or page action succeeds.',
       }),
     ),
 

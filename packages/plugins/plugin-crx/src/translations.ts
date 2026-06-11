@@ -22,6 +22,7 @@ export const translations = [
         'toast.error.title': 'Clip failed',
         'toast.error.invalidPayload.message': 'Unrecognized clip payload.',
         'toast.error.unsupportedVersion.message': 'Unsupported clip version — update Composer.',
+        'toast.error.disabled.message': 'Extension actions are disabled in settings.',
         'toast.error.unsupportedKind.message': 'Unsupported clip kind.',
         'toast.error.noSpace.message': 'Open a space first.',
         'toast.error.internal.message': 'Failed to save clip.',
