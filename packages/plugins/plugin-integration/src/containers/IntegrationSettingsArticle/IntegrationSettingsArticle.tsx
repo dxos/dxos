@@ -11,10 +11,11 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { Row, RowList } from '@dxos/react-ui-list';
 import { Settings } from '@dxos/react-ui-form';
+import { Row, RowList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
+
 import { integrationDeckSubject } from '../../constants';
 import { Integration } from '../../types';
 
@@ -74,7 +75,7 @@ export const IntegrationSettingsArticle = (_props: IntegrationSettingsArticlePro
                     integration.name ??
                     (accessToken
                       ? `${accessToken.source}${accessToken.account ? ` · ${accessToken.account}` : ''}`
-                      : integration.providerId ?? integration.id);
+                      : (integration.providerId ?? integration.id));
                   return (
                     <Row
                       key={integration.id}
