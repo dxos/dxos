@@ -9,7 +9,7 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { ACTOR_REF_REGEX, ActorList, EMAIL_REGEX } from '@dxos/react-ui-form';
+import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -129,7 +129,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       const actors: Actor.Actor[] = [];
       const remainder: string[] = [];
       for (const token of tokens) {
-        const ref = token.match(ACTOR_REF_REGEX);
+        const ref = token.match(REF_REGEX);
         const person = ref ? people.find((person) => person.id === ref[1]) : undefined;
         if (person) {
           actors.push({
@@ -243,7 +243,18 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* Always-blank row for adding the next attendee. */}
       <Card.Row icon='ph--user-plus--regular' classNames='items-center'>
-        <ActorList db={db} activateOnTyping onChange={handleAttendeesChange} ref={actorListRef} />
+        <RefEditor
+          db={db}
+          type={Person.Person}
+          match={EMAIL_REGEX}
+          getLabel={getPersonLabel}
+          getValues={getPersonValues}
+          icon='ph--user--regular'
+          placeholder={t('event-add-attendee.placeholder')}
+          activateOnTyping
+          onChange={handleAttendeesChange}
+          ref={actorListRef}
+        />
       </Card.Row>
     </>
   );
@@ -274,6 +285,18 @@ const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
     </Select.Root>
   );
 };
+
+/** Display label for a person attendee (label annotation, then primary email, then id). */
+const getPersonLabel = (object: Obj.Unknown): string => {
+  if (Obj.instanceOf(Person.Person, object)) {
+    return Obj.getLabel(object) ?? object.emails?.[0]?.value ?? object.id;
+  }
+  return Obj.getLabel(object) ?? object.id;
+};
+
+/** Person email addresses (shown as picker item detail). */
+const getPersonValues = (object: Obj.Unknown): readonly string[] =>
+  Obj.instanceOf(Person.Person, object) ? (object.emails ?? []).map(({ value }) => value) : [];
 
 /**
  * Bare entity id from a ref URI. Refs to the same object can carry different URI schemes

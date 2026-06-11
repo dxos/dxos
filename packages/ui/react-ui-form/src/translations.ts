@@ -10,8 +10,8 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'actor-list.placeholder': "Type '@' to add a person, or enter an email",
-        'actor-list-auto.placeholder': 'Add a person by name, or enter an email',
+        'ref-editor.placeholder': "Type '@' to add a reference, or enter a value",
+        'ref-editor-auto.placeholder': 'Search by name, or enter a value',
 
         'fields.label': 'Fields',
         'hidden-fields.label': 'Hidden Fields',

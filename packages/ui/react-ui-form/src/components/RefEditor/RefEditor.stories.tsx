@@ -16,7 +16,8 @@ import { Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ActorList, type ActorListProps } from './ActorList';
+import { EMAIL_REGEX } from './ref-editor-extension';
+import { RefEditor, type RefEditorProps } from './RefEditor';
 
 const generator: ValueGenerator = random as any;
 
@@ -45,6 +46,10 @@ const generatePeople = async (db: Database.Database, count: number) => {
   return people;
 };
 
+/** Person email addresses (the values a person can be captured as in email mode). */
+const getPersonValues = (object: Obj.Unknown): readonly string[] =>
+  Obj.instanceOf(Person.Person, object) ? (object.emails ?? []).map(({ value }) => value) : [];
+
 /**
  * Dense reference grid of the generated people and their email addresses.
  */
@@ -64,21 +69,36 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
   );
 };
 
-const meta = {
-  title: 'ui/react-ui-form/ActorList',
-  component: ActorList,
-  render: (args: ActorListProps) => {
-    const { space } = useClientStory();
-    const [value, setValue] = useState(args.value ?? '');
+type StoryProps = Partial<Pick<RefEditorProps, 'value' | 'mode' | 'activateOnTyping' | 'autoFocus'>>;
 
-    return (
-      <div className='flex flex-col gap-2'>
-        <ActorList {...args} db={space?.db} onChange={setValue} classNames='border' />
-        <JsonHighlighter data={{ value }} classNames='text-xs' />
-        <PeopleGrid db={space?.db} />
-      </div>
-    );
-  },
+// NOTE: The Person config (type/match/getValues) is supplied in render, not args — Storybook's
+// arg traversal attempts to mutate the proxied ECHO schema and crashes.
+const DefaultStory = ({ value: initialValue, ...args }: StoryProps) => {
+  const { space } = useClientStory();
+  const [value, setValue] = useState(initialValue ?? '');
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <RefEditor
+        {...args}
+        value={initialValue}
+        type={Person.Person}
+        match={EMAIL_REGEX}
+        getValues={getPersonValues}
+        icon='ph--user--regular'
+        db={space?.db}
+        onChange={setValue}
+        classNames='border'
+      />
+      <JsonHighlighter data={{ value }} classNames='text-xs' />
+      <PeopleGrid db={space?.db} />
+    </div>
+  );
+};
+
+const meta = {
+  title: 'ui/react-ui-form/RefEditor',
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
@@ -94,7 +114,7 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof ActorList>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

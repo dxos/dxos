@@ -9,30 +9,32 @@ import { Domino } from '@dxos/ui';
 import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 /**
- * Display info for a resolved actor reference.
+ * Display info for a resolved object reference.
  */
-export type ActorInfo = {
+export type RefInfo = {
   label: string;
   hue?: string;
 };
 
 /**
  * Content model:
- * - `'ref'`: whitespace-separated tokens; `@<id>` references to existing Person objects
- *   (and well-formed raw email tokens).
+ * - `'ref'`: whitespace-separated tokens; `@<id>` references to existing objects (and raw tokens
+ *   accepted by the pluggable {@link RefEditorExtensionOptions.match} regexp).
  * - `'email'`: comma-separated RFC 5322 mailboxes (`Name <email>` or bare `email`); the comma
  *   separators are consumed into the atomic tags so they are not visible.
  */
-export type ActorListMode = 'ref' | 'email';
+export type RefEditorMode = 'ref' | 'email';
 
-export type ActorListOptions = {
-  mode?: ActorListMode;
-  /** Resolve an actor (person) id referenced as `@<id>` to display info. */
-  getActor?: (id: string) => ActorInfo | undefined;
+export type RefEditorExtensionOptions = {
+  mode?: RefEditorMode;
+  /** Resolve an object id referenced as `@<id>` to display info. */
+  getRef?: (id: string) => RefInfo | undefined;
+  /** Pluggable raw-token matcher (e.g. {@link EMAIL_REGEX}); matching tokens render as neutral tags. */
+  match?: RegExp;
 };
 
-/** Matches an actor reference token (`@<object id>`). */
-export const ACTOR_REF_REGEX = /^@([A-Za-z0-9]+)$/;
+/** Matches an object reference token (`@<object id>`). */
+export const REF_REGEX = /^@([A-Za-z0-9]+)$/;
 
 /** Matches a well-formed email address token. */
 export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -44,39 +46,40 @@ export const NAME_ADDR_REGEX = /^(.*?)\s*<([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-
 export const formatMailbox = (name: string | undefined, email: string): string => (name ? `${name} <${email}>` : email);
 
 /**
- * Effect dispatched when actor data changes out-of-band (e.g. people finish loading) so that
+ * Effect dispatched when reference data changes out-of-band (e.g. objects finish loading) so that
  * already-rendered reference decorations re-resolve without a document change.
  */
-export const actorListRedecorate = StateEffect.define<null>();
+export const refEditorRedecorate = StateEffect.define<null>();
 
 /**
- * CodeMirror extension rendering actor-list tokens as tags. Tags are atomic: the cursor cannot
- * enter them and deletion removes the whole token.
- * - `'ref'` mode: `@<id>` references resolve to the person's name (via
- *   {@link ActorListOptions.getActor}); well-formed email tokens render as neutral tags.
+ * CodeMirror extension rendering reference-editor tokens as tags. Tags are atomic: the cursor
+ * cannot enter them and deletion removes the whole token.
+ * - `'ref'` mode: `@<id>` references resolve to the object's label (via
+ *   {@link RefEditorExtensionOptions.getRef}); tokens accepted by the pluggable `match` regexp
+ *   render as neutral tags.
  * - `'email'` mode: RFC 5322 mailboxes render as tags labelled with the display name (falling
  *   back to the address); the trailing comma separator is hidden inside the tag's atomic range.
  */
-export const actorList = ({ mode = 'ref', getActor }: ActorListOptions = {}): Extension => {
+export const refEditor = ({ mode = 'ref', getRef, match }: RefEditorExtensionOptions = {}): Extension => {
   const buildRefDecorations = (state: EditorState) => {
     const deco = new RangeSetBuilder<Decoration>();
     const text = state.doc.toString();
     const tokenRegex = /\S+/g;
-    let match: RegExpExecArray | null;
-    while ((match = tokenRegex.exec(text))) {
-      const token = match[0];
-      const from = match.index;
+    let tokenMatch: RegExpExecArray | null;
+    while ((tokenMatch = tokenRegex.exec(text))) {
+      const token = tokenMatch[0];
+      const from = tokenMatch.index;
       const to = from + token.length;
 
-      const refMatch = token.match(ACTOR_REF_REGEX);
+      const refMatch = token.match(REF_REGEX);
       if (refMatch) {
-        const actor = getActor?.(refMatch[1]);
-        if (actor) {
+        const ref = getRef?.(refMatch[1]);
+        if (ref) {
           deco.add(
             from,
             to,
             Decoration.widget({
-              widget: new ActorWidget(actor.label, actor.hue ?? getHashHue(refMatch[1])),
+              widget: new RefWidget(ref.label, ref.hue ?? getHashHue(refMatch[1])),
               atomic: true,
             }),
           );
@@ -84,12 +87,12 @@ export const actorList = ({ mode = 'ref', getActor }: ActorListOptions = {}): Ex
         continue;
       }
 
-      if (EMAIL_REGEX.test(token)) {
+      if (match?.test(token)) {
         deco.add(
           from,
           to,
           Decoration.widget({
-            widget: new EmailWidget(token),
+            widget: new TokenWidget(token),
             atomic: true,
           }),
         );
@@ -100,22 +103,23 @@ export const actorList = ({ mode = 'ref', getActor }: ActorListOptions = {}): Ex
   };
 
   const buildEmailDecorations = (state: EditorState) => {
+    const addrRegex = match ?? EMAIL_REGEX;
     const deco = new RangeSetBuilder<Decoration>();
     const text = state.doc.toString();
     // Segments are comma-separated; a segment's atomic range includes its trailing comma (and
     // following whitespace) so the separator never renders.
     const segmentRegex = /[^,]+(?:,\s*)?|,\s*/g;
-    let match: RegExpExecArray | null;
-    while ((match = segmentRegex.exec(text))) {
-      const segment = match[0];
+    let segmentMatch: RegExpExecArray | null;
+    while ((segmentMatch = segmentRegex.exec(text))) {
+      const segment = segmentMatch[0];
       const commaIndex = segment.indexOf(',');
       const content = (commaIndex === -1 ? segment : segment.slice(0, commaIndex)).trim();
       if (!content) {
         continue;
       }
       const leading = segment.length - segment.trimStart().length;
-      const from = match.index + leading;
-      const to = match.index + segment.length;
+      const from = segmentMatch.index + leading;
+      const to = segmentMatch.index + segment.length;
 
       const nameAddr = content.match(NAME_ADDR_REGEX);
       if (nameAddr) {
@@ -123,16 +127,16 @@ export const actorList = ({ mode = 'ref', getActor }: ActorListOptions = {}): Ex
           from,
           to,
           Decoration.widget({
-            widget: new ActorWidget(nameAddr[1] || nameAddr[2], getHashHue(nameAddr[2])),
+            widget: new RefWidget(nameAddr[1] || nameAddr[2], getHashHue(nameAddr[2])),
             atomic: true,
           }),
         );
-      } else if (EMAIL_REGEX.test(content)) {
+      } else if (addrRegex.test(content)) {
         deco.add(
           from,
           to,
           Decoration.widget({
-            widget: new EmailWidget(content),
+            widget: new TokenWidget(content),
             atomic: true,
           }),
         );
@@ -149,7 +153,7 @@ export const actorList = ({ mode = 'ref', getActor }: ActorListOptions = {}): Ex
     StateField.define<DecorationSet>({
       create: (state) => buildDecorations(state),
       update: (deco, tr) => {
-        if (tr.docChanged || tr.effects.some((effect) => effect.is(actorListRedecorate))) {
+        if (tr.docChanged || tr.effects.some((effect) => effect.is(refEditorRedecorate))) {
           return buildDecorations(tr.state);
         }
 
@@ -187,9 +191,9 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
 };
 
 /**
- * Resolved actor (person reference or RFC 5322 mailbox), rendered as the person's name.
+ * Resolved reference (object reference or RFC 5322 mailbox), rendered as the object's label.
  */
-class ActorWidget extends WidgetType {
+class RefWidget extends WidgetType {
   constructor(
     private readonly _label: string,
     private readonly _hue: string,
@@ -214,21 +218,21 @@ class ActorWidget extends WidgetType {
 }
 
 /**
- * Well-formed email address token.
+ * Raw token accepted by the pluggable matcher (e.g. an email address).
  */
-class EmailWidget extends WidgetType {
-  constructor(private readonly _email: string) {
+class TokenWidget extends WidgetType {
+  constructor(private readonly _token: string) {
     super();
   }
 
   override eq(other: this) {
-    return this._email === other._email;
+    return this._token === other._token;
   }
 
   override toDOM() {
     return container(
       'border-separator',
-      Domino.of('span').classNames('flex items-center px-1 text-subdued text-sm').text(this._email),
+      Domino.of('span').classNames('flex items-center px-1 text-subdued text-sm').text(this._token),
     );
   }
 }
