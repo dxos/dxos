@@ -16,6 +16,7 @@ export const translations = [
         'typename.label_zero': 'Chess games',
         'typename.label_one': 'Chess game',
         'typename.label_other': 'Chess games',
+        'object-name.placeholder': 'New chess game',
         'add-object.label': 'Add chess game',
         'delete-object.label': 'Delete chess game',
       },
