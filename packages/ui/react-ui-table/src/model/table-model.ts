@@ -209,10 +209,15 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._cellUpdateCounter = Atom.make<number>(0);
 
     // Create derived atom for persisted sort from view.query.ast.
-    this._persistedSort = Atom.make((_get) => {
-      // Note: This depends on the view being loaded and the projection being set.
-      // The view is loaded in _open().
-      const viewSnapshot = Obj.getSnapshot(this.view);
+    this._persistedSort = Atom.make((get) => {
+      // Subscribe to the view ref's atom so this recomputes once the reference resolves; the view
+      // is loaded asynchronously in _open() and is absent before then (and after disposal).
+      const view = get(this._object.view.atom);
+      if (!view) {
+        return undefined;
+      }
+
+      const viewSnapshot = Obj.getSnapshot(view);
       const ast = viewSnapshot.query.ast;
       const orders = extractOrder(ast);
 
@@ -701,9 +706,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
       const validationResult = validateSchema(schema, snapshot);
       if (validationResult && validationResult.length > 0) {
-        const error = validationResult[0];
-        invariant(error.path === field.path);
-        return { valid: false, error: error.message };
+        const error = validationResult.find((err) => err.path === field.path);
+        if (error) {
+          return { valid: false, error: error.message };
+        }
       }
 
       return { valid: true };
