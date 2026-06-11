@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { DXN, Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';

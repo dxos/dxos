@@ -100,7 +100,7 @@ const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
  */
 const findByForeignId = <T>(type: Type.AnyEntity, id: string) =>
   Effect.gen(function* () {
-    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(type as never, [fkFor(id)])));
+    const results = yield* Database.query(Query.select(Filter.foreignKeys(type as never, [fkFor(id)]))).run;
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 

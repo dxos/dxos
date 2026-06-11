@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { AppNodeMatcher } from '@dxos/app-toolkit';
 import { type PublicKey } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Obj } from '@dxos/echo';
@@ -19,8 +20,8 @@ export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
 
-/** Type for the per-space virtual "Settings" section that groups settings panels. */
-export const SETTINGS_SECTION_TYPE = `${meta.id}.settings`;
+/** Type for the per-space virtual "Settings" section. Single source of truth is `AppNodeMatcher.SETTINGS_SECTION_TYPE`. */
+export const SETTINGS_SECTION_TYPE = AppNodeMatcher.SETTINGS_SECTION_TYPE;
 
 /** Node id (local segment) for the per-space virtual "Settings" section. */
 export const SETTINGS_SECTION_ID = 'settings';

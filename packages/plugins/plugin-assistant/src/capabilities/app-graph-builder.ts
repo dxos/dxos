@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -110,28 +110,6 @@ export default Capability.makeModule(
               properties: {
                 label: ['toggle-trace-panel-debug.label', { ns: meta.id }],
                 icon: 'ph--brackets-curly--regular',
-              },
-            }),
-            Node.makeAction({
-              id: 'resetBlueprints',
-              data: Effect.fnUntraced(function* () {
-                const capabilities = yield* Capability.Service;
-                const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
-                if (!space) {
-                  return;
-                }
-                const blueprints = yield* Effect.promise(
-                  (): Promise<Blueprint.Blueprint[]> => space.db.query(Filter.type(Blueprint.Blueprint)).run(),
-                );
-                for (const blueprint of blueprints) {
-                  space.db.remove(blueprint);
-                }
-                yield* Database.flush();
-              }),
-              properties: {
-                label: ['reset-blueprints.label', { ns: meta.id }],
-                icon: 'ph--arrow-clockwise--regular',
               },
             }),
           ]),

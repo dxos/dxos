@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, QueryResult, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space';
@@ -144,7 +144,7 @@ export default Capability.makeModule(
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(QueryResult.atom(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
+          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
           if (order) {
             const snapshot = get(Obj.atom(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];

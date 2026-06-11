@@ -11,7 +11,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { DXN, Annotation, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { SchemaEx } from '@dxos/effect';
 import { ViewAnnotation } from '@dxos/schema';
 

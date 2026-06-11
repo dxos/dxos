@@ -8,7 +8,7 @@ import React from 'react';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type, View } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';

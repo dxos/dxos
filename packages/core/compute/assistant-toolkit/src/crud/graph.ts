@@ -11,16 +11,10 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Entity, Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Relation, Scope, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import {
-  ReferenceAnnotationId,
-  RelationSourceId,
-  RelationTargetId,
-  createObject,
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
-} from '@dxos/echo/internal';
+import { ReferenceAnnotationId, getTypeAnnotation, getTypeIdentifierAnnotation } from '@dxos/echo/Annotation';
+import { createObject } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -101,7 +95,7 @@ export const LocalSearchToolkit = Toolkit.make(
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {
-    const objects = yield* Database.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const objects = yield* Database.query(Query.select(Filter.text(query, { type: 'vector' }))).run;
     const results = [...objects];
 
     const feedOption = yield* Effect.serviceOption(Feed.ContextFeedService);
@@ -299,7 +293,7 @@ export const sanitizeObjects = (
         const id = EID.getEntityId(sourceUri);
         const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
-          data[RelationSourceId] = obj;
+          data[Relation.Source] = obj;
         } else {
           skip = true;
         }
@@ -308,7 +302,7 @@ export const sanitizeObjects = (
         const id = EID.getEntityId(targetUri);
         const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
-          data[RelationTargetId] = obj;
+          data[Relation.Target] = obj;
         } else {
           skip = true;
         }

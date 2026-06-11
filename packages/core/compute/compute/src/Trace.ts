@@ -150,6 +150,7 @@ export const MessageData = Schema.Struct({
 export type MessageData = Schema.Schema.Type<typeof MessageData>;
 export const Message = MessageData.pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+  Annotation.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.traceMessage', '0.1.0')),
 );
 export type Message = Type.InstanceType<typeof Message>;

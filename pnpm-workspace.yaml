@@ -214,8 +214,9 @@ catalog:
   '@swc/core': 1.15.40
   '@swc/types': ^0.1.26
   '@tailwindcss/forms': ^0.5.9
-  '@tailwindcss/oxide': ^4.2.0
-  '@tailwindcss/postcss': ^4.2.0
+  '@tailwindcss/oxide': ^4.3.0
+  '@tailwindcss/postcss': ^4.3.0
+  '@tailwindcss/vite': ^4.3.0
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.11.0
   '@tauri-apps/cli': ^2.11.1
@@ -610,7 +611,7 @@ catalog:
   tabster: ^8.5.5
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
-  tailwindcss: ^4.2.0
+  tailwindcss: ^4.3.0
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0

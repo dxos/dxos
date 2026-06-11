@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo } from 'react';
 import { expect, within } from 'storybook/test';
 
-import { type Database, Filter, Obj, QueryResult, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -72,8 +72,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
     const orderAtom = Atom.make<string[]>([]);
 
     // Source of truth for which columns exist; subscribed to ECHO query.
-    const columnsAtom =
-      space?.db != null ? QueryResult.atom(space.db, Filter.type(TestColumn)) : Atom.make<TestColumn[]>([]);
+    const columnsAtom = space?.db != null ? space.db.query(Filter.type(TestColumn)).atom : Atom.make<TestColumn[]>([]);
 
     // If orderAtom is empty, use Echo order as-is; else sort by orderAtom and append new columns.
     const orderedColumnsAtom = Atom.make((get) => {

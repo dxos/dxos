@@ -1002,6 +1002,35 @@ describe('GraphBuilder', () => {
         expect(actions[0].id).to.equal('parent/late-act');
       });
 
+      test('connectors appear when extension registered after expand', async ({ expect }) => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+        const writableGraph = graph as Graph.WritableGraph;
+
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent', 'child');
+        await GraphBuilder.flush(builder);
+
+        expect(registry.get(graph.connections('parent', 'child'))).to.have.length(0);
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'lateConnector',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: () =>
+              Effect.succeed([{ id: 'late-child', type: EXAMPLE_TYPE, data: 'late', properties: { label: 'Late' } }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+        await GraphBuilder.flush(builder);
+
+        const connections = registry.get(graph.connections('parent', 'child'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('parent/late-child');
+      });
+
       test('_actionContext captures and provides services to action execution', async () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });

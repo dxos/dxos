@@ -55,4 +55,29 @@ describe('Bookmark.fromSnapshot', () => {
     expect(bookmark.image).toBeUndefined();
     expect(bookmark.favicon).toBeUndefined();
   });
+
+  test('excerpt prefers the picked/selected text over og:description', ({ expect }) => {
+    const bookmark = Bookmark.fromSnapshot({
+      source: { url: 'https://example.com', title: 'Example', clippedAt: '2026-06-11T00:00:00.000Z' },
+      selection: { text: 'User-picked extract.' },
+      hints: { ogDescription: 'Marketing blurb.' },
+    });
+    expect(bookmark.excerpt).toBe('User-picked extract.');
+  });
+
+  test('excerpt falls back to og:description without a selection', ({ expect }) => {
+    const bookmark = Bookmark.fromSnapshot({
+      source: { url: 'https://example.com', title: 'Example', clippedAt: '2026-06-11T00:00:00.000Z' },
+      hints: { ogDescription: 'Marketing blurb.' },
+    });
+    expect(bookmark.excerpt).toBe('Marketing blurb.');
+  });
+
+  test('excerpt truncates picked text to 280 chars', ({ expect }) => {
+    const bookmark = Bookmark.fromSnapshot({
+      source: { url: 'https://example.com', title: 'Example', clippedAt: '2026-06-11T00:00:00.000Z' },
+      selection: { text: 'x'.repeat(400) },
+    });
+    expect(bookmark.excerpt?.length).toBe(280);
+  });
 });

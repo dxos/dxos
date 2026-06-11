@@ -545,6 +545,14 @@ export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutabl
 }
 
 /**
+ * Get the display label of a type entity.
+ * Reads the field(s) nominated by the type's {@link LabelAnnotation} (e.g. `name` on persisted schemas).
+ * Returns `undefined` if no label field is populated.
+ */
+export const getLabel = (entity: AnyEntity, options?: internal.GetLabelOptions): string | undefined =>
+  internal.getLabel(entity, options);
+
+/**
  * String key used to phantom-carry the instance type produced by a `Type.Type`.
  * Used by `Type.InstanceType<typeof Foo>` to recover the schema instance type
  * since `Type.makeObject(dxn)` does not return a `Schema.Schema`.

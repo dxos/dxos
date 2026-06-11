@@ -8,30 +8,30 @@ import * as Schema from 'effect/Schema';
 
 /**
  * User preferences that govern how Composer coordinates with the composer-crx
- * browser extension — both the clip bridge and the render-proxy. All fields
+ * browser extension — both the page-actions bridge and the render-proxy. All fields
  * are optional; defaults are applied by consumers when reading the atom.
  */
 export const Settings = Schema.mutable(
   Schema.Struct({
     /**
-     * Master toggle. When false, the bridge plugin ignores incoming clips.
+     * Master toggle. When false, the bridge plugin ignores incoming extension actions.
      * Defaults to `true`.
      */
     enabled: Schema.optional(
       Schema.Boolean.annotations({
-        title: 'Accept clips',
-        description: 'When off, clips sent from the composer-crx browser extension are ignored.',
+        title: 'Accept extension actions',
+        description: 'When off, actions sent from the composer-crx browser extension are ignored.',
       }),
     ),
 
     /**
-     * Navigate to the created object after a successful clip. Defaults to
+     * Navigate to the created object after the extension creates one. Defaults to
      * `false` to avoid yanking focus during active work.
      */
     autoOpenAfterClip: Schema.optional(
       Schema.Boolean.annotations({
-        title: 'Open after clip',
-        description: 'Navigate to the created object when a clip is received.',
+        title: 'Open after action',
+        description: 'Navigate to the created object when the extension creates one.',
       }),
     ),
 

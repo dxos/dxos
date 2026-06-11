@@ -275,6 +275,58 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
 });
 
 // ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — id-rooted relation traversal (companion chat history)
+//
+// The companion chat-history toolbar queries:
+//   Query.select(Filter.id(primary.id)).targetOf(CompanionTo).source()
+// i.e. it is rooted at a FIXED object id and traverses inbound relations. When a new chat +
+// CompanionTo relation are persisted, the primary object is NOT re-indexed, so the indexing hint
+// mentions only the new relation/chat (their ids + the relation typename) — not the primary's id.
+// The user's hypothesis: such a query is skipped by hint matching because its only constrained
+// dimension (objectIds = {primary.id}) does not overlap the hint.
+// ---------------------------------------------------------------------------
+
+describe('QueryExecutor.matchesHint — id-rooted relation traversal', () => {
+  const PRIMARY_ID = EntityId.random();
+  const NEW_CHAT_ID = EntityId.random();
+  const NEW_RELATION_ID = EntityId.random();
+
+  const idRootedTraversal = () =>
+    makeExecutor(withSpace(Query.select(Filter.id(PRIMARY_ID)).targetOf(TestSchema.HasManager).source()));
+
+  // The decisive case: a relation is added targeting PRIMARY_ID. The hint carries the new
+  // relation/source object ids and the relation typename, but NOT PRIMARY_ID. If the query is
+  // treated as "simple" (objectIds = {PRIMARY_ID}), this hint is disjoint and the query is skipped —
+  // reproducing the reported "history dropdown doesn't update until reload" bug.
+  test('re-runs when a relation targeting the root is added (hint omits the root id)', ({ expect }) => {
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SPACE_ID),
+      objectIds: makeObjectSet(NEW_CHAT_ID, NEW_RELATION_ID),
+    });
+    expect(idRootedTraversal().matchesHint(hint)).toBe(true);
+  });
+
+  // A type-keyed hint for the newly added objects must also re-run the traversal.
+  test('re-runs for a type-only hint that omits the root id', ({ expect }) => {
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SPACE_ID),
+      typenames: makeTypeSet(PERSON_TYPENAME),
+    });
+    expect(idRootedTraversal().matchesHint(hint)).toBe(true);
+  });
+
+  // Sanity: traversal queries are conservative — even a fully disjoint hint re-runs them.
+  test('re-runs for a fully disjoint hint (traversal → isSimple=false → always match)', ({ expect }) => {
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet('com.example.unrelated'),
+      objectIds: makeObjectSet(EntityId.random()),
+    });
+    expect(idRootedTraversal().matchesHint(hint)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // QueryExecutor.matchesHint — queue-scope derives spaceId
 // ---------------------------------------------------------------------------
 

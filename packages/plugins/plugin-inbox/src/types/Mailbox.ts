@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, TagIndex, Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -37,11 +37,18 @@ export const Mailbox = Schema.Struct({
   // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
   // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
   tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+  extractors: Schema.Struct({
+    enabled: Schema.Array(Schema.String),
+    threshold: Schema.Number.pipe(Schema.between(0, 1)),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
   // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
   // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
   // the association lives here on the mutable Mailbox. The referenced objects are space-db
   // objects resolved by id (`db.getObjectById`).
-  extracted: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) })),
+  extracted: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }).pipe(
+    FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -49,10 +56,6 @@ export const Mailbox = Schema.Struct({
       filter: Schema.String,
     }),
   ).pipe(FormInputAnnotation.set(false)),
-  extractors: Schema.Struct({
-    enabled: Schema.Array(Schema.String),
-    threshold: Schema.Number.pipe(Schema.between(0, 1)),
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
   FeedAnnotation.set(true),

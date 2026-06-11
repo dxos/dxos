@@ -153,7 +153,7 @@ export namespace AppCapabilities {
   /**
    * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
    * supplied by the active-space resolver — BYOK-aware resolvers wrap their HTTP client with
-   * `byokHeaderLayer(...)`; the rest carry it through unused.
+   * `Header.byokLayer(...)`; the rest carry it through unused.
    */
   export const AiModelResolver = Capability$.make<
     Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>

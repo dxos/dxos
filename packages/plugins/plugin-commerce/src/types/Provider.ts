@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 export const BLUEPRINT_KEY = 'org.dxos.plugin.commerce/blueprint/provider';
 

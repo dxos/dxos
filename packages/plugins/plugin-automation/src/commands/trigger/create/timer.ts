@@ -37,7 +37,7 @@ export const timer = Command.make(
         onNone: () => selectFunction(),
         onSome: (id) => Effect.succeed(id),
       });
-      const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+      const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));

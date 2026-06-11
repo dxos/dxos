@@ -90,6 +90,19 @@ export default defineConfig((env) => ({
             cert: '../../../cert.pem',
           }
         : undefined,
+    watch: {
+      // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
+      // a single HMR pass: chokidar holds add/change events until the file size
+      // has been stable for `stabilityThreshold` ms, so a hundred-file burst
+      // produces one invalidation wave instead of one per write. Costs ~200 ms
+      // of HMR latency on every save — acceptable against the multi-second
+      // rescan queue a burst otherwise produces (each invalidation of the
+      // theme CSS re-runs a monorepo-wide Tailwind scan).
+      awaitWriteFinish: {
+        stabilityThreshold: 200,
+        pollInterval: 50,
+      },
+    },
     fs: {
       strict: false,
       cachedChecks: false,

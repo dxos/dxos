@@ -6,7 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj, type View } from '@dxos/echo';
-import { Format, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {

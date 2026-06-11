@@ -4,7 +4,7 @@
 
 import React, { type FC, useCallback, useMemo } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';

@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
-import { OptionsAnnotationId, HiddenAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { OptionsAnnotationId } from '@dxos/echo/Format';
 
 /**
  * Type discriminator for TriggerType.

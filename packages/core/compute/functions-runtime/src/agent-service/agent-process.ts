@@ -83,7 +83,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
-        // Needed in the fiber's context — `byokHeaderLayer`'s per-request callback reads it.
+        // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
         Credential.CredentialsService,
       ],
     },
