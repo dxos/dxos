@@ -17,7 +17,7 @@ import { translations } from '#translations';
 
 import { Event } from './Event';
 
-const generator = random as any as ValueGenerator;
+const generator: ValueGenerator = random as any;
 
 random.seed(7);
 

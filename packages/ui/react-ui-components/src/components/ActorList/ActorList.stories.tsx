@@ -18,7 +18,7 @@ import { translations } from '#translations';
 
 import { ActorList, type ActorListProps } from './ActorList';
 
-const generator = random as any as ValueGenerator;
+const generator: ValueGenerator = random as any;
 
 random.seed(7);
 
