@@ -115,7 +115,7 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
               '**/dist/**',
               '**/out/**',
               '**/*.log',
-              ...(base !== undefined ? [`${resolve(base, '.claude')}/**`] : []),
+              `${resolve(import.meta.dirname, ROOT, '.claude')}/**`,
             ],
           },
         },
