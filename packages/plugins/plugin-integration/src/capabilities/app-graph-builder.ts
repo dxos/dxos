@@ -10,8 +10,8 @@ import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { SpaceNodeMatcher, SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
@@ -79,13 +79,9 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when integrations are added or removed.
       GraphBuilder.createExtension({
         id: 'integrationsSection',
-        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
-        connector: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          if (!space) {
-            return Effect.succeed([]);
-          }
-          return Effect.succeed([
+        match: SpaceNodeMatcher.whenSpaceSettings,
+        connector: (space) =>
+          Effect.succeed([
             Node.make({
               id: INTEGRATIONS_SECTION_ID,
               type: INTEGRATIONS_SECTION_TYPE,
@@ -99,19 +95,17 @@ export default Capability.makeModule(
                 space,
               },
             }),
-          ]);
-        },
+          ]),
       }),
 
-      // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
+      // Integration objects listed under the integrations section node.
       GraphBuilder.createExtension({
         id: 'integrationListing',
-        match: NodeMatcher.whenNodeType(INTEGRATIONS_SECTION_TYPE),
-        connector: (node, get) => {
+        match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          if (!space) {
-            return Effect.succeed([]);
-          }
+          return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        },
+        connector: (space, get) => {
           const integrations = get(space.db.query(Filter.type(Integration.Integration)).atom);
           return Effect.succeed(
             integrations
