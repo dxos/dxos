@@ -42,6 +42,10 @@ export const instanceOf = (value: unknown): value is Bookmark => Obj.instanceOf(
  * Best-effort mapping from a page-action snapshot. Missing fields are left
  * unset rather than blocking creation. Prefers the extension-captured
  * thumbnail data URL over the hotlinked og-image URL.
+ *
+ * `selection.text` outranks `hints.ogDescription` for the excerpt because a
+ * selection is only present when the user explicitly picked or selected
+ * content, making it a more precise signal than page-declared metadata.
  */
 export const fromSnapshot = (snapshot: PageAction.Snapshot): Bookmark =>
   make({
@@ -49,5 +53,5 @@ export const fromSnapshot = (snapshot: PageAction.Snapshot): Bookmark =>
     url: snapshot.source.url,
     favicon: snapshot.source.favicon,
     image: snapshot.imageData ?? snapshot.hints?.ogImage,
-    excerpt: snapshot.hints?.ogDescription ?? snapshot.selection?.text?.slice(0, EXCERPT_LENGTH),
+    excerpt: snapshot.selection?.text?.slice(0, EXCERPT_LENGTH) ?? snapshot.hints?.ogDescription,
   });
