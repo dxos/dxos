@@ -27,7 +27,7 @@ Files: `packages/plugins/plugin-crx/src/types/PageAction.ts` and `packages/apps/
 ### 2. Extension: registry-driven picker (composer-crx)
 
 - `picker/kinds.ts` (`CLIP_KINDS`) is deleted. `startPicker()` takes the list of toolbar entries (`{ id, label, icon }`) as a parameter; the picker resolves with `{ status: 'picked', element, actionId }`.
-- `pickAndHarvest()` (renamed/refactored as needed) reads the cached page-actions registry (via a `PAGE_ACTIONS_LIST_MESSAGE_TYPE`-style runtime request to the background, which serves it from `chrome.storage`), filters to actions whose `contexts` include `'picker'` and whose `urlPatterns` match the current URL, and passes them to the picker toolbar. Empty list → toolbar shows only Cancel.
+- `pickSnapshot()` (replacing `pickAndHarvest()`) reads the cached page-actions registry from `chrome.storage`, filters to actions whose `contexts` include `'picker'` and whose `urlPatterns` match the current URL, and passes them to the picker toolbar. Empty list → the picker does not start; a transient in-page notice tells the user to open Composer first (the registry populates when a Composer tab announces ready).
 - On pick, the content script builds a `Snapshot` directly from the picked element:
   - `source`: `{ url, title, favicon (harvestFavicon), clippedAt }`
   - `selection`: `harvestSelection(element)` (text, html, htmlTruncated, rect)

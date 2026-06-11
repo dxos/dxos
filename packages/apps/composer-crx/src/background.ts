@@ -8,8 +8,7 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
-import { deliverClip, focusOrOpenComposerTab } from './bridge';
-import type { Clip } from './clip';
+import { focusOrOpenComposerTab } from './bridge';
 import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
@@ -22,8 +21,6 @@ import {
 import { installSearchProxy } from './proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
-
-const BACKGROUND_CLIP_MSG_TYPE = 'composer-crx:deliver-clip';
 
 const notify = (title: string, message: string) => {
   try {
@@ -43,33 +40,6 @@ const notify = (title: string, message: string) => {
 };
 
 /**
- * Route a clip through the bridge to an open Composer tab. Surfaces a
- * browser notification on non-success outcomes so the user gets feedback
- * even though the popup has already closed.
- */
-const handleIncomingClip = async (clip: Clip) => {
-  log.info('delivering clip', { kind: clip.kind, url: clip.source.url });
-  const result = await deliverClip(clip);
-  switch (result.status) {
-    case 'delivered':
-      if (!result.ack.ok) {
-        notify('Clip rejected', result.ack.error);
-      }
-      break;
-    case 'no-tab':
-      notify('No Composer tab', 'Open Composer from the extension popup to receive clips.');
-      break;
-    case 'timeout':
-      notify('Clip timed out', 'Composer did not acknowledge the clip.');
-      break;
-    case 'error':
-      notify('Clip failed', result.error);
-      break;
-  }
-  return result;
-};
-
-/**
  * Background worker.
  */
 const main = async () => {
@@ -77,23 +47,12 @@ const main = async () => {
     return { debug: data.debug ?? false };
   });
 
-  // Content script delivers finished clips to us via direct
-  // `browser.runtime.sendMessage` (not webext-bridge) so routing doesn't
-  // depend on the popup still being alive.
-  browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
-    if (!msg || msg.type !== BACKGROUND_CLIP_MSG_TYPE) {
-      return undefined;
-    }
-    const clip = msg.clip as Clip;
-    return handleIncomingClip(clip);
-  });
-
   onMessage('open-composer', async () => {
     await focusOrOpenComposerTab();
   });
 
   // Render-proxy: lets Composer pages request a JS-rendered URL via a
-  // background tab. Additive to the clip flow above.
+  // background tab.
   installSearchProxy();
 
   // Page actions: refresh the registry when a Composer tab announces itself,

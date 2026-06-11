@@ -6,24 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { type Clip, type ClipAck } from '../clip/types';
 import { getComposerUrls } from './urls';
-
-/**
- * Result of a delivery attempt.
- *   - `delivered`  : Composer acked the clip; `ack` is present.
- *   - `no-tab`     : No matching Composer tab was open.
- *   - `timeout`    : A tab was found but did not ack within the timeout.
- *   - `error`      : Unexpected transport error (permissions, closed tab, …).
- */
-export type DeliverResult =
-  | { status: 'delivered'; ack: ClipAck; tabId: number }
-  | { status: 'no-tab' }
-  | { status: 'timeout'; tabId: number }
-  | { status: 'error'; error: string };
-
-const BRIDGE_MSG_TYPE = 'composer-crx:clip';
-const DEFAULT_TIMEOUT_MS = 5_000;
 
 let lastUsedTabId: number | undefined;
 
@@ -56,61 +39,6 @@ export const findComposerTab = async (): Promise<browser.Tabs.Tab | undefined> =
   const urls = await getComposerUrls();
   const tabs = await browser.tabs.query({ url: urls });
   return pickBestTab(tabs);
-};
-
-/**
- * Type guard — validate a ClipAck shape rather than trusting any object with
- * an `ok` property. Unknown responses fall through to `invalidAck`.
- */
-const isClipAck = (response: unknown): response is ClipAck => {
-  if (!response || typeof response !== 'object') {
-    return false;
-  }
-  const ack = response as { ok?: unknown; id?: unknown; error?: unknown };
-  return (ack.ok === true && typeof ack.id === 'string') || (ack.ok === false && typeof ack.error === 'string');
-};
-
-/**
- * Find the best matching Composer tab and send the clip. The tab-side
- * bridge listener lives in `content.ts`, which is auto-loaded on every
- * page, so no on-demand script injection is required.
- */
-export const deliverClip = async (clip: Clip, options: { timeoutMs?: number } = {}): Promise<DeliverResult> => {
-  try {
-    const tab = await findComposerTab();
-    if (!tab || tab.id === undefined) {
-      return { status: 'no-tab' };
-    }
-
-    const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    const ack = await new Promise<ClipAck | 'timeout'>((resolve) => {
-      const timer = setTimeout(() => resolve('timeout'), timeout);
-      browser.tabs
-        .sendMessage(tab.id!, { type: BRIDGE_MSG_TYPE, clip })
-        .then((response: unknown) => {
-          clearTimeout(timer);
-          if (isClipAck(response)) {
-            resolve(response);
-          } else {
-            resolve({ ok: false, error: 'invalidAck' });
-          }
-        })
-        .catch((err: Error) => {
-          clearTimeout(timer);
-          log.catch(err);
-          resolve({ ok: false, error: err.message || 'transportError' });
-        });
-    });
-
-    if (ack === 'timeout') {
-      return { status: 'timeout', tabId: tab.id };
-    }
-    lastUsedTabId = tab.id;
-    return { status: 'delivered', ack, tabId: tab.id };
-  } catch (err: any) {
-    log.catch(err);
-    return { status: 'error', error: err?.message ?? 'unknown' };
-  }
 };
 
 /**

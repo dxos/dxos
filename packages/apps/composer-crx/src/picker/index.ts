@@ -5,6 +5,7 @@
 import { getActionsForUrl } from '../page-actions/registry';
 import { type Snapshot } from '../page-actions/types';
 import { harvestFavicon, harvestHints, harvestSelection } from './harvest';
+import { showPickerNotice } from './notice';
 import { startPicker } from './picker';
 
 export * from './picker';
@@ -24,6 +25,7 @@ export type PickedSnapshot = {
 export const pickSnapshot = async (): Promise<PickedSnapshot | null> => {
   const actions = await getActionsForUrl(window.location.href, 'picker');
   if (actions.length === 0) {
+    showPickerNotice('Open Composer to enable clip actions.');
     return null;
   }
 
