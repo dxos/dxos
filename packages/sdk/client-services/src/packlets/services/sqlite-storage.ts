@@ -151,6 +151,14 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     if (this.#loaded) {
       return Promise.resolve();
     }
+    // If the file was closed (e.g. the storage was torn down during shutdown) before its initial
+    // load completed, don't start the DB read. The underlying SQL connection may already be
+    // closing, and the read would reject with "database connection is not open" as an unhandled
+    // rejection — a background read racing teardown. #buffer already defaults to empty, so reads
+    // resolve against an empty file.
+    if (this.#closed) {
+      return Promise.resolve();
+    }
     if (!this.#loading) {
       this.#loading = this._loadFromDb();
     }
@@ -235,7 +243,12 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
 
   close(cb: Callback<Error>): void {
     this.#closed = true;
-    cb(null);
+    // Drain any in-flight initial load before reporting closed, so a read never races a
+    // torn-down SQL connection (avoids "database connection is not open" unhandled rejections).
+    (this.#loading ?? Promise.resolve()).then(
+      () => cb(null),
+      () => cb(null),
+    );
   }
 
   destroy(cb: Callback<Error>): void {
@@ -268,6 +281,7 @@ export class SqliteStorage implements Storage {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   readonly #files = new Map<string, File>();
   readonly #nativeFiles = new Map<string, SqliteRandomAccessFile>();
+  #closed = false;
 
   constructor({ runtime }: SqliteStorageOptions, path = '/sqlite-feeds') {
     this.#runtime = runtime;
@@ -360,6 +374,17 @@ export class SqliteStorage implements Storage {
   }
 
   async close(): Promise<void> {
+    if (this.#closed) {
+      return;
+    }
+    this.#closed = true;
+    // Close each native file before the SQL connection is torn down. `close()` marks the file
+    // closed (so any subsequent read skips the DB) and drains its in-flight initial load —
+    // preventing "database connection is not open" unhandled rejections from background reads
+    // that race shutdown (e.g. a test client closing while a background sync read is in flight).
+    const natives = [...this.#nativeFiles.values()];
+    await Promise.all(natives.map((native) => new Promise<void>((resolve) => native.close(() => resolve()))));
     this.#files.clear();
+    this.#nativeFiles.clear();
   }
 }
