@@ -6,6 +6,7 @@ import { type Tree } from '@lezer/common';
 import { describe, it, test } from 'vitest';
 
 import { Filter, Tag } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { QueryDSL } from './gen';
 import { type BuildResult, QueryBuilder, normalizeInput } from './query-builder';
@@ -307,7 +308,7 @@ describe('query', () => {
       {
         input: 'type:org.dxos.type.person',
         expected: {
-          filter: Filter.typename('org.dxos.type.person'),
+          filter: Filter.type(DXN.make('org.dxos.type.person')),
         },
       },
       // Tags
@@ -359,14 +360,20 @@ describe('query', () => {
       {
         input: 'type:org.dxos.type.person OR type:org.dxos.type.organization',
         expected: {
-          filter: Filter.or(Filter.typename('org.dxos.type.person'), Filter.typename('org.dxos.type.organization')),
+          filter: Filter.or(
+            Filter.type(DXN.make('org.dxos.type.person')),
+            Filter.type(DXN.make('org.dxos.type.organization')),
+          ),
         },
       },
       {
         input: '(type:org.dxos.type.person OR type:org.dxos.type.organization) AND { name: "DXOS" }',
         expected: {
           filter: Filter.and(
-            Filter.or(Filter.typename('org.dxos.type.person'), Filter.typename('org.dxos.type.organization')),
+            Filter.or(
+              Filter.type(DXN.make('org.dxos.type.person')),
+              Filter.type(DXN.make('org.dxos.type.organization')),
+            ),
             Filter.props({ name: 'DXOS' }),
           ),
         },
@@ -374,7 +381,7 @@ describe('query', () => {
       {
         input: 'type:org.dxos.type.person and { name: "DXOS" }',
         expected: {
-          filter: Filter.and(Filter.typename('org.dxos.type.person'), Filter.props({ name: 'DXOS' })),
+          filter: Filter.and(Filter.type(DXN.make('org.dxos.type.person')), Filter.props({ name: 'DXOS' })),
         },
       },
       // Assignment
@@ -382,7 +389,7 @@ describe('query', () => {
         input: 'x = ( type:org.dxos.type.person )',
         expected: {
           name: 'x',
-          filter: Filter.typename('org.dxos.type.person'),
+          filter: Filter.type(DXN.make('org.dxos.type.person')),
         },
       },
       {

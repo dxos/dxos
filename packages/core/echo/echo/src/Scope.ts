@@ -42,7 +42,7 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
 });
 
 /**
- * Scope targeting a specific feed (by its underlying queue DXN).
+ * Scope targeting a specific feed (by its underlying queue EID).
  */
 export const feed = (feedUri: string): QueryAST.FeedScope => ({
   _tag: 'feed',

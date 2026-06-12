@@ -299,8 +299,8 @@ const getPersonValues = (object: Obj.Unknown): readonly string[] =>
   Obj.instanceOf(Person.Person, object) ? (object.emails ?? []).map(({ value }) => value) : [];
 
 /**
- * Bare entity id from a ref URI. Refs to the same object can carry different URI schemes
- * (`echo:/<id>`, `echo://<spaceId>/<id>`, `dxn:echo:<space>:<id>`), so compare trailing ids.
+ * Bare entity id from a ref URI. Refs to the same object can carry different URI forms
+ * (`echo:/<id>`, `echo://<spaceId>/<id>`), so compare trailing ids.
  */
 const refEntityId = (uri: string): string | undefined => uri.split(/[:/]/).filter(Boolean).pop();
 

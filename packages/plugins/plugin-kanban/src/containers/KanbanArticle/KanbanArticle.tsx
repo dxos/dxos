@@ -11,7 +11,7 @@ import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
@@ -37,13 +37,13 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const db = Obj.getDatabase(object);
   const { invokePromise } = useOperationInvoker();
   const [view] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
-  const schemaFromDb = useType(db, typename);
+  const schemaFromDb = useType(db, typeUri);
   const cardSchema = useMemo(
-    () => schemaFromDb ?? schemas.flat().find((schema) => Type.getTypename(schema) === typename),
-    [schemaFromDb, schemas, typename],
+    () => schemaFromDb ?? schemas.flat().find((schema) => Type.getURI(schema) === typeUri),
+    [schemaFromDb, schemas, typeUri],
   );
 
   const baseFilter = useSchemaFilter(cardSchema);

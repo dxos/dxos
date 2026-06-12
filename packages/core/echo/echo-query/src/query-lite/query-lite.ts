@@ -674,7 +674,7 @@ const isDxnLike = (value: unknown): value is DXN.DXN => {
 
 const isEchoUriLike = (value: unknown): value is EID.EID => {
   if (typeof value === 'string') {
-    return value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:');
+    return value.startsWith('echo:');
   }
   return (
     typeof value === 'object' &&

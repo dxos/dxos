@@ -37,7 +37,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
 
 /**
  * ECHO identifier (for a stored schema).
- * Must be a `dxn:echo:` URI.
+ * Must be an `echo:` URI.
  */
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 

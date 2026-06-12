@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dx
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { URI } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -42,7 +42,7 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
         ? // Untyped refs show space objects only; the registry is too broad for "any".
           Query.select(Filter.everything())
         : // Include registry scope so keyed entities (blueprints, operations) appear as options.
-          Query.select(Filter.typename(typename)).from(Scope.space(), Scope.registry()),
+          Query.select(Filter.type(DXN.make(typename))).from(Scope.space(), Scope.registry()),
   );
 
 export type RefFieldProps = FormFieldComponentProps &
@@ -52,7 +52,7 @@ export type RefFieldProps = FormFieldComponentProps &
   > & {
     db?: Database.Database;
     // TODO(burdon): Replace hooks with callbacks.
-    useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    useType?: (db?: Database.Database, typeUri?: URI.URI) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     /**
@@ -116,7 +116,7 @@ export const RefField = (props: RefFieldProps) => {
 
   const item = handleGetValue();
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
-  const createSchema = useType(db, typename);
+  const createSchema = useType(db, typename && typename !== ANY_OBJECT_TYPENAME ? DXN.make(typename) : undefined);
 
   // Lift the popover open state so we can dismiss it after a successful create.
   const [open, setOpen] = useState(false);

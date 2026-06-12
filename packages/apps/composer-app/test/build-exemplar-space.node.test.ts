@@ -485,7 +485,7 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
-  const query = Query.select(Filter.typename(Type.getTypename(Organization.Organization)));
+  const query = Query.select(Filter.type(Organization.Organization));
 
   // Each view object holds its own View.View so they can be customised independently
   // (e.g. Kanban's pivot field). We share the query/jsonSchema across them.

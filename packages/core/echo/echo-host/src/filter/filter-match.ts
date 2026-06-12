@@ -7,7 +7,7 @@ import * as semver from 'semver';
 import { Entity } from '@dxos/echo';
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 export type MatchedDoc = {
   id: EntityId;
@@ -454,31 +454,42 @@ export const filterMatchEntity = (filter: QueryAST.Filter, entity: Entity.Unknow
 };
 
 /**
- * Compare two DXN strings, allowing version-agnostic type DXN comparison:
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
- * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
+ * Compares a filter's type discriminator (`expectedStr`) against the value stored on an object's
+ * `system.type` (`actualStr`).
+ *
+ * - `echo:` EIDs match by entity id; a bare (space-less) id matches the object in any space, while
+ *   a space-qualified id matches only that space.
+ * - `dxn:` DXNs match version-agnostically (a missing version on either side matches any version).
+ * - Any other string is compared verbatim.
  */
 const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  // Normalize via DXN.tryMake to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
-  const expectedDxn = DXN.tryMake(expectedStr);
-  const actualDxn = DXN.tryMake(actualStr);
-  if (expectedDxn !== undefined) {
-    if (actualDxn === undefined) {
+  const expectedEid = EID.tryParse(expectedStr);
+  if (expectedEid) {
+    const actualEid = EID.tryParse(actualStr);
+    if (!actualEid) {
       return false;
     }
-    if (DXN.getName(actualDxn) !== DXN.getName(expectedDxn)) {
+    if (EID.getEntityId(expectedEid) !== EID.getEntityId(actualEid)) {
+      return false;
+    }
+    const expectedSpaceId = EID.getSpaceId(expectedEid);
+    const actualSpaceId = EID.getSpaceId(actualEid);
+    return expectedSpaceId === undefined || actualSpaceId === undefined || expectedSpaceId === actualSpaceId;
+  }
+
+  const expectedDxn = DXN.tryMake(expectedStr);
+  if (expectedDxn) {
+    const actualDxn = DXN.tryMake(actualStr);
+    if (!actualDxn) {
+      return false;
+    }
+    if (DXN.getName(expectedDxn) !== DXN.getName(actualDxn)) {
       return false;
     }
     const expectedVersion = DXN.getVersion(expectedDxn);
     const actualVersion = DXN.getVersion(actualDxn);
-    if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
-      return false;
-    }
-  } else {
-    // EID or other URI type — exact match.
-    if (actualStr !== expectedStr) {
-      return false;
-    }
+    return expectedVersion === undefined || actualVersion === undefined || expectedVersion === actualVersion;
   }
-  return true;
+
+  return expectedStr === actualStr;
 };

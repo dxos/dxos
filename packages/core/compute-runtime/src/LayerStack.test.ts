@@ -435,7 +435,7 @@ describe('LayerStack', () => {
         expect(failureText).toContain('test/ServiceB');
 
         // With conversation present the same tag resolves successfully.
-        const conversation = 'dxn:queue:test-feed' as any;
+        const conversation = 'echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTFEED0000000000000000' as any;
         const resolvedConversation = yield* resolveWithScope(
           resolver.resolve(ServiceB, { space, conversation, process: 'agent' as any }),
         );

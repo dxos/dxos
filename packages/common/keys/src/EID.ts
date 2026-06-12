@@ -22,12 +22,6 @@ const QUALIFIED_RE = /^echo:\/\/([^/]+)\/([^/]+)$/;
 const SPACE_ONLY_RE = /^echo:\/\/([^/]+)$/;
 const LOCAL_RE = /^echo:(?:\/\/\/|\/)([^/]+)$/;
 
-// Legacy format patterns (backward-compat parse).
-const LEGACY_LOCAL_RE = /^dxn:echo:@:([^:]+)$/;
-const LEGACY_QUALIFIED_RE = /^dxn:echo:([^:@][^:]*):([^:]+)$/;
-const LEGACY_QUEUE_ITEM_RE = /^dxn:queue:[^:]+:([^:]+):([^:]+):([^:]+)$/;
-const LEGACY_QUEUE_RE = /^dxn:queue:[^:]+:([^:]+):([^:]+)$/;
-
 /**
  * Addresses an ECHO object or space. Uses the `echo:` URI scheme.
  *
@@ -41,22 +35,18 @@ const LEGACY_QUEUE_RE = /^dxn:queue:[^:]+:([^:]+):([^:]+)$/;
 export type EID = URI.URI & { readonly __EID: unique symbol };
 
 /**
- * Returns true if the value is a valid EID (new or legacy format).
+ * Returns true if the value is a valid EID.
  */
-export const isEID = (value: unknown): value is EID =>
-  typeof value === 'string' &&
-  (value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:'));
+export const isEID = (value: unknown): value is EID => typeof value === 'string' && value.startsWith('echo:');
 
 /**
- * Parses a string to EID, normalizing legacy formats to the canonical `echo:` form.
- * Throws if the (normalized) string is not a valid EID.
+ * Parses a string to EID. Throws if the string is not a valid canonical `echo:` EID.
  */
 export const parse = (uri: string): EID => {
-  const normalized = normalizeLegacy(uri);
-  if (!ECHO_URI_REGEXP.test(normalized)) {
+  if (!ECHO_URI_REGEXP.test(uri)) {
     throw new Error(`Invalid EID: ${uri}`);
   }
-  return normalized as EID;
+  return uri as EID;
 };
 
 /**
@@ -68,35 +58,6 @@ export const tryParse = (uri: string): EID | undefined => {
   } catch {
     return undefined;
   }
-};
-
-const normalizeLegacy = (uri: string): string => {
-  if (uri.startsWith('echo:')) {
-    return uri;
-  }
-
-  const localMatch = LEGACY_LOCAL_RE.exec(uri);
-  if (localMatch) {
-    return `echo:/${localMatch[1]}`;
-  }
-
-  // Check queue item (more specific) before queue.
-  const queueItemMatch = LEGACY_QUEUE_ITEM_RE.exec(uri);
-  if (queueItemMatch) {
-    return `echo://${queueItemMatch[1]}/${queueItemMatch[3]}`;
-  }
-
-  const queueMatch = LEGACY_QUEUE_RE.exec(uri);
-  if (queueMatch) {
-    return `echo://${queueMatch[1]}/${queueMatch[2]}`;
-  }
-
-  const qualifiedMatch = LEGACY_QUALIFIED_RE.exec(uri);
-  if (qualifiedMatch) {
-    return `echo://${qualifiedMatch[1]}/${qualifiedMatch[2]}`;
-  }
-
-  return uri;
 };
 
 /**
@@ -166,7 +127,7 @@ export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
 // runtime representation is identical (a branded string).
 const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
   Schema.filter((value): value is EID => isEID(value), {
-    message: () => 'Invalid EID: must start with echo:, dxn:echo:, or dxn:queue:',
+    message: () => 'Invalid EID: must start with echo:',
   }),
   Schema.annotations({
     title: 'EID',

@@ -9,7 +9,7 @@ export type InvalidationHint = {
   spaceIds?: ReadonlySet<SpaceId>;
   queueIds?: ReadonlySet<EntityId>;
   /**
-   * Canonical typenames (version-less, no legacy `dxn:type:` prefix) — see {@link canonicalTypename}.
+   * Canonical typenames (version-less) — see {@link canonicalTypename}.
    * A type filter matches every version of a typename, so invalidation keys on the bare typename.
    * Query scopes are canonicalized the same way, so hints and scopes compare with a plain set overlap.
    */
@@ -19,9 +19,9 @@ export type InvalidationHint = {
 
 /**
  * Reduces a type URI to the version-less typename used as the canonical key for invalidation
- * matching. Stored objects record a versioned `@type` (e.g. `dxn:type:foo:0.1.0`) while type
- * filters reference a typename without a version; both collapse to the same key here. Non-DXN
- * URIs (EchoURI schema references) have no version and pass through unchanged.
+ * matching. Stored objects record a versioned `@type` (e.g. `dxn:foo:0.1.0`) while type filters
+ * reference a typename without a version; both collapse to the same key here. Non-DXN URIs
+ * (EchoURI schema references) have no version and pass through unchanged.
  */
 export const canonicalTypename = (uri: string): string => {
   const dxn = DXN.tryMake(uri);
