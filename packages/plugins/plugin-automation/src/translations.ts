@@ -24,9 +24,9 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Automation',
         'automation-panel.label': 'Automations',
+        'create-panel.template.placeholder': 'Search templates...',
 
         'automation-name.label': 'Name',
-        'automation-name.placeholder': 'New automation',
         'general.title': 'General',
         'general.description': 'Name and status.',
         'action.title': 'Action',
@@ -48,7 +48,7 @@ export const translations = [
         'add-trigger-first.message': 'Add a trigger to enable.',
         'remove-trigger.label': 'Remove',
         'select-action-first.message': 'Select an action first.',
-        'automations-companion.label': 'Automations',
+        'automation-companion.label': 'Automation',
         'no-automations.message': 'No automations for this object.',
         'automation-not-associated.message': 'Not yet associated with this object.',
         'automation-detached.message': 'No longer associated with this object.',

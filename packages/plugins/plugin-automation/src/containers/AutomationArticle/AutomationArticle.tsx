@@ -501,7 +501,7 @@ const InlineSection = ({ title, children }: { title: string; children: ReactNode
 );
 
 /**
- * Compact inline view used in the Automations companion. Renders the same three sections as the full article
+ * Compact inline view used in the Automation companion. Renders the same three sections as the full article
  * (General / Trigger / Action) with condensed headings and no descriptions or scrolling Settings.Viewport.
  */
 export const AutomationInlineForm = ({ automation, space }: { automation: Automation.Automation; space: Space }) => {

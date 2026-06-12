@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { AutomationArticle, AutomationsCompanion, AutomationSettings } from '#containers';
+import { AutomationArticle, AutomationCompanion, AutomationSettings } from '#containers';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
@@ -37,9 +37,9 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'companion.automations',
+        id: 'companion.automation',
         filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'automations'),
+          AppSurface.literal(AppSurface.Article, 'automation'),
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data }) => {
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
           if (!space) {
             return null;
           }
-          return <AutomationsCompanion space={space} object={data.companionTo} />;
+          return <AutomationCompanion space={space} object={data.companionTo} />;
         },
       }),
     ]),

@@ -16,7 +16,7 @@ import { Automation, AutomationCapabilities, AutomationOperation } from '#types'
 import { AutomationInlineForm } from '../../containers/AutomationArticle/AutomationArticle';
 import { connectedAutomationsQuery } from '../../util/automations-for-object';
 
-export type AutomationsCompanionProps = {
+export type AutomationCompanionProps = {
   space: Space;
   object: Obj.Unknown;
 };
@@ -32,7 +32,7 @@ type Status = 'associated' | 'pending' | 'detached';
  * making rows jump or disappear. Creating uses a template dropdown (no dialog); the new automation is
  * appended and auto-expanded for immediate configuration.
  */
-export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProps) => {
+export const AutomationCompanion = ({ space, object }: AutomationCompanionProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const templates = useCapabilities(AutomationCapabilities.Template);

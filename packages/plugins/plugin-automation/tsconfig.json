@@ -99,6 +99,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-search"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

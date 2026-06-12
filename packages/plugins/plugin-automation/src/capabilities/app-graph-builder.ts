@@ -70,15 +70,15 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: 'automationsCompanion',
+        id: 'automationCompanion',
         match: NodeMatcher.whenEchoObjectMatches,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('automations'),
-              label: ['automations-companion.label', { ns: meta.id }],
+              id: linkedSegment('automation'),
+              label: ['automation-companion.label', { ns: meta.id }],
               icon: 'ph--lightning--regular',
-              data: 'automations',
+              data: 'automation',
               position: 'last',
             }),
           ]),
