@@ -19,8 +19,6 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Automation.Automation),
       customPanel: CreateAutomationPanel,
-      // Funnel through the shared CreateAutomation op (scaffold + parent owned objects + place) so the create
-      // dialog, the companion dropdown, and the sidebar action all create automations the same way.
       createObject: ({ name, templateId }: { name?: string; templateId: string }, options: CreateOptions) =>
         Operation.invoke(AutomationOperation.CreateAutomation, { db: options.db, templateId, name }),
     });

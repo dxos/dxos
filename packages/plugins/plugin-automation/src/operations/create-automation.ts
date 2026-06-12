@@ -21,13 +21,10 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation
         const template = templates.find((entry) => entry.id === templateId);
         invariant(template, `Unknown automation template: ${templateId}`);
 
-        // The scaffold mints the Automation and its owned auxiliary objects (triggers parented to it) via
-        // Database.Service; the Automation itself is added to the space tree below.
         const object = yield* template
           .scaffold({ name, subject })
           .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-        // Automations are placed consistently: hidden, under the dedicated "Automations" section.
         return yield* Operation.invoke(SpaceOperation.AddObject, {
           object,
           target: db,

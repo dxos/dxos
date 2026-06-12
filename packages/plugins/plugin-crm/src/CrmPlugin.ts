@@ -18,7 +18,6 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),
-  // Contribute the CRM automation template; the generic "Automations" companion on a Mailbox offers it.
   Plugin.addModule({
     id: 'crm-automation-templates',
     activatesOn: AppActivationEvents.SetupSchema,

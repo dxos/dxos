@@ -17,8 +17,7 @@ import { Automation } from '#types';
 
 import { automationsForObject, connectedAutomationsQuery } from './automations-for-object';
 
-// A minimal feed-annotated host (like a mailbox): an object holding a `feed` ref. The reverse-ref query
-// reaches its automations by resolving `host.feed` and finding triggers that reference the same feed.
+// A minimal feed-annotated host (like a mailbox): an object holding a `feed` ref.
 const FeedHost = Schema.Struct({
   name: Schema.optional(Schema.String),
   feed: Ref.Ref(Feed.Feed),
@@ -34,7 +33,6 @@ const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestAp
   return personalSpace.db;
 };
 
-// Resolve the reverse-ref query to a sorted id list (the query resolves via the index, hence the poll).
 const connectedIds = (db: Database.Database, object: Obj.Unknown) =>
   db
     .query(connectedAutomationsQuery(object))
@@ -54,17 +52,16 @@ describe('automations connected to an object', () => {
 
     const target = db.add(Automation.make({ name: 'target', triggers: [] }));
     const other = db.add(Automation.make({ name: 'other', triggers: [] }));
-    // The owning automation's trigger passes `target` as input (the magazine-on-a-timer shape); the ref is
-    // nested in the untyped `input` record, and is space-qualified like a picker-created ref.
+    // The target ref is nested in the trigger's untyped `input` record, and is space-qualified like a
+    // picker-created ref.
     const trigger = db.add(Trigger.make({ input: { subject: qualifiedRef(db, target) } }));
     const owner = db.add(Automation.make({ name: 'owner', triggers: [Ref.make(trigger)] }));
     await db.flush();
 
-    // Pure predicate.
     expect(automationsForObject(target, [owner, other]).map((automation) => automation.id)).toEqual([owner.id]);
     expect(automationsForObject(other, [owner])).toEqual([]);
 
-    // Reverse-ref query agrees (resolves via the index — poll to absorb indexing latency).
+    // Poll to absorb index latency; the query resolves via the reverse-ref index.
     await expect.poll(() => connectedIds(db, target), { timeout: 5_000 }).toEqual([owner.id]);
     await expect.poll(() => connectedIds(db, other), { timeout: 5_000 }).toEqual([]);
   });

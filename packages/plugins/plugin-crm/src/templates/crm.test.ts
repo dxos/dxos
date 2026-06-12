@@ -40,44 +40,35 @@ describe('crm automation template', () => {
 
   test('scaffolds a Routine, a disabled feed Trigger, and an Automation wiring them together', async ({ expect }) => {
     await Effect.gen(function* () {
-      // Arrange — create a mailbox; ECHO adds the feed as a child automatically.
       const mailbox = Mailbox.make({ name: 'Test Mailbox' });
       yield* Database.add(mailbox);
       yield* Database.flush();
 
-      // Act — run the template scaffold, then add the automation as the caller (SpaceOperation.AddObject) would.
       const automation = yield* crm.scaffold({ subject: mailbox });
       yield* Database.add(automation);
       yield* Database.flush();
 
-      // The returned Automation references one trigger and the runnable (AgentPrompt).
       expect(automation.triggers).toHaveLength(1);
       expect(automation.runnable).toBeDefined();
 
-      // A single Routine exists, named after the mailbox, carrying the CRM + supporting blueprints.
       const routines = yield* Database.query(Filter.type(Routine.Routine)).run;
       expect(routines).toHaveLength(1);
       expect(routines[0]?.name).toContain('Test Mailbox');
-      // Blueprint refs are registry-bound (Ref.fromURI), not local DB copies.
       expect(routines[0]?.blueprints).toHaveLength(BLUEPRINT_COUNT);
 
-      // A single disabled feed Trigger exists, bound to the mailbox's feed.
       const triggers = yield* Database.query(Query.select(Filter.type(Trigger.Trigger))).run;
       expect(triggers).toHaveLength(1);
       const trigger = triggers[0];
-      // Starts disabled so the user can review instructions before activating.
       expect(trigger?.enabled).toBe(false);
       expect(trigger?.spec?.kind).toBe('feed');
       const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);
-      // The trigger input references the routine and uses the message template.
       expect(trigger?.input?.prompt).toBeDefined();
       expect(trigger?.input?.input).toBe('{{event.item}}');
       // The trigger is owned by the automation (cascade-deletes with it); the routine stays independent.
       expect(trigger && Obj.getParent(trigger)?.id).toBe(automation.id);
       expect(routines[0] && Obj.getParent(routines[0])).toBeUndefined();
 
-      // The Automation's runnable and the trigger's function both reference the AgentPrompt operation.
       const operations = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       expect(operations).toHaveLength(1);
       expect(automation.runnable?.uri).toBe(trigger?.function?.uri);

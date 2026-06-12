@@ -82,8 +82,6 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
 
   const handleCreate = useCallback(
     async (templateId: string) => {
-      // CreateAutomation scaffolds, parents owned objects, and places the automation under the "Automations"
-      // section in one step (shared by every creation path).
       const { data, error } = await invokePromise(AutomationOperation.CreateAutomation, {
         db: space.db,
         templateId,

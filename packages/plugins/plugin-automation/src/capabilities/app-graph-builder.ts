@@ -22,7 +22,6 @@ import { blank } from '../templates';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Dedicated "Automations" sidebar section listing the space's Automation objects (typeSection idiom).
       createTypeSectionExtension(Automation.Automation),
       GraphBuilder.createExtension({
         id: 'automationsSectionActions',
@@ -36,8 +35,6 @@ export default Capability.makeModule(
               id: 'create-automation',
               data: () =>
                 Effect.gen(function* () {
-                  // Shared creation op (scaffold + parent owned objects + hidden placement under the
-                  // "Automations" section); the Blank template mints an empty, ready-to-configure automation.
                   const { subject } = yield* Operation.invoke(
                     AutomationOperation.CreateAutomation,
                     { db: space.db, templateId: blank.id },

@@ -32,12 +32,7 @@ Create or update CRM Profiles (Person and/or Organization objects) for those con
 Attach a profile photo or company logo when you can find one.
 `;
 
-/**
- * CRM automation template: configures a Mailbox so each new message runs the CRM blueprint via a feed
- * trigger. Scaffolds a Routine (CRM + supporting blueprints), a disabled feed Trigger bound to the
- * mailbox's feed, and an Automation wiring them together. Only offered on a Mailbox subject (it needs
- * `mailbox.feed`).
- */
+/** CRM automation template. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`. */
 export const crm: AutomationCapabilities.Template = {
   id: 'org.dxos.automation.crm',
   label: 'CRM',
@@ -52,7 +47,6 @@ export const crm: AutomationCapabilities.Template = {
       const mailbox = subject;
       const routineName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
-      // Registry-bound blueprint refs — pure, no DB fork required.
       const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
       const routine = yield* Database.add(
         Routine.make({
@@ -74,8 +68,6 @@ export const crm: AutomationCapabilities.Template = {
       ).run;
       const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
 
-      // Disabled feed trigger; `input: '{{event.item}}'` is substituted to the new Message at invocation time
-      // and becomes the AgentPrompt input, which the routine receives in <input>.
       const feed = yield* Database.load(mailbox.feed);
       const trigger = yield* Database.add(
         Obj.make(Trigger.Trigger, {
@@ -90,14 +82,13 @@ export const crm: AutomationCapabilities.Template = {
         }),
       );
 
-      // The automation is added to the space tree by the caller (SpaceOperation.AddObject); the routine and
-      // the AgentPrompt op stay independent (the routine is edited separately and may be reused). The trigger
-      // is owned by the automation — it is only reachable via it — so it is parented and cascade-deletes with it.
       const automation = Automation.make({
         name: name ?? routineName,
         runnable: Ref.make(agentPromptFn),
         triggers: [Ref.make(trigger)],
       });
+      // The trigger is owned by the automation (reachable only via it) so it cascade-deletes with it; the
+      // routine stays independent, since it is edited separately and may be reused.
       Obj.setParent(trigger, automation);
 
       return automation;

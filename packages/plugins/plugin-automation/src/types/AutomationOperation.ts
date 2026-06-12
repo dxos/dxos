@@ -38,13 +38,8 @@ export const CreateTriggerFromTemplate = Operation.make({
   output: Schema.Void,
 });
 
-// The single automation-creation entrypoint: resolves a contributed `AutomationCapabilities.Template` by id,
-// runs its `scaffold` (which mints the Automation and its owned auxiliary objects — triggers parented to the
-// automation — via Database.Service), then adds the automation to the space tree under the dedicated
-// (hidden) "Automations" section. Every creation path (the create dialog, the per-object companion, the
-// sidebar action) invokes this so placement and ownership are established in exactly one place. Output
-// mirrors `SpaceOperation.AddObject` / `SpaceCapabilities.CreateObjectResult` so the create dialog can return
-// it directly.
+// The single creation entrypoint for every path (create dialog, companion, sidebar) so placement and
+// ownership are established in one place. Output mirrors `SpaceCapabilities.CreateObjectResult`.
 export const CreateAutomation = Operation.make({
   meta: {
     key: makeKey('createAutomation'),
