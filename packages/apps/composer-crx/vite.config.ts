@@ -113,6 +113,9 @@ export default defineConfig({
         },
         permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
+        // Broad host access is required so the popup and background can fetch cross-origin
+        // (chat-agent, image-service) without CORS — extensions bypass CORS for hosts they
+        // hold permissions for — and so the content script can be injected on any page.
         host_permissions: ['http://*/*', 'https://*/*'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

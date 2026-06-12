@@ -6,7 +6,7 @@ import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconci
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -127,7 +127,7 @@ export const Main = () => {
     }
 
     // TODO(burdon): [API]: Rename delete and just provide ID?
-    const object = space.db.getObjectById(id);
+    const object = space.db.query(Filter.id(id)).runSync()[0];
     if (object) {
       space.db.remove(object);
     }

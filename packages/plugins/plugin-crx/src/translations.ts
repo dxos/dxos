@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin.name': 'CRX',
+        'plugin.name': 'Browser Extension',
         'settings.title': 'Browser extension',
         'test.title': 'Connection',
         'test.button.label': 'Test connection',

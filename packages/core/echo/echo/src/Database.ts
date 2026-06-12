@@ -121,6 +121,7 @@ export interface Database extends Queryable {
 
   /**
    * Return object by local ID.
+   * @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}.
    */
   getObjectById<T extends Obj.Unknown = Obj.OfShape<AnyProperties>>(
     id: string,
