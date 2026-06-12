@@ -355,10 +355,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
   // Current type URI and filter.
   const [selectedUri, setSelectedUri] = useState<string>(ANY);
-  const anyFilter = useMemo(
-    () => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))),
-    [typeOptions],
-  );
+  const anyFilter = useMemo(() => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))), [typeOptions]);
 
   // Context objects.
   const objects = useQuery(db, selectedUri === ANY ? anyFilter : Filter.type(selectedUri));

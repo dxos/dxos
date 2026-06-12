@@ -198,9 +198,8 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         // (db-backed types, which have no DXN). Preserve EIDs verbatim; wrap bare names as DXN.
         const query =
           mode === 'schema'
-            ? Query.select(
-                Filter.type(EID.isEID(values.query) ? (values.query as EID.EID) : DXN.make(values.query)),
-              ).ast
+            ? Query.select(Filter.type(EID.isEID(values.query) ? (values.query as EID.EID) : DXN.make(values.query)))
+                .ast
             : JSON.parse(JSON.stringify(values.query));
         onQueryChanged?.(query, queueDxn);
       },

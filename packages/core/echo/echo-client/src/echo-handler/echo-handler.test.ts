@@ -347,9 +347,7 @@ describe('Reactive Object with ECHO database', () => {
 
       {
         // Also verify Filter.type accepts a canonical DXN URI string.
-        const queryResult = await db
-          .query(Filter.type(DXN.make(Type.getTypename(TestSchema.Example))))
-          .run();
+        const queryResult = await db.query(Filter.type(DXN.make(Type.getTypename(TestSchema.Example)))).run();
         expect(queryResult.length).to.eq(1);
       }
     });
