@@ -161,7 +161,7 @@ export class ComputeGraph extends Resource {
               .getSheetNames()
               .map((name) => {
                 const { type, id } = parseSheetName(name);
-                return type && id ? this._space?.db.getObjectById(id) : undefined;
+                return type && id ? this._space?.db.query(Filter.id(id)).runSync()[0] : undefined;
               })
               .filter(isNonNullable);
 

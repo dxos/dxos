@@ -204,7 +204,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     const byId = new Map<string, Obj.Any>(relationObjects.map((object) => [object.id, object]));
     for (const id of mailboxes.flatMap((mailbox) => Mailbox.getExtractedObjectIds(mailbox, message.id))) {
       if (!byId.has(id)) {
-        const object = db?.getObjectById(id);
+        const object = db?.query(Filter.id(id)).runSync()[0];
         if (object) {
           byId.set(id, object);
         }

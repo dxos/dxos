@@ -337,6 +337,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   // TODO(burdon): Type check.
+  /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
