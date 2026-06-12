@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dx
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { URI } from '@dxos/keys';
+import { EID, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -23,6 +23,32 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 // TODO(burdon): Factor out.
 const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
+};
+
+/**
+ * Find the option a ref-like form value points at. Falls back to matching by entity id so a bare local EID
+ * (`echo:/<id>`, produced by `Ref.make`) still resolves against an option keyed by the entity's qualified
+ * self URI (`echo://<space>/<id>`). Returns `undefined` when the value is not a ref or no option matches.
+ */
+export const findRefOption = (value: unknown, options: RefOption[]): RefOption | undefined => {
+  const isRef = Ref.isRef(value);
+  if (!isRef && !isRefSnapshot(value)) {
+    return undefined;
+  }
+  const uri = isRef ? value.uri : value['/'];
+  const exact = options.find((option) => option.id === uri);
+  if (exact) {
+    return exact;
+  }
+  const eid = EID.tryParse(uri);
+  const entityId = eid && EID.getEntityId(eid);
+  if (!entityId) {
+    return undefined;
+  }
+  return options.find((option) => {
+    const optionEid = EID.tryParse(option.id);
+    return optionEid != null && EID.getEntityId(optionEid) === entityId;
+  });
 };
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
@@ -125,20 +151,7 @@ export const RefField = (props: RefFieldProps) => {
     return getOptions(results, { parentLabel, getTypePlaceholder });
   }, [results, getOptions, type, getTypePlaceholder]);
 
-  const handleGetValue = useCallback(() => {
-    const formValue = getValue();
-
-    const unknownToRefOption = (value: unknown) => {
-      const isRef = Ref.isRef(value);
-      if (isRef || isRefSnapshot(value)) {
-        const uri = isRef ? value.uri : value['/'];
-        return options.find((option) => option.id === uri);
-      }
-      return undefined;
-    };
-
-    return unknownToRefOption(formValue);
-  }, [options, getValue]);
+  const handleGetValue = useCallback(() => findRefOption(getValue(), options), [options, getValue]);
 
   const item = handleGetValue();
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
