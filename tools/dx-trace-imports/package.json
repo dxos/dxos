@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dx-trace-imports",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Trace static import chains from an entry module to a target package, file, or pattern.",
   "homepage": "https://dxos.org",
