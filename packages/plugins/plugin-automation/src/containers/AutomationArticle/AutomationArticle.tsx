@@ -441,8 +441,10 @@ export const TriggerSection = ({
         });
       } else {
         // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
-        // until an action is set, so a function-less trigger never dispatches.
+        // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
+        // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
         const created = space.db.add(Trigger.make({ function: automation.runnable, enabled: false, spec }));
+        Obj.setParent(created, automation);
         Obj.update(automation, (automation) => {
           automation.triggers = [...automation.triggers, Ref.make(created)];
         });

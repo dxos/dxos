@@ -7,9 +7,10 @@ import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
 import { Operation, Routine, Trace, Trigger } from '@dxos/compute';
-import { Database, Feed, Filter, Query } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Automation } from '@dxos/plugin-automation';
 import { Mailbox } from '@dxos/plugin-inbox';
 
 import { crm } from './crm';
@@ -18,7 +19,14 @@ import { crm } from './crm';
 const BLUEPRINT_COUNT = 4;
 
 const dbLayer = TestDatabaseLayer({
-  types: [Routine.Routine, Trigger.Trigger, Operation.PersistentOperation, Mailbox.Mailbox, Feed.Feed],
+  types: [
+    Automation.Automation,
+    Routine.Routine,
+    Trigger.Trigger,
+    Operation.PersistentOperation,
+    Mailbox.Mailbox,
+    Feed.Feed,
+  ],
 });
 
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
@@ -37,8 +45,10 @@ describe('crm automation template', () => {
       yield* Database.add(mailbox);
       yield* Database.flush();
 
-      // Act — run the template scaffold.
+      // Act — run the template scaffold, then add the automation as the caller (SpaceOperation.AddObject) would.
       const automation = yield* crm.scaffold({ subject: mailbox });
+      yield* Database.add(automation);
+      yield* Database.flush();
 
       // The returned Automation references one trigger and the runnable (AgentPrompt).
       expect(automation.triggers).toHaveLength(1);
@@ -63,6 +73,9 @@ describe('crm automation template', () => {
       // The trigger input references the routine and uses the message template.
       expect(trigger?.input?.prompt).toBeDefined();
       expect(trigger?.input?.input).toBe('{{event.item}}');
+      // The trigger is owned by the automation (cascade-deletes with it); the routine stays independent.
+      expect(trigger && Obj.getParent(trigger)?.id).toBe(automation.id);
+      expect(routines[0] && Obj.getParent(routines[0])).toBeUndefined();
 
       // The Automation's runnable and the trigger's function both reference the AgentPrompt operation.
       const operations = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;

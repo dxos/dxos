@@ -72,8 +72,8 @@ export const crm: AutomationCapabilities.Template = {
       ).run;
       const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
 
-      // Disabled feed trigger; `input: '{{event.item}}'` is substituted to the new Message at invocation
-      // time and becomes the AgentPrompt input, which the routine receives in <input>.
+      // Disabled feed trigger; `input: '{{event.item}}'` is substituted to the new Message at invocation time
+      // and becomes the AgentPrompt input, which the routine receives in <input>.
       const feed = yield* Database.load(mailbox.feed);
       const trigger = yield* Database.add(
         Obj.make(Trigger.Trigger, {
@@ -88,10 +88,16 @@ export const crm: AutomationCapabilities.Template = {
         }),
       );
 
-      return Automation.make({
+      // The automation is added to the space tree by the caller (SpaceOperation.AddObject); the routine and
+      // the AgentPrompt op stay independent (the routine is edited separately and may be reused). The trigger
+      // is owned by the automation — it is only reachable via it — so it is parented and cascade-deletes with it.
+      const automation = Automation.make({
         name: name ?? routineName,
         runnable: Ref.make(agentPromptFn),
         triggers: [Ref.make(trigger)],
       });
+      Obj.setParent(trigger, automation);
+
+      return automation;
     }),
 };
