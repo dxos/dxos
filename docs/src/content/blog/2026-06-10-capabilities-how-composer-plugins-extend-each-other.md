@@ -5,6 +5,7 @@ date: 2026-06-10
 description: A look at the capability mechanism in the DXOS app framework, which lets any plugin define typed extension points that other plugins implement — using comments as a worked example.
 author: Rich Burdon
 tags: [composer, plugins, architecture]
+draft: true
 ---
 
 Most plugin systems are one-way streets: the host application defines a fixed set of extension points, and plugins fill them in. Composer is built differently. In the DXOS app framework, _every plugin can define extension points_ — and every plugin can implement extension points defined by others. We call these typed contracts **capabilities**, and they are the reason Composer can be assembled from dozens of small plugins that compose without importing each other.
