@@ -6,7 +6,7 @@ import * as semver from 'semver';
 
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
   id: EntityId;
@@ -356,49 +356,76 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
   }
 };
 
+// A type discriminator reduced to a comparable identity, independent of scheme/form.
+//  - `type`: a static typename (with optional version), e.g. `dxn:com.example.task:0.1.0`.
+//  - `echo`: a stored (database) schema, identified by its entity id and optional space id.
+//  - `raw`:  an unrecognized string, compared verbatim.
+type TypeTag =
+  | { kind: 'type'; name: string; version?: string }
+  | { kind: 'echo'; spaceId?: SpaceId; entityId: EntityId }
+  | { kind: 'raw'; value: string };
+
 /**
- * Compares typename DXNs.
- * @returns true if they match
- *
- * Compares typename string.
- * Missing version (on either actual or expected) matches any version.
- * non `type` DXNs are compared exactly.
- *
- * Examples: (expected) (actual)
- *
- * dxn:type:com.example.type.task       !== dxn:type:com.example.type.contact
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task
- * dxn:type:com.example.type.task:0.1.0 !== dxn:type:com.example.type.task:0.2.0
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
- * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
- *
+ * Reduces a type discriminator string to a {@link TypeTag}. Accepts the full URI forms stored on
+ * `system.type` (typename DXN, `echo:` EID) and the scheme-less tag forms callers may filter by
+ * (a bare typename, a bare `<entityId>`, or a qualified `<spaceId>:<entityId>`) — mirroring how a
+ * typename carries no `dxn:` scheme.
  */
-/**
- * Compare two DXN strings, allowing version-agnostic type DXN comparison:
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
- * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
- */
-const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  // Normalize via DXN.tryMake to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
-  const expectedDxn = DXN.tryMake(expectedStr);
-  const actualDxn = DXN.tryMake(actualStr);
-  if (expectedDxn !== undefined) {
-    if (actualDxn === undefined) {
-      return false;
-    }
-    if (DXN.getName(actualDxn) !== DXN.getName(expectedDxn)) {
-      return false;
-    }
-    const expectedVersion = DXN.getVersion(expectedDxn);
-    const actualVersion = DXN.getVersion(actualDxn);
-    if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
-      return false;
-    }
-  } else {
-    // EID or other URI type — exact match.
-    if (actualStr !== expectedStr) {
-      return false;
+const parseTypeTag = (str: string): TypeTag => {
+  const eid = EID.tryParse(str);
+  if (eid) {
+    const entityId = EID.getEntityId(eid);
+    if (entityId) {
+      return { kind: 'echo', spaceId: EID.getSpaceId(eid), entityId };
     }
   }
-  return true;
+
+  const dxn = DXN.tryMake(str);
+  if (dxn) {
+    return { kind: 'type', name: DXN.getName(dxn), version: DXN.getVersion(dxn) };
+  }
+
+  // Scheme-less echo identity: `<spaceId>:<entityId>` or bare `<entityId>`.
+  const colon = str.indexOf(':');
+  if (colon > 0) {
+    const space = str.slice(0, colon);
+    const entity = str.slice(colon + 1);
+    if (SpaceId.isValid(space) && EntityId.isValid(entity)) {
+      return { kind: 'echo', spaceId: space, entityId: entity };
+    }
+  }
+  if (EntityId.isValid(str)) {
+    return { kind: 'echo', entityId: str };
+  }
+
+  return { kind: 'raw', value: str };
+};
+
+/**
+ * Compares a filter's type discriminator (`expectedStr`) against the value stored on an object's
+ * `system.type` (`actualStr`), normalizing both to a scheme-less {@link TypeTag} first.
+ *
+ * - Typenames match version-agnostically (a missing version on either side matches any version).
+ * - Stored (echo) schemas match by entity id; a bare (space-less) id matches the object in any
+ *   space, while a space-qualified id matches only that space.
+ */
+const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  const expected = parseTypeTag(expectedStr);
+  const actual = parseTypeTag(actualStr);
+  if (expected.kind === 'type' && actual.kind === 'type') {
+    if (expected.name !== actual.name) {
+      return false;
+    }
+    return expected.version === undefined || actual.version === undefined || expected.version === actual.version;
+  }
+  if (expected.kind === 'echo' && actual.kind === 'echo') {
+    if (expected.entityId !== actual.entityId) {
+      return false;
+    }
+    return expected.spaceId === undefined || actual.spaceId === undefined || expected.spaceId === actual.spaceId;
+  }
+  if (expected.kind === 'raw' || actual.kind === 'raw') {
+    return expectedStr === actualStr;
+  }
+  return false;
 };

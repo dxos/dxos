@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
-import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { ViewAnnotation, getTypeTag, getTypenameFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
 
@@ -46,11 +46,22 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
           : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
       const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
+      // A view holder filed under a target type its view query can't resolve would be invisible in
+      // the navigation tree. Fail loudly rather than silently dropping it under its own typename.
+      invariant(
+        !view || (viewTargetTypename != null && viewTargetTypename.length > 0),
+        `View object ${typename} (${object.id}) has no resolvable target type — its view query must filter by a known type.`,
+      );
+      // Stored (database) types are keyed by entity id in the graph, so resolve the object's own
+      // type tag rather than filing it under its (human) typename.
+      const objectType = Obj.getType(object);
+      const typeTag = objectType ? getTypeTag(objectType) : typename;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,
         objectId: object.id,
         nodeId: input.targetNodeId,
         typename,
+        typeTag,
         viewTargetTypename,
       });
 
@@ -69,9 +80,11 @@ const getSubjectPathForNewObject = (props: {
   objectId: string;
   nodeId?: string;
   typename: string;
+  /** Tag of the object's own type ({@link getTypeTag}) — keys the `types/<tag>` node it files under. */
+  typeTag: string;
   viewTargetTypename?: string;
 }): string => {
-  const { nodeId, typename, viewTargetTypename, spaceId, objectId } = props;
+  const { nodeId, typename, typeTag, viewTargetTypename, spaceId, objectId } = props;
   if (typeof nodeId === 'string') {
     return `${nodeId}/${objectId}`;
   }
@@ -81,5 +94,5 @@ const getSubjectPathForNewObject = (props: {
   if (viewTargetTypename) {
     return getTypePath(spaceId, viewTargetTypename, objectId);
   }
-  return getObjectPath(spaceId, typename, objectId);
+  return getObjectPath(spaceId, typeTag, objectId);
 };

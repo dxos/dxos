@@ -804,7 +804,7 @@ describe('Reactive Object with ECHO database', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const importantUri = 'dxn:echo:@:TAGIMPORTANT';
+      const importantUri = 'echo:/TAGIMPORTANT';
       const org = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'DXOS',

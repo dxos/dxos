@@ -37,8 +37,8 @@ import { SHARED } from '../util';
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
-// E.g., dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
-const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
+// E.g., echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6
+const ECHO_DXN_LENGTH = 'echo://'.length + 33 + 1 + 26;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

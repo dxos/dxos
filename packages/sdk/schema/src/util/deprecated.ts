@@ -5,10 +5,19 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { QueryAST } from '@dxos/echo';
+import { QueryAST, Type } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
+
+/**
+ * Scheme-less tag identifying a type for queries, grouping, and graph node ids: a static schema's
+ * typename, or — for a stored (database) schema — its entity id. The tag matches what
+ * `getTypenameFromQuery` extracts from `Filter.type(entity)`/`Filter.typename(tag)`, so callers can
+ * thread it uniformly without branching on whether the schema is database-backed.
+ */
+export const getTypeTag = (entity: Type.AnyEntity): string =>
+  Type.getDatabase(entity) != null ? entity.id : Type.getTypename(entity);
 
 /**
  * Get the base type; e.g., traverse through refinements.
@@ -133,15 +142,29 @@ export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string 
         return;
       }
 
-      const dxn = DXN.tryMake(node.filter.typename);
-      if (!dxn) {
-        return;
-      }
-
-      typename = DXN.getName(dxn);
+      typename = uriToTypeTag(node.filter.typename) ?? typename;
     });
 
   return typename;
+};
+
+/**
+ * Reduces a type URI to its scheme-less tag: a typename DXN to its version-less name, an `echo:`
+ * EID (stored schema) to its entity id (space-qualified when the EID carries a space). Inverse of
+ * the tag resolution in `Filter.typename`. Returns undefined for an unrecognized URI.
+ */
+export const uriToTypeTag = (uri: string): string | undefined => {
+  const eid = EID.tryParse(uri);
+  if (eid) {
+    const entityId = EID.getEntityId(eid);
+    if (!entityId) {
+      return undefined;
+    }
+    const spaceId = EID.getSpaceId(eid);
+    return spaceId ? `${spaceId}:${entityId}` : entityId;
+  }
+  const dxn = DXN.tryMake(uri);
+  return dxn ? DXN.getName(dxn) : undefined;
 };
 
 /**

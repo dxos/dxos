@@ -61,6 +61,27 @@ describe('Database.addType', () => {
     expect(objects).toHaveLength(1);
     expect(objects[0].id).to.eq(object.id);
   });
+
+  // Objects from a persisted type are stamped with the type entity's echo:/<id> URI, not the
+  // typename DXN. Filter.typename accepts that entity id as a scheme-less tag and matches them.
+  test('Filter.typename matches objects of a persisted type by entity id', async () => {
+    const { db } = await builder.createDatabase();
+    const type = await db.addType(TestType);
+    const object = db.add(Obj.make(type, { name: 'Alice' }));
+    await db.flush();
+
+    // Bare entity id matches regardless of space.
+    const byEntityId = await db.query(Filter.typename(type.id)).run();
+    expect(byEntityId.map((o) => o.id)).toEqual([object.id]);
+
+    // Space-qualified tag matches within the owning space.
+    const byQualified = await db.query(Filter.typename(`${db.spaceId}:${type.id}`)).run();
+    expect(byQualified.map((o) => o.id)).toEqual([object.id]);
+
+    // The human typename DXN does NOT match (db-type objects carry the echo id, not the typename).
+    const byTypename = await db.query(Filter.typename(Type.getTypename(TestType))).run();
+    expect(byTypename).toHaveLength(0);
+  });
 });
 
 describe('type and query isolation across spaces', () => {

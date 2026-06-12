@@ -132,15 +132,13 @@ export class EntityMetaIndex implements Index {
         const sql = yield* SqlClient.SqlClient;
         const parsedDxn = DXN.isDXN(query.typeDXN) ? query.typeDXN : undefined;
         const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-        // Legacy backward-compat: old snapshots stored `dxn:type:<nsid>` before the DXN refactor stripped the `type:` segment.
-        const legacyTypeDXN = parsedDxn ? (`dxn:type:${parsedDxn.slice(4)}` as typeof parsedDxn) : undefined;
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows = hasNoVersion
           ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
               query.typeDXN
-            } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\' ${legacyTypeDXN ? sql`OR typeDXN = ${legacyTypeDXN}` : sql``})`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${query.typeDXN} ${legacyTypeDXN ? sql`OR typeDXN = ${legacyTypeDXN}` : sql``})`;
+            } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\')`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${query.typeDXN}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -212,11 +210,7 @@ export class EntityMetaIndex implements Index {
           typeDxns.map((typeDXN) => {
             const parsedDxn = DXN.isDXN(typeDXN) ? typeDXN : undefined;
             const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-            // Legacy backward-compat: old snapshots stored `dxn:type:<nsid>` before the DXN refactor.
-            const legacyTypeDXN = parsedDxn ? (`dxn:type:${parsedDxn.slice(4)}` as typeof parsedDxn) : undefined;
-            const exactMatch = legacyTypeDXN
-              ? sql.or([sql`typeDXN = ${typeDXN}`, sql`typeDXN = ${legacyTypeDXN}`])
-              : sql`typeDXN = ${typeDXN}`;
+            const exactMatch = sql`typeDXN = ${typeDXN}`;
             return hasNoVersion
               ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
               : exactMatch;
@@ -295,9 +289,9 @@ export class EntityMetaIndex implements Index {
 
               // Extract metadata.
               const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
-              // Normalize legacy `dxn:type:<nsid>` → `dxn:<nsid>` at index time for forward compat.
-              const rawTypeDXN = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
-              const typeDXN = (DXN.tryMake(rawTypeDXN) ?? rawTypeDXN) as typeof rawTypeDXN;
+              // Type identifier as stored on `system.type`: a typename DXN for static schemas,
+              // an `echo:` EID for stored (dynamic) schemas.
+              const typeDXN = URI.make(castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type');
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;

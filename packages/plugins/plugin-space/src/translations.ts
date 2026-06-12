@@ -113,6 +113,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Spaces',
+        'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
         'join-space.label': 'Join space',

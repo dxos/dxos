@@ -26,7 +26,7 @@ import {
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, EID, PublicKey, URI } from '@dxos/keys';
+import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -38,7 +38,7 @@ import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 random.seed(1);
 
 // Tag ids are the URIs of Tag objects; meta stores them as refs.
-const tags = ['dxn:echo:@:TAGRED', 'dxn:echo:@:TAGGREEN', 'dxn:echo:@:TAGBLUE'];
+const tags = ['echo:/TAGRED', 'echo:/TAGGREEN', 'echo:/TAGBLUE'];
 const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
@@ -1492,8 +1492,8 @@ describe('Query', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const important = 'dxn:echo:@:TAGIMPORTANT';
-      const investor = 'dxn:echo:@:TAGINVESTOR';
+      const important = 'echo:/TAGIMPORTANT';
+      const investor = 'echo:/TAGINVESTOR';
       const importantRef = Ref.fromURI(URI.make(important));
       const investorRef = Ref.fromURI(URI.make(investor));
 
@@ -1515,24 +1515,23 @@ describe('Query', () => {
       expect(objects).toEqual([b, c]);
     });
 
-    test('legacy string tags are upgraded to refs and normalized to EIDs on read', async ({ expect }) => {
+    test('bare string tags are upgraded to refs on read', async ({ expect }) => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { name: 'legacy' }));
       await db.flush();
 
-      // Simulate data written before the tags-as-refs migration: a legacy DXN string in `meta.tags`.
-      const legacyDxn = 'dxn:echo:@:01J00000000000000000000000';
-      const canonicalEid = EID.parse(legacyDxn); // → `echo:/01J0...`
-      getObjectCore(obj).setDecoded(['meta', 'tags'], [legacyDxn]);
+      // Simulate data written before the tags-as-refs migration: a bare tag id string in `meta.tags`.
+      const tagEid = EID.make({ entityId: EntityId.make('01J00000000000000000000000') });
+      getObjectCore(obj).setDecoded(['meta', 'tags'], [tagEid]);
 
-      // Read back: the string is materialized as a `Ref` with the DXN normalized to a canonical EID.
+      // Read back: the string is materialized as a `Ref` carrying the tag EID.
       const tags = Obj.getMeta(obj).tags;
       expect(tags).toHaveLength(1);
       expect(Ref.isRef(tags[0])).toBe(true);
-      expect(tags[0].uri).toBe(canonicalEid);
+      expect(tags[0].uri).toBe(tagEid);
 
-      // And it remains queryable by the canonical tag URI.
-      const objects = await db.query(Query.select(Filter.tag(canonicalEid))).run();
+      // And it remains queryable by the tag URI.
+      const objects = await db.query(Query.select(Filter.tag(tagEid))).run();
       expect(objects).toEqual([obj]);
     });
 

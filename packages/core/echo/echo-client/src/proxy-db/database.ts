@@ -28,7 +28,7 @@ import {
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -301,7 +301,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       [MetaId]: { keys: [], key: meta.typename, version: meta.version },
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
-    const typeId = `dxn:echo:@:${schemaToStore.id}`;
+    const typeId = EID.make({ entityId: EntityId.make(schemaToStore.id) });
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(

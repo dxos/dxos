@@ -31,10 +31,10 @@ const ORG_DXN = 'dxn:com.example.type.organization:0.1.0';
 const PERSON_TYPENAME = 'com.example.type.person';
 const ORG_TYPENAME = 'com.example.type.organization';
 
-// Stable queue DXN mirroring query-planner.test.ts.
-const QUEUE_DXN = EID.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
+// Stable queue EID mirroring query-planner.test.ts.
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 const QUEUE_ID = EntityId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
+const QUEUE_DXN = EID.make({ spaceId: QUEUE_SPACE_ID, entityId: QUEUE_ID });
 
 const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
@@ -93,17 +93,16 @@ describe('hintFromIndexingResult', () => {
     expect(result!.queueIds).toBeUndefined();
   });
 
-  // Regression for DX-966: stored object types arrive versioned (and sometimes with the legacy
-  // `dxn:type:` prefix); the hint must reduce them to the bare typename so it can match a
-  // version-less type filter scope.
-  test('canonicalizes versioned and legacy-prefixed object types', ({ expect }) => {
+  // Regression for DX-966: stored object types arrive versioned; the hint must reduce them to the
+  // bare typename so it can match a version-less type filter scope.
+  test('canonicalizes versioned object types', ({ expect }) => {
     const result = hintFromIndexingResult({
       updated: 2,
       done: true,
       spaces: new Set([SpaceId.random()]),
       queues: new Set(),
       documents: new Set(),
-      types: new Set([PERSON_DXN, `dxn:type:${ORG_TYPENAME}:0.1.0`]),
+      types: new Set([PERSON_DXN, ORG_DXN]),
       objects: new Set(),
     });
     expect(result!.typenames).toEqual(new Set([PERSON_TYPENAME, ORG_TYPENAME]));
@@ -111,15 +110,14 @@ describe('hintFromIndexingResult', () => {
 });
 
 describe('canonicalTypename', () => {
-  test('strips schema version and the legacy `type:` kind segment', ({ expect }) => {
+  test('strips schema version', ({ expect }) => {
     expect(canonicalTypename(PERSON_DXN)).toBe(PERSON_TYPENAME);
-    expect(canonicalTypename(`dxn:type:${PERSON_TYPENAME}:0.1.0`)).toBe(PERSON_TYPENAME);
     expect(canonicalTypename(`dxn:${PERSON_TYPENAME}`)).toBe(PERSON_TYPENAME);
   });
 
   test('passes through schema-as-object (EchoURI) and other non-type URIs unchanged', ({ expect }) => {
     // Dynamic schemas reference the schema object by EchoURI rather than a typename DXN.
-    const echoUri = 'dxn:echo:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E';
+    const echoUri = EID.make({ spaceId: QUEUE_SPACE_ID, entityId: QUEUE_ID });
     expect(canonicalTypename(echoUri)).toBe(echoUri);
     // Arbitrary non-DXN strings are returned verbatim.
     expect(canonicalTypename('plain-string')).toBe('plain-string');

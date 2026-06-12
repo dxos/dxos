@@ -22,8 +22,8 @@ const getDebug = (): ObjectPropertiesDebug => {
 };
 
 /**
- * Refs may be stored as legacy (`dxn:echo:@:<id>`, `dxn:echo:<space>:<id>`) or
- * new (`echo:/<id>`, `echo://<space>/<id>`) form — extract and compare object id.
+ * Refs may be stored in local (`echo:/<id>`) or qualified (`echo://<space>/<id>`) form —
+ * extract and compare object id.
  */
 const refTargetsObject = (uri: string, objectId: string): boolean => {
   const parsed = EID.tryParse(uri);

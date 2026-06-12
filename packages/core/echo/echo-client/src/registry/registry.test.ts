@@ -111,8 +111,6 @@ describe('Registry', () => {
 
     // Exact DXN lookup via getByURI.
     expect(registry.getByURI(`dxn:${typename}:${version}`)).toBe(schema);
-    // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
-    expect(registry.getByURI(`dxn:type:${typename}:${version}`)).toBe(schema);
     // Short-form (without dxn: prefix) is not a valid DXN and does not resolve.
     expect(registry.getByURI(`${typename}:${version}`)).toBeUndefined();
     // Missing DXN.

@@ -15,7 +15,7 @@ import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from 
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation, getTypeTag } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -106,12 +106,12 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           if (Type.getDatabase(schema) != null) {
             return true;
           }
-          const typename = Type.getTypename(schema);
-          const objects = get(space.db.query(Filter.typename(typename)).atom);
+          const tag = getTypeTag(schema);
+          const objects = get(space.db.query(Filter.typename(tag)).atom);
           if (ViewAnnotation.has(schema)) {
             return objects.some((obj) => !viewIndex.isView(obj));
           }
-          return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
+          return objects.length > 0 || viewIndex.typenamesWithViews.has(tag);
         });
 
         return Effect.succeed(visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })));
@@ -129,19 +129,19 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const typename = Type.getTypename(schema);
+        const tag = getTypeTag(schema);
 
         // {All} virtual node.
         const allNode = Node.make({
           id: 'all',
           type: TYPE_COLLECTION_TYPE,
-          data: { space, typename },
+          data: { space, typename: tag },
           properties: {
             label: ['type-collection-all.label', { ns: meta.id }],
             icon: 'ph--list--regular',
             iconHue: 'neutral',
             role: 'branch',
-            testId: `spacePlugin.typeCollectionAll.${typename}`,
+            testId: `spacePlugin.typeCollectionAll.${tag}`,
             selectable: false,
             draggable: false,
             droppable: false,
@@ -153,7 +153,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // View objects for this schema.
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
-          .getViewsForTypename(typename!)
+          .getViewsForTypename(tag)
           .map((object: Obj.Unknown) =>
             createObjectNode({
               db: space.db,
@@ -215,10 +215,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const targetTypename = Type.getTypename(schema);
+        const targetTag = getTypeTag(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
         const deletable =
-          Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTypename).length === 0;
+          Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTag).length === 0;
 
         return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities }));
       },
@@ -251,6 +251,9 @@ const createSchemaNode = ({
   get: Atom.Context;
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
+  // The node id doubles as the `types/<tag>` path segment, so it must match the tag the table's
+  // view query resolves to (entity id for stored schemas, typename for static ones).
+  const tag = getTypeTag(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
@@ -266,13 +269,13 @@ const createSchemaNode = ({
             'object-name.placeholder',
             { ns: Type.getTypename(Type.Type) },
           ],
-          nodeId: typename,
+          nodeId: tag,
         };
       },
     ),
     Match.orElse(() => ({
       label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
-      nodeId: typename,
+      nodeId: tag,
     })),
   );
   const icon =
@@ -345,7 +348,9 @@ const createSchemaActions = ({
               }
             }),
             properties: {
-              label: getDynamicLabel('add-object.label', typename),
+              // Static plugin types carry a per-typename `add-object.label` (e.g. "Add event");
+              // database types have no such namespace, so fall back to the plugin's generic label.
+              label: getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',

@@ -7,7 +7,9 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 /**
- * Subscribe to and retrieve a type by typename from a space.
+ * Subscribe to and retrieve a type by its tag from a space: a static schema's typename, or a
+ * persisted (database) schema's entity id (the tag {@link getTypeTag} / `getTypenameFromQuery`
+ * produce — persisted-type objects carry the schema's echo id, not a typename).
  *
  * Fans across the owning space db (persisted custom types) and the shared
  * registry (static/runtime plugin types). Persisted types live only in the db,
@@ -29,7 +31,9 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
     let subscribed = false;
     const find = (): T | undefined =>
       subscribed
-        ? (queryResult.results.find((type) => Type.getTypename(type) === typename) as T | undefined)
+        ? (queryResult.results.find((type) => Type.getTypename(type) === typename || type.id === typename) as
+            | T
+            | undefined)
         : undefined;
 
     return {

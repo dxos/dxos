@@ -219,7 +219,9 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        // Legacy `dxn:queue:` URIs identify a feed/queue; everything else is an ECHO container.
+        // TODO(dxos): Dead branch — queues are now plain `echo://space/id` EIDs, indistinguishable
+        // from a view container by scheme. Replace with feed-vs-container detection (try-resolve as
+        // Feed, else container) so feed-append works for canonical EIDs.
         if (typeof id === 'string' && id.startsWith('dxn:queue:')) {
           const mappedItems = items.map((item: any) => ({
             ...item,

@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EID, EntityId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -147,15 +147,41 @@ export const type: {
 };
 
 /**
- * Filter by non-qualified typename.
+ * Filter by a scheme-less type tag: a static typename (`com.example.task`), or — for a stored
+ * (database) schema — its entity id, either bare (`<entityId>`, matches the object in any space)
+ * or space-qualified (`<spaceId>:<entityId>`). Mirrors how a typename carries no `dxn:` scheme and
+ * an echo identifier no `echo:` scheme; the tag is resolved to the matching URI here.
  */
 export const typename = (typename: string): Any => {
-  assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
+  assertArgument(
+    !typename.startsWith('dxn:') && !typename.startsWith('echo:'),
+    'typename',
+    'Type tag must be scheme-less',
+  );
   return new FilterClass({
     type: 'object',
-    typename: DXN.make(typename),
+    typename: typeTagToUri(typename),
     props: {},
   });
+};
+
+/**
+ * Resolves a scheme-less type tag to the URI stored on an object's `system.type`: a `<spaceId>:<entityId>`
+ * or bare `<entityId>` tag becomes an `echo:` EID (stored schema), any other tag a typename DXN.
+ */
+const typeTagToUri = (tag: string): URI.URI => {
+  const colon = tag.indexOf(':');
+  if (colon > 0) {
+    const space = tag.slice(0, colon);
+    const entity = tag.slice(colon + 1);
+    if (SpaceId.isValid(space) && EntityId.isValid(entity)) {
+      return EID.make({ spaceId: space, entityId: entity });
+    }
+  }
+  if (EntityId.isValid(tag)) {
+    return EID.make({ entityId: tag });
+  }
+  return DXN.make(tag);
 };
 
 /**
