@@ -9,28 +9,27 @@ import { EntityStructure } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { type MatchedObject, filterMatchObject } from './filter-match';
+import { type MatchedDoc, filterMatchDoc } from './filter-match';
 
 describe('filterMatch', () => {
   test('everything', () => {
-    expect(filterMatchObject(Filter.everything().ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.everything().ast, OBJECT_2)).to.be.true;
+    expect(filterMatchDoc(Filter.everything().ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.everything().ast, OBJECT_2)).to.be.true;
   });
 
   test('nothing', () => {
-    expect(filterMatchObject(Filter.nothing().ast, OBJECT_1)).to.be.false;
-    expect(filterMatchObject(Filter.nothing().ast, OBJECT_2)).to.be.false;
+    expect(filterMatchDoc(Filter.nothing().ast, OBJECT_1)).to.be.false;
+    expect(filterMatchDoc(Filter.nothing().ast, OBJECT_2)).to.be.false;
   });
 
   test('properties', () => {
-    expect(filterMatchObject(Filter.type(TestSchema.Expando, { title: 'test' }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(TestSchema.Expando, { value: 100 }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(TestSchema.Expando, { complete: false }).ast, OBJECT_1)).to.be.false;
-    expect(filterMatchObject(Filter.type(TestSchema.Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.type(TestSchema.Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { title: 'test' }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { value: 100 }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { complete: false }).ast, OBJECT_1)).to.be.false;
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be
       .true;
-    expect(filterMatchObject(Filter.type(TestSchema.Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be
-      .true;
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be.true;
   });
 
   test('and', () => {
@@ -38,7 +37,7 @@ describe('filterMatch', () => {
     const filter2 = Filter.type(TestSchema.Expando, { value: 100 });
     const filter3 = Filter.type(TestSchema.Expando, { complete: true });
 
-    expect(filterMatchObject(Filter.and(filter1, filter2, filter3).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.and(filter1, filter2, filter3).ast, OBJECT_1)).to.be.true;
   });
 
   test('or', () => {
@@ -46,26 +45,23 @@ describe('filterMatch', () => {
     const filter2 = Filter.type(TestSchema.Expando, { title: 'test' });
     const filter3 = Filter.type(TestSchema.Expando, { complete: false });
 
-    expect(filterMatchObject(Filter.or(filter1, filter2, filter3).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.or(filter1, filter2, filter3).ast, OBJECT_1)).to.be.true;
   });
 
   test('not', () => {
     const filter1 = Filter.type(TestSchema.Expando, { title: 'test' });
     const filter2 = Filter.not(filter1);
 
-    expect(filterMatchObject(filter1.ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(filter2.ast, OBJECT_1)).to.be.false;
+    expect(filterMatchDoc(filter1.ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(filter2.ast, OBJECT_1)).to.be.false;
   });
 
   test('contains', () => {
     expect(
-      filterMatchObject(
-        Filter.type(TestSchema.Expando, { properties: { label: Filter.contains('test') } }).ast,
-        OBJECT_1,
-      ),
+      filterMatchDoc(Filter.type(TestSchema.Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1),
     ).to.be.true;
     expect(
-      filterMatchObject(
+      filterMatchDoc(
         Filter.type(TestSchema.Expando, { fields: Filter.contains({ label: 'label', value: 'test' }) }).ast,
         OBJECT_1,
       ),
@@ -75,34 +71,34 @@ describe('filterMatch', () => {
   test('complex', () => {
     const filter1 = Filter.type(TestSchema.Expando, { title: 'bad' });
     const filter2 = Filter.type(TestSchema.Expando, { value: 0 });
-    expect(filterMatchObject(Filter.not(Filter.or(filter1, filter2)).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(Filter.not(Filter.or(filter1, filter2)).ast, OBJECT_1)).to.be.true;
   });
 
   test('ids', () => {
     const filter = Filter.id(OBJECT_1.id);
-    expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
+    expect(filterMatchDoc(filter.ast, OBJECT_1)).to.be.true;
+    expect(filterMatchDoc(filter.ast, OBJECT_2)).to.be.false;
   });
 
   test('refs', () => {
     const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromURI(EID.make({ entityId: OBJECT_1.id })) });
-    expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.false;
-    expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
-    expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;
+    expect(filterMatchDoc(filter.ast, OBJECT_1)).to.be.false;
+    expect(filterMatchDoc(filter.ast, OBJECT_2)).to.be.false;
+    expect(filterMatchDoc(filter.ast, OBJECT_3)).to.be.true;
   });
 
   test('standalone timestamp filter throws invariant (must be handled at index level)', () => {
-    expect(() => filterMatchObject(Filter.updated({ after: Date.now() - 1000 }).ast, OBJECT_1)).to.throw();
-    expect(() => filterMatchObject(Filter.created({ before: Date.now() + 1000 }).ast, OBJECT_1)).to.throw();
+    expect(() => filterMatchDoc(Filter.updated({ after: Date.now() - 1000 }).ast, OBJECT_1)).to.throw();
+    expect(() => filterMatchDoc(Filter.created({ before: Date.now() + 1000 }).ast, OBJECT_1)).to.throw();
   });
 
   test('and(type, timestamp) throws on timestamp part', () => {
     const filter = Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: Date.now() - 1000 }));
-    expect(() => filterMatchObject(filter.ast, OBJECT_1)).to.throw();
+    expect(() => filterMatchDoc(filter.ast, OBJECT_1)).to.throw();
   });
 });
 
-const OBJECT_1: MatchedObject = {
+const OBJECT_1: MatchedDoc = {
   id: EntityId.make('01JVS9YYT5VMVJW0GGTM1YHCCH'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: EntityStructure.makeObject({
@@ -118,7 +114,7 @@ const OBJECT_1: MatchedObject = {
   }),
 };
 
-const OBJECT_2: MatchedObject = {
+const OBJECT_2: MatchedDoc = {
   id: EntityId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: EntityStructure.makeObject({
@@ -128,7 +124,7 @@ const OBJECT_2: MatchedObject = {
   }),
 };
 
-const OBJECT_3: MatchedObject = {
+const OBJECT_3: MatchedDoc = {
   id: EntityId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: EntityStructure.makeObject({
