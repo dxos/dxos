@@ -8,24 +8,32 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { SpaceOperation } from '@dxos/plugin-space';
 
+import { getAutomationsPath } from '../paths';
 import { AutomationCapabilities, AutomationOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomationFromTemplate> =
-  AutomationOperation.CreateAutomationFromTemplate.pipe(
+const handler: Operation.WithHandler<typeof AutomationOperation.CreateAutomation> =
+  AutomationOperation.CreateAutomation.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ db, templateId, name, subject }) {
         const templates = yield* Capability.getAll(AutomationCapabilities.Template);
         const template = templates.find((entry) => entry.id === templateId);
         invariant(template, `Unknown automation template: ${templateId}`);
 
-        // Auxiliary objects the template creates (triggers, runnable) are added via Database.Service; the
-        // returned Automation is added to the space tree by the caller's SpaceOperation.AddObject.
+        // The scaffold mints the Automation and its owned auxiliary objects (triggers parented to it) via
+        // Database.Service; the Automation itself is added to the space tree below.
         const object = yield* template
           .scaffold({ name, subject })
           .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-        return { object };
+        // Automations are placed consistently: hidden, under the dedicated "Automations" section.
+        return yield* Operation.invoke(SpaceOperation.AddObject, {
+          object,
+          target: db,
+          hidden: true,
+          targetNodeId: getAutomationsPath(db.spaceId),
+        });
       }),
     ),
   );

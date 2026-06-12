@@ -38,14 +38,17 @@ export const CreateTriggerFromTemplate = Operation.make({
   output: Schema.Void,
 });
 
-// Resolves a contributed `AutomationCapabilities.Template` by id and runs its `scaffold` (which mints the
-// Automation and any auxiliary objects via Database.Service). The returned object is NOT yet added to the
-// space tree — callers invoke `SpaceOperation.AddObject` with their own target. Lets React surfaces (the
-// companion dropdown) create from a template without running the scaffold Effect directly.
-export const CreateAutomationFromTemplate = Operation.make({
+// The single automation-creation entrypoint: resolves a contributed `AutomationCapabilities.Template` by id,
+// runs its `scaffold` (which mints the Automation and its owned auxiliary objects — triggers parented to the
+// automation — via Database.Service), then adds the automation to the space tree under the dedicated
+// (hidden) "Automations" section. Every creation path (the create dialog, the per-object companion, the
+// sidebar action) invokes this so placement and ownership are established in exactly one place. Output
+// mirrors `SpaceOperation.AddObject` / `SpaceCapabilities.CreateObjectResult` so the create dialog can return
+// it directly.
+export const CreateAutomation = Operation.make({
   meta: {
-    key: makeKey('createAutomationFromTemplate'),
-    name: 'Create Automation From Template',
+    key: makeKey('createAutomation'),
+    name: 'Create Automation',
     icon: 'ph--lightning--regular',
   },
   services: [Capability.Service],
@@ -56,6 +59,8 @@ export const CreateAutomationFromTemplate = Operation.make({
     subject: Schema.optional(Obj.Unknown),
   }),
   output: Schema.Struct({
+    id: Schema.String,
+    subject: Schema.Array(Schema.String),
     object: Obj.Unknown,
   }),
 });

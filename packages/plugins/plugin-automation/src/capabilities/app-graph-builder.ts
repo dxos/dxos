@@ -11,13 +11,13 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
+import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { Automation } from '#types';
+import { Automation, AutomationOperation } from '#types';
 
-import { getAutomationsPath } from '../paths';
+import { blank } from '../templates';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -36,12 +36,11 @@ export default Capability.makeModule(
               id: 'create-automation',
               data: () =>
                 Effect.gen(function* () {
-                  const object = Automation.make({ triggers: [] });
+                  // Shared creation op (scaffold + parent owned objects + hidden placement under the
+                  // "Automations" section); the Blank template mints an empty, ready-to-configure automation.
                   const { subject } = yield* Operation.invoke(
-                    SpaceOperation.AddObject,
-                    // Hidden so both creation paths (sidebar + companion) place automations under the
-                    // "Automations" section rather than as first-class space items (matches AutomationsCompanion).
-                    { object, target: space.db, hidden: true, targetNodeId: getAutomationsPath(space.db.spaceId) },
+                    AutomationOperation.CreateAutomation,
+                    { db: space.db, templateId: blank.id },
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(

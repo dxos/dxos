@@ -6,7 +6,6 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery, type Space } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
@@ -15,7 +14,6 @@ import { meta } from '#meta';
 import { Automation, AutomationCapabilities, AutomationOperation } from '#types';
 
 import { AutomationInlineForm } from '../../containers/AutomationArticle/AutomationArticle';
-import { getAutomationsPath } from '../../paths';
 import { connectedAutomationsQuery } from '../../util/automations-for-object';
 
 export type AutomationsCompanionProps = {
@@ -80,7 +78,9 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
 
   const handleCreate = useCallback(
     async (templateId: string) => {
-      const { data, error } = await invokePromise(AutomationOperation.CreateAutomationFromTemplate, {
+      // CreateAutomation scaffolds, parents owned objects, and places the automation under the "Automations"
+      // section in one step (shared by every creation path).
+      const { data, error } = await invokePromise(AutomationOperation.CreateAutomation, {
         db: space.db,
         templateId,
         subject: object,
@@ -89,20 +89,8 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
         return;
       }
 
-      const created = data.object;
-      const { error: addError } = await invokePromise(SpaceOperation.AddObject, {
-        object: created,
-        target: space.db,
-        // Automations are not first-class items in the space tree; land under the "Automations" section.
-        hidden: true,
-        targetNodeId: getAutomationsPath(space.db.spaceId),
-      });
-      if (addError) {
-        return;
-      }
-
-      setCreatedIds((prev) => new Set(prev).add(created.id));
-      setOpen((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
+      setCreatedIds((prev) => new Set(prev).add(data.object.id));
+      setOpen((prev) => (prev.includes(data.object.id) ? prev : [...prev, data.object.id]));
     },
     [invokePromise, space.db, object],
   );

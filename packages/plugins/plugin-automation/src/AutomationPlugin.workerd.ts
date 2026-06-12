@@ -15,8 +15,8 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({
     schema: [Automation.Automation, Operation.PersistentOperation, Trigger.Trigger, Trace.Message],
   }),
-  // CreateAutomationFromTemplate (in OperationHandler) resolves AutomationCapabilities.Template, so the
-  // template provider must be present wherever the handler is exported.
+  // CreateAutomation (in OperationHandler) resolves AutomationCapabilities.Template, so the template
+  // provider must be present wherever the handler is exported.
   Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   Plugin.make,
 );
