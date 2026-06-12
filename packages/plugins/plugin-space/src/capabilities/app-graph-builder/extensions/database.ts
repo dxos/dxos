@@ -217,8 +217,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         const targetTag = getTypeTag(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
-        const deletable =
-          Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTag).length === 0;
+        const deletable = Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTag).length === 0;
 
         return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities }));
       },

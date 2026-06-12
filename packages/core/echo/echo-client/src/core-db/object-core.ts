@@ -626,4 +626,3 @@ const upgradeTagRef = (value: unknown): unknown => {
   const uri = EID.tryParse(value) ?? value;
   return EncodedReference.fromURI(URI.make(uri));
 };
-
