@@ -251,6 +251,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   query<Q extends Query.Any>(query: Q): QueryResult.QueryResult<Query.Type<Q>>;
   query<F extends Filter.Any>(filter: F): QueryResult.QueryResult<Filter.Type<F>>;
+  query(queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<Entity.Unknown>;
   query(queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
     const q = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = q.from(Scope.space({ id: this._spaceId }), Scope.feed(this._echoUri));

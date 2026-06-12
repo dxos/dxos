@@ -33,7 +33,6 @@ import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';

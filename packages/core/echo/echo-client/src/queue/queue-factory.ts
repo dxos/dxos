@@ -12,8 +12,8 @@ import { QueueImpl } from './queue';
 import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(echoUri: EID.EID, options?: { subspaceTag?: string }): Queue<T>;
-  create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoUri: EID.EID, options?: { subspaceTag?: string }): QueueImpl<T>;
+  create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): QueueImpl<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
@@ -36,7 +36,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(echoUri: EID.EID, { subspaceTag }: { subspaceTag?: string } = {}): Queue<T> {
+  get<T extends Entity.Unknown>(echoUri: EID.EID, { subspaceTag }: { subspaceTag?: string } = {}): QueueImpl<T> {
     assertArgument(EID.isEID(echoUri), 'echoUri', 'must be an EID');
     return this._getOrCreate<T>(echoUri, subspaceTag);
   }
@@ -68,16 +68,16 @@ export class QueueFactory extends Resource implements QueueAPI {
     return this._queues.values();
   }
 
-  create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
+  create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): QueueImpl<T> {
     const echoUri = EID.make({ spaceId: this._spaceId, entityId: EntityId.random() });
     return this._getOrCreate<T>(echoUri, subspaceTag);
   }
 
-  private _getOrCreate<T extends Entity.Unknown>(echoUri: EID.EID, subspaceTag?: string): Queue<T> {
+  private _getOrCreate<T extends Entity.Unknown>(echoUri: EID.EID, subspaceTag?: string): QueueImpl<T> {
     assertState(this._service, 'Service not set');
     const existing = this._queues.get(echoUri);
     if (existing) {
-      return existing as Queue<T>;
+      return existing as QueueImpl<T>;
     }
     const newQueue = new QueueImpl<T>(
       this._service,

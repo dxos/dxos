@@ -1451,10 +1451,7 @@ const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (
-  core: ObjectCore,
-  schema: Schema.Schema.AnyNoContext | undefined,
-) => {
+const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema.AnyNoContext | undefined) => {
   if (schema != null) {
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema must be defined via TypedObject.');

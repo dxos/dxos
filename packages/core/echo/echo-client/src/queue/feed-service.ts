@@ -7,7 +7,6 @@ import * as Layer from 'effect/Layer';
 
 import { type Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
 
-import type { QueueImpl } from './queue';
 import type { QueueAPI } from './queue-factory';
 
 /**
@@ -21,7 +20,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to append to feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(queueUri, { subspaceTag: feed.namespace }) as QueueImpl;
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     queue.setParentEntity(feed as Obj.Unknown);
     await queue.append(items);
   },
@@ -42,9 +41,9 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to query feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(queueUri, { subspaceTag: feed.namespace }) as QueueImpl;
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     queue.setParentEntity(feed as Obj.Unknown);
-    return queue.query(queryOrFilter as any);
+    return queue.query(queryOrFilter);
   },
 
   sync: async (feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> => {
@@ -63,7 +62,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to get feed sync state: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(queueUri, { subspaceTag: feed.namespace }) as QueueImpl;
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     return queue.getSyncState();
   },
 });

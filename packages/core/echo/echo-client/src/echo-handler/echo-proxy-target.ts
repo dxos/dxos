@@ -66,8 +66,7 @@ export type ProxyTarget = {
  * Returns a string label for an ObjectCore used in inspection output.
  * @internal
  */
-export const coreInspectLabel = (core: ObjectCore): string =>
-  `ObjectCore(${core.id}${core.database ? ' bound' : ''})`;
+export const coreInspectLabel = (core: ObjectCore): string => `ObjectCore(${core.id}${core.database ? ' bound' : ''})`;
 
 // ---------------------------------------------------------------------------
 // EchoDatabase accessor — the database field on ObjectCore is `unknown` to
