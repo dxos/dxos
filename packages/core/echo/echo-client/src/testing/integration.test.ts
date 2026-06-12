@@ -161,8 +161,9 @@ describe('Integration tests', () => {
 
     // Set up a listener for update events on db2 BEFORE client 1 creates the object.
     const updateReceived = new Trigger();
-    const unsubscribe = db2.entityManager._updateEvent.on(({ itemsUpdated }) => {
-      if (itemsUpdated.length > 0) {
+    const updateQuery = db2.query(Filter.type(TestSchema.Person));
+    const unsubscribe = updateQuery.subscribe(() => {
+      if (updateQuery.results.length > 0) {
         updateReceived.wake();
       }
     });
