@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
@@ -34,7 +34,7 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
     // (e.g. a system feed) has no meaningful parent to label by.
     .filter((result) => !parentLabel || Obj.getParent(result as Obj.Unknown) != null)
     .map((result) => {
-      const id = Entity.getURI(result);
+      const id = Entity.getURI(result, { prefer: 'named' });
       const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
       const labelEntity = parent ?? result;
       const typename = Entity.getTypename(labelEntity);
@@ -48,12 +48,13 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
 const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
   useQuery(
     db,
-    typename
-      ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
-        typename === ANY_OBJECT_TYPENAME
-        ? Filter.everything()
-        : Filter.typename(typename)
-      : Filter.nothing(),
+    !typename
+      ? Query.select(Filter.nothing())
+      : typename === ANY_OBJECT_TYPENAME
+        ? // Untyped refs show space objects only; the registry is too broad for "any".
+          Query.select(Filter.everything())
+        : // Include registry scope so keyed entities (blueprints, operations) appear as options.
+          Query.select(Filter.typename(typename)).from(Scope.space(), Scope.registry()),
   );
 
 export type RefFieldProps = FormFieldComponentProps &
@@ -127,29 +128,13 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
-    // Match form-value Refs against options by the bare entity id, not by full
-    // URI string. A just-created object's Ref (`Ref.make`) carries the LOCAL
-    // EID `echo:/<id>`, while options derived from `Entity.getURI` carry the
-    // qualified EID `echo://<spaceId>/<id>`; encoded snapshots use the DXN
-    // form `dxn:echo:<space|@>:<id>`. The entity id (a ULID) contains neither
-    // `:` nor `/`, so it is always the final delimiter-separated segment —
-    // splitting on both reconciles all three forms. Comparing full strings (or
-    // splitting on `:` alone, which leaves `/`-delimited EIDs intact) makes the
-    // just-created Ref's lookup fail and the slot render empty even though the
-    // underlying form value IS set.
-    const dxnToEntityId = (dxn: string): string => dxn.split(/[:/]/).filter(Boolean).pop() ?? dxn;
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
-        const dxnString = isRef ? value.uri : value['/'];
-        const objectId = dxnToEntityId(dxnString);
-        const matchingOption = options.find((option) => dxnToEntityId(option.id) === objectId);
-        if (matchingOption) {
-          return matchingOption;
-        }
+        const uri = isRef ? value.uri : value['/'];
+        return options.find((option) => option.id === uri);
       }
-
       return undefined;
     };
 

@@ -4,6 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
+import { meta as inboxMeta } from '@dxos/plugin-inbox';
 import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
@@ -35,15 +36,17 @@ export const meta = Plugin.makeMeta({
     into structured ContactExtract output, making contact extraction
     regression-testable independently of the LLM loop.
 
-    v1 is a library-layer plugin with no UI surfaces. All customisation is done
-    through the blueprint editor: the section template and research instructions
-    are editable prose, and additional research sources (such as a planned
-    LinkedIn integration via the browser extension) register themselves via the
-    ResearchSource contract without modifying the core blueprint.
+    v1 includes a Mailbox companion panel for one-click CRM routine setup and
+    enable/disable toggling. All further customisation is done through the
+    blueprint editor: the section template and research instructions are editable
+    prose, and additional research sources (such as a planned LinkedIn integration
+    via the browser extension) register themselves via the ResearchSource contract
+    without modifying the core blueprint.
   `,
   icon: 'ph--address-book--regular',
-  iconHue: 'emerald',
+  iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',
   spec: 'PLUGIN.mdl',
+  dependsOn: [inboxMeta.id],
   tags: ['labs'],
 });

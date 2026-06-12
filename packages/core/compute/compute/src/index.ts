@@ -3,10 +3,10 @@
 //
 
 export * from './errors';
-export { byokHeaderLayer } from './byok';
 
 export * as Blueprint from './Blueprint';
 export * as Credential from './Credential';
+export * as Header from './Header';
 export * as McpServer from './McpServer';
 export * as LayerSpec from './LayerSpec';
 export * as Operation from './Operation';

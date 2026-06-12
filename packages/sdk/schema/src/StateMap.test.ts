@@ -8,8 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Obj, Type } from '@dxos/echo';
-import { getObjectCore } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
 

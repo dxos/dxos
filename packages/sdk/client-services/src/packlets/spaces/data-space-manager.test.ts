@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { asyncTimeout, latch } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials } from '@dxos/credentials';
-import { AuthStatus } from '@dxos/echo-pipeline';
+import { AuthStatus } from '@dxos/echo-host';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

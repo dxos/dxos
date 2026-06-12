@@ -12,7 +12,7 @@ type SubjectId = string;
 export type ViewState = { showResolvedThreads: boolean };
 export type ViewStore = Record<SubjectId, ViewState>;
 
-export type ThreadState = {
+export type CommentState = {
   /** Object toolbar state. */
   toolbar: Record<string, boolean>;
   /** In-memory draft threads. */

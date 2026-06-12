@@ -34,7 +34,7 @@ export const remove = Command.make(
       } else {
         throw new Error('Must specify typename or id');
       }
-      const objects = yield* Database.runQuery(query);
+      const objects = yield* Database.query(query).run;
       for (const object of objects) {
         yield* Database.remove(object);
       }

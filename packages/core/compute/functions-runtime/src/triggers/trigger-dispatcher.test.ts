@@ -24,7 +24,7 @@ import {
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';

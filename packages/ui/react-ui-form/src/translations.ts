@@ -10,6 +10,9 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'ref-editor.placeholder': "Type '@' to add a reference, or enter a value",
+        'ref-editor-auto.placeholder': 'Search by name, or enter a value',
+
         'fields.label': 'Fields',
         'hidden-fields.label': 'Hidden Fields',
         'empty-readonly-ref-field.label': '(none)',

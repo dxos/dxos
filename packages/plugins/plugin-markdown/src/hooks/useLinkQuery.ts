@@ -6,7 +6,8 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';

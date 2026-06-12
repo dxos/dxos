@@ -355,7 +355,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-db/package.json",
+          "path": "packages/core/echo/echo-client/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -365,7 +365,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-pipeline/package.json",
+          "path": "packages/core/echo/echo-host/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -555,6 +555,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-bookmarks/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-calls/package.json",
           "jsonpath": "$.version"
         },
@@ -626,11 +631,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-extension/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -911,6 +911,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-trip/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-video/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation } from '@dxos/schema';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';

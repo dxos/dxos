@@ -13,7 +13,7 @@ import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Card, Icon, Message as MessageHint, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
-import { getParentId, useAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -21,8 +21,8 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { CommentThread } from '#components';
 import { meta } from '#meta';
-import { ThreadOperation } from '#types';
-import { ThreadCapabilities, type ViewState } from '#types';
+import { CommentOperation } from '#types';
+import { CommentCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
@@ -79,11 +79,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
-  const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
-  const stateAtom = useCapability(ThreadCapabilities.State);
-  const viewStoreAtom = useCapability(ThreadCapabilities.ViewState);
+  const stateAtom = useCapability(CommentCapabilities.State);
+  const viewStoreAtom = useCapability(CommentCapabilities.ViewState);
   const state = useAtomValue(stateAtom);
   const viewStore = useAtomValue(viewStoreAtom);
   const drafts = state.drafts[subjectId];
@@ -130,7 +129,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [registry, viewStoreAtom, subjectId],
   );
 
-  const { hasAttention, isAncestor, isRelated } = useAttention(parentId);
+  const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
   const isAttended = hasAttention || isAncestor || isRelated;
   const currentId = isAttended ? state.current : undefined;
 
@@ -143,15 +142,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
         // Scroll plank into view (deck handler).
-        void invokePromise(LayoutOperation.ScrollIntoView, { subject: parentId });
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
 
         // Scroll within content to anchor (comment config per typename).
-        if (anchor.anchor && parentId) {
+        if (anchor.anchor && attendableId) {
           const typename = Obj.getTypename(subject);
           const commentConfig = commentConfigs.find(({ id }) => id === typename);
           if (commentConfig?.scrollToAnchor) {
             void invokePromise(commentConfig.scrollToAnchor, {
-              subject: parentId,
+              subject: attendableId,
               cursor: anchor.anchor,
               ref: threadId,
             });
@@ -159,12 +158,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         }
       }
     },
-    [state.current, invokePromise, registry, stateAtom, parentId, subject, commentConfigs],
+    [state.current, invokePromise, registry, stateAtom, attendableId, subject, commentConfigs],
   );
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
-      await invokePromise(ThreadOperation.AddMessage, {
+      await invokePromise(CommentOperation.AddMessage, {
         anchor,
         subject,
         sender: { identityDid: identity?.did },
@@ -179,20 +178,20 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(ThreadOperation.ToggleResolved, {
+      invokePromise(CommentOperation.ToggleResolved, {
         thread: Relation.getSource(anchor) as Thread.Thread,
       }),
     [invokePromise],
   );
 
   const handleThreadDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) => invokePromise(ThreadOperation.Delete, { anchor, subject }),
+    (anchor: AnchoredTo.AnchoredTo) => invokePromise(CommentOperation.Delete, { anchor, subject }),
     [invokePromise, subject],
   );
 
   const handleMessageDelete = useCallback(
     (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
-      invokePromise(ThreadOperation.DeleteMessage, {
+      invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
         messageId,
@@ -215,7 +214,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(ThreadOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.ToggleResolved, { thread });
     },
     [invokePromise, subject],
   );

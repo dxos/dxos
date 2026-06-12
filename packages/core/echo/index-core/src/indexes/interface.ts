@@ -43,6 +43,13 @@ export interface IndexerObject {
   data: Obj.JSON;
 
   /**
+   * Unix ms timestamp when this object was first created.
+   * Sourced from system.createdAt in the automerge document; null for legacy objects
+   * created before this field was introduced.
+   */
+  createdAt: number | null;
+
+  /**
    * Timestamp of the last update of the object.
    */
   updatedAt: number;

@@ -83,7 +83,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
-        // Needed in the fiber's context — `byokHeaderLayer`'s per-request callback reads it.
+        // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
         Credential.CredentialsService,
       ],
     },
@@ -200,7 +200,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   system: options.systemPrompt,
                   mcpServers: options.getMcpServers?.(),
                 })
-                .pipe(Effect.ensuring(Trace.write(AgentRequestEnd, {})));
+                .pipe(
+                  Effect.onExit((exit) =>
+                    Trace.write(AgentRequestEnd, {
+                      status: Exit.isSuccess(exit) ? 'success' : Exit.isInterrupted(exit) ? 'interrupted' : 'error',
+                      error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                    }),
+                  ),
+                );
               log('end request');
               yield* AgentEventsKey.set(inputQueue);
 

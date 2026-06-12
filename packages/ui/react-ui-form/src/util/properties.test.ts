@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
 import { getFormProperties, getRootFormProperties } from './properties';

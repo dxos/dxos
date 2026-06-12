@@ -384,7 +384,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
     }, [dxGrid, model, presentation]);
 
     if (!model || !modals) {
-      return <span role='none' className='dx-attention-surface' />;
+      return <span className='dx-attention-surface' />;
     }
 
     return (

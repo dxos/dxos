@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Filter, Obj } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { Booking, Segment, Trip } from '../types';

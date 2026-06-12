@@ -58,6 +58,9 @@ export const OAUTH_REDIRECT_PATH = '/redirect/oauth' as const;
 /** Node id (local segment) for the per-space "Integrations" section. */
 export const INTEGRATIONS_SECTION_ID = 'integrations';
 
+/** Graph node type for the per-space "Integrations" section under space settings. */
+export const INTEGRATIONS_SECTION_TYPE = `org.dxos.plugin.integration.space-settings`;
+
 /**
  * Deck navigation subject for a specific integration inside a space — used
  * by `navigateToNewIntegration` to open the freshly created integration

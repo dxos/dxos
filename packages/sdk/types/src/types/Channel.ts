@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
 /** Backend kind for the default local-feed-backed channel. */
 export const FeedBackendKind = 'org.dxos.channel.backend.feed';

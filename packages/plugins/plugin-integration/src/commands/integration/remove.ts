@@ -37,7 +37,7 @@ export const remove = Command.make(
         onNone: () =>
           Effect.gen(function* () {
             const filter = Filter.type(AccessToken.AccessToken);
-            const tokens = yield* Database.runQuery(filter);
+            const tokens = yield* Database.query(filter).run;
 
             if (tokens.length === 0) {
               return yield* Effect.fail(new Error('No tokens found to remove'));

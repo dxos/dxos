@@ -44,6 +44,8 @@ const StorybookViewport = (_: StorybookViewportProps) => {
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Overlay>
         <AlertDialog.Content classNames='p-0'>
+          <AlertDialog.Title srOnly>Viewport</AlertDialog.Title>
+          <AlertDialog.Description srOnly>Storybook viewport navigation demo.</AlertDialog.Description>
           <Viewport.Root defaultActiveView='one'>
             <Views />
           </Viewport.Root>

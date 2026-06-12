@@ -7,7 +7,7 @@ import type * as Context from 'effect/Context';
 import type { Space } from '@dxos/client/echo';
 import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { makeFeedService, type QueueFactory } from '@dxos/echo-db';
+import { makeFeedService, type QueueFactory } from '@dxos/echo-client';
 import { ConfiguredCredentialsService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 

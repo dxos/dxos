@@ -4,7 +4,7 @@
 
 import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { type Space } from '@dxos/echo-pipeline';
+import { type Space } from '@dxos/echo-host';
 import { type KeyringApi } from '@dxos/keyring';
 import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';

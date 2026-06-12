@@ -9,7 +9,7 @@ import { AiContext } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 

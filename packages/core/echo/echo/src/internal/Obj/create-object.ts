@@ -18,7 +18,8 @@ import {
   setSchema,
   setType,
 } from '../common/types';
-import { MetaId, type EntityMeta } from '../common/types/meta';
+import { type EntityMeta } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 import {
   RelationSourceDXNId,
   RelationSourceId,

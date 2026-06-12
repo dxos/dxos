@@ -69,7 +69,7 @@ describe('buildSpanTree', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const tree = buildSpanTree(messages);
@@ -87,9 +87,9 @@ describe('buildSpanTree', () => {
         { pid: 'agent-1' },
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
           yield* Trace.write(AgentRequestBegin, {});
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -107,7 +107,7 @@ describe('buildSpanTree', () => {
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {});
           yield* Trace.write(NoteEvent, {});
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -174,7 +174,7 @@ describe('buildSpanTree', () => {
           yield* Trace.write(NoteEvent, { text: 'note 1' });
           yield* Trace.write(NoteEvent, { text: 'note 2' });
           yield* Trace.write(NoteEvent, { text: 'note 3' });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -207,7 +207,7 @@ describe('buildSpanTree', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'parent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'parent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const tree = buildSpanTree(messages, {
@@ -236,7 +236,7 @@ describe('buildSpanTree', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'a', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const tree = buildSpanTree(messages);

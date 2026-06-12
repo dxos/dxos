@@ -4,6 +4,112 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-11 — TS2883 codemod (fake imports → annotations), RefEditor
+
+### TS2883 (d.ts can't name @dxos/compute types): annotate the export, no fake imports
+
+- PREFERRED fix (supersedes the fake-import trick below): drop `Capability.makeModule(...)` and annotate the export — `const activate: () => Effect.Effect<Capability.Capability<typeof AppCapabilities.X>, never, Capability.Service> = Effect.fnUntraced(...); export default activate;` with the comment `// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).` Annotations are copied verbatim into the d.ts; inferred types are expanded (which is what drags in unnameable compute types). Explicit type args on `makeModule<...>()` do NOT help.
+- Barrels: annotate the lazy export `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]>` (array when the module contributes several). `makeModule` is an inference-only identity helper — safe to drop when annotating.
+- Name the module activation fn `activate` (it is consumed as `Plugin.addModule({ activate })`), or `blueprintDefinition` for blueprint modules.
+- Fake imports remain ONLY where annotation is impractical: huge inferred schema types (`types/*.ts` with echo `View`/`QueryAST`), deep Effect pipelines (plugin-inbox Google `Credential` files, functions-runtime), and ambient-augmentation imports (plugin-support Tooltip react-floater/type-fest — different mechanism).
+- For hard cases, transcribe the exact type from the previously emitted `dist/types/**/*.d.ts` instead of guessing.
+
+### RefEditor (react-ui-form) is the generic reference token input
+
+- `RefEditor` (`react-ui-form/components/RefEditor/`) generalizes the former ActorList: pluggable `type` (ECHO type for `@<id>` refs), `match` RegExp for raw tokens (e.g. `EMAIL_REGEX`), `getLabel`/`getValues`, `mode: 'ref' | 'email'` (email mode = RFC 5322 mailbox list, commas hidden inside atomic tags). EventEditor/stories configure it for `Person`.
+- Storybook: never pass a proxied ECHO schema (e.g. `Person.Person`) via story `args` — Storybook's arg traversal mutates it and crashes ("Cannot modify object property 'id' outside of Obj.update()"). Supply it in `render`.
+
+## 2026-06-11 — plugin-inbox (calendar fixes), react-ui-components (ActorList)
+
+### UI-invoked space ops MUST pass `spaceId` in InvokeOptions
+
+- Any op whose `services` include space-affinity tags (`Database.Service`, `Feed.FeedService`, `Credential.CredentialsService`) fails with `ServiceNotAvailable` when invoked from a container without `{ spaceId: Obj.getDatabase(subject)?.spaceId }` — the spawn environment has no `space`, so the space slice never initializes. There is NO inference from ECHO objects in the input. Reference: `plugin-video` `SummarySection.tsx`.
+
+### Editor menu (`Editor.Root`) props must be referentially stable
+
+- `placeholder` (and `getMenu`) feed `useEditorMenu`'s extension `useMemo`; an inline object literal recreates the extension each render → `useTextEditor` destroys/recreates the editor per keystroke. Symptom: typed text vanishes, only a stray char survives. Memoize the `placeholder` object.
+- `trigger='@'` menus own their own filtering (`useEditorMenu` skips label filtering for '@'): filter inside `getMenu` using `text.slice(1)` (text includes the trigger char). Empty groups auto-hide the popover.
+
+### ActorList (react-ui-components) is the person/email token input
+
+- `ActorList` (`components/ActorList/`) mirrors `QueryEditor`: `Editor.Root` + trigger '@' typeahead against `Person` name/emails; content is whitespace-separated tokens `@<personId>` or emails; `actor-extension.ts` renders resolved refs/emails as Domino tag widgets (raw while cursor inside token); `actorListRedecorate` StateEffect re-resolves decorations when people load. EventEditor commits completed tokens into `event.attendees` (Actor with `contact: Ref.make(person)`) and clears the input via the controller.
+
+### Reactivity in shared row components
+
+- Shared presentational row fragments that read an ECHO object (e.g. `EventDetails`) must subscribe via `useObject(event)` and read from the snapshot — Mosaic tiles don't re-render on proxy mutation otherwise (stale title until click).
+
+### Zombie storybook ports from deleted worktrees
+
+- A storybook from a since-deleted worktree can still hold a port (responds 200 with `{"entries":{}}` and 500 ENOENT on iframe). `lsof -nP -iTCP:<port>` to identify; pick another port rather than killing other sessions' processes.
+
+## 2026-06-10 — plugin-comments (Thread→Comment rename), plugin-bookmarks/plugin-video (comment-config)
+
+### plugin-comments namespaces are Comment\*, not Thread\*
+
+- plugin-comments exports `CommentCapabilities`/`CommentOperation` (`src/types/CommentCapabilities.ts`, `CommentOperation.ts`), `CommentBlueprint`, and the `CommentState` type — never reintroduce `ThreadCapabilities`/`ThreadOperation` there. plugin-thread keeps its OWN channel-scoped `ThreadCapabilities` (`ChannelBackend`) / `ThreadOperation` (`CreateChannel`) — distinct namespaces, do not merge.
+- The `Thread.Thread` ECHO schema (`@dxos/types`) is unchanged — comment threads are still Thread objects; only plugin-comments' namespace/wording changed.
+
+### CommentConfig contributions hit TS2883 — annotate the barrel export
+
+- (Superseded by the 2026-06-11 annotation rule above — module files now use the explicit `const activate` annotation instead of fake imports.) `Capability.lazy('CommentConfig', () => import('./comment-config'))` fails `tsc` (TS2883, `Operation.Definition.Any` in the config type) in plugins that don't already deep-import compute types. The barrel still needs `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.CommentConfig>>` (see plugin-bookmarks/plugin-video `capabilities/index.ts`).
+- `comments: 'unanchored'` works for any typename with zero extra plumbing; `'anchored'` needs selection publishing keyed by `Obj.getURI(subject)` + the comment-sync editor extension, which is `Markdown.Document`-only today (see SKILL.md worked example).
+
+## 2026-06-10 — plugin-crx (CrxSettings, page actions)
+
+### Prefer `IconButton` over `Button` + `Icon`
+
+- For an icon-plus-label button use `IconButton` (`@dxos/react-ui`) with `icon`/`label` props, not `<Button><Icon …/>{label}</Button>` with manual `mie-2` spacing (user corrected `CrxSettings.tsx`; same applies to the composer-crx popup `PageActions.tsx`).
+
+### TS2883 cross-package `Capability.lazy` fix that preserves code-splitting
+
+- When a `Capability.lazy(...)` module contributes a type declared in ANOTHER package (TS2883 "inferred type cannot be named / not portable"), annotate the barrel export as `Capability.LazyCapability<void, Capability.Capability<typeof OtherPlugin.TheCapability>>` — the `LazyCapability<Props, Value>` annotation on the barrel export is what fixes portability while keeping the module boundary intact (no eager import). This is the precedent in plugin-osrm, plugin-trip, and plugin-bookmarks (`PageActionProvider`). Prefer this over the eager re-export fallback already documented below.
+
+### Page-action icons must be literals in `capabilities/page-action*.ts`
+
+- The composer-crx popup renders descriptor icons from its own sprite; the extension build eager-scans `packages/plugins/*/src/capabilities/page-action*.ts` (IconsPlugin `scanPaths` in `composer-crx/vite.config.ts`) because plugin sources are outside its module graph. Write the `ph--…` icon name as a string literal in that file (no indirection through meta/constants from other files) or the icon renders blank in the popup.
+
+### No `createdAt`/`updatedAt` data fields on schemas — ECHO meta provides them
+
+- Do not add a `createdAt` (or `updatedAt`) field to an ECHO type's data schema; the object's built-in meta carries creation/update timestamps (user corrected `Bookmark.ts` — field removed from schema, `fromSnapshot`, PLUGIN.mdl). Only model a timestamp as data when it differs semantically from object creation (e.g. an external event time).
+
+### Stories that exercise an extension/relay round-trip install a fake relay
+
+- A component calling `pingExtension` (or any page↔extension CustomEvent contract) always fails in storybook ("Extension not detected") — add a story `Decorator` that sets the readiness dataset marker and acks the request events (see `CrxSettings.stories.tsx` `withFakeExtension`), plus an explicit `NotDetected` story. Export the event-name constants from the util module so test + story don't re-declare them.
+
+## 2026-06-08 — plugin-video (new plugin: Video type, EDGE transcribe op, embed player)
+
+### `Format.URL` rejects query strings — don't use it for URL fields
+
+- `Format.URL` (`@dxos/echo/internal`) applies a regex (`Format/string.ts`) that rejects `?query=` — so `Obj.make` throws on any real video/watch URL (`...?v=...`). Symptom: a storybook "Fatal Error / ParseError … Predicate refinement failure" at object creation. Use `Schema.String.pipe(Schema.annotations({...}), FormatAnnotation.set(TypeFormat.URL), Schema.optional)` to keep the URL form-input hint without the broken pattern. (Both exported from `@dxos/echo/internal`.) Matches the existing `// TODO: Format.URL breaks validation` notes in `@dxos/types` Organization/Person.
+
+### New-plugin skeleton checklist (things `moon run :build`/`:test` need beyond src)
+
+- `tsconfig.json` (extends `../../../tsconfig.base.json`, `references` per dep) — without it `:build` fails "No tsconfig.json found". References are auto-extended into `composer-app/tsconfig.json` + `release-please-config.json` by the postinstall sync.
+- `src/vite-env.d.ts` declaring `*.mdl?raw` (copy from plugin-chess) — needed for `import pluginSpec from '../PLUGIN.mdl?raw'`.
+- `vitest.config.ts` (`createConfig({ node: true, storybook: true })`) + a `.storybook/` dir (`main.mts`, `preview.mts`, and symlinks `manager-head.html`/`preview-head.html` → `tools/storybook/.storybook/*`) — without these `:test` fails "No projects matched filter 'node'" then storybook `MainFileMissingError`.
+- Register in `composer-app/src/plugin-defs.tsx`: import from `@dxos/plugin-foo/plugin`, add `FooPlugin()` to the instance list and `FooPlugin.meta.id` to a `getDefaults` list (Labs for experimental); add `@dxos/plugin-foo: workspace:*` to composer-app `package.json`.
+
+### Operations import from `@dxos/compute`, not `@dxos/operation`
+
+- In plugins, `Operation`/`OperationHandlerSet` come from `@dxos/compute` (the operations SKILL says `@dxos/operation` — wrong for plugin code). Handler reads input directly via `Effect.fn(function* ({ video, lang }) {...})`; resolve refs with `Database.load(ref)`, create with `Database.add(obj)`, mutate with `Obj.update`. Op needs `services: [Database.Service]`; the invoker scopes the space from the input ref (pass `Ref.make(liveObj)`), same as `plugin-assistant/operations/update-chat-name.ts`.
+- A client-side EDGE call with no auth is just `Effect.tryPromise(() => fetch(url))` in the handler — no EdgeHttpClient needed for a public worker on a distinct host.
+
+### create→navigate crash `Open` / `Database.Service space=<missing>` is a STALE-BRANCH symptom, not a plugin bug
+
+- Symptom: creating ANY object (reproduced with Sketch too) throws `ServiceNotAvailable: @dxos/echo/Database/Service (affinity=process) space=<missing>` from `LayoutOperation.Open` (deck `operations/open.ts`), crashing the create dialog + app boot (deck url-handler reopens the active subject). Root cause: an older `Open` declared `services: [Capability.Service, Database.Service]`; the create dialog/url-handler invoke it without `spaceId`, so the spawned process can't materialise the space-affinity `Database.Service`. Fixed on main by #11725 (dropped `Database.Service` from `Open`). **If a new-plugin branch hits this, it's behind main — merge `origin/main`.** Confirm with `git show origin/main:packages/sdk/app-toolkit/src/operations.ts | sed -n '/const Open/,/services/p'`.
+
+### Reuse `Text.Text` from `@dxos/schema` for text-body refs
+
+- A "transcript/notes text object" ref is `Ref.Ref(Text.Text)` (`@dxos/schema`), created with `Text.make({ name, content })`. Schema registration is deduped by URI across plugins (`plugin-client/capabilities/schema-defs.ts`), so registering `Text.Text` in your `addSchemaModule` alongside markdown is safe (idempotent).
+
+### `Schema.optional` must be LAST in a `.pipe()` after `FormatAnnotation.set`
+
+- Order is `Schema.String.pipe(Schema.annotations({...}), FormatAnnotation.set(TypeFormat.X), Schema.optional)`. Putting `Schema.optional(Schema.String)` first then piping `FormatAnnotation.set` fails build with TS2684 `'this' context of type 'optional<...>' is not assignable` — `FormatAnnotation.set` needs the bare (non-optional) schema. There is no `TypeFormat.Multiline`; use `TypeFormat.Text` for multiline plain text.
+
+### CRX render-proxy is re-declared per-consumer, not shared
+
+- To load a full cross-origin page (incl. anti-bot/consent-gated like a YouTube watch page) use the Composer extension render-proxy: dispatch `composer:proxy:render` window event, await `:render:ack`, probe availability via `document.documentElement.dataset.composerProxy === '1'`. Fall back to `proxyFetchLegacy(url)` from `@dxos/edge-client` (EDGE CORS proxy) when the extension is absent. Contract source of truth is `composer-crx/src/proxy/types.ts`; plugins MUST NOT depend on the extension app package, so each consumer re-declares the wire shapes locally (precedent: `plugin-commerce/src/util/renderViaCrx.ts`; copied into `plugin-video/src/util/fetch-page.ts`). YouTube's full description is in `ytInitialPlayerResponse.videoDetails.shortDescription` in the raw server HTML (no JS exec needed) — `og:description` is the truncated fallback. NOTE: YouTube `timedtext` caption URLs from the watch page are `pot`-token gated (return empty); fetch caption tracks via the InnerTube `player` endpoint (ANDROID client) through the CORS proxy with an `x-cors-proxy-origin: https://www.youtube.com` override (the browser's localhost `Origin` triggers a 403) — see `plugin-video/src/util/fetch-page.ts` `fetchYouTubePlayer`.
+
 ## 2026-06-05 — plugin-comments (factored from plugin-thread), react-ui-thread
 
 ### No plugin → plugin deps when factoring a feature out

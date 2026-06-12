@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Obj } from '@dxos/echo';
+import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
@@ -17,7 +18,8 @@ import { CrmOperation } from '../types';
  * `DX_CRM_IMAGE_SERVICE_URL` environment variable. A per-space
  * `CrmSettings` object is planned (see PLUGIN.mdl feature F-8).
  */
-const DEFAULT_IMAGE_SERVICE_URL = 'https://images.dxos.org';
+// TODO(dmaretskyi): images.dxos.org does not resolve.
+const DEFAULT_IMAGE_SERVICE_URL = 'https://image-service-main.dxos.workers.dev';
 
 // SVG is intentionally excluded: inline <script>/event handlers make it a
 // stored-XSS risk for any downstream surface that renders the image via
@@ -166,7 +168,7 @@ const isAbsoluteHttpUrl = (raw: string): boolean => {
   }
 };
 
-const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOperation.AttachImage.pipe(
+export default CrmOperation.AttachImage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, url, imageServiceUrl }) {
       const serviceUrl = getImageServiceUrl(imageServiceUrl);
@@ -177,7 +179,7 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
       });
 
       const downloaded = yield* Effect.tryPromise({
-        try: () => fetch(validatedSource.toString(), { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
+        try: () => proxyFetchLegacy(validatedSource, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }),
         catch: (cause) => new Error(`Failed to download image: ${String(cause)}`),
       });
       if (!downloaded.ok) {
@@ -268,7 +270,21 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
         );
       }
 
-      const { url: uploadedUrl } = (yield* Effect.promise(() => uploadRes.json())) as { url?: string };
+      // Derive the canonical hosted URL from the upload response.
+      // JSON-speaking services return { url: "https://..." }; services that return raw image
+      // bytes (like the current default worker) expose the hosted URL as the final response URL
+      // after any redirects (response.url). DX-1002 tracks aligning on a single contract.
+      const responseContentType = uploadRes.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+      let uploadedUrl: string | undefined;
+      if (responseContentType === 'application/json') {
+        const json = (yield* Effect.tryPromise({
+          try: () => uploadRes.json(),
+          catch: (cause) => new Error(`Failed to parse image service response: ${String(cause)}`),
+        })) as { url?: string };
+        uploadedUrl = json.url;
+      } else {
+        uploadedUrl = uploadRes.url;
+      }
       if (!uploadedUrl || uploadedUrl.length === 0 || !isAbsoluteHttpUrl(uploadedUrl)) {
         return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
       }
@@ -288,6 +304,5 @@ const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOpera
       return { imageUrl: uploadedUrl };
     }),
   ),
+  Operation.opaqueHandler,
 );
-
-export default handler;

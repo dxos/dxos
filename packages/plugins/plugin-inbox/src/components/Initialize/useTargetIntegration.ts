@@ -15,13 +15,22 @@ import { useQuery } from '@dxos/react-client/echo';
  * Returns the matching integration (or `undefined` if none exists).
  */
 export const useTargetIntegration = <T extends Obj.Any>(
-  target: T,
+  target: T | undefined,
 ): { integration: Integration.Integration | undefined } => {
-  const db = Obj.getDatabase(target);
+  const db = target ? Obj.getDatabase(target) : undefined;
   const integrations = useQuery(db, Filter.type(Integration.Integration));
-  const integration = integrations.find((candidate) =>
-    candidate.targets.some((entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === target.id),
-  );
+  const integration = target
+    ? integrations.find((candidate) =>
+        candidate.targets.some((entry) => {
+          if (!entry.object) {
+            return false;
+          }
+          // Guard against malformed stored URIs (tryParse returns undefined).
+          const eid = EID.tryParse(entry.object.uri);
+          return eid ? EID.getEntityId(eid) === target.id : false;
+        }),
+      )
+    : undefined;
   return { integration };
 };
 

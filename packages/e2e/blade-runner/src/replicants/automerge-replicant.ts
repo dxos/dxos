@@ -8,7 +8,7 @@ import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-index
 
 import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { LevelDBStorageAdapter } from '@dxos/echo-pipeline';
+import { LevelDBStorageAdapter } from '@dxos/echo-host';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { trace } from '@dxos/tracing';

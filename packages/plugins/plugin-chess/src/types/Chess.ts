@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';

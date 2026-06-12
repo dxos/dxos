@@ -42,6 +42,8 @@ test.describe('Basic tests', () => {
   test('create document', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
+    await expect(host.getObjectLinks()).toHaveCount(1);
+    await expect(host.currentWorkspace.getByTestId('org.dxos.type.document.section')).toBeAttached();
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);

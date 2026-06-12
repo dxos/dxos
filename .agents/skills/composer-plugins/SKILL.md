@@ -203,13 +203,18 @@ See: `plugin-chess/src/capabilities/`
 Some plugins expose capability keys for other plugins to implement — a decoupled provider/extension
 contract. See `packages/plugins/AUDIT.md` for the current registry.
 
-**Naming convention** — use one of three suffixes depending on the role:
+**Naming convention** — use one of four suffixes depending on the role:
 
-| Suffix         | Use when                                                             | Example                                                                                                        |
-| -------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `Provider`     | The contributor supplies data, a factory, or an array of extensions  | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
-| `Service`      | The contributor performs active async work (search, routing, …)      | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService`                                           |
-| `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events | `CallsCapabilities.EventHandler`                                                                               |
+| Suffix         | Use when                                                               | Example                                                                                                        |
+| -------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Provider`     | The contributor supplies data, a factory, or an array of extensions    | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
+| `Service`      | The contributor performs active async work (search, routing, …)        | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService`                                           |
+| `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events   | `CallsCapabilities.EventHandler`                                                                               |
+| `Config`       | The contributor supplies a declarative config object keyed by typename | `AppCapabilities.CommentConfig` (consumed by plugin-comments)                                                  |
+
+When the contract is app-wide rather than owned by one plugin (e.g. comment support), the capability
+key lives in `AppCapabilities` (`@dxos/app-toolkit`) instead of a plugin's `src/types/XCapabilities.ts`;
+plugin-comments re-exports `AppCapabilities.CommentConfig` as `CommentCapabilities.CommentConfig`.
 
 **Where to define** — add the `Capability.make<T>()` call in the defining plugin's
 `src/types/XCapabilities.ts`, namespace-exported from `src/types/index.ts`:
@@ -240,6 +245,27 @@ import { FooCapabilities } from '@dxos/plugin-foo';
 - Provider: `plugin-osrm/src/capabilities/routing-service.ts` → `TripCapabilities.RoutingService`
 - Enumeration Provider: `plugin-chess/src/capabilities/game-variant.ts` → `GameCapabilities.VariantProvider`
 - EventHandler: `plugin-meeting/src/capabilities/call-extension.ts` → `CallsCapabilities.EventHandler`
+- Config: `plugin-markdown/src/capabilities/comment-config.ts` → `AppCapabilities.CommentConfig`
+
+#### Worked example: comments (`AppCapabilities.CommentConfig`)
+
+plugin-comments owns the comments companion + threads UI but knows nothing about which types are
+commentable. A plugin opts a typename in by contributing a `CommentConfig` and wiring it with
+`AppPlugin.addCommentConfigModule({ activate: CommentConfig })`:
+
+- `comments: 'unanchored'` — comments attach to the object as a whole; no other integration needed
+  (see `plugin-sketch`, `plugin-table`, `plugin-bookmarks`, `plugin-video`).
+- `comments: 'anchored'` — comments anchor to a selection range. Requires the subject's editor to
+  publish selections into `AttentionCapabilities.Selection` keyed by `Obj.getURI(subject)`, plus
+  `getAnchorLabel` / `scrollToAnchor` in the config (see `plugin-markdown`, `plugin-sheet`). The
+  comment-sync CodeMirror extension (`plugin-comments/src/extensions/threads.ts`) is injected into
+  the markdown editor via `MarkdownCapabilities.ExtensionProvider` and currently only supports
+  `Markdown.Document` content — a custom editor (e.g. a `Ref<Text>` field rendered with
+  `useTextEditor`) cannot get anchored comments without equivalent plumbing.
+
+plugin-comments resolves configs by typename (`getAll(AppCapabilities.CommentConfig).find(({ id }) =>
+id === typename)`) in its app-graph builder, which offers the comments companion and the toolbar
+"Add comment" action for matching nodes.
 
 #### LayerSpec contributions (`src/capabilities/layer-specs.ts`)
 
@@ -329,6 +355,7 @@ The main plugin file wires everything together using `Plugin.define(meta).pipe()
 | `addSurfaceModule`             | React surface components       | `SetupReactSurface`       |
 | `addMetadataModule`            | Type metadata (icon, creation) | `SetupMetadata`           |
 | `addSchemaModule`              | ECHO type registration         | `SetupSchema`             |
+| `addCommentConfigModule`       | Comment config (per typename)  | `SetupSchema`             |
 | `addOperationHandlerModule`    | Operation handlers             | `SetupOperationHandler`   |
 | `addTranslationsModule`        | i18n resources                 | `SetupTranslations`       |
 | `addBlueprintDefinitionModule` | AI blueprints                  | `SetupArtifactDefinition` |

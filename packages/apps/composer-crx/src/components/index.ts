@@ -5,4 +5,5 @@
 export * from './Chat';
 export * from './Container';
 export * from './Options';
+export * from './PageActions';
 export * from './Thumbnail';

@@ -23,7 +23,7 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       if (!echoFeed) {
         continue;
       }
-      const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
+      const posts = yield* Database.query(Query.select(Filter.type(Subscription.Post)).from(echoFeed)).run;
       for (const post of posts) {
         if (seen.has(post.id)) {
           continue;

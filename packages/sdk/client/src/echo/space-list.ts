@@ -17,7 +17,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
-import { type EchoClient } from '@dxos/echo-db';
+import { type EchoClient } from '@dxos/echo-client';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

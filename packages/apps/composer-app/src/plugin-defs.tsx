@@ -14,6 +14,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
+import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -21,6 +22,7 @@ import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
+import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
@@ -28,7 +30,6 @@ import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
-import { ExtensionPlugin } from '@dxos/plugin-extension/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
@@ -81,6 +82,7 @@ import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
+import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
@@ -135,6 +137,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
+      BookmarksPlugin.meta.id,
       CallsPlugin.meta.id,
       CodePlugin.meta.id,
       DuffelPlugin.meta.id,
@@ -147,9 +150,11 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
       CommercePlugin.meta.id,
+      CrmPlugin.meta.id,
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
+      VideoPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
   ]
@@ -177,6 +182,7 @@ export const getPlugins = ({
     AttentionPlugin(),
     AutomationPlugin(),
     BoardPlugin(),
+    BookmarksPlugin(),
     CallsPlugin(),
     ChessPlugin(),
     CommentsPlugin(),
@@ -203,7 +209,6 @@ export const getPlugins = ({
     DoctorPlugin(),
     DuffelPlugin(),
     ExplorerPlugin(),
-    !isTauri && ExtensionPlugin(),
     FeedPlugin(),
     GamePlugin(),
     GeneratorPlugin(),
@@ -232,6 +237,7 @@ export const getPlugins = ({
     PreviewPlugin(),
     ProcessManagerPlugin(),
     CommercePlugin(),
+    CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),
@@ -272,6 +278,7 @@ export const getPlugins = ({
     TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
+    VideoPlugin(),
     VoxelPlugin(),
     FilePlugin(),
     WnfsPlugin(),

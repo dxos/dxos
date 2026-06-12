@@ -11,15 +11,10 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
 import { type Database, Entity, Filter, Format, Obj, Query, Ref, type Registry, Scope, Type, View } from '@dxos/echo';
-import {
-  type JsonSchemaType,
-  LabelAnnotation,
-  type Mutable,
-  ReferenceAnnotationId,
-  type ReferenceAnnotationValue,
-  TypeEnum,
-  toEffectSchema,
-} from '@dxos/echo/internal';
+import { LabelAnnotation, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
+import { TypeEnum } from '@dxos/echo/Format';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
+import { type Mutable } from '@dxos/echo/Obj';
 import { EffectEx, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

@@ -22,6 +22,13 @@ export const useViewportResize = (
         }
         timeout = setTimeout(() => {
           timeout = undefined;
+          // The debounced callback can outlive the DOM realm: in jsdom/happy-dom test runs the
+          // timer survives environment teardown (e.g. story roots that are never unmounted), and
+          // callbacks here read DOM globals such as `getComputedStyle`. Skip dispatch once the
+          // realm is gone.
+          if (typeof document === 'undefined' || typeof getComputedStyle === 'undefined') {
+            return;
+          }
           cb(event);
         }, delay);
       },

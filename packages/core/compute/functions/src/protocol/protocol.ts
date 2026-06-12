@@ -12,21 +12,21 @@ import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
   FunctionError,
+  Header,
   InvalidOperationInputError,
   InvalidOperationOutputError,
   Operation,
   Trace,
-  byokHeaderLayer,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import {
   createFeedServiceLayer,
   EchoClient,
-  type EchoDatabaseImpl,
+  type DatabaseImpl,
   makeRegistry,
   type QueueFactory,
-} from '@dxos/echo-db';
+} from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -121,7 +121,7 @@ export const wrapFunctionHandler = (
 
         // Flush in-memory ECHO writes before the function scope closes.
         // Writes performed by `db.add` / `db.remove` are buffered in the in-memory
-        // `EchoDatabaseImpl` and only pushed across the `DataService` binding when
+        // `DatabaseImpl` and only pushed across the `DataService` binding when
         // `db.flush({ disk })` is called. `FunctionContext._close` (invoked by the
         // `await using` above) calls `db.close()` but does NOT flush, so mutations
         // performed by handlers that declare `Database.Service` (e.g. `object-create`,
@@ -157,7 +157,7 @@ export const wrapFunctionHandler = (
 class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
-  db: EchoDatabaseImpl | undefined;
+  db: DatabaseImpl | undefined;
   queues: QueueFactory | undefined;
   readonly opts: FunctionWrappingOptions;
 
@@ -273,7 +273,7 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
 /** Proxies Anthropic requests through the EDGE-provided `FunctionsAiService`, BYOK-wrapped. */
 const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) => {
   // `apiUrl` is a sentinel — the request gets re-routed by the AI gateway in EDGE.
-  const httpClient = byokHeaderLayer('anthropic.com').pipe(
+  const httpClient = Header.byokLayer('anthropic.com').pipe(
     Layer.provide(FunctionsAiHttpClient.layer(functionsAiService)),
   );
   const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://internal/provider/anthropic' }).pipe(
@@ -340,7 +340,7 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   }),
 } as Operation.OperationService);
 
-const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
+const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseImpl): unknown => {
   if (value == null) {
     return value;
   }

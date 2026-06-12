@@ -7,7 +7,7 @@ import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Type, View } from '@dxos/echo';
-import { isInstanceOf } from '@dxos/echo/internal';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { ProjectionModel } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -36,10 +36,11 @@ const waitForViewEditor = async () => {
 
 describe('ViewEditor', () => {
   afterEach(async () => {
-    // Flush pending React scheduler work before teardown to prevent
-    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
-    await act(async () => {});
-    cleanup();
+    // Wrap cleanup in async act() so React fully drains the scheduler
+    // (including setImmediate callbacks) before happy-dom tears down window.
+    await act(async () => {
+      cleanup();
+    });
   });
 
   test('renders view editor', async () => {

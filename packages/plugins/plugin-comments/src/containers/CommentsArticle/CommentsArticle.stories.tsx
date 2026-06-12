@@ -20,7 +20,7 @@ import {
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
+import { createDocAccessor, toCursorRange } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -31,7 +31,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { linkedSegment, useAttentionAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
@@ -40,7 +40,7 @@ import { isNonNullable } from '@dxos/util';
 import { CommentsPlugin } from '../../CommentsPlugin';
 import { textOf } from '../../should-trigger-agent';
 import { translations } from '../../translations';
-import { AgentIdentity, ThreadCapabilities } from '../../types';
+import { AgentIdentity, CommentCapabilities } from '../../types';
 
 random.seed(1);
 
@@ -107,7 +107,7 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
  * last non-assistant message and appends an assistant message that quotes it.
  * Used by the WithMentionAgent / WithAutoAgent variants.
  */
-const StubAgentRunner: ThreadCapabilities.AgentRunner = {
+const StubAgentRunner: CommentCapabilities.AgentRunner = {
   run: ({ thread }) =>
     Effect.gen(function* () {
       const identity = yield* Capability.get(AgentIdentity);
@@ -197,7 +197,7 @@ const StoryStubAgentPlugin = Plugin.define(
   Plugin.addModule({
     id: 'story-stub-agent.runner',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(ThreadCapabilities.AgentRunner, StubAgentRunner)),
+    activate: () => Effect.succeed(Capability.contributes(CommentCapabilities.AgentRunner, StubAgentRunner)),
   }),
   Plugin.make,
 );
@@ -206,7 +206,7 @@ type StoryArgs = {
   /**
    * Sets the Markdown plugin's `commentAgentMode` setting so newly-created
    * comment threads on the seeded doc are stamped with the matching agent
-   * config by ThreadOperation.Create.
+   * config by CommentOperation.Create.
    */
   agentMode?: Markdown.Settings['commentAgentMode'];
   /** Seed three anchored comment threads over known phrases in the document. */
@@ -228,7 +228,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   }, [graph, attendableId]);
 
   // Push the variant's `agentMode` into the markdown plugin settings so that
-  // ThreadOperation.Create stamps new threads with the matching agent config.
+  // CommentOperation.Create stamps new threads with the matching agent config.
   const markdownSettings = useCapability(MarkdownCapabilities.Settings);
   const registry = useCapability(Capabilities.AtomRegistry);
   useEffect(() => {
@@ -239,14 +239,11 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   }, [markdownSettings, registry, agentMode]);
 
   const articleData = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
-  // Nest the companion's attendable id under the article's so that
-  // `getParentId` in CommentsArticle resolves to the editor's registration key
-  // (mirrors the deck companion layout), enabling editor ↔ comment selection sync.
   const companionData = useMemo(
     () => ({
       subject: 'comments',
       companionTo: doc,
-      attendableId: attendableId ? `${attendableId}/${linkedSegment('comments')}` : 'story',
+      attendableId: attendableId ?? 'story',
     }),
     [doc, attendableId],
   );
