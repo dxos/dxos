@@ -94,11 +94,9 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       return model;
     }, [atomRegistry, type, view]);
 
-    useImperativeHandle<ProjectionModel | null, ProjectionModel | null>(
-      forwardedRef,
-      () => projectionModel,
-      [projectionModel],
-    );
+    useImperativeHandle<ProjectionModel | null, ProjectionModel | null>(forwardedRef, () => projectionModel, [
+      projectionModel,
+    ]);
 
     const queueTarget = Match.value(view.query.ast).pipe(
       Match.when({ type: 'from' }, ({ from }) => {
@@ -229,7 +227,10 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   },
 );
 
-type FieldListProps = Omit<Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>, 'type'> & {
+type FieldListProps = Omit<
+  Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>,
+  'type'
+> & {
   type: Type.AnyEntity;
 };
 
