@@ -35,10 +35,14 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
     const queryResult = db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
     let subscribed = false;
     const find = (): T | undefined => {
-      if (!subscribed) return undefined;
+      if (!subscribed) {
+        return undefined;
+      }
       return queryResult.results.find((type) => {
         const uri = Type.getURI(type);
-        if (uri === typeUri) return true;
+        if (uri === typeUri) {
+          return true;
+        }
         // EID matching is space-agnostic: echo:/<id> matches echo://<space>/<id>.
         if (searchEid && EID.isEID(uri)) {
           const typeEid = EID.tryParse(uri);

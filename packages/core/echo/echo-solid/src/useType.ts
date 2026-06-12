@@ -55,7 +55,9 @@ export const useType = (
       setType(() =>
         queryResult.results.find((type) => {
           const uri = Type.getURI(type);
-          if (uri === resolvedTypeUri) return true;
+          if (uri === resolvedTypeUri) {
+            return true;
+          }
           // EID matching is space-agnostic: echo:/<id> matches echo://<space>/<id>.
           if (searchEid && EID.isEID(uri)) {
             const typeEid = EID.tryParse(uri);
