@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { getSpace } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
 
 import { AutomationArticle, AutomationCompanion, AutomationSettings } from '#containers';
 import { meta } from '#meta';
@@ -43,11 +43,11 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data }) => {
-          const space = getSpace(data.companionTo);
-          if (!space) {
+          const db = Obj.getDatabase(data.companionTo);
+          if (!db) {
             return null;
           }
-          return <AutomationCompanion space={space} object={data.companionTo} />;
+          return <AutomationCompanion db={db} object={data.companionTo} />;
         },
       }),
     ]),

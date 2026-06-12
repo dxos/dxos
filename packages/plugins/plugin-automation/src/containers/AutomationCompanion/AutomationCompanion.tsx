@@ -5,8 +5,8 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { useQuery, type Space } from '@dxos/react-client/echo';
+import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
 
@@ -17,7 +17,7 @@ import { AutomationInlineForm } from '../../containers/AutomationArticle';
 import { connectedAutomationsQuery } from '../../util/automations-for-object';
 
 export type AutomationCompanionProps = {
-  space: Space;
+  db: Database.Database;
   object: Obj.Unknown;
 };
 
@@ -25,26 +25,108 @@ export type AutomationCompanionProps = {
 type Status = 'associated' | 'pending' | 'detached';
 
 /**
- * Lists the automations connected to an object via a reactive reverse-reference query
- * (see `connectedAutomationsQuery`). The list is **session-stable**: rows are appended as they connect or
- * are created here and are never removed while mounted — instead a row that loses its association (or a
- * freshly-created one that has none yet) is flagged with a warning badge. This keeps inline editing from
- * making rows jump or disappear. Creating uses a template dropdown (no dialog); the new automation is
- * appended and auto-expanded for immediate configuration.
+ * Renders the automations connected to an object as an accordion (see `useConnectedAutomations` for the
+ * session-stable list it draws from), flagging non-associated rows with a warning badge. New automations are
+ * created from a template dropdown (no dialog).
  */
-export const AutomationCompanion = ({ space, object }: AutomationCompanionProps) => {
+export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
   const templates = useCapabilities(AutomationCapabilities.Template);
   // Only offer templates applicable to this companion's subject (e.g. a CRM template needs a Mailbox).
   const applicableTemplates = useMemo(
     () => templates.filter((template) => template.appliesTo?.(object) ?? true),
     [templates, object],
   );
+  const { items, statusFor, open, setOpen, handleCreate } = useConnectedAutomations(db, object);
+
+  return (
+    <div className='flex flex-col'>
+      {items.length === 0 ? (
+        <p className='text-sm text-description p-2'>{t('no-automations.message')}</p>
+      ) : (
+        <Accordion.Root<Automation.Automation> items={items} value={open} onValueChange={setOpen}>
+          {({ items }) => (
+            <div className='flex flex-col divide-y divide-separator'>
+              {items.map((automation) => {
+                const status = statusFor(automation.id);
+                return (
+                  <Accordion.Item key={automation.id} item={automation}>
+                    <Accordion.ItemHeader>
+                      <Icon icon='ph--lightning--regular' size={4} classNames='mr-2 shrink-0' />
+                      <span className='flex-1 truncate'>
+                        {Obj.getLabel(automation) ??
+                          t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}
+                      </span>
+                      {status !== 'associated' && (
+                        <Tooltip.Trigger
+                          asChild
+                          side='bottom'
+                          content={t(
+                            status === 'pending' ? 'automation-not-associated.message' : 'automation-detached.message',
+                          )}
+                        >
+                          <Icon icon='ph--warning--regular' size={4} classNames='text-warning-text shrink-0 mr-2' />
+                        </Tooltip.Trigger>
+                      )}
+                    </Accordion.ItemHeader>
+                    <Accordion.ItemBody>
+                      <AutomationInlineForm automation={automation} db={db} />
+                    </Accordion.ItemBody>
+                  </Accordion.Item>
+                );
+              })}
+            </div>
+          )}
+        </Accordion.Root>
+      )}
+
+      <div className='border-t border-separator'>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
+            <button type='button' className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
+              <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
+              <span className='flex-1 truncate'>
+                {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
+              </span>
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                {applicableTemplates.map((template) => (
+                  <DropdownMenu.Item key={template.id} onClick={() => void handleCreate(template.id)}>
+                    <Icon icon={template.icon ?? 'ph--lightning--regular'} size={4} />
+                    <span>{template.label}</span>
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </div>
+    </div>
+  );
+};
+
+//
+// Hooks
+//
+
+/**
+ * Owns the companion's session-stable automation list. A reactive reverse-ref query supplies the live
+ * connected set, accumulated into an append-only ordering so rows never reorder or disappear while mounted;
+ * a row that loses its association (or a freshly-created one not yet connected) is surfaced via `statusFor`
+ * rather than dropped. Also holds the accordion open state and a create handler that appends the new
+ * automation and auto-expands it for immediate configuration.
+ */
+const useConnectedAutomations = (db: Database.Database, object: Obj.Unknown) => {
+  const { invokePromise } = useOperationInvoker();
 
   // Live connected set (reactive reverse-ref query) + a by-id map for resolving rows that have left it.
-  const connected = useQuery(space.db, connectedAutomationsQuery(object));
-  const all = useQuery(space.db, Filter.type(Automation.Automation));
+  const connected = useQuery(db, connectedAutomationsQuery(object));
+  const all = useQuery(db, Filter.type(Automation.Automation));
   const connectedIds = useMemo(() => new Set(connected.map((automation) => automation.id)), [connected]);
   const byId = useMemo(() => new Map(all.map((automation) => [automation.id, automation])), [all]);
 
@@ -83,7 +165,7 @@ export const AutomationCompanion = ({ space, object }: AutomationCompanionProps)
   const handleCreate = useCallback(
     async (templateId: string) => {
       const { data, error } = await invokePromise(AutomationOperation.CreateAutomation, {
-        db: space.db,
+        db,
         templateId,
         subject: object,
       });
@@ -94,76 +176,8 @@ export const AutomationCompanion = ({ space, object }: AutomationCompanionProps)
       setCreatedIds((prev) => new Set(prev).add(data.object.id));
       setOpen((prev) => (prev.includes(data.object.id) ? prev : [...prev, data.object.id]));
     },
-    [invokePromise, space.db, object],
+    [invokePromise, db, object],
   );
 
-  return (
-    <div className='flex flex-col'>
-      {items.length === 0 ? (
-        <p className='text-sm text-description p-2'>{t('no-automations.message')}</p>
-      ) : (
-        <Accordion.Root<Automation.Automation> items={items} value={open} onValueChange={setOpen}>
-          {({ items }) => (
-            <div className='flex flex-col divide-y divide-separator'>
-              {items.map((automation) => {
-                const status = statusFor(automation.id);
-                return (
-                  <Accordion.Item key={automation.id} item={automation}>
-                    <Accordion.ItemHeader>
-                      <Icon icon='ph--lightning--regular' size={4} classNames='mr-2 shrink-0' />
-                      <span className='flex-1 truncate'>
-                        {Obj.getLabel(automation) ??
-                          t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}
-                      </span>
-                      {status !== 'associated' && (
-                        <Tooltip.Trigger
-                          asChild
-                          side='bottom'
-                          content={t(
-                            status === 'pending' ? 'automation-not-associated.message' : 'automation-detached.message',
-                          )}
-                        >
-                          <Icon icon='ph--warning--regular' size={4} classNames='text-warning-text shrink-0 mr-2' />
-                        </Tooltip.Trigger>
-                      )}
-                    </Accordion.ItemHeader>
-                    <Accordion.ItemBody>
-                      <AutomationInlineForm automation={automation} space={space} />
-                    </Accordion.ItemBody>
-                  </Accordion.Item>
-                );
-              })}
-            </div>
-          )}
-        </Accordion.Root>
-      )}
-
-      <div className='border-t border-separator'>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
-            <button type='button' className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
-              <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
-              <span className='flex-1 truncate'>
-                {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
-              </span>
-            </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                {applicableTemplates.map((template) => (
-                  <DropdownMenu.Item key={template.id} onClick={() => void handleCreate(template.id)}>
-                    <Icon icon={template.icon ?? 'ph--lightning--regular'} size={4} />
-                    <span>{template.label}</span>
-                  </DropdownMenu.Item>
-                ))}
-              </DropdownMenu.Viewport>
-              <DropdownMenu.Arrow />
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
-      </div>
-    </div>
-  );
+  return { items, statusFor, open, setOpen, handleCreate };
 };

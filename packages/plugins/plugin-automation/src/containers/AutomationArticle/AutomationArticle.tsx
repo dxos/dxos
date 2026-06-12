@@ -7,8 +7,8 @@ import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Routine, Trigger } from '@dxos/compute';
-import { Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { getSpace, useObject, useQuery, type Space } from '@dxos/react-client/echo';
+import { type Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import {
   Form,
@@ -29,20 +29,10 @@ export type AutomationArticleProps = AppSurface.ObjectArticleProps<Automation.Au
 
 export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const [automation] = useObject(subject);
-  const space = getSpace(subject);
+  const db = Obj.getDatabase(subject);
+  const trigger = usePrimaryTrigger(subject);
 
-  const trigger = useMemo(() => {
-    for (const ref of automation.triggers) {
-      const target = ref.target;
-      if (Obj.instanceOf(Trigger.Trigger, target)) {
-        return target;
-      }
-    }
-    return undefined;
-  }, [automation.triggers]);
-
-  if (!space) {
+  if (!db) {
     return null;
   }
 
@@ -56,13 +46,13 @@ export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => 
 
       <Settings.Section title={t('trigger-picker.title')} description={t('trigger-picker.description')}>
         <Settings.Panel>
-          <TriggerSection space={space} automation={subject} trigger={trigger} />
+          <TriggerSection db={db} automation={subject} trigger={trigger} />
         </Settings.Panel>
       </Settings.Section>
 
       <Settings.Section title={t('action.title')} description={t('action.description')}>
         <Settings.Panel>
-          <ActionSection space={space} automation={subject} trigger={trigger} />
+          <ActionSection db={db} automation={subject} trigger={trigger} />
         </Settings.Panel>
       </Settings.Section>
     </Settings.Viewport>
@@ -91,39 +81,7 @@ export const GeneralSection = ({
   automation: Automation.Automation;
   trigger?: Trigger.Trigger;
 }) => {
-  const [auto, updateAuto] = useObject(automation);
-  const canEnable = Boolean(trigger && auto.runnable);
-  const messageKey = !trigger
-    ? 'add-trigger-first.message'
-    : !auto.runnable
-      ? 'select-action-first.message'
-      : undefined;
-
-  const fieldMap = useMemo<FormFieldMap>(
-    () => ({ enabled: (props) => <EnabledField {...props} canEnable={canEnable} messageKey={messageKey} /> }),
-    [canEnable, messageKey],
-  );
-
-  // Read once per trigger identity; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<GeneralFormValues>>(
-    () => ({ name: auto.name, enabled: (trigger?.enabled ?? false) && canEnable }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [automation, trigger],
-  );
-
-  const handleValuesChanged = useCallback(
-    (values: Partial<GeneralFormValues>) => {
-      updateAuto((automation) => {
-        automation.name = values.name;
-      });
-      if (trigger && canEnable) {
-        Obj.update(trigger, (trigger) => {
-          trigger.enabled = values.enabled ?? false;
-        });
-      }
-    },
-    [updateAuto, trigger, canEnable],
-  );
+  const { defaultValues, fieldMap, handleValuesChanged } = useGeneralForm(automation, trigger);
 
   return (
     <Form.Root
@@ -190,101 +148,15 @@ type ActionFormInput = {
 };
 
 export const ActionSection = ({
-  space,
+  db,
   automation,
   trigger,
 }: {
-  space: Space;
+  db: Database.Database;
   automation: Automation.Automation;
   trigger?: Trigger.Trigger;
 }) => {
-  const { t } = useTranslation(meta.id);
-  const [auto, updateAuto] = useObject(automation);
-  // Filter.typename returns Entity.Any[] (untyped), which is what RefField.useResults expects.
-  // Filter.type returns Entity<T>[] which is narrower and not directly assignable to Entity.Any[].
-  // Using typename here avoids a cast while preserving the runtime filter behavior.
-  const operations = useQuery(
-    space.db,
-    // Include registry operations (built-in / plugin-provided) alongside space-resident ones.
-    Query.select(Filter.typename(Type.getTypename(Operation.PersistentOperation))).from(
-      Scope.space(),
-      Scope.registry(),
-    ),
-  );
-  const routines = useQuery(
-    space.db,
-    Query.select(Filter.typename(Type.getTypename(Routine.Routine))).from(Scope.space(), Scope.registry()),
-  );
-  const runRoutineOp = useMemo(() => findRunRoutineOp(operations), [operations]);
-  const boundRoutine = getBoundRoutine(trigger);
-  const runnableTarget = auto.runnable?.target;
-
-  const kindOptions = useMemo(
-    () => [
-      { value: 'operation', label: t('action-kind.operation.label') },
-      { value: 'routine', label: t('action-kind.routine.label') },
-    ],
-    [t],
-  );
-  const fieldMap = useMemo<FormFieldMap>(
-    () => ({
-      kind: (props) => <SelectField {...props} options={kindOptions} />,
-      // Custom useResults so pickers draw from the already-queried sets (space + registry for
-      // operations; space-only for routines) rather than RefField's default Filter.typename query.
-      operation: (props) => <RefField {...props} db={space.db} useResults={() => operations} />,
-      routine: (props) => <RefField {...props} db={space.db} useResults={() => routines} />,
-    }),
-    [kindOptions, operations, routines, space.db],
-  );
-
-  // Read the current action once per trigger identity (the uncontrolled form owns edits after mount).
-  const defaultValues = useMemo<Partial<ActionFormValues>>(() => {
-    if (boundRoutine) {
-      return { kind: 'routine', routine: Ref.make(boundRoutine) };
-    }
-    if (auto.runnable && Obj.instanceOf(Operation.PersistentOperation, runnableTarget)) {
-      return { kind: 'operation', operation: auto.runnable };
-    }
-    return { kind: 'operation' };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [automation, trigger]);
-
-  const handleValuesChanged = useCallback(
-    (values: Partial<ActionFormValues>) => {
-      const action: ActionFormInput = values;
-      if (action.kind === 'routine') {
-        const routineRef = action.routine;
-        if (!routineRef || !runRoutineOp) {
-          return;
-        }
-        updateAuto((automation) => {
-          automation.runnable = Ref.make(runRoutineOp);
-        });
-        if (trigger) {
-          Obj.update(trigger, (trigger) => {
-            trigger.function = Ref.make(runRoutineOp);
-            trigger.input = { prompt: routineRef, input: {} };
-          });
-        }
-      } else if (action.kind === 'operation' && action.operation) {
-        const operationRef = action.operation;
-        updateAuto((automation) => {
-          automation.runnable = operationRef;
-        });
-        if (trigger) {
-          Obj.update(trigger, (trigger) => {
-            trigger.function = operationRef;
-            trigger.input = undefined;
-          });
-        }
-      }
-    },
-    [runRoutineOp, trigger, updateAuto],
-  );
-
-  // The directly-selected operation (not the routine-bound AgentPrompt case); its input schema drives the editor.
-  const selectedOperation =
-    !boundRoutine && Obj.instanceOf(Operation.PersistentOperation, runnableTarget) ? runnableTarget : undefined;
+  const { defaultValues, fieldMap, handleValuesChanged, selectedOperation } = useActionForm(db, automation, trigger);
 
   return (
     <div className='flex flex-col gap-2'>
@@ -293,7 +165,7 @@ export const ActionSection = ({
         key={trigger?.id ?? 'new'}
         schema={ActionForm}
         defaultValues={defaultValues}
-        db={space.db}
+        db={db}
         fieldMap={fieldMap}
         onValuesChanged={handleValuesChanged}
       >
@@ -305,18 +177,18 @@ export const ActionSection = ({
       {/* Bind the operation's inputs (e.g. an object ref) once a trigger exists — input lives on the trigger;
           a ref set here is what associates a non-feed object via `automationsForObject`. */}
       {trigger && selectedOperation && (
-        <ActionInputEditor space={space} operation={selectedOperation} trigger={trigger} />
+        <ActionInputEditor db={db} operation={selectedOperation} trigger={trigger} />
       )}
     </div>
   );
 };
 
 const ActionInputEditor = ({
-  space,
+  db,
   operation,
   trigger,
 }: {
-  space: Space;
+  db: Database.Database;
   operation: Operation.PersistentOperation;
   trigger: Trigger.Trigger;
 }) => {
@@ -351,7 +223,7 @@ const ActionInputEditor = ({
         key={operation.id}
         schema={effectSchema}
         defaultValues={defaultValues}
-        db={space.db}
+        db={db}
         onValuesChanged={handleValuesChanged}
       >
         <Form.FieldSet />
@@ -405,63 +277,16 @@ const triggerFormSpec = (values: TriggerFormInput): Trigger.TimerSpec | Trigger.
   values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron ?? '');
 
 export const TriggerSection = ({
-  space,
+  db,
   automation,
   trigger,
 }: {
-  space: Space;
+  db: Database.Database;
   automation: Automation.Automation;
   trigger?: Trigger.Trigger;
 }) => {
   const { t } = useTranslation(meta.id);
-  const kindOptions = useMemo(
-    () => [
-      { value: 'timer', label: t('trigger-kind.timer.label') },
-      { value: 'feed', label: t('trigger-kind.feed.label') },
-    ],
-    [t],
-  );
-  const fieldMap = useMemo<FormFieldMap>(
-    () => ({ kind: (props) => <SelectField {...props} options={kindOptions} /> }),
-    [kindOptions],
-  );
-  // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
-  const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => triggerFormValues(trigger?.spec),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [trigger],
-  );
-
-  const handleValuesChanged = useCallback(
-    (values: Partial<TriggerFormValues>) => {
-      const spec = triggerFormSpec(values);
-      if (trigger) {
-        Obj.update(trigger, (trigger) => {
-          trigger.spec = spec;
-        });
-      } else {
-        // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
-        // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
-        // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
-        const created = space.db.add(Trigger.make({ function: automation.runnable, enabled: false, spec }));
-        Obj.setParent(created, automation);
-        Obj.update(automation, (automation) => {
-          automation.triggers = [...automation.triggers, Ref.make(created)];
-        });
-      }
-    },
-    [space, automation, trigger],
-  );
-
-  const handleRemove = useCallback(() => {
-    if (!trigger) {
-      return;
-    }
-    Obj.update(automation, (automation) => {
-      automation.triggers = automation.triggers.filter((ref) => ref.target?.id !== trigger.id);
-    });
-    space.db.remove(trigger);
-  }, [space, automation, trigger]);
+  const { defaultValues, fieldMap, handleValuesChanged, handleRemove } = useTriggerForm(db, automation, trigger);
 
   return (
     <div className='flex flex-col gap-2'>
@@ -470,7 +295,7 @@ export const TriggerSection = ({
         key={trigger?.id ?? 'new'}
         schema={TriggerForm}
         defaultValues={defaultValues}
-        db={space.db}
+        db={db}
         fieldMap={fieldMap}
         onValuesChanged={handleValuesChanged}
       >
@@ -504,11 +329,33 @@ const InlineSection = ({ title, children }: { title: string; children: ReactNode
  * Compact inline view used in the Automation companion. Renders the same three sections as the full article
  * (General / Trigger / Action) with condensed headings and no descriptions or scrolling Settings.Viewport.
  */
-export const AutomationInlineForm = ({ automation, space }: { automation: Automation.Automation; space: Space }) => {
+export const AutomationInlineForm = ({ automation, db }: { automation: Automation.Automation; db: Database.Database }) => {
   const { t } = useTranslation(meta.id);
-  // Subscribe for reactive trigger changes (mirrors how AutomationArticle derives the trigger).
+  const trigger = usePrimaryTrigger(automation);
+
+  return (
+    <div className='flex flex-col gap-3'>
+      <InlineSection title={t('general.title')}>
+        <GeneralSection automation={automation} trigger={trigger} />
+      </InlineSection>
+      <InlineSection title={t('trigger-picker.title')}>
+        <TriggerSection db={db} automation={automation} trigger={trigger} />
+      </InlineSection>
+      <InlineSection title={t('action.title')}>
+        <ActionSection db={db} automation={automation} trigger={trigger} />
+      </InlineSection>
+    </div>
+  );
+};
+
+//
+// Hooks
+//
+
+/** Subscribe to the automation and derive its primary (first) trigger. */
+const usePrimaryTrigger = (automation: Automation.Automation): Trigger.Trigger | undefined => {
   const [snapshot] = useObject(automation);
-  const trigger = useMemo(() => {
+  return useMemo(() => {
     for (const ref of snapshot.triggers) {
       const target = ref.target;
       if (Obj.instanceOf(Trigger.Trigger, target)) {
@@ -517,20 +364,193 @@ export const AutomationInlineForm = ({ automation, space }: { automation: Automa
     }
     return undefined;
   }, [snapshot.triggers]);
+};
 
-  return (
-    <div className='flex flex-col gap-3'>
-      <InlineSection title={t('general.title')}>
-        <GeneralSection automation={automation} trigger={trigger} />
-      </InlineSection>
-      <InlineSection title={t('trigger-picker.title')}>
-        <TriggerSection space={space} automation={automation} trigger={trigger} />
-      </InlineSection>
-      <InlineSection title={t('action.title')}>
-        <ActionSection space={space} automation={automation} trigger={trigger} />
-      </InlineSection>
-    </div>
+/** Form state for the General section: the name plus an enabled toggle that writes through to the trigger. */
+const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Trigger) => {
+  const [auto, updateAuto] = useObject(automation);
+  const canEnable = Boolean(trigger && auto.runnable);
+  const messageKey = !trigger
+    ? 'add-trigger-first.message'
+    : !auto.runnable
+      ? 'select-action-first.message'
+      : undefined;
+
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({ enabled: (props) => <EnabledField {...props} canEnable={canEnable} messageKey={messageKey} /> }),
+    [canEnable, messageKey],
   );
+
+  // Read once per trigger identity; the uncontrolled form owns edits after mount.
+  const defaultValues = useMemo<Partial<GeneralFormValues>>(
+    () => ({ name: auto.name, enabled: (trigger?.enabled ?? false) && canEnable }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [automation, trigger],
+  );
+
+  const handleValuesChanged = useCallback(
+    (values: Partial<GeneralFormValues>) => {
+      updateAuto((automation) => {
+        automation.name = values.name;
+      });
+      if (trigger && canEnable) {
+        Obj.update(trigger, (trigger) => {
+          trigger.enabled = values.enabled ?? false;
+        });
+      }
+    },
+    [updateAuto, trigger, canEnable],
+  );
+
+  return { defaultValues, fieldMap, handleValuesChanged };
+};
+
+/** Form state for the Action section: pick an operation|routine and bind it to the trigger's function/input. */
+const useActionForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
+  const { t } = useTranslation(meta.id);
+  const [auto, updateAuto] = useObject(automation);
+  // Filter.typename returns Entity.Any[] (untyped), which is what RefField.useResults expects.
+  // Filter.type returns Entity<T>[] which is narrower and not directly assignable to Entity.Any[].
+  // Using typename here avoids a cast while preserving the runtime filter behavior.
+  const operations = useQuery(
+    db,
+    // Include registry operations (built-in / plugin-provided) alongside space-resident ones.
+    Query.select(Filter.typename(Type.getTypename(Operation.PersistentOperation))).from(
+      Scope.space(),
+      Scope.registry(),
+    ),
+  );
+  const routines = useQuery(
+    db,
+    Query.select(Filter.typename(Type.getTypename(Routine.Routine))).from(Scope.space(), Scope.registry()),
+  );
+  const runRoutineOp = useMemo(() => findRunRoutineOp(operations), [operations]);
+  const boundRoutine = getBoundRoutine(trigger);
+  const runnableTarget = auto.runnable?.target;
+
+  const kindOptions = useMemo(
+    () => [
+      { value: 'operation', label: t('action-kind.operation.label') },
+      { value: 'routine', label: t('action-kind.routine.label') },
+    ],
+    [t],
+  );
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({
+      kind: (props) => <SelectField {...props} options={kindOptions} />,
+      // Custom useResults so pickers draw from the already-queried sets (space + registry for
+      // operations; space-only for routines) rather than RefField's default Filter.typename query.
+      operation: (props) => <RefField {...props} db={db} useResults={() => operations} />,
+      routine: (props) => <RefField {...props} db={db} useResults={() => routines} />,
+    }),
+    [kindOptions, operations, routines, db],
+  );
+
+  // Read the current action once per trigger identity (the uncontrolled form owns edits after mount).
+  const defaultValues = useMemo<Partial<ActionFormValues>>(() => {
+    if (boundRoutine) {
+      return { kind: 'routine', routine: Ref.make(boundRoutine) };
+    }
+    if (auto.runnable && Obj.instanceOf(Operation.PersistentOperation, runnableTarget)) {
+      return { kind: 'operation', operation: auto.runnable };
+    }
+    return { kind: 'operation' };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [automation, trigger]);
+
+  const handleValuesChanged = useCallback(
+    (values: Partial<ActionFormValues>) => {
+      const action: ActionFormInput = values;
+      if (action.kind === 'routine') {
+        const routineRef = action.routine;
+        if (!routineRef || !runRoutineOp) {
+          return;
+        }
+        updateAuto((automation) => {
+          automation.runnable = Ref.make(runRoutineOp);
+        });
+        if (trigger) {
+          Obj.update(trigger, (trigger) => {
+            trigger.function = Ref.make(runRoutineOp);
+            trigger.input = { prompt: routineRef, input: {} };
+          });
+        }
+      } else if (action.kind === 'operation' && action.operation) {
+        const operationRef = action.operation;
+        updateAuto((automation) => {
+          automation.runnable = operationRef;
+        });
+        if (trigger) {
+          Obj.update(trigger, (trigger) => {
+            trigger.function = operationRef;
+            trigger.input = undefined;
+          });
+        }
+      }
+    },
+    [runRoutineOp, trigger, updateAuto],
+  );
+
+  // The directly-selected operation (not the routine-bound AgentPrompt case); its input schema drives the editor.
+  const selectedOperation =
+    !boundRoutine && Obj.instanceOf(Operation.PersistentOperation, runnableTarget) ? runnableTarget : undefined;
+
+  return { defaultValues, fieldMap, handleValuesChanged, selectedOperation };
+};
+
+/** Form state for the Trigger section: the timer|feed spec, plus create-on-first-edit and remove handlers. */
+const useTriggerForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
+  const { t } = useTranslation(meta.id);
+  const kindOptions = useMemo(
+    () => [
+      { value: 'timer', label: t('trigger-kind.timer.label') },
+      { value: 'feed', label: t('trigger-kind.feed.label') },
+    ],
+    [t],
+  );
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({ kind: (props) => <SelectField {...props} options={kindOptions} /> }),
+    [kindOptions],
+  );
+  // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
+  const defaultValues = useMemo<Partial<TriggerFormValues>>(
+    () => triggerFormValues(trigger?.spec),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [trigger],
+  );
+
+  const handleValuesChanged = useCallback(
+    (values: Partial<TriggerFormValues>) => {
+      const spec = triggerFormSpec(values);
+      if (trigger) {
+        Obj.update(trigger, (trigger) => {
+          trigger.spec = spec;
+        });
+      } else {
+        // Create the trigger on first edit; `function` is wired by the action section, and it stays disabled
+        // until an action is set, so a function-less trigger never dispatches. The trigger is owned by the
+        // automation (it is only reachable via it), so it is parented and cascade-deletes with the automation.
+        const created = db.add(Trigger.make({ function: automation.runnable, enabled: false, spec }));
+        Obj.setParent(created, automation);
+        Obj.update(automation, (automation) => {
+          automation.triggers = [...automation.triggers, Ref.make(created)];
+        });
+      }
+    },
+    [db, automation, trigger],
+  );
+
+  const handleRemove = useCallback(() => {
+    if (!trigger) {
+      return;
+    }
+    Obj.update(automation, (automation) => {
+      automation.triggers = automation.triggers.filter((ref) => ref.target?.id !== trigger.id);
+    });
+    db.remove(trigger);
+  }, [db, automation, trigger]);
+
+  return { defaultValues, fieldMap, handleValuesChanged, handleRemove };
 };
 
 //
