@@ -54,6 +54,7 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
 
   const handleTypeChange = useCallback(
     (value: string | null) => {
+      // Select.onValueChange returns bare string; values come from types[].value which are URI.URI.
       const uri = value as URI.URI | null;
       setType(uri);
       handleChange({ type: uri, tag });
