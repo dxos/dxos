@@ -5,8 +5,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { Button, Column, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { type SpaceCapabilities } from '@dxos/plugin-space';
+import { Button, Column, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { AutomationCapabilities } from '#types';
@@ -26,7 +26,15 @@ export const CreateAutomationPanel = ({ onCreateObject, templates: templatesProp
   const capabilityTemplates = useCapabilities(AutomationCapabilities.Template);
   const templates = templatesProp ?? capabilityTemplates;
   const [name, setName] = useState('');
-  const sorted = useMemo(() => [...templates].sort((a, b) => a.label.localeCompare(b.label)), [templates]);
+  // The global create dialog has no subject, so subject-required templates (e.g. CRM, which needs a
+  // Mailbox) are excluded; they are offered from the relevant object's "Automations" companion instead.
+  const sorted = useMemo(
+    () =>
+      [...templates]
+        .filter((template) => template.appliesTo?.(undefined) ?? true)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [templates],
+  );
 
   const handleSelect = useCallback(
     (templateId: string) => {
@@ -47,7 +55,7 @@ export const CreateAutomationPanel = ({ onCreateObject, templates: templatesProp
           onChange={(event) => setName(event.target.value)}
         />
       </Input.Root>
-      <div role='list' className='flex flex-col gap-1'>
+      <div className='flex flex-col gap-1'>
         {sorted.map((template) => (
           <Button
             key={template.id}

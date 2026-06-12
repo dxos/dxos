@@ -5,8 +5,8 @@
 import type * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type DelegationStrategy } from '@dxos/functions-runtime';
 import type { Database, Obj } from '@dxos/echo';
+import { type DelegationStrategy } from '@dxos/functions-runtime';
 
 import * as Automation from './Automation';
 
@@ -32,6 +32,12 @@ export type Template = {
   label: string;
   /** Optional Phosphor icon name. */
   icon?: string;
+  /**
+   * Whether this template applies to the given companion subject. The subject is the object whose
+   * "Automations" companion is open, or undefined in the global create dialog. Templates that need a
+   * specific subject (e.g. a feed-bearing Mailbox) gate themselves here. Defaults to always-applies.
+   */
+  appliesTo?: (subject?: Obj.Unknown) => boolean;
   /**
    * Build the Automation from the user's input. The returned Automation is added to the database by the
    * create flow; any auxiliary objects (runnable, triggers) must be added by the scaffold itself via

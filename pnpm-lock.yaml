@@ -9354,9 +9354,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
+      '@dxos/plugin-automation':
         specifier: workspace:*
-        version: link:../plugin-graph
+        version: link:../plugin-automation
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox

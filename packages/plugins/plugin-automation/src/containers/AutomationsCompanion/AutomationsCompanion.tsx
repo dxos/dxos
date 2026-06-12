@@ -38,6 +38,11 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const templates = useCapabilities(AutomationCapabilities.Template);
+  // Only offer templates applicable to this companion's subject (e.g. a CRM template needs a Mailbox).
+  const applicableTemplates = useMemo(
+    () => templates.filter((template) => template.appliesTo?.(object) ?? true),
+    [templates, object],
+  );
 
   // Live connected set (reactive reverse-ref query) + a by-id map for resolving rows that have left it.
   const connected = useQuery(space.db, connectedAutomationsQuery(object));
@@ -157,7 +162,7 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
           <DropdownMenu.Portal>
             <DropdownMenu.Content>
               <DropdownMenu.Viewport>
-                {templates.map((template) => (
+                {applicableTemplates.map((template) => (
                   <DropdownMenu.Item key={template.id} onClick={() => void handleCreate(template.id)}>
                     <Icon icon={template.icon ?? 'ph--lightning--regular'} size={4} />
                     <span>{template.label}</span>
