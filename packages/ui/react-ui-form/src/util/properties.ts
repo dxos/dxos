@@ -23,26 +23,6 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
 };
 
 /**
- * Get the property types of an AST and filter out properties that are not form inputs.
- *
- * The `FormInputAnnotation` is read from the raw property signature's AST (before
- * `encodedBoundAST` is applied by `SchemaEx.getProperties`), because `encodedBoundAST` strips
- * annotations from non-keyword inner types (e.g., `Schema.Struct`, `Schema.Array`).
- * Without this, fields like `Routine.input` (a JsonSchema struct) annotated
- * `FormInputAnnotation.set(false)` would still render in the form.
- *
- * For optional fields, `prop.type` is the union `T | undefined` — the annotation
- * lives on the inner `T`. Unwrap before reading so that the conventional pattern
- * `Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional)` works.
- *
- * Container properties (nested structs, unions, arrays) keep their *raw* AST rather than
- * the `encodedBoundAST` produced by `SchemaEx.getProperties`. `encodedBoundAST` strips annotations
- * from non-keyword inner types, so a `FormInputAnnotation` nested beneath an encoded container
- * (e.g. `RouteLeg.geometry`, reached via `Segment → details → routes → Route → legs`) would
- * otherwise be lost by the time recursion reaches it. Leaf/transformation fields stay encoded
- * (e.g. a `DateTime` still renders as its encoded string input).
- */
-/**
  * Resolve the properties to render for a field set's *root* schema, given the current form values.
  *
  * A top-level discriminated union is rendered flat: the fields of the member selected by the current
@@ -80,6 +60,26 @@ export const getRootFormProperties = (
   );
 };
 
+/**
+ * Get the property types of an AST and filter out properties that are not form inputs.
+ *
+ * The `FormInputAnnotation` is read from the raw property signature's AST (before
+ * `encodedBoundAST` is applied by `SchemaEx.getProperties`), because `encodedBoundAST` strips
+ * annotations from non-keyword inner types (e.g., `Schema.Struct`, `Schema.Array`).
+ * Without this, fields like `Routine.input` (a JsonSchema struct) annotated
+ * `FormInputAnnotation.set(false)` would still render in the form.
+ *
+ * For optional fields, `prop.type` is the union `T | undefined` — the annotation
+ * lives on the inner `T`. Unwrap before reading so that the conventional pattern
+ * `Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional)` works.
+ *
+ * Container properties (nested structs, unions, arrays) keep their *raw* AST rather than
+ * the `encodedBoundAST` produced by `SchemaEx.getProperties`. `encodedBoundAST` strips annotations
+ * from non-keyword inner types, so a `FormInputAnnotation` nested beneath an encoded container
+ * (e.g. `RouteLeg.geometry`, reached via `Segment → details → routes → Route → legs`) would
+ * otherwise be lost by the time recursion reaches it. Leaf/transformation fields stay encoded
+ * (e.g. a `DateTime` still renders as its encoded string input).
+ */
 export const getFormProperties = (ast: SchemaAST.AST): SchemaEx.SchemaProperty[] => {
   const signatures = SchemaAST.getPropertySignatures(ast);
   const rawByName = new Map<PropertyKey, SchemaAST.AST>(signatures.map((prop) => [prop.name, unwrapOptional(prop)]));

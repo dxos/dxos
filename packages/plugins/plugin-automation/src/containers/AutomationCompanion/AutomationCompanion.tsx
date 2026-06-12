@@ -13,7 +13,7 @@ import { Accordion } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { Automation, AutomationCapabilities, AutomationOperation } from '#types';
 
-import { AutomationInlineForm } from '../../containers/AutomationArticle/AutomationArticle';
+import { AutomationInlineForm } from '../../containers/AutomationArticle';
 import { connectedAutomationsQuery } from '../../util/automations-for-object';
 
 export type AutomationCompanionProps = {

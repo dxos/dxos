@@ -36,4 +36,10 @@ describe('findRefOption', () => {
   test('returns undefined when no option matches', ({ expect }) => {
     expect(findRefOption({ '/': 'echo:/01J00MISSING0000000000000000' }, options)).toBeUndefined();
   });
+
+  test('does not match a qualified ref against a same-entity-id option from a different space', ({ expect }) => {
+    // The entity id coincides but the space authority differs; ids are only unique within a space.
+    const otherSpace = `echo://BZ25QRC2FEWCSAMRP4RZL65LWJ7352CKE/${ENTITY_ID}`;
+    expect(findRefOption({ '/': otherSpace }, options)).toBeUndefined();
+  });
 });
