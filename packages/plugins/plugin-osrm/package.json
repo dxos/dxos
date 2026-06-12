@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-osrm",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "OSRM (OpenStreetMap) driving-route provider for Composer.",
   "homepage": "https://dxos.org",
