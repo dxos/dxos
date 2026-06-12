@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -17,7 +17,10 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       invariant(db);
       const typeUri = view.query ? getTypeURIFromQuery(view.query.ast) : undefined;
       invariant(typeUri);
-      const types = yield* Effect.promise(() => db.query(Filter.type(Type.Type)).run());
+      // Fan across space (persisted db types) and registry (static plugin types).
+      const types = yield* Effect.promise(() =>
+        db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
+      );
       const schema = types.find((t) => Type.getURI(t) === typeUri);
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);

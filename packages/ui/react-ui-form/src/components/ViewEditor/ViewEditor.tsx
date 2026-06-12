@@ -194,9 +194,13 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         }
 
         // TODO(wittjosiah): Deep-clone the AST to plain JS or ECHO proxy arrays become objects with numeric keys.
+        // In schema mode, values.query is either a DXN name (static types) or a raw `echo:` EID
+        // (db-backed types, which have no DXN). Preserve EIDs verbatim; wrap bare names as DXN.
         const query =
           mode === 'schema'
-            ? Query.select(Filter.type(DXN.make(values.query))).ast
+            ? Query.select(
+                Filter.type(EID.isEID(values.query) ? (values.query as EID.EID) : DXN.make(values.query)),
+              ).ast
             : JSON.parse(JSON.stringify(values.query));
         onQueryChanged?.(query, queueDxn);
       },

@@ -30,7 +30,7 @@ export const RelatedToOrganization = ({
 
   const spaceViews = useQuery(db, Filter.type(Table.Table));
   const spaceContactTable = spaceViews.find(
-    (table) => getTypeURIFromQuery(table.view.target?.query.ast) === Type.getURI(Person.Person),
+    (table) => getTypeURIFromQuery(table.view.target?.query?.ast) === Type.getURI(Person.Person),
   );
 
   // TODO(wittjosiah): Generalized way of handling related objects navigation.

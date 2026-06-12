@@ -7,7 +7,6 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Database, Filter, Obj, type Registry, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -341,28 +340,28 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);
-  const typenames = useMemo(() => {
-    const typenames = types.map((type) => {
+  const typeOptions = useMemo(() => {
+    const options = types.map((type) => {
       const typename = Type.getTypename(type);
       return {
-        typename,
+        uri: Type.getURI(type),
         label: t('typename.label', { ns: typename, defaultValue: typename }),
       };
     });
 
-    typenames.sort((a, b) => a.label.localeCompare(b.label));
-    return typenames;
+    options.sort((a, b) => a.label.localeCompare(b.label));
+    return options;
   }, [types]);
 
-  // Current type and filter.
-  const [typename, setTypename] = useState<string>(ANY);
+  // Current type URI and filter.
+  const [selectedUri, setSelectedUri] = useState<string>(ANY);
   const anyFilter = useMemo(
-    () => Filter.or(...typenames.map(({ typename }) => Filter.type(DXN.make(typename)))),
-    [typenames],
+    () => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))),
+    [typeOptions],
   );
 
   // Context objects.
-  const objects = useQuery(db, typename === ANY ? anyFilter : Filter.type(DXN.make(typename)));
+  const objects = useQuery(db, selectedUri === ANY ? anyFilter : Filter.type(selectedUri));
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
   const { results, handleSearch } = useSearchListResults({
     items: objects,
@@ -398,15 +397,15 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
       </SearchList.Content>
 
       <div className={mx('flex flex-col', styles.toolbar)}>
-        <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
+        <Select.Root value={selectedUri === ANY ? undefined : selectedUri} onValueChange={setSelectedUri}>
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.ScrollUpButton />
               <Select.Viewport>
                 <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
-                {typenames.map(({ typename, label }) => (
-                  <Select.Option key={typename} value={typename}>
+                {typeOptions.map(({ uri, label }) => (
+                  <Select.Option key={uri} value={uri}>
                     {label}
                   </Select.Option>
                 ))}

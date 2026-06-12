@@ -174,7 +174,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
         viewObjectIds.add(viewObject.id);
       }
 
-      const viewTarget = holder !== undefined ? get(Obj.atom(holder as Obj.Any)) : undefined;
+      const viewTarget = holder != null ? get(Obj.atom(holder as Obj.Any)) : undefined;
       const typeUri = getTypeURIFromQuery(viewTarget?.query?.ast);
       if (typeUri) {
         const existing = viewsByTypeUri.get(typeUri) ?? [];
