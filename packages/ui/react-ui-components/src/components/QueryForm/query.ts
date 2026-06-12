@@ -19,6 +19,9 @@ export const extractTypename = (query: QueryAST.Query): Option.Option<string> =>
       return Option.isSome(selectionTypename) ? selectionTypename : filterTypename;
     }),
     Match.when({ type: 'options' }, (q) => extractTypename(q.query)),
+    Match.when({ type: 'from' }, (q) => extractTypename(q.query)),
+    Match.when({ type: 'order' }, (q) => extractTypename(q.query)),
+    Match.when({ type: 'limit' }, (q) => extractTypename(q.query)),
     Match.orElse(() => Option.none()),
   );
 };
@@ -34,6 +37,9 @@ export const extractTag = (query: QueryAST.Query): Option.Option<string> => {
       return Option.isSome(filterTag) ? filterTag : selectionTag;
     }),
     Match.when({ type: 'options' }, (q) => extractTag(q.query)),
+    Match.when({ type: 'from' }, (q) => extractTag(q.query)),
+    Match.when({ type: 'order' }, (q) => extractTag(q.query)),
+    Match.when({ type: 'limit' }, (q) => extractTag(q.query)),
     Match.orElse(() => Option.none()),
   );
 };

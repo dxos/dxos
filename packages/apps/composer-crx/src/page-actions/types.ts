@@ -71,6 +71,12 @@ export const PAGE_ACTION_EXTRACT_MESSAGE_TYPE = 'composer-crx:page-action:extrac
 export const PAGE_ACTION_PREDICATE_MESSAGE_TYPE = 'composer-crx:page-action:predicate';
 
 /**
+ * Runtime message `type` discriminator the content script sends to the
+ * background worker to deliver a picker-captured snapshot for invocation.
+ */
+export const PAGE_ACTION_DELIVER_MESSAGE_TYPE = 'composer-crx:page-action:deliver';
+
+/**
  * Window CustomEvent dispatched by the Composer page once its page-actions
  * listeners are attached (mirrors `PageAction.READY_EVENT` in plugin-crx —
  * keep the string value in sync). The content-script relay listens for this
@@ -95,9 +101,9 @@ export const PAGE_ACTIONS_STORAGE_KEY = 'composer-crx:page-actions-registry';
 /**
  * Where a page action can be surfaced.
  */
-export type PageActionContext = 'popup' | 'page' | 'selection' | 'link';
+export type PageActionContext = 'popup' | 'page' | 'selection' | 'link' | 'picker';
 
-const PAGE_ACTION_CONTEXTS: readonly string[] = ['popup', 'page', 'selection', 'link'];
+const PAGE_ACTION_CONTEXTS: readonly string[] = ['popup', 'page', 'selection', 'link', 'picker'];
 
 /**
  * Serializable page-action descriptor cached in the extension's registry.
@@ -140,7 +146,7 @@ export type InvokeRequest = {
   actionId: string;
   page: { url: string; title: string; favicon?: string };
   inputs: unknown;
-  invokedFrom: 'popup' | 'contextMenu';
+  invokedFrom: 'popup' | 'contextMenu' | 'picker';
 };
 
 /**
@@ -175,6 +181,12 @@ export type Snapshot = {
   html?: string;
   htmlTruncated?: boolean;
 };
+
+/** Nominal alias for the selection sub-shape of a {@link Snapshot}. */
+export type SnapshotSelection = NonNullable<Snapshot['selection']>;
+
+/** Nominal alias for the hints sub-shape of a {@link Snapshot}. */
+export type SnapshotHints = NonNullable<Snapshot['hints']>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 

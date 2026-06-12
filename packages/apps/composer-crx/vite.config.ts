@@ -6,7 +6,7 @@ import { crx } from '@crxjs/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -23,8 +23,11 @@ import packageJson from './package.json';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+const { prepareCanonicalDist } = await import(pathToFileURL(path.join(dirname, 'scripts/canonical-dist.mjs')).href);
+
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const outDir = prepareCanonicalDist(dirname);
 
 /**
  * https://vitejs.dev/config
@@ -32,6 +35,8 @@ const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core
 export default defineConfig({
   root: dirname,
   build: {
+    outDir,
+    emptyOutDir: true,
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages
       input: {
@@ -108,6 +113,9 @@ export default defineConfig({
         },
         permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
+        // Broad host access is required so the popup and background can fetch cross-origin
+        // (chat-agent, image-service) without CORS — extensions bypass CORS for hosts they
+        // hold permissions for — and so the content script can be injected on any page.
         host_permissions: ['http://*/*', 'https://*/*'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

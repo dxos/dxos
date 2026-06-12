@@ -14,6 +14,7 @@ import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useT
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
+import { focusOrOpenComposerTab } from '../../bridge';
 import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
 
@@ -126,6 +127,10 @@ export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
     inputRef.current?.focus();
   }, [clearError, clearHistory, stop]);
 
+  const handleLaunchComposer = useCallback(() => {
+    void focusOrOpenComposerTab();
+  }, []);
+
   return (
     <div className={mx('flex flex-col bg-base-surface', classNames)}>
       {/* TODO(burdon): Replace with chat from plugin-assistant. */}
@@ -165,6 +170,14 @@ export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
             />
           )}
           {actions}
+          <Toolbar.Separator />
+          <IconButton
+            variant='ghost'
+            icon='ph--arrow-square-out--regular'
+            iconOnly
+            label={t('launch-composer.button')}
+            onClick={handleLaunchComposer}
+          />
         </Toolbar.Root>
       </div>
 

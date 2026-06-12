@@ -6,22 +6,29 @@ tags:
   - vite
   - storybook
 tasks:
-  # Point the main worktree's gitignored `dist` at this worktree's build output so Chrome's
-  # "Load unpacked" target stays at a fixed, worktree-independent path. No-op in the main worktree.
-  link-dist:
-    command: node scripts/link-dist.mjs
-    # Uncached so it always re-points the symlink; safe to run in CI where it is a no-op (the CI
-    # checkout is the main worktree, so the canonical dist path already is the build output).
+  # Ensure the main checkout's gitignored `dist` is a real directory (not a stale symlink) before
+  # bundle/serve. Linked worktrees write build output there directly; no-op in the main worktree.
+  prepare-dist:
+    command: node scripts/prepare-dist.mjs
+    # Uncached so a prior worktree's symlink is removed before Vite writes; no-op in CI main checkout.
     options:
       cache: false
   # `build` here is typecheck-only (see .moon/tasks/tag-typecheck.yml); `bundle`/`serve` (tag-vite)
-  # are what actually emit `dist`. Hook all three so the symlink is (re)established for any of them.
+  # are what actually emit `dist`. Hook bundle/serve so the canonical dist dir exists before Vite runs.
   build:
     deps:
-      - link-dist
+      - prepare-dist
   bundle:
     deps:
-      - link-dist
+      - prepare-dist
   serve:
     deps:
-      - link-dist
+      - prepare-dist
+  # Bundle and zip the extension for Chrome Web Store upload.
+  # Output: packages/apps/composer-crx/composer-crx.zip
+  pack:
+    command: node scripts/pack.mjs
+    deps:
+      - bundle
+    outputs:
+      - composer-crx.zip

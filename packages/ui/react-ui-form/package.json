@@ -35,6 +35,8 @@
   ],
   "dependencies": {
     "@codemirror/lang-xml": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
@@ -53,6 +55,7 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

@@ -69,6 +69,11 @@ describe('page-actions types', () => {
     expect(decoded).toEqual({ ...minimalDescriptor, contexts: ['popup'] });
   });
 
+  test('decodeDescriptor keeps the picker context', ({ expect }) => {
+    const decoded = decodeDescriptor({ ...fullDescriptor, contexts: ['picker'] });
+    expect(decoded?.contexts).toEqual(['picker']);
+  });
+
   test('decodeDescriptor tolerates unknown extra fields', ({ expect }) => {
     expect(decodeDescriptor({ ...minimalDescriptor, junk: true })).toEqual(minimalDescriptor);
   });

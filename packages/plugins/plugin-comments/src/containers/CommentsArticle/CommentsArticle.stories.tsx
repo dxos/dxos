@@ -31,7 +31,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { linkedSegment, useAttentionAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
@@ -239,14 +239,11 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   }, [markdownSettings, registry, agentMode]);
 
   const articleData = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
-  // Nest the companion's attendable id under the article's so that
-  // `getParentId` in CommentsArticle resolves to the editor's registration key
-  // (mirrors the deck companion layout), enabling editor ↔ comment selection sync.
   const companionData = useMemo(
     () => ({
       subject: 'comments',
       companionTo: doc,
-      attendableId: attendableId ? `${attendableId}/${linkedSegment('comments')}` : 'story',
+      attendableId: attendableId ?? 'story',
     }),
     [doc, attendableId],
   );
