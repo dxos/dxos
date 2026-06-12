@@ -24,8 +24,8 @@ import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type DocHandleProxy } from '../automerge';
-import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
+import { type EntityManager } from './entity-manager';
 import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, TargetKey, isValidKeyPath } from './types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -55,9 +55,9 @@ export class ObjectCore {
   public id = EntityId.random();
 
   /**
-   * Set when the object is bound to a CoreDatabase.
+   * Set when the object is bound to an EntityManager.
    */
-  public coreDatabase?: CoreDatabase | undefined;
+  public entityManager?: EntityManager | undefined;
 
   /**
    * Set when the object is not bound to a database.
@@ -158,7 +158,7 @@ export class ObjectCore {
     // When loading existing documents, wait for the document to be ready.
     // When creating new documents (assignFromLocalState), the local doc is immediately usable.
     invariant(options.assignFromLocalState || options.docHandle.isReady());
-    this.coreDatabase = options.db;
+    this.entityManager = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
 
@@ -544,7 +544,7 @@ export class ObjectCore {
       return true;
     }
 
-    if (this.coreDatabase && remainingDepth > 0) {
+    if (this.entityManager && remainingDepth > 0) {
       const parentRef = this.getParent();
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
@@ -552,11 +552,11 @@ export class ObjectCore {
         const parentEchoUri = EID.tryParse(parentDXN);
         const spaceId = parentEchoUri ? EID.getSpaceId(parentEchoUri) : undefined;
         const parentId = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
-        if (parentId && (spaceId === undefined || spaceId === this.coreDatabase.spaceId)) {
+        if (parentId && (spaceId === undefined || spaceId === this.entityManager.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
-          const parent = this.coreDatabase.getObjectCoreById(parentId);
+          const parent = this.entityManager.getObjectCoreById(parentId);
           if (parent && parent.isDeleted(remainingDepth - 1)) {
             return true;
           }
@@ -618,7 +618,7 @@ export class ObjectCore {
 }
 
 export type BindOptions = {
-  db: CoreDatabase;
+  db: EntityManager;
   docHandle: DocHandleProxy<DatabaseDirectory>;
   path: KeyPath;
   /** Assign the state from the local doc into the shared structure for the database. */

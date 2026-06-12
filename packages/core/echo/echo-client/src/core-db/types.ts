@@ -24,12 +24,10 @@ type TargetKeyType = {
 export type TargetKey = TargetKeyType;
 
 export const TargetKey = {
-  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
-    ({
-      path: [...path],
-      namespace,
-      type,
-    }) as TargetKey,
+  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey => {
+    const copiedPath: KeyPath = [...path];
+    return { path: copiedPath, namespace, type } as TargetKey;
+  },
   hash: (key: TargetKey): string => JSON.stringify(key),
 };
 

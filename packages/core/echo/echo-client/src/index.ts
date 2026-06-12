@@ -7,10 +7,10 @@ export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 export * from './automerge';
 export * from './client';
 export {
-  CoreDatabase,
+  EntityManager,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
-  type CoreDatabaseProps,
+  type EntityManagerProps,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,

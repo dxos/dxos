@@ -35,7 +35,7 @@ import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxo
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import { EntityManager, type LoadObjectOptions } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -161,7 +161,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  readonly _coreDatabase: CoreDatabase;
+  readonly _entityManager: EntityManager;
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
@@ -175,7 +175,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._reactiveSchemaQuery = params.reactiveSchemaQuery ?? true;
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
 
-    this._coreDatabase = new CoreDatabase({
+    this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
       queryService: params.queryService,
@@ -183,7 +183,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.saveStateChanged = this._coreDatabase.saveStateChanged;
+    this.saveStateChanged = this._entityManager.saveStateChanged;
   }
 
   [inspect.custom]() {
@@ -191,18 +191,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   toJSON() {
-    return this._coreDatabase.toJSON();
+    return this._entityManager.toJSON();
   }
 
   get spaceId(): SpaceId {
-    return this._coreDatabase.spaceId;
+    return this._entityManager.spaceId;
   }
 
   /**
    * @deprecated Use `spaceId`.
    */
   get spaceKey(): PublicKey {
-    return this._coreDatabase.spaceKey;
+    return this._entityManager.spaceKey;
   }
 
   get rootUrl(): string | undefined {
@@ -210,7 +210,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   get graph(): HypergraphImpl {
-    return this._coreDatabase.graph;
+    return this._entityManager.graph;
   }
 
   // `db.registry` is literally the shared hypergraph registry — queries with a
@@ -223,7 +223,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
-      await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
+      await this._entityManager.open(this._ctx, { rootUrl: this._rootUrl });
     }
 
     if (this._preloadSchemaOnOpen) {
@@ -245,7 +245,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _close(): Promise<void> {
-    await this._coreDatabase.close();
+    await this._entityManager.close();
   }
 
   /**
@@ -322,9 +322,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
-        await this._coreDatabase.open(this._ctx, { rootUrl });
+        await this._entityManager.open(this._ctx, { rootUrl });
       } else {
-        await this._coreDatabase.updateSpaceState(this._ctx, { rootUrl });
+        await this._entityManager.updateSpaceState(this._ctx, { rootUrl });
       }
     }
   }
@@ -332,7 +332,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   // TODO(burdon): Type check.
   /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
-    const core = this._coreDatabase.getObjectCoreById(id);
+    const core = this._entityManager.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
@@ -367,7 +367,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       query = Query.fromAst(bindOwningSpaceScopes(query.ast, this.spaceId));
     }
 
-    return this._coreDatabase.graph.query(query);
+    return this._entityManager.graph.query(query);
   }
 
   /**
@@ -456,7 +456,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(obj), opts);
+    this._entityManager.addCore(getObjectCore(obj), opts);
     return obj;
   }
 
@@ -465,16 +465,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     assertArgument(isEchoObject(obj), 'obj');
-    return this._coreDatabase.removeCore(getObjectCore(obj));
+    return this._entityManager.removeCore(getObjectCore(obj));
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
-    await this._coreDatabase.flush(opts);
+    await this._entityManager.flush(opts);
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const objects = await this._coreDatabase.graph
+      const objects = await this._entityManager.graph
         .query(Query.select(Filter.typeURI(migration.fromType)).from(this))
         .run();
       log.verbose('migrate', {
@@ -497,7 +497,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
 
-        await this._coreDatabase.atomicReplaceObject(object.id, {
+        await this._entityManager.atomicReplaceObject(object.id, {
           data: output,
           type: migration.toType,
           meta: metaPatch as any,
@@ -514,56 +514,56 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   getSyncState(): Promise<SpaceSyncState> {
-    return this._coreDatabase.getSyncState();
+    return this._entityManager.getSyncState();
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    return this._coreDatabase.subscribeToSyncState(ctx, callback);
+    return this._entityManager.subscribeToSyncState(ctx, callback);
   }
 
   getAllObjectIds(): string[] {
-    return this._coreDatabase.getAllObjectIds();
+    return this._entityManager.getAllObjectIds();
   }
 
   getNumberOfInlineObjects(): number {
-    return this._coreDatabase.getNumberOfInlineObjects();
+    return this._entityManager.getNumberOfInlineObjects();
   }
 
   get rootChanged(): ReadOnlyEvent<void> {
-    return this._coreDatabase.rootChanged;
+    return this._entityManager.rootChanged;
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {
-    return this._coreDatabase.getLoadedDocumentHandles();
+    return this._entityManager.getLoadedDocumentHandles();
   }
 
   get _repo(): RepoProxy {
-    return this._coreDatabase._repo;
+    return this._entityManager._repo;
   }
 
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
-    return this._coreDatabase.getSpaceRootDocHandle();
+    return this._entityManager.getSpaceRootDocHandle();
   }
 
   /**
    * Update service references after reconnection.
    */
   _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
-    this._coreDatabase._updateServices({ dataService, queryService });
+    this._entityManager._updateServices({ dataService, queryService });
   }
 
   /**
    * Handle reconnection to re-establish RPC streams.
    */
   async _onReconnect(): Promise<void> {
-    await this._coreDatabase._onReconnect();
+    await this._entityManager._onReconnect();
   }
 
   /**
    * @internal
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
+    const core = await this._entityManager.loadObjectCoreById(objectId, options);
     if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
     }
@@ -587,8 +587,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Direct access to the core database layer. Only valid within @dxos/echo-client; external consumers
    * must use the named API methods (getAllObjectIds, getNumberOfInlineObjects, rootChanged, etc.).
    */
-  get coreDatabase(): CoreDatabase {
-    return this._coreDatabase;
+  get entityManager(): EntityManager {
+    return this._entityManager;
   }
 }
 

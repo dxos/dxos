@@ -21,7 +21,6 @@ import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
-import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';

@@ -17,9 +17,9 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
 import { type DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-import { type CoreDatabase } from './core-database';
+import { type EntityManager } from './entity-manager';
 
-describe('CoreDatabase', () => {
+describe('EntityManager', () => {
   describe('space fragmentation', () => {
     test('objects are created in separate docs', async () => {
       const testBuilder = new EchoTestBuilder();
@@ -91,7 +91,7 @@ describe('CoreDatabase', () => {
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       const newObject = addObjectToDoc(newRootDocHandle, { id: EntityId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url!);
       const retrievedObject = db.getObjectById(newObject.id);
@@ -101,10 +101,10 @@ describe('CoreDatabase', () => {
     test('objects are removed if not present in the new document', async () => {
       const oldObject = Obj.make(TestSchema.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       const beforeUpdate = await db.query(Query.type(TestSchema.Expando, { id: oldObject.id })).first();
       expect(beforeUpdate).not.to.be.undefined;
-      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
+      await db.entityManager.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
       expect(afterUpdate).to.be.undefined;
     });
@@ -112,7 +112,7 @@ describe('CoreDatabase', () => {
     test('preserved objects are rebound to the new root', async () => {
       const originalObj = Obj.make(TestSchema.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(originalObj);
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
       });
@@ -120,7 +120,7 @@ describe('CoreDatabase', () => {
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.doc().links?.[beforeUpdate.id].toString(),
       );
-      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
+      await db.entityManager.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.doc().links?.[beforeUpdate.id].toString());
     });
 
@@ -136,7 +136,7 @@ describe('CoreDatabase', () => {
       const notLoadedDocumentId = stack.notLoadedDocument.target?.id;
 
       const db = await createClientDbInSpaceWithObject(stack);
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(stack).doc().objects;
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
@@ -162,7 +162,7 @@ describe('CoreDatabase', () => {
       const ids = [stack.text1.target?.id, stack.text2.target?.id, stack.text3.target?.id];
       const contents = [stack.text1.target?.content, stack.text2.target?.content, stack.text3.target?.content];
       const db = await createClientDbInSpaceWithObject(stack);
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
 
       for (const id of ids) {
         await db.query(Query.type(TestSchema.Expando, { id })).run();
@@ -179,7 +179,7 @@ describe('CoreDatabase', () => {
         newDoc.objects[ids[2]] = getObjectDocHandle(db.getObjectById(ids[2])).doc()?.objects?.[ids[2]];
       });
 
-      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
+      await db.entityManager.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       expect((db.getObjectById(ids[0]) as any).content).to.eq(contents[0]);
       for (const id of ids) {
@@ -200,11 +200,11 @@ describe('CoreDatabase', () => {
         beforeUpdate.title,
       );
 
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).doc().objects;
       });
-      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
+      await db.entityManager.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: id2, title: 'test2' });
       expect(db.getObjectById(afterUpdate.id)).to.be.undefined;
@@ -214,7 +214,7 @@ describe('CoreDatabase', () => {
       const obj = createTextObject('Hello, world');
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = oldRootDocHandle.doc()?.links;
       });
@@ -225,7 +225,7 @@ describe('CoreDatabase', () => {
       const beforeUpdate = db.getObjectById(obj.id);
       expect(beforeUpdate).to.be.undefined;
 
-      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
+      await db.entityManager.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       await db.query(Filter.id(obj.id)).first();
     });
@@ -247,7 +247,7 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(rootObject);
 
       const oldDoc = getDocHandles(db).spaceRootHandle.doc();
-      const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
+      const newRootDocHandle = await createTestRootDoc(db.entityManager._repo);
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = oldDoc.objects ?? {};
         newDoc.links = oldDoc.links;
@@ -263,7 +263,7 @@ describe('CoreDatabase', () => {
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
       }
-      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
+      await db.entityManager.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       for (const obj of linksToRemove) {
         expect(db.getObjectById(obj.id)).to.be.undefined;
@@ -322,7 +322,7 @@ describe('CoreDatabase', () => {
         const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
         const peer = await testBuilder.createPeer();
         const spaceKey = PublicKey.random();
-        let coreDb: CoreDatabase;
+        let coreDb: EntityManager;
         {
           // Create db.
           const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
@@ -330,7 +330,7 @@ describe('CoreDatabase', () => {
           const spaceId = await createIdFromSpaceKey(spaceKey);
           const db = peer.client.constructDatabase({ spaceId, spaceKey });
           void db.setSpaceRoot(root.url);
-          coreDb = db.coreDatabase;
+          coreDb = db.entityManager;
         }
         expect(coreDb.getAllObjectIds()).to.deep.eq([]);
         void coreDb.open(Context.default(), { rootUrl: fakeUrl });
@@ -346,7 +346,7 @@ describe('CoreDatabase', () => {
         const testBuilder = new EchoTestBuilder();
         await openAndClose(testBuilder);
         const { db } = await testBuilder.createDatabase();
-        const rootDoc = db.coreDatabase.getSpaceRootDocHandle().doc();
+        const rootDoc = db.entityManager.getSpaceRootDocHandle().doc();
         expect(rootDoc?.access?.spaceKey).to.be.a('string');
       });
 
@@ -357,7 +357,7 @@ describe('CoreDatabase', () => {
         const object = Obj.make(TestSchema.Expando, {});
         db.add(object);
         await db.flush();
-        const rootDoc = db.coreDatabase.getSpaceRootDocHandle().doc();
+        const rootDoc = db.entityManager.getSpaceRootDocHandle().doc();
         expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
       });
 
@@ -368,7 +368,7 @@ describe('CoreDatabase', () => {
         const object = Obj.make(TestSchema.Expando, { name: 'linked-doc-test' });
         db.add(object);
         await db.flush();
-        const loaded = await db.coreDatabase.loadObjectCoreById(object.id);
+        const loaded = await db.entityManager.loadObjectCoreById(object.id);
         expect(loaded?.id).to.eq(object.id);
       });
     });
@@ -380,7 +380,7 @@ describe('CoreDatabase', () => {
       const { db, graph } = await testBuilder.createDatabase();
       graph.registry.add([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
-      await db.coreDatabase.atomicReplaceObject(contact.id, {
+      await db.entityManager.atomicReplaceObject(contact.id, {
         type: DXN.make('com.example.type.task', '0.1.0'),
         data: { name: 'Bar' },
       });
@@ -392,8 +392,8 @@ describe('CoreDatabase', () => {
 });
 
 const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
-  spaceRootHandle: db.coreDatabase.getSpaceRootDocHandle(),
-  linkedDocHandles: db.coreDatabase.getLinkedDocHandles(),
+  spaceRootHandle: db.entityManager.getSpaceRootDocHandle(),
+  linkedDocHandles: db.entityManager.getLinkedDocHandles(),
 });
 
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;

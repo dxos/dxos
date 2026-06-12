@@ -45,7 +45,7 @@ import { getInlineAndLinkChanges } from './util';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
-export type CoreDatabaseProps = {
+export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -71,7 +71,7 @@ export type AddCoreOptions = {
 };
 
 /**
- * Options for {@link CoreDatabase.loadObjectDocument}.
+ * Options for {@link EntityManager.loadObjectDocument}.
  */
 export interface LoadObjectDocumentOptions {
   /**
@@ -113,7 +113,7 @@ const TRACE_LOADING = false;
 //
 // TODO(burdon): Document.
 @trace.resource()
-export class CoreDatabase {
+export class EntityManager {
   private readonly _spaceKey: PublicKey;
   private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
@@ -140,7 +140,7 @@ export class CoreDatabase {
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
-  private _state = CoreDatabaseState.CLOSED;
+  private _state = EntityManagerState.CLOSED;
 
   private _ctx = Context.default();
 
@@ -182,7 +182,7 @@ export class CoreDatabase {
   /** Pending document creation promises, used by `_waitForPendingCreations`. */
   private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
 
-  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: EntityManagerProps) {
     this._hypergraph = graph;
     this._dataService = dataService;
     this._queryService = queryService;
@@ -223,11 +223,11 @@ export class CoreDatabase {
   @synchronized
   async open(ctx: Context, spaceState: SpaceState): Promise<void> {
     const start = performance.now();
-    if (this._state !== CoreDatabaseState.CLOSED) {
+    if (this._state !== EntityManagerState.CLOSED) {
       log.info('Already open');
       return;
     }
-    this._state = CoreDatabaseState.OPENING;
+    this._state = EntityManagerState.OPENING;
 
     this._ctx = new Context({ parent: ctx });
     this._updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
@@ -258,17 +258,17 @@ export class CoreDatabase {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
-    this._state = CoreDatabaseState.OPEN;
+    this._state = EntityManagerState.OPEN;
     this.opened.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close(): Promise<void> {
-    if (this._state === CoreDatabaseState.CLOSED) {
+    if (this._state === EntityManagerState.CLOSED) {
       return;
     }
-    this._state = CoreDatabaseState.CLOSED;
+    this._state = EntityManagerState.CLOSED;
 
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
@@ -312,7 +312,7 @@ export class CoreDatabase {
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {
-    if (this._state !== CoreDatabaseState.OPEN) {
+    if (this._state !== EntityManagerState.OPEN) {
       return [];
     }
 
@@ -543,9 +543,9 @@ export class CoreDatabase {
   }
 
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
-    if (core.coreDatabase) {
+    if (core.entityManager) {
       // Already in the database.
-      if (core.coreDatabase !== this) {
+      if (core.entityManager !== this) {
         throw new Error('Object already belongs to another database');
       }
 
@@ -1053,7 +1053,7 @@ export class CoreDatabase {
 
   private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
-    await warnAfterTimeout(5_000, 'Automerge root doc load timeout (CoreDatabase)', async () => {
+    await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
       await cancelWithContext(ctx, docHandle.whenReady());
     });
 
@@ -1554,7 +1554,7 @@ export type LoadObjectOptions = {
   diskOnly?: boolean;
 };
 
-enum CoreDatabaseState {
+enum EntityManagerState {
   CLOSED,
   OPENING,
   OPEN,

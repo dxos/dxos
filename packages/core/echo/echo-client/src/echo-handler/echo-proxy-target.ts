@@ -5,13 +5,11 @@
 import type * as Schema from 'effect/Schema';
 
 import type { Event } from '@dxos/async';
-import { inspectCustom } from '@dxos/debug';
-import type { Entity, Type } from '@dxos/echo';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
 
-import type { KeyPath, ObjectCore, TargetKey } from '../core-db';
+import type { KeyPath, ObjectCore } from '../core-db';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 
@@ -66,7 +64,8 @@ export type ProxyTarget = {
  * Returns a string label for an ObjectCore used in inspection output.
  * @internal
  */
-export const coreInspectLabel = (core: ObjectCore): string => `ObjectCore(${core.id}${core.coreDatabase ? ' bound' : ''})`;
+export const coreInspectLabel = (core: ObjectCore): string =>
+  `ObjectCore(${core.id}${core.entityManager ? ' bound' : ''})`;
 
 // ---------------------------------------------------------------------------
 // EchoDatabase accessor — the database field on ObjectCore is `unknown` to

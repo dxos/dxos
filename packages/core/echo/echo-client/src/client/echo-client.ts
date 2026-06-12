@@ -230,7 +230,7 @@ export class EchoClient extends Resource {
     // Waiting for the database to open since the query can run before the database is ready.
     // TODO(dmaretskyi): Refactor this.
     try {
-      await db.coreDatabase.opened.wait();
+      await db.entityManager.opened.wait();
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return undefined;
@@ -238,7 +238,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.coreDatabase.getObjectDocumentId(objectId);
+    const objectDocId = db.entityManager.getObjectDocumentId(objectId);
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;
