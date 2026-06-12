@@ -647,7 +647,7 @@ describe('Query', () => {
 
       const obj = initialDb.add(createTestObject({ value: 1 }));
       await initialDb.flush();
-      await initialDb.coreDatabase.updateIndexes();
+      await initialDb.updateIndexes();
 
       const createdAt = Obj.getMeta(obj).createdAt;
       const objectId = obj.id;
@@ -657,7 +657,7 @@ describe('Query', () => {
 
       const db = await peer.openLastDatabase();
       await db.flush();
-      await db.coreDatabase.updateIndexes();
+      await db.updateIndexes();
 
       const results = await db.query(Query.select(Filter.everything())).run();
       const reloaded = results.find((o) => o.id === objectId);
@@ -1260,7 +1260,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
+      root = db.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
@@ -1288,7 +1288,7 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const rootDocHandle = db.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
@@ -1323,7 +1323,7 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const rootDocHandle = db.getSpaceRootDocHandle();
       const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       // Wait for documents to be ready before accessing url and objects.
@@ -1345,7 +1345,7 @@ describe('Query', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      await db.coreDatabase.updateIndexes();
+      await db.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 

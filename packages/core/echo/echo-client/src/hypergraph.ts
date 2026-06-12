@@ -78,7 +78,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   ): void {
     this._databases.set(spaceId, database);
     this._owningObjects.set(spaceId, owningObject);
-    database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
+    database._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceId);
     if (map) {

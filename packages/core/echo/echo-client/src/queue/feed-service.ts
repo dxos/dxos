@@ -7,7 +7,6 @@ import * as Layer from 'effect/Layer';
 
 import { type Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
 
-import type { QueueImpl } from './queue';
 import type { QueueAPI } from './queue-factory';
 
 /**
@@ -16,54 +15,54 @@ import type { QueueAPI } from './queue-factory';
 // TODO(wittjosiah): QueueFactory should become a Feed API and be factored out to be part of the Database API in the echo package.
 export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.FeedService> => ({
   append: async (feed: Feed.Feed, items: Entity.Unknown[]): Promise<void> => {
-    const feedDXN = Feed.getQueueUri(feed);
-    if (!feedDXN) {
+    const queueUri = Feed.getQueueUri(feed);
+    if (!queueUri) {
       throw new Error('Unable to append to feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     queue.setParentEntity(feed as Obj.Unknown);
     await queue.append(items);
   },
 
   remove: async (feed: Feed.Feed, ids: string[]): Promise<void> => {
-    const feedDXN = Feed.getQueueUri(feed);
-    if (!feedDXN) {
+    const queueUri = Feed.getQueueUri(feed);
+    if (!queueUri) {
       throw new Error('Unable to remove from feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace });
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     await queue.delete(ids);
   },
 
   query: (feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any) => {
-    const feedDXN = Feed.getQueueUri(feed);
-    if (!feedDXN) {
+    const queueUri = Feed.getQueueUri(feed);
+    if (!queueUri) {
       throw new Error('Unable to query feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     queue.setParentEntity(feed as Obj.Unknown);
-    return queue.query(queryOrFilter as any);
+    return queue.query(queryOrFilter);
   },
 
   sync: async (feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> => {
-    const feedDXN = Feed.getQueueUri(feed);
-    if (!feedDXN) {
+    const queueUri = Feed.getQueueUri(feed);
+    if (!queueUri) {
       throw new Error('Unable to sync feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace });
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     await queue.sync(options);
   },
 
   getSyncState: async (feed: Feed.Feed): Promise<Feed.SyncState> => {
-    const feedDXN = Feed.getQueueUri(feed);
-    if (!feedDXN) {
+    const queueUri = Feed.getQueueUri(feed);
+    if (!queueUri) {
       throw new Error('Unable to get feed sync state: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
+    const queue = queues.get(queueUri, { subspaceTag: feed.namespace });
     return queue.getSyncState();
   },
 });

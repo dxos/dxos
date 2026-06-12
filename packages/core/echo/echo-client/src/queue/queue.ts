@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity, Feed, Filter, Obj, Query, type Ref, Scope } from '@dxos/echo';
+import { type Database, Entity, Feed, Filter, Obj, Query, QueryResult, type Ref, Scope } from '@dxos/echo';
 import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -143,10 +143,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this._queueId = EID.getEntityId(_echoUri) ?? failedInvariant('Missing queueId in EID');
   }
 
-  /**
-   * Set the parent entity for items in this queue.
-   * When set, all deserialized items will have their parent set to this entity.
-   */
   setParentEntity(parent: Obj.Unknown): void {
     this._parentEntity = parent;
   }
@@ -163,9 +159,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return this._echoUri;
   }
 
-  /**
-   * Subscribe to queue updates.
-   */
   subscribe(callback: () => void): () => void {
     return this.updated.on(callback);
   }
@@ -256,15 +249,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     }
   }
 
-  // Odd way to define method's types from a typedef.
-  declare query: Database.QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(queryOrFilter: Query.Any | Filter.Any) {
-    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithScope = query.from(Scope.space({ id: this._spaceId }), Scope.feed(this._echoUri));
+  query<Q extends Query.Any>(query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+  query<F extends Filter.Any>(filter: F): QueryResult.QueryResult<Filter.Type<F>>;
+  query(queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<Entity.Unknown>;
+  query(queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
+    const q = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    const queryWithScope = q.from(Scope.space({ id: this._spaceId }), Scope.feed(this._echoUri));
     return this.#queryResultCache.getOrCreate(
       queryWithScope,
       () => new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope),

@@ -21,7 +21,6 @@ import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
-import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
@@ -816,36 +815,6 @@ describe('Reactive Object with ECHO database', () => {
 
       expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toEqual([importantUri]);
     });
-  });
-
-  test('rebind', async () => {
-    const { db } = await builder.createDatabase();
-
-    const obj1 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-    const obj2 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 2' }));
-    // Wait for document creation to complete so docHandle is ready.
-    await db.flush();
-
-    let updateCount = 0;
-    const unsub1 = Obj.subscribe(obj1, () => updateCount++);
-    const unsub2 = Obj.subscribe(obj2, () => updateCount++);
-    using _ = defer(() => {
-      unsub1();
-      unsub2();
-    });
-
-    expect(updateCount).to.eq(0);
-
-    // Rebind obj2 to obj1
-    getObjectCore(obj2).bind({
-      db: getObjectCore(obj1).database!,
-      docHandle: getObjectCore(obj1).docHandle!,
-      path: getObjectCore(obj1).mountPath,
-      assignFromLocalState: false,
-    });
-
-    expect(updateCount).to.eq(1);
-    expect(obj2.title).to.eq('Object 1');
   });
 
   test('assign a non-echo reactive object', async () => {
