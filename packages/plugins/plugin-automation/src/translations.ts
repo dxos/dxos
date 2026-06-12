@@ -53,7 +53,6 @@ export const translations = [
         'automation-not-associated.message': 'Not yet associated with this object.',
         'automation-detached.message': 'No longer associated with this object.',
 
-        'script-automation.label': 'Automation',
         'automation-verbose.label': 'Manage automations',
         'automation.description': 'Manage where automations in this space run.',
 

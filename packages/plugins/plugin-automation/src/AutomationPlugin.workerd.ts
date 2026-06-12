@@ -3,10 +3,10 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 
-import { OperationHandler } from '#capabilities';
+import { OperationHandler, Templates } from '#capabilities';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
@@ -15,6 +15,9 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({
     schema: [Automation.Automation, Operation.PersistentOperation, Trigger.Trigger, Trace.Message],
   }),
+  // CreateAutomationFromTemplate (in OperationHandler) resolves AutomationCapabilities.Template, so the
+  // template provider must be present wherever the handler is exported.
+  Plugin.addModule({ id: 'automation-templates', activatesOn: AppActivationEvents.SetupSchema, activate: Templates }),
   Plugin.make,
 );
 

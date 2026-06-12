@@ -8,7 +8,6 @@ import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 
 import { blank } from '../templates';
-
 import * as Automation from './Automation';
 import * as Runnable from './Runnable';
 

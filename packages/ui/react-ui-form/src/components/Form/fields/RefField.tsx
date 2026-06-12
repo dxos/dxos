@@ -40,8 +40,7 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
       const typename = Entity.getTypename(labelEntity);
       // Fall back to the entity's type placeholder when it has no label of its own — matching the
       // app-graph/navtree (`object-name.placeholder` in the entity's typename namespace).
-      const label =
-        Entity.getLabel(labelEntity) ?? (typename ? getTypePlaceholder?.(typename) : undefined) ?? id;
+      const label = Entity.getLabel(labelEntity) ?? (typename ? getTypePlaceholder?.(typename) : undefined) ?? id;
       return { id, label };
     });
 

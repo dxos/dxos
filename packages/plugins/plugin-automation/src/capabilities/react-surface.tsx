@@ -37,20 +37,6 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'companion.automation',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'automation'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: ({ data }) => {
-          const space = getSpace(data.companionTo);
-          if (!space) {
-            return null;
-          }
-          return <AutomationSettings space={space} object={data.companionTo} />;
-        },
-      }),
-      Surface.create({
         id: 'companion.automations',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'automations'),

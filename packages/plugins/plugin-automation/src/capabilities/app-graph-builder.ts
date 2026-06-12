@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, createTypeSectionExtension } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Operation, Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
@@ -39,10 +39,16 @@ export default Capability.makeModule(
                   const object = Automation.make({ triggers: [] });
                   const { subject } = yield* Operation.invoke(
                     SpaceOperation.AddObject,
-                    { object, target: space.db, targetNodeId: getAutomationsPath(space.db.spaceId) },
+                    // Hidden so both creation paths (sidebar + companion) place automations under the
+                    // "Automations" section rather than as first-class space items (matches AutomationsCompanion).
+                    { object, target: space.db, hidden: true, targetNodeId: getAutomationsPath(space.db.spaceId) },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...subject] }, { spaceId: space.db.spaceId });
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [...subject] },
+                    { spaceId: space.db.spaceId },
+                  );
                 }),
               properties: {
                 label: ['add-object.label', { ns: Type.getTypename(Automation.Automation) }],
@@ -78,19 +84,6 @@ export default Capability.makeModule(
               icon: 'ph--lightning--regular',
               data: 'automations',
               position: 'last',
-            }),
-          ]),
-      }),
-      GraphBuilder.createTypeExtension({
-        id: 'scriptCompanion',
-        type: Script.Script,
-        connector: (script) =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              id: linkedSegment('automation'),
-              label: ['script-automation.label', { ns: meta.id }],
-              icon: 'ph--lightning--regular',
-              data: 'automation',
             }),
           ]),
       }),
