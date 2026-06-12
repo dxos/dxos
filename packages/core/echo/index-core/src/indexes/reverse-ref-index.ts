@@ -27,7 +27,8 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
         return; // Skip non-echo references.
       }
       // Key by the local (space-less) form so a space-qualified ref and a bare ref to the same entity index
-      // under the same key — entity ids are globally unique, and lookups normalize the same way (see `query`).
+      // under the same key. The index is scoped to one space (entity ids are unique within it), and lookups
+      // normalize the same way (see `query`).
       refs.push({ path, targetDXN: EID.toLocal(parsedEchoUri) });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {

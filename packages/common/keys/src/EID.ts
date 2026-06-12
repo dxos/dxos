@@ -153,29 +153,17 @@ export const isLocal = (uri: EID): boolean => {
 };
 
 /**
- * Returns the local (space-less) form of an EID, dropping any space authority.
+ * Returns the local (space-less) form of an EID, dropping any space authority. A space-qualified EID and a
+ * bare one for the same entity collapse to the same value; space-only EIDs (no entity id) are returned
+ * unchanged.
  *
- * Entity ids are globally unique, so the local form canonically identifies the same entity whether or not
- * the original EID named a space — a space-qualified EID and a bare one for the same entity collapse to the
- * same value. Space-only EIDs (no entity id) are returned unchanged.
+ * Entity ids are unique within a space, so the local form is a safe key/comparison basis only among EIDs
+ * already known to belong to one space (e.g. a single space's reverse-ref index). Do NOT use it to decide
+ * whether two arbitrary EIDs name the same entity across spaces.
  */
 export const toLocal = (uri: EID): EID => {
   const entityId = getEntityId(uri);
   return entityId != null ? make({ entityId }) : parse(uri);
-};
-
-/**
- * Returns true if the two EIDs refer to the same entity, treating a space-less (local) EID as implicitly the
- * same space as a qualified one. Because entity ids are globally unique, this compares by entity id —
- * `echo:/<id>` matches `echo://<space>/<id>`. Space-only EIDs fall back to exact (normalized) comparison.
- */
-export const refersToSameEntity = (a: EID, b: EID): boolean => {
-  const entityA = getEntityId(a);
-  const entityB = getEntityId(b);
-  if (entityA != null && entityB != null) {
-    return entityA === entityB;
-  }
-  return parse(a) === parse(b);
 };
 
 /**

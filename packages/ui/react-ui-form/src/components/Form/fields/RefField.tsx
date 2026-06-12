@@ -29,6 +29,10 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
  * Find the option a ref-like form value points at. Falls back to matching by entity id so a bare local EID
  * (`echo:/<id>`, produced by `Ref.make`) still resolves against an option keyed by the entity's qualified
  * self URI (`echo://<space>/<id>`). Returns `undefined` when the value is not a ref or no option matches.
+ *
+ * The entity-id fallback is sound because `options` is drawn from a single space (plus the registry), where
+ * entity ids are unique — a matching id unambiguously names the same entity. It must not be generalized to
+ * compare refs across spaces.
  */
 export const findRefOption = (value: unknown, options: RefOption[]): RefOption | undefined => {
   const isRef = Ref.isRef(value);

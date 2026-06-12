@@ -176,24 +176,3 @@ describe('EID.toLocal', () => {
     expect(EID.toLocal(EID.make({ spaceId: SPACE }))).toBe(EID.make({ spaceId: SPACE }));
   });
 });
-
-describe('EID.refersToSameEntity', () => {
-  test('matches a space-less EID with a qualified one for the same entity (implicit same space)', ({ expect }) => {
-    const local = EID.make({ entityId: OBJECT });
-    const qualified = EID.make({ spaceId: SPACE, entityId: OBJECT });
-    expect(EID.refersToSameEntity(local, qualified)).toBe(true);
-    expect(EID.refersToSameEntity(qualified, local)).toBe(true);
-  });
-
-  test('matches the legacy local format with a qualified one', ({ expect }) => {
-    const legacyLocal = EID.parse(`dxn:echo:@:${OBJECT}`);
-    const qualified = EID.make({ spaceId: SPACE, entityId: OBJECT });
-    expect(EID.refersToSameEntity(legacyLocal, qualified)).toBe(true);
-  });
-
-  test('does not match different entities', ({ expect }) => {
-    const a = EID.make({ entityId: OBJECT });
-    const b = EID.make({ spaceId: SPACE, entityId: OBJECT2 });
-    expect(EID.refersToSameEntity(a, b)).toBe(false);
-  });
-});
