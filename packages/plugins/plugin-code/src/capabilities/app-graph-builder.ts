@@ -51,9 +51,7 @@ export default Capability.makeModule(
           if (!spec) {
             return Effect.succeed([]);
           }
-          const content = get(pluginAssetsAtom).find(
-            (entry) => entry.pluginId === id && entry.path === spec,
-          )?.content;
+          const content = get(pluginAssetsAtom).find((entry) => entry.pluginId === id && entry.path === spec)?.content;
           if (!content) {
             return Effect.succeed([]);
           }
