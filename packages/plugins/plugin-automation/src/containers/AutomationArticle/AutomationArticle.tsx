@@ -176,9 +176,7 @@ export const ActionSection = ({
 
       {/* Bind the operation's inputs (e.g. an object ref) once a trigger exists — input lives on the trigger;
           a ref set here is what associates a non-feed object via `automationsForObject`. */}
-      {trigger && selectedOperation && (
-        <ActionInputEditor db={db} operation={selectedOperation} trigger={trigger} />
-      )}
+      {trigger && selectedOperation && <ActionInputEditor db={db} operation={selectedOperation} trigger={trigger} />}
     </div>
   );
 };
@@ -329,7 +327,13 @@ const InlineSection = ({ title, children }: { title: string; children: ReactNode
  * Compact inline view used in the Automation companion. Renders the same three sections as the full article
  * (General / Trigger / Action) with condensed headings and no descriptions or scrolling Settings.Viewport.
  */
-export const AutomationInlineForm = ({ automation, db }: { automation: Automation.Automation; db: Database.Database }) => {
+export const AutomationInlineForm = ({
+  automation,
+  db,
+}: {
+  automation: Automation.Automation;
+  db: Database.Database;
+}) => {
   const { t } = useTranslation(meta.id);
   const trigger = usePrimaryTrigger(automation);
 
