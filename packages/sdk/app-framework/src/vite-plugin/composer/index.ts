@@ -274,7 +274,16 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     plugins.push({
       name: 'composer-plugin:meta',
       enforce: 'pre',
-      resolveId: (id) => (id === '#meta' ? '\0dxos:plugin-meta' : undefined),
+      resolveId: (id, importer) => {
+        if (id !== '#meta') return undefined;
+        // Only intercept `#meta` imports from the plugin's own source, not from
+        // bundled node_modules (e.g. @dxos/plugin-space). Those packages have their
+        // own `#meta` entry in their package.json#imports and must resolve to their
+        // own metadata — returning our synthesized module here would give them the
+        // wrong plugin ID, corrupting capability identifiers like CreateObjectEntry.
+        if (importer && importer.includes('node_modules')) return undefined;
+        return '\0dxos:plugin-meta';
+      },
       load: (id) => (id === '\0dxos:plugin-meta' ? synthesizePluginMetaSource(pluginEntry) : undefined),
     });
   }
