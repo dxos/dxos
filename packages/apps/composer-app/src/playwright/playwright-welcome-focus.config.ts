@@ -16,7 +16,7 @@ export default defineConfig({
   testMatch: '**/welcome-focus.spec.ts',
   timeout: 120_000,
   webServer: {
-    command: 'pnpm --dir ../../../tools/storybook-react exec storybook dev --port 9009 --no-open --ci',
+    command: 'pnpm --dir ../../../../../tools/storybook-react exec storybook dev --port 9009 --no-open --ci',
     port: 9009,
     reuseExistingServer: true,
     timeout: 300_000,
