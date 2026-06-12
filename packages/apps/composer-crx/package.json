@@ -11,10 +11,7 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
-  "scripts": {
-    "pack:crx": "crx pack out/composer-crx -o composer.crx",
-    "pack:webext": "web-ext build --source-dir out/composer-crx"
-  },
+  "scripts": {},
   "dependencies": {
     "@ai-sdk/react": "catalog:",
     "@cloudflare/ai-chat": "catalog:",

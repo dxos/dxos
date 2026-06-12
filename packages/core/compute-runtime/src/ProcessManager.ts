@@ -524,11 +524,16 @@ export class ProcessManagerImpl implements Manager {
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Schema<I, any, never> };
-      // Fall back to null rather than crashing if encoding fails (e.g. operation passed undefined
-      // for a Struct({}) input schema). The handler still receives the original typed value;
-      // re-delivery after restart will see null and may also fail, but that is best-effort by design.
+      // Fall back to null rather than crashing if the input cannot be persisted. The durable
+      // store JSON-serializes this value, and a successful schema encode does not guarantee
+      // JSON-safety (e.g. Schema.Any passes a live reference straight through), so round-trip
+      // through JSON and degrade to null when it is not serializable. The handler still receives
+      // the original typed value; re-delivery after restart sees null — best-effort by design.
       const encodeInput = (input: I): Effect.Effect<unknown> =>
-        Schema.encode(defRaw.input)(input).pipe(Effect.orElseSucceed(() => null));
+        Schema.encode(defRaw.input)(input).pipe(
+          Effect.flatMap((encoded) => Effect.try((): unknown => JSON.parse(JSON.stringify(encoded)))),
+          Effect.orElseSucceed(() => null),
+        );
 
       const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,

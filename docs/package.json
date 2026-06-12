@@ -38,6 +38,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@types/turndown": "catalog:",
-    "turndown": "catalog:"
+    "turndown": "catalog:",
+    "vite": "^7.3.2"
   }
 }

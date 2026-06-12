@@ -24,3 +24,11 @@ tasks:
   serve:
     deps:
       - prepare-dist
+  # Bundle and zip the extension for Chrome Web Store upload.
+  # Output: packages/apps/composer-crx/composer-crx.zip
+  pack:
+    command: node scripts/pack.mjs
+    deps:
+      - bundle
+    outputs:
+      - composer-crx.zip
