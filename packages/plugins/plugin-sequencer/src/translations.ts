@@ -20,6 +20,7 @@ export const translations = [
         'add-object.label': 'Add score',
         'rename-object.label': 'Rename score',
         'delete-object.label': 'Delete score',
+        'object-deleted.label': 'Score deleted',
       },
       [meta.id]: {
         'plugin.name': 'Sequencer',

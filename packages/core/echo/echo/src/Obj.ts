@@ -547,6 +547,11 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
 /**
  * Get the database the object belongs to.
  * Accepts both reactive objects and snapshots.
+ *
+ * @idiom org.dxos.echo.objGetDatabase
+ *   applies: Reaching an object's database — to query, add, or remove — when the surrounding Space is not otherwise needed
+ *   instead-of: `getSpace(obj)?.db` (resolving the whole Space just to read its `.db`)
+ *   uses: {@link getDatabase}
  */
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);

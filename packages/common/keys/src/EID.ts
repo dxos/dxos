@@ -114,6 +114,20 @@ export const isLocal = (uri: EID): boolean => {
 };
 
 /**
+ * Returns the local (space-less) form of an EID, dropping any space authority. A space-qualified EID and a
+ * bare one for the same entity collapse to the same value; space-only EIDs (no entity id) are returned
+ * unchanged.
+ *
+ * Entity ids are unique within a space, so the local form is a safe key/comparison basis only among EIDs
+ * already known to belong to one space (e.g. a single space's reverse-ref index). Do NOT use it to decide
+ * whether two arbitrary EIDs name the same entity across spaces.
+ */
+export const toLocal = (uri: EID): EID => {
+  const entityId = getEntityId(uri);
+  return entityId != null ? make({ entityId }) : parse(uri);
+};
+
+/**
  * Returns true if the two EIDs refer to the same object, normalizing both first.
  */
 export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
