@@ -549,7 +549,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
-    return this._coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    return this._coreDatabase.getSpaceRootDocHandle();
   }
 
   /**

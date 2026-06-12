@@ -81,7 +81,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     // 3. Wire both objects into the local space root. Main is reachable on
     //    disk via `links[mainObjectId]`; dep is *advertised* via
     //    `links[depObjectId]` but its underlying chunks never arrive.
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.coreDatabase.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -158,7 +158,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     });
     const unreachableUrl = orphanDepHandle.url;
 
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.coreDatabase.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -220,7 +220,7 @@ describe('Query pipeline strong-dependency stalls', () => {
       },
     });
 
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.coreDatabase.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[aId] = new A.RawString(aHandle.url);
@@ -272,7 +272,7 @@ describe('Query pipeline strong-dependency stalls', () => {
       },
     });
 
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.coreDatabase.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -343,7 +343,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     });
 
     // Link only the main object — the dep id has no entry in the directory at all.
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.coreDatabase.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);

@@ -341,6 +341,38 @@ describe('CoreDatabase', () => {
       });
     });
 
+    describe('document loading', () => {
+      test('space access is set on root document handle', async () => {
+        const testBuilder = new EchoTestBuilder();
+        await openAndClose(testBuilder);
+        const { db } = await testBuilder.createDatabase();
+        const rootDoc = db.coreDatabase.getSpaceRootDocHandle().doc();
+        expect(rootDoc?.access?.spaceKey).to.be.a('string');
+      });
+
+      test('new object document is linked with root document', async () => {
+        const testBuilder = new EchoTestBuilder();
+        await openAndClose(testBuilder);
+        const { db } = await testBuilder.createDatabase();
+        const object = Obj.make(TestSchema.Expando, {});
+        db.add(object);
+        await db.flush();
+        const rootDoc = db.coreDatabase.getSpaceRootDocHandle().doc();
+        expect(rootDoc?.links?.[object.id]).to.not.be.undefined;
+      });
+
+      test('object becomes available via loadObjectCoreById after linked document is loaded', async () => {
+        const testBuilder = new EchoTestBuilder();
+        await openAndClose(testBuilder);
+        const { db } = await testBuilder.createDatabase();
+        const object = Obj.make(TestSchema.Expando, { name: 'linked-doc-test' });
+        db.add(object);
+        await db.flush();
+        const loaded = await db.coreDatabase.loadObjectCoreById(object.id);
+        expect(loaded?.id).to.eq(object.id);
+      });
+    });
+
     // TODO(dmaretskyi): Test for conflict resolution.
     test('atomic replace object', async () => {
       const testBuilder = new EchoTestBuilder();
@@ -360,8 +392,8 @@ describe('CoreDatabase', () => {
 });
 
 const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
-  spaceRootHandle: db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(),
-  linkedDocHandles: db.coreDatabase._automergeDocLoader.getLinkedDocHandles(),
+  spaceRootHandle: db.coreDatabase.getSpaceRootDocHandle(),
+  linkedDocHandles: db.coreDatabase.getLinkedDocHandles(),
 });
 
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
