@@ -8,14 +8,15 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
+import { AppNode, AppNodeMatcher, LayoutOperation, Segments, getTypeSlug } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { type URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { ViewAnnotation, getTypeTag } from '@dxos/schema';
+import { ViewAnnotation } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -106,12 +107,12 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           if (Type.getDatabase(schema) != null) {
             return true;
           }
-          const tag = getTypeTag(schema);
-          const objects = get(space.db.query(Filter.typename(tag)).atom);
+          const typeUri = Type.getURI(schema);
+          const objects = get(space.db.query(Filter.type(typeUri)).atom);
           if (ViewAnnotation.has(schema)) {
             return objects.some((obj) => !viewIndex.isView(obj));
           }
-          return objects.length > 0 || viewIndex.typenamesWithViews.has(tag);
+          return objects.length > 0 || viewIndex.typeUrisWithViews.has(typeUri);
         });
 
         return Effect.succeed(visibleSchemas.map((schema) => createSchemaNode({ schema, space, get })));
@@ -129,19 +130,20 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const tag = getTypeTag(schema);
+        const slug = getTypeSlug(schema);
+        const typeUri = Type.getURI(schema);
 
         // {All} virtual node.
         const allNode = Node.make({
           id: 'all',
           type: TYPE_COLLECTION_TYPE,
-          data: { space, typename: tag },
+          data: { space, typeUri },
           properties: {
             label: ['type-collection-all.label', { ns: meta.id }],
             icon: 'ph--list--regular',
             iconHue: 'neutral',
             role: 'branch',
-            testId: `spacePlugin.typeCollectionAll.${tag}`,
+            testId: `spacePlugin.typeCollectionAll.${slug}`,
             selectable: false,
             draggable: false,
             droppable: false,
@@ -153,7 +155,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // View objects for this schema.
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
-          .getViewsForTypename(tag)
+          .getViewsForTypeUri(typeUri)
           .map((object: Obj.Unknown) =>
             createObjectNode({
               db: space.db,
@@ -171,16 +173,16 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     GraphBuilder.createExtension({
       id: 'typeCollectionObjects',
       match: (node) => {
-        if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typename) {
+        if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
           return Option.none();
         }
-        return Option.some({ space: node.data.space as Space, typename: node.data.typename as string });
+        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
       },
-      connector: ({ space, typename }, get) => {
+      connector: ({ space, typeUri }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
-        const objects = get(space.db.query(Filter.typename(typename)).atom).filter(
+        const objects = get(space.db.query(Filter.type(typeUri)).atom).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
 
@@ -215,9 +217,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const targetTag = getTypeTag(schema);
+        const targetUri = Type.getURI(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
-        const deletable = Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTag).length === 0;
+        const deletable = Type.getDatabase(schema) != null && viewIndex.getViewsForTypeUri(targetUri).length === 0;
 
         return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities }));
       },
@@ -250,9 +252,9 @@ const createSchemaNode = ({
   get: Atom.Context;
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
-  // The node id doubles as the `types/<tag>` path segment, so it must match the tag the table's
-  // view query resolves to (entity id for stored schemas, typename for static ones).
-  const tag = getTypeTag(schema);
+  // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
+  // a stored schema's entity id, or a static schema's typename.
+  const slug = getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
@@ -268,13 +270,13 @@ const createSchemaNode = ({
             'object-name.placeholder',
             { ns: Type.getTypename(Type.Type) },
           ],
-          nodeId: tag,
+          nodeId: slug,
         };
       },
     ),
     Match.orElse(() => ({
       label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
-      nodeId: tag,
+      nodeId: slug,
     })),
   );
   const icon =

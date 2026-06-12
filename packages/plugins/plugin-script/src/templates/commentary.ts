@@ -158,7 +158,7 @@ export default Commentary.pipe(
         let document: Markdown.Document;
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-          const [properties] = yield* Database.query(Filter.typename('org.dxos.type.spaceProperties')).run;
+          const [properties] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.spaceProperties'))).run;
           const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
           const rootCollection = rootCollectionRef
             ? yield* Database.load<Collection.Collection>(rootCollectionRef)

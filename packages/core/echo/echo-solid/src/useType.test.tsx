@@ -72,7 +72,7 @@ describe('useType', () => {
     let schemaAccessor: (() => any) | undefined;
 
     function TestComponent() {
-      const schema = useType(db, Type.getTypename(registeredSchema)!);
+      const schema = useType(db, Type.getURI(registeredSchema));
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -139,7 +139,7 @@ describe('useType', () => {
     let dbAccessor: any = db;
 
     function TestComponent() {
-      const schema = useType(() => dbAccessor, Type.getTypename(registeredSchema)!);
+      const schema = useType(() => dbAccessor, Type.getURI(registeredSchema));
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -170,10 +170,10 @@ describe('useType', () => {
     const registeredSchema = await db.addType(TestSchema.Person);
 
     let schemaAccessor: (() => any) | undefined;
-    let typename: string | undefined = Type.getTypename(registeredSchema)!;
+    let typeUri: string | undefined = Type.getURI(registeredSchema);
 
     function TestComponent() {
-      const schema = useType(db, () => typename);
+      const schema = useType(db, () => typeUri);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -193,11 +193,11 @@ describe('useType', () => {
     expect(result).toBeDefined();
     expect(Type.getTypename(result!)).toBe(Type.getTypename(registeredSchema)!);
 
-    // Change typename
-    typename = undefined;
+    // Change typeUri
+    typeUri = undefined;
 
     await waitFor(() => {
-      // Should keep previous value when typename becomes undefined
+      // Should keep previous value when typeUri becomes undefined
       expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
     result = schemaAccessor?.();

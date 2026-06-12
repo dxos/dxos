@@ -9,6 +9,7 @@ import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -48,7 +49,7 @@ export const InlineRefField = (props: RefFieldProps) => {
   );
 
   // Empty ref: offer to create the referenced object so the inline form has a target.
-  const createType = useType(db, typename);
+  const createType = useType(db, typename ? DXN.make(typename) : undefined);
   const handleCreate = useCallback(async () => {
     if (!createType || !onCreate) {
       return;
@@ -91,8 +92,8 @@ type InlineFormProps = {
 
 const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: InlineFormProps) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
-  const typename = target ? (Obj.getTypename(target) ?? undefined) : undefined;
-  const typeFromRegistry = useType(db, typename);
+  const typeUri = target ? Obj.getTypeURI(target) : undefined;
+  const typeFromRegistry = useType(db, typeUri);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;
   // Drop the ECHO `id` property (mirrors `ObjectProperties` via `withMetaTags`);
   // otherwise the nested form renders an "Id" field. Hidden fields

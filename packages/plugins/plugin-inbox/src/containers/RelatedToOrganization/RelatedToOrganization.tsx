@@ -12,7 +12,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 
 import { RelatedContacts } from '#components';
@@ -30,7 +30,7 @@ export const RelatedToOrganization = ({
 
   const spaceViews = useQuery(db, Filter.type(Table.Table));
   const spaceContactTable = spaceViews.find(
-    (table) => getTypenameFromQuery(table.view.target?.query.ast) === Type.getTypename(Person.Person),
+    (table) => getTypeURIFromQuery(table.view.target?.query.ast) === Type.getURI(Person.Person),
   );
 
   // TODO(wittjosiah): Generalized way of handling related objects navigation.

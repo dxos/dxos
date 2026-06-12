@@ -3,12 +3,19 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { CollectionModel, getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
+import {
+  CollectionModel,
+  getCollectionsPath,
+  getObjectPath,
+  getTypePath,
+  getTypeSlug,
+  getTypeSlugFromUri,
+} from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
-import { ViewAnnotation, getTypeTag, getTypenameFromQuery } from '@dxos/schema';
+import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
 
@@ -45,24 +52,24 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
           ? ViewAnnotation.get(Type.getSchema(runtimeSchema)).pipe(Option.getOrElse(() => []))
           : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
-      const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
+      const viewTargetUri = view ? getTypeURIFromQuery(view.query.ast) : undefined;
       // A view holder filed under a target type its view query can't resolve would be invisible in
       // the navigation tree. Fail loudly rather than silently dropping it under its own typename.
       invariant(
-        !view || (viewTargetTypename != null && viewTargetTypename.length > 0),
+        !view || viewTargetUri != null,
         `View object ${typename} (${object.id}) has no resolvable target type — its view query must filter by a known type.`,
       );
-      // Stored (database) types are keyed by entity id in the graph, so resolve the object's own
-      // type tag rather than filing it under its (human) typename.
+      // Graph type nodes are keyed by a slash-free slug (entity id for stored types, typename for
+      // static); resolve the object's own type slug rather than filing it under its (human) typename.
       const objectType = Obj.getType(object);
-      const typeTag = objectType ? getTypeTag(objectType) : typename;
+      const typeSlug = objectType ? getTypeSlug(objectType) : typename;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,
         objectId: object.id,
         nodeId: input.targetNodeId,
         typename,
-        typeTag,
-        viewTargetTypename,
+        typeSlug,
+        viewTargetSlug: viewTargetUri ? getTypeSlugFromUri(viewTargetUri) : undefined,
       });
 
       return {
@@ -80,19 +87,20 @@ const getSubjectPathForNewObject = (props: {
   objectId: string;
   nodeId?: string;
   typename: string;
-  /** Tag of the object's own type ({@link getTypeTag}) — keys the `types/<tag>` node it files under. */
-  typeTag: string;
-  viewTargetTypename?: string;
+  /** Slug of the object's own type ({@link getTypeSlug}) — keys the `types/<slug>` node it files under. */
+  typeSlug: string;
+  /** Slug of the view holder's target type, when the object is a view holder. */
+  viewTargetSlug?: string;
 }): string => {
-  const { nodeId, typename, typeTag, viewTargetTypename, spaceId, objectId } = props;
+  const { nodeId, typename, typeSlug, viewTargetSlug, spaceId, objectId } = props;
   if (typeof nodeId === 'string') {
     return `${nodeId}/${objectId}`;
   }
   if (typename === Type.getTypename(Collection.Collection)) {
     return getCollectionsPath(spaceId, objectId);
   }
-  if (viewTargetTypename) {
-    return getTypePath(spaceId, viewTargetTypename, objectId);
+  if (viewTargetSlug) {
+    return getTypePath(spaceId, viewTargetSlug, objectId);
   }
-  return getObjectPath(spaceId, typeTag, objectId);
+  return getObjectPath(spaceId, typeSlug, objectId);
 };

@@ -366,10 +366,9 @@ type TypeTag =
   | { kind: 'raw'; value: string };
 
 /**
- * Reduces a type discriminator string to a {@link TypeTag}. Accepts the full URI forms stored on
- * `system.type` (typename DXN, `echo:` EID) and the scheme-less tag forms callers may filter by
- * (a bare typename, a bare `<entityId>`, or a qualified `<spaceId>:<entityId>`) — mirroring how a
- * typename carries no `dxn:` scheme.
+ * Reduces a type discriminator URI (the value stored on `system.type` and the value carried by a
+ * type filter) to a {@link TypeTag}: a typename DXN, or an `echo:` EID. Falls back to `raw` for an
+ * unrecognized string.
  */
 const parseTypeTag = (str: string): TypeTag => {
   const eid = EID.tryParse(str);
@@ -383,19 +382,6 @@ const parseTypeTag = (str: string): TypeTag => {
   const dxn = DXN.tryMake(str);
   if (dxn) {
     return { kind: 'type', name: DXN.getName(dxn), version: DXN.getVersion(dxn) };
-  }
-
-  // Scheme-less echo identity: `<spaceId>:<entityId>` or bare `<entityId>`.
-  const colon = str.indexOf(':');
-  if (colon > 0) {
-    const space = str.slice(0, colon);
-    const entity = str.slice(colon + 1);
-    if (SpaceId.isValid(space) && EntityId.isValid(entity)) {
-      return { kind: 'echo', spaceId: space, entityId: entity };
-    }
-  }
-  if (EntityId.isValid(str)) {
-    return { kind: 'echo', entityId: str };
   }
 
   return { kind: 'raw', value: str };

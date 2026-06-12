@@ -7,7 +7,7 @@ import { act, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
 import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
 import * as stories from './ObjectProperties.stories';
@@ -60,7 +60,7 @@ describe('ObjectProperties — inline create flow', () => {
     const { db, object } = getDebug();
 
     // The new Author should exist in the DB.
-    const authors = (await db.query(Filter.typename('org.dxos.test.author' as any)).run()) as any[];
+    const authors = (await db.query(Filter.type(DXN.make('org.dxos.test.author'))).run()) as any[];
     const created = authors.find((author: any) => author.name === 'Ada Lovelace');
     expect(created, 'new Author with name "Ada Lovelace" should be in the database').toBeDefined();
 
@@ -84,7 +84,7 @@ describe('ObjectProperties — inline create flow', () => {
       const { db, object } = getDebug();
 
       // The new Note should exist in the DB with the synthesised backing ref.
-      const notes = (await db.query(Filter.typename('org.dxos.test.note' as any)).run()) as any[];
+      const notes = (await db.query(Filter.type(DXN.make('org.dxos.test.note'))).run()) as any[];
       const created = notes.find((note: any) => note.title === 'Ideas');
       expect(created, 'new Note with title "Ideas" should be in the database').toBeDefined();
       expect(

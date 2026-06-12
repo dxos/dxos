@@ -68,7 +68,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
       .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
       .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
       .filter((type) => Type.getTypename(type) !== collectionTypename);
-    return types.length > 0 ? Filter.or(...types.map((type) => Filter.typename(Type.getTypename(type)))) : undefined;
+    return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
   }, [schemas]);
 
   const query = useMemo(

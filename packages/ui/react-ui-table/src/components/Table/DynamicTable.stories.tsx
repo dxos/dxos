@@ -132,7 +132,7 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientStory();
-    const type = useType(space?.db, Type.getTypename(TestSchema.Person));
+    const type = useType(space?.db, Type.getURI(TestSchema.Person));
     const objects = useQuery(space?.db, type ? Filter.type(type) : Filter.nothing());
     if (!type) {
       return <div>Loading schema...</div>;

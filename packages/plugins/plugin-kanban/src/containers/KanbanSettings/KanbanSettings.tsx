@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { useObject, useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';
 import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema, UNCATEGORIZED_VALUE } from '#types';
@@ -30,8 +30,8 @@ export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
   const isView = object.spec.kind === 'view';
   const [view, updateView] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
   const [, updateKanban] = useObject(object);
-  const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useType(db, currentTypename);
+  const currentTypeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const schema = useType(db, currentTypeUri);
   const projection = useProjectionModel(schema, object, registry);
 
   const fieldProjections = projection?.getFieldProjections() ?? [];

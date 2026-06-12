@@ -8,7 +8,21 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { EID, Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type Registry, Type, View } from '@dxos/echo';
+import {
+  DXN,
+  EID,
+  Entity,
+  Feed,
+  Filter,
+  Format,
+  Obj,
+  Query,
+  QueryAST,
+  Ref,
+  type Registry,
+  Type,
+  View,
+} from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -20,7 +34,7 @@ import {
   ProjectionModel,
   VIEW_FIELD_LIMIT,
   createEchoChangeCallback,
-  getTypenameFromQuery,
+  getTypeURIFromQuery,
 } from '@dxos/schema';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
@@ -151,13 +165,15 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
 
     // TODO(burdon): Need to warn user of possible consequences of editing.
     // TODO(burdon): Settings should have domain name owned by user.
-    const viewValues = useMemo(
-      () => ({
-        query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
+    const viewValues = useMemo(() => {
+      // Schema mode edits a typename; show the version-less name of the type DXN.
+      const typeUri = getTypeURIFromQuery(view.query.ast);
+      const typeDxn = typeUri ? DXN.tryMake(typeUri) : undefined;
+      return {
+        query: mode === 'schema' ? (typeDxn ? DXN.getName(typeDxn) : (typeUri ?? '')) : view.query.ast,
         target: targetRef,
-      }),
-      [mode, view.query.ast, targetRef],
-    );
+      };
+    }, [mode, view.query.ast, targetRef]);
 
     const fieldMap = useMemo<FormFieldMap | undefined>(
       () => (mode === 'tag' ? customFields({ types, tags }) : undefined),
@@ -180,7 +196,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         // TODO(wittjosiah): Deep-clone the AST to plain JS or ECHO proxy arrays become objects with numeric keys.
         const query =
           mode === 'schema'
-            ? Query.select(Filter.typename(values.query)).ast
+            ? Query.select(Filter.type(DXN.make(values.query))).ast
             : JSON.parse(JSON.stringify(values.query));
         onQueryChanged?.(query, queueDxn);
       },

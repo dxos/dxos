@@ -6,6 +6,7 @@ import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
 import { Filter, type Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { type DXN } from '@dxos/keys';
 
 import { QueryDSL } from './gen';
 
@@ -347,7 +348,9 @@ export class QueryBuilder {
 
     const typename = this._getNodeText(cursor, input);
     cursor.parent(); // Go back to TypeFilter.
-    return Filter.typename(typename);
+    // Inline the `dxn:` URI (rather than `DXN.make`) to keep the value-side `@dxos/keys` import out
+    // of the query-lite bundle, which runs in a QuickJS sandbox without that dependency.
+    return Filter.type(`dxn:${typename}` as DXN.DXN);
   }
 
   /**

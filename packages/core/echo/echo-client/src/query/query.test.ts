@@ -782,13 +782,13 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person')))).run();
+      const both = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
-      const v1 = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person', '0.1.0')))).run();
+      const v1 = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person', '0.1.0')))).run();
       expect(v1).toEqual([contactV1]);
 
-      const v2 = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')))).run();
+      const v2 = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person', '0.2.0')))).run();
       expect(v2).toEqual([contactV2]);
     });
 
@@ -1433,10 +1433,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person')), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.1.0')), [contactV1]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person', '0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);
@@ -2632,11 +2632,11 @@ describe('Query', () => {
       expect(updates.at(-1)).toEqual([]);
     });
 
-    // Regression for DX-966. The Composer navtree lists objects per type via
-    // `Filter.typename(...)`, which produces a version-less typename scope, while stored
-    // objects carry a versioned `@type`. The reactive index query must still be invalidated
-    // on delete so the navtree drops the node. Mirrors the bulk-delete test above but with a
-    // version-less typename filter instead of `Filter.type(StaticSchema)`.
+    // Regression for DX-966. The Composer navtree lists objects per type via a version-less
+    // typename DXN (`Filter.type(DXN.make(typename))`), while stored objects carry a versioned
+    // `@type`. The reactive index query must still be invalidated on delete so the navtree drops
+    // the node. Mirrors the bulk-delete test above but with a version-less typename filter
+    // instead of `Filter.type(StaticSchema)`.
     test('deleting an item removes it from a version-less typename query (reactive)', async ({
       expect,
       onTestFinished,
@@ -2650,7 +2650,7 @@ describe('Query', () => {
       await db.flush({ indexes: true, updates: true });
 
       const updates: string[][] = [];
-      const unsub = db.query(Query.select(Filter.typename('com.example.type.person'))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(DXN.make('com.example.type.person')))).subscribe(
         (query) => {
           updates.push([...query.results.map((obj) => obj.name!)].sort());
         },

@@ -124,7 +124,7 @@ describe('Projection', () => {
     });
 
     const view = ViewModel.make({
-      query: Query.select(Filter.typename(typename)),
+      query: Query.select(Filter.type(DXN.make(typename))),
       jsonSchema: baseType.jsonSchema,
       overrideSchema: overrideType.jsonSchema,
     });
@@ -206,7 +206,7 @@ describe('Projection', () => {
     const byType = await db.query(Filter.type(typeEntity)).run();
     expect(byType).toHaveLength(1);
 
-    const byTypename = await db.query(Filter.typename(jsonSchema.typename!)).run();
+    const byTypename = await db.query(Filter.type(DXN.make(jsonSchema.typename!))).run();
     expect(byTypename).toHaveLength(0);
   });
 
@@ -224,7 +224,7 @@ describe('Projection', () => {
     });
 
     const view = ViewModel.make({
-      query: Query.select(Filter.typename(Type.getTypename(schema)!)),
+      query: Query.select(Filter.type(schema)),
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
     });

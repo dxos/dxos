@@ -9,7 +9,7 @@ import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -290,7 +290,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('org.dxos.type.chess')).ast as Obj.Mutable<QueryAST.Query>,
+                ast: Query.select(Filter.type(DXN.make('org.dxos.type.chess'))).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );

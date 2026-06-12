@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EID, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { QueryExecutor } from '../query/query-executor';
 import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
@@ -219,13 +219,13 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     ).toBe(false);
   });
 
-  // Regression for DX-966. The Composer navtree lists objects per type via `Filter.typename(...)`,
-  // whose scope typename is version-less. It must match the canonical hint produced for a stored
+  // Regression for DX-966. The Composer navtree lists objects per type via a version-less typename
+  // DXN (`Filter.type(DXN.make(typename))`). It must match the canonical hint produced for a stored
   // (versioned) object so the reactive query is re-run on insert/delete. Both scope and hint are
   // reduced to the same canonical typename, so the comparison stays a plain set overlap — see
   // `canonicalTypename` and `hintFromIndexingResult` for the canonicalization at each boundary.
-  test('version-less Filter.typename scope matches the canonical hint typename', ({ expect }) => {
-    const executor = makeExecutor(withSpace(Query.select(Filter.typename(PERSON_TYPENAME))));
+  test('version-less typename scope matches the canonical hint typename', ({ expect }) => {
+    const executor = makeExecutor(withSpace(Query.select(Filter.type(DXN.make(PERSON_TYPENAME)))));
     expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
   });
 });

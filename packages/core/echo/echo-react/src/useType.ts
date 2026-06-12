@@ -7,9 +7,8 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 /**
- * Subscribe to and retrieve a type by its tag from a space: a static schema's typename, or a
- * persisted (database) schema's entity id (the tag {@link getTypeTag} / `getTypenameFromQuery`
- * produce — persisted-type objects carry the schema's echo id, not a typename).
+ * Subscribe to and retrieve a type by its URI from a space: a static schema's typename DXN, or a
+ * persisted (database) schema's `echo:` EID (what `Type.getURI` / `getTypeURIFromQuery` produce).
  *
  * Fans across the owning space db (persisted custom types) and the shared
  * registry (static/runtime plugin types). Persisted types live only in the db,
@@ -17,10 +16,10 @@ import { type Database, Filter, Query, Scope, Type } from '@dxos/echo';
  */
 export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
   db?: Database.Database,
-  typename?: string,
+  typeUri?: string,
 ): T | undefined => {
   const { subscribe, getType } = useMemo(() => {
-    if (!typename || !db) {
+    if (!typeUri || !db) {
       return {
         subscribe: () => () => {},
         getType: (): T | undefined => undefined,
@@ -30,15 +29,7 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
     const queryResult = db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
     let subscribed = false;
     const find = (): T | undefined =>
-      subscribed
-        ? (queryResult.results.find(
-            (type) =>
-              Type.getTypename(type) === typename ||
-              type.id === typename ||
-              // Space-qualified form: spaceId:entityId — strip the qualifier and compare.
-              (typename.length > type.id.length && typename.endsWith(`:${type.id}`)),
-          ) as T | undefined)
-        : undefined;
+      subscribed ? (queryResult.results.find((type) => Type.getURI(type) === typeUri) as T | undefined) : undefined;
 
     return {
       subscribe: (onStoreChange: () => void) => {
@@ -51,7 +42,7 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
       },
       getType: find,
     };
-  }, [typename, db]);
+  }, [typeUri, db]);
 
   return useSyncExternalStore(subscribe, getType);
 };

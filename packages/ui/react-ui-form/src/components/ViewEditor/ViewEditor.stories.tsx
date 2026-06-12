@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ProjectionModel, ViewModel, getTypenameFromQuery } from '@dxos/schema';
+import { type ProjectionModel, ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
@@ -86,9 +86,9 @@ const DefaultStory = (props: DefaultStoryProps) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;
         });
 
-        const typename = getTypenameFromQuery(query.ast);
+        const typeUri = getTypeURIFromQuery(query.ast);
         const allTypes = space.db.graph.registry.list().filter(Type.isType);
-        const newSchema = allTypes.find((t) => Type.getTypename(t) === typename);
+        const newSchema = allTypes.find((t) => Type.getURI(t) === typeUri);
         if (!newSchema) {
           return;
         }

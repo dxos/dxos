@@ -30,9 +30,9 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...object }), [object, tags]);
 
     // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
-    // useType queries by typename which correctly resolves both static and dynamic schemas.
-    const typename = Obj.getTypename(object) ?? undefined;
-    const typeFromRegistry = useType(db, typename);
+    // useType queries by the object's stored type URI, resolving both static and dynamic schemas.
+    const typeUri = Obj.getTypeURI(object);
+    const typeFromRegistry = useType(db, typeUri);
     const type = Obj.getType(object) ?? typeFromRegistry;
 
     const formSchema = useMemo(() => {

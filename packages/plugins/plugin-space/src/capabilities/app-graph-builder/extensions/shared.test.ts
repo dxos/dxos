@@ -55,7 +55,7 @@ describe('buildViewIndex', () => {
       .filter((t) => !Type.isTypeKind(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
-    expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(true);
+    expect(viewIndex.typeUrisWithViews.has(Type.getURI(TestContact))).toBe(true);
   });
 
   test('excludes typename when no straightforward view targets it', async ({ expect }) => {
@@ -73,11 +73,11 @@ describe('buildViewIndex', () => {
       .filter((t) => !Type.isTypeKind(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
-    expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(false);
-    expect(viewIndex.typenamesWithViews.size).toBe(0);
+    expect(viewIndex.typeUrisWithViews.has(Type.getURI(TestContact))).toBe(false);
+    expect(viewIndex.typeUrisWithViews.size).toBe(0);
   });
 
-  test('getViewsForTypename returns matching view objects', async ({ expect }) => {
+  test('getViewsForTypeUri returns matching view objects', async ({ expect }) => {
     const viewObj = db.add(
       View.make({
         query: { ast: Query.select(Filter.type(TestContact)).ast },
@@ -92,7 +92,7 @@ describe('buildViewIndex', () => {
       .filter((t) => !Type.isTypeKind(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
-    const views = viewIndex.getViewsForTypename(Type.getTypename(TestContact));
+    const views = viewIndex.getViewsForTypeUri(Type.getURI(TestContact));
     expect(views).toHaveLength(1);
     expect(views[0].id).toBe(tableView.id);
   });
@@ -107,8 +107,8 @@ describe('buildViewIndex', () => {
       .filter((schema) => !ViewAnnotation.has(schema));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, userSchemas);
 
-    expect(viewIndex.typenamesWithViews.size).toBe(0);
-    expect(viewIndex.getViewsForTypename(Type.getTypename(TestContact))).toHaveLength(0);
+    expect(viewIndex.typeUrisWithViews.size).toBe(0);
+    expect(viewIndex.getViewsForTypeUri(Type.getURI(TestContact))).toHaveLength(0);
   });
 });
 

@@ -5,19 +5,10 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { QueryAST, Type } from '@dxos/echo';
+import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
-import { DXN, EID } from '@dxos/keys';
-
-/**
- * Scheme-less tag identifying a type for queries, grouping, and graph node ids: a static schema's
- * typename, or — for a stored (database) schema — its entity id. The tag matches what
- * `getTypenameFromQuery` extracts from `Filter.type(entity)`/`Filter.typename(tag)`, so callers can
- * thread it uniformly without branching on whether the schema is database-backed.
- */
-export const getTypeTag = (entity: Type.AnyEntity): string =>
-  Type.getDatabase(entity) != null ? entity.id : Type.getTypename(entity);
+import { type URI } from '@dxos/keys';
 
 /**
  * Get the base type; e.g., traverse through refinements.
@@ -122,12 +113,15 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; ty
 };
 
 // TODO(wittjosiah): This needs to be cleaned up.
-//   Ideally this should be something like `Query.getTypename`.
-//   It should return the typename the query is indexing, regardless or where in the AST it is.
-// TODO(burdon): Should return type or undefined not empty string.
+//   Ideally this should be something like `Query.getType`.
+//   It should return the type the query is indexing, regardless of where in the AST it is.
 // TODO(burdon): What does this actually mean? Queries may be complex (in the future) and have multiple types.
-export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string => {
-  let typename = '';
+/**
+ * Returns the type URI a query selects on — the `echo:` EID (stored schema) or `dxn:` typename DXN
+ * stored on the filter — or undefined. Compare against an entity via `Type.getURI`.
+ */
+export const getTypeURIFromQuery = (query: QueryAST.Query | undefined): URI.URI | undefined => {
+  let typeUri: URI.URI | undefined;
   query &&
     QueryAST.visit(query, (node) => {
       if (node?.type !== 'select') {
@@ -142,29 +136,10 @@ export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string 
         return;
       }
 
-      typename = uriToTypeTag(node.filter.typename) ?? typename;
+      typeUri = node.filter.typename;
     });
 
-  return typename;
-};
-
-/**
- * Reduces a type URI to its scheme-less tag: a typename DXN to its version-less name, an `echo:`
- * EID (stored schema) to its entity id (space-qualified when the EID carries a space). Inverse of
- * the tag resolution in `Filter.typename`. Returns undefined for an unrecognized URI.
- */
-export const uriToTypeTag = (uri: string): string | undefined => {
-  const eid = EID.tryParse(uri);
-  if (eid) {
-    const entityId = EID.getEntityId(eid);
-    if (!entityId) {
-      return undefined;
-    }
-    const spaceId = EID.getSpaceId(eid);
-    return spaceId ? `${spaceId}:${entityId}` : entityId;
-  }
-  const dxn = DXN.tryMake(uri);
-  return dxn ? DXN.getName(dxn) : undefined;
+  return typeUri;
 };
 
 /**

@@ -7,6 +7,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Database, Filter, Obj, type Registry, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -356,12 +357,12 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   // Current type and filter.
   const [typename, setTypename] = useState<string>(ANY);
   const anyFilter = useMemo(
-    () => Filter.or(...typenames.map(({ typename }) => Filter.typename(typename))),
+    () => Filter.or(...typenames.map(({ typename }) => Filter.type(DXN.make(typename)))),
     [typenames],
   );
 
   // Context objects.
-  const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
+  const objects = useQuery(db, typename === ANY ? anyFilter : Filter.type(DXN.make(typename)));
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
   const { results, handleSearch } = useSearchListResults({
     items: objects,
