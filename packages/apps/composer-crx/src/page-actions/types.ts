@@ -94,13 +94,6 @@ export const PAGE_ACTIONS_PAGE_READY_EVENT = 'composer:page-actions:ready';
 export const PAGE_ACTIONS_READY_MESSAGE_TYPE = 'composer-crx:page-actions:ready';
 
 /**
- * Runtime message `type` discriminator the popup sends to the background
- * worker to inject the content script on-demand and then forward the
- * start-picker request.
- */
-export const START_PICKER_REQUEST_MESSAGE_TYPE = 'composer-crx:start-picker-request';
-
-/**
  * `chrome.storage` key for the cached {@link PageActionsRegistry}.
  */
 export const PAGE_ACTIONS_STORAGE_KEY = 'composer-crx:page-actions-registry';

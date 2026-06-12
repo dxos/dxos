@@ -8,7 +8,6 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 import { IconButton } from '@dxos/react-ui';
 
-import { injectContentScript } from '../../inject';
 import { getActionsForUrl } from '../../page-actions/registry';
 import {
   PAGE_ACTION_PREDICATE_MESSAGE_TYPE,
@@ -64,12 +63,6 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
     setMessage(null);
     void (async () => {
       const candidates = await getActionsForUrl(tabUrl, 'popup');
-      if (candidates.length > 0) {
-        // Inject and wait for ready — on pages not covered by the manifest's
-        // content_scripts (non-Composer pages). injectContentScript polls until
-        // the CRXJS async loader has finished evaluating the module.
-        await injectContentScript(tabId);
-      }
       const visible: PageActionDescriptor[] = [];
       for (const action of candidates) {
         if (action.predicate) {

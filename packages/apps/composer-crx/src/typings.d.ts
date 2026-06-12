@@ -4,31 +4,6 @@
 
 import type { ProtocolWithReturn } from 'webext-bridge';
 
-// Minimal ambient declaration for chrome.scripting.executeScript — not included in
-// webextension-polyfill types or the installed @types/chrome version.
-declare global {
-  namespace chrome {
-    namespace scripting {
-      interface InjectionTarget {
-        tabId: number;
-      }
-      interface InjectionResult {
-        result?: unknown;
-        frameId?: number;
-        documentId?: string;
-        error?: unknown;
-      }
-      interface ScriptInjection {
-        target: InjectionTarget;
-        files?: string[];
-        func?: (...args: unknown[]) => unknown;
-        args?: unknown[];
-      }
-      function executeScript(injection: ScriptInjection): Promise<InjectionResult[]>;
-    }
-  }
-}
-
 declare module 'webext-bridge' {
   export interface ProtocolMap {
     config: ProtocolWithReturn<{ debug?: boolean }, { debug: boolean }>;
