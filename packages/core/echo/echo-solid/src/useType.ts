@@ -4,7 +4,7 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { DXN, EID, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
+import { DXN, EID, URI, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
@@ -23,7 +23,7 @@ type MaybeAccessor<T> = T | Accessor<T>;
  */
 export const useType = (
   db?: MaybeAccessor<Database.Database | undefined>,
-  typeUri?: MaybeAccessor<string | undefined>,
+  typeUri?: MaybeAccessor<URI.URI | undefined>,
 ): Accessor<Type.AnyEntity | undefined> => {
   // Derive resolved values reactively.
   const resolved = createMemo(() => {

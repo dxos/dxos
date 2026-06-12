@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { DXN, EID, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
+import { DXN, EID, URI, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 /**
  * Subscribe to and retrieve a type by its URI from a space: a static schema's typename DXN, or a
@@ -19,7 +19,7 @@ import { DXN, EID, type Database, Filter, Query, Scope, Type } from '@dxos/echo'
  */
 export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
   db?: Database.Database,
-  typeUri?: string,
+  typeUri?: URI.URI,
 ): T | undefined => {
   const { subscribe, getType } = useMemo(() => {
     if (!typeUri || !db) {

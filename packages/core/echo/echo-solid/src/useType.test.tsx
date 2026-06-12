@@ -6,7 +6,7 @@ import { render, waitFor } from '@solidjs/testing-library';
 import { type JSX, createMemo } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Type } from '@dxos/echo';
+import { DXN, Type, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -30,7 +30,7 @@ describe('useType', () => {
     let result: any;
 
     render(() => {
-      const schema = useType(undefined, 'dxos.test.Person');
+      const schema = useType(undefined, DXN.make('dxos.test.Person'));
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -54,7 +54,7 @@ describe('useType', () => {
     let result: any;
 
     render(() => {
-      const schema = useType(db, 'dxos.test.NonExistent');
+      const schema = useType(db, DXN.make('dxos.test.NonExistent'));
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -98,7 +98,7 @@ describe('useType', () => {
     // The query reads from db.graph.registry.types (shared registry), but when a schema is added
     // via db.add(), the runtime registry query subscription doesn't fire reactively.
     let schemaAccessor: (() => any) | undefined;
-    const typename = 'com.example.type.person';
+    const typename = DXN.make('com.example.type.person');
 
     function TestComponent() {
       const schema = useType(db, typename);
@@ -170,7 +170,7 @@ describe('useType', () => {
     const registeredSchema = await db.addType(TestSchema.Person);
 
     let schemaAccessor: (() => any) | undefined;
-    let typeUri: string | undefined = Type.getURI(registeredSchema);
+    let typeUri: URI.URI | undefined = Type.getURI(registeredSchema);
 
     function TestComponent() {
       const schema = useType(db, () => typeUri);
