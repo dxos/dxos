@@ -356,62 +356,35 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
   }
 };
 
-// A type discriminator reduced to a comparable identity, independent of scheme/form.
-//  - `type`: a static typename (with optional version), e.g. `dxn:com.example.task:0.1.0`.
-//  - `echo`: a stored (database) schema, identified by its entity id and optional space id.
-//  - `raw`:  an unrecognized string, compared verbatim.
-type TypeTag =
-  | { kind: 'type'; name: string; version?: string }
-  | { kind: 'echo'; spaceId?: SpaceId; entityId: EntityId }
-  | { kind: 'raw'; value: string };
-
-/**
- * Reduces a type discriminator URI (the value stored on `system.type` and the value carried by a
- * type filter) to a {@link TypeTag}: a typename DXN, or an `echo:` EID. Falls back to `raw` for an
- * unrecognized string.
- */
-const parseTypeTag = (str: string): TypeTag => {
-  const eid = EID.tryParse(str);
-  if (eid) {
-    const entityId = EID.getEntityId(eid);
-    if (entityId) {
-      return { kind: 'echo', spaceId: EID.getSpaceId(eid), entityId };
-    }
-  }
-
-  const dxn = DXN.tryMake(str);
-  if (dxn) {
-    return { kind: 'type', name: DXN.getName(dxn), version: DXN.getVersion(dxn) };
-  }
-
-  return { kind: 'raw', value: str };
-};
-
 /**
  * Compares a filter's type discriminator (`expectedStr`) against the value stored on an object's
- * `system.type` (`actualStr`), normalizing both to a scheme-less {@link TypeTag} first.
+ * `system.type` (`actualStr`).
  *
- * - Typenames match version-agnostically (a missing version on either side matches any version).
- * - Stored (echo) schemas match by entity id; a bare (space-less) id matches the object in any
- *   space, while a space-qualified id matches only that space.
+ * - `echo:` EIDs match by entity id; a bare (space-less) id matches the object in any space, while
+ *   a space-qualified id matches only that space.
+ * - `dxn:` DXNs match version-agnostically (a missing version on either side matches any version).
+ * - Any other string is compared verbatim.
  */
 const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  const expected = parseTypeTag(expectedStr);
-  const actual = parseTypeTag(actualStr);
-  if (expected.kind === 'type' && actual.kind === 'type') {
-    if (expected.name !== actual.name) {
-      return false;
-    }
-    return expected.version === undefined || actual.version === undefined || expected.version === actual.version;
+  const expectedEid = EID.tryParse(expectedStr);
+  if (expectedEid) {
+    const actualEid = EID.tryParse(actualStr);
+    if (!actualEid) return false;
+    if (EID.getEntityId(expectedEid) !== EID.getEntityId(actualEid)) return false;
+    const expectedSpaceId = EID.getSpaceId(expectedEid);
+    const actualSpaceId = EID.getSpaceId(actualEid);
+    return expectedSpaceId === undefined || actualSpaceId === undefined || expectedSpaceId === actualSpaceId;
   }
-  if (expected.kind === 'echo' && actual.kind === 'echo') {
-    if (expected.entityId !== actual.entityId) {
-      return false;
-    }
-    return expected.spaceId === undefined || actual.spaceId === undefined || expected.spaceId === actual.spaceId;
+
+  const expectedDxn = DXN.tryMake(expectedStr);
+  if (expectedDxn) {
+    const actualDxn = DXN.tryMake(actualStr);
+    if (!actualDxn) return false;
+    if (DXN.getName(expectedDxn) !== DXN.getName(actualDxn)) return false;
+    const expectedVersion = DXN.getVersion(expectedDxn);
+    const actualVersion = DXN.getVersion(actualDxn);
+    return expectedVersion === undefined || actualVersion === undefined || expectedVersion === actualVersion;
   }
-  if (expected.kind === 'raw' || actual.kind === 'raw') {
-    return expectedStr === actualStr;
-  }
-  return false;
+
+  return expectedStr === actualStr;
 };
