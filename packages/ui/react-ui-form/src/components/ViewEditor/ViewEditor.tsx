@@ -120,7 +120,6 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       if (!queueTarget) {
         return undefined;
       }
-      // Normalize via EID so legacy (dxn:queue:…) and canonical (echo://…) feed URIs compare equal.
       const targetEid = EID.tryParse(queueTarget);
       const feed = feeds.find((feed) => {
         const feedEid = Feed.getQueueUri(feed);
