@@ -7,8 +7,6 @@ import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { type Queue } from './types';
-
 export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
   queueId?: EntityId;
@@ -17,10 +15,9 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
 };
 
 /**
- * In-memory queue.
  * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
+export class MemoryQueue<T extends Entity.Unknown> {
   static make<T extends Entity.Unknown>({ spaceId, queueId, uri, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!uri) {
       uri = EID.make({ spaceId: spaceId ?? SpaceId.random(), entityId: queueId ?? EntityId.random() });
@@ -67,10 +64,6 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
 
   get objects(): T[] {
     return [...this._objects];
-  }
-
-  query(): never {
-    throw new Error('Method not implemented.');
   }
 
   async sync(): Promise<void> {
