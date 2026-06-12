@@ -4,11 +4,12 @@
 
 import * as semver from 'semver';
 
+import { Entity } from '@dxos/echo';
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-export type MatchedObject = {
+export type MatchedDoc = {
   id: EntityId;
   spaceId: SpaceId;
   doc: EntityStructure;
@@ -38,7 +39,7 @@ const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
  * Matches an object against a filter AST.
  * @param obj object structure as stored in automerge.
  */
-export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
+export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc): boolean => {
   switch (filter.type) {
     case 'object': {
       // Check typename if specified.
@@ -108,15 +109,15 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'not': {
-      return !filterMatchObject(filter.filter, obj);
+      return !filterMatchDoc(filter.filter, obj);
     }
 
     case 'and': {
-      return filter.filters.every((f) => filterMatchObject(f, obj));
+      return filter.filters.every((f) => filterMatchDoc(f, obj));
     }
 
     case 'or': {
-      return filter.filters.some((f) => filterMatchObject(f, obj));
+      return filter.filters.some((f) => filterMatchDoc(f, obj));
     }
 
     default:
@@ -151,7 +152,7 @@ const matchMetaKey = (
   return semver.satisfies(objVersion, versionRange, { includePrerelease: true });
 };
 
-// TODO(burdon): Reconcile with filterMatchObject.
+// TODO(burdon): Reconcile with filterMatchDoc (automerge doc path).
 export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
   switch (filter.type) {
     case 'object': {
@@ -351,6 +352,102 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
     case 'or': {
       return filter.filters.some((f) => filterMatchValue(f, value));
     }
+    default:
+      return false;
+  }
+};
+
+/**
+ * Matches a filter against an {@link Entity.Unknown} proxy without full JSON serialization.
+ *
+ * Checks typename, id, and meta via direct symbol-property access (O(1)) before falling
+ * back to {@link Entity.toJSON} only when props-based filtering requires it. Avoids the
+ * expensive deepMapValues traversal incurred by filterMatchObjectJSON for the common case of
+ * type-based registry queries.
+ */
+export const filterMatchEntity = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => {
+  switch (filter.type) {
+    case 'object': {
+      if (filter.typename !== null) {
+        const typeURI = Entity.getTypeURI(entity);
+        if (!typeURI || !compareTypenameStrings(filter.typename, typeURI)) {
+          return false;
+        }
+      }
+
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity.id)) {
+        return false;
+      }
+
+      if (filter.props) {
+        // Serialize to JSON only when props filtering is needed; serialization of complex
+        // static-type entities (e.g. those with class-instance schema fields) may throw.
+        let json: ObjectJSON | null = null;
+        try {
+          json = Entity.toJSON(entity);
+        } catch {}
+        if (json === null) {
+          return false;
+        }
+        for (const [key, valueFilter] of Object.entries(filter.props)) {
+          if (key.startsWith('@')) {
+            continue;
+          }
+          if (!filterMatchValue(valueFilter, (json as any)[key])) {
+            return false;
+          }
+        }
+      }
+
+      const meta = Entity.getMeta(entity);
+
+      if (filter.foreignKeys && filter.foreignKeys.length > 0) {
+        const hasKey = filter.foreignKeys.some((fk) => meta.keys.some((k) => k.source === fk.source && k.id === fk.id));
+        if (!hasKey) {
+          return false;
+        }
+      }
+
+      if (filter.metaKey !== undefined) {
+        if (!matchMetaKey(filter.metaKey, filter.metaVersion, meta.key, meta.version)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    case 'tag': {
+      // Live meta tags are Ref<Tag> instances; encode to EncodedReference for matchesTag.
+      const rawTags = Entity.getMeta(entity).tags;
+      const tags = rawTags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));
+      return matchesTag(tags, filter.tag);
+    }
+
+    case 'text-search': {
+      return false;
+    }
+
+    case 'timestamp': {
+      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
+    }
+
+    case 'child-of': {
+      throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+    }
+
+    case 'not': {
+      return !filterMatchEntity(filter.filter, entity);
+    }
+
+    case 'and': {
+      return filter.filters.every((f) => filterMatchEntity(f, entity));
+    }
+
+    case 'or': {
+      return filter.filters.some((f) => filterMatchEntity(f, entity));
+    }
+
     default:
       return false;
   }

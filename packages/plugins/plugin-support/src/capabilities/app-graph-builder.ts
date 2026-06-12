@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation } from '#types';
+import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
 import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
 
@@ -29,6 +29,9 @@ const SPACE_HOME_NODE_LABEL: LabelTuple = ['space-home-node.label', { ns: meta.i
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const settingsAtom = capabilities.get(SupportCapabilities.Settings);
+
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       GraphBuilder.createExtension({
@@ -110,11 +113,16 @@ export default Capability.makeModule(
 
       // Deck companion: Discord community tab in the complementary sidebar (R1).
       // Renders the Discord widget iframe via the `deck-companion--discord` surface.
+      // Hidden by default; toggled via the showDiscordCompanion setting.
       GraphBuilder.createExtension({
         id: 'discord',
         match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
+        connector: (_root, get) => {
+          const settings = get(settingsAtom);
+          if (!settings.showDiscordCompanion) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('discord'),
               label: DISCORD_LABEL,
@@ -122,7 +130,8 @@ export default Capability.makeModule(
               data: null,
               position: 'first',
             }),
-          ]),
+          ]);
+        },
       }),
 
       // Per-space Home virtual node, hoisted to the top of every space's navtree. The node is fully

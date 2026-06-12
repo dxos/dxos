@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, Query, type Filter, type QueryResult, Registry, Type } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo-host/filter';
+import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
@@ -363,5 +363,4 @@ const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.
   }
 };
 
-const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean =>
-  filterMatchObjectJSON(filter, Entity.toJSON(entity));
+const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => filterMatchEntity(filter, entity);
