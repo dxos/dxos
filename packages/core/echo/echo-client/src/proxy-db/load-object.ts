@@ -41,7 +41,7 @@ export const loadObjectReferences = async <
   const tasks = objectArray.map((obj) => {
     const core = getObjectCore(obj as any);
     const value = valueAccessor(obj);
-    if (core.database == null) {
+    if (core.coreDatabase == null) {
       return value;
     }
 
@@ -54,7 +54,7 @@ export const loadObjectReferences = async <
 
     // TODO(burdon): Timeout if trying to load object that isn't there.
     return asyncTimeout(
-      core.database._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
+      core.coreDatabase._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
       timeout,
     );
   });

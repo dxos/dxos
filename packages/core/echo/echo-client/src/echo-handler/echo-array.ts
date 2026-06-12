@@ -4,9 +4,9 @@
 
 import { batchEvents } from '@dxos/echo/internal';
 
-import type { KeyPath } from '../core-db';
+import type { KeyPath, ObjectCore } from '../core-db';
 import { type EchoReactiveHandler } from './echo-handler';
-import { type ObjectInternals, symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
+import { symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 
 export class EchoArray<T> extends Array<T> {
   static override get [Symbol.species]() {
@@ -14,7 +14,7 @@ export class EchoArray<T> extends Array<T> {
   }
 
   // Will be initialize when the proxy is created.
-  [symbolInternals]: ObjectInternals = null as any;
+  [symbolInternals]: ObjectCore = null as any;
   [symbolPath]: KeyPath = null as any;
   [symbolNamespace]: string = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;

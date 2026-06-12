@@ -5,9 +5,33 @@
 // TODO(burdon): Move this file to ../automerge.
 // TDOO(burdon): Standardize import * as A.
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
+import type * as Brand from 'effect/Brand';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { getDeep } from '@dxos/util';
+
+// ---------------------------------------------------------------------------
+// TargetKey — proxy-target cache key (shared with echo-handler to avoid
+// circular dep: object-core ← echo-proxy-target ← core-db).
+// ---------------------------------------------------------------------------
+
+type TargetKeyType = {
+  path: KeyPath;
+  namespace: string;
+  type: 'record' | 'array';
+} & Brand.Brand<'TargetKey'>;
+
+export type TargetKey = TargetKeyType;
+
+export const TargetKey = {
+  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
+    ({
+      path,
+      namespace,
+      type,
+    }) as TargetKey,
+  hash: (key: TargetKey): string => JSON.stringify(key),
+};
 
 /**
  * Values that can be encoded/decoded from Automerge documents.

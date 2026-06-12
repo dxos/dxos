@@ -543,9 +543,9 @@ export class CoreDatabase {
   }
 
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
-    if (core.database) {
+    if (core.coreDatabase) {
       // Already in the database.
-      if (core.database !== this) {
+      if (core.coreDatabase !== this) {
         throw new Error('Object already belongs to another database');
       }
 
@@ -836,9 +836,12 @@ export class CoreDatabase {
 
   /**
    * Returns handles linked from the space root handle.
+   * Excludes the space root handle itself (inline objects are stored in the root doc
+   * and share its handle, so they must not be counted as linked documents).
    */
   getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
-    return [...new Set(this._objectDocumentHandles.values())];
+    const rootHandle = this._spaceRootDocHandle;
+    return [...new Set(this._objectDocumentHandles.values())].filter((h) => h !== rootHandle);
   }
 
   /**

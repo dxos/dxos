@@ -32,7 +32,7 @@ import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
-import { defaultMap } from '@dxos/util';
+
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
@@ -163,12 +163,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    */
   readonly _coreDatabase: CoreDatabase;
-
-  /**
-   * Mapping `object core` -> `root proxy` (User facing proxies).
-   * @internal
-   */
-  readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
@@ -344,7 +338,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
+    return (core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
   makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
@@ -458,7 +452,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
     // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));
-    this._rootProxies.set(getObjectCore(obj), obj);
+    getObjectCore(obj).rootProxy = obj;
 
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
@@ -575,7 +569,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    const obj = core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this);
     invariant(isProxy(obj));
     return obj;
   }
