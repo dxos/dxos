@@ -23,7 +23,13 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { cancelWithContext, Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject, raise, warnAfterTimeout } from '@dxos/debug';
 import { Database, Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
-import { DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
+import {
+  DatabaseDirectory,
+  EncodedReference,
+  type EntityStructure,
+  SpaceDocVersion,
+  type SpaceState,
+} from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import {
   type AnyProperties,
@@ -51,15 +57,6 @@ import { trace } from '@dxos/tracing';
 import { chunkArray, ComplexSet, deepMapValues, defaultMap } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
-import { type HypergraphImpl } from '../hypergraph';
-import {
-  EchoReactiveHandler,
-  type ProxyTarget,
-  createObject,
-  getObjectCore,
-  initEchoReactiveObjectRootProxy,
-  isEchoObject,
-} from '../echo-handler';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -73,6 +70,15 @@ import {
   type SpaceDocumentHeads,
 } from '../core-db';
 import { getInlineAndLinkChanges } from '../core-db/util';
+import {
+  EchoReactiveHandler,
+  type ProxyTarget,
+  createObject,
+  getObjectCore,
+  initEchoReactiveObjectRootProxy,
+  isEchoObject,
+} from '../echo-handler';
+import { type HypergraphImpl } from '../hypergraph';
 import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
@@ -587,9 +593,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase, IDatabaseBin
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const objects = await this._hypergraph
-        .query(Query.select(Filter.typeURI(migration.fromType)).from(this))
-        .run();
+      const objects = await this._hypergraph.query(Query.select(Filter.typeURI(migration.fromType)).from(this)).run();
       log.verbose('migrate', {
         from: migration.fromType,
         to: migration.toType,
