@@ -31,7 +31,11 @@ export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | U
     // carries `TypeIdentifierAnnotation` (→ local `echo:/<objectId>`).
     const schema = getStaticTypeSchema(input);
     if (schema != null) {
-      return getSchemaURI(schema) ?? raise(new TypeError('Type entity has no URI'));
+      // Static types carry TypeAnnotation → DXN; persisted db types carry
+      // TypeIdentifierAnnotation → echo EID. In-memory makeObjectFromJsonSchema
+      // entities have neither (plain JSON Schema), so fall through to the EID path.
+      const uri = getSchemaURI(schema);
+      if (uri != null) return uri;
     }
     return getUriFromEntity(input as AnyEntity);
   }

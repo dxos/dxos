@@ -4,7 +4,7 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Database, Filter, Query, Scope, Type } from '@dxos/echo';
+import { DXN, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
@@ -48,8 +48,20 @@ export const useType = (
 
     const { db: resolvedDb, typeUri: resolvedTypeUri } = r;
 
+    const searchDxn = DXN.isDXN(resolvedTypeUri) ? DXN.tryMake(resolvedTypeUri) : undefined;
     const queryResult = resolvedDb.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
-    const update = () => setType(() => queryResult.results.find((type) => Type.getURI(type) === resolvedTypeUri));
+    const update = () =>
+      setType(() =>
+        queryResult.results.find((type) => {
+          const uri = Type.getURI(type);
+          if (uri === resolvedTypeUri) return true;
+          if (searchDxn && DXN.isDXN(uri)) {
+            const typeDxn = DXN.tryMake(uri);
+            return typeDxn != null && DXN.getName(typeDxn) === DXN.getName(searchDxn);
+          }
+          return false;
+        }),
+      );
 
     // Subscribe before reading `.results` — the query requires at least one subscriber.
     const unsubscribe = queryResult.subscribe(update);
