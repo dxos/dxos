@@ -66,7 +66,11 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
 
   // Resolve to live objects in stable order, dropping ids whose object was hard-deleted.
   const items = useMemo(
-    () => seenOrder.current.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : [])),
+    () =>
+      seenOrder.current.flatMap((id) => {
+        const automation = byId.get(id);
+        return automation ? [automation] : [];
+      }),
     [byId, connectedIds, createdIds],
   );
 
@@ -140,7 +144,7 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
-            <button className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
+            <button type='button' className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
               <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
               <span className='flex-1 truncate'>
                 {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
