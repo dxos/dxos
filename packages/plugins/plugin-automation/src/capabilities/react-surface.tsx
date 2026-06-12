@@ -10,12 +10,20 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { AutomationSettings, FunctionsContainer } from '#containers';
+import { AutomationArticle, AutomationsCompanion, AutomationSettings, FunctionsContainer } from '#containers';
 import { meta } from '#meta';
+import { Automation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'automation.article',
+        filter: AppSurface.object(AppSurface.Article, Automation.Automation),
+        component: ({ data, role }) => (
+          <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
       Surface.create({
         id: 'spaceSettingsFunctions',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-functions`),
@@ -52,6 +60,20 @@ export default Capability.makeModule(() =>
             return null;
           }
           return <AutomationSettings space={space} object={data.companionTo} />;
+        },
+      }),
+      Surface.create({
+        id: 'companion.automations',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'automations'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data }) => {
+          const space = getSpace(data.companionTo);
+          if (!space) {
+            return null;
+          }
+          return <AutomationsCompanion space={space} object={data.companionTo} />;
         },
       }),
     ]),

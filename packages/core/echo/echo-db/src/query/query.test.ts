@@ -1549,6 +1549,27 @@ describe('Query', () => {
       expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
     });
 
+    test('sqlIndex: referencedBy matches both space-qualified and bare refs to the same entity', async () => {
+      const { db: sqlDb } = await builder.createDatabase({ types: [TestSchema.Person] });
+
+      const person = sqlDb.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+
+      // Bare ref, as produced in code by `Ref.make`.
+      sqlDb.add(Obj.make(TestSchema.Expando, { name: 'bare', a: Ref.make(person) }));
+      // Space-qualified ref, as produced by the RefField object picker (it builds the ref from the entity's
+      // fully-qualified URI). Reverse-ref lookups must still find it: a space-less anchor refers to the same
+      // space implicitly, so qualified and bare refs to the same entity match.
+      const qualified = Ref.fromURI(URI.make(EID.make({ spaceId: sqlDb.spaceId, entityId: person.id })));
+      sqlDb.add(Obj.make(TestSchema.Expando, { name: 'qualified', a: qualified }));
+
+      await sqlDb.flush();
+
+      const referrers = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando))
+        .run();
+      expect(referrers.map((o) => o.name).sort()).toEqual(['bare', 'qualified']);
+    });
+
     test('traverse inbound array references', async () => {
       db.add(
         Obj.make(TestSchema.Expando, {

@@ -25,13 +25,25 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
-  results.map((result) => {
-    const id = Entity.getURI(result);
-    const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
-    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
-    return { id, label: label ?? id };
-  });
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
+  results,
+  { parentLabel, getTypePlaceholder } = {},
+) =>
+  results
+    // When labeling by parent, only surface objects that actually have a parent — an unparented object
+    // (e.g. a system feed) has no meaningful parent to label by.
+    .filter((result) => !parentLabel || Obj.getParent(result as Obj.Unknown) != null)
+    .map((result) => {
+      const id = Entity.getURI(result);
+      const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
+      const labelEntity = parent ?? result;
+      const typename = Entity.getTypename(labelEntity);
+      // Fall back to the entity's type placeholder when it has no label of its own — matching the
+      // app-graph/navtree (`object-name.placeholder` in the entity's typename namespace).
+      const label =
+        Entity.getLabel(labelEntity) ?? (typename ? getTypePlaceholder?.(typename) : undefined) ?? id;
+      return { id, label };
+    });
 
 const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
   useQuery(
@@ -53,7 +65,10 @@ export type RefFieldProps = FormFieldComponentProps &
     // TODO(burdon): Replace hooks with callbacks.
     useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
-    getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
+    getOptions?: (
+      objects: Entity.Any[],
+      options?: { parentLabel?: boolean; getTypePlaceholder?: (typename: string) => string },
+    ) => RefOption[];
     /**
      * Persist a newly-created object. Called after the user fills out the
      * inline create form and clicks Save. Should add the object to the
@@ -92,11 +107,23 @@ export const RefField = (props: RefFieldProps) => {
     [type],
   );
 
+  // Resolve a type-based placeholder label for entities that have no label of their own — the entity's
+  // `object-name.placeholder` in its own typename namespace, like the app-graph/navtree. Falls back to a
+  // humanized typename segment so we never surface a raw DXN for a type that hasn't registered one.
+  const getTypePlaceholder = useCallback(
+    (placeholderTypename: string): string => {
+      const segment = placeholderTypename.split(/[.:/]/).filter(Boolean).pop() ?? placeholderTypename;
+      const humanized = segment.charAt(0).toUpperCase() + segment.slice(1);
+      return t('object-name.placeholder', { ns: placeholderTypename, defaultValue: humanized });
+    },
+    [t],
+  );
+
   const results = useResults(db, typename);
   const options = useMemo(() => {
     const parentLabel = type ? SchemaEx.findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
-    return getOptions(results, { parentLabel });
-  }, [results, getOptions, type]);
+    return getOptions(results, { parentLabel, getTypePlaceholder });
+  }, [results, getOptions, type, getTypePlaceholder]);
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();

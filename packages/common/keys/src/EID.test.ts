@@ -156,3 +156,44 @@ describe('EID.equals', () => {
     expect(EID.equals(a, b)).toBe(false);
   });
 });
+
+describe('EID.toLocal', () => {
+  test('drops the space from a qualified ref', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(EID.make({ entityId: OBJECT }));
+  });
+
+  test('leaves a local ref unchanged', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ entityId: OBJECT }))).toBe(EID.make({ entityId: OBJECT }));
+  });
+
+  test('collapses qualified and bare refs to the same value', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(
+      EID.toLocal(EID.make({ entityId: OBJECT })),
+    );
+  });
+
+  test('returns space-only refs unchanged', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE }))).toBe(EID.make({ spaceId: SPACE }));
+  });
+});
+
+describe('EID.refersToSameEntity', () => {
+  test('matches a space-less EID with a qualified one for the same entity (implicit same space)', ({ expect }) => {
+    const local = EID.make({ entityId: OBJECT });
+    const qualified = EID.make({ spaceId: SPACE, entityId: OBJECT });
+    expect(EID.refersToSameEntity(local, qualified)).toBe(true);
+    expect(EID.refersToSameEntity(qualified, local)).toBe(true);
+  });
+
+  test('matches the legacy local format with a qualified one', ({ expect }) => {
+    const legacyLocal = EID.parse(`dxn:echo:@:${OBJECT}`);
+    const qualified = EID.make({ spaceId: SPACE, entityId: OBJECT });
+    expect(EID.refersToSameEntity(legacyLocal, qualified)).toBe(true);
+  });
+
+  test('does not match different entities', ({ expect }) => {
+    const a = EID.make({ entityId: OBJECT });
+    const b = EID.make({ spaceId: SPACE, entityId: OBJECT2 });
+    expect(EID.refersToSameEntity(a, b)).toBe(false);
+  });
+});

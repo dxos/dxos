@@ -4,6 +4,7 @@
 
 import { lazy } from 'react';
 
+export * from './CreateAutomationPanel';
 export * from './TriggerEditor';
 
 export const AutomationPanel = lazy(() => import('./AutomationPanel'));
