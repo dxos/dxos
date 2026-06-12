@@ -762,6 +762,30 @@ export type RequestAccessRequest = Schema.Schema.Type<typeof RequestAccessReques
 export type RequestAccessResponse = { received: boolean };
 
 //
+// Metering (VP auth)
+//
+
+export const MeteringUsageItemSchema = Schema.Struct({
+  category: Schema.String,
+  amount: Schema.Number,
+});
+export type MeteringUsageItem = Schema.Schema.Type<typeof MeteringUsageItemSchema>;
+
+export const MeteringLimitSchema = Schema.Struct({
+  categoryPrefix: Schema.String,
+  amount: Schema.Number,
+  windowHours: Schema.Number,
+});
+export type MeteringLimit = Schema.Schema.Type<typeof MeteringLimitSchema>;
+
+export const GetProfileUsageResponseSchema = Schema.Struct({
+  profileId: Schema.String,
+  usage: Schema.Array(MeteringUsageItemSchema),
+  limits: Schema.Array(MeteringLimitSchema),
+});
+export type GetProfileUsageResponse = Schema.Schema.Type<typeof GetProfileUsageResponseSchema>;
+
+//
 // Admin (X-API-KEY)
 //
 
