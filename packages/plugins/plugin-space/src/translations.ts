@@ -151,9 +151,6 @@ export const translations = [
         'space-settings.label': 'Spaces',
         'space-settings.description':
           'Per-space settings for properties, membership, integrations, and other space-specific objects.',
-        'show-hidden-spaces.label': 'Show archived spaces',
-        'show-hidden-spaces.description':
-          'Display archived spaces in the sidebar so they can be accessed or unarchived.',
         'save-files-to-directory.label': 'Save files to disk',
         'select-path.label': 'Select path',
         'snapshot-by-schema.label': 'Snapshot of objects',
@@ -267,11 +264,6 @@ export const translations = [
         'hue.description': 'Color used to represent the space in the app.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
-        'archive-space.description':
-          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. Unarchive by enabling archived spaces in the app settings.',
-        'archive-space.label': 'Archive',
-        'unarchive-space.label': 'Unarchive',
-
         'space-key.title': 'Space Key',
         'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
         'copy-space-key.label': 'Copy space key',

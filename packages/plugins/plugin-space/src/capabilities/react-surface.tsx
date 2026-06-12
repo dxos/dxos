@@ -9,7 +9,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
@@ -50,7 +50,6 @@ import {
   HueAnnotationId,
   IconAnnotationId,
   SpaceCapabilities,
-  type Settings,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -86,14 +85,11 @@ export default Capability.makeModule(
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          const spaces = useSpaces({ all: settings.showHidden });
+        component: () => {
+          const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
           return (
             <SpaceSettings
-              settings={settings}
-              onSettingsChange={updateSettings}
               spaces={spaces}
               onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
             />
