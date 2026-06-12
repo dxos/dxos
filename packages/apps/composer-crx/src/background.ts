@@ -9,10 +9,12 @@ import { log } from '@dxos/log';
 
 import { createThumbnail } from './actions';
 import { focusOrOpenComposerTab } from './bridge';
+import { injectContentScript } from './inject';
 import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_RUN_MESSAGE_TYPE,
+  START_PICKER_REQUEST_MESSAGE_TYPE,
   decodeDeliverPayload,
   deliverPickedSnapshot,
   refreshRegistry,
@@ -21,24 +23,6 @@ import {
 import { installSearchProxy } from './proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
-const START_PICKER_REQUEST_MESSAGE_TYPE = 'composer-crx:start-picker-request';
-
-/**
- * Inject the content script into a tab on-demand using the file list declared
- * in the manifest. A no-op if the script is already loaded (idempotency guard
- * in content.ts). Silently ignores restricted pages (chrome://, settings, etc.).
- */
-const ensureContentScript = async (tabId: number): Promise<void> => {
-  const files = browser.runtime.getManifest().content_scripts?.[0]?.js;
-  if (!files?.length) {
-    return;
-  }
-  try {
-    await chrome.scripting.executeScript({ target: { tabId }, files });
-  } catch {
-    // Tab is a restricted page or has been closed — ignore.
-  }
-};
 
 const notify = (title: string, message: string) => {
   try {
@@ -92,7 +76,7 @@ const main = async () => {
     if (typeof msg.tabId !== 'number') {
       return undefined;
     }
-    return ensureContentScript(msg.tabId).then(() =>
+    return injectContentScript(msg.tabId).then(() =>
       sendMessage('start-picker', {}, { context: 'content-script', tabId: msg.tabId }),
     );
   });
@@ -107,7 +91,7 @@ const main = async () => {
     // Inject content script on-demand before extracting (page may not be a Composer page).
     // Notify on failure as well as returning the ack: opening a Composer tab
     // steals focus and closes the popup, so the inline status may never render.
-    return ensureContentScript(msg.tabId)
+    return injectContentScript(msg.tabId)
       .then(() => runPageAction({ actionId: msg.actionId, tabId: msg.tabId }))
       .then((ack) => {
         if (!ack.ok) {

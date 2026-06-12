@@ -16,12 +16,15 @@ export const meta = Plugin.makeMeta({
     title, images, and details are picked up automatically, so a profile page becomes a ready-made
     Person card and an article becomes a note with its source and text already filled in.
 
-    Saved items land in your active space alongside everything else you're working on, complete
-    with a link back to the original page.
+    Saved items land in your active space alongside everything else you're working on, 
+    complete with a link back to the original page.
   `,
   icon: 'ph--browser--regular',
-  iconHue: 'neutral',
+  iconHue: 'orange',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crx',
+  // screenshots: [
+  //   'https://raw.githubusercontent.com/dxos/dxos/refs/heads/main/packages/plugins/plugin-crx/assets/images/',
+  // ],
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
 });

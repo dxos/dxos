@@ -15,6 +15,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { Chat, type ChatProps, Container, PageActions, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';
+import { injectContentScript } from './inject';
+import { START_PICKER_REQUEST_MESSAGE_TYPE } from './page-actions';
 
 // NOTE: Keep in sync with popup.html initial layout.
 const rootClasses = 'flex flex-col w-[500px] opacity-0 [animation:popup-fade-in_0.5s_ease-out_forwards]';
@@ -59,29 +61,17 @@ const Root = () => {
     })();
   }, []);
 
-  // TODO(burdon): Change to event.
-  // TODO(burdon): Demo to communicate with content script.
   const handlePing = useCallback<NonNullable<ChatProps['onPing']>>(async () => {
-    log.info('sending...');
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
-      log.error('no active tab found');
       return null;
     }
 
-    try {
-      const result = await sendMessage(
-        'ping',
-        {
-          debug: true,
-        },
-        {
-          context: 'content-script',
-          tabId: tab.id,
-        },
-      );
+    await injectContentScript(tab.id);
 
-      log.info('result', { result });
+    try {
+      const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
+      log.info('ping result', { result });
       return result;
     } catch (err) {
       log.catch(err);
@@ -100,7 +90,7 @@ const Root = () => {
     // (activeTab) before forwarding the start-picker message. Fire and forget —
     // any rejection is surfaced by the background via a browser notification.
     browser.runtime
-      .sendMessage({ type: 'composer-crx:start-picker-request', tabId: tab.id })
+      .sendMessage({ type: START_PICKER_REQUEST_MESSAGE_TYPE, tabId: tab.id })
       .catch((err) => log.catch(err));
     window.close();
   }, []);

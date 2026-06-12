@@ -12,13 +12,19 @@ declare global {
       interface InjectionTarget {
         tabId: number;
       }
+      interface InjectionResult {
+        result?: unknown;
+        frameId?: number;
+        documentId?: string;
+        error?: unknown;
+      }
       interface ScriptInjection {
         target: InjectionTarget;
         files?: string[];
         func?: (...args: unknown[]) => unknown;
         args?: unknown[];
       }
-      function executeScript(injection: ScriptInjection): Promise<unknown[]>;
+      function executeScript(injection: ScriptInjection): Promise<InjectionResult[]>;
     }
   }
 }

@@ -10,7 +10,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -26,19 +26,21 @@ if (!existsSync(distDir)) {
 
 // Parse --out argument.
 const outArgIdx = process.argv.indexOf('--out');
-const zipPath = outArgIdx !== -1 ? resolve(process.argv[outArgIdx + 1]) : join(projectRoot, 'composer-crx.zip');
+const outValue = outArgIdx !== -1 ? process.argv[outArgIdx + 1] : undefined;
+if (outArgIdx !== -1 && (!outValue || outValue.startsWith('-'))) {
+  console.error('--out requires a value');
+  process.exit(1);
+}
+const zipPath = outValue ? resolve(outValue) : join(projectRoot, 'composer-crx.zip');
 
-// Use the built-in zip via Node.js streams + archiver if available, otherwise fall back to the
-// system `zip` command which is present on all macOS/Linux CI environments.
+// Use the system `zip` command which is present on all macOS/Linux CI environments.
 await zipDir(distDir, zipPath);
 
 console.log(`Packed: ${zipPath}`);
 console.log(`Source: ${distDir}`);
 
 async function zipDir(sourceDir, outPath) {
-  // Try the system `zip` command first (always available in CI and on macOS/Linux).
   const { spawnSync } = await import('node:child_process');
-  const rel = relative(sourceDir, outPath);
 
   // Run zip from inside the source dir so paths inside the archive are relative.
   const result = spawnSync('zip', ['-r', outPath, '.'], {
