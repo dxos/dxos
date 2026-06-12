@@ -4,7 +4,7 @@
 
 import * as semver from 'semver';
 
-import { Entity, Ref } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
