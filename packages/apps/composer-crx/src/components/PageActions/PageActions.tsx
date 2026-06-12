@@ -63,6 +63,12 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
     setMessage(null);
     void (async () => {
       const candidates = await getActionsForUrl(tabUrl, 'popup');
+      if (candidates.length > 0) {
+        // Inject the content script on-demand so predicate/extract messages reach it
+        // on pages not covered by the manifest's content_scripts (non-Composer pages).
+        const files = browser.runtime.getManifest().content_scripts?.[0]?.js ?? [];
+        await chrome.scripting.executeScript({ target: { tabId }, files }).catch(() => undefined);
+      }
       const visible: PageActionDescriptor[] = [];
       for (const action of candidates) {
         if (action.predicate) {

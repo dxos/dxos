@@ -96,11 +96,12 @@ const Root = () => {
       return;
     }
 
-    // Fire and forget — picker + delivery is orchestrated by the content
-    // script and background worker. The popup closes naturally; any
-    // rejection during the round-trip is surfaced by the background via a
-    // browser notification, so here we just need to log it.
-    sendMessage('start-picker', {}, { context: 'content-script', tabId: tab.id }).catch((err) => log.catch(err));
+    // Route through the background so it can inject the content script on-demand
+    // (activeTab) before forwarding the start-picker message. Fire and forget —
+    // any rejection is surfaced by the background via a browser notification.
+    browser.runtime
+      .sendMessage({ type: 'composer-crx:start-picker-request', tabId: tab.id })
+      .catch((err) => log.catch(err));
     window.close();
   }, []);
 

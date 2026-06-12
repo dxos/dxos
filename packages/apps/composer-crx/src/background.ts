@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onMessage } from 'webext-bridge/background';
+import { onMessage, sendMessage } from 'webext-bridge/background';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
@@ -21,6 +21,24 @@ import {
 import { installSearchProxy } from './proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
+const START_PICKER_REQUEST_MESSAGE_TYPE = 'composer-crx:start-picker-request';
+
+/**
+ * Inject the content script into a tab on-demand using the file list declared
+ * in the manifest. A no-op if the script is already loaded (idempotency guard
+ * in content.ts). Silently ignores restricted pages (chrome://, settings, etc.).
+ */
+const ensureContentScript = async (tabId: number): Promise<void> => {
+  const files = browser.runtime.getManifest().content_scripts?.[0]?.js;
+  if (!files?.length) {
+    return;
+  }
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files });
+  } catch {
+    // Tab is a restricted page or has been closed — ignore.
+  }
+};
 
 const notify = (title: string, message: string) => {
   try {
@@ -65,6 +83,20 @@ const main = async () => {
       return refreshRegistry(sender.tab?.id);
     },
   );
+  // Popup routes start-picker through the background so the content script can
+  // be injected on-demand before the webext-bridge message is forwarded.
+  browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
+    if (!msg || msg.type !== START_PICKER_REQUEST_MESSAGE_TYPE) {
+      return undefined;
+    }
+    if (typeof msg.tabId !== 'number') {
+      return undefined;
+    }
+    return ensureContentScript(msg.tabId).then(() =>
+      sendMessage('start-picker', {}, { context: 'content-script', tabId: msg.tabId }),
+    );
+  });
+
   browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
     if (!msg || msg.type !== PAGE_ACTION_RUN_MESSAGE_TYPE) {
       return undefined;
@@ -72,14 +104,17 @@ const main = async () => {
     if (typeof msg.actionId !== 'string' || typeof msg.tabId !== 'number') {
       return Promise.resolve({ version: 1, id: '', ok: false, error: 'badRequest' });
     }
+    // Inject content script on-demand before extracting (page may not be a Composer page).
     // Notify on failure as well as returning the ack: opening a Composer tab
     // steals focus and closes the popup, so the inline status may never render.
-    return runPageAction({ actionId: msg.actionId, tabId: msg.tabId }).then((ack) => {
-      if (!ack.ok) {
-        notify('Action failed', ack.error);
-      }
-      return ack;
-    });
+    return ensureContentScript(msg.tabId)
+      .then(() => runPageAction({ actionId: msg.actionId, tabId: msg.tabId }))
+      .then((ack) => {
+        if (!ack.ok) {
+          notify('Action failed', ack.error);
+        }
+        return ack;
+      });
   });
   browser.runtime.onMessage.addListener((msg: any): undefined | Promise<unknown> => {
     if (!msg || msg.type !== PAGE_ACTION_DELIVER_MESSAGE_TYPE) {

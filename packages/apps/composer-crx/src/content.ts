@@ -304,4 +304,15 @@ const main = async () => {
   });
 };
 
-void main();
+declare global {
+  interface Window {
+    __composerContentScriptLoaded?: boolean;
+  }
+}
+
+// Guard against double-initialization when the script is injected both via
+// the manifest (Composer pages) and programmatically via scripting.executeScript.
+if (!window.__composerContentScriptLoaded) {
+  window.__composerContentScriptLoaded = true;
+  void main();
+}

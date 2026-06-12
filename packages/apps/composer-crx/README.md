@@ -20,3 +20,11 @@ See "Inspect views" for background worker logs.
 ```sh
 moon run composer-crx:bundle
 ```
+
+## Publishing
+
+Google Dashboard: https://chrome.google.com/webstore/devconsole/c9e5f2e9-a1e0-4f0a-b13b-4610552e81a9
+
+```sh
+moon run composer-crx:pack
+```

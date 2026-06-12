@@ -113,7 +113,9 @@ export default defineConfig({
         },
         permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
-        host_permissions: ['http://*/*', 'https://*/*'],
+        // Broad host access is optional: only needed for the render proxy (background URL fetching).
+        // The picker and page-action extractors use activeTab + scripting.executeScript instead.
+        optional_host_permissions: ['http://*/*', 'https://*/*'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
         },
@@ -124,9 +126,17 @@ export default defineConfig({
         background: {
           service_worker: 'src/background.ts',
         },
+        // Auto-inject only on known Composer origins for the relay and proxy relay.
+        // For all other pages the content script is injected on-demand via
+        // scripting.executeScript (activeTab) when the user interacts with the extension.
         content_scripts: [
           {
-            matches: ['http://*/*', 'https://*/*'],
+            matches: [
+              'http://localhost:5173/*',
+              'http://localhost:4200/*',
+              'https://composer.dxos.org/*',
+              'https://labs.composer.space/*',
+            ],
             run_at: 'document_start',
             js: ['src/content.ts'],
           },
