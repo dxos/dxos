@@ -26,7 +26,7 @@ export type TargetKey = TargetKeyType;
 export const TargetKey = {
   new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
     ({
-      path,
+      path: [...path],
       namespace,
       type,
     }) as TargetKey,
