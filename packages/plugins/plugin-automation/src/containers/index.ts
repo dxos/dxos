@@ -7,5 +7,4 @@ import { type ComponentType, lazy } from 'react';
 export const AutomationArticle: ComponentType<any> = lazy(() => import('./AutomationArticle'));
 export const AutomationSettings: ComponentType<any> = lazy(() => import('./AutomationSettings'));
 export const AutomationsCompanion: ComponentType<any> = lazy(() => import('./AutomationsCompanion'));
-export const FunctionsContainer: ComponentType<any> = lazy(() => import('./FunctionsContainer'));
 export const TriggerSettings: ComponentType<any> = lazy(() => import('./TriggerSettings'));

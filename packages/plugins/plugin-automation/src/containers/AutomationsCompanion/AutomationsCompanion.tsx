@@ -8,7 +8,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery, type Space } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -143,13 +143,16 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
         </Accordion.Root>
       )}
 
-      <div className='p-2 border-t border-separator'>
+      <div className='border-t border-separator'>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <Button variant='ghost' classNames='gap-2 w-full justify-start'>
-              <Icon icon='ph--plus--regular' size={4} />
-              <span>{t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}</span>
-            </Button>
+            {/* Mirror the accordion item header layout (p-2 + icon mr-2) so the icon aligns with the rows above. */}
+            <button className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
+              <Icon icon='ph--plus--regular' size={4} classNames='mr-2 shrink-0' />
+              <span className='flex-1 truncate'>
+                {t('add-object.label', { ns: Type.getTypename(Automation.Automation) })}
+              </span>
+            </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content>
@@ -161,6 +164,7 @@ export const AutomationsCompanion = ({ space, object }: AutomationsCompanionProp
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>

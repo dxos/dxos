@@ -3,14 +3,21 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Routine, Trigger } from '@dxos/compute';
 import { Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { getSpace, useObject, useQuery, type Space } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldComponentProps, type FormFieldMap, RefField, SelectField, Settings } from '@dxos/react-ui-form';
+import {
+  Form,
+  type FormFieldComponentProps,
+  type FormFieldMap,
+  RefField,
+  SelectField,
+  Settings,
+} from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -86,7 +93,11 @@ export const GeneralSection = ({
 }) => {
   const [auto, updateAuto] = useObject(automation);
   const canEnable = Boolean(trigger && auto.runnable);
-  const messageKey = !trigger ? 'add-trigger-first.message' : !auto.runnable ? 'select-action-first.message' : undefined;
+  const messageKey = !trigger
+    ? 'add-trigger-first.message'
+    : !auto.runnable
+      ? 'select-action-first.message'
+      : undefined;
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({ enabled: (props) => <EnabledField {...props} canEnable={canEnable} messageKey={messageKey} /> }),
@@ -195,7 +206,10 @@ export const ActionSection = ({
   const operations = useQuery(
     space.db,
     // Include registry operations (built-in / plugin-provided) alongside space-resident ones.
-    Query.select(Filter.typename(Type.getTypename(Operation.PersistentOperation))).from(Scope.space(), Scope.registry()),
+    Query.select(Filter.typename(Type.getTypename(Operation.PersistentOperation))).from(
+      Scope.space(),
+      Scope.registry(),
+    ),
   );
   const routines = useQuery(
     space.db,
@@ -313,7 +327,10 @@ const ActionInputEditor = ({
   );
   const propertyCount = operation.inputSchema?.properties ? Object.keys(operation.inputSchema.properties).length : 0;
   // Read the current input once per operation (key remounts the uncontrolled Form when the action changes).
-  const defaultValues = useMemo(() => ({ ...((trigger.input as Record<string, unknown>) ?? {}) }), [operation.id, trigger]);
+  const defaultValues = useMemo(
+    () => ({ ...((trigger.input as Record<string, unknown>) ?? {}) }),
+    [operation.id, trigger],
+  );
   const handleValuesChanged = useCallback(
     (values: Record<string, unknown>) => {
       Obj.update(trigger, (trigger) => {
@@ -357,7 +374,11 @@ const TimerSpecForm = Schema.Struct({
 });
 const FeedSpecForm = Schema.Struct({
   kind: Schema.Literal('feed'),
-  feed: Ref.Ref(Feed.Feed).pipe(ParentLabelAnnotation.set(true), Schema.annotations({ title: 'Feed' }), Schema.optional),
+  feed: Ref.Ref(Feed.Feed).pipe(
+    ParentLabelAnnotation.set(true),
+    Schema.annotations({ title: 'Feed' }),
+    Schema.optional,
+  ),
 });
 const TriggerForm = Schema.Union(TimerSpecForm, FeedSpecForm);
 type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
@@ -365,7 +386,11 @@ type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 // Flat view of the form values: `Partial<TriggerFormValues>` collapses a discriminated union to its common
 // key alone (`kind`), so reach the variant fields through this all-optional shape instead. `Partial<T>` is
 // assignable to it, so handlers/helpers can accept the Form's value verbatim and still read `cron`/`feed`.
-type TriggerFormInput = { readonly kind?: 'timer' | 'feed'; readonly cron?: string; readonly feed?: Ref.Ref<Feed.Feed> };
+type TriggerFormInput = {
+  readonly kind?: 'timer' | 'feed';
+  readonly cron?: string;
+  readonly feed?: Ref.Ref<Feed.Feed>;
+};
 
 /** Project a trigger spec onto the form's discriminated-union members. */
 const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput =>
@@ -465,17 +490,20 @@ export const TriggerSection = ({
 // Inline form (companion)
 //
 
+/** Compact section heading for the inline form — just a small title, no description (cf. Settings.Section). */
+const InlineSection = ({ title, children }: { title: string; children: ReactNode }) => (
+  <div className='flex flex-col gap-1'>
+    <h3 className='pli-1 text-sm font-medium text-description'>{title}</h3>
+    <Settings.Panel>{children}</Settings.Panel>
+  </div>
+);
+
 /**
- * Compact inline view used in the Automations companion. Renders the same three form panels as the
- * full article but without Settings.Section headings or descriptions — just the bordered cards stacked.
+ * Compact inline view used in the Automations companion. Renders the same three sections as the full article
+ * (General / Trigger / Action) with condensed headings and no descriptions or scrolling Settings.Viewport.
  */
-export const AutomationInlineForm = ({
-  automation,
-  space,
-}: {
-  automation: Automation.Automation;
-  space: Space;
-}) => {
+export const AutomationInlineForm = ({ automation, space }: { automation: Automation.Automation; space: Space }) => {
+  const { t } = useTranslation(meta.id);
   // Subscribe for reactive trigger changes (mirrors how AutomationArticle derives the trigger).
   const [snapshot] = useObject(automation);
   const trigger = useMemo(() => {
@@ -489,16 +517,16 @@ export const AutomationInlineForm = ({
   }, [snapshot.triggers]);
 
   return (
-    <div className='flex flex-col gap-2'>
-      <Settings.Panel>
+    <div className='flex flex-col gap-3'>
+      <InlineSection title={t('general.title')}>
         <GeneralSection automation={automation} trigger={trigger} />
-      </Settings.Panel>
-      <Settings.Panel>
+      </InlineSection>
+      <InlineSection title={t('trigger-picker.title')}>
         <TriggerSection space={space} automation={automation} trigger={trigger} />
-      </Settings.Panel>
-      <Settings.Panel>
+      </InlineSection>
+      <InlineSection title={t('action.title')}>
         <ActionSection space={space} automation={automation} trigger={trigger} />
-      </Settings.Panel>
+      </InlineSection>
     </div>
   );
 };

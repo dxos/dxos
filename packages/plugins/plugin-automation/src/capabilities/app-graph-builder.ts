@@ -68,21 +68,6 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: 'spaceSettingsFunctions',
-        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeSettingsPanel({
-              id: 'functions',
-              type: `${meta.id}.space-settings-functions`,
-              label: ['functions-panel.label', { ns: meta.id }],
-              icon: 'ph--function--regular',
-              iconHue: 'indigo',
-              position: 'last',
-            }),
-          ]),
-      }),
-      GraphBuilder.createExtension({
         id: 'automationsCompanion',
         match: NodeMatcher.whenEchoObjectMatches,
         connector: () =>

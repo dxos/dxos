@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { AutomationArticle, AutomationsCompanion, AutomationSettings, FunctionsContainer } from '#containers';
+import { AutomationArticle, AutomationsCompanion, AutomationSettings } from '#containers';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
@@ -23,18 +23,6 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <AutomationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
-      }),
-      Surface.create({
-        id: 'spaceSettingsFunctions',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-functions`),
-        component: () => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          return <FunctionsContainer space={space} />;
-        },
       }),
       Surface.create({
         id: 'spaceSettingsAutomation',
