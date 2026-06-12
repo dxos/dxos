@@ -29,8 +29,7 @@ describe('filterMatch', () => {
     expect(filterMatchDoc(Filter.type(TestSchema.Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
     expect(filterMatchDoc(Filter.type(TestSchema.Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be
       .true;
-    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be
-      .true;
+    expect(filterMatchDoc(Filter.type(TestSchema.Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be.true;
   });
 
   test('and', () => {
@@ -59,10 +58,7 @@ describe('filterMatch', () => {
 
   test('contains', () => {
     expect(
-      filterMatchDoc(
-        Filter.type(TestSchema.Expando, { properties: { label: Filter.contains('test') } }).ast,
-        OBJECT_1,
-      ),
+      filterMatchDoc(Filter.type(TestSchema.Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1),
     ).to.be.true;
     expect(
       filterMatchDoc(
