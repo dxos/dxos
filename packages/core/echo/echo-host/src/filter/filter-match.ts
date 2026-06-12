@@ -9,7 +9,7 @@ import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } 
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
 
-export type MatchedObject = {
+export type MatchedDoc = {
   id: EntityId;
   spaceId: SpaceId;
   doc: EntityStructure;
@@ -39,7 +39,7 @@ const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
  * Matches an object against a filter AST.
  * @param obj object structure as stored in automerge.
  */
-export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
+export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc): boolean => {
   switch (filter.type) {
     case 'object': {
       // Check typename if specified.
@@ -109,15 +109,15 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'not': {
-      return !filterMatchObject(filter.filter, obj);
+      return !filterMatchDoc(filter.filter, obj);
     }
 
     case 'and': {
-      return filter.filters.every((f) => filterMatchObject(f, obj));
+      return filter.filters.every((f) => filterMatchDoc(f, obj));
     }
 
     case 'or': {
-      return filter.filters.some((f) => filterMatchObject(f, obj));
+      return filter.filters.some((f) => filterMatchDoc(f, obj));
     }
 
     default:
@@ -152,7 +152,7 @@ const matchMetaKey = (
   return semver.satisfies(objVersion, versionRange, { includePrerelease: true });
 };
 
-// TODO(burdon): Reconcile with filterMatchObject.
+// TODO(burdon): Reconcile with filterMatchDoc (automerge doc path).
 export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
   switch (filter.type) {
     case 'object': {

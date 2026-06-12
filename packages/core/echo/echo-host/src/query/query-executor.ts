@@ -29,7 +29,7 @@ import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge';
 import type { SpaceStateManager } from '../db-host';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
-import { filterMatchObject, filterMatchObjectJSON } from '../filter';
+import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
@@ -931,7 +931,7 @@ export class QueryExecutor extends Resource {
 
     const result = workingSet.filter((item) => {
       if (item.doc) {
-        return filterMatchObject(step.filter, {
+        return filterMatchDoc(step.filter, {
           id: item.objectId,
           spaceId: item.spaceId,
           doc: item.doc,
