@@ -58,7 +58,9 @@ export const crm: AutomationCapabilities.Template = {
         Routine.make({
           name: routineName,
           instructions: DEFAULT_INSTRUCTIONS,
-          input: Schema.Struct({ message: Schema.Unknown }),
+          // The feed trigger forwards the raw event item (the new Message) as AgentPrompt's top-level input
+          // (`input: '{{event.item}}'`), so the routine input is the message itself, not a `{ message }` wrapper.
+          input: Schema.Unknown,
           output: Schema.Void,
           blueprints: blueprintRefs,
           context: [],
