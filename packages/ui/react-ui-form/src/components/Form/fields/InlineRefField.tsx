@@ -9,7 +9,7 @@ import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -87,7 +87,7 @@ type InlineFormProps = {
   db?: Database.Database;
   readonly?: boolean;
   // Accepts both the generic `defaultUseType` and `RefFieldProps['useType']`.
-  useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity | undefined;
+  useType?: (db?: Database.Database, typeUri?: URI.URI) => Type.AnyEntity | undefined;
 };
 
 const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: InlineFormProps) => {

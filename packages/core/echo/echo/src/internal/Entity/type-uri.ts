@@ -35,7 +35,9 @@ export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | U
       // TypeIdentifierAnnotation → echo EID. In-memory makeObjectFromJsonSchema
       // entities have neither (plain JSON Schema), so fall through to the EID path.
       const uri = getSchemaURI(schema);
-      if (uri != null) return uri;
+      if (uri != null) {
+        return uri;
+      }
     }
     return getUriFromEntity(input as AnyEntity);
   }

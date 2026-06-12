@@ -52,7 +52,7 @@ export type RefFieldProps = FormFieldComponentProps &
   > & {
     db?: Database.Database;
     // TODO(burdon): Replace hooks with callbacks.
-    useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    useType?: (db?: Database.Database, typeUri?: URI.URI) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     /**

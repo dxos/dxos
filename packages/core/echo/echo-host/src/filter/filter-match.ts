@@ -466,8 +466,12 @@ const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean
   const expectedEid = EID.tryParse(expectedStr);
   if (expectedEid) {
     const actualEid = EID.tryParse(actualStr);
-    if (!actualEid) return false;
-    if (EID.getEntityId(expectedEid) !== EID.getEntityId(actualEid)) return false;
+    if (!actualEid) {
+      return false;
+    }
+    if (EID.getEntityId(expectedEid) !== EID.getEntityId(actualEid)) {
+      return false;
+    }
     const expectedSpaceId = EID.getSpaceId(expectedEid);
     const actualSpaceId = EID.getSpaceId(actualEid);
     return expectedSpaceId === undefined || actualSpaceId === undefined || expectedSpaceId === actualSpaceId;
@@ -476,8 +480,12 @@ const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean
   const expectedDxn = DXN.tryMake(expectedStr);
   if (expectedDxn) {
     const actualDxn = DXN.tryMake(actualStr);
-    if (!actualDxn) return false;
-    if (DXN.getName(expectedDxn) !== DXN.getName(actualDxn)) return false;
+    if (!actualDxn) {
+      return false;
+    }
+    if (DXN.getName(expectedDxn) !== DXN.getName(actualDxn)) {
+      return false;
+    }
     const expectedVersion = DXN.getVersion(expectedDxn);
     const actualVersion = DXN.getVersion(actualDxn);
     return expectedVersion === undefined || actualVersion === undefined || expectedVersion === actualVersion;
