@@ -37,8 +37,7 @@ import { SHARED } from '../util';
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
-// E.g., echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6
-const ECHO_DXN_LENGTH = 'echo://'.length + 33 + 1 + 26;
+const isEchoRef = (id: string) => id.startsWith('echo:/');
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -138,7 +137,7 @@ export default Capability.makeModule(
           }
 
           const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-          if (!node && (id.length === ECHO_DXN_LENGTH || id.length === SPACE_ID_LENGTH)) {
+          if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
             void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);

@@ -14,6 +14,23 @@ import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
+/**
+ * Normalizes an echo: EID to the local (unqualified) form so SQL comparisons are consistent.
+ * DB rows always store `echo:/<entityId>`; a space-qualified `echo://<space>/<entityId>` would
+ * otherwise miss every row for that type.
+ */
+const _normalizeTypeUri = (typeDXN: string): string => {
+  if (!typeDXN.startsWith('echo:')) {
+    return typeDXN;
+  }
+  const eid = EID.tryParse(typeDXN);
+  if (!eid) {
+    return typeDXN;
+  }
+  const entityId = EID.getEntityId(eid);
+  return entityId ? EID.make({ entityId }) : typeDXN;
+};
+
 const _escapeLikePrefix = (prefix: string) => {
   // Escape LIKE metacharacters in the *literal* prefix (we still append a wildcard for the version suffix).
   // Backslash is used as the ESCAPE character.
@@ -130,15 +147,16 @@ export class EntityMetaIndex implements Index {
     ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const parsedDxn = DXN.isDXN(query.typeDXN) ? query.typeDXN : undefined;
+        const normalizedTypeDXN = _normalizeTypeUri(query.typeDXN);
+        const parsedDxn = DXN.isDXN(normalizedTypeDXN) ? normalizedTypeDXN : undefined;
         const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows = hasNoVersion
           ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
-              query.typeDXN
-            } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\')`
-          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${query.typeDXN}`;
+              normalizedTypeDXN
+            } OR typeDXN LIKE ${_escapeLikePrefix(normalizedTypeDXN)} ESCAPE '\\')`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${normalizedTypeDXN}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -208,11 +226,12 @@ export class EntityMetaIndex implements Index {
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
         const typeWhere = sql.or(
           typeDxns.map((typeDXN) => {
-            const parsedDxn = DXN.isDXN(typeDXN) ? typeDXN : undefined;
+            const normalized = _normalizeTypeUri(typeDXN);
+            const parsedDxn = DXN.isDXN(normalized) ? normalized : undefined;
             const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
-            const exactMatch = sql`typeDXN = ${typeDXN}`;
+            const exactMatch = sql`typeDXN = ${normalized}`;
             return hasNoVersion
-              ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
+              ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(normalized)} ESCAPE '\\'`])
               : exactMatch;
           }),
         );

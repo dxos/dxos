@@ -106,7 +106,7 @@ export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
       }
 
       // Check for self URI key: { "@uri": "echo:…" }
-      const selfUri = (record as any)['@uri'];
+      const selfUri = record['@uri'];
       if (typeof selfUri === 'string' && (selfUri.startsWith('dxn:') || selfUri.startsWith('echo:'))) {
         addDxn(selfUri);
       }
@@ -115,7 +115,7 @@ export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
       if (record._tag === 'reference' && record.reference && typeof record.reference === 'object') {
         const ref = record.reference as Record<string, unknown>;
         const refUri = ref.uri;
-        if (refUri && typeof refUri === 'string') {
+        if (typeof refUri === 'string' && (refUri.startsWith('echo:') || refUri.startsWith('dxn:'))) {
           addDxn(refUri);
         }
       }

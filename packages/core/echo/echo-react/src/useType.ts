@@ -31,9 +31,13 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
     let subscribed = false;
     const find = (): T | undefined =>
       subscribed
-        ? (queryResult.results.find((type) => Type.getTypename(type) === typename || type.id === typename) as
-            | T
-            | undefined)
+        ? (queryResult.results.find(
+            (type) =>
+              Type.getTypename(type) === typename ||
+              type.id === typename ||
+              // Space-qualified form: spaceId:entityId — strip the qualifier and compare.
+              (typename.length > type.id.length && typename.endsWith(`:${type.id}`)),
+          ) as T | undefined)
         : undefined;
 
     return {
