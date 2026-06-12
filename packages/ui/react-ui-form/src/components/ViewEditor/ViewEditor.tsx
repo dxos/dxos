@@ -38,7 +38,7 @@ import {
 
 export type ViewEditorProps = ThemedClassName<
   {
-    type: Type.AnyEntity;
+    type?: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
     registry?: Registry.Registry;
@@ -52,7 +52,7 @@ export type ViewEditorProps = ThemedClassName<
 /**
  * Schema-based object form.
  */
-export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
+export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   (
     {
       classNames,
@@ -71,10 +71,13 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     forwardedRef,
   ) => {
     const atomRegistry = useContext(RegistryContext);
-    const schemaReadonly = Type.getDatabase(type) == null;
+    const schemaReadonly = type == null || Type.getDatabase(type) == null;
     const { t } = useTranslation(translationKey);
 
     const projectionModel = useMemo(() => {
+      if (!type) {
+        return null;
+      }
       const jsonSchema = type.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
@@ -91,7 +94,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       return model;
     }, [atomRegistry, type, view]);
 
-    useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
+    useImperativeHandle<ProjectionModel | null, ProjectionModel | null>(
+      forwardedRef,
+      () => projectionModel,
+      [projectionModel],
+    );
 
     const queueTarget = Match.value(view.query.ast).pipe(
       Match.when({ type: 'from' }, ({ from }) => {
@@ -113,7 +120,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (!queueTarget) {
         return undefined;
       }
-      const feed = feeds.find((feed) => Feed.getQueueUri(feed)?.toString() === queueTarget);
+      // Normalize via EID so legacy (dxn:queue:…) and canonical (echo://…) feed URIs compare equal.
+      const targetEid = EID.tryParse(queueTarget);
+      const feed = feeds.find((feed) => {
+        const feedEid = Feed.getQueueUri(feed);
+        return feedEid != null && targetEid != null && EID.equals(feedEid, targetEid);
+      });
       return feed ? Ref.fromURI(Entity.getURI(feed)) : undefined;
     }, [queueTarget, feeds]);
 
@@ -199,22 +211,28 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
           <Form.FieldSet />
 
-          <FormFieldLabel label={t('fields.label')} asChild />
-          <FieldList
-            type={type}
-            view={view}
-            registry={registry}
-            readonly={readonly}
-            showHeading={showHeading}
-            onDelete={handleDelete}
-          />
+          {type && (
+            <>
+              <FormFieldLabel label={t('fields.label')} asChild />
+              <FieldList
+                type={type}
+                view={view}
+                registry={registry}
+                readonly={readonly}
+                showHeading={showHeading}
+                onDelete={handleDelete}
+              />
+            </>
+          )}
         </Form.Root>
       </div>
     );
   },
 );
 
-type FieldListProps = Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
+type FieldListProps = Omit<Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>, 'type'> & {
+  type: Type.AnyEntity;
+};
 
 const FieldList = ({ type, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
   const atomRegistry = useContext(RegistryContext);

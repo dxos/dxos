@@ -77,11 +77,8 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       }
 
       const queue = target;
-      const query = queue
-        ? Query.fromAst(newQuery).from([
-            Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
-          ])
-        : Query.fromAst(newQuery);
+      // Store the canonical EID so the feed scope round-trips against Feed.getQueueUri when reading the view back.
+      const query = queue ? Query.fromAst(newQuery).from([Scope.feed(String(queue))]) : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
@@ -209,20 +206,18 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                           <Form.FieldSet />
                         </Form.Content>
                       </Form.Root>
-                      {type && (
-                        <ViewEditor
-                          ref={projectionRef}
-                          mode='tag'
-                          readonly
-                          type={type}
-                          view={column.view.target}
-                          registry={db?.graph.registry}
-                          db={db}
-                          tags={tags}
-                          types={types}
-                          onQueryChanged={handleQueryChanged}
-                        />
-                      )}
+                      <ViewEditor
+                        ref={projectionRef}
+                        mode='tag'
+                        readonly
+                        type={type}
+                        view={column.view.target}
+                        registry={db?.graph.registry}
+                        db={db}
+                        tags={tags}
+                        types={types}
+                        onQueryChanged={handleQueryChanged}
+                      />
                     </div>
                   )}
                 </List.Item>
