@@ -68,7 +68,9 @@ export class QueueFactory extends Resource implements QueueAPI {
     return this._queues.values();
   }
 
-  create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): QueueImpl<T> {
+  create<T extends Entity.Unknown>({
+    subspaceTag = QueueSubspaceTags.DATA,
+  }: { subspaceTag?: string } = {}): QueueImpl<T> {
     const echoUri = EID.make({ spaceId: this._spaceId, entityId: EntityId.random() });
     return this._getOrCreate<T>(echoUri, subspaceTag);
   }
