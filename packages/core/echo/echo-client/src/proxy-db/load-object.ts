@@ -7,6 +7,7 @@ import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
 import { getObjectCore } from '../echo-handler';
+import { type DatabaseImpl } from './database';
 
 /**
  * @param obj
@@ -41,7 +42,8 @@ export const loadObjectReferences = async <
   const tasks = objectArray.map((obj) => {
     const core = getObjectCore(obj as any);
     const value = valueAccessor(obj);
-    if (core.entityManager == null) {
+    const db = core.entityManager as DatabaseImpl | undefined;
+    if (db == null) {
       return value;
     }
 
@@ -54,7 +56,7 @@ export const loadObjectReferences = async <
 
     // TODO(burdon): Timeout if trying to load object that isn't there.
     return asyncTimeout(
-      core.entityManager._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
+      db._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
       timeout,
     );
   });

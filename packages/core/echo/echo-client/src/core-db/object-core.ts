@@ -25,8 +25,25 @@ import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/
 
 import { type DocHandleProxy } from '../automerge';
 import { docChangeSemaphore } from './doc-semaphore';
-import { type EntityManager } from './entity-manager';
-import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, TargetKey, isValidKeyPath } from './types';
+import {
+  type DecodedAutomergePrimaryValue,
+  type DocAccessor,
+  type GetObjectCoreByIdOptions,
+  type KeyPath,
+  TargetKey,
+  isValidKeyPath,
+} from './types';
+
+/**
+ * Minimal interface that ObjectCore requires from the containing database.
+ * Kept in this file (rather than types.ts) to avoid a circular import:
+ * types.ts must not reference ObjectCore.
+ * @internal
+ */
+export interface IDatabaseBinding {
+  readonly spaceId: SpaceId;
+  getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
+}
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -55,9 +72,9 @@ export class ObjectCore {
   public id = EntityId.random();
 
   /**
-   * Set when the object is bound to an EntityManager.
+   * Set when the object is bound to a database.
    */
-  public entityManager?: EntityManager | undefined;
+  public entityManager?: IDatabaseBinding | undefined;
 
   /**
    * Set when the object is not bound to a database.
@@ -618,7 +635,7 @@ export class ObjectCore {
 }
 
 export type BindOptions = {
-  db: EntityManager;
+  db: IDatabaseBinding;
   docHandle: DocHandleProxy<DatabaseDirectory>;
   path: KeyPath;
   /** Assign the state from the local doc into the shared structure for the database. */

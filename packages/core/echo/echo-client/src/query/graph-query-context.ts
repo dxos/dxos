@@ -194,7 +194,7 @@ export class SpaceQuerySource implements QuerySource {
     prohibitSignalActions(() => {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
-        const core = this._database.entityManager.getObjectCoreById(objectId, {
+        const core = this._database.getObjectCoreById(objectId, {
           load: false,
         });
 
@@ -233,7 +233,7 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database.entityManager.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
+        ...(await this._database.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),
@@ -284,7 +284,7 @@ export class SpaceQuerySource implements QuerySource {
     this._ctx = new Context();
     this._query = query;
 
-    this._database.entityManager._updateEvent.on(this._ctx, this._onUpdate);
+    this._database._updateEvent.on(this._ctx, this._onUpdate);
 
     this._results = undefined;
     this.changed.emit();
@@ -299,10 +299,10 @@ export class SpaceQuerySource implements QuerySource {
   ): QueryResult.EntityEntry<Obj.Unknown>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
-          .id!.map((id) => this._database.entityManager.getObjectCoreById(id, { load: true }))
+          .id!.map((id) => this._database.getObjectCoreById(id, { load: true }))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
-      : this._database.entityManager.allObjectCores().filter((core) => this._filterCore(core, filter, options));
+      : this._database.allObjectCores().filter((core) => this._filterCore(core, filter, options));
 
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
@@ -346,7 +346,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
     return (
-      this._database.entityManager.areStrongDepsSatisfied(core) &&
+      this._database.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
       filterMatchObject(filter, {
         id: core.id,
