@@ -18,8 +18,8 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
-  '@astrojs/rss': ^4.0.17
-  '@astrojs/starlight': ^0.38.2
+  '@astrojs/rss': ^4.0.18
+  '@astrojs/starlight': ^0.40.0
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -334,7 +334,7 @@ catalog:
   aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  astro: ^6.0.8
+  astro: ^6.4.6
   autoprefixer: ^10.5.0
   babel-preset-solid: ^1.9.9
   babylonjs-gltf2interface: ^7.0.0
@@ -603,7 +603,7 @@ catalog:
   solid-js: ^1.9.11
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
-  starlight-links-validator: ^0.20.1
+  starlight-links-validator: ^0.24.0
   storybook: ^10.4.2
   storybook-solidjs-vite: ^10.0.13
   streamx: ^2.12.5
@@ -714,6 +714,7 @@ onlyBuiltDependencies:
 overrides:
   '@automerge/automerge': 'catalog:'
   '@automerge/automerge-subduction': 'catalog:'
+  '@dxos/docs>vite': ^7.3.2
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': 'catalog:'
   '@lezer/highlight': 'catalog:'
@@ -726,6 +727,7 @@ overrides:
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
   ajv@8: '>=8.18.0'
+  astro>vite: ^7.3.2
   axios: 1.14.0
   base-x@4: 4.0.1
   cookie: '>=0.7.0'
@@ -781,6 +783,7 @@ peerDependencyRules:
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
     vite-plugin-pwa>vite: '>=7.0.0'
+    vitefu>vite: '>=7.0.0'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
