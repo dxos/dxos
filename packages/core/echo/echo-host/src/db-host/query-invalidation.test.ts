@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EID, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { QueryExecutor } from '../query/query-executor';
 import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
@@ -31,10 +31,10 @@ const ORG_DXN = 'dxn:com.example.type.organization:0.1.0';
 const PERSON_TYPENAME = 'com.example.type.person';
 const ORG_TYPENAME = 'com.example.type.organization';
 
-// Stable queue DXN mirroring query-planner.test.ts.
-const QUEUE_DXN = EID.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
+// Stable queue EID mirroring query-planner.test.ts.
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 const QUEUE_ID = EntityId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
+const QUEUE_DXN = EID.make({ spaceId: QUEUE_SPACE_ID, entityId: QUEUE_ID });
 
 const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
@@ -93,17 +93,16 @@ describe('hintFromIndexingResult', () => {
     expect(result!.queueIds).toBeUndefined();
   });
 
-  // Regression for DX-966: stored object types arrive versioned (and sometimes with the legacy
-  // `dxn:type:` prefix); the hint must reduce them to the bare typename so it can match a
-  // version-less type filter scope.
-  test('canonicalizes versioned and legacy-prefixed object types', ({ expect }) => {
+  // Regression for DX-966: stored object types arrive versioned; the hint must reduce them to the
+  // bare typename so it can match a version-less type filter scope.
+  test('canonicalizes versioned object types', ({ expect }) => {
     const result = hintFromIndexingResult({
       updated: 2,
       done: true,
       spaces: new Set([SpaceId.random()]),
       queues: new Set(),
       documents: new Set(),
-      types: new Set([PERSON_DXN, `dxn:type:${ORG_TYPENAME}:0.1.0`]),
+      types: new Set([PERSON_DXN, ORG_DXN]),
       objects: new Set(),
     });
     expect(result!.typenames).toEqual(new Set([PERSON_TYPENAME, ORG_TYPENAME]));
@@ -111,15 +110,14 @@ describe('hintFromIndexingResult', () => {
 });
 
 describe('canonicalTypename', () => {
-  test('strips schema version and the legacy `type:` kind segment', ({ expect }) => {
+  test('strips schema version', ({ expect }) => {
     expect(canonicalTypename(PERSON_DXN)).toBe(PERSON_TYPENAME);
-    expect(canonicalTypename(`dxn:type:${PERSON_TYPENAME}:0.1.0`)).toBe(PERSON_TYPENAME);
     expect(canonicalTypename(`dxn:${PERSON_TYPENAME}`)).toBe(PERSON_TYPENAME);
   });
 
   test('passes through schema-as-object (EchoURI) and other non-type URIs unchanged', ({ expect }) => {
     // Dynamic schemas reference the schema object by EchoURI rather than a typename DXN.
-    const echoUri = 'dxn:echo:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E';
+    const echoUri = EID.make({ spaceId: QUEUE_SPACE_ID, entityId: QUEUE_ID });
     expect(canonicalTypename(echoUri)).toBe(echoUri);
     // Arbitrary non-DXN strings are returned verbatim.
     expect(canonicalTypename('plain-string')).toBe('plain-string');
@@ -221,13 +219,13 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     ).toBe(false);
   });
 
-  // Regression for DX-966. The Composer navtree lists objects per type via `Filter.typename(...)`,
-  // whose scope typename is version-less. It must match the canonical hint produced for a stored
+  // Regression for DX-966. The Composer navtree lists objects per type via a version-less typename
+  // DXN (`Filter.type(DXN.make(typename))`). It must match the canonical hint produced for a stored
   // (versioned) object so the reactive query is re-run on insert/delete. Both scope and hint are
   // reduced to the same canonical typename, so the comparison stays a plain set overlap — see
   // `canonicalTypename` and `hintFromIndexingResult` for the canonicalization at each boundary.
-  test('version-less Filter.typename scope matches the canonical hint typename', ({ expect }) => {
-    const executor = makeExecutor(withSpace(Query.select(Filter.typename(PERSON_TYPENAME))));
+  test('version-less typename scope matches the canonical hint typename', ({ expect }) => {
+    const executor = makeExecutor(withSpace(Query.select(Filter.type(DXN.make(PERSON_TYPENAME)))));
     expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
   });
 });

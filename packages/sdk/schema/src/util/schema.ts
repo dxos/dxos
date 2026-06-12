@@ -57,7 +57,7 @@ export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Pro
     return;
   }
   // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
-  // directly rather than rebuilding a legacy `dxn:type:` string.
+  // directly rather than rebuilding a DXN string.
   const entity = registry.getByURI(dxn);
   return entity != null && Type.isType(entity) ? entity : undefined;
 };

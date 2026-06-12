@@ -13,14 +13,14 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const generator: ValueGenerator = random as any;
 
-const findViewByTypename = async (views: View.View[], typename: string) => {
-  return views.find((view) => getTypenameFromQuery(view.query.ast) === typename);
+const findViewByTypeUri = async (views: View.View[], typeUri: string) => {
+  return views.find((view) => getTypeURIFromQuery(view.query.ast) === typeUri);
 };
 
 export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
@@ -35,7 +35,7 @@ export const createGenerator = <S extends Type.AnyObj>(
 
     // Find or create table and view.
     const views = await space.db.query(Filter.type(View.View)).run();
-    const view = await findViewByTypename(views, typename);
+    const view = await findViewByTypeUri(views, Type.getURI(schema));
     const staticSchema = client
       ? client.graph.registry
           .list()

@@ -658,31 +658,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const database = target[symbolInternals].database;
 
-    // For dxn:echo:@:objectId references, load the PersistentSchema on demand.
-    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
-    if (echoRefMatch) {
-      const echoId = echoRefMatch[1];
-      if (echoId != null) {
-        const found = registry.getByURI(`dxn:echo:@:${echoId}`);
-        if (found != null && Type.isType(found)) {
-          return found;
-        }
-        const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          return database._getOrRegisterPersistentSchema(schemaObject);
-        }
-      }
-    }
-
-    // Legacy EID form (echo://spaceId/objectId or echo:/<objectId>) — load on demand.
+    // Echo identifier (echo://spaceId/objectId or echo:/<objectId>) — load the
+    // PersistentSchema on demand (handles preloadSchemaOnOpen=false or schema added after open).
     const echoUri = EID.tryParse(typeURI);
     if (echoUri) {
       const echoId = EID.getEntityId(echoUri);
       if (echoId != null) {
-        const found = registry.getByURI(`dxn:echo:@:${echoId}`);
-        if (found != null && Type.isType(found)) {
-          return found;
-        }
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
           return database._getOrRegisterPersistentSchema(schemaObject);
@@ -720,7 +701,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
 
     // Skip protobuf types as they are runtime registered types.
-    if (typeURI.startsWith('dxn:type:protobuf') || typeURI.startsWith('dxn:protobuf')) {
+    if (typeURI.startsWith('dxn:protobuf')) {
       return undefined;
     }
 
@@ -729,21 +710,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return Type.getSchema(fromRegistry);
     }
 
-    // For dxn:echo:@:objectId references, load the PersistentSchema on demand
-    // (handles the case where preloadSchemaOnOpen is false or the schema was added after open).
-    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
-    if (echoRefMatch) {
-      const echoId = echoRefMatch[1];
-      if (echoId != null) {
-        const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject);
-          return Type.getSchema(typeEntity);
-        }
-      }
-    }
-
-    // Legacy EID form (echo://spaceId/objectId) — load the PersistentSchema on demand.
+    // Echo identifier (echo://spaceId/objectId or echo:/<objectId>) — load the
+    // PersistentSchema on demand (handles preloadSchemaOnOpen=false or schema added after open).
     const echoUri = EID.tryParse(typeURI);
     if (echoUri != null) {
       const echoId = EID.getEntityId(echoUri);

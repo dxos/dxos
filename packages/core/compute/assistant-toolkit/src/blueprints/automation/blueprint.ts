@@ -32,14 +32,14 @@ const instructions = trim`
   {
     item: '{{event.item}}',
     instructions: 'Summarize and perform entity-extraction'
-    mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+    mailbox: { '/': 'echo://AAA/ZZZ' }
   }
 
   ## Trigger kinds
 
   - Timer: Triggered by a cron schedule.
   - Queue: Subscribes and processes items begginging to end.
-            Note: queues are the same as feeds. The queue DXN should be of form: dxn:queue:data:<space-id>:<queue-id>.
+            Note: queues are the same as feeds. The queue EID should be of form: echo://<space-id>/<queue-id>.
   - Subscription: Subscribes and processes database items based on a query.
 
   Avoid: email and webhook triggers.
@@ -56,7 +56,7 @@ const instructions = trim`
   Timer:
 
   {
-    "function": { "/": "dxn:echo:AAA:ZZZ" },
+    "function": { "/": "echo://AAA/ZZZ" },
     "enabled": true,
     "spec": {
       "kind": "timer",
@@ -67,22 +67,22 @@ const instructions = trim`
   Queue:
 
   {
-    "function": { "/": "dxn:echo:AAA:ZZZ" },
+    "function": { "/": "echo://AAA/ZZZ" },
     "enabled": true,
     "spec": {
       "kind": "queue",
-      "queue": "dxn:queue:data:XXX:YYY"
+      "queue": "echo://XXX/YYY"
     }
   }
 
   Subscription:
 
   {
-    "function": { "/": "dxn:echo:AAA:ZZZ" },
+    "function": { "/": "echo://AAA/ZZZ" },
     "enabled": true,
     "spec": {
       "kind": "subscription",
-      "query": { "ast": { "type": "select", "filter": { "type": "object", "typename": "dxn:type:org.dxos.type.person" } } }
+      "query": { "ast": { "type": "select", "filter": { "type": "object", "typename": "dxn:org.dxos.type.person" } } }
     }
   }
 `;

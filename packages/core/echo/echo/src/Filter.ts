@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EID, EntityId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -105,7 +105,8 @@ export const id = (...ids: EntityId[]): Any => {
  *
  * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /
  * `Type.makeRelation`), a `Schema.Union` of such entities (for filtering across a
- * union of ECHO types), or a non-qualified typename string.
+ * union of ECHO types), or a fully-qualified type URI — an `echo:` EID (stored schema)
+ * or a `dxn:` DXN (static schema). To filter by a bare typename, wrap it: `DXN.make(typename)`.
  */
 export const type: {
   <T extends Type$.AnyEntity>(type: T, props?: Props<Type$.InstanceType<T>>): Filter<Type$.InstanceType<T>>;
@@ -120,12 +121,12 @@ export const type: {
     union: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
-  (schema: string, props?: Props<unknown>): Filter<any>;
-  // Passthrough overload for callers that hold a `Type.AnyEntity | string` union
+  (uri: URI.URI, props?: Props<unknown>): Filter<any>;
+  // Passthrough overload for callers that hold a `Type.AnyEntity | URI.URI` union
   // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
   // typed overloads above still win for monomorphic inputs.
-  (input: Type$.AnyEntity | string, props?: Props<unknown>): Filter<unknown>;
-} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | string, props?: Props<unknown>): any => {
+  (input: Type$.AnyEntity | URI.URI, props?: Props<unknown>): Filter<unknown>;
+} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | URI.URI, props?: Props<unknown>): any => {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({
@@ -143,30 +144,6 @@ export const type: {
     type: 'object',
     typename: uri,
     ...propsFilterToAst(props ?? {}),
-  });
-};
-
-/**
- * Filter by non-qualified typename.
- */
-export const typename = (typename: string): Any => {
-  assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
-  return new FilterClass({
-    type: 'object',
-    typename: DXN.make(typename),
-    props: {},
-  });
-};
-
-/**
- * Filter by fully qualified type URI — either a typename DXN (for static schemas) or
- * a schema-as-object EID (for stored dynamic schemas). See `getSchemaURI`.
- */
-export const typeURI = (uri: URI.URI): Any => {
-  return new FilterClass({
-    type: 'object',
-    typename: uri,
-    props: {},
   });
 };
 
@@ -245,7 +222,7 @@ export const text = (
 /**
  * Filter by foreign keys.
  */
-export const foreignKeys = <S extends Type$.AnyEntity | string>(
+export const foreignKeys = <S extends Type$.AnyEntity | URI.URI>(
   schema: S,
   keys: ForeignKey[],
 ): Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> => {

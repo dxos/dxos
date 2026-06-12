@@ -100,15 +100,15 @@ describe('Object JSON serializer', () => {
     expect(getTypeURI(contactFromJson)).toEqual(Type.getURI(TestSchema.Person));
   });
 
-  test('upgrades legacy string tags to encoded references on deserialize', async () => {
+  test('upgrades bare string tags to encoded references on deserialize', async () => {
     const expando = Obj.make(TestSchema.Expando, { message: 'hi' });
     const json = objectToJSON(expando) as any;
-    // Simulate data serialized before the tags-as-refs migration: bare DXN strings.
-    json['@meta'] = { keys: [], tags: ['dxn:echo:@:TAGLEGACY'] };
+    // Simulate data serialized before the tags-as-refs migration: bare id strings.
+    json['@meta'] = { keys: [], tags: ['echo:/TAGLEGACY'] };
 
     const fromJson = (await objectFromJSON(json)) as any;
     // Decodes to a materialized `Ref` (the shared ref codec), not a raw encoded reference.
-    expect(fromJson[MetaId].tags.map((ref: any) => ref.uri)).toEqual(['dxn:echo:@:TAGLEGACY']);
+    expect(fromJson[MetaId].tags.map((ref: any) => ref.uri)).toEqual(['echo:/TAGLEGACY']);
   });
 
   test('deserializes expando without leaking internal json keys', async () => {

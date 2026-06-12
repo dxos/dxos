@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Filter, Order, Query } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { QuerySandbox } from './query-sandbox';
@@ -18,21 +19,21 @@ describe('QuerySandbox', () => {
     const ast = sandbox.eval(trim`
       Query.select(Filter.typename('org.dxos.type.person'))
     `);
-    expect(ast).toEqual(Query.select(Filter.typename('org.dxos.type.person')).ast);
+    expect(ast).toEqual(Query.select(Filter.type(DXN.make('org.dxos.type.person'))).ast);
   });
 
   test('works with just Filter passed in', () => {
     const ast = sandbox.eval(trim`
       Filter.typename('org.dxos.type.person')
     `);
-    expect(ast).toEqual(Query.select(Filter.typename('org.dxos.type.person')).ast);
+    expect(ast).toEqual(Query.select(Filter.type(DXN.make('org.dxos.type.person'))).ast);
   });
 
   test('Order', () => {
     const ast = sandbox.eval(trim`
       Query.type('org.dxos.type.person').orderBy(Order.property('name', 'desc'))
     `);
-    expect(ast).toEqual(Query.type('org.dxos.type.person').orderBy(Order.property('name', 'desc')).ast);
+    expect(ast).toEqual(Query.type(DXN.make('org.dxos.type.person')).orderBy(Order.property('name', 'desc')).ast);
   });
 
   test('traversal', () => {
@@ -44,9 +45,9 @@ describe('QuerySandbox', () => {
     `);
 
     expect(ast).toEqual(
-      Query.select(Filter.type('org.dxos.type.person', { jobTitle: 'investor' }))
+      Query.select(Filter.type(DXN.make('org.dxos.type.person'), { jobTitle: 'investor' }))
         .reference('organization')
-        .targetOf('org.dxos.relation.hasSubject')
+        .targetOf(DXN.make('org.dxos.relation.hasSubject'))
         .source().ast,
     );
   });

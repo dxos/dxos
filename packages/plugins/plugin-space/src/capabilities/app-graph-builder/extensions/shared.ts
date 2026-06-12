@@ -12,7 +12,7 @@ import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
-import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
@@ -118,27 +118,27 @@ export const downloadBlob = async (blob: Blob, filename: string) => {
 //
 
 /**
- * Index of view objects grouped by their target typename.
+ * Index of view objects grouped by their target type URI.
  */
 export type ViewIndex = {
-  /** Typenames that have at least one straightforward view targeting them. */
-  typenamesWithViews: Set<string>;
-  /** View objects targeting a specific typename. */
-  getViewsForTypename: (typename: string) => Obj.Any[];
+  /** Type URIs that have at least one straightforward view targeting them. */
+  typeUrisWithViews: Set<string>;
+  /** View objects targeting a specific type URI. */
+  getViewsForTypeUri: (typeUri: string) => Obj.Any[];
   /** True when the schema has `ViewAnnotation` and that path resolves non-null on `object`; false otherwise (no annotation, or null/undefined path — e.g. Kanban with unset `view`). */
   isView: (object: Obj.Any) => boolean;
 };
 
 /**
  * Builds an index of view objects by scanning view-annotated schemas and resolving the target
- * typename from each view's query AST. Only straightforward views whose query resolves to a
- * simple typename via getTypenameFromQuery are included.
+ * type URI from each view's query AST. Only straightforward views whose query resolves to a
+ * type URI via getTypeURIFromQuery are included.
  */
 // TODO(wittjosiah): Make reactive to schema registry changes (currently only object/view mutations trigger updates).
 export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
   const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
-  const viewsByTypename = new Map<string, Obj.Any[]>();
+  const viewsByTypeUri = new Map<string, Obj.Any[]>();
   // Object IDs whose `ViewAnnotation` path resolves to a non-null value.
   // Used by `isView` to distinguish view instances from regular instances of
   // the same schema (e.g. items-variant Kanban vs view-variant Kanban).
@@ -174,19 +174,19 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
         viewObjectIds.add(viewObject.id);
       }
 
-      const viewTarget = holder !== undefined ? get(Obj.atom(holder as Obj.Any)) : undefined;
-      const typename = getTypenameFromQuery(viewTarget?.query?.ast);
-      if (typename) {
-        const existing = viewsByTypename.get(typename) ?? [];
+      const viewTarget = holder != null ? get(Obj.atom(holder as Obj.Any)) : undefined;
+      const typeUri = getTypeURIFromQuery(viewTarget?.query?.ast);
+      if (typeUri) {
+        const existing = viewsByTypeUri.get(typeUri) ?? [];
         existing.push(viewObject);
-        viewsByTypename.set(typename, existing);
+        viewsByTypeUri.set(typeUri, existing);
       }
     }
   }
 
   return {
-    typenamesWithViews: new Set(viewsByTypename.keys()),
-    getViewsForTypename: (typename) => viewsByTypename.get(typename) ?? [],
+    typeUrisWithViews: new Set(viewsByTypeUri.keys()),
+    getViewsForTypeUri: (typeUri) => viewsByTypeUri.get(typeUri) ?? [],
     isView: (object) => viewObjectIds.has(object.id),
   };
 };

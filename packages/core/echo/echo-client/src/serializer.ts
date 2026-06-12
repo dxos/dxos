@@ -13,8 +13,6 @@ import type { SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
-const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
-
 export type ImportOptions = {
   /**
    * Called for each object before importing.
@@ -98,9 +96,6 @@ export class Serializer {
   }
 }
 
-const isEncodedReferenceJSON = (value: any): boolean =>
-  typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
-
 export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return EncodedRef.toURI(encoded);
@@ -110,20 +105,6 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI 
     }
     // Treat plain strings as type names.
     return DXN.make(encoded);
-  }
-};
-
-/**
- * Decode an encoded reference from JSON format to EncodedReference.
- * Handles both the current `{ '/': string }` format and the legacy `{ '@type': ..., objectId, ... }` format.
- */
-const decodeEncodedReferenceFromJSON = (value: any): EncodedReference | undefined => {
-  if (typeof value === 'object' && value !== null && '/' in value) {
-    // Already in the correct format.
-    return value as EncodedReference;
-  } else if (typeof value === 'object' && value !== null && value['@type'] === LEGACY_REFERENCE_TYPE_TAG) {
-    // Legacy format: convert to DXN and then to EncodedReference.
-    return EncodedRef.fromURI(DXN.make(value.objectId));
   }
 };
 

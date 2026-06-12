@@ -450,7 +450,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   /**
    * Resolve a persisted (db-backed) type entity from an echo-form URI.
    * Persisted schemas live in the db only (never in the shared registry), so type refs
-   * carrying an echo URI (`dxn:echo:@:<objectId>`) resolve through the owning space db.
+   * carrying an echo URI (`echo:/<objectId>`) resolve through the owning space db.
    */
   private async _resolveTypeFromDatabase(
     uri: URI.URI,

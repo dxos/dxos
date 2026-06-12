@@ -33,7 +33,7 @@ Expected to return `FunctionMetadata` in JSON:
 
 POST http://functions.dxos.internal/
 Content-Type: application/json
-X-Trace-Queue-Dxn: dxn:queue:trace:AAAAAA:BBBBBB
+X-Trace-Queue-Dxn: echo://AAAAAA/BBBBBB
 X-Invocation-Id: XXXXXXX
 X-Edge-Env: production
 

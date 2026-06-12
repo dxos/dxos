@@ -177,7 +177,7 @@ const updateSpec = Effect.fn(function* (
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    const queryAst = Query.select(Filter.type(typename)).ast;
+    const queryAst = Query.select(Filter.type(DXN.make(typename))).ast;
 
     const deepOptionValue = yield* Option.match(deepOption, {
       onNone: () =>

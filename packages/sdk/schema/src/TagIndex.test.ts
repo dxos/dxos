@@ -153,7 +153,7 @@ describe('TagIndex (feed integration)', () => {
       yield* Feed.append(feed, [hello, world]);
 
       // Tag feed objects by their ids (tag ids reference existing Tag objects/URIs).
-      const urgent = 'dxn:echo:@:urgent';
+      const urgent = 'echo:/urgent';
       const tags = TagIndex.bind(tagIndex);
       tags.setTag(urgent, hello.id);
 

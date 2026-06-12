@@ -6,7 +6,7 @@ import { render, waitFor } from '@solidjs/testing-library';
 import { type JSX, createMemo } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Type } from '@dxos/echo';
+import { DXN, Type, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -30,7 +30,7 @@ describe('useType', () => {
     let result: any;
 
     render(() => {
-      const schema = useType(undefined, 'dxos.test.Person');
+      const schema = useType(undefined, DXN.make('dxos.test.Person'));
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -54,7 +54,7 @@ describe('useType', () => {
     let result: any;
 
     render(() => {
-      const schema = useType(db, 'dxos.test.NonExistent');
+      const schema = useType(db, DXN.make('dxos.test.NonExistent'));
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -72,7 +72,7 @@ describe('useType', () => {
     let schemaAccessor: (() => any) | undefined;
 
     function TestComponent() {
-      const schema = useType(db, Type.getTypename(registeredSchema)!);
+      const schema = useType(db, Type.getURI(registeredSchema));
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -98,7 +98,7 @@ describe('useType', () => {
     // The query reads from db.graph.registry.types (shared registry), but when a schema is added
     // via db.add(), the runtime registry query subscription doesn't fire reactively.
     let schemaAccessor: (() => any) | undefined;
-    const typename = 'com.example.type.person';
+    const typename = DXN.make('com.example.type.person');
 
     function TestComponent() {
       const schema = useType(db, typename);
@@ -139,7 +139,7 @@ describe('useType', () => {
     let dbAccessor: any = db;
 
     function TestComponent() {
-      const schema = useType(() => dbAccessor, Type.getTypename(registeredSchema)!);
+      const schema = useType(() => dbAccessor, Type.getURI(registeredSchema));
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -170,10 +170,10 @@ describe('useType', () => {
     const registeredSchema = await db.addType(TestSchema.Person);
 
     let schemaAccessor: (() => any) | undefined;
-    let typename: string | undefined = Type.getTypename(registeredSchema)!;
+    let typeUri: URI.URI | undefined = Type.getURI(registeredSchema);
 
     function TestComponent() {
-      const schema = useType(db, () => typename);
+      const schema = useType(db, () => typeUri);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -193,11 +193,11 @@ describe('useType', () => {
     expect(result).toBeDefined();
     expect(Type.getTypename(result!)).toBe(Type.getTypename(registeredSchema)!);
 
-    // Change typename
-    typename = undefined;
+    // Change typeUri
+    typeUri = undefined;
 
     await waitFor(() => {
-      // Should keep previous value when typename becomes undefined
+      // Should keep previous value when typeUri becomes undefined
       expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
     result = schemaAccessor?.();

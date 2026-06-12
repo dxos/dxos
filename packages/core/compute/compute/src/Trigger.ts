@@ -180,7 +180,7 @@ const TriggerSchema = Schema.Struct({
    * {
    *   item: '{{event.item}}',
    *   instructions: 'Summarize and perform entity-extraction'
-   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+   *   mailbox: { '/': 'echo://AAA/ZZZ' }
    * }
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),

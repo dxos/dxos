@@ -8,6 +8,7 @@ import React, { type ReactNode, useCallback, useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Routine, Trigger } from '@dxos/compute';
 import { type Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import {
@@ -413,20 +414,18 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
 const useActionForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
   const { t } = useTranslation(meta.id);
   const [auto, updateAuto] = useObject(automation);
-  // Filter.typename returns Entity.Any[] (untyped), which is what RefField.useResults expects.
-  // Filter.type returns Entity<T>[] which is narrower and not directly assignable to Entity.Any[].
-  // Using typename here avoids a cast while preserving the runtime filter behavior.
+  // Query by typename DXN so results stay untyped (`Entity.Any[]`), as RefField.useResults expects.
   const operations = useQuery(
     db,
     // Include registry operations (built-in / plugin-provided) alongside space-resident ones.
-    Query.select(Filter.typename(Type.getTypename(Operation.PersistentOperation))).from(
+    Query.select(Filter.type(DXN.make(Type.getTypename(Operation.PersistentOperation)))).from(
       Scope.space(),
       Scope.registry(),
     ),
   );
   const routines = useQuery(
     db,
-    Query.select(Filter.typename(Type.getTypename(Routine.Routine))).from(Scope.space(), Scope.registry()),
+    Query.select(Filter.type(DXN.make(Type.getTypename(Routine.Routine)))).from(Scope.space(), Scope.registry()),
   );
   const runRoutineOp = useMemo(() => findRunRoutineOp(operations), [operations]);
   const boundRoutine = getBoundRoutine(trigger);
@@ -443,7 +442,7 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
     () => ({
       kind: (props) => <SelectField {...props} options={kindOptions} />,
       // Custom useResults so pickers draw from the already-queried sets (space + registry for
-      // operations; space-only for routines) rather than RefField's default Filter.typename query.
+      // operations; space-only for routines) rather than RefField's default typename query.
       operation: (props) => <RefField {...props} db={db} useResults={() => operations} />,
       routine: (props) => <RefField {...props} db={db} useResults={() => routines} />,
     }),

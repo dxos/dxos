@@ -23,8 +23,8 @@ describe('hideRemoteImages ranges', () => {
     expect(applyHidden('before ![alt](https://example.com/a.png) after')).to.equal('before  after');
   });
 
-  test('leaves dxn: images untouched', ({ expect }) => {
-    const text = 'see ![alt](dxn:echo:@:1234) here';
+  test('leaves echo: images untouched', ({ expect }) => {
+    const text = 'see ![alt](echo:/1234) here';
     expect(applyHidden(text)).to.equal(text);
   });
 

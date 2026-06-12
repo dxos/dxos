@@ -202,15 +202,15 @@ type Story = StoryObj<typeof meta>;
 const text = trim`
   # Preview
 
-  This project is part of the [DXOS](dxn:queue:data:123) SDK.
+  This project is part of the [DXOS](echo:/123) SDK.
 
-  ![DXOS](dxn:queue:data:123)
+  ![DXOS](echo:/123)
 
-  It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
+  It consists of [ECHO](echo:/echo), [HALO](echo:/halo), and [MESH](echo:/mesh).
 
   ## Deep dive
 
-  ![ECHO](dxn:queue:data:echo)
+  ![ECHO](echo:/echo)
 
 `;
 
