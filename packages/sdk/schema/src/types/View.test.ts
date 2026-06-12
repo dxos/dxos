@@ -94,7 +94,7 @@ describe('Projection', () => {
   // The bug: overrideSchema is stored in view.projection.schema but the field initialisation
   // loop still iterates jsonSchema (the base schema), so any field present only in the
   // override is silently dropped — the table renders with fewer columns than intended.
-  // TODO(dxos): ViewModel.make stores overrideSchema in view.projection.schema but initializes
+  // TODO(wittjosiah): ViewModel.make stores overrideSchema in view.projection.schema but initializes
   // fields from jsonSchema (the base), so fields present only in the override are dropped. Unskip
   // once field initialization merges the override schema.
   test.skip('create view with overrideSchema should project fields from override schema', ({ expect }) => {
