@@ -358,23 +358,6 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
 };
 
 /**
- * Compares typename DXNs.
- * @returns true if they match
- *
- * Compares typename string.
- * Missing version (on either actual or expected) matches any version.
- * non `type` DXNs are compared exactly.
- *
- * Examples: (expected) (actual)
- *
- * dxn:type:com.example.type.task       !== dxn:type:com.example.type.contact
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task
- * dxn:type:com.example.type.task:0.1.0 !== dxn:type:com.example.type.task:0.2.0
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
- * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
- *
- */
-/**
  * Matches a filter against an {@link Entity.Unknown} proxy without full JSON serialization.
  *
  * Checks typename, id, and meta via direct symbol-property access (O(1)) before falling
