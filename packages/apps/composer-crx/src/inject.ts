@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import browser from 'webextension-polyfill';
+
+import { log } from '@dxos/log';
 
 const INJECT_READY_MAX_ATTEMPTS = 20;
 const INJECT_READY_INTERVAL_MS = 50;
