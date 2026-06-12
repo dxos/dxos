@@ -35,9 +35,9 @@
   --dx-elevation-7: light-dark(white, var(--color-neutral-750));
 
   /* Surfaces — each maps to exactly one elevation level */
+  --color-deck-surface: var(--dx-elevation-1);
   --color-sidebar-surface: var(--dx-elevation-2);
   --color-header-surface: var(--dx-elevation-2);
-  --color-deck-surface: var(--dx-elevation-3);
   --color-base-surface: var(--dx-elevation-3);
   --color-card-surface: var(--dx-elevation-3);
   --color-group-surface: var(--dx-elevation-4);
