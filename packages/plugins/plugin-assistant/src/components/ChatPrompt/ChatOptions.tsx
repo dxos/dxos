@@ -351,7 +351,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
     options.sort((a, b) => a.label.localeCompare(b.label));
     return options;
-  }, [types]);
+  }, [types, t]);
 
   // Current type URI and filter.
   const [selectedUri, setSelectedUri] = useState<string>(ANY);

@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { DXN, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
+import { DXN, EID, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 /**
  * Subscribe to and retrieve a type by its URI from a space: a static schema's typename DXN, or a
@@ -29,6 +29,7 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
       };
     }
 
+    const searchEid = EID.isEID(typeUri) ? EID.tryParse(typeUri) : undefined;
     const searchDxn = DXN.isDXN(typeUri) ? DXN.tryMake(typeUri) : undefined;
 
     const queryResult = db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
@@ -38,6 +39,11 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
       return queryResult.results.find((type) => {
         const uri = Type.getURI(type);
         if (uri === typeUri) return true;
+        // EID matching is space-agnostic: echo:/<id> matches echo://<space>/<id>.
+        if (searchEid && EID.isEID(uri)) {
+          const typeEid = EID.tryParse(uri);
+          return typeEid != null && EID.getEntityId(typeEid) === EID.getEntityId(searchEid);
+        }
         // DXN matching is version-agnostic so callers may pass an unversioned DXN.
         if (searchDxn && DXN.isDXN(uri)) {
           const typeDxn = DXN.tryMake(uri);

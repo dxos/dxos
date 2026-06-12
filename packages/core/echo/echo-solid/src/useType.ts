@@ -4,7 +4,7 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { DXN, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
+import { DXN, EID, type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
@@ -42,12 +42,13 @@ export const useType = (
   createEffect(() => {
     const r = resolved();
     if (!r) {
-      // Keep previous value during transitions to prevent flickering.
+      setType(() => undefined);
       return;
     }
 
     const { db: resolvedDb, typeUri: resolvedTypeUri } = r;
 
+    const searchEid = EID.isEID(resolvedTypeUri) ? EID.tryParse(resolvedTypeUri) : undefined;
     const searchDxn = DXN.isDXN(resolvedTypeUri) ? DXN.tryMake(resolvedTypeUri) : undefined;
     const queryResult = resolvedDb.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
     const update = () =>
@@ -55,6 +56,12 @@ export const useType = (
         queryResult.results.find((type) => {
           const uri = Type.getURI(type);
           if (uri === resolvedTypeUri) return true;
+          // EID matching is space-agnostic: echo:/<id> matches echo://<space>/<id>.
+          if (searchEid && EID.isEID(uri)) {
+            const typeEid = EID.tryParse(uri);
+            return typeEid != null && EID.getEntityId(typeEid) === EID.getEntityId(searchEid);
+          }
+          // DXN matching is version-agnostic so callers may pass an unversioned DXN.
           if (searchDxn && DXN.isDXN(uri)) {
             const typeDxn = DXN.tryMake(uri);
             return typeDxn != null && DXN.getName(typeDxn) === DXN.getName(searchDxn);
