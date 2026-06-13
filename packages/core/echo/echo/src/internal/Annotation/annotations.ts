@@ -608,7 +608,7 @@ export const getLabelProperty = (entity: AnyProperties): string => {
     return 'name';
   }
   return LabelAnnotation.get(schema).pipe(
-    Option.map((fields) => fields[0]),
+    Option.flatMap((fields) => Option.fromNullable(fields[0])),
     Option.getOrElse(() => 'name'),
   );
 };

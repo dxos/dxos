@@ -11,10 +11,10 @@ import * as Option from 'effect/Option';
 import { assertArgument } from '@dxos/invariant';
 
 import type * as Entity from '../../Entity';
-import { getLabel } from '../Annotation';
 import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
+import { getLabel } from '../Annotation';
 import { subscribe } from '../common/proxy/reactive';
 import { isEntity, getDatabase } from '../Entity';
 import { RefTypeId } from '../Ref/ref';

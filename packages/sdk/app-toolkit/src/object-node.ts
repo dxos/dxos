@@ -3,8 +3,8 @@
 //
 
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import * as Option from 'effect/Option';
 import type { Atom } from '@effect-atom/atom-react';
+import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
@@ -182,8 +182,7 @@ export const createObjectNode = ({
     : graphProps;
 
   const label =
-    get(Obj.labelAtom(object)) ||
-    getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
+    get(Obj.labelAtom(object)) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
