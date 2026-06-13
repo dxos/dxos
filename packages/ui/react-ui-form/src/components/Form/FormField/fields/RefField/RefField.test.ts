@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type RefOption } from '#types';
+
 import { findRefOption } from './RefField';
 
 // Sample qualified self URIs as produced by an in-space object (Entity.getURI / `echo://<space>/<id>`).

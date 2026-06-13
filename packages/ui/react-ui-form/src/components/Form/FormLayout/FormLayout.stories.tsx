@@ -19,8 +19,8 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { omitId } from '../../../util';
 import { TestLayout, TestPanel } from '../../../testing';
+import { omitId } from '../../../util';
 import { Form, type FormRootProps } from '../Form';
 import { parseLayout } from './parser';
 

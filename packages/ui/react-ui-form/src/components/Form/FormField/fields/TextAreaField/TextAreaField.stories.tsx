@@ -40,7 +40,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/TextAreaField',
+  title: 'ui/react-ui-form/FormField/TextAreaField',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },

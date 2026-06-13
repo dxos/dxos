@@ -39,7 +39,6 @@ import {
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
-
 import { type FormFieldRenderer, type FormFieldRendererProps, type FormFieldMap } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
@@ -426,10 +425,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
   );
 };
 
-const customFields = ({
-  types,
-  tags,
-}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldRenderer> => ({
+const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldRenderer> => ({
   query: ({ type, readonly, label, getValue, onValueChange }: FormFieldRendererProps) => {
     const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
       (query) => onValueChange(type, query.ast),

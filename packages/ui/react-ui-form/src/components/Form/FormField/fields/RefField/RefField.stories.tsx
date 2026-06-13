@@ -58,7 +58,7 @@ const RefStory = ({ schema }: { schema: Schema.Schema<any> }) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/RefField',
+  title: 'ui/react-ui-form/FormField/RefField',
   render: RefStory,
   decorators: [
     withTheme(),

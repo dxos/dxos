@@ -9,8 +9,8 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
-
 import { type FormFieldRendererProps } from '#types';
+
 import { FormFieldLabel } from '../../FormFieldWrapper';
 
 export const GeoPointField = ({

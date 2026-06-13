@@ -40,7 +40,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/GeoPointField',
+  title: 'ui/react-ui-form/FormField/GeoPointField',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },

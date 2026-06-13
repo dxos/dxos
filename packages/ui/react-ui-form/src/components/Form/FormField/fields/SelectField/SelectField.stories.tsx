@@ -40,7 +40,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/SelectField',
+  title: 'ui/react-ui-form/FormField/SelectField',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },

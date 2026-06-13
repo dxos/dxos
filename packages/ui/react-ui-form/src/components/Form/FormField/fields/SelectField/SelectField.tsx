@@ -8,6 +8,7 @@ import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
+
 import { FormFieldLabel } from '../../FormFieldWrapper';
 
 export type SelectFieldOptions = FormFieldRendererProps & {

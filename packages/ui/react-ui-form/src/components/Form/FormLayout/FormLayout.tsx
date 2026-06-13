@@ -13,9 +13,10 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { Input } from '@dxos/react-ui';
 
+import { type FormPresentation } from '#types';
+
 import { useFormFieldState } from '../../../hooks';
 import { FormField, type FormFieldProps } from '../FormField';
-import { type FormPresentation } from '#types';
 import { FormFieldErrorBoundary, FormFieldLabel } from '../FormField';
 import { LayoutParseError, type LayoutNode, parseLayout } from './parser';
 

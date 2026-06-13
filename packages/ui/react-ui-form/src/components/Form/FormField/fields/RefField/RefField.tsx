@@ -15,13 +15,7 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
-
-import {
-  type CreateOptions,
-  type FormFieldRendererProps,
-  type RefFieldDataProps,
-  type RefOption,
-} from '#types';
+import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps, type RefOption } from '#types';
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';

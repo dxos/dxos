@@ -39,7 +39,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/NumberField',
+  title: 'ui/react-ui-form/FormField/NumberField',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },

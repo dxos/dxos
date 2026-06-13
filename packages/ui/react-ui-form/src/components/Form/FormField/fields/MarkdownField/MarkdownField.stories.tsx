@@ -111,7 +111,7 @@ const EmptyRefStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/MarkdownField',
+  title: 'ui/react-ui-form/FormField/MarkdownField',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

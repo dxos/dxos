@@ -8,6 +8,7 @@ import { Input, type TextInputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
+
 import { FormFieldWrapper } from '../../FormFieldWrapper';
 
 export const NumberField = ({

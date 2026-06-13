@@ -82,7 +82,7 @@ const StoryComponent = ({ schema }: { schema: typeof Pipeline }) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/Form/fields/ArrayField',
+  title: 'ui/react-ui-form/FormField/ArrayField',
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',

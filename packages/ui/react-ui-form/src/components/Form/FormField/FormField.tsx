@@ -25,6 +25,7 @@ import {
 
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
+import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
   BooleanField,
@@ -38,7 +39,6 @@ import {
   TextAreaField,
   TextField,
 } from './fields';
-import { FormFieldSet } from '../FormFieldSet';
 
 export type FormFieldProps = {
   /**

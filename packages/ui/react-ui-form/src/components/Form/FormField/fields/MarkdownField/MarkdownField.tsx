@@ -13,8 +13,8 @@ import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
-
 import { type FormFieldRendererProps } from '#types';
+
 import { FormFieldLabel } from '../../FormFieldWrapper';
 
 const editorClassNames =

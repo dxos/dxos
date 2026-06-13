@@ -12,7 +12,6 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
-
 import { type CreateOptions, type FormFieldOptions, type RefFieldDataProps } from '#types';
 
 import { type FormHandlerProps, useFormValues } from '../../../hooks';

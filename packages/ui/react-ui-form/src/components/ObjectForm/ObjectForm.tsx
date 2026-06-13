@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { translationKey } from '#translations';
-
 import { type FormFieldMap } from '#types';
+
 import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectFormProps = {
