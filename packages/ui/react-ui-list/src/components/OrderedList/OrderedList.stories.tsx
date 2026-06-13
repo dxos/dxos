@@ -231,11 +231,10 @@ export default meta;
 
 type Story = StoryObj;
 
-// `Default` aliases the simplest variant so storybook's first-listed story shows the
-// lowest-noise shape of the compound. The composed-story tests below import the
-// specific variant they exercise rather than reading `Default`.
+// `Default` shows the lowest-noise shape of the compound (no drag / no expand / no
+// delete). The composed-story tests below import the specific variant they exercise
+// rather than reading `Default`.
 export const Default: Story = { render: () => <SimpleStory /> };
-export const Simple: Story = { render: () => <SimpleStory /> };
 export const Scrollable: Story = { render: () => <ScrollableStory /> };
 export const Draggable: Story = { render: () => <DraggableStory /> };
 export const CheckboxWithDelete: Story = { render: () => <CheckboxWithDeleteStory /> };
