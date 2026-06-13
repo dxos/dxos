@@ -21,11 +21,10 @@ import { ListRoot, type ListRootProps } from './ListRoot';
  * Ref: https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
  *
  * @deprecated New code should use one of:
- *
- *   - `RowList` / `CardList` from this same package — for selectable
- *     pickers (master/detail). Correct ARIA + dx-* by construction.
- *   - `Mosaic.Stack` / `Mosaic.VirtualStack` from `@dxos/react-ui-mosaic`
- *     — for virtualized or drag-reorderable card stacks.
+ * - `RowList` / `CardList` from this same package — for selectable
+ *   pickers (master/detail). Correct ARIA + dx-* by construction.
+ * - `Mosaic.Stack` / `Mosaic.VirtualStack` from `@dxos/react-ui-mosaic`
+ *   — for virtualized or drag-reorderable card stacks.
  *
  * This component is retained for the existing reorder-with-delete-button
  * use cases (plugin-meeting, plugin-automation, plugin-zen, etc.) until
