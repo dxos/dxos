@@ -127,14 +127,20 @@ export const useListNavigation = ({
     [mode],
   );
 
+  // `aria-orientation` only accepts 'vertical' or 'horizontal'. Tabster's `axis` permits
+  // grid-shaped values too ('grid', 'grid-linear', 'both'); collapse those (and the grid mode
+  // itself) so we never leak an invalid ARIA value into the DOM.
+  const orientation: 'vertical' | 'horizontal' | undefined =
+    mode === 'grid' ? undefined : axis === 'horizontal' ? 'horizontal' : 'vertical';
+
   const containerProps = useMemo(
     () => ({
       role: containerRoleByMode[mode],
-      ...(mode !== 'grid' && { 'aria-orientation': (axis ?? 'vertical') as 'vertical' | 'horizontal' }),
+      ...(orientation && { 'aria-orientation': orientation }),
       ...tabsterAttrs,
       onFocus: handleFocus,
     }),
-    [mode, axis, tabsterAttrs, handleFocus],
+    [mode, orientation, tabsterAttrs, handleFocus],
   );
 
   // Listbox items need tabIndex=0 so Tabster can focus them; list/grid items inherit

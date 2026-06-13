@@ -329,9 +329,13 @@ export const useReorderItem = <T>(controller: ReorderListController<T>, id: stri
       handleElement.current = node;
       if (node && rowElement.current) {
         tryRegister();
+      } else if (!node) {
+        // Mirror rowRef: if either ref detaches, tear down pragmatic-dnd bindings so a
+        // re-attaching handle creates a fresh registration rather than racing the old one.
+        teardown();
       }
     },
-    [tryRegister],
+    [tryRegister, teardown],
   );
 
   return {

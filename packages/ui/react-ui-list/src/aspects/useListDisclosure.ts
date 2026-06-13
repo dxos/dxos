@@ -68,15 +68,17 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  */
 export const useListDisclosure: {
   <M extends ListDisclosureMode>(opts: UseListDisclosureOptions<M>): UseListDisclosureReturn;
-} = ({ mode, value, defaultValue, onValueChange }) => {
+} = (opts) => {
+  const { mode, value, defaultValue, onValueChange } = opts;
   const idPrefix = useId();
 
-  // Latches once the consumer has ever passed a non-undefined `value`, so subsequent renders
-  // with `value === undefined` are treated as "controlled cleared" rather than "switched to
-  // uncontrolled" — a `string | undefined` parent state should be able to clear to undefined
-  // without the row falling back to stale internal state.
-  const wasControlledRef = useRef(false);
-  if (value !== undefined) {
+  // Latches whenever the consumer passes the `value` prop key, regardless of whether the
+  // current value is `undefined`. A controlled single-expand parent (`expandedId: string | undefined`)
+  // must be able to clear to undefined without the row falling back to stale internal state —
+  // detecting controlled-ness by `value !== undefined` would misclassify "controlled and currently
+  // empty" as uncontrolled.
+  const wasControlledRef = useRef(Object.prototype.hasOwnProperty.call(opts, 'value'));
+  if (Object.prototype.hasOwnProperty.call(opts, 'value')) {
     wasControlledRef.current = true;
   }
   const isControlled = wasControlledRef.current;

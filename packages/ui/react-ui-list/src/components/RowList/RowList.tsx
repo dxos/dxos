@@ -74,8 +74,6 @@ const ROW_NAME = 'List.Row';
 //
 
 type RowListContextValue = {
-  /** The currently-selected option id, read by `useRowListSelection`. */
-  selectedId?: string;
   /** Selection aspect binding factory; rows consume their own bindings from this. */
   selection: UseListSelectionReturn;
 };
@@ -116,13 +114,7 @@ const Root = ({ selectedId, defaultSelectedId, onSelectChange, children }: RootP
     },
   });
 
-  const context = useMemo(
-    () => ({
-      selectedId: selectedId ?? defaultSelectedId,
-      selection,
-    }),
-    [selectedId, defaultSelectedId, selection],
-  );
+  const context = useMemo(() => ({ selection }), [selection]);
 
   return (
     <RowListProvider scope={undefined} {...context}>
