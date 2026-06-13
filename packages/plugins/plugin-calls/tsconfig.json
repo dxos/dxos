@@ -130,6 +130,15 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
     },
     {
