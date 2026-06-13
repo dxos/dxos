@@ -151,6 +151,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     setExpandedId(newView.id);
   }, [db, updateColumns]);
 
+  // TODO(burdon): Replace wrapper with Form.Content.
   return (
     <div className={mx('py-form-padding overflow-y-auto', classNames)}>
       <FormFieldLabel label={t('views.label')} standalone classNames='py-1' />

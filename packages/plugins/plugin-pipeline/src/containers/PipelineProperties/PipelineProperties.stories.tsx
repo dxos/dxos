@@ -17,7 +17,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
@@ -44,6 +44,7 @@ const meta = {
   title: 'plugins/plugin-pipeline/containers/PipelineProperties',
   render: DefaultStory,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
