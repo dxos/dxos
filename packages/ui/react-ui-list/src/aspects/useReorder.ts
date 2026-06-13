@@ -356,13 +356,15 @@ export const useReorderItem = <T>(controller: ReorderListController<T>, id: stri
  *
  * `autoScrollForElements` is global — it activates on every drag regardless of which list
  * started it — so it's safe to register one element per scroll surface.
+ *
+ * Returns a callback ref so the registration fires as soon as the element attaches and the
+ * cleanup fires when it detaches; React doesn't re-run effects on mutable `ref.current`
+ * changes, so a plain `useEffect` on a `useRef` would miss late-mounting elements entirely.
  */
-export const useReorderAutoScroll = (containerRef: { current: HTMLElement | null }) => {
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element) {
-      return;
-    }
-    return autoScrollForElements({ element });
-  }, [containerRef]);
+export const useReorderAutoScroll = (): RefCallback<HTMLElement> => {
+  const cleanupRef = useRef<(() => void) | null>(null);
+  return useCallback((node) => {
+    cleanupRef.current?.();
+    cleanupRef.current = node ? autoScrollForElements({ element: node }) : null;
+  }, []);
 };

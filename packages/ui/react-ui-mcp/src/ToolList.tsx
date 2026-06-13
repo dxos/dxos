@@ -153,13 +153,13 @@ ToolListItemDescription.displayName = 'ToolList.ItemDescription';
 //
 // Default usage:
 //
-//   <ToolList.Root value={id} onSelect={setId}>
+//   <ToolList.Root selectedId={id} onSelect={setId}>
 //     <ToolList.Content tools={tools} />
 //   </ToolList.Root>
 //
 // Custom row content:
 //
-//   <ToolList.Root value={id} onSelect={setId}>
+//   <ToolList.Root selectedId={id} onSelect={setId}>
 //     <ToolList.Content
 //       tools={tools}
 //       renderItem={(tool) => (

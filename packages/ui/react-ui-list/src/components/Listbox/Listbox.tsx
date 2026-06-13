@@ -40,7 +40,7 @@
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
 //   - Multi-select. Future expansion — the aspect (`useListSelection`) already supports it.
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
+import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -80,8 +80,9 @@ const LISTBOX_ITEM_LABEL_NAME = 'Listbox.ItemLabel';
 const LISTBOX_INDICATOR_NAME = 'Listbox.Indicator';
 
 //
-// Contexts — Radix-scoped so future composition (nested Listboxes, Combobox embeddings)
-// can read the right scope.
+// Contexts — plain Radix contexts (un-scoped). Scoped composition (nested Listboxes,
+// Combobox embeddings) is a future expansion; when needed, switch to `createContextScope`
+// and thread `__listboxScope` through every subcomponent's props in one focused PR.
 //
 
 type ListboxContextValue = {
@@ -94,11 +95,8 @@ type ListboxItemContextValue = {
   selected: boolean;
 };
 
-type ListboxScopedProps<P> = P & { __listboxScope?: Scope };
-
-const [createListboxContext, createListboxScope] = createContextScope(LISTBOX_NAME, []);
-const [ListboxProvider, useListboxContext] = createListboxContext<ListboxContextValue>(LISTBOX_NAME);
-const [ListboxItemProvider, useListboxItemContext] = createListboxContext<ListboxItemContextValue>(LISTBOX_ITEM_NAME);
+const [ListboxProvider, useListboxContext] = createContext<ListboxContextValue>(LISTBOX_NAME);
+const [ListboxItemProvider, useListboxItemContext] = createContext<ListboxItemContextValue>(LISTBOX_ITEM_NAME);
 
 //
 // Root — headless context provider. Renders no DOM.
@@ -137,11 +135,7 @@ const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, child
 
   const context = useMemo(() => ({ selection }), [selection]);
 
-  return (
-    <ListboxProvider scope={undefined} {...context}>
-      {children}
-    </ListboxProvider>
-  );
+  return <ListboxProvider {...context}>{children}</ListboxProvider>;
 };
 
 Root.displayName = LISTBOX_ROOT_NAME;
@@ -186,7 +180,7 @@ type ContentProps = {
 
 const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
   // Touch the context so Content fails loudly if used outside Root.
-  useListboxContext(LISTBOX_CONTENT_NAME, undefined);
+  useListboxContext(LISTBOX_CONTENT_NAME);
 
   // `useListNavigation` bundles role=listbox, aria-orientation, Tabster arrow nav, and the
   // focus-on-entry redirect (to selected, then first non-disabled option).
@@ -234,7 +228,7 @@ const ITEM_BASE = 'flex items-center dx-hover dx-selected px-3 py-2 cursor-point
 
 const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   const { id, disabled, onClick, onFocus, children, ...rest } = props as ItemProps & Record<string, unknown>;
-  const { selection } = useListboxContext(LISTBOX_ITEM_NAME, undefined);
+  const { selection } = useListboxContext(LISTBOX_ITEM_NAME);
   const binding: SelectionItemBinding = selection.bind(id, { disabled });
 
   // Compose the selection aspect's click/focus handlers with the row's optional ones so
@@ -291,7 +285,7 @@ Item.displayName = LISTBOX_ITEM_NAME;
  * own composition stays a single component.
  */
 const ListItemProviderHost = ({ id, selected, children }: PropsWithChildren<ListboxItemContextValue>) => (
-  <ListboxItemProvider scope={undefined} id={id} selected={selected}>
+  <ListboxItemProvider id={id} selected={selected}>
     {children}
   </ListboxItemProvider>
 );
@@ -316,20 +310,17 @@ ItemLabel.displayName = LISTBOX_ITEM_LABEL_NAME;
 
 type IndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
 
-const Indicator = forwardRef<SVGSVGElement, IndicatorProps>(
-  (props: ListboxScopedProps<IndicatorProps>, forwardedRef) => {
-    const { __listboxScope, classNames, ...rootProps } = props;
-    const { selected } = useListboxItemContext(LISTBOX_INDICATOR_NAME, __listboxScope);
-    return (
-      <Icon
-        icon='ph--check--regular'
-        {...rootProps}
-        classNames={mx(!selected && 'invisible', classNames)}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
+const Indicator = forwardRef<SVGSVGElement, IndicatorProps>(({ classNames, ...rootProps }, forwardedRef) => {
+  const { selected } = useListboxItemContext(LISTBOX_INDICATOR_NAME);
+  return (
+    <Icon
+      icon='ph--check--regular'
+      {...rootProps}
+      classNames={mx(!selected && 'invisible', classNames)}
+      ref={forwardedRef}
+    />
+  );
+});
 
 Indicator.displayName = LISTBOX_INDICATOR_NAME;
 
@@ -339,7 +330,7 @@ Indicator.displayName = LISTBOX_INDICATOR_NAME;
  * selection without re-rendering on unrelated changes.
  */
 const useListboxSelection = (id: string): boolean => {
-  const { selection } = useListboxContext('useListboxSelection', undefined);
+  const { selection } = useListboxContext('useListboxSelection');
   return selection.bind(id).selected;
 };
 
@@ -356,7 +347,7 @@ const Listbox = {
   Indicator,
 };
 
-export { Listbox, createListboxScope, useListboxSelection };
+export { Listbox, useListboxSelection };
 export type {
   RootProps as ListboxRootProps,
   ViewportProps as ListboxViewportProps,

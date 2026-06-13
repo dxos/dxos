@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, type ReactNode, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import {
   ScrollArea,
@@ -153,8 +153,9 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
   const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
     OrderedListViewportProps & Record<string, unknown>
   >;
-  const viewportRef = useRef<HTMLDivElement>(null);
-  useReorderAutoScroll(viewportRef);
+  // Callback ref so registration fires on attach and cleanup on detach — `useEffect` on a
+  // ref object would miss the element entirely (ref mutations don't re-run effects).
+  const autoScrollRef = useReorderAutoScroll();
   return (
     <ScrollArea.Root
       {...composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' })}
@@ -162,7 +163,7 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
       orientation='vertical'
       ref={forwardedRef}
     >
-      <ScrollArea.Viewport ref={viewportRef}>{children}</ScrollArea.Viewport>
+      <ScrollArea.Viewport ref={autoScrollRef}>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 });

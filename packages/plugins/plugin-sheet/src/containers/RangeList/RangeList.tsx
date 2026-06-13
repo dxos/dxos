@@ -45,28 +45,33 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) => (
             <OrderedList.Content>
-              {ranges.map((range, i) => (
-                // Reorder is not wired (no `onMove` upstream and ranges lack a stable id),
-                // so we omit the drag handle entirely. Add `OrderedList.DragHandle` + a
-                // proper `getId` when DX-8121 is implemented.
-                <OrderedList.Item
-                  key={i}
-                  id={String(i)}
-                  item={range}
-                  hover
-                  classNames='flex items-center cursor-pointer'
-                  onClick={() => handleSelectRange(range)}
-                >
-                  <div className='flex grow items-center truncate px-2'>
-                    {t('range.title', {
-                      position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
-                      key: t(`range-key.${range.key}.label`),
-                      value: t(`range-value.${range.value}.label`),
-                    })}
-                  </div>
-                  <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
-                </OrderedList.Item>
-              ))}
+              {ranges.map((range) => {
+                // Use the range's underlying cell range string as the stable id so deletes /
+                // re-renders don't shift row identity by array position. Reorder is not
+                // wired (DX-8121); add `OrderedList.DragHandle` + a real id strategy when it
+                // lands. We avoid `OrderedList.Title` because there's no disclosure panel
+                // for it to control here.
+                const id = range.range;
+                return (
+                  <OrderedList.Item
+                    key={id}
+                    id={id}
+                    item={range}
+                    hover
+                    classNames='flex items-center cursor-pointer'
+                    onClick={() => handleSelectRange(range)}
+                  >
+                    <div className='flex grow items-center truncate px-2'>
+                      {t('range.title', {
+                        position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
+                        key: t(`range-key.${range.key}.label`),
+                        value: t(`range-value.${range.value}.label`),
+                      })}
+                    </div>
+                    <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
+                  </OrderedList.Item>
+                );
+              })}
             </OrderedList.Content>
           )}
         </OrderedList.Root>

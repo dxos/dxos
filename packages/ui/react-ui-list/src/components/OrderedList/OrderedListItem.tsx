@@ -53,9 +53,11 @@ export type OrderedListItemProps<T extends ListItemRecord> = ThemedClassName<
     /** Apply the row-hover affordance. Defaults to false. */
     hover?: boolean;
     /**
-     * When true, sets `aria-selected="true"` on the row so the `dx-selected` styling kicks
-     * in. Used for surfaces like the `Mixer` where the active layer needs visual highlight
-     * without going through `RowList`'s listbox role semantics.
+     * Visually highlights the row as the "currently active" entry — sets `aria-current="true"`
+     * paired with `dx-current` styling. `aria-current` is the right grammar for an active row
+     * inside a `list`-mode container (listbox/option semantics live on `Listbox`); used for
+     * surfaces like the `Mixer` where the active layer needs visual highlight without
+     * adopting listbox role semantics.
      */
     selected?: boolean;
     /** Optional click handler bound to the outer row element. */
@@ -102,10 +104,10 @@ export const OrderedListItem = <T extends ListItemRecord>({
         ref={rowRef as RefCallback<HTMLDivElement>}
         {...navigation.itemProps()}
         style={style}
-        aria-selected={selected || undefined}
+        aria-current={selected || undefined}
         onClick={onClick}
         className={mx(
-          'relative dx-selected',
+          'relative dx-current',
           hover && 'dx-hover',
           state.type === 'dragging' && 'opacity-50',
           classNames,

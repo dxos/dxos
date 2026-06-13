@@ -84,7 +84,10 @@ const SKIP_KEYS = new Set(['location', 'metaLocation']);
 
 const ResultTable = ({ data }: { data: unknown }) => {
   const { t } = useTranslation(translationKey);
-  const items = useMemo(() => toItems(data), [data]);
+  // Each row carries a synthetic id derived from its position in the source array. Stable
+  // across filter changes (filter narrows the view, never re-orders), so `Listbox.Item`
+  // bindings can't drift to the wrong logical row.
+  const items = useMemo(() => toItems(data).map((value, index) => ({ id: `row-${index}`, value })), [data]);
   const [filter, setFilter] = useState('');
   const filterInputRef = useRef<HTMLInputElement>(null);
   // Reset and refocus when the underlying result changes — typical flow is
@@ -99,7 +102,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
     if (!needle) {
       return items;
     }
-    return items.filter((item) => itemMatchesFilter(item, needle));
+    return items.filter((item) => itemMatchesFilter(item.value, needle));
   }, [items, filter]);
 
   // The two-column grid lives on `Listbox.Content` so every entry across
@@ -134,13 +137,9 @@ const ResultTable = ({ data }: { data: unknown }) => {
                     aria-label={t('tool-result.label')}
                     classNames='grid grid-cols-[max-content_1fr] gap-x-3'
                   >
-                    {filtered.map((item, index) => (
-                      <Listbox.Item
-                        key={index}
-                        id={String(index)}
-                        classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'
-                      >
-                        <KeyValueTable record={item} />
+                    {filtered.map((item) => (
+                      <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
+                        <KeyValueTable record={item.value} />
                       </Listbox.Item>
                     ))}
                   </Listbox.Content>

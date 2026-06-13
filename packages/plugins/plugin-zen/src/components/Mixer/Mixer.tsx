@@ -224,7 +224,9 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
     >
       <OrderedList.DragHandle />
       <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
-      <OrderedList.Title>{item.name ?? Sequence.getSourceLabel(item.source)}</OrderedList.Title>
+      {/* Plain title row — there's no disclosure panel here, so we don't want
+          `OrderedList.Title`'s aria-expanded / trigger semantics. */}
+      <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>
       <OrderedList.IconButton
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
