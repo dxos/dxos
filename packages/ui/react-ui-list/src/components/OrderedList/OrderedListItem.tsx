@@ -30,6 +30,8 @@ export type OrderedListItemProps<T extends ListItemRecord> = ThemedClassName<
     item: T;
     /** Defaults to true; false disables the drag handle. */
     canDrag?: boolean;
+    /** Apply the row-hover affordance. Defaults to false. */
+    hover?: boolean;
   }>
 >;
 
@@ -38,6 +40,7 @@ export const OrderedListItem = <T extends ListItemRecord>({
   id,
   item,
   canDrag = true,
+  hover = false,
   classNames,
   children,
 }: OrderedListItemProps<T>) => {
@@ -49,7 +52,7 @@ export const OrderedListItem = <T extends ListItemRecord>({
     <OrderedListItemProvider id={id} expanded={expanded} toggle={toggle} canDrag={canDrag}>
       {/* Disclosure state lives on the controlling caret button (aria-expanded/aria-controls),
           not the row container, so the row stays neutral for non-expandable lists. */}
-      <List.Item<T> item={item} classNames={mx('flex flex-col', classNames)}>
+      <List.Item<T> item={item} hover={hover} classNames={mx('flex flex-col', classNames)}>
         {children}
       </List.Item>
     </OrderedListItemProvider>
@@ -58,16 +61,14 @@ export const OrderedListItem = <T extends ListItemRecord>({
 
 /** Flex row holding the handle / title / actions / caret. `Expanded` is its sibling. */
 export const OrderedListRow = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex items-center gap-1 dx-hover rounded-xs cursor-pointer min-h-10', classNames)}>
-    {children}
-  </div>
+  <div className={mx('flex items-center gap-1 rounded-xs cursor-pointer min-h-10', classNames)}>{children}</div>
 );
 
 /** Drag handle. Disabled when the list is readonly or the item opts out via `canDrag={false}`. */
 export const OrderedListDragHandle = () => {
   const { readonly } = useOrderedListContext('OrderedListDragHandle');
   const { canDrag } = useOrderedListItemContext('OrderedListDragHandle');
-  return <List.ItemDragHandle disabled={readonly || !canDrag} />;
+  return <List.ItemDragHandle disabled={readonly || !canDrag} noTooltip />;
 };
 
 /** Clickable title; clicking toggles the item's expanded state. */

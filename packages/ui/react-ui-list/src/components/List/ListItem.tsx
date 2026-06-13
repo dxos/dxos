@@ -83,6 +83,8 @@ export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
       item: T;
       asChild?: boolean;
       selected?: boolean;
+      /** Apply the `dx-hover` row-hover affordance. Defaults to true. */
+      hover?: boolean;
     } & HTMLAttributes<HTMLDivElement>
   >
 >;
@@ -96,6 +98,7 @@ export const ListItem = <T extends ListItemRecord>({
   item,
   asChild,
   selected,
+  hover = true,
   ...props
 }: ListItemProps<T>) => {
   const Comp = asChild ? Slot : 'div';
@@ -185,7 +188,7 @@ export const ListItem = <T extends ListItemRecord>({
         {...props}
         role='listitem'
         aria-selected={selected}
-        className={mx('relative dx-selected dx-hover', classNames, stateStyles[state.type])}
+        className={mx('relative dx-selected', hover && 'dx-hover', classNames, stateStyles[state.type])}
         ref={rootRef}
       >
         {children}
@@ -248,13 +251,14 @@ export const ListItemDeleteButton = ({
   );
 };
 
-export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
+export const ListItemDragHandle = ({ disabled, noTooltip }: Pick<IconButtonProps, 'disabled' | 'noTooltip'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
   const { t } = useTranslation(osTranslations);
   return (
     <IconButton
       variant='ghost'
       disabled={disabled}
+      noTooltip={noTooltip}
       icon='ph--dots-six-vertical--regular'
       iconOnly
       label={t('drag-handle.label')}
