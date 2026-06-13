@@ -13,7 +13,7 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import {
   Form,
-  type FormFieldComponentProps,
+  type FormFieldRendererProps,
   type FormFieldMap,
   RefField,
   SelectField,
@@ -104,7 +104,7 @@ const EnabledField = ({
   canEnable,
   messageKey,
   ...props
-}: FormFieldComponentProps & { canEnable: boolean; messageKey?: string }) => {
+}: FormFieldRendererProps & { canEnable: boolean; messageKey?: string }) => {
   const { t } = useTranslation(meta.id);
   return (
     <div className='flex items-center gap-2 pt-form-padding'>

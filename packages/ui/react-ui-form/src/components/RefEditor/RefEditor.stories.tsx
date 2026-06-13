@@ -88,7 +88,6 @@ const DefaultStory = ({ value: initialValue, ...args }: StoryProps) => {
         icon='ph--user--regular'
         db={space?.db}
         onChange={setValue}
-        classNames='border'
       />
       <JsonHighlighter data={{ value }} classNames='text-xs' />
       <PeopleGrid db={space?.db} />

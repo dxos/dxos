@@ -19,12 +19,12 @@
    */
   .dx-hover {
     @apply cursor-pointer
-      hover:bg-hover-surface! hover:text-hover-fg!
+      hover:bg-hover-surface-subtle! hover:text-hover-fg!
       hover:aria-selected:bg-selected-surface-hover hover:aria-selected:text-selected-fg
       hover:aria-[current=true]:bg-current-surface-hover hover:aria-[current=true]:text-current-fg;
   }
   .dx-hover-row {
-    @apply group-hover/row:bg-hover-surface! group-hover/row:text-hover-fg!
+    @apply group-hover/row:bg-hover-surface-subtle! group-hover/row:text-hover-fg!
       group-hover/row:group-aria-selected/row:bg-selected-surface-hover!
       group-hover/row:group-aria-selected/row:text-selected-fg!
       group-hover/row:group-aria-[current=true]/row:bg-current-surface-hover!

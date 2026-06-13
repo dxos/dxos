@@ -122,7 +122,7 @@ export const _Organization: StoryObj<typeof DefaultStory<Organization.Organizati
   },
 };
 
-export const _Project: StoryObj<typeof DefaultStory<Pipeline.Pipeline>> = {
+export const _Pipeline: StoryObj<typeof DefaultStory<Pipeline.Pipeline>> = {
   args: {
     Component: ProjectCard,
     createObject: createProject,

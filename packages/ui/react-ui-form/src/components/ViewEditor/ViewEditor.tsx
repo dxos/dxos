@@ -39,16 +39,10 @@ import {
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
+import { type FormFieldRenderer, type FormFieldRendererProps, type FormFieldMap } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
-import {
-  Form,
-  type FormFieldComponent,
-  type FormFieldComponentProps,
-  FormFieldLabel,
-  type FormFieldMap,
-  type FormRootProps,
-} from '../Form';
+import { Form, FormFieldLabel, type FormRootProps } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -64,7 +58,7 @@ export type ViewEditorProps = ThemedClassName<
 >;
 
 /**
- * Schema-based object form.
+ * View editor form.
  */
 export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   (
@@ -92,6 +86,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       if (!type) {
         return null;
       }
+
       const jsonSchema = type.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
@@ -117,6 +112,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
+
         const feedScope = from.scopes.find((s) => s._tag === 'feed');
         return Option.fromNullable(feedScope).pipe(
           Option.map((s) => s.feedUri),
@@ -216,30 +212,32 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
 
     return (
       <div className={mx(classNames)}>
-        {/* If readonly is set, then the callout is not needed. */}
-        {schemaReadonly && !readonly && (
-          <Message.Root valence='info' classNames='my-form-padding'>
-            <Message.Title>{t('system-schema.description')}</Message.Title>
-          </Message.Root>
-        )}
-
         {/* TODO(burdon): Is the form read-only or just the schema? */}
         <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
-          <Form.FieldSet />
-
-          {type && (
-            <>
-              <FormFieldLabel label={t('fields.label')} asChild />
-              <FieldList
-                type={type}
-                view={view}
-                registry={registry}
-                readonly={readonly}
-                showHeading={showHeading}
-                onDelete={handleDelete}
-              />
-            </>
-          )}
+          <Form.Viewport>
+            <Form.Content>
+              {/* If readonly is set, then the callout is not needed. */}
+              {schemaReadonly && !readonly && (
+                <Message.Root valence='info' classNames='my-form-padding'>
+                  <Message.Title>{t('system-schema.description')}</Message.Title>
+                </Message.Root>
+              )}
+              <Form.FieldSet />
+              {type && (
+                <>
+                  <FormFieldLabel label={t('fields.label')} asChild />
+                  <FieldList
+                    type={type}
+                    view={view}
+                    registry={registry}
+                    readonly={readonly}
+                    showHeading={showHeading}
+                    onDelete={handleDelete}
+                  />
+                </>
+              )}
+            </Form.Content>
+          </Form.Viewport>
         </Form.Root>
       </div>
     );
@@ -396,7 +394,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                     )}
                   </div>
                   {expandedField === field.id && !readonly && (
-                    <div className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
+                    <div className='col-span-full mt-1 mb-1 border border-separator rounded-sm'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}
                         registry={registry}
@@ -427,11 +425,8 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
   );
 };
 
-const customFields = ({
-  types,
-  tags,
-}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
-  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
+const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldRenderer> => ({
+  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldRendererProps) => {
     const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
       (query) => onValueChange(type, query.ast),
       [onValueChange],

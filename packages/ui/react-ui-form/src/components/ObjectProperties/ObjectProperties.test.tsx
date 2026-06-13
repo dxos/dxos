@@ -9,7 +9,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './ObjectProperties.stories';
 import { type ObjectPropertiesDebug } from './ObjectProperties.stories';
 
