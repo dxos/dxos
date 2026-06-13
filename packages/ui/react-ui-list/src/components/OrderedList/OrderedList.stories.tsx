@@ -18,8 +18,7 @@ const initialItems: Item[] = [
   { id: 'c', label: 'Charlie' },
 ];
 
-const isItem = (value: any): value is Item =>
-  !!value && typeof value === 'object' && typeof value.id === 'string';
+const isItem = (value: any): value is Item => !!value && typeof value === 'object' && typeof value.id === 'string';
 
 const DefaultStory = () => {
   const [items, setItems] = useState<Item[]>(initialItems);

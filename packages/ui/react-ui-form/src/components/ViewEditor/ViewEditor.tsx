@@ -357,9 +357,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                 >
                   <OrderedList.Row>
                     <OrderedList.DragHandle />
-                    <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>
-                      {field.path}
-                    </OrderedList.Title>
+                    <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>{field.path}</OrderedList.Title>
                     <OrderedList.Action
                       label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
@@ -379,7 +377,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                       </>
                     )}
                   </OrderedList.Row>
-                  { !readonly && (
+                  {!readonly && (
                     <OrderedList.Expanded classNames='mt-1 mb-1'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}

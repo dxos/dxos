@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OrderedListContent, OrderedListRoot, type OrderedListRootProps } from './OrderedListRoot';
 import {
   OrderedListAction,
   OrderedListDeleteButton,
@@ -14,6 +13,7 @@ import {
   OrderedListRow,
   OrderedListTitle,
 } from './OrderedListItem';
+import { OrderedListContent, OrderedListRoot, type OrderedListRootProps } from './OrderedListRoot';
 
 /**
  * Reorderable, single-expandable master-detail list.
