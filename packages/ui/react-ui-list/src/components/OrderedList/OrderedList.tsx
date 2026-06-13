@@ -8,6 +8,7 @@ import {
   type OrderedListDetailItemProps,
   OrderedListDragHandle,
   OrderedListExpandCaret,
+  OrderedListIconButton,
   OrderedListItem,
   type OrderedListItemProps,
   OrderedListTitle,
@@ -47,6 +48,7 @@ export const OrderedList = {
   DetailItem: OrderedListDetailItem,
   DragHandle: OrderedListDragHandle,
   Title: OrderedListTitle,
+  IconButton: OrderedListIconButton,
   DeleteButton: OrderedListDeleteButton,
   ExpandCaret: OrderedListExpandCaret,
 };

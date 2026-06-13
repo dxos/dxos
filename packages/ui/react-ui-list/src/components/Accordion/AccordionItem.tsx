@@ -9,7 +9,8 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ListItemRecord } from '../List';
+// See `AccordionRoot.tsx` for the rationale on `ListItemRecord = any`.
+type ListItemRecord = any;
 import { useAccordionContext } from './AccordionRoot';
 
 const ACCORDION_ITEM_NAME = 'AccordionItem';

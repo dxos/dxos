@@ -52,6 +52,14 @@ export type OrderedListItemProps<T extends ListItemRecord> = ThemedClassName<
     canDrag?: boolean;
     /** Apply the row-hover affordance. Defaults to false. */
     hover?: boolean;
+    /**
+     * When true, sets `aria-selected="true"` on the row so the `dx-selected` styling kicks
+     * in. Used for surfaces like the `Mixer` where the active layer needs visual highlight
+     * without going through `RowList`'s listbox role semantics.
+     */
+    selected?: boolean;
+    /** Optional click handler bound to the outer row element. */
+    onClick?: (event: MouseEvent<HTMLDivElement>) => void;
     /** Inline style merged onto the outer element. Used for grid templates produced by `useListGrid`. */
     style?: CSSProperties;
   }>
@@ -70,6 +78,8 @@ export const OrderedListItem = <T extends ListItemRecord>({
   id,
   canDrag = true,
   hover = false,
+  selected,
+  onClick,
   classNames,
   style,
   children,
@@ -92,6 +102,8 @@ export const OrderedListItem = <T extends ListItemRecord>({
         ref={rowRef as RefCallback<HTMLDivElement>}
         {...navigation.itemProps()}
         style={style}
+        aria-selected={selected || undefined}
+        onClick={onClick}
         className={mx(
           'relative dx-selected',
           hover && 'dx-hover',
@@ -164,6 +176,28 @@ export const OrderedListTitle = ({
 };
 
 /**
+ * Generic action icon button. Anchored in a `var(--dx-rail-item)` IconBlock so it shares a
+ * centerline with the title row regardless of expand state. Use for inline row actions
+ * (mute, edit, copy, etc.); pair with `OrderedListDeleteButton` for the delete affordance.
+ */
+export const OrderedListIconButton = ({
+  autoHide = false,
+  disabled,
+  classNames,
+  ...props
+}: IconButtonProps & { autoHide?: boolean }) => (
+  <IconBlock>
+    <IconButton
+      {...props}
+      variant='ghost'
+      iconOnly
+      disabled={disabled}
+      classNames={[classNames, autoHide && disabled && 'hidden']}
+    />
+  </IconBlock>
+);
+
+/**
  * Delete icon button. Anchored in a `var(--dx-rail-item)` IconBlock so it shares a centerline
  * with the title row regardless of expand state. No `my-[1px]` nudge: the central column's
  * outline is `ring-1` (see `OrderedListDetailItem`) so layout is exact.
@@ -179,17 +213,14 @@ export const OrderedListDeleteButton = ({
   Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
   const { t } = useTranslation(osTranslations);
   return (
-    <IconBlock>
-      <IconButton
-        {...props}
-        variant='ghost'
-        disabled={disabled}
-        icon={icon}
-        iconOnly
-        label={label ?? t('delete.label')}
-        classNames={[classNames, autoHide && disabled && 'hidden']}
-      />
-    </IconBlock>
+    <OrderedListIconButton
+      {...props}
+      autoHide={autoHide}
+      disabled={disabled}
+      icon={icon}
+      label={label ?? t('delete.label')}
+      classNames={classNames}
+    />
   );
 };
 

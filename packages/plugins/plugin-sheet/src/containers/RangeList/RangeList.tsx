@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { rangeFromIndex } from '#types';
@@ -42,23 +42,34 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
           <Message.Title>{t('no-ranges.message')}</Message.Title>
         </Message.Root>
       ) : (
-        <List.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
-          {({ items: ranges }) =>
-            ranges.map((range, i) => (
-              <List.Item key={i} item={range}>
-                <List.ItemDragHandle />
-                <List.ItemTitle onClick={() => handleSelectRange(range)}>
-                  {t('range.title', {
-                    position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
-                    key: t(`range-key.${range.key}.label`),
-                    value: t(`range-value.${range.value}.label`),
-                  })}
-                </List.ItemTitle>
-                <List.ItemDeleteButton onClick={() => handleDeleteRange(range)} />
-              </List.Item>
-            ))
-          }
-        </List.Root>
+        <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
+          {({ items: ranges }) => (
+            <OrderedList.Content>
+              {ranges.map((range, i) => (
+                // Reorder is not wired (no `onMove` upstream and ranges lack a stable id),
+                // so we omit the drag handle entirely. Add `OrderedList.DragHandle` + a
+                // proper `getId` when DX-8121 is implemented.
+                <OrderedList.Item
+                  key={i}
+                  id={String(i)}
+                  item={range}
+                  hover
+                  classNames='flex items-center cursor-pointer'
+                  onClick={() => handleSelectRange(range)}
+                >
+                  <div className='flex grow items-center truncate px-2'>
+                    {t('range.title', {
+                      position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
+                      key: t(`range-key.${range.key}.label`),
+                      value: t(`range-value.${range.value}.label`),
+                    })}
+                  </div>
+                  <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
+                </OrderedList.Item>
+              ))}
+            </OrderedList.Content>
+          )}
+        </OrderedList.Root>
       )}
     </>
   );
