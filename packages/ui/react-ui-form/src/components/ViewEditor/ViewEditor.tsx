@@ -224,17 +224,14 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
               )}
               <Form.FieldSet />
               {type && (
-                <>
-                  <FormFieldLabel label={t('fields.label')} asChild />
-                  <FieldList
-                    type={type}
-                    view={view}
-                    registry={registry}
-                    readonly={readonly}
-                    showHeading={showHeading}
-                    onDelete={handleDelete}
-                  />
-                </>
+                <FieldList
+                  type={type}
+                  view={view}
+                  registry={registry}
+                  readonly={readonly}
+                  showHeading={showHeading}
+                  onDelete={handleDelete}
+                />
               )}
             </Form.Content>
           </Form.Viewport>
@@ -263,14 +260,12 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     // Pass type only when mutable to allow schema mutations.
     const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
 
-    const model = new ProjectionModel({
+    return new ProjectionModel({
       registry: atomRegistry,
       view,
       baseSchema: jsonSchema,
       change,
     });
-
-    return model;
   }, [atomRegistry, type, view]);
 
   const [expandedField, setExpandedField] = useState<View.FieldType['id']>();
@@ -341,6 +336,21 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     >
       {({ items: fields }) => (
         <>
+          <div className='flex items-center gap-2'>
+            <div className='flex-1 min-w-0'>
+              <FormFieldLabel label={t('fields.label')} asChild />
+            </div>
+            {!readonly && (
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--plus--regular'
+                label={t('add-property-button.label')}
+                onClick={handleAdd}
+                disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
+              />
+            )}
+          </div>
           {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
           <OrderedList.Content>
             {fields.map((field) => {
@@ -356,8 +366,8 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                   {/* Drag handle and delete flank the central column; the name row and the
                       expanded editor live inside it (mirrors the ordered ArrayField layout). */}
                   <OrderedList.DragHandle />
-                  <div className='flex flex-col'>
-                    <div className='flex items-center gap-1'>
+                  <div className='flex flex-col border border-subdued-separator rounded-sm'>
+                    <div className='flex items-center gap-1 px-2'>
                       <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>
                         {field.path}
                       </OrderedList.Title>
@@ -370,8 +380,8 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                       />
                       {!readonly && <OrderedList.ExpandCaret data-testid='field.toggle' />}
                     </div>
-                    {!readonly && (
-                      <OrderedList.Expanded classNames='mb-1'>
+                    {!readonly && expandedField === field.id && (
+                      <div className='px-2 pb-2'>
                         <FieldEditor
                           readonly={readonly || schemaReadonly}
                           registry={registry}
@@ -379,7 +389,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                           field={field}
                           onSave={handleClose}
                         />
-                      </OrderedList.Expanded>
+                      </div>
                     )}
                   </div>
                   {!readonly && (
@@ -394,17 +404,6 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
               );
             })}
           </OrderedList.Content>
-          {!readonly && !expandedField && (
-            <div className='my-form-padding'>
-              <IconButton
-                icon='ph--plus--regular'
-                label={t('add-property-button.label')}
-                onClick={handleAdd}
-                disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
-                classNames='w-full'
-              />
-            </div>
-          )}
         </>
       )}
     </OrderedList.Root>
