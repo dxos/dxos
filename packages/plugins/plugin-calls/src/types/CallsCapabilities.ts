@@ -13,7 +13,7 @@ import { type Channel } from '@dxos/types';
 import { meta } from '#meta';
 
 import * as Call from './Call';
-import * as SettingsType from './Settings';
+import { type Settings as SettingsType } from './index';
 
 import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
 
