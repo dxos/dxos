@@ -132,11 +132,14 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     if (!db) {
       return;
     }
-    const newView = ViewModel.make({
-      query: Query.select(Filter.nothing()),
-      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    });
-    db.add(newView);
+
+    const newView = db.add(
+      ViewModel.make({
+        query: Query.select(Filter.nothing()),
+        jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
+      }),
+    );
+
     updateColumns((columns) => {
       columns.push({
         name: '',

@@ -12,7 +12,8 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": "./src/translations.ts",
+    "#types": "./src/types.ts"
   },
   "exports": {
     ".": {

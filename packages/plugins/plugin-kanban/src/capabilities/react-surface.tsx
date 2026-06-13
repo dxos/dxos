@@ -12,7 +12,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Database, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           if (!db) {
             return null;
