@@ -13,11 +13,13 @@ import { createFeedServiceLayer } from '@dxos/echo-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { ObjectProperties } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
-import { withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
@@ -29,18 +31,17 @@ import { PipelineProperties } from './PipelineProperties';
 random.seed(0);
 
 const DefaultStory = () => {
-  const db = useDatabase();
-  const pipelines = useQuery(db, Filter.type(Pipeline.Pipeline));
+  const [space] = useSpaces();
+  const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const pipeline = pipelines.find((pipeline) => (pipeline.columns?.length ?? 0) > 0);
-
   if (!pipeline) {
-    return <p>Loading…</p>;
+    return <Loading data={{ pipelines: pipelines.length }} />;
   }
 
   return (
-    <div className='grid grid-cols-[400px] justify-center overflow-hidden h-full w-full'>
-      <PipelineProperties pipeline={pipeline} classNames='border-is border-ie border-separator' />
-    </div>
+    <ObjectProperties object={pipeline}>
+      <PipelineProperties subject={pipeline} />
+    </ObjectProperties>
   );
 };
 
@@ -48,11 +49,11 @@ const meta = {
   title: 'plugins/plugin-pipeline/containers/PipelineProperties',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
-        StorybookPlugin({}),
         ClientPlugin({
           types: [
             Tag.Tag,
@@ -140,7 +141,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...stackTranslations],
+    translations: [...translations, ...formTranslations, ...stackTranslations],
   },
 } satisfies Meta<typeof PipelineProperties>;
 

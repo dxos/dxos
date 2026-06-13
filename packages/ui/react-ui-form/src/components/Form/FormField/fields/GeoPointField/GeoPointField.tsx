@@ -62,7 +62,7 @@ export const GeoPointField = ({
   return (
     <Input.Root validationValence={status}>
       {layout !== 'inline' && (
-        <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} asChild />
+        <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} standalone />
       )}
       {layout === 'static' ? (
         <LatLng {...value} />

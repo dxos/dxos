@@ -6,7 +6,7 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, us
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
+import { type ChromaticPalette, IconButton, Input, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { hues, osTranslations } from '@dxos/ui-theme';
@@ -146,11 +146,12 @@ export const SelectOptionField = ({
                           {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                           <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
                         </List.ItemTitle>
-                        <IconButton
+                        <ToggleIconButton
                           iconOnly
                           variant='ghost'
+                          active={selected === item.id}
+                          icon='ph--caret-right--regular'
                           label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
-                          icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleClick(item.id)}
                         />
                       </div>

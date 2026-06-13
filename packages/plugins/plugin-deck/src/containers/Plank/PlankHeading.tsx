@@ -7,10 +7,9 @@ import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
-import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
-import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '#hooks';

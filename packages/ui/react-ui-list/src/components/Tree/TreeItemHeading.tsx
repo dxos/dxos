@@ -4,8 +4,7 @@
 
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallback } from 'react';
 
-import { Button, Icon, type Label, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { Button, Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct

@@ -1240,11 +1240,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-text-tooltip/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-thread/package.json",
           "jsonpath": "$.version"
         },

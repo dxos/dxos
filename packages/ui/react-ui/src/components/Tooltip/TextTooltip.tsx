@@ -12,7 +12,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { Tooltip, type TooltipScopedProps, type TooltipTriggerProps } from '@dxos/react-ui';
+import { Tooltip, type TooltipScopedProps, type TooltipTriggerProps } from './Tooltip';
 
 export type TextTooltipProps = PropsWithChildren<
   {
@@ -44,6 +44,7 @@ export const TextTooltip = forwardRef<HTMLButtonElement, TooltipScopedProps<Text
       },
       [onlyWhenTruncating, truncateQuery],
     );
+
     return (
       <Tooltip.Trigger asChild={asChild} {...props} content={text} side={side} onInteract={handleInteract} ref={ref}>
         {children}

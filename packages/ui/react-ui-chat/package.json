@@ -49,7 +49,6 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",

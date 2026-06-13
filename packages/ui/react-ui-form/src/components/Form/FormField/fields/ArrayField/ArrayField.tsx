@@ -9,7 +9,7 @@ import React, { type ReactNode, useCallback, useRef } from 'react';
 import { Annotation, Ref } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -17,8 +17,8 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
-import { FormField, IconBlock, type FormFieldProps } from '../../FormField';
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FieldHeader } from '../../FieldHeader';
+import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form
 // values have no stable identity, so drag-and-drop (which requires a stable key
@@ -146,14 +146,12 @@ export const ArrayField = ({
   );
 
   const header = (layout !== 'static' || (values && values.length > 0)) && (
-    <div className='flex items-center gap-2'>
-      <div className='flex-1 min-w-0'>
-        <FormFieldLabel readonly={readonly} label={label} path={SchemaEx.createJsonPath(path ?? [])} asChild />
-      </div>
-      {!readonly && layout !== 'static' && (
-        <IconBlock inline icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
-      )}
-    </div>
+    <FieldHeader
+      label={label}
+      path={SchemaEx.createJsonPath(path ?? [])}
+      readonly={readonly}
+      add={layout !== 'static' ? { label: t('add-item.button'), onClick: handleAdd } : undefined}
+    />
   );
 
   //
@@ -170,32 +168,34 @@ export const ArrayField = ({
     if (ids.length > count) {
       ids.length = count;
     }
+
     const items: OrderedItem[] = (values ?? []).map((value, index) => ({ value, index, [DND_ID]: ids[index] }));
 
     return (
       <>
         {header}
-        <List.Root<OrderedItem> items={items} isItem={isOrderedItem} getId={getOrderedId} onMove={handleMove}>
+        <OrderedList.Root<OrderedItem> items={items} isItem={isOrderedItem} getId={getOrderedId} onMove={handleMove}>
           {({ items }) => (
-            <div role='list' className='flex flex-col'>
+            <OrderedList.Content>
               {items.map((item) => (
-                <List.Item<OrderedItem>
+                <OrderedList.Item<OrderedItem>
                   key={getOrderedId(item)}
+                  id={getOrderedId(item)}
                   item={item}
-                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0.5'
+                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0 pb-1'
                 >
-                  <List.ItemDragHandle />
+                  <OrderedList.DragHandle />
                   {renderField(item.index, item.index === items.length - 1)}
-                  <List.ItemDeleteButton
-                    autoHide={false}
+                  <CompactIconButton
+                    icon='ph--x--regular'
                     label={t('remove-item.button')}
                     onClick={() => handleDelete(item.index)}
                   />
-                </List.Item>
+                </OrderedList.Item>
               ))}
-            </div>
+            </OrderedList.Content>
           )}
-        </List.Root>
+        </OrderedList.Root>
       </>
     );
   }
@@ -214,8 +214,7 @@ export const ArrayField = ({
             <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
               {renderField(index, isLast)}
               {!readonly && layout !== 'static' && (
-                <IconBlock
-                  inline={!renderItemAsObject}
+                <CompactIconButton
                   icon='ph--x--regular'
                   label={t('remove-item.button')}
                   onClick={() => handleDelete(index)}
