@@ -52,8 +52,8 @@
     );
     /* Gentler offset for full-row/region hover (`.dx-hover`) so it does not read as heavily as a control. */
     --color-hover-surface-subtle: light-dark(
-      oklch(from var(--surface-bg) calc(l - 0.04) c h),
-      oklch(from var(--surface-bg) calc(l + 0.04) c h)
+      oklch(from var(--surface-bg) calc(l - 0.02) c h),
+      oklch(from var(--surface-bg) calc(l + 0.02) c h)
     );
     --color-current-surface: light-dark(
       oklch(from var(--surface-bg) calc(l - 0.1) c h),
