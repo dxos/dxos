@@ -3619,6 +3619,15 @@ importers:
         specifier: 'catalog:'
         version: 0.8.3
 
+  packages/common/av:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../context
+
   packages/common/codec-protobuf:
     dependencies:
       '@dxos/async':
@@ -8537,6 +8546,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/av':
+        specifier: workspace:*
+        version: link:../../common/av
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -15200,6 +15212,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/av':
+        specifier: workspace:*
+        version: link:../../common/av
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -15227,9 +15242,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-calls':
-        specifier: workspace:*
-        version: link:../plugin-calls
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

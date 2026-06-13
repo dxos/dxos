@@ -22,6 +22,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/av"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -29,6 +32,9 @@
     },
     {
       "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -49,7 +55,19 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
@@ -70,10 +88,16 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-audio"
@@ -83,6 +107,15 @@
     },
     {
       "path": "../../ui/react-ui-dnd"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
@@ -97,10 +130,16 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-space"
+    },
+    {
       "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }
