@@ -18,10 +18,10 @@
    *   1    base     base content, L0 icon rail
    *   2    chrome   L1/R sidebars, header
    *   3    card     card
-   *   4    raised   group, input, modal, focus/attention
+   *   4    raised   group, input, focus/attention
    *   5    bar      toolbar (sticky, drop-shadowed)
-   *   6    popover  popover
-   *   7    float    (reserved: menu, toast, tooltip)
+   *   6    modal    dialog, modal
+   *   7    float    popover, menu, toast, tooltip
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
@@ -97,21 +97,26 @@
     oklch(from var(--dx-elevation-4) calc(l + 0.03) c h)
   );
   --color-input-surface: var(--dx-elevation-4);
-  --color-modal-surface: var(--dx-elevation-4);
 
-  /** 
+  /**
    * Elevation 5
    */
 
   --color-toolbar-surface: var(--dx-elevation-5);
 
-  /** 
+  /**
    * Elevation 6
    */
 
-  --color-popover-surface: var(--dx-elevation-6);
+  --color-modal-surface: var(--dx-elevation-6);
 
-  /** 
+  /**
+   * Elevation 7
+   */
+
+  --color-popover-surface: var(--dx-elevation-7);
+
+  /**
    * Misc
    */
 
