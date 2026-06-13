@@ -3043,9 +3043,6 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
-      '@dxos/react-ui-text-tooltip':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-text-tooltip
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
@@ -9723,9 +9720,6 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
-      '@dxos/react-ui-text-tooltip':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-text-tooltip
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../../ui/ui-types
@@ -18435,9 +18429,6 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
-      '@dxos/react-ui-text-tooltip':
-        specifier: workspace:*
-        version: link:../react-ui-text-tooltip
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -18974,9 +18965,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/react-ui-text-tooltip':
-        specifier: workspace:*
-        version: link:../react-ui-text-tooltip
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
@@ -20147,9 +20135,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-text-tooltip':
-        specifier: workspace:*
-        version: link:../react-ui-text-tooltip
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -21113,31 +21098,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.14)
-      react:
-        specifier: ~19.2.3
-        version: 19.2.6
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.6(react@19.2.6)
-      vite:
-        specifier: '>=8.0.16'
-        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
-  packages/ui/react-ui-text-tooltip:
-    dependencies:
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.14)(react@19.2.6)
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
