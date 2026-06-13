@@ -44,6 +44,7 @@ export const TextTooltip = forwardRef<HTMLButtonElement, TooltipScopedProps<Text
       },
       [onlyWhenTruncating, truncateQuery],
     );
+
     return (
       <Tooltip.Trigger asChild={asChild} {...props} content={text} side={side} onInteract={handleInteract} ref={ref}>
         {children}
