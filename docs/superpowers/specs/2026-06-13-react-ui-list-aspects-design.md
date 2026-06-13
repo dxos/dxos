@@ -442,37 +442,51 @@ density variant (`{ density: 'compact' | 'cozy' | 'comfortable' }`) layers in
 without API churn — adding a variant parameter to existing tokens. See AUDIT.md
 §9 open questions.
 
-## Migration order
+## Migration order (this PR)
 
-Land in a single PR to keep the aspect contract honest. Compounds + at least
-one external surface (Mosaic nav) prove the contract.
+Bounded scope to land the aspect contracts + the two compounds that exercise them
+most directly. Tree and Mosaic adoption are deferred to follow-up PRs once the
+contract has settled.
 
 1. **`src/aspects/`** — implement and unit-test the aspect hooks. Each in its
-   own file with a co-located `*.test.ts`.
+   own file with a co-located `*.test.ts`. ✓ landed.
 2. **`OrderedList`** — refactor onto `useReorder` + `useListDisclosure` + `useListGrid`
    + `useListNavigation({ mode: 'list' })`. **Stop wrapping the deprecated `List`.**
    Public namespace API preserved (`Root` / `Content` / `Item` / `DetailItem` / `DragHandle` /
-   `Title` / `ExpandCaret` / `DeleteButton`).
+   `Title` / `ExpandCaret` / `DeleteButton`). Replace the bordered card with `ring-1`
+   so handle / title / caret / trailing all share a baseline (kills `my-[1px]`). ✓ landed.
 3. **`RowList`** — refactor onto `useListNavigation({ mode: 'listbox' })` +
    `useListSelection({ mode: 'single' })`. Internal DOM stays
-   identical (still uses `@dxos/react-list` primitives). Public API preserved.
-4. **`Tree`** — refactor onto `useReorder` + `useListDisclosure({ mode: 'multi' })`
-   + `useListGrid`. Replace `gridTemplateColumns` / `renderColumns` props with
-   the grid aspect's slot conventions, but **add a `legacy` prop that accepts
-   `gridTemplateColumns` for back-compat** during the navtree migration.
-5. **Deprecated `List`** — stays in this PR (no consumers depend on it once
+   identical (still uses `@dxos/react-list` primitives). Public API preserved. ✓ landed.
+4. **Deprecated `List`** — stays in this PR (no consumers depend on it once
    OrderedList detaches). Final deletion is AUDIT.md Phase 6 follow-up.
-6. **`Mosaic.Stack` keyboard nav** — replace `Focus.Group`'s arrow-nav with
-   `useListNavigation({ mode: 'list' })`. **`useReorder` adoption in Mosaic is
-   deferred to a follow-up PR** (see §"Mosaic.Stack call-site sketch" for the
-   target shape).
-7. **External call-sites** — verified compile + render. The OrderedList /
-   RowList namespace APIs are preserved, so plugin-pipeline / ArrayField /
-   ViewEditor / etc. should be no-op for them. NavTree and devtools (Tree
-   callers) may need minor prop changes if `gridTemplateColumns` is renamed.
-8. **Tests + storybooks** — full storybook pass, particular attention to the
+5. **External call-sites** — no breaking-change surface in this PR. The
+   OrderedList / RowList namespace APIs are preserved, so plugin-pipeline /
+   ArrayField / ViewEditor / etc. are no-op.
+6. **Tests + storybooks** — full storybook pass, particular attention to the
    three critical stories: ArrayField/Ordered, ViewEditor/Default,
-   PipelineProperties/Default(dark).
+   PipelineProperties/Default (dark).
+
+### Deferred to follow-up PRs
+
+- **`Tree`** — would refactor onto `useReorder` + `useListDisclosure({ mode: 'multi' })`
+  + `useListGrid`. Risk: Tree has its own DnD wiring (hierarchical drop targets:
+  above / below / into) and a `gridTemplateColumns` + `renderColumns` API used by
+  navtree (6 files) and devtools. Land separately so the contract for
+  hierarchical reorder gets focused review.
+- **Mosaic.Stack keyboard nav** — Mosaic.Stack itself is a pure layout primitive
+  with no ARIA or keyboard wiring; Focus.Group is applied by *consumers*
+  (`SearchStack`, `Board.Column`, the Stack story). "Adopting useListNavigation"
+  means migrating those consumers, not Stack itself. Defer to the PR that does
+  Mosaic's full reorder adoption — they share the same call-site sweep.
+- **`useReorder` adoption in Mosaic.Stack / Mosaic.VirtualStack** — VirtualStack's
+  interleaved-placeholder logic and cross-Stack drag are gnarly. The aspect
+  contract is fixed (see §"Mosaic.Stack call-site sketch"); implementation lands
+  separately.
+- **`Combobox.List` / `Listbox` / `Picker`** — listbox + filter; the contracts
+  above cover them. Migrate alongside any future search-domain refactor.
+- **Density variants** — token surface designed to absorb them; deferred until
+  there's a concrete density spec across compounds.
 
 ## Mosaic.Stack call-site sketch (for follow-up PR)
 
