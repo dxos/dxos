@@ -3,4 +3,5 @@
 //
 
 export * from './FormField';
+export * from './fields';
 export * from './FormFieldWrapper';

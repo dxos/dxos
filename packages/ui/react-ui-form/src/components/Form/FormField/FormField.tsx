@@ -37,7 +37,7 @@ import {
   SelectField,
   TextAreaField,
   TextField,
-} from '../fields';
+} from './fields';
 import { FormFieldSet } from '../FormFieldSet';
 
 export type FormFieldProps = {
@@ -60,7 +60,6 @@ export type FormFieldProps = {
    * Path to the current object from the root. Used with nested forms.
    */
   path?: (string | number)[];
-
   autoFocus?: boolean;
 } & FormFieldOptions &
   Pick<RefFieldDataProps, 'getOptions' | 'onCreate' | 'useType'> &
