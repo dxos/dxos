@@ -170,6 +170,7 @@ export const ArrayField = ({
     if (ids.length > count) {
       ids.length = count;
     }
+
     const items: OrderedItem[] = (values ?? []).map((value, index) => ({ value, index, [DND_ID]: ids[index] }));
 
     return (
