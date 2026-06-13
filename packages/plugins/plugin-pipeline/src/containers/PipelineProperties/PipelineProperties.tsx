@@ -12,7 +12,7 @@ import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form, ViewEditor } from '@dxos/react-ui-form';
+import { Form, FormFieldLabel, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -153,7 +153,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
 
   return (
     <div className={mx('py-form-padding overflow-y-auto', classNames)}>
-      <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
+      <FormFieldLabel label={t('views.label')} standalone classNames='py-1' />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}
