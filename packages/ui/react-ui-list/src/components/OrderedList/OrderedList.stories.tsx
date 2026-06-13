@@ -47,6 +47,35 @@ const SimpleStory = () => {
 };
 
 //
+// Scrollable — Simple variant wrapped in `OrderedList.Viewport` so it fills its parent
+// pane and scrolls independently. Use this shape when the list lives inside a constrained
+// container (settings panel, sidebar) and may overflow.
+//
+
+const longItems: Item[] = Array.from({ length: 40 }, (_, i) => ({
+  id: `item-${i}`,
+  label: `Item ${i + 1}`,
+}));
+
+const ScrollableStory = () => {
+  return (
+    <OrderedList.Root<Item> items={longItems} isItem={isItem} getId={(item) => item.id}>
+      {({ items: resolved }) => (
+        <OrderedList.Viewport>
+          <OrderedList.Content>
+            {resolved.map((item) => (
+              <OrderedList.Item key={item.id} id={item.id} item={item} hover classNames='px-3 py-2'>
+                {item.label}
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        </OrderedList.Viewport>
+      )}
+    </OrderedList.Root>
+  );
+};
+
+//
 // Draggable / Ordered — drag handle + title, reorder via `onMove`. No expand, no delete.
 // The canonical "user-curates-the-order" shape (matches the ordered ArrayField pattern).
 //
@@ -202,11 +231,12 @@ export default meta;
 
 type Story = StoryObj;
 
+// `Default` aliases the simplest variant so storybook's first-listed story shows the
+// lowest-noise shape of the compound. The composed-story tests below import the
+// specific variant they exercise rather than reading `Default`.
+export const Default: Story = { render: () => <SimpleStory /> };
 export const Simple: Story = { render: () => <SimpleStory /> };
+export const Scrollable: Story = { render: () => <ScrollableStory /> };
 export const Draggable: Story = { render: () => <DraggableStory /> };
 export const CheckboxWithDelete: Story = { render: () => <CheckboxWithDeleteStory /> };
 export const DraggableWithToggle: Story = { render: () => <DraggableWithToggleStory /> };
-
-// Kept as an alias so the existing OrderedList tests (`composeStories(stories)` →
-// `Default`) keep working without a rename. The test exercises the full feature set.
-export const Default: Story = DraggableWithToggle;

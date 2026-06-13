@@ -5,7 +5,13 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import {
+  ScrollArea,
+  type ScrollAreaRootProps,
+  type ThemedClassName,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -130,3 +136,31 @@ export const OrderedListContent = ({ classNames, children }: ThemedClassName<Pro
     </div>
   );
 };
+
+/**
+ * Optional ScrollArea wrapper for the list. Mirrors `Listbox.Viewport` — include when the
+ * list needs to fill a constrained pane and scroll independently; omit for static lists
+ * that flow with their parent. Auto-scroll during drag-reorder is not wired here; add when
+ * `useReorderList` gains the `useReorderAutoScroll` companion (see design doc).
+ */
+type OrderedListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+
+export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewportProps>((props, forwardedRef) => {
+  const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
+    OrderedListViewportProps & Record<string, unknown>
+  >;
+  return (
+    <ScrollArea.Root
+      {...composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' })}
+      {...{ thin, padding, centered }}
+      orientation='vertical'
+      ref={forwardedRef}
+    >
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+});
+
+OrderedListViewport.displayName = 'OrderedList.Viewport';
+
+export type { OrderedListViewportProps };
