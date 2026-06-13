@@ -47,7 +47,9 @@ export const OrderedListItem = <T extends ListItemRecord>({
 
   return (
     <OrderedListItemProvider id={id} expanded={expanded} toggle={toggle} canDrag={canDrag}>
-      <List.Item<T> item={item} aria-expanded={expanded} classNames={mx('flex flex-col', classNames)}>
+      {/* Disclosure state lives on the controlling caret button (aria-expanded/aria-controls),
+          not the row container, so the row stays neutral for non-expandable lists. */}
+      <List.Item<T> item={item} classNames={mx('flex flex-col', classNames)}>
         {children}
       </List.Item>
     </OrderedListItemProvider>

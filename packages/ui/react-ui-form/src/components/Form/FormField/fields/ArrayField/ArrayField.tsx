@@ -9,7 +9,7 @@ import React, { type ReactNode, useCallback, useRef } from 'react';
 import { Annotation, Ref } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -175,27 +175,28 @@ export const ArrayField = ({
     return (
       <>
         {header}
-        <List.Root<OrderedItem> items={items} isItem={isOrderedItem} getId={getOrderedId} onMove={handleMove}>
+        <OrderedList.Root<OrderedItem> items={items} isItem={isOrderedItem} getId={getOrderedId} onMove={handleMove}>
           {({ items }) => (
-            <div role='list' className='flex flex-col'>
+            <OrderedList.Content>
               {items.map((item) => (
-                <List.Item<OrderedItem>
+                <OrderedList.Item<OrderedItem>
                   key={getOrderedId(item)}
+                  id={getOrderedId(item)}
                   item={item}
                   classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0.5'
                 >
-                  <List.ItemDragHandle />
+                  <OrderedList.DragHandle />
                   {renderField(item.index, item.index === items.length - 1)}
-                  <List.ItemDeleteButton
+                  <OrderedList.DeleteButton
                     autoHide={false}
                     label={t('remove-item.button')}
                     onClick={() => handleDelete(item.index)}
                   />
-                </List.Item>
+                </OrderedList.Item>
               ))}
-            </div>
+            </OrderedList.Content>
           )}
-        </List.Root>
+        </OrderedList.Root>
       </>
     );
   }
