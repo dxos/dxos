@@ -16,7 +16,8 @@ import { FactoryAnnotation } from '@dxos/schema';
 
 import { translationKey } from '#translations';
 
-import { Form, type FormFieldMap, META_TAGS_KEY, withMetaTags } from '../Form';
+import { type FormFieldMap } from '#types';
+import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
 

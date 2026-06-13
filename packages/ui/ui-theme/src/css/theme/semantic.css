@@ -94,6 +94,15 @@
   --color-hover-surface: var(--dx-hover-surface-base);
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
+  /*
+   * Subtle region hover for large highlight targets (list rows, tiles) where the full
+   * control-strength hover reads as too heavy. Tracks --color-hover-surface by default, so it
+   * is identical to the control hover everywhere except on surfaces that re-derive a gentler
+   * value (see surface.css). Consumed by `.dx-hover` / `.dx-hover-row`; controls (buttons) keep
+   * --color-hover-surface.
+   */
+  --color-hover-surface-subtle: var(--color-hover-surface);
+
   /* current (aria-current) */
   --dx-current-surface-base: light-dark(var(--color-neutral-150), var(--color-neutral-800));
   --dx-current-surface-hover-base: light-dark(var(--color-neutral-150), var(--color-neutral-600));

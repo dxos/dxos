@@ -21,6 +21,7 @@ import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 
+// TODO(burdon): Remove: Anti-pattern to pull out className fragments.
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
@@ -139,11 +140,14 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     if (!db) {
       return;
     }
-    const newView = ViewModel.make({
-      query: Query.select(Filter.nothing()),
-      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    });
-    db.add(newView);
+
+    const newView = db.add(
+      ViewModel.make({
+        query: Query.select(Filter.nothing()),
+        jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
+      }),
+    );
+
     updateColumns((columns) => {
       columns.push({
         name: '',

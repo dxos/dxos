@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { type FormFieldComponent, type FormFieldComponentProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
+import { type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
@@ -71,8 +71,8 @@ const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) 
     if (!plugins || plugins.length === 0) {
       return undefined;
     }
-    const AreaField: FormFieldComponent = (props: FormFieldComponentProps) => (
-      <AreaSelectField {...(props as FormFieldComponentProps<string | undefined>)} plugins={plugins} />
+    const AreaField: FormFieldRenderer = (props: FormFieldRendererProps) => (
+      <AreaSelectField {...(props as FormFieldRendererProps<string | undefined>)} plugins={plugins} />
     );
     return { area: AreaField };
   }, [plugins]);

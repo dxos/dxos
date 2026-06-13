@@ -14,10 +14,7 @@ import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
-export type FormFieldStatus = {
-  status?: 'error';
-  error?: string;
-};
+import { type FormFieldStatus } from '#types';
 
 /**
  * Form properties.

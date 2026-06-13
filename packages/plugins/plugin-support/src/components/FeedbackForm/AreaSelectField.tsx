@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
-import { type FormFieldComponentProps, FormFieldLabel } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, FormFieldLabel } from '@dxos/react-ui-form';
 
 import type { FeedbackPluginOption } from './types';
 
@@ -18,7 +18,7 @@ import type { FeedbackPluginOption } from './types';
  * the plugin id so the form payload stays a simple `string`. A "(none)" sentinel clears the
  * selection because Radix Select cannot bind to `undefined`.
  */
-export type AreaSelectFieldProps = FormFieldComponentProps<string | undefined> & {
+export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
 };
 

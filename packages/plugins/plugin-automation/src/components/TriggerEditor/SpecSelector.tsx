@@ -7,11 +7,11 @@ import React, { useCallback, useMemo } from 'react';
 import { Trigger } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-export type SpecSelectorProps = FormFieldComponentProps;
+export type SpecSelectorProps = FormFieldRendererProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
   const { t } = useTranslation(meta.id);

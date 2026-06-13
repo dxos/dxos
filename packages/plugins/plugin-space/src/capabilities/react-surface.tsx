@@ -16,7 +16,7 @@ import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo'
 import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
-import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -225,7 +225,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldRendererProps;
           const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [ast, onValueChange]);
           const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
@@ -249,7 +249,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldRendererProps;
           const handleChange = useCallback((nextIcon: string) => onValueChange(ast, nextIcon), [ast, onValueChange]);
           const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
@@ -292,7 +292,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const annotation = SchemaEx.findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
           const options = useTypeOptions({ db, annotation });

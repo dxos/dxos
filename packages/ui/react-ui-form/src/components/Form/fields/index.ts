@@ -6,7 +6,6 @@ export * from './ArrayField';
 export * from './BooleanField';
 export * from './DateField';
 export * from './GeoPointField';
-export * from './InlineRefField';
 export * from './MarkdownField';
 export * from './NumberField';
 export * from './RefField';

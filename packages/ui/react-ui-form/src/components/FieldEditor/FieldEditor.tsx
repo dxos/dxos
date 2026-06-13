@@ -19,7 +19,8 @@ import {
 import { translationKey } from '#translations';
 
 import { getFormProperties } from '../../util';
-import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionField } from '../Form';
+import { type FormFieldMap } from '#types';
+import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form';
 
 export type FieldEditorProps = {
   projection: ProjectionModel;

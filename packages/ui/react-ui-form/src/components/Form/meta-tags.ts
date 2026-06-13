@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Ref, Tag } from '@dxos/echo';
 
-import { omitId } from './Form';
+import { omitId } from '../../util';
 
 /**
  * Form-field key for the synthetic meta-tags array spliced into property/create forms.
