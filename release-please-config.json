@@ -130,6 +130,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/graph-engine/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/hypercore/package.json",
           "jsonpath": "$.version"
         },

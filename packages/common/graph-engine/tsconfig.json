@@ -1,0 +1,35 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../graph"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}

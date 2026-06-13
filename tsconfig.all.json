@@ -64,6 +64,9 @@
       "path": "packages/common/graph/tsconfig.json"
     },
     {
+      "path": "packages/common/graph-engine/tsconfig.json"
+    },
+    {
       "path": "packages/common/hypercore/tsconfig.json"
     },
     {

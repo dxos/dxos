@@ -39,6 +39,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/graph": "workspace:*",
+    "@dxos/graph-engine": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
