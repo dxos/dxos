@@ -17,8 +17,8 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
-import { FormField, IconBlock, type FormFieldProps } from '../../FormField';
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FieldHeader } from '../../FieldHeader';
+import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form
 // values have no stable identity, so drag-and-drop (which requires a stable key
@@ -146,14 +146,12 @@ export const ArrayField = ({
   );
 
   const header = (layout !== 'static' || (values && values.length > 0)) && (
-    <div className='flex items-center gap-2'>
-      <div className='flex-1 min-w-0'>
-        <FormFieldLabel readonly={readonly} label={label} path={SchemaEx.createJsonPath(path ?? [])} asChild />
-      </div>
-      {!readonly && layout !== 'static' && (
-        <IconBlock inline icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
-      )}
-    </div>
+    <FieldHeader
+      label={label}
+      path={SchemaEx.createJsonPath(path ?? [])}
+      readonly={readonly}
+      add={layout !== 'static' ? { label: t('add-item.button'), onClick: handleAdd } : undefined}
+    />
   );
 
   //
@@ -188,8 +186,9 @@ export const ArrayField = ({
                 >
                   <OrderedList.DragHandle />
                   {renderField(item.index, item.index === items.length - 1)}
-                  <OrderedList.DeleteButton
-                    autoHide={false}
+                  <CompactIconButton
+                    inline={!renderItemAsObject}
+                    icon='ph--x--regular'
                     label={t('remove-item.button')}
                     onClick={() => handleDelete(item.index)}
                   />
@@ -216,7 +215,7 @@ export const ArrayField = ({
             <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
               {renderField(index, isLast)}
               {!readonly && layout !== 'static' && (
-                <IconBlock
+                <CompactIconButton
                   inline={!renderItemAsObject}
                   icon='ph--x--regular'
                   label={t('remove-item.button')}

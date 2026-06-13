@@ -26,7 +26,7 @@ import {
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
@@ -42,7 +42,7 @@ import { translationKey } from '#translations';
 import { type FormFieldRenderer, type FormFieldRendererProps, type FormFieldMap } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
-import { Form, FormFieldLabel, type FormRootProps } from '../Form';
+import { CompactIconButton, FieldHeader, Form, FormFieldLabel, type FormRootProps } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -336,21 +336,15 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     >
       {({ items: fields }) => (
         <>
-          <div className='flex items-center gap-2'>
-            <div className='flex-1 min-w-0'>
-              <FormFieldLabel label={t('fields.label')} asChild />
-            </div>
-            {!readonly && (
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--plus--regular'
-                label={t('add-property-button.label')}
-                onClick={handleAdd}
-                disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
-              />
-            )}
-          </div>
+          <FieldHeader
+            label={t('fields.label')}
+            readonly={readonly}
+            add={{
+              label: t('add-property-button.label'),
+              disabled: viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT,
+              onClick: handleAdd,
+            }}
+          />
           {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
           <OrderedList.Content>
             {fields.map((field) => {
@@ -361,13 +355,13 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                   id={field.id}
                   item={field}
                   canDrag={!readonly && !schemaReadonly}
-                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1'
+                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0.5'
                 >
                   {/* Drag handle and delete flank the central column; the name row and the
                       expanded editor live inside it (mirrors the ordered ArrayField layout). */}
                   <OrderedList.DragHandle />
                   <div className='flex flex-col border border-subdued-separator rounded-sm'>
-                    <div className='flex items-center gap-1 px-2'>
+                    <div className='flex items-center px-2'>
                       <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>
                         {field.path}
                       </OrderedList.Title>
@@ -393,7 +387,9 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                     )}
                   </div>
                   {!readonly && (
-                    <OrderedList.DeleteButton
+                    <CompactIconButton
+                      inline
+                      icon='ph--x--regular'
                       label={t('delete-field.label')}
                       disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
                       onClick={() => handleDelete(field.id)}

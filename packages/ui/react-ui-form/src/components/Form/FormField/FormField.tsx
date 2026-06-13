@@ -258,7 +258,7 @@ FormField.displayName = 'Form.FormField';
 // Layout components
 //
 
-export const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
+export const CompactIconButton = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
   return (
     <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col pt-2.5')}>
       <IconButton variant='ghost' density='xs' square iconOnly {...props} />
