@@ -81,7 +81,7 @@ const ScrollableStory = () => {
 //
 
 const DraggableStory = () => {
-  const [items, setItems] = useState<Item[]>(initialItems);
+  const [items, setItems] = useState<Item[]>(longItems);
 
   const handleMove = useCallback((fromIndex: number, toIndex: number) => {
     setItems((prev) => {
@@ -94,20 +94,22 @@ const DraggableStory = () => {
   return (
     <OrderedList.Root<Item> items={items} isItem={isItem} getId={(item) => item.id} onMove={handleMove}>
       {({ items: resolved }) => (
-        <OrderedList.Content>
-          {resolved.map((item) => (
-            <OrderedList.Item
-              key={item.id}
-              id={item.id}
-              item={item}
-              hover
-              classNames='grid grid-cols-[var(--dx-rail-item)_1fr] items-center gap-1'
-            >
-              <OrderedList.DragHandle />
-              <OrderedList.Title>{item.label}</OrderedList.Title>
-            </OrderedList.Item>
-          ))}
-        </OrderedList.Content>
+        <OrderedList.Viewport>
+          <OrderedList.Content>
+            {resolved.map((item) => (
+              <OrderedList.Item
+                key={item.id}
+                id={item.id}
+                item={item}
+                hover
+                classNames='grid grid-cols-[var(--dx-rail-item)_1fr] items-center gap-1'
+              >
+                <OrderedList.DragHandle />
+                <OrderedList.Title>{item.label}</OrderedList.Title>
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        </OrderedList.Viewport>
       )}
     </OrderedList.Root>
   );
@@ -222,6 +224,144 @@ const DraggableWithToggleStory = () => {
   );
 };
 
+//
+// Nested — a parent `OrderedList.DetailItem` whose detail panel contains another
+// `OrderedList`. Exercises Radix context shadowing (each `<OrderedList.Root>` provides its
+// own reorder/disclosure/nav controllers) and pragmatic-dnd's per-list `canDrop` filter
+// (so a sub-item can't drop into the parent list, and vice versa).
+//
+
+type Group = { id: string; label: string; subItems: Item[] };
+
+const initialGroups: Group[] = [
+  {
+    id: 'g-a',
+    label: 'Vowels',
+    subItems: [
+      { id: 'sa-1', label: 'A' },
+      { id: 'sa-2', label: 'E' },
+      { id: 'sa-3', label: 'I' },
+    ],
+  },
+  {
+    id: 'g-b',
+    label: 'Numbers',
+    subItems: [
+      { id: 'sb-1', label: 'One' },
+      { id: 'sb-2', label: 'Two' },
+      { id: 'sb-3', label: 'Three' },
+    ],
+  },
+  {
+    id: 'g-c',
+    label: 'Colors',
+    subItems: [
+      { id: 'sc-1', label: 'Red' },
+      { id: 'sc-2', label: 'Green' },
+      { id: 'sc-3', label: 'Blue' },
+    ],
+  },
+];
+
+const isGroup = (value: any): value is Group => isItem(value) && Array.isArray((value as Group).subItems);
+
+const NestedStory = () => {
+  const [groups, setGroups] = useState<Group[]>(initialGroups);
+  const [expandedId, setExpandedId] = useState<string>();
+
+  const handleGroupMove = useCallback((fromIndex: number, toIndex: number) => {
+    setGroups((prev) => {
+      const next = [...prev];
+      arrayMove(next, fromIndex, toIndex);
+      return next;
+    });
+  }, []);
+
+  const handleGroupDelete = useCallback((id: string) => {
+    setGroups((prev) => prev.filter((group) => group.id !== id));
+    setExpandedId((current) => (current === id ? undefined : current));
+  }, []);
+
+  // Per-group sub-item reorder. Each nested list owns its own onMove that updates the
+  // matching group; the parent list's `onMove` (above) is independent.
+  const handleSubMove = useCallback(
+    (groupId: string) => (fromIndex: number, toIndex: number) => {
+      setGroups((prev) =>
+        prev.map((group) => {
+          if (group.id !== groupId) {
+            return group;
+          }
+          const subItems = [...group.subItems];
+          arrayMove(subItems, fromIndex, toIndex);
+          return { ...group, subItems };
+        }),
+      );
+    },
+    [],
+  );
+
+  const handleSubDelete = useCallback(
+    (groupId: string, subId: string) => {
+      setGroups((prev) =>
+        prev.map((group) =>
+          group.id === groupId ? { ...group, subItems: group.subItems.filter((sub) => sub.id !== subId) } : group,
+        ),
+      );
+    },
+    [],
+  );
+
+  return (
+    <OrderedList.Root<Group>
+      items={groups}
+      isItem={isGroup}
+      getId={(group) => group.id}
+      onMove={handleGroupMove}
+      expandedId={expandedId}
+      onExpandedChange={setExpandedId}
+    >
+      {({ items: resolved }) => (
+        <OrderedList.Content>
+          {resolved.map((group) => (
+            <OrderedList.DetailItem<Group>
+              key={group.id}
+              id={group.id}
+              item={group}
+              title={group.label}
+              trailing={<OrderedList.DeleteButton onClick={() => handleGroupDelete(group.id)} />}
+            >
+              <OrderedList.Root<Item>
+                items={group.subItems}
+                isItem={isItem}
+                getId={(sub) => sub.id}
+                onMove={handleSubMove(group.id)}
+              >
+                {({ items: subs }) => (
+                  <OrderedList.Content>
+                    {subs.map((sub) => (
+                      <OrderedList.Item
+                        key={sub.id}
+                        id={sub.id}
+                        item={sub}
+                        hover
+                        classNames='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)] items-center gap-1'
+                      >
+                        <OrderedList.DragHandle />
+                        <OrderedList.Title>{sub.label}</OrderedList.Title>
+                        <OrderedList.DeleteButton onClick={() => handleSubDelete(group.id, sub.id)} />
+                      </OrderedList.Item>
+                    ))}
+                  </OrderedList.Content>
+                )}
+              </OrderedList.Root>
+            </OrderedList.DetailItem>
+          ))}
+        </OrderedList.Content>
+      )}
+    </OrderedList.Root>
+  );
+};
+
 const meta: Meta = {
   title: 'ui/react-ui-list/OrderedList',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
@@ -239,3 +379,4 @@ export const Scrollable: Story = { render: () => <ScrollableStory /> };
 export const Draggable: Story = { render: () => <DraggableStory /> };
 export const CheckboxWithDelete: Story = { render: () => <CheckboxWithDeleteStory /> };
 export const DraggableWithToggle: Story = { render: () => <DraggableWithToggleStory /> };
+export const Nested: Story = { render: () => <NestedStory /> };
