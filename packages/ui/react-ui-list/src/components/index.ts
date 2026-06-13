@@ -7,5 +7,4 @@ export * from './Combobox';
 export * from './Listbox';
 export * from './OrderedList';
 export * from './Picker';
-export * from './RowList';
 export * from './Tree';

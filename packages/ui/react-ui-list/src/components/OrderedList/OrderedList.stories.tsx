@@ -7,8 +7,8 @@ import React, { useCallback, useState } from 'react';
 
 import { Input, useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { arrayMove } from '@dxos/util';
 import { mx, osTranslations } from '@dxos/ui-theme';
+import { arrayMove } from '@dxos/util';
 
 import { OrderedList } from './OrderedList';
 

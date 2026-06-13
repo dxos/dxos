@@ -3,7 +3,7 @@
 //
 
 // Composable list view over MCP tool definitions. Built on `@dxos/react-ui-list`'s
-// `RowList` + `Row` selectable-listbox primitives, with each part exposed as its own
+// `Listbox` + `Listbox.Item` selectable-listbox primitives, with each part exposed as its own
 // component so consumers can either drop in `<ToolList ... />` for the default layout or
 // assemble exactly the surface they need (just titles, custom row, header chips, etc.).
 //
@@ -14,7 +14,7 @@
 import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Row, RowList } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -33,9 +33,9 @@ export type Tool = {
 };
 
 //
-// Root — wraps `RowList.Root` so descendant `ToolList.Item` rows participate in
-// the listbox's single-select model. `RowList` itself supplies the selection context
-// (`useRowListSelection` reads back the active id), so `ToolList` doesn't ship its own.
+// Root — wraps `Listbox.Root` so descendant `ToolList.Item` rows participate in
+// the listbox's single-select model. `Listbox` itself supplies the selection context
+// (`useListboxSelection` reads back the active id), so `ToolList` doesn't ship its own.
 //
 
 export type ToolListRootProps = PropsWithChildren<{
@@ -46,9 +46,9 @@ export type ToolListRootProps = PropsWithChildren<{
 }>;
 
 const ToolListRoot = ({ selectedId, onSelect, children }: ToolListRootProps): ReactNode => (
-  <RowList.Root selectedId={selectedId ?? undefined} onSelectChange={onSelect}>
+  <Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>
     {children}
-  </RowList.Root>
+  </Listbox.Root>
 );
 ToolListRoot.displayName = 'ToolList.Root';
 
@@ -69,10 +69,10 @@ export type ToolListContentProps = ThemedClassName<{
 }>;
 
 // `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
-// land on the listbox's `<ul>` (which `RowList.Content` renders via `@dxos/react-list`).
+// land on the listbox's `<ul>` (which `Listbox.Content` renders via `@dxos/react-list`).
 const ToolListContent = composable<HTMLUListElement, ToolListContentProps>(
   ({ tools, renderItem, ...props }, forwardedRef) => (
-    <RowList.Content
+    <Listbox.Content
       {...composableProps<HTMLUListElement>(props, { classNames: 'flex flex-col gap-px' })}
       aria-label='Tools'
       ref={forwardedRef}
@@ -80,7 +80,7 @@ const ToolListContent = composable<HTMLUListElement, ToolListContentProps>(
       {tools.map((tool) =>
         renderItem ? <Fragment key={tool.id}>{renderItem(tool)}</Fragment> : <ToolListItem key={tool.id} tool={tool} />,
       )}
-    </RowList.Content>
+    </Listbox.Content>
   ),
 );
 ToolListContent.displayName = 'ToolList.Content';
@@ -97,12 +97,12 @@ export type ToolListItemProps = ThemedClassName<
 
 const ToolListItem = ({ classNames, tool, children }: ToolListItemProps): ReactNode => {
   return (
-    <Row
+    <Listbox.Item
       id={tool.id}
       classNames={mx(
         // Tailwind tokens follow the conventions used in `react-ui-list`: `dx-hover`
         // and `dx-selected` are theme states that adapt to dark mode (already applied
-        // by `Row`). We layer the consumer's `classNames` last so they win on conflict.
+        // by `Listbox.Item`). We layer the consumer's `classNames` last so they win on conflict.
         'flex flex-col gap-0.5 rounded',
         classNames,
       )}
@@ -113,7 +113,7 @@ const ToolListItem = ({ classNames, tool, children }: ToolListItemProps): ReactN
           {tool.description ? <ToolListItemDescription>{tool.description}</ToolListItemDescription> : null}
         </>
       )}
-    </Row>
+    </Listbox.Item>
   );
 };
 ToolListItem.displayName = 'ToolList.Item';
@@ -153,13 +153,13 @@ ToolListItemDescription.displayName = 'ToolList.ItemDescription';
 //
 // Default usage:
 //
-//   <ToolList.Root selectedId={id} onSelect={setId}>
+//   <ToolList.Root value={id} onSelect={setId}>
 //     <ToolList.Content tools={tools} />
 //   </ToolList.Root>
 //
 // Custom row content:
 //
-//   <ToolList.Root selectedId={id} onSelect={setId}>
+//   <ToolList.Root value={id} onSelect={setId}>
 //     <ToolList.Content
 //       tools={tools}
 //       renderItem={(tool) => (

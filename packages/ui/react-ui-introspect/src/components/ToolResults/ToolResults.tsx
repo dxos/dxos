@@ -6,7 +6,7 @@
 // `{ content: [{ type: 'text', text: <stringified JSON> }] }` for our tools,
 // so we accept either the raw envelope or pre-parsed data.
 //
-// Default rendering is a compact key/value table built on `RowList` —
+// Default rendering is a compact key/value table built on `Listbox` —
 // one row per top-level entry in the result. Pass `debug` to switch to
 // the raw JSON view via the `Syntax` compound (filter input + scrolling
 // viewport + highlighted code leaf) for inspecting the wire format.
@@ -15,7 +15,7 @@ import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Input, Message, Panel, ScrollArea, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Row, RowList } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { translationKey } from '#translations';
@@ -102,12 +102,12 @@ const ResultTable = ({ data }: { data: unknown }) => {
     return items.filter((item) => itemMatchesFilter(item, needle));
   }, [items, filter]);
 
-  // The two-column grid lives on `RowList.Content` so every entry across
-  // every row lands in the same `key | value` tracks. Each `Row` spans
+  // The two-column grid lives on `Listbox.Content` so every entry across
+  // every row lands in the same `key | value` tracks. Each `Listbox.Item` spans
   // both columns and uses `grid-cols-subgrid` to inherit them, so a
   // `KeyValueTable` can emit plain `<div>` cells as direct grid items.
   return (
-    <RowList.Root>
+    <Listbox.Root>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -129,24 +129,28 @@ const ResultTable = ({ data }: { data: unknown }) => {
               {filtered.length === 0 ? (
                 <p className='p-3 text-sm text-description'>{t('no-matching-rows.message')}</p>
               ) : (
-                <RowList.Viewport>
-                  <RowList.Content
+                <Listbox.Viewport>
+                  <Listbox.Content
                     aria-label={t('tool-result.label')}
                     classNames='grid grid-cols-[max-content_1fr] gap-x-3'
                   >
                     {filtered.map((item, index) => (
-                      <Row key={index} id={String(index)} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
+                      <Listbox.Item
+                        key={index}
+                        id={String(index)}
+                        classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'
+                      >
                         <KeyValueTable record={item} />
-                      </Row>
+                      </Listbox.Item>
                     ))}
-                  </RowList.Content>
-                </RowList.Viewport>
+                  </Listbox.Content>
+                </Listbox.Viewport>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>
       </Panel.Root>
-    </RowList.Root>
+    </Listbox.Root>
   );
 };
 
