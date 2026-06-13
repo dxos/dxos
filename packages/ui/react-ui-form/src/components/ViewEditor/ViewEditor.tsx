@@ -241,6 +241,22 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   },
 );
 
+const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldRenderer> => ({
+  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldRendererProps) => {
+    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
+      (query) => onValueChange(type, query.ast),
+      [onValueChange],
+    );
+
+    return (
+      <Input.Root>
+        <FormFieldLabel readonly={readonly} label={label} />
+        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
+      </Input.Root>
+    );
+  },
+});
+
 type FieldListProps = {
   type: Type.AnyEntity;
 } & Pick<ViewEditorProps, 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
@@ -408,19 +424,3 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     </OrderedList.Root>
   );
 };
-
-const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldRenderer> => ({
-  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldRendererProps) => {
-    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
-      (query) => onValueChange(type, query.ast),
-      [onValueChange],
-    );
-
-    return (
-      <Input.Root>
-        <FormFieldLabel readonly={readonly} label={label} />
-        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
-      </Input.Root>
-    );
-  },
-});
