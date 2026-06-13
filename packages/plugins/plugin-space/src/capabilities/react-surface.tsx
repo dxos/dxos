@@ -317,7 +317,6 @@ export default Capability.makeModule(
             ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
             : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
-
           if (!view) {
             return null;
           }

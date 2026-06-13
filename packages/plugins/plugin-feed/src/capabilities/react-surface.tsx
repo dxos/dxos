@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'objectProperties',
+        id: 'magazineProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Magazine.Magazine),
         component: ({ data }) => <MagazineProperties subject={data.subject} />,
       }),

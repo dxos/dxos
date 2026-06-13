@@ -6,31 +6,28 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
-import { useTypeOptions } from '@dxos/app-toolkit/ui';
+import { AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { FieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 
 const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
-export type PipelinePropertiesProps = ThemedClassName<{
-  pipeline: Pipeline.Pipeline;
-}>;
+export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.Pipeline>;
 
 /**
  * Supports editing the pipeline view.
  */
-export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesProps) => {
+export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
@@ -151,9 +148,8 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     setExpandedId(newView.id);
   }, [db, updateColumns]);
 
-  // TODO(burdon): Replace wrapper with Form.Content.
   return (
-    <div className={mx('py-form-padding overflow-y-auto', classNames)}>
+    <Form.Section>
       <FieldHeader label={t('views.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
@@ -209,6 +205,6 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-    </div>
+    </Form.Section>
   );
 };

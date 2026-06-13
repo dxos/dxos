@@ -26,6 +26,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import {
+  IconBlock,
   IconButton,
   type IconButtonProps,
   ListItem as NaturalListItem,
@@ -239,15 +240,17 @@ export const ListItemDeleteButton = ({
   const isDisabled = state.type !== 'idle' || disabled;
   const { t } = useTranslation(osTranslations);
   return (
-    <IconButton
-      {...props}
-      variant='ghost'
-      disabled={isDisabled}
-      icon={icon}
-      iconOnly
-      label={label ?? t('delete.label')}
-      classNames={[classNames, autoHide && disabled && 'hidden']}
-    />
+    <IconBlock classNames='my-[1px]'>
+      <IconButton
+        {...props}
+        variant='ghost'
+        disabled={isDisabled}
+        icon={icon}
+        iconOnly
+        label={label ?? t('delete.label')}
+        classNames={[classNames, autoHide && disabled && 'hidden']}
+      />
+    </IconBlock>
   );
 };
 

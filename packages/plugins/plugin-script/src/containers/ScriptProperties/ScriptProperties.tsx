@@ -16,10 +16,16 @@ export type ScriptPropertiesProps = AppSurface.ObjectPropertiesProps<Script.Scri
 
 export const ScriptProperties = ({ subject: object }: ScriptPropertiesProps) => {
   return (
-    <Form.Section>
-      <FunctionBinding object={object} />
-      <BlueprintEditor object={object} />
-      <FunctionPublishing object={object} />
-    </Form.Section>
+    <>
+      <Form.Section>
+        <FunctionBinding object={object} />
+      </Form.Section>
+      <Form.Section>
+        <BlueprintEditor object={object} />
+      </Form.Section>
+      <Form.Section>
+        <FunctionPublishing object={object} />
+      </Form.Section>
+    </>
   );
 };

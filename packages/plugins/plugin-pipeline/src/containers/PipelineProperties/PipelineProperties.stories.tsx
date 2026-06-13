@@ -16,6 +16,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { ObjectProperties } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -37,7 +38,11 @@ const DefaultStory = () => {
     return <Loading data={{ pipelines: pipelines.length }} />;
   }
 
-  return <PipelineProperties pipeline={pipeline} />;
+  return (
+    <ObjectProperties object={pipeline}>
+      <PipelineProperties subject={pipeline} />
+    </ObjectProperties>
+  );
 };
 
 const meta = {
