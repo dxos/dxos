@@ -13,7 +13,7 @@ export type FieldHeaderProps = {
   path?: string;
   readonly?: boolean;
   /** Trailing inline add affordance; omit to hide it. */
-  add?: { label: string; disabled?: boolean; onClick: () => void };
+  add?: { icon?: string; label: string; disabled?: boolean; onClick: () => void };
 };
 
 /**
@@ -25,7 +25,12 @@ export const FieldHeader = ({ label, path, readonly, add }: FieldHeaderProps) =>
       <FormFieldLabel readonly={readonly} label={label} path={path} standalone />
     </div>
     {!readonly && add && (
-      <CompactIconButton icon='ph--plus--regular' label={add.label} disabled={add.disabled} onClick={add.onClick} />
+      <CompactIconButton
+        disabled={add.disabled}
+        icon={add.icon ?? 'ph--plus--regular'}
+        label={add.label}
+        onClick={add.onClick}
+      />
     )}
   </div>
 );
