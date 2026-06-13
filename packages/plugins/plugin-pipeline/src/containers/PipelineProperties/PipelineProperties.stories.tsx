@@ -17,7 +17,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
-import { withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
@@ -34,14 +34,10 @@ const DefaultStory = () => {
   const pipeline = pipelines.find((pipeline) => (pipeline.columns?.length ?? 0) > 0);
 
   if (!pipeline) {
-    return <p>Loading…</p>;
+    return <Loading data={{ pipelines: pipelines.length }} />;
   }
 
-  return (
-    <div className='grid grid-cols-[400px] justify-center overflow-hidden h-full w-full'>
-      <PipelineProperties pipeline={pipeline} classNames='border-is border-ie border-separator' />
-    </div>
-  );
+  return <PipelineProperties pipeline={pipeline} classNames='border-is border-ie border-separator' />;
 };
 
 const meta = {
