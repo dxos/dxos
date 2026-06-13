@@ -11,8 +11,7 @@ import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { IconBlock, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import {
@@ -258,11 +257,11 @@ FormField.displayName = 'Form.FormField';
 // Layout components
 //
 
-export const CompactIconButton = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
+export const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'border flex-col pt-0.5')}>
+    <IconBlock>
       <IconButton variant='ghost' density='xs' square iconOnly {...props} />
-    </div>
+    </IconBlock>
   );
 };
 

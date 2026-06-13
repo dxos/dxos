@@ -22,16 +22,10 @@ export type FieldHeaderProps = {
 export const FieldHeader = ({ label, path, readonly, add }: FieldHeaderProps) => (
   <div className='flex items-center gap-2'>
     <div className='flex-1 min-w-0'>
-      <FormFieldLabel readonly={readonly} label={label} path={path} asChild />
+      <FormFieldLabel readonly={readonly} label={label} path={path} standalone />
     </div>
     {!readonly && add && (
-      <CompactIconButton
-        inline
-        icon='ph--plus--regular'
-        label={add.label}
-        disabled={add.disabled}
-        onClick={add.onClick}
-      />
+      <CompactIconButton icon='ph--plus--regular' label={add.label} disabled={add.disabled} onClick={add.onClick} />
     )}
   </div>
 );

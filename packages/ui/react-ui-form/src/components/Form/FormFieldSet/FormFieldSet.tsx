@@ -104,7 +104,7 @@ export const FormFieldSet = ({
     <>
       {layout !== 'inline' && label && (
         <FormFieldLabel
-          asChild
+          standalone
           classNames='pl-2'
           label={label}
           path={SchemaEx.createJsonPath(path ?? [])}

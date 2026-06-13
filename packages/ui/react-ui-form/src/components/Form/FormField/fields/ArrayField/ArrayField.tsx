@@ -187,7 +187,6 @@ export const ArrayField = ({
                   <OrderedList.DragHandle />
                   {renderField(item.index, item.index === items.length - 1)}
                   <CompactIconButton
-                    inline={!renderItemAsObject}
                     icon='ph--x--regular'
                     label={t('remove-item.button')}
                     onClick={() => handleDelete(item.index)}
@@ -216,7 +215,6 @@ export const ArrayField = ({
               {renderField(index, isLast)}
               {!readonly && layout !== 'static' && (
                 <CompactIconButton
-                  inline={!renderItemAsObject}
                   icon='ph--x--regular'
                   label={t('remove-item.button')}
                   onClick={() => handleDelete(index)}

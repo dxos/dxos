@@ -17,7 +17,8 @@ import { type FormFieldRendererProps } from '#types';
 
 export type FormFieldLabelProps = ThemedClassName<
   {
-    asChild?: boolean;
+    /** Render a plain `<span>` instead of an input-associated `Input.Label`, for labels used outside an `Input.Root` (e.g. section/group headers). */
+    standalone?: boolean;
     error?: string;
     /**
      * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
@@ -38,11 +39,11 @@ export const FormFieldLabel = ({
   label,
   error,
   readonly,
-  asChild, // TODO(burdon): ???
+  standalone,
   button,
   onClick,
 }: FormFieldLabelProps) => {
-  const Label = readonly || asChild ? 'span' : Input.Label;
+  const Label = readonly || standalone ? 'span' : Input.Label;
   const labelNode = <Label className={mx(inputTextLabel, 'text-sm')}>{label}</Label>;
 
   return (
