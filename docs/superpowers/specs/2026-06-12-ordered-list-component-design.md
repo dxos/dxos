@@ -62,8 +62,13 @@ We **wrap `List`** rather than rebuild on `Mosaic.Stack`:
 
 ### D3 — API shape: Radix-style compound namespace
 
-`OrderedList.Root` / `.Content` / `.Item` / `.DragHandle` / `.Title` / `.Action` /
-`.DeleteButton` / `.ExpandCaret` / `.Expanded` / `.Footer`.
+`OrderedList.Root` / `.Content` / `.Item` / `.Row` / `.DragHandle` / `.Title` / `.Action` /
+`.DeleteButton` / `.ExpandCaret` / `.Expanded`.
+
+`Row` is the flex row wrapper around a single item's chrome (handle/title/actions/caret);
+`Expanded` is its sibling below. There is intentionally no `Footer` component — a list
+package shouldn't own form-padding semantics, so consumers render their add affordance as a
+plain sibling inside the render-prop child (exactly as today).
 
 Rationale over a single render-prop component:
 
@@ -109,13 +114,14 @@ type OrderedListRootProps<T> = ThemedClassName<{
 // OrderedList.Content — role='list' flex-col layout container.
 type OrderedListContentProps = ThemedClassName<PropsWithChildren>;
 
-// OrderedList.Item — wraps List.Item; provides per-item context (id, expanded, toggle).
+// OrderedList.Item — wraps List.Item; provides per-item context (id, expanded, toggle, canDrag).
 type OrderedListItemProps = ThemedClassName<PropsWithChildren<{
   id: string;
   item: unknown;          // the record passed to List.Item for DnD
   canDrag?: boolean;      // default true; false → drag handle disabled
 }>>;
 
+// OrderedList.Row — flex row wrapper (handle·title·actions·caret). Expanded is its sibling.
 // OrderedList.DragHandle — thin wrapper over List.ItemDragHandle (reads canDrag + readonly).
 // OrderedList.Title       — List.ItemTitle + onClick → toggle expand. classNames passthrough.
 // OrderedList.Action      — generic List.ItemIconButton (autoHide=false default). Full IconButtonProps.
@@ -124,7 +130,6 @@ type OrderedListItemProps = ThemedClassName<PropsWithChildren<{
 //                           label defaults to osTranslations 'toggle-expand.label'.
 // OrderedList.Expanded    — renders children in `border border-separator rounded-md` wrapper
 //                           ONLY when the item is expanded. classNames passthrough for margins.
-// OrderedList.Footer      — optional `my-form-padding` wrapper for an add button. classNames passthrough.
 ```
 
 ### Contexts
@@ -155,25 +160,27 @@ Both use `@radix-ui/react-context` `createContext`, matching `ListRoot`/`RowList
           const hidden = field.visible === false;
           return (
             <OrderedList.Item key={field.id} id={field.id} item={field} canDrag={!readonly && !schemaReadonly}>
-              <OrderedList.DragHandle />
-              <OrderedList.Title classNames={hidden && 'text-subdued'}>{field.path}</OrderedList.Title>
-              <OrderedList.Action
-                label={t(hidden ? 'show-field.label' : 'hide-field.label')}
-                icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
-                disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
-                onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
-              />
-              {!readonly && (
-                <>
-                  <OrderedList.DeleteButton
-                    label={t('delete-field.label')}
-                    disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
-                    onClick={() => handleDelete(field.id)}
-                    data-testid='field.delete'
-                  />
-                  <OrderedList.ExpandCaret data-testid='field.toggle' />
-                </>
-              )}
+              <OrderedList.Row>
+                <OrderedList.DragHandle />
+                <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>{field.path}</OrderedList.Title>
+                <OrderedList.Action
+                  label={t(hidden ? 'show-field.label' : 'hide-field.label')}
+                  icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
+                  disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
+                  onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
+                />
+                {!readonly && (
+                  <>
+                    <OrderedList.DeleteButton
+                      label={t('delete-field.label')}
+                      disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
+                      onClick={() => handleDelete(field.id)}
+                      data-testid='field.delete'
+                    />
+                    <OrderedList.ExpandCaret data-testid='field.toggle' />
+                  </>
+                )}
+              </OrderedList.Row>
               {!readonly && (
                 <OrderedList.Expanded classNames='mt-1 mb-1'>
                   <FieldEditor
@@ -190,7 +197,7 @@ Both use `@radix-ui/react-context` `createContext`, matching `ListRoot`/`RowList
         })}
       </OrderedList.Content>
       {!readonly && !expandedField && (
-        <OrderedList.Footer>
+        <div className='my-form-padding'>
           <IconButton
             icon='ph--plus--regular'
             label={t('add-property-button.label')}
@@ -198,7 +205,7 @@ Both use `@radix-ui/react-context` `createContext`, matching `ListRoot`/`RowList
             disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
             classNames='w-full'
           />
-        </OrderedList.Footer>
+        </div>
       )}
     </>
   )}
@@ -206,18 +213,18 @@ Both use `@radix-ui/react-context` `createContext`, matching `ListRoot`/`RowList
 ```
 
 `PipelineProperties` maps identically: no `Action` (no eye toggle), `Expanded classNames='my-2'`
-wrapping the name `Form` + `ViewEditor` (still guarded on `column.view.target`), `Footer`
-always rendered.
+wrapping the name `Form` + `ViewEditor` (still guarded on `column.view.target`), and the add
+button kept as an always-visible sibling outside `OrderedList.Root` (as today).
 
 ## Files
 
 ```
 packages/ui/react-ui-list/src/components/OrderedList/
-  OrderedList.tsx          # namespace object { Root, Content, Item, DragHandle, Title,
-                           #   Action, DeleteButton, ExpandCaret, Expanded, Footer } + types
-  OrderedListRoot.tsx      # Root + Content + Footer + OrderedListContext
-  OrderedListItem.tsx      # Item + DragHandle + Title + Action + DeleteButton + ExpandCaret +
-                           #   Expanded + OrderedListItemContext
+  OrderedList.tsx          # namespace object { Root, Content, Item, Row, DragHandle, Title,
+                           #   Action, DeleteButton, ExpandCaret, Expanded } + types
+  OrderedListRoot.tsx      # Root + Content + OrderedListContext
+  OrderedListItem.tsx      # Item + Row + DragHandle + Title + Action + DeleteButton +
+                           #   ExpandCaret + Expanded + OrderedListItemContext
   OrderedList.stories.tsx  # standalone story (plain-value + ECHO-id variants)
   OrderedList.test.tsx     # behavior tests
   index.ts
