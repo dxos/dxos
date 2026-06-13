@@ -154,7 +154,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   // TODO(burdon): Replace wrapper with Form.Content.
   return (
     <div className={mx('py-form-padding overflow-y-auto', classNames)}>
-      <FormFieldLabel label={t('views.label')} standalone classNames='py-1' />
+      <FormFieldLabel standalone classNames='py-1' label={t('views.label')} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}
@@ -166,19 +166,21 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
         {({ items }) => (
           <OrderedList.Content>
             {items.map((column) => (
-              <OrderedList.Item<Pipeline.Column> key={column.view.uri} id={column.view.uri} item={column}>
-                <OrderedList.Row>
-                  <OrderedList.DragHandle />
-                  <OrderedList.Title>{column.name || t('untitled-view.title')}</OrderedList.Title>
+              <OrderedList.DetailItem<Pipeline.Column>
+                key={column.view.uri}
+                id={column.view.uri}
+                item={column}
+                title={column.name || t('untitled-view.title')}
+                trailing={
                   <OrderedList.DeleteButton
                     label={t('delete-view.label')}
                     onClick={() => handleDelete(column)}
                     data-testid='view.delete'
                   />
-                  <OrderedList.ExpandCaret />
-                </OrderedList.Row>
+                }
+              >
                 {column.view.target && (
-                  <OrderedList.Expanded classNames='my-2'>
+                  <>
                     <Form.Root
                       schema={ColumnFormSchema}
                       values={column}
@@ -200,16 +202,17 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                       types={types}
                       onQueryChanged={handleQueryChanged}
                     />
-                  </OrderedList.Expanded>
+                  </>
                 )}
-              </OrderedList.Item>
+              </OrderedList.DetailItem>
             ))}
           </OrderedList.Content>
         )}
       </OrderedList.Root>
 
+      {/* TODO(burdon): Move to header. */}
       <div className='my-form-padding'>
-        <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
+        <IconButton icon='ph--plus--regular' label={t('add-column.label')} onClick={handleAdd} />
       </div>
     </div>
   );

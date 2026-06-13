@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentProps, type PropsWithChildren, useCallback } from 'react';
+import React, { type ComponentProps, type PropsWithChildren, type ReactNode, useCallback } from 'react';
 
 import { type IconButtonProps, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
@@ -59,11 +59,6 @@ export const OrderedListItem = <T extends ListItemRecord>({
   );
 };
 
-/** Flex row holding the handle / title / actions / caret. `Expanded` is its sibling. */
-export const OrderedListRow = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex items-center gap-1 rounded-xs cursor-pointer min-h-10', classNames)}>{children}</div>
-);
-
 /** Drag handle. Disabled when the list is readonly or the item opts out via `canDrag={false}`. */
 export const OrderedListDragHandle = () => {
   const { readonly } = useOrderedListContext('OrderedListDragHandle');
@@ -85,11 +80,6 @@ export const OrderedListTitle = ({
     </List.ItemTitle>
   );
 };
-
-/** Generic per-row action icon button (e.g. hide/show eye). */
-export const OrderedListAction = ({ autoHide = false, ...props }: IconButtonProps & { autoHide?: boolean }) => (
-  <List.ItemIconButton autoHide={autoHide} {...props} />
-);
 
 /** Delete icon button. */
 export const OrderedListDeleteButton = ({
@@ -121,21 +111,65 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
   );
 };
 
-/** Expanded detail panel. Renders inside a bordered wrapper only when the item is expanded. */
-export const OrderedListExpanded = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  const { id, expanded } = useOrderedListItemContext('OrderedListExpanded');
-  if (!expanded) {
-    return null;
-  }
-  // The panel is a region named by its title so it is reachable and labelled for assistive tech.
+export type OrderedListDetailItemProps<T extends ListItemRecord> = ThemedClassName<
+  PropsWithChildren<{
+    id: string;
+    /** The record handed to the underlying `List.Item` for DnD. */
+    item: T;
+    /** Defaults to true; false disables the drag handle. */
+    canDrag?: boolean;
+    /** Title content shown in the clickable name row (clicking toggles expansion). */
+    title: ReactNode;
+    titleClassNames?: ThemedClassName<any>['classNames'];
+    /** Inline actions placed in the name row before the expand caret (e.g. a visibility toggle). */
+    actions?: ReactNode;
+    /** Action(s) placed outside the bordered column, flanking it (e.g. a delete button). */
+    trailing?: ReactNode;
+    /** When false, hides the expand caret and detail panel. Defaults to true. */
+    expandable?: boolean;
+  }>
+>;
+
+/**
+ * Master-detail row: a drag handle and trailing action flank a bordered central column whose
+ * name row (title + inline actions + expand caret) toggles an inline detail panel (children).
+ */
+export const OrderedListDetailItem = <T extends ListItemRecord>({
+  id,
+  item,
+  canDrag,
+  title,
+  titleClassNames,
+  actions,
+  trailing,
+  expandable = true,
+  classNames,
+  children,
+}: OrderedListDetailItemProps<T>) => {
+  const { expandedId } = useOrderedListContext('OrderedListDetailItem');
+  const expanded = expandedId === id;
   return (
-    <div
-      role='region'
-      id={`${id}-panel`}
-      aria-labelledby={`${id}-title`}
-      className={mx('border border-separator rounded-md', classNames)}
+    <OrderedListItem
+      id={id}
+      item={item}
+      canDrag={canDrag}
+      classNames={mx('grid grid-cols-[min-content_1fr_min-content] items-start gap-1 pb-1', classNames)}
     >
-      {children}
-    </div>
+      <OrderedListDragHandle />
+      <div className='flex flex-col border border-subdued-separator rounded-sm'>
+        <div className='flex items-center'>
+          <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
+          {actions}
+          {expandable && <OrderedListExpandCaret />}
+        </div>
+        {/* Detail panel: a region named by its title so it is reachable and labelled for assistive tech. */}
+        {expandable && expanded && children && (
+          <div role='region' id={`${id}-panel`} aria-labelledby={`${id}-title`} className='px-2 pb-2'>
+            {children}
+          </div>
+        )}
+      </div>
+      {trailing}
+    </OrderedListItem>
   );
 };

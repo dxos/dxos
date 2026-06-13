@@ -16,6 +16,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
@@ -32,12 +33,11 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const pipeline = pipelines.find((pipeline) => (pipeline.columns?.length ?? 0) > 0);
-
   if (!pipeline) {
     return <Loading data={{ pipelines: pipelines.length }} />;
   }
 
-  return <PipelineProperties pipeline={pipeline} classNames='border-is border-ie border-separator' />;
+  return <PipelineProperties pipeline={pipeline} />;
 };
 
 const meta = {
@@ -136,7 +136,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...stackTranslations],
+    translations: [...translations, ...formTranslations, ...stackTranslations],
   },
 } satisfies Meta<typeof PipelineProperties>;
 

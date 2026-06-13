@@ -3,14 +3,13 @@
 //
 
 import {
-  OrderedListAction,
   OrderedListDeleteButton,
+  OrderedListDetailItem,
+  type OrderedListDetailItemProps,
   OrderedListDragHandle,
   OrderedListExpandCaret,
-  OrderedListExpanded,
   OrderedListItem,
   type OrderedListItemProps,
-  OrderedListRow,
   OrderedListTitle,
 } from './OrderedListItem';
 import { OrderedListContent, OrderedListRoot, type OrderedListRootProps } from './OrderedListRoot';
@@ -18,20 +17,24 @@ import { OrderedListContent, OrderedListRoot, type OrderedListRootProps } from '
 /**
  * Reorderable, single-expandable master-detail list.
  *
+ * `DetailItem` encapsulates the common master-detail row (drag handle + bordered column with a
+ * name row that toggles an inline detail panel + a trailing action). Compose the lower-level
+ * `Item` / `DragHandle` / `Title` / `ExpandCaret` / `DeleteButton` directly for other layouts.
+ *
  * @example
  *   <OrderedList.Root items={…} isItem={…} getId={…} onMove={…} expandedId={…} onExpandedChange={…}>
  *     {({ items }) => (
  *       <OrderedList.Content>
  *         {items.map((item) => (
- *           <OrderedList.Item key={item.id} id={item.id} item={item}>
- *             <OrderedList.Row>
- *               <OrderedList.DragHandle />
- *               <OrderedList.Title>{item.label}</OrderedList.Title>
- *               <OrderedList.DeleteButton onClick={…} />
- *               <OrderedList.ExpandCaret />
- *             </OrderedList.Row>
- *             <OrderedList.Expanded>…</OrderedList.Expanded>
- *           </OrderedList.Item>
+ *           <OrderedList.DetailItem
+ *             key={item.id}
+ *             id={item.id}
+ *             item={item}
+ *             title={item.label}
+ *             trailing={<OrderedList.DeleteButton onClick={…} />}
+ *           >
+ *             {detail}
+ *           </OrderedList.DetailItem>
  *         ))}
  *       </OrderedList.Content>
  *     )}
@@ -41,13 +44,11 @@ export const OrderedList = {
   Root: OrderedListRoot,
   Content: OrderedListContent,
   Item: OrderedListItem,
-  Row: OrderedListRow,
+  DetailItem: OrderedListDetailItem,
   DragHandle: OrderedListDragHandle,
   Title: OrderedListTitle,
-  Action: OrderedListAction,
   DeleteButton: OrderedListDeleteButton,
   ExpandCaret: OrderedListExpandCaret,
-  Expanded: OrderedListExpanded,
 };
 
-export type { OrderedListRootProps, OrderedListItemProps };
+export type { OrderedListRootProps, OrderedListItemProps, OrderedListDetailItemProps };

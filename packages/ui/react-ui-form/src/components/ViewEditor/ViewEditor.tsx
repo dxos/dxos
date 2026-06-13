@@ -361,61 +361,52 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
               onClick: handleAdd,
             }}
           />
-          {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
+          {showHeading && <FormFieldLabel standalone classNames='py-1' label={t('field-path.label')} />}
           <OrderedList.Content>
             {fields.map((field) => {
               const hidden = field.visible === false;
               return (
-                <OrderedList.Item<View.FieldType>
+                <OrderedList.DetailItem<View.FieldType>
                   key={field.id}
                   id={field.id}
                   item={field}
                   canDrag={!readonly && !schemaReadonly}
-                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0 pb-1'
-                >
-                  {/* Drag handle and delete flank the central column; the name row and the
-                      expanded editor live inside it (mirrors the ordered ArrayField layout). */}
-                  <OrderedList.DragHandle />
-                  <div className='flex flex-col border border-subdued-separator rounded-sm'>
-                    <div className='flex items-center'>
-                      <OrderedList.Title classNames={mx('px-2', hidden ? 'text-subdued' : undefined)}>
-                        {field.path}
-                      </OrderedList.Title>
-                      <ToggleIconButton
-                        iconOnly
-                        variant='ghost'
-                        active={hidden}
-                        icon='ph--eye--regular'
-                        activeIcon='ph--eye-closed--regular'
-                        label={t(hidden ? 'show-field.label' : 'hide-field.label')}
-                        data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
-                        disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
-                        onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
-                      />
-                      {!readonly && <OrderedList.ExpandCaret data-testid='field.toggle' />}
-                    </div>
-                    {!readonly && expandedField === field.id && (
-                      <div className='px-2'>
-                        <FieldEditor
-                          readonly={readonly || schemaReadonly}
-                          registry={registry}
-                          projection={projectionModel}
-                          field={field}
-                          onSave={handleClose}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {!readonly && (
-                    <CompactIconButton
-                      icon='ph--x--regular'
-                      label={t('delete-field.label')}
-                      disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
-                      onClick={() => handleDelete(field.id)}
-                      data-testid='field.delete'
+                  expandable={!readonly}
+                  title={field.path}
+                  titleClassNames={hidden ? 'text-subdued' : undefined}
+                  actions={
+                    <ToggleIconButton
+                      iconOnly
+                      variant='ghost'
+                      active={hidden}
+                      icon='ph--eye--regular'
+                      activeIcon='ph--eye-closed--regular'
+                      label={t(hidden ? 'show-field.label' : 'hide-field.label')}
+                      data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
+                      disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
+                      onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                     />
-                  )}
-                </OrderedList.Item>
+                  }
+                  trailing={
+                    !readonly && (
+                      <CompactIconButton
+                        icon='ph--x--regular'
+                        label={t('delete-field.label')}
+                        disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
+                        onClick={() => handleDelete(field.id)}
+                        data-testid='field.delete'
+                      />
+                    )
+                  }
+                >
+                  <FieldEditor
+                    readonly={readonly || schemaReadonly}
+                    registry={registry}
+                    projection={projectionModel}
+                    field={field}
+                    onSave={handleClose}
+                  />
+                </OrderedList.DetailItem>
               );
             })}
           </OrderedList.Content>

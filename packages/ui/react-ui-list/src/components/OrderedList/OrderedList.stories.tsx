@@ -49,23 +49,23 @@ const DefaultStory = () => {
       {({ items: resolved }) => (
         <OrderedList.Content>
           {resolved.map((item) => (
-            <OrderedList.Item<Item> key={item.id} id={item.id} item={item}>
-              <OrderedList.Row>
-                <OrderedList.DragHandle />
-                <OrderedList.Title>{item.label}</OrderedList.Title>
+            <OrderedList.DetailItem<Item>
+              key={item.id}
+              id={item.id}
+              item={item}
+              title={item.label}
+              trailing={
                 <OrderedList.DeleteButton
                   label='Delete'
                   onClick={() => handleDelete(item.id)}
                   data-testid={`delete-${item.id}`}
                 />
-                <OrderedList.ExpandCaret data-testid={`caret-${item.id}`} />
-              </OrderedList.Row>
-              <OrderedList.Expanded>
-                <div data-testid={`panel-${item.id}`} className='p-2'>
-                  Details for {item.label}
-                </div>
-              </OrderedList.Expanded>
-            </OrderedList.Item>
+              }
+            >
+              <div data-testid={`panel-${item.id}`} className='p-2'>
+                Details for {item.label}
+              </div>
+            </OrderedList.DetailItem>
           ))}
         </OrderedList.Content>
       )}

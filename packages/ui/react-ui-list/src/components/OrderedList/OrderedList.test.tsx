@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
@@ -43,7 +43,8 @@ describe('OrderedList', () => {
 
   test('caret toggles expansion', () => {
     render(<Default />);
-    fireEvent.click(screen.getByTestId('caret-c'));
+    const row = screen.getByText('Charlie').closest('[role="listitem"]')!;
+    fireEvent.click(within(row as HTMLElement).getByRole('button', { name: /toggle-expand/i }));
     expect(screen.getByTestId('panel-c')).toBeInTheDocument();
   });
 
