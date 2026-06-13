@@ -69,13 +69,22 @@ export const OrderedListDragHandle = () => {
 /** Clickable title; clicking toggles the item's expanded state. */
 export const OrderedListTitle = ({
   classNames,
+  onClick,
   children,
   ...props
 }: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => {
   const { id, toggle } = useOrderedListItemContext('OrderedListTitle');
   // The title carries a stable id so the expanded panel can name itself via `aria-labelledby`.
   return (
-    <List.ItemTitle id={`${id}-title`} classNames={classNames} onClick={toggle} {...props}>
+    <List.ItemTitle
+      id={`${id}-title`}
+      classNames={classNames}
+      onClick={(event) => {
+        toggle();
+        onClick?.(event);
+      }}
+      {...props}
+    >
       {children}
     </List.ItemTitle>
   );
@@ -91,7 +100,7 @@ export const OrderedListDeleteButton = ({
 );
 
 /** Expand/collapse caret; reflects and toggles the item's expanded state. */
-export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
+export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButtonProps>) => {
   const { t } = useTranslation(osTranslations);
   const { id, expanded, toggle } = useOrderedListItemContext('OrderedListExpandCaret');
   // Disclosure semantics: this button controls the expanded panel so assistive tech can
@@ -105,7 +114,10 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
       label={t('toggle-expand.label')}
       aria-expanded={expanded}
       aria-controls={`${id}-panel`}
-      onClick={toggle}
+      onClick={(event) => {
+        toggle();
+        onClick?.(event);
+      }}
       {...props}
     />
   );
@@ -158,7 +170,11 @@ export const OrderedListDetailItem = <T extends ListItemRecord>({
       <OrderedListDragHandle />
       <div className='flex flex-col border border-subdued-separator rounded-sm'>
         <div className='flex items-center'>
-          <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
+          {expandable ? (
+            <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
+          ) : (
+            <List.ItemTitle classNames={mx('px-2', titleClassNames)}>{title}</List.ItemTitle>
+          )}
           {actions}
           {expandable && <OrderedListExpandCaret />}
         </div>
