@@ -27,7 +27,7 @@ import { ListRoot, type ListRootProps } from './ListRoot';
  *   — for virtualized or drag-reorderable card stacks.
  *
  * This component is retained for the existing reorder-with-delete-button
- * use cases (plugin-meeting, plugin-automation, plugin-zen, etc.) until
+ * use cases (plugin-calls, plugin-automation, plugin-zen, etc.) until
  * each is migrated; see `AUDIT.md` Phase 6 for the migration plan.
  */
 export const List = {
