@@ -255,33 +255,7 @@ export declare namespace Ref {
 }
 
 Ref.isRef = (obj: any): obj is Ref<any> => {
-  // Use Symbol.for directly so cross-chunk Ref instances always match.
-  const globalRefTypeId = Symbol.for('@dxos/echo/internal/Ref');
-  const result = obj != null && typeof obj === 'object' && globalRefTypeId in obj;
-  // #region agent log
-  if (obj && typeof obj === 'object' && !result && String(obj).startsWith('Ref(')) {
-    const globalRefTypeId = Symbol.for('@dxos/echo/internal/Ref');
-    fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-      body: JSON.stringify({
-        sessionId: 'cf2e73',
-        location: 'ref.ts:Ref.isRef',
-        message: 'Ref.isRef false for Ref-like value',
-        data: {
-          refTypeIdSameAsGlobal: RefTypeId.toString() === globalRefTypeId.toString(),
-          refTypeIdInObj: RefTypeId in obj,
-          globalRefTypeIdInObj: globalRefTypeId in obj,
-          ownSymbols: Object.getOwnPropertySymbols(obj).map((symbol) => symbol.toString()),
-          valueToString: String(obj),
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'B,D',
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-  return result;
+  return obj != null && typeof obj === 'object' && RefTypeId in obj;
 };
 
 Ref.hasEntityId = (id: EntityId) => (ref: Ref<any>) => {
@@ -307,27 +281,6 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   invariant(EntityId.isValid(id), 'Invalid object ID');
   const uri = EID.make({ entityId: id });
   const ref = new RefImpl(uri, obj);
-  // #region agent log
-  const globalRefTypeId = Symbol.for('@dxos/echo/internal/Ref');
-  fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-    body: JSON.stringify({
-      sessionId: 'cf2e73',
-      location: 'ref.ts:Ref.make',
-      message: 'Ref.make created',
-      data: {
-        targetId: id,
-        refTypeIdSameAsGlobal: RefTypeId.toString() === globalRefTypeId.toString(),
-        refTypeIdInRef: RefTypeId in ref,
-        globalRefTypeIdInRef: globalRefTypeId in ref,
-        ownSymbols: Object.getOwnPropertySymbols(ref).map((symbol) => symbol.toString()),
-      },
-      timestamp: Date.now(),
-      hypothesisId: 'B,C',
-    }),
-  }).catch(() => {});
-  // #endregion
   return ref;
 };
 
@@ -700,37 +653,16 @@ export class RefImpl<T> implements Ref<T> {
  * Internal API for setting the reference resolver.
  */
 export const setRefResolver = (ref: Ref<any>, resolver: RefResolver) => {
-  invariant(Ref.isRef(ref), 'Expected Ref');
-  // Ref.isRef uses Symbol.for branding so plugin and host bundle chunks share identity.
-  (ref as RefImpl<any>)._setResolver(resolver);
+  invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
+  ref._setResolver(resolver);
 };
 
 /**
  * Internal API for getting the saved target on a reference.
  */
 export const getRefSavedTarget = (ref: Ref<any>): AnyProperties | undefined => {
-  invariant(Ref.isRef(ref), 'Expected Ref');
-  const savedTarget = (ref as RefImpl<any>)._getSavedTarget();
-  // #region agent log
-  fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-    body: JSON.stringify({
-      sessionId: 'cf2e73',
-      location: 'ref.ts:getRefSavedTarget',
-      message: 'getRefSavedTarget',
-      data: {
-        hasSavedTarget: savedTarget != null,
-        savedTargetId: (savedTarget as any)?.id,
-        refIsRef: Ref.isRef(ref),
-        instanceofRefImpl: ref instanceof RefImpl,
-      },
-      timestamp: Date.now(),
-      hypothesisId: 'J',
-    }),
-  }).catch(() => {});
-  // #endregion
-  return savedTarget;
+  invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
+  return ref._getSavedTarget();
 };
 
 // Used to validate reference target type.
