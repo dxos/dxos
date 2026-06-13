@@ -30,9 +30,7 @@ describe('useListDisclosure', () => {
 
     test('toggling an expanded item collapses it to undefined', ({ expect }) => {
       const onValueChange = vi.fn();
-      const { result } = renderHook(() =>
-        useListDisclosure({ mode: 'single', defaultValue: 'a', onValueChange }),
-      );
+      const { result } = renderHook(() => useListDisclosure({ mode: 'single', defaultValue: 'a', onValueChange }));
       expect(result.current.bind('a').expanded).toBe(true);
       act(() => result.current.bind('a').toggle());
       expect(onValueChange).toHaveBeenLastCalledWith(undefined);

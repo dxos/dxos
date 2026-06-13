@@ -89,7 +89,7 @@ export type UseReorderListReturn<T> = {
  * drop-target wiring lives in `useReorderItem` so each row owns its own React state without
  * re-rendering siblings on hover.
  */
-export const useReorderList = <T,>({
+export const useReorderList = <T>({
   items,
   getId,
   onMove,
@@ -246,10 +246,7 @@ export const useReorderList = <T,>({
               return source.data[REORDER_LIST_KEY] === listId;
             },
             getData: ({ input }) =>
-              attachClosestEdge(
-                { [REORDER_LIST_KEY]: listId, id },
-                { element: refs.row, input, allowedEdges },
-              ),
+              attachClosestEdge({ [REORDER_LIST_KEY]: listId, id }, { element: refs.row, input, allowedEdges }),
             getIsSticky: () => true,
             onDragEnter: ({ self }) => {
               onItemState({ type: 'dragging-over', closestEdge: extractClosestEdge(self.data) });
@@ -285,10 +282,7 @@ export type ReorderItemBinding = {
  * Called inside the item component, not in the parent's render loop — this is what keeps
  * us inside the rules of hooks.
  */
-export const useReorderItem = <T,>(
-  controller: ReorderListController<T>,
-  id: string,
-): ReorderItemBinding => {
+export const useReorderItem = <T>(controller: ReorderListController<T>, id: string): ReorderItemBinding => {
   const [state, setState] = useState<ReorderItemState>(IDLE);
 
   // Snapshot the attached DOM nodes between renders without disturbing the React tree. When
@@ -303,11 +297,7 @@ export const useReorderItem = <T,>(
       return;
     }
     cleanupRef.current?.();
-    cleanupRef.current = controller.bindItem(
-      id,
-      { row: rowElement.current, handle: handleElement.current },
-      setState,
-    );
+    cleanupRef.current = controller.bindItem(id, { row: rowElement.current, handle: handleElement.current }, setState);
   }, [controller, id]);
 
   const teardown = useCallback(() => {

@@ -79,8 +79,8 @@ type ListNavigationMode = 'list' | 'listbox' | 'grid';
 
 type UseListNavigationOptions = {
   mode: ListNavigationMode;
-  axis?: 'vertical' | 'horizontal' | 'both';   // 'both' implies grid
-  memorizeCurrent?: boolean;                   // default: true
+  axis?: 'vertical' | 'horizontal' | 'both'; // 'both' implies grid
+  memorizeCurrent?: boolean; // default: true
   /** Selector for the focus-on-entry target inside the container. */
   focusOnEntrySelector?: string;
 };
@@ -106,11 +106,11 @@ export const useListNavigation: (opts: UseListNavigationOptions) => UseListNavig
 
 **Mode semantics:**
 
-| Mode      | Container role | Item role  | Tabster                                      | Focus-on-entry         |
-| --------- | -------------- | ---------- | -------------------------------------------- | ---------------------- |
-| `list`    | `list`         | `listitem` | `useArrowNavigationGroup({ axis: 'vertical' })` (so focus moves between draggable handles / interactive buttons) | first focusable |
-| `listbox` | `listbox`      | `option`   | `useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true })` + selection-follows-focus integration | `[aria-selected="true"]`, then first non-disabled `[role="option"]` |
-| `grid`    | `grid`         | `row`      | `useArrowNavigationGroup({ axis: 'both' })`  | first focusable cell |
+| Mode      | Container role | Item role  | Tabster                                                                                                          | Focus-on-entry                                                      |
+| --------- | -------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `list`    | `list`         | `listitem` | `useArrowNavigationGroup({ axis: 'vertical' })` (so focus moves between draggable handles / interactive buttons) | first focusable                                                     |
+| `listbox` | `listbox`      | `option`   | `useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true })` + selection-follows-focus integration     | `[aria-selected="true"]`, then first non-disabled `[role="option"]` |
+| `grid`    | `grid`         | `row`      | `useArrowNavigationGroup({ axis: 'both' })`                                                                      | first focusable cell                                                |
 
 **Escape hatch:** mode is fixed per compound; if a caller needs custom Tabster
 (e.g. Mosaic's Focus.Group nested in a multi-pane layout), they call
@@ -128,7 +128,7 @@ type UseReorderOptions<T> = {
   items: readonly T[];
   getId: (item: T) => string;
   onMove: (fromIndex: number, toIndex: number) => void;
-  axis?: 'vertical' | 'horizontal';            // default: 'vertical'
+  axis?: 'vertical' | 'horizontal'; // default: 'vertical'
   readonly?: boolean;
 
   // --- direct pragmatic-dnd passthroughs (all optional) ---
@@ -161,7 +161,7 @@ type UseReorderReturn = {
   active: { id: string; item: any } | null;
 };
 
-export const useReorder: <T,>(opts: UseReorderOptions<T>) => UseReorderReturn;
+export const useReorder: <T>(opts: UseReorderOptions<T>) => UseReorderReturn;
 ```
 
 Auto-scroll is intentionally a sibling hook, not baked in:
@@ -226,6 +226,7 @@ export const useListDisclosure: (opts: UseListDisclosureOptions) => UseListDiscl
 ```
 
 Notes:
+
 - Single mode matches `OrderedList`'s current behaviour. Multi mode covers
   `Tree` (multiple branches open) and future `Accordion`-replacement use cases.
 - `panelId` / `triggerId` are stable per item id; remount-safe.
@@ -281,7 +282,7 @@ CSS grid with named tracks:
 ```ts
 type UseListGridOptions = {
   /** Number of `var(--dx-rail-item)` slots between title and expand. */
-  actionSlots?: number;                        // default: 0
+  actionSlots?: number; // default: 0
   /** Whether the row reserves an expand-caret slot. */
   expandable?: boolean;
   /** Whether the row reserves a trailing-action slot outside the card. */
@@ -332,10 +333,7 @@ Pure derivation, not strictly an "aspect" in the keyboard/DnD sense — but
 worth co-locating so callers find one place for "list-shaped concerns".
 
 ```ts
-export const useListFilter: <T,>(
-  items: readonly T[],
-  predicate: (item: T) => boolean,
-) => readonly T[];
+export const useListFilter: <T>(items: readonly T[], predicate: (item: T) => boolean) => readonly T[];
 ```
 
 Used by `Combobox` / `SearchList` today; surfaced here for parity.
@@ -347,14 +345,15 @@ provider context, and renders its default markup. Compounds preserve their
 current public namespace API at the call-site (no breaking changes for
 external consumers).
 
-| Compound      | Mode      | Reorder | Disclosure | Selection | Grid                     | Virtual |
-| ------------- | --------- | :-----: | :--------: | :-------: | ------------------------ | :-----: |
-| `RowList`     | listbox   |   —     |     —      |   single  | implicit (1 column row)  |   —     |
-| `OrderedList` | list      |   ✓     |  single    |     —     | handle/title/actions/expand/trailing | — |
-| `Tree`        | list      |   ✓     |   multi    |     —     | configurable (today's `gridTemplateColumns` becomes useListGrid) | — |
-| `List` (deprecated) | list | ✓     |     —      |     —     | implicit                 |   —     |
+| Compound            | Mode    | Reorder | Disclosure | Selection | Grid                                                             | Virtual |
+| ------------------- | ------- | :-----: | :--------: | :-------: | ---------------------------------------------------------------- | :-----: |
+| `RowList`           | listbox |    —    |     —      |  single   | implicit (1 column row)                                          |    —    |
+| `OrderedList`       | list    |    ✓    |   single   |     —     | handle/title/actions/expand/trailing                             |    —    |
+| `Tree`              | list    |    ✓    |   multi    |     —     | configurable (today's `gridTemplateColumns` becomes useListGrid) |    —    |
+| `List` (deprecated) | list    |    ✓    |     —      |     —     | implicit                                                         |    —    |
 
 Deferred (out of scope this PR, contracts fit):
+
 - `Accordion` — disclosure-only; the existing Radix wrapper is fine.
 - `Combobox.List` / `Listbox` / `Picker` — listbox mode + filter; future PR.
 - `Mosaic.Stack` — adopts `useListNavigation` only this PR; `useReorder`
@@ -367,17 +366,20 @@ Deferred (out of scope this PR, contracts fit):
 ```tsx
 <div className='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 pb-1'>
   <DragHandle />
-  <div className='flex flex-col border border-subdued-separator rounded-sm'>  {/* 1px borders */}
+  <div className='flex flex-col border border-subdued-separator rounded-sm'>
+    {' '}
+    {/* 1px borders */}
     <div className='flex items-center'>
       <Title /> {actions} {expandable && <ExpandCaret />}
     </div>
     {expanded && <div role='region'>{children}</div>}
   </div>
-  <DeleteButton classNames='my-[1px]' />  {/* nudge to align with bordered title */}
+  <DeleteButton classNames='my-[1px]' /> {/* nudge to align with bordered title */}
 </div>
 ```
 
 Problems:
+
 - `my-[1px]` is a pixel hack: `IconBlock` is `var(--dx-rail-item)` tall, but the
   bordered column's content area is 2px shorter (1px top + 1px bottom border),
   so the title text centerline sits 1px below the trailing icon's centerline.
@@ -391,7 +393,9 @@ Problems:
 ```tsx
 <div
   className='grid items-start gap-1 pb-1'
-  style={{ gridTemplateColumns: `var(--dx-rail-item) 1fr repeat(${actionSlots},var(--dx-rail-item)) ${expandable ? 'var(--dx-rail-item)' : ''} ${trailing ? 'var(--dx-rail-item)' : ''}` }}
+  style={{
+    gridTemplateColumns: `var(--dx-rail-item) 1fr repeat(${actionSlots},var(--dx-rail-item)) ${expandable ? 'var(--dx-rail-item)' : ''} ${trailing ? 'var(--dx-rail-item)' : ''}`,
+  }}
 >
   <DragHandle />
   <div className='ring-1 ring-subdued-separator rounded-sm flex flex-col col-span-[…]'>
@@ -400,11 +404,12 @@ Problems:
     </div>
     {expanded && <div role='region'>{children}</div>}
   </div>
-  <DeleteButton />  {/* no my-[1px] */}
+  <DeleteButton /> {/* no my-[1px] */}
 </div>
 ```
 
 Key changes:
+
 - **`ring-1` instead of `border`** for the central card outline. Rings are
   rendered via `box-shadow`; they do not occupy layout. The content area of
   the card is the full `var(--dx-rail-item)` height, matching `IconBlock`'s slot.
@@ -451,10 +456,10 @@ contract has settled.
 1. **`src/aspects/`** — implement and unit-test the aspect hooks. Each in its
    own file with a co-located `*.test.ts`. ✓ landed.
 2. **`OrderedList`** — refactor onto `useReorder` + `useListDisclosure` + `useListGrid`
-   + `useListNavigation({ mode: 'list' })`. **Stop wrapping the deprecated `List`.**
-   Public namespace API preserved (`Root` / `Content` / `Item` / `DetailItem` / `DragHandle` /
-   `Title` / `ExpandCaret` / `DeleteButton`). Replace the bordered card with `ring-1`
-   so handle / title / caret / trailing all share a baseline (kills `my-[1px]`). ✓ landed.
+   - `useListNavigation({ mode: 'list' })`. **Stop wrapping the deprecated `List`.**
+     Public namespace API preserved (`Root` / `Content` / `Item` / `DetailItem` / `DragHandle` /
+     `Title` / `ExpandCaret` / `DeleteButton`). Replace the bordered card with `ring-1`
+     so handle / title / caret / trailing all share a baseline (kills `my-[1px]`). ✓ landed.
 3. **`RowList`** — refactor onto `useListNavigation({ mode: 'listbox' })` +
    `useListSelection({ mode: 'single' })`. Internal DOM stays
    identical (still uses `@dxos/react-list` primitives). Public API preserved. ✓ landed.
@@ -470,12 +475,12 @@ contract has settled.
 ### Deferred to follow-up PRs
 
 - **`Tree`** — would refactor onto `useReorder` + `useListDisclosure({ mode: 'multi' })`
-  + `useListGrid`. Risk: Tree has its own DnD wiring (hierarchical drop targets:
-  above / below / into) and a `gridTemplateColumns` + `renderColumns` API used by
-  navtree (6 files) and devtools. Land separately so the contract for
-  hierarchical reorder gets focused review.
+  - `useListGrid`. Risk: Tree has its own DnD wiring (hierarchical drop targets:
+    above / below / into) and a `gridTemplateColumns` + `renderColumns` API used by
+    navtree (6 files) and devtools. Land separately so the contract for
+    hierarchical reorder gets focused review.
 - **Mosaic.Stack keyboard nav** — Mosaic.Stack itself is a pure layout primitive
-  with no ARIA or keyboard wiring; Focus.Group is applied by *consumers*
+  with no ARIA or keyboard wiring; Focus.Group is applied by _consumers_
   (`SearchStack`, `Board.Column`, the Stack story). "Adopting useListNavigation"
   means migrating those consumers, not Stack itself. Defer to the PR that does
   Mosaic's full reorder adoption — they share the same call-site sweep.
@@ -527,6 +532,7 @@ const MosaicStack = ({ id, items, onMove, ... }) => {
 ```
 
 Notes:
+
 - Cross-stack drag is handled by `canDrop` + `getInitialData` payloads; the
   hook's `monitorForElements` is per-instance, and two stacks coexist on
   pragmatic-dnd's global monitor.

@@ -35,8 +35,7 @@ type OrderedListContextValue<T extends ListItemRecord> = {
   getId: (item: T) => string;
 };
 
-const [OrderedListProvider, useOrderedListContext] =
-  createContext<OrderedListContextValue<any>>(ORDERED_LIST_NAME);
+const [OrderedListProvider, useOrderedListContext] = createContext<OrderedListContextValue<any>>(ORDERED_LIST_NAME);
 
 export { useOrderedListContext };
 
