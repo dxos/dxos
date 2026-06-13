@@ -101,10 +101,10 @@ row, and removes the column-count coupling entirely.
 // OrderedList.Root
 type OrderedListRootProps<T> = ThemedClassName<{
   items: readonly T[];
-  isItem: (item: unknown) => boolean;        // forwarded to List.Root (DnD type guard)
-  getId?: (item: T) => string;               // optional; falls back to List's ref-equality.
-                                             //   Synthetic-id reconciliation for plain-value
-                                             //   arrays lands with the ordered ArrayField.
+  isItem: (item: unknown) => boolean; // forwarded to List.Root (DnD type guard)
+  getId?: (item: T) => string; // optional; falls back to List's ref-equality.
+  //   Synthetic-id reconciliation for plain-value
+  //   arrays lands with the ordered ArrayField.
   onMove?: (from: number, to: number) => void;
   readonly?: boolean;
 
@@ -122,11 +122,13 @@ type OrderedListRootProps<T> = ThemedClassName<{
 type OrderedListContentProps = ThemedClassName<PropsWithChildren>;
 
 // OrderedList.Item — wraps List.Item; provides per-item context (id, expanded, toggle, canDrag).
-type OrderedListItemProps = ThemedClassName<PropsWithChildren<{
-  id: string;
-  item: unknown;          // the record passed to List.Item for DnD
-  canDrag?: boolean;      // default true; false → drag handle disabled
-}>>;
+type OrderedListItemProps = ThemedClassName<
+  PropsWithChildren<{
+    id: string;
+    item: unknown; // the record passed to List.Item for DnD
+    canDrag?: boolean; // default true; false → drag handle disabled
+  }>
+>;
 
 // OrderedList.Row — flex row wrapper (handle·title·actions·caret). Expanded is its sibling.
 // OrderedList.DragHandle — thin wrapper over List.ItemDragHandle (reads canDrag + readonly).
@@ -271,5 +273,7 @@ Add `export * from './OrderedList';` to `packages/ui/react-ui-list/src/component
 - `FormOrderedAnnotation` itself (owned by `affectionate-curie`; this branch consumes it).
 - Migrating other `List` consumers (AUDIT Phase 6, separate work).
 - Replacing `List` with `Mosaic.Stack` (deferred to Phase 6; `OrderedList` is the seam).
+
 ```
 
+```
