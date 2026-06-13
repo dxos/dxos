@@ -2,80 +2,47 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import { useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { useCapability } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { log } from '@dxos/log';
+import { Panel } from '@dxos/react-ui';
+import { useSoundEffect } from '@dxos/react-ui-audio';
 
-import { meta } from '#meta';
-import { type Call, CallOperation } from '#types';
+import { type Call as CallType, CallsCapabilities } from '#types';
 
-export type CallArticleProps = AppSurface.ObjectArticleProps<Call.Call>;
+import { Call } from '../../components/Call';
 
-export const CallArticle = ({ attendableId, role, subject: call }: CallArticleProps) => {
-  const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
-  const notes = call.notes?.target;
-  const summary = call.summary?.target;
-  const notesData = useMemo(() => ({ attendableId, subject: notes }), [attendableId, notes]);
-  const summaryData = useMemo(
-    () => summary && summary.content.length > 0 && { attendableId, subject: summary },
-    [attendableId, summary, summary?.content],
-  );
+export type CallArticleProps = AppSurface.ObjectArticleProps<CallType.Call>;
 
-  const handleGenerateSummary = useCallback(async () => {
-    await invokePromise(CallOperation.Summarize, { call });
-  }, [invokePromise, call]);
+/**
+ * Live video/participant grid for a `Call`. The persistent `Call` selects the
+ * room; live peer/media state is owned by `CallManager`.
+ */
+export const CallArticle = (_props: CallArticleProps) => {
+  const callManager = useCapability(CallsCapabilities.Manager);
+  const _roomId = useAtomValue(callManager.roomIdAtom);
+  const leaveSound = useSoundEffect('LeaveCall');
 
-  if (!notes || !summary) {
-    return null;
-  }
+  const handleLeave = useCallback(() => {
+    leaveSound.play().catch((err) => log.catch(err));
+    void callManager.turnAudioOff();
+    void callManager.turnVideoOff();
+    void callManager.turnScreenshareOff();
+    void callManager.leave();
+  }, [callManager, leaveSound]);
 
   return (
-    <Stack orientation='vertical' size='contain' rail>
-      <StackItem.Root item={notes} role='section'>
-        <StackItem.Heading>
-          <StackItem.HeadingStickyContent>
-            <StackItem.Sigil icon='ph--note--regular' triggerLabel={t('notes.label')} />
-          </StackItem.HeadingStickyContent>
-        </StackItem.Heading>
-        <StackItem.Content>
-          <Surface.Surface type={AppSurface.Section} data={notesData} />
-        </StackItem.Content>
-      </StackItem.Root>
-      <StackItem.Root item={summary} role='section'>
-        <StackItem.Heading>
-          <StackItem.HeadingStickyContent>
-            <StackItem.Sigil icon='ph--list-bullets--regular' triggerLabel={t('summary.label')} />
-            {summaryData && (
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--book-open-text--regular'
-                label={t('regenerate-summary.label')}
-                onClick={handleGenerateSummary}
-                tooltipSide='right'
-                classNames='w-full'
-              />
-            )}
-          </StackItem.HeadingStickyContent>
-        </StackItem.Heading>
-        <StackItem.Content>
-          {summaryData ? (
-            <Surface.Surface type={AppSurface.Section} data={summaryData} />
-          ) : (
-            <div className='grid place-items-center min-h-32'>
-              <IconButton
-                icon='ph--book-open-text--regular'
-                label={t('generate-summary.label')}
-                onClick={handleGenerateSummary}
-              />
-            </div>
-          )}
-        </StackItem.Content>
-      </StackItem.Root>
-    </Stack>
+    <Panel.Root>
+      <Panel.Content>
+        <Call.Root>
+          <Call.Audio />
+          <Call.Grid />
+          <Call.Toolbar onLeave={handleLeave} />
+        </Call.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };

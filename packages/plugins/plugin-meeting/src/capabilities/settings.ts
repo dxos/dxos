@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { CallsCapabilities, Settings } from '#types';
+import { Settings, MeetingCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(CallsCapabilities.Settings, settingsAtom),
+      Capability.contributes(MeetingCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
         schema: Settings.Settings,

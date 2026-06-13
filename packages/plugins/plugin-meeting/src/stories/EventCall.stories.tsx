@@ -11,20 +11,22 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import { Call } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Config } from '@dxos/react-client';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { Calendar } from '@dxos/plugin-inbox/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { Config } from '@dxos/react-client';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Actor, Event, Transcript } from '@dxos/types';
 
-import { CallsPlugin } from '../CallsPlugin';
-import { Call } from '../types';
+import { MeetingPlugin } from '../MeetingPlugin';
+import { Meeting } from '../types';
 
 type StoryProps = {};
 
@@ -33,13 +35,13 @@ const DefaultStory = (_: StoryProps) => {
   const db = useDatabase(spaces[0]?.id);
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const events = useQuery(db, Filter.type(Event.Event));
-  const calls = useQuery(db, Filter.type(Call.Call));
+  const meetings = useQuery(db, Filter.type(Meeting.Meeting));
   const calendar = calendars[0];
   const event = events[0];
-  const call = calls[0];
+  const meeting = meetings[0];
 
-  if (!db || !calendar || !event || !call) {
-    return <Loading data={{ db: !!db, calendar: !!calendar, event: !!event, call: !!call }} />;
+  if (!db || !calendar || !event || !meeting) {
+    return <Loading data={{ db: !!db, calendar: !!calendar, event: !!event, meeting: !!meeting }} />;
   }
 
   return (
@@ -54,7 +56,7 @@ const DefaultStory = (_: StoryProps) => {
       <div className='min-h-0'>
         <Surface.Surface
           type={AppSurface.Article}
-          data={{ subject: call, attendableId: Obj.getURI(call) }}
+          data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
           limit={1}
         />
       </div>
@@ -63,7 +65,7 @@ const DefaultStory = (_: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-calls/stories/EventAndCall',
+  title: 'plugins/plugin-meeting/stories/EventAndCall',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -72,7 +74,15 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Calendar.Calendar, Event.Event, Transcript.Transcript, Call.Call, Text.Text],
+          types: [
+            Feed.Feed,
+            Calendar.Calendar,
+            Event.Event,
+            Transcript.Transcript,
+            Call.Call,
+            Meeting.Meeting,
+            Text.Text,
+          ],
           // CallManager requires the edge service config to construct (it throws otherwise).
           config: new Config({
             runtime: {
@@ -108,21 +118,33 @@ const meta = {
                 }),
               );
 
-              // Call requires resolvable notes + summary refs for CallArticle to render (returns null otherwise).
+              // The Meeting hub owns notes + summary + transcript; the MeetingArticle reads them.
               const transcriptFeed = personalSpace.db.add(Feed.make());
               const transcript = personalSpace.db.add(Transcript.make(Ref.make(transcriptFeed)));
-              const callNotes = personalSpace.db.add(
+              const meetingNotes = personalSpace.db.add(
                 Text.make({ content: 'Discussed the roadmap and assigned action items.' }),
               );
-              const callSummary = personalSpace.db.add(
+              const meetingSummary = personalSpace.db.add(
                 Text.make({ content: '## Summary\n\n- Roadmap reviewed.\n- Owners assigned.\n- Follow-up scheduled.' }),
               );
-              personalSpace.db.add(
+              // Slim Call (room/transport) the Meeting optionally links to.
+              // The transport config is provider-owned; any object stands in for the story.
+              const transportConfig = personalSpace.db.add(Text.make({ content: 'room-1' }));
+              const call = personalSpace.db.add(
                 Call.make({
                   name: 'Standup',
+                  transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(transportConfig) },
+                }),
+              );
+              personalSpace.db.add(
+                Obj.make(Meeting.Meeting, {
+                  name: 'Standup',
+                  created: new Date().toISOString(),
+                  participants: [],
                   transcript: Ref.make(transcript),
-                  notes: Ref.make(callNotes),
-                  summary: Ref.make(callSummary),
+                  notes: Ref.make(meetingNotes),
+                  summary: Ref.make(meetingSummary),
+                  call: Ref.make(call),
                 }),
               );
 
@@ -132,6 +154,7 @@ const meta = {
         StorybookPlugin({}),
         InboxPlugin(),
         CallsPlugin(),
+        MeetingPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
       ],

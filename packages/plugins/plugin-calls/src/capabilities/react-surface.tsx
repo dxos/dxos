@@ -9,10 +9,8 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { Channel } from '@dxos/types';
 
-import { CallArticle, CallDebugPanel, CallSidebar, CallsList } from '#containers';
+import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { Call, CallsCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
@@ -38,20 +36,6 @@ export default Capability.makeModule(() =>
         component: ({ role, data }) => (
           <CallArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
-      }),
-      Surface.create({
-        id: 'callCompanion',
-        role: 'article',
-        filter: (data): data is { subject: Call.Call | 'call'; companionTo: Channel.Channel } =>
-          (Obj.instanceOf(Call.Call, data.subject) || data.subject === 'call') &&
-          Obj.instanceOf(Channel.Channel, data.companionTo),
-        component: ({ role, data }) => {
-          return data.subject === 'call' ? (
-            <CallsList companionTo={data.companionTo} />
-          ) : (
-            <CallArticle role={role} subject={data.subject} />
-          );
-        },
       }),
     ]),
   ),

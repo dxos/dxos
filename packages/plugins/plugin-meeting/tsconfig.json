@@ -19,21 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/av"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/display-name"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -46,13 +31,22 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -61,16 +55,10 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../devtools/devtools"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -85,16 +73,19 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-audio"
+      "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
+      "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-dnd"
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-calls"
     },
     {
       "path": "../plugin-client"
@@ -112,10 +103,16 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-space"
+    },
+    {
       "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }

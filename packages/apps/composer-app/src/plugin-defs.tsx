@@ -46,6 +46,7 @@ import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { MasonryPlugin } from '@dxos/plugin-masonry/plugin';
+import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';
 import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
 import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
@@ -138,6 +139,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     (isDev || isLabs) && [
       BookmarksPlugin.meta.id,
       CallsPlugin.meta.id,
+      MeetingPlugin.meta.id,
       CodePlugin.meta.id,
       DuffelPlugin.meta.id,
       FeedPlugin.meta.id,
@@ -218,6 +220,7 @@ export const getPlugins = ({
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
+    MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),

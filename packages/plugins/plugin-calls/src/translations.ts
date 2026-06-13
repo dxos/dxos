@@ -28,26 +28,6 @@ export const translations = [
         'channel-companion.label': 'Channel',
         'call-panel.label': 'Active Call',
 
-        'meetings.label': 'All Meetings',
-        'meeting.label': 'Meeting',
-
-        'start-transcription.label': 'Start transcription',
-        'stop-transcription.label': 'Stop transcription',
-
-        'meeting-list.label': 'Meetings',
-        'create-meeting.label': 'Start New Meeting',
-        'select-meeting.label': 'Set Active',
-        'share-call-link.label': 'Share call link',
-
-        'meeting-companion.label': 'Meeting Notes',
-        'notes.label': 'Notes',
-        'stats.label': 'Stats',
-        'summary.label': 'Summary',
-        'regenerate-summary.label': 'Regenerate Summary',
-        'generate-summary.label': 'Generate Summary',
-
-        'transcript-companion.label': 'Meeting Transcript',
-
         'display-name.label': 'Display name',
         'display-name.description': 'Set your display name before joining a meeting.',
         'display-name-input.placeholder': 'Enter your name',

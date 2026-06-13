@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,11 +19,7 @@ describe('CallsPlugin', () => {
       plugins: [ClientPlugin({}), CallsPlugin()],
     });
 
-    // Modules expected to be active after a normal startup (headless/node variant).
+    // The slim Call schema is registered on startup (headless/node variant).
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

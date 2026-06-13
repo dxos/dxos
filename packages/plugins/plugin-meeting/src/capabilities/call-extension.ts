@@ -9,6 +9,8 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { type buf } from '@dxos/protocols/buf';
@@ -16,20 +18,18 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space } from '@dxos/react-client/echo';
 import { type Channel, type Message } from '@dxos/types';
 
-import { Call, CallOperation, CallsCapabilities } from '#types';
-
-import { type CallState, type MediaState } from '../calls';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
-type CallPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
+type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    const store = capabilities.get(CallsCapabilities.RecordState);
+    const store = capabilities.get(MeetingCapabilities.State);
 
     return Capability.contributes(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
@@ -62,14 +62,14 @@ export default Capability.makeModule(
       },
       onCallStateUpdated: async (callState: CallState) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-        const typename = Type.getTypename(Call.Call);
+        const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
         if (!activity?.payload) {
           return;
         }
 
-        const payload: CallPayload = activity.payload;
-        await invokePromise(CallOperation.HandlePayload, payload);
+        const payload: MeetingPayload = activity.payload;
+        await invokePromise(MeetingOperation.HandlePayload, payload);
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
         const { transcriptionManager } = store.state;

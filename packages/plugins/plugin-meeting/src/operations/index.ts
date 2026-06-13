@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const CallOperationHandlerSet = OperationHandlerSet.lazy(
+export const MeetingOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),
   () => import('./handle-payload'),
   () => import('./set-active'),

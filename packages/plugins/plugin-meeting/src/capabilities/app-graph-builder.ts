@@ -1,0 +1,194 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Feed, Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceState, getSpace } from '@dxos/react-client/echo';
+import { linkedSegment } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
+
+import { meta } from '#meta';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+
+/**
+ * Atom families to derive meeting state properties.
+ * Keyed by store to ensure proper caching.
+ */
+const activeMeetingFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).activeMeeting),
+);
+
+const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
+);
+
+const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).transcriptionManager),
+);
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
+      // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
+      GraphBuilder.createTypeExtension({
+        id: 'shareCallLink',
+        type: Channel.Channel,
+        actions: (channel, get) => {
+          const space = getSpace(channel);
+          const state = space && get(CreateAtom.fromObservable(space.state));
+          if (!space || state !== SpaceState.SPACE_READY || space.membershipPolicy === MembershipPolicy.LOCKED) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            {
+              id: 'action.shareMeetingLink',
+              data: Effect.fnUntraced(function* () {
+                invariant(space);
+                yield* Operation.invoke(SpaceOperation.GetShareLink, {
+                  space,
+                  target: Obj.getURI(channel),
+                  copyToClipboard: true,
+                });
+              }),
+              properties: {
+                label: ['share-call-link.label', { ns: meta.id }],
+                icon: 'ph--share-network--regular',
+              },
+            },
+          ]);
+        },
+      }),
+
+      GraphBuilder.createTypeExtension({
+        id: 'callCompanion',
+        type: Channel.Channel,
+        connector: Effect.fnUntraced(function* (channel, get) {
+          const callManager = yield* Capability.get(CallsCapabilities.Manager);
+          const channelUri = Obj.getURI(channel);
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== channelUri) {
+            return [];
+          }
+
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const data = get(activeMeetingOrPlaceholderFamily(store));
+
+          return [
+            AppNode.makeCompanion({
+              id: 'meeting',
+              label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
+              icon: 'ph--note--regular',
+              data,
+              position: 'first',
+            }),
+          ];
+        }),
+      }),
+
+      GraphBuilder.createTypeExtension({
+        id: 'callTranscript',
+        type: Channel.Channel,
+        actions: Effect.fnUntraced(function* (channel, get) {
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const transcriptionManager = get(transcriptionManagerFamily(store));
+          const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
+          return [
+            {
+              id: 'action.startStopTranscription',
+              data: Effect.fnUntraced(function* () {
+                const store = yield* Capability.get(MeetingCapabilities.State);
+                let meeting = store.state.activeMeeting;
+                if (!meeting) {
+                  const db = Obj.getDatabase(channel);
+                  invariant(db);
+                  const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
+                  const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
+                    target: db,
+                    hidden: true,
+                    object: createResult.object,
+                  });
+                  invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
+                  yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
+                  meeting = addResult.object as Meeting.Meeting;
+                }
+
+                const callManager = yield* Capability.get(CallsCapabilities.Manager);
+                const transcript = yield* Effect.promise(() => meeting.transcript.load());
+                const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
+                const transcriptQueueDxn = Feed.getQueueUri(transcriptFeed);
+                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
+                const transcriptionEnabled = !enabled;
+                callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
+                  meetingId: Obj.getURI(meeting),
+                  transcriptDxn: transcriptQueueDxn.toString(),
+                  transcriptionEnabled,
+                });
+
+                if (!transcriptionEnabled) {
+                  log.warn('transcription disabled');
+                } else {
+                  const companion = linkedSegment('transcript');
+                  yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
+                }
+              }),
+              properties: {
+                label: enabled
+                  ? ['stop-transcription.label', { ns: meta.id }]
+                  : ['start-transcription.label', { ns: meta.id }],
+                icon: 'ph--subtitles--regular',
+                disposition: 'toolbar',
+              },
+            },
+          ];
+        }),
+        connector: Effect.fnUntraced(function* (channel, get) {
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(activeMeetingFamily(store));
+          if (!meeting) {
+            return [];
+          }
+
+          return [
+            AppNode.makeCompanion({
+              id: 'transcript',
+              label: ['transcript-companion.label', { ns: meta.id }],
+              icon: 'ph--subtitles--regular',
+              data: get(Obj.atom(meeting.transcript)),
+              position: 'first',
+            }),
+          ];
+        }),
+      }),
+
+      GraphBuilder.createTypeExtension({
+        id: 'meetingTranscriptCompanion',
+        type: Meeting.Meeting,
+        connector: (meeting, get) =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'transcript',
+              label: ['transcript-companion.label', { ns: meta.id }],
+              icon: 'ph--subtitles--regular',
+              data: get(Obj.atom(meeting.transcript)),
+              position: 'first',
+            }),
+          ]),
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

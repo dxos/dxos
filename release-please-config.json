@@ -720,6 +720,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-meeting/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-mermaid/package.json",
           "jsonpath": "$.version"
         },

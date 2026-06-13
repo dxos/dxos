@@ -8,23 +8,22 @@ import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EID, parseId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { Call, CallOperation, CallsCapabilities } from '#types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof CallOperation.HandlePayload> = CallOperation.HandlePayload.pipe(
+const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ meetingId, transcriptDXN, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const store = yield* Capability.get(CallsCapabilities.RecordState);
+      const store = yield* Capability.get(MeetingCapabilities.State);
       const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
       const space = spaceId && client.spaces.get(spaceId);
-      const call =
+      const meeting =
         objectId && space
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).first())
           : undefined;
       store.updateState((current) => ({
         ...current,
-        // Query returns an untyped object; the id-based lookup guarantees a Call.
-        activeCall: call as Call.Call | undefined,
+        activeMeeting: meeting as Meeting.Meeting | undefined,
       }));
 
       const enabled = !!transcriptionEnabled;

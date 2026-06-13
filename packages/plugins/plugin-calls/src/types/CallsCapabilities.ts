@@ -4,18 +4,14 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom-react';
-
 import { Capability } from '@dxos/app-framework';
-import { type TranscriptionManager } from '@dxos/plugin-transcription';
+import { type Obj } from '@dxos/echo';
 import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as Call from './Call';
-import { type Settings as SettingsType } from './index';
-
 import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
+import * as Call from './Call';
 
 export const Manager = Capability.make<CallManagerImpl>(`${meta.id}.capability.call-manager`);
 
@@ -29,17 +25,25 @@ export type CallProperties = {
 
 export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
 
-export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(`${meta.id}.capability.settings`);
-
-export type CallRecordState = {
-  activeCall?: Call.Call;
-  transcriptionManager?: TranscriptionManager;
+/**
+ * Pluggable live-transport for a {@link Call.Call}, keyed by `kind`. A
+ * `Call.transport.kind` selects the provider; `makeConfig` produces the
+ * persisted reconnection config. The built-in Cloudflare provider wraps
+ * `CallManager` + `CallsService`.
+ */
+export type CallTransportProvider = {
+  /** Stable provider id, e.g. `org.dxos.call.transport.cloudflare`. */
+  kind: string;
+  /** Human-readable label. */
+  label: string;
+  /** Produces the config persisted into `Call.transport.config`. */
+  makeConfig: (roomId: string) => Obj.Unknown;
+  /** Establish a live session for the call. */
+  join: (call: Call.Call) => Promise<void>;
+  /** Tear down the live session for the call. */
+  leave: (call: Call.Call) => Promise<void>;
 };
 
-export type CallRecordStore = {
-  stateAtom: Atom.Writable<CallRecordState>;
-  get state(): CallRecordState;
-  updateState: (updater: (current: CallRecordState) => CallRecordState) => void;
-};
-
-export const RecordState = Capability.make<CallRecordStore>(`${meta.id}.capability.record-state`);
+export const CallTransportProvider = Capability.make<CallTransportProvider>(
+  `${meta.id}.capability.call-transport-provider`,
+);

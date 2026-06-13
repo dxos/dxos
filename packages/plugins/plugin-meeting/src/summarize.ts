@@ -24,15 +24,15 @@ import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type Call } from '#types';
+import { type Meeting } from '#types';
 
-// TODO(wittjosiah): Also include content of object which are linked to the call.
-export const getCallContent = async (
-  call: Call.Call,
+// TODO(wittjosiah): Also include content of object which are linked to the meeting.
+export const getMeetingContent = async (
+  meeting: Meeting.Meeting,
   textContentCapabilities: AppCapabilities.TextContent[],
 ) => {
-  const notes = await call.notes.load();
-  const transcript = await call.transcript.load();
+  const notes = await meeting.notes.load();
+  const transcript = await meeting.transcript.load();
   const textContent = textContentCapabilities.find(({ id }) => id === Type.getTypename(Transcript.Transcript));
   const content = `${await textContent?.getTextContent(transcript)}\n\n${notes.content}`;
   return content;
@@ -45,7 +45,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   AiService.AiService
 > = Effect.fn('summarizeTranscript')(
   function* (content) {
-    log.info('summarizing call', { contentLength: content.length });
+    log.info('summarizing meeting', { contentLength: content.length });
 
     const output = yield* new AiRequest.Request().run({
       system: SUMMARIZE_PROMPT,

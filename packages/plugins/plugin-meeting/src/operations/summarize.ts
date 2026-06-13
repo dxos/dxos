@@ -4,9 +4,9 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 
-import { CallOperation } from '#types';
+import { MeetingOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof CallOperation.Summarize> = CallOperation.Summarize.pipe(
+const handler: Operation.WithHandler<typeof MeetingOperation.Summarize> = MeetingOperation.Summarize.pipe(
   Operation.withHandler(() => Effect.fail(new Error('Not implemented'))),
 );
 
