@@ -154,7 +154,6 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   return (
     <div className={mx('py-form-padding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
-
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}

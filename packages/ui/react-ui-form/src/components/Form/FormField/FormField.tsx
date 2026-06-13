@@ -259,7 +259,7 @@ FormField.displayName = 'Form.FormField';
 
 export const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <IconBlock>
+    <IconBlock classNames='my-[1px]'>
       <IconButton variant='ghost' density='xs' square iconOnly {...props} />
     </IconBlock>
   );
