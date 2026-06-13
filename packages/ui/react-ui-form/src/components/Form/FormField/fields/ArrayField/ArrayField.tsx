@@ -26,7 +26,11 @@ import { FormFieldLabel } from '../../FormFieldWrapper';
 // lockstep with the array via the add/delete/move handlers.
 const DND_ID = '__dndId';
 
-type OrderedItem = { value: unknown; index: number; [DND_ID]: string };
+type OrderedItem = {
+  [DND_ID]: string;
+  value: unknown;
+  index: number;
+};
 
 const isOrderedItem = (item: any): item is OrderedItem =>
   !!item && typeof item === 'object' && typeof item[DND_ID] === 'string';
@@ -203,7 +207,6 @@ export const ArrayField = ({
   return (
     <>
       {header}
-
       <div className='flex flex-col'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
