@@ -4,29 +4,33 @@ name: CallsPlugin
 version: 0.1.0
 ---
 
-WebRTC video / audio conferencing for `DXOS` Composer, plus the persistent
-`Call` record that captures a call's participants, transcript, notes and summary.
+WebRTC video / audio conferencing for `DXOS` Composer, plus a slim, persistent
+`Call` (a session/room) so the "where" of a conversation is known ahead of time.
 
-`plugin-calls` owns everything required to join, render, and leave a multi-party
-real-time call, AND the persistent `Call` ECHO type that survives the live
-session. The live transport (Cloudflare Calls / WebRTC) is one pluggable
-`CallTransportProvider`; a `Call` persists which transport it used and that
+`plugin-calls` is **meeting-agnostic**: it owns everything required to join,
+render, and leave a multi-party real-time call, and a slim persistent `Call`
+ECHO type that holds only a transport descriptor (`{ name?, created, transport }`).
+The live transport (Cloudflare Calls / WebRTC) is one pluggable
+`CallTransportProvider`; the `Call` persists which transport it uses and that
 provider's reconnection config (e.g. SFU room id) so a call is **resumable**.
 This mirrors the `Channel.backend` pluggable-backend pattern in `plugin-thread`.
 
-A `Call` attaches to a calendar `Event` via a `Call --AnchoredTo--> Event`
-relation, keyed by occurrence (see F-10). Transcription is delegated to
-`plugin-transcription` via `TranscriptionCapabilities`; `plugin-calls` does not
-implement speech-to-text itself.
+A `Call` carries **no** notes / summary / transcript / participants — those live
+on the `Meeting` hub in **`plugin-meeting`**, which references a `Call` via
+`Meeting.call?: Ref<Call>`. Because `plugin-calls` knows nothing about meetings,
+a `Call` can also be started directly from other contexts (e.g. a chat `Channel`).
 
-This plugin is the result of two consolidations:
+Plugin boundaries:
 - Video-call functionality was extracted out of `plugin-thread`. After that
   split `plugin-thread` owns chat, threaded comments and the `Channel` ECHO type
   only; `plugin-calls` owns the live call surface.
-- `plugin-meeting` was absorbed into `plugin-calls` and deleted. Its `Meeting`
-  type became `Call`, and its persistence + summary orchestration + article UI
-  moved here. There is no `plugin-meeting` and no `Meeting` type; all call
-  records are `Call`.
+- The persistent meeting record (notes / summary / transcript / participants) and
+  its Event linkage live in **`plugin-meeting`** (`@dxos/plugin-meeting`), which
+  depends on `plugin-calls` + `plugin-transcription`. `plugin-calls` does **not**
+  depend on either. (An earlier iteration merged the two; they are separate again
+  so `Call` is reusable without a `Meeting`.)
+- Transcription is delegated to `plugin-transcription`; `plugin-calls` does not
+  implement speech-to-text. It exposes `SpeakingMonitor` (now in `@dxos/av`).
 
 ## Extensions
 
@@ -48,17 +52,15 @@ Each extension is defined in the Appendix or resolved via its URI.
 ```mdl
 type Call
   desc: |
-    Persistent record of a call. Created when a user starts a call (ad-hoc, or
-    from an Event). Outlives the live session: the transcript, notes and summary
-    remain after everyone leaves. Formerly `Meeting` in `plugin-meeting`.
+    Slim, meeting-agnostic persistent session/room. Holds only a transport
+    descriptor so the "where" is known ahead of time and the call is resumable.
+    Notes / summary / transcript / participants live on the `Meeting` hub in
+    plugin-meeting, NOT here. Live state (joined peers, media tracks) is
+    runtime-only, owned by `CallManager`.
   fields:
     name?: string
     created: string                  # ISO-8601 timestamp
-    participants: string[]           # identity DIDs seen in the call
-    transport: CallTransport         # which transport + reconnection config
-    transcript?: Ref<Transcript>     # populated by plugin-transcription
-    notes?: Ref<Text>                # freeform markdown
-    summary?: Ref<Text>              # AI-generated summary
+    transport: CallTransport         # selected provider + reconnection config
 ```
 
 ```mdl
@@ -446,34 +448,17 @@ op pinParticipant
 ```
 
 ```mdl
-op createCall
+op provisionCall
   desc: |
-    Creates a persistent Call in the space, selecting a transport provider and
-    persisting its config. Optionally links the Call to an Event occurrence via
-    a Call --AnchoredTo--> Event relation. Returns the Call.
+    Creates a slim persistent Call in the space, selecting a transport provider
+    and persisting its reconnection config (the room/link), without starting a
+    live session. Returns the Call. Meeting/Event linkage (Meeting.call,
+    Meeting --AnchoredTo--> Event) is plugin-meeting's concern, not this op's.
   input:
     space: Space
     transportKind?: string           # defaults to the Cloudflare provider
-    event?: Ref<Event>               # when started from an EventArticle
-    occurrence?: string              # ISO nominal start (RECURRENCE-ID) of the occurrence
   output: Call
   effects: [echo:write]
-  note: |
-    The EventArticle entry point (action + header chip + navigation) is
-    specified separately (task: create-call-from-Event). This op is the
-    underlying primitive.
-```
-
-```mdl
-op summarizeCall
-  desc: |
-    Generates a markdown summary of a Call from its transcript + notes and
-    writes it to Call.summary. Delegates to plugin-transcription's
-    summarizeTranscript. Migrated from the former MeetingOperation.Summarize.
-  input:
-    call: Call
-  effects: [echo:write, http]
-  requires: [AiService]
 ```
 
 ## Features
@@ -613,32 +598,25 @@ feat F-8: Independence from plugin-thread
 ```
 
 ```mdl
-feat F-9: Persistent Call Record (absorbed from plugin-meeting)
+feat F-9: Slim Persistent Call
 
-  req F-9.1: A `Call` ECHO type persists name, created, participants,
-             transport, transcript, notes and summary. It replaces the former
-             `Meeting` type; no `Meeting` type or `plugin-meeting` package
-             remains.
+  req F-9.1: The `Call` ECHO type persists ONLY `name?`, `created`, and
+             `transport`. It carries no notes / summary / transcript /
+             participants — those are owned by `Meeting` in plugin-meeting.
 
   req F-9.2:
-    when: op:createCall runs
+    when: op:provisionCall runs
     then: a Call is written to the space with transport.kind set and
-          transport.config produced by the provider's makeConfig
+          transport.config produced by the provider's makeConfig (the room/link)
 
   req F-9.3:
     when: a Call article is opened
-    then: notes (markdown editor) and summary (with Generate / Regenerate
-          actions) render, as MeetingArticle did previously
+    then: the CallArticle renders the live video/participant grid (not a notes
+          or summary editor)
 
-  req F-9.4:
-    when: op:summarizeCall runs with a non-empty transcript
-    then: a markdown summary is written to Call.summary via
-          plugin-transcription's summarizeTranscript
-
-  req F-9.5: All former consumers of `plugin-meeting` (`Meeting`,
-             `MeetingOperation.*`, `MeetingCapabilities.*`, `MeetingArticle`)
-             are migrated to the `plugin-calls` equivalents. No compatibility
-             re-exports remain.
+  req F-9.4: plugin-calls does NOT depend on plugin-meeting or
+             plugin-transcription; a `Call` is usable from any context (e.g. a
+             chat `Channel`) without a `Meeting`.
 ```
 
 ```mdl
@@ -654,7 +632,7 @@ feat F-10: Pluggable Call Transport
           establishes the live session using Call.transport.config
 
   req F-10.3:
-    when: no transportKind is supplied to op:createCall
+    when: no transportKind is supplied to op:provisionCall
     then: the Cloudflare provider is selected by default
 
   req F-10.4: A Call persists enough transport config to be re-joined after the
@@ -663,33 +641,14 @@ feat F-10: Pluggable Call Transport
 ```
 
 ```mdl
-feat F-11: Event Linkage and Occurrence
+feat F-11: Event / Meeting linkage (out of scope — see plugin-meeting)
 
-  req F-11.1: `Event` (in @dxos/types) is extended with `recurrence?: string[]`
-              (RRULE/EXDATE/RDATE lines) and `timeZone?: string`. The Google
-              Calendar sync stores the master event once (singleEvents=false)
-              instead of expanding instances; the `rrule` library is added to
-              the pnpm catalog and occurrences are expanded client-side.
-    tags: [depends:@dxos/types, depends:plugin-inbox]
-
-  req F-11.2: A `Call --AnchoredTo--> Event` relation links a Call to an Event.
-              `AnchoredTo` is extended with `occurrence?: string` — the ISO
-              nominal start (RECURRENCE-ID) of the occurrence the Call belongs
-              to. The relation is N:1 (many Calls, one Event).
-    tags: [depends:@dxos/types]
-
-  req F-11.3:
-    when: op:createCall is invoked with `event` (and `occurrence` for a
-          recurring event)
-    then: a Call --AnchoredTo--> Event relation is created with that occurrence
-
-  req F-11.4:
-    when: an Event occurrence is viewed
-    then: at most one Call is shown — the one whose relation.occurrence matches
-          the viewed occurrence (or none, if no Call exists yet)
-
-  req F-11.5: Recurrence exceptions / single-occurrence overrides are out of
-              scope; only the master recurrence rule is modelled.
+  req F-11.1: `Call` has no knowledge of `Event` or `Meeting`. The hub `Meeting`
+              references a `Call` via `Meeting.call?: Ref<Call>`, and
+              `Meeting --AnchoredTo--> Event` (occurrence-keyed) links it to the
+              calendar. That relation, the "Attach Meeting" flow, and recurrence
+              are specified in **plugin-meeting** (and the cross-plugin AUDIT),
+              not here.
 ```
 
 ## Acceptance
@@ -789,34 +748,15 @@ test T-9: Devtools surface displays call diagnostics
 ```
 
 ```mdl
-test T-10: Create a persistent Call
+test T-10: Provision a slim persistent Call
   given: a DXOS space is available
-  when: op:createCall is invoked with no transportKind
+  when: op:provisionCall is invoked with no transportKind
   then:
     - a Call is written to the space
     - Call.transport.kind === org.dxos.call.transport.cloudflare
     - Call.transport.config is a resolvable Ref
     - Call.created is set
-```
-
-```mdl
-test T-11: Summarize a Call
-  given: a Call with a transcript containing speech and optional notes
-  when: op:summarizeCall is invoked
-  then:
-    - Call.summary.target contains a non-empty markdown summary
-    - the summary was produced via plugin-transcription summarizeTranscript
-```
-
-```mdl
-test T-12: Link a Call to an Event occurrence
-  given: a recurring Event with recurrence + timeZone set
-  when: op:createCall is invoked with that Event and an occurrence instant
-  then:
-    - a Call --AnchoredTo--> Event relation exists
-    - relation.occurrence === the supplied occurrence instant
-    - viewing that occurrence surfaces exactly this Call
-    - viewing a different occurrence with no Call surfaces none
+    - the Call has no notes / summary / transcript / participants fields
 ```
 
 ```mdl
