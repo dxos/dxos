@@ -83,7 +83,9 @@ export const ArrayField = ({
 
   const handleAdd = useCallback(() => {
     const defaultValue =
-      SchemaEx.isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
+      elementType && SchemaEx.isNestedType(elementType)
+        ? getDefaultObjectValue(elementType)
+        : getDefaultValue(elementType);
     idsRef.current.push(nextId());
     // `values` is `undefined` on first render for arrays whose parent path
     // hasn't been materialised in the form values yet (e.g. `package.repos`

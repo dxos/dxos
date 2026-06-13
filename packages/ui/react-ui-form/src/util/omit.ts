@@ -25,6 +25,8 @@ export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(
   const schema = Type.isType(schemaOrType)
     ? Type.getSchema(schemaOrType)
     : (schemaOrType as Schema.Schema.AnyNoContext);
+  // Cast: `Schema.omit` cannot statically express the `ExcludeId<S>` result type, so the pipe
+  // returns a widened schema; the runtime shape matches the declared return type.
   return schema.pipe(Schema.omit('id')) as any;
 };
 
@@ -39,5 +41,7 @@ export const omitHiddenFormFields = <S extends Schema.Schema.AnyNoContext>(schem
   const hidden = properties
     .filter((prop) => Option.getOrElse(Annotation.FormInputAnnotation.getFromAst(prop.type), () => true) === false)
     .map((prop) => prop.name as string);
+  // Cast: omitting a dynamically-computed set of keys can't be expressed as the original `S`, but
+  // the result is structurally a subset of `S` and callers treat it as `S`.
   return hidden.length === 0 ? schema : (schema.pipe(Schema.omit(...(hidden as [string, ...string[]]))) as any);
 };
