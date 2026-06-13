@@ -104,23 +104,94 @@ Transcript (sdk/types)
 | `MeetingOperation.SetActive`                | plugin-meeting       | `Meeting?`             | —            | Updates `MeetingCapabilities.State` atom                                  |
 | `MeetingOperation.HandlePayload`            | plugin-meeting       | `payload`              | —            | Syncs active meeting from call activity broadcast                         |
 
+## Domain model (target)
+
+`Event → Meeting → Call`, with the **Meeting as the hub**. One plugin owns both Meeting and Call.
+
+```
+Event (sdk/types; synced, may recur, may carry external video links e.g. Zoom/Meet)
+  └─ AnchoredTo (occurrence-keyed) ─ Meeting        # at most one Meeting per event occurrence
+Meeting (hub; the human gathering — in-person, phone, video, or not-yet-happened)
+  ├── notes?      → Ref<Text>        # prep/agenda/notes; exists before any call
+  ├── summary?    → Ref<Text>        # AI summary
+  ├── transcript? → Ref<Transcript>  # hangs off the Meeting (works in-person/external too)
+  ├── call?       → Ref<Call>        # at most one; provisioned ahead; resumable
+  └── participants
+Call (slim session/room; persistent so the "where" is known ahead of time)
+  └── transport: { kind, config }    # room/link + reconnection; live state is runtime (CallManager)
+Transcript (sdk/types)
+  └── feed → Ref<Feed>
+```
+
+- **At most one Call per occurrence.** Stop→restart = the same Call (stable room).
+- **Provision ahead:** a Call (room/link) can be created when the meeting is prepped, before anyone joins.
+- **In-progress:** runtime `CallManager` reports whether the Call's room is live → "join" affordance.
+
+### Attaching a Meeting (the single primitive)
+
+A naked `Event` has no `Meeting`. **"Attach Meeting"** is the one creation action — create the
+`Meeting` hub + `AnchoredTo`(Event, occurrence) + an empty `notes` `Text` (≤1 per occurrence; reused
+after). Three intents all funnel through it (create-or-reuse):
+
+| Intent | Action | Effect on the hub |
+| --- | --- | --- |
+| (a) Planning | Attach meeting / open Notes | `Meeting` + `notes`; edit `Meeting.notes`. |
+| (b) In-person notes | Attach meeting / open Notes | same — notes without any `Call`. |
+| (c) Plan/start a call | Attach meeting → provision call | `Meeting` + `Meeting.call` (room/link ahead); join via `CallManager`. |
+
+Transcript and summary attach to the `Meeting` as used. Attaching a Meeting is also what flips the
+Event companion from the vanilla inbox view to the Meeting-aware tabbed companion (precedence).
+
 ## Schema
 
-| Type       | Field | Purpose | Note                                                      |
-| ---------- | ----- | ------- | --------------------------------------------------------- |
-| Event      |       |         |                                                           |
-| Channel    |       |         |                                                           |
-| Thread     |       |         | Conflicts with Channel?                                   |
-| Meeting    |       |         | Change to Call and merge plugin-meeting with plugin-calls |
-| Segment    |       |         |                                                           |
-| Transcript |       |         |                                                           |
+| Type         | Owner        | Key fields                                                                           | Note                                                        |
+| ------------ | ------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `Event`      | sdk/types    | `description`, `startDate`/`endDate`, `recurrence?`, attendees, external video links | Synced; the schedule.                                       |
+| `Meeting`    | calls plugin | `notes?`, `summary?`, `transcript?`, `call?`, participants                           | **Hub.** Renamed back from P1's `Call`-as-hub.              |
+| `Call`       | calls plugin | `transport: { kind, config }`                                                        | Slim room/session; ≤1 per Meeting; resumable.               |
+| `Transcript` | sdk/types    | `feed → Ref<Feed>`                                                                   | Hangs off the Meeting.                                      |
+| `Channel`    | sdk/types    | `backend: { kind, config }`                                                          | Pluggable backend (Feed default). See Thread/Channel merge. |
+| `Thread`     | sdk/types    | `status`, `messages: Ref<Message>[]`, `agent?`                                       | Merge candidate with Channel.                               |
+| `Segment`    | plugin-trip  | `details` (Flight/Train/…), `booking?`                                               | `AnchoredTo` Event.                                         |
 
 ## Relations
 
-| Type       | Source  | Target | Purpose |
-| ---------- | ------- | ------ | ------- |
-| AnchoredTo | Call    | Event  |         |
-| AnchoredTo | Segment | Event  |         |
+| Type         | Source    | Target  | Key                          | Purpose                                           |
+| ------------ | --------- | ------- | ---------------------------- | ------------------------------------------------- |
+| `AnchoredTo` | `Meeting` | `Event` | `occurrence` (RECURRENCE-ID) | The meeting for a specific event occurrence (≤1). |
+| `AnchoredTo` | `Segment` | `Event` | —                            | A trip segment (e.g. flight) tied to an event.    |
+
+## Surfaces
+
+A **main** plank pairs with a **companion**. The companion shows the `Event`; if that Event has a
+linked `Meeting`, a richer Meeting-aware companion takes precedence (see below).
+
+| Surface                   | Owning plugin                               | Renders                             | Main / Companion | Notes                                                                                             |
+| ------------------------- | ------------------------------------------- | ----------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------- |
+| `CalendarArticle`         | `plugin-inbox`                              | `Calendar`                          | Main             | Calendar grid + event stack; navigation root.                                                     |
+| `CallArticle`             | `plugin-calls`                              | `Call` (live session)               | Main             | **Changed:** the live video/participant grid (was the notes+summary record view). Alternate main. |
+| Event companion (vanilla) | `plugin-inbox`                              | `Event`                             | Companion        | Header, description, attendees. Matches **every** Event.                                          |
+| Event companion (meeting) | `plugin-meeting`                            | `Event` + `Meeting`                 | Companion        | Higher priority; filter gated on "Event has a linked `Meeting`". Adds tabs (below).               |
+| `TranscriptionArticle`    | `plugin-transcription`                      | `Transcript` (`Meeting.transcript`) | tab / companion  | Live transcript feed.                                                                             |
+| `SummaryArticle`          | `plugin-transcription`                      | `Text` (`Meeting.summary`)          | tab / companion  | AI summary.                                                                                       |
+| Notes                     | `plugin-markdown` editor on `Meeting.notes` | `Text`                              | tab              | Meeting notes doc (tied to `Meeting`, not a loose `Text` on the Event).                           |
+
+### Companion precedence (vanilla vs meeting)
+
+Most events are not meetings, so by default the companion is the **vanilla `plugin-inbox` Event**
+(header, description, attendees). When an Event has a linked `Meeting`, `plugin-meeting` contributes
+a **higher-priority** Event companion whose filter requires a linked `Meeting`; with `limit={1}` it
+wins and renders instead — same Event header/description, plus a tab strip:
+
+```
+[ Notes · Transcript · Summary ]      # Meeting.notes / Meeting.transcript / Meeting.summary
+```
+
+- `Event.description` stays in the Event header (synced; read-only unless draft).
+- `Notes` is a **tab** (the `Meeting.notes` markdown editor), not a body toggle.
+- plugin-inbox stays meeting-agnostic; plugin-meeting augments via precedence.
+- The same Meeting companion attaches to both the **Event** node and the **Call** node (resolving the
+  owning Meeting via `Meeting.call`), so it appears alongside the calendar grid or the live call.
 
 ## Gaps / Issues
 
