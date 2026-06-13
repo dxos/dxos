@@ -1158,43 +1158,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
-  const globalRefTypeId = Symbol.for('@dxos/echo/internal/Ref');
-  if (
-    value == null ||
-    Array.isArray(value) ||
-    Ref.isRef(value) ||
-    (typeof value === 'object' && globalRefTypeId in value) ||
-    value instanceof Uint8Array
-  ) {
+  if (value == null || Array.isArray(value) || Ref.isRef(value) || value instanceof Uint8Array) {
     return;
   }
 
   const proto = Object.getPrototypeOf(value);
   if (typeof value === 'object' && proto !== Object.prototype) {
-    // #region agent log
-    const globalRefTypeId = Symbol.for('@dxos/echo/internal/Ref');
-    fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-      body: JSON.stringify({
-        sessionId: 'cf2e73',
-        location: 'echo-handler.ts:throwIfCustomClass',
-        message: 'throwIfCustomClass reject',
-        data: {
-          prop: String(prop),
-          isRef: Ref.isRef(value),
-          globalRefTypeIdInValue: globalRefTypeId in value,
-          ownSymbols: Object.getOwnPropertySymbols(value).map((symbol) => symbol.toString()),
-          valueToString: String(value),
-          protoName: proto?.constructor?.name,
-          swScriptUrl:
-            typeof navigator !== 'undefined' ? navigator.serviceWorker?.controller?.scriptURL : undefined,
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'A,B,C,D',
-      }),
-    }).catch(() => {});
-    // #endregion
     throw new Error(`class instances are not supported: setting ${value} on ${String(prop)}`);
   }
 };
@@ -1262,54 +1231,6 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
-  // #region agent log
-  const rawForLog = isProxy(obj) ? getProxyTarget(obj) : obj;
-  fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-    body: JSON.stringify({
-      sessionId: 'cf2e73',
-      location: 'echo-handler.ts:createObject',
-      message: 'createObject entry',
-      data: {
-        typename: (rawForLog as any)?.['@type'],
-        isProxy: isProxy(obj),
-        hasCanvas: (rawForLog as any)?.canvas != null,
-        canvasIsRef: Ref.isRef((rawForLog as any)?.canvas),
-        canvasGlobalRef: (rawForLog as any)?.canvas
-          ? Symbol.for('@dxos/echo/internal/Ref') in (rawForLog as any).canvas
-          : false,
-      },
-      timestamp: Date.now(),
-      hypothesisId: 'E,F,G,J',
-    }),
-  }).catch(() => {});
-  // #endregion
-  try {
-    return createObjectInner(obj);
-  } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-      body: JSON.stringify({
-        sessionId: 'cf2e73',
-        location: 'echo-handler.ts:createObject',
-        message: 'createObject error',
-        data: {
-          typename: (rawForLog as any)?.['@type'],
-          error: error instanceof Error ? error.message : String(error),
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'J,K',
-      }),
-    }).catch(() => {});
-    // #endregion
-    throw error;
-  }
-};
-
-const createObjectInner = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   const type = Obj.getType(obj as unknown as Obj.Unknown);
   const schema = type != null ? Type.getSchema(type) : undefined;
   if (schema != null) {
@@ -1547,29 +1468,6 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     } else if (typeof value === 'object') {
       if (Ref.isRef(value)) {
         // Pass refs as is.
-      } else if (key === 'canvas') {
-        // #region agent log
-        const globalRefTypeId = Symbol.for('@dxos/echo/internal/Ref');
-        fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-          body: JSON.stringify({
-            sessionId: 'cf2e73',
-            location: 'echo-handler.ts:validateInitialProps',
-            message: 'validateInitialProps canvas branch',
-            data: {
-              isRef: Ref.isRef(value),
-              globalRefTypeIdInValue: globalRefTypeId in value,
-              ownSymbols: Object.getOwnPropertySymbols(value).map((symbol) => symbol.toString()),
-              valueToString: String(value),
-              protoName: Object.getPrototypeOf(value)?.constructor?.name,
-            },
-            timestamp: Date.now(),
-            hypothesisId: 'E,F',
-          }),
-        }).catch(() => {});
-        // #endregion
-        throwIfCustomClass(key, value);
       } else if (isTypedObjectProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if ((value as any) instanceof Uint8Array) {

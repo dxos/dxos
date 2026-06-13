@@ -433,24 +433,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
-    // #region agent log
-    fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-      body: JSON.stringify({
-        sessionId: 'cf2e73',
-        location: 'database.ts:_addObject',
-        message: '_addObject entry',
-        data: {
-          isEchoObject: isEchoObject(obj),
-          objectId: (obj as any)?.id,
-          typename: Obj.getTypename(obj as Obj.Unknown),
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'F,G,H',
-      }),
-    }).catch(() => {});
-    // #endregion
     if (!isEchoObject(obj)) {
       const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
@@ -482,23 +464,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
-    // #region agent log
-    fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
-      body: JSON.stringify({
-        sessionId: 'cf2e73',
-        location: 'database.ts:_addObject',
-        message: '_addObject success',
-        data: {
-          objectId: obj.id,
-          typename: Obj.getTypename(obj),
-        },
-        timestamp: Date.now(),
-        hypothesisId: 'F,G,I',
-      }),
-    }).catch(() => {});
-    // #endregion
     return obj;
   }
 
