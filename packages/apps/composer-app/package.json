@@ -90,7 +90,6 @@
     "@dxos/plugin-map-solid": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-masonry": "workspace:*",
-    "@dxos/plugin-meeting": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",
     "@dxos/plugin-native": "workspace:*",
     "@dxos/plugin-native-filesystem": "workspace:*",

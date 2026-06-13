@@ -52,8 +52,6 @@
       "@dxos/plugin-map/types": ["packages/plugins/plugin-map/src/types/index.ts"],
       "@dxos/plugin-markdown": ["packages/plugins/plugin-markdown/src/index.ts"],
       "@dxos/plugin-markdown/types": ["packages/plugins/plugin-markdown/src/types/index.ts"],
-      "@dxos/plugin-meeting": ["packages/plugins/plugin-meeting/src/index.ts"],
-      "@dxos/plugin-meeting/types": ["packages/plugins/plugin-meeting/src/types/index.ts"],
       "@dxos/plugin-mermaid": ["packages/plugins/plugin-mermaid/src/index.ts"],
       "@dxos/plugin-native": ["packages/plugins/plugin-native/src/index.ts"],
       "@dxos/plugin-navtree": ["packages/plugins/plugin-navtree/src/index.ts"],

@@ -415,9 +415,6 @@
       "path": "packages/plugins/plugin-masonry/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-meeting/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
