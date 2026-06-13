@@ -217,7 +217,7 @@ const ActionInputEditor = ({
 
   return (
     <>
-      <Form.Label label={t('action-input.label')} asChild />
+      <Form.Label label={t('action-input.label')} standalone />
       <Form.Root
         key={operation.id}
         schema={effectSchema}
