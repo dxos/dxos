@@ -3,13 +3,29 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentProps, type PropsWithChildren, type ReactNode, useCallback } from 'react';
+import React, {
+  type ComponentProps,
+  type CSSProperties,
+  type MouseEvent,
+  type PropsWithChildren,
+  type ReactNode,
+  type RefCallback,
+  useCallback,
+} from 'react';
 
-import { type IconButtonProps, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import {
+  IconBlock,
+  IconButton,
+  type IconButtonProps,
+  ListItem as NaturalListItem,
+  type ThemedClassName,
+  ToggleIconButton,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { List, type ListItemRecord } from '../List';
-import { useOrderedListContext } from './OrderedListRoot';
+import { useListGrid, useReorderItem } from '../../aspects';
+import { type ListItemRecord, useOrderedListContext } from './OrderedListRoot';
 
 const ORDERED_LIST_ITEM_NAME = 'OrderedListItem';
 
@@ -18,6 +34,10 @@ type OrderedListItemContextValue = {
   expanded: boolean;
   toggle: () => void;
   canDrag: boolean;
+  handleRef: RefCallback<HTMLElement>;
+  /** ARIA wiring for the controlled disclosure panel. */
+  triggerProps: ReturnType<NonNullable<ReturnType<typeof useOrderedListContext>['disclosure']['bind']>>['triggerProps'];
+  panelProps: ReturnType<NonNullable<ReturnType<typeof useOrderedListContext>['disclosure']['bind']>>['panelProps'];
 };
 
 const [OrderedListItemProvider, useOrderedListItemContext] =
@@ -26,76 +46,160 @@ const [OrderedListItemProvider, useOrderedListItemContext] =
 export type OrderedListItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<{
     id: string;
-    /** The record handed to the underlying `List.Item` for DnD. */
+    /** The record handed to the underlying reorder hook (kept for back-compat with callers). */
     item: T;
     /** Defaults to true; false disables the drag handle. */
     canDrag?: boolean;
     /** Apply the row-hover affordance. Defaults to false. */
     hover?: boolean;
+    /** Inline style merged onto the outer element. Used for grid templates produced by `useListGrid`. */
+    style?: CSSProperties;
   }>
 >;
 
-/** A single reorderable item. Wraps `List.Item` and provides per-item expand context. */
+/**
+ * A single reorderable item. Calls `useReorderItem` to wire pragmatic-dnd refs + state,
+ * resolves disclosure state from the root context, and exposes both via item context for
+ * the sub-components (`OrderedListDragHandle`, `OrderedListTitle`, `OrderedListExpandCaret`).
+ *
+ * The outer element applies only structural concerns (`relative` + state classes); the
+ * layout (flex/grid) is controlled by the caller via `classNames` so master-detail rows
+ * and bare reorderable rows can share the same component.
+ */
 export const OrderedListItem = <T extends ListItemRecord>({
   id,
-  item,
   canDrag = true,
   hover = false,
   classNames,
+  style,
   children,
 }: OrderedListItemProps<T>) => {
-  const { expandedId, setExpanded } = useOrderedListContext(ORDERED_LIST_ITEM_NAME);
-  const expanded = expandedId === id;
-  const toggle = useCallback(() => setExpanded(expanded ? undefined : id), [expanded, id, setExpanded]);
+  const { reorder, disclosure, navigation } = useOrderedListContext(ORDERED_LIST_ITEM_NAME);
+  const { rowRef, handleRef, closestEdge, state } = useReorderItem(reorder, id);
+  const { expanded, toggle, triggerProps, panelProps } = disclosure.bind(id);
 
   return (
-    <OrderedListItemProvider id={id} expanded={expanded} toggle={toggle} canDrag={canDrag}>
-      {/* Disclosure state lives on the controlling caret button (aria-expanded/aria-controls),
-          not the row container, so the row stays neutral for non-expandable lists. */}
-      <List.Item<T> item={item} hover={hover} classNames={mx('flex flex-col', classNames)}>
+    <OrderedListItemProvider
+      id={id}
+      expanded={expanded}
+      toggle={toggle}
+      canDrag={canDrag}
+      handleRef={handleRef}
+      triggerProps={triggerProps}
+      panelProps={panelProps}
+    >
+      <div
+        ref={rowRef as RefCallback<HTMLDivElement>}
+        {...navigation.itemProps()}
+        style={style}
+        className={mx(
+          'relative dx-selected',
+          hover && 'dx-hover',
+          state.type === 'dragging' && 'opacity-50',
+          classNames,
+        )}
+      >
         {children}
-      </List.Item>
+        {closestEdge && <NaturalListItem.DropIndicator edge={closestEdge} />}
+      </div>
     </OrderedListItemProvider>
   );
 };
 
-/** Drag handle. Disabled when the list is readonly or the item opts out via `canDrag={false}`. */
+/**
+ * Drag handle. Disabled when the list is readonly or the item opts out via `canDrag={false}`.
+ * The button is the only element that initiates drag — pragmatic-dnd's `dragHandle:` option
+ * scopes the source surface to this ref.
+ */
 export const OrderedListDragHandle = () => {
   const { readonly } = useOrderedListContext('OrderedListDragHandle');
-  const { canDrag } = useOrderedListItemContext('OrderedListDragHandle');
-  return <List.ItemDragHandle disabled={readonly || !canDrag} noTooltip />;
-};
-
-/** Clickable title; clicking toggles the item's expanded state. */
-export const OrderedListTitle = ({
-  classNames,
-  children,
-  ...props
-}: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => {
-  const { id, toggle } = useOrderedListItemContext('OrderedListTitle');
-  // The title carries a stable id so the expanded panel can name itself via `aria-labelledby`.
+  const { canDrag, handleRef } = useOrderedListItemContext('OrderedListDragHandle');
+  const { t } = useTranslation(osTranslations);
+  const disabled = readonly || !canDrag;
   return (
-    <List.ItemTitle id={`${id}-title`} classNames={classNames} onClick={toggle} {...props}>
-      {children}
-    </List.ItemTitle>
+    <IconButton
+      variant='ghost'
+      disabled={disabled}
+      noTooltip
+      icon='ph--dots-six-vertical--regular'
+      iconOnly
+      label={t('drag-handle.label')}
+      ref={handleRef as RefCallback<HTMLButtonElement>}
+    />
   );
 };
 
-/** Delete icon button. */
+/**
+ * Clickable title; clicking toggles the item's expanded state. Carries a stable id so the
+ * expanded panel can name itself via `aria-labelledby`.
+ */
+export const OrderedListTitle = ({
+  classNames,
+  children,
+  onClick,
+  ...props
+}: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => {
+  const { triggerProps } = useOrderedListItemContext('OrderedListTitle');
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      onClick?.(event);
+      triggerProps.onClick(event);
+    },
+    [onClick, triggerProps],
+  );
+  return (
+    <div
+      {...props}
+      // The title row is also the disclosure trigger, so it carries the trigger's
+      // `id` + `aria-expanded` + `aria-controls` for assistive tech.
+      id={triggerProps.id}
+      aria-expanded={triggerProps['aria-expanded']}
+      aria-controls={triggerProps['aria-controls']}
+      className={mx('flex grow items-center truncate cursor-pointer', classNames)}
+      onClick={handleClick}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Delete icon button. Anchored in a `var(--dx-rail-item)` IconBlock so it shares a centerline
+ * with the title row regardless of expand state. No `my-[1px]` nudge: the central column's
+ * outline is `ring-1` (see `OrderedListDetailItem`) so layout is exact.
+ */
 export const OrderedListDeleteButton = ({
   autoHide = false,
+  icon = 'ph--x--regular',
+  label,
+  disabled,
+  classNames,
   ...props
 }: Partial<Pick<IconButtonProps, 'icon'>> &
-  Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => (
-  <List.ItemDeleteButton autoHide={autoHide} {...props} />
-);
+  Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
+  const { t } = useTranslation(osTranslations);
+  return (
+    <IconBlock>
+      <IconButton
+        {...props}
+        variant='ghost'
+        disabled={disabled}
+        icon={icon}
+        iconOnly
+        label={label ?? t('delete.label')}
+        classNames={[classNames, autoHide && disabled && 'hidden']}
+      />
+    </IconBlock>
+  );
+};
 
-/** Expand/collapse caret; reflects and toggles the item's expanded state. */
+/**
+ * Expand/collapse caret; reflects and toggles the item's expanded state via the disclosure
+ * trigger's `aria-expanded` + `aria-controls`.
+ */
 export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
   const { t } = useTranslation(osTranslations);
-  const { id, expanded, toggle } = useOrderedListItemContext('OrderedListExpandCaret');
-  // Disclosure semantics: this button controls the expanded panel so assistive tech can
-  // announce the open/closed state and navigate to the controlled region.
+  const { expanded, toggle, triggerProps } = useOrderedListItemContext('OrderedListExpandCaret');
   return (
     <ToggleIconButton
       iconOnly
@@ -103,8 +207,10 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
       active={expanded}
       icon='ph--caret-right--regular'
       label={t('toggle-expand.label')}
-      aria-expanded={expanded}
-      aria-controls={`${id}-panel`}
+      // Disclosure semantics are carried here for AT users that interact with the caret
+      // rather than the title.
+      aria-expanded={triggerProps['aria-expanded']}
+      aria-controls={triggerProps['aria-controls']}
       onClick={toggle}
       {...props}
     />
@@ -114,7 +220,7 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
 export type OrderedListDetailItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<{
     id: string;
-    /** The record handed to the underlying `List.Item` for DnD. */
+    /** The record handed to the underlying reorder hook (kept for back-compat with callers). */
     item: T;
     /** Defaults to true; false disables the drag handle. */
     canDrag?: boolean;
@@ -131,8 +237,13 @@ export type OrderedListDetailItemProps<T extends ListItemRecord> = ThemedClassNa
 >;
 
 /**
- * Master-detail row: a drag handle and trailing action flank a bordered central column whose
- * name row (title + inline actions + expand caret) toggles an inline detail panel (children).
+ * Master-detail row: a drag handle and trailing action flank a `ring-1`-outlined central
+ * column whose title row (title + inline actions + expand caret) toggles an inline detail
+ * panel (children).
+ *
+ * Outline uses `ring-1` (rendered as box-shadow) rather than `border` so the column's
+ * content area is the full `var(--dx-rail-item)` height — handles, title, caret, and
+ * trailing all sit on the same baseline without per-pixel nudges.
  */
 export const OrderedListDetailItem = <T extends ListItemRecord>({
   id,
@@ -146,30 +257,45 @@ export const OrderedListDetailItem = <T extends ListItemRecord>({
   classNames,
   children,
 }: OrderedListDetailItemProps<T>) => {
-  const { expandedId } = useOrderedListContext('OrderedListDetailItem');
-  const expanded = expandedId === id;
+  const grid = useListGrid({ trailing: !!trailing });
   return (
     <OrderedListItem
       id={id}
       item={item}
       canDrag={canDrag}
-      classNames={mx('grid grid-cols-[min-content_1fr_min-content] items-start gap-1 pb-1', classNames)}
+      // The grid template is inline so the row's three slots (handle / card / trailing)
+      // land in fixed-width tracks that share a baseline with the title row inside the card.
+      // See useListGrid for the rationale.
+      style={grid.rowProps.style}
+      classNames={mx(grid.rowProps.className, 'pb-1', classNames)}
     >
       <OrderedListDragHandle />
-      <div className='flex flex-col border border-subdued-separator rounded-sm'>
-        <div className='flex items-center'>
+      <div className='flex flex-col ring-1 ring-subdued-separator rounded-sm overflow-hidden'>
+        <div className='flex items-center min-h-[var(--dx-rail-item)]'>
           <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
           {actions}
           {expandable && <OrderedListExpandCaret />}
         </div>
-        {/* Detail panel: a region named by its title so it is reachable and labelled for assistive tech. */}
-        {expandable && expanded && children && (
-          <div role='region' id={`${id}-panel`} aria-labelledby={`${id}-title`} className='px-2 pb-2'>
-            {children}
-          </div>
-        )}
+        {expandable && <DetailPanel>{children}</DetailPanel>}
       </div>
       {trailing}
     </OrderedListItem>
+  );
+};
+
+/**
+ * Read-only panel renderer that consumes the item's disclosure state from context. Kept as
+ * a small sub-component so the panel's `id` + `role=region` + `aria-labelledby` come from a
+ * single source — and so a closed item doesn't pay for rendering an empty panel.
+ */
+const DetailPanel = ({ children }: PropsWithChildren) => {
+  const { expanded, panelProps } = useOrderedListItemContext('OrderedListDetailItem.Panel');
+  if (!expanded || !children) {
+    return null;
+  }
+  return (
+    <div {...panelProps} className='px-2 pb-2'>
+      {children}
+    </div>
   );
 };

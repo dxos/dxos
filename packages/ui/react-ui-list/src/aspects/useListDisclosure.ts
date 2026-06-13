@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { type MouseEvent, useCallback, useId } from 'react';
+import { type MouseEvent, useCallback, useEffect, useId, useRef, useState } from 'react';
 
 export type ListDisclosureMode = 'single' | 'multi';
 
@@ -63,24 +62,37 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  *
  * Controlled-ness keys on `onValueChange` rather than on the value's presence so that
  * `undefined` (single mode) and the empty set (multi mode) remain valid "nothing expanded"
- * values — `useControllableState` would otherwise flip to uncontrolled on clear.
+ * values. Radix's `useControllableState` (1.1.0) flips to uncontrolled when a controlled
+ * value clears to `undefined`, then re-reads the stale internal state and fails to collapse —
+ * a hand-rolled controller is the only correct option here.
  */
 export const useListDisclosure: {
   <M extends ListDisclosureMode>(opts: UseListDisclosureOptions<M>): UseListDisclosureReturn;
 } = ({ mode, value, defaultValue, onValueChange }) => {
   const idPrefix = useId();
 
-  // `useControllableState` accepts `T | undefined`; the controlled path holds whatever the
-  // caller passes in. We branch on `mode` once when toggling so the public API stays clean.
-  const [resolvedValue, setResolvedValue] = useControllableState<SingleValue | MultiValue>({
-    prop: value,
-    defaultProp: defaultValue,
-    onChange: (next) => {
-      // Tightening the callback type for callers is safe: `next` always matches the
-      // declared mode because we only write values of that shape ourselves.
-      onValueChange?.(next as ValueFor<typeof mode>);
-    },
-  });
+  // Latches once the consumer has ever passed a non-undefined `value`, so subsequent renders
+  // with `value === undefined` are treated as "controlled cleared" rather than "switched to
+  // uncontrolled" — a `string | undefined` parent state should be able to clear to undefined
+  // without the row falling back to stale internal state.
+  const wasControlledRef = useRef(false);
+  if (value !== undefined) {
+    wasControlledRef.current = true;
+  }
+  const isControlled = wasControlledRef.current;
+
+  const [internalValue, setInternalValue] = useState<SingleValue | MultiValue>(() => defaultValue);
+
+  // Mirror the controlled prop into internal state so going uncontrolled in a later render
+  // doesn't surface a stale internal value (and so consumers can read `internalValue`
+  // uniformly regardless of mode).
+  useEffect(() => {
+    if (isControlled) {
+      setInternalValue(value);
+    }
+  }, [isControlled, value]);
+
+  const resolvedValue = isControlled ? value : internalValue;
 
   const isExpanded = useCallback(
     (id: string) => {
@@ -94,20 +106,26 @@ export const useListDisclosure: {
 
   const setExpanded = useCallback(
     (id: string, expanded: boolean) => {
-      if (mode === 'multi') {
-        const current = isMulti(resolvedValue) ? resolvedValue : new Set<string>();
-        const next = new Set(current);
-        if (expanded) {
-          next.add(id);
-        } else {
-          next.delete(id);
+      const computeNext = (): SingleValue | MultiValue => {
+        if (mode === 'multi') {
+          const current = isMulti(resolvedValue) ? resolvedValue : new Set<string>();
+          const next = new Set(current);
+          if (expanded) {
+            next.add(id);
+          } else {
+            next.delete(id);
+          }
+          return next;
         }
-        setResolvedValue(next);
-      } else {
-        setResolvedValue(expanded ? id : undefined);
+        return expanded ? id : undefined;
+      };
+      const next = computeNext();
+      if (!isControlled) {
+        setInternalValue(next);
       }
+      onValueChange?.(next as ValueFor<typeof mode>);
     },
-    [mode, resolvedValue, setResolvedValue],
+    [mode, resolvedValue, isControlled, onValueChange],
   );
 
   const bind = useCallback(
