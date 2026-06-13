@@ -74,9 +74,10 @@ export const OrderedListTitle = ({
   children,
   ...props
 }: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => {
-  const { toggle } = useOrderedListItemContext('OrderedListTitle');
+  const { id, toggle } = useOrderedListItemContext('OrderedListTitle');
+  // The title carries a stable id so the expanded panel can name itself via `aria-labelledby`.
   return (
-    <List.ItemTitle classNames={classNames} onClick={toggle} {...props}>
+    <List.ItemTitle id={`${id}-title`} classNames={classNames} onClick={toggle} {...props}>
       {children}
     </List.ItemTitle>
   );
@@ -99,7 +100,9 @@ export const OrderedListDeleteButton = ({
 /** Expand/collapse caret; reflects and toggles the item's expanded state. */
 export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
   const { t } = useTranslation(osTranslations);
-  const { expanded, toggle } = useOrderedListItemContext('OrderedListExpandCaret');
+  const { id, expanded, toggle } = useOrderedListItemContext('OrderedListExpandCaret');
+  // Disclosure semantics: this button controls the expanded panel so assistive tech can
+  // announce the open/closed state and navigate to the controlled region.
   return (
     <List.ItemIconButton
       iconOnly
@@ -107,6 +110,8 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
       autoHide={false}
       label={t('toggle-expand.label')}
       icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+      aria-expanded={expanded}
+      aria-controls={`${id}-panel`}
       onClick={toggle}
       {...props}
     />
@@ -115,9 +120,19 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
 
 /** Expanded detail panel. Renders inside a bordered wrapper only when the item is expanded. */
 export const OrderedListExpanded = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  const { expanded } = useOrderedListItemContext('OrderedListExpanded');
+  const { id, expanded } = useOrderedListItemContext('OrderedListExpanded');
   if (!expanded) {
     return null;
   }
-  return <div className={mx('border border-separator rounded-md', classNames)}>{children}</div>;
+  // The panel is a region named by its title so it is reachable and labelled for assistive tech.
+  return (
+    <div
+      role='region'
+      id={`${id}-panel`}
+      aria-labelledby={`${id}-title`}
+      className={mx('border border-separator rounded-md', classNames)}
+    >
+      {children}
+    </div>
+  );
 };
