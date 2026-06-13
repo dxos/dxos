@@ -378,6 +378,24 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 
+  /**
+   * Uploads a built plugin bundle to the registry's R2-backed hosting. Authenticated
+   * with the caller's hub identity (verifiable presentation) — `setIdentity` must
+   * have been called. Returns the canonical `moduleUrl` (the hosted `manifest.json`).
+   */
+  public async uploadPluginBundle(
+    ctx: Context,
+    request: { slug: string; version: string; files: { path: string; content: string }[] },
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ moduleUrl: string }> {
+    return this._call(ctx, new URL('/registry/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
+      ...args,
+    });
+  }
+
   //
   // Import/Export
   //

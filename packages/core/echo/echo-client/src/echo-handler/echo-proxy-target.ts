@@ -18,10 +18,11 @@ import { type EchoDatabase } from '../proxy-db';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 
-export const symbolPath = Symbol('path');
-export const symbolNamespace = Symbol('namespace');
-export const symbolHandler = Symbol('handler');
-export const symbolInternals = Symbol('internals');
+/** Global symbols so proxy targets work across Vite bundle chunks (host vs import-map plugin). */
+export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
+export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
+export const symbolHandler = Symbol.for('@dxos/echo/internal/ProxyHandler');
+export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
 
 /**
  * For tracking proxy targets in the `targetsMap`.

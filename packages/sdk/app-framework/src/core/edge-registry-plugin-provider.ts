@@ -21,7 +21,10 @@ import * as Registry from './registry';
  * (e.g. `org.dxos.plugin.excalidraw`), so `DXN.make(slug, latestVersion)`
  * reconstructs the canonical `Plugin.Meta.key`.
  */
-const toRegistryPlugin = (entry: PluginView): Registry.Plugin => {
+const toRegistryPlugin = (entry: PluginView): Registry.Plugin | null => {
+  if (!entry.releases?.length) {
+    return null;
+  }
   const latestRelease = entry.releases.find((release) => release.version === entry.latestVersion) ?? entry.releases[0];
   return {
     id: entry.slug,
@@ -44,7 +47,7 @@ const toRegistryPlugin = (entry: PluginView): Registry.Plugin => {
  * Maps a wire-format `PluginView` release list to `Registry.PluginVersion[]`.
  */
 const toRegistryVersions = (entry: PluginView): Registry.PluginVersion[] =>
-  entry.releases.map((release) => ({
+  (entry.releases ?? []).map((release) => ({
     tag: release.version,
     moduleUrl: release.moduleUrl,
   }));
@@ -75,7 +78,7 @@ export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
     }).pipe(
       Effect.map((body) => {
         this.#cachedEntries = body.plugins;
-        const plugins = body.plugins.map(toRegistryPlugin);
+        const plugins = body.plugins.map(toRegistryPlugin).filter((p): p is Registry.Plugin => p !== null);
         this.#cachedPlugins = plugins;
         return plugins;
       }),

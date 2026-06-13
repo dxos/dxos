@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -42,6 +45,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../devtools/cli-util"
     },
     {
@@ -49,6 +55,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"
