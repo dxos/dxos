@@ -3,8 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useCallback, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -56,11 +55,22 @@ export const OrderedListRoot = <T extends ListItemRecord>({
   onExpandedChange,
   children,
 }: OrderedListRootProps<T>) => {
-  const [expandedId, setExpanded] = useControllableState<string | undefined>({
-    prop: expandedIdProp,
-    defaultProp: defaultExpandedId,
-    onChange: onExpandedChange,
-  });
+  // Controlled-ness is keyed on `onExpandedChange` rather than on `expandedId !== undefined`
+  // so that `undefined` remains a valid "nothing expanded" value: `expandedId` returns to
+  // `undefined` on every collapse, and Radix `useControllableState` (v1.1.0) would otherwise
+  // flip to uncontrolled when the id is cleared and fail to collapse the panel.
+  const controlled = onExpandedChange !== undefined;
+  const [internalExpandedId, setInternalExpandedId] = useState<string | undefined>(defaultExpandedId);
+  const expandedId = controlled ? expandedIdProp : internalExpandedId;
+  const setExpanded = useCallback(
+    (id: string | undefined) => {
+      if (!controlled) {
+        setInternalExpandedId(id);
+      }
+      onExpandedChange?.(id);
+    },
+    [controlled, onExpandedChange],
+  );
 
   return (
     <OrderedListProvider expandedId={expandedId} setExpanded={setExpanded} readonly={readonly}>
