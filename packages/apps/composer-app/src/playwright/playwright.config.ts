@@ -8,6 +8,8 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
+  // Storybook-based tests require a separate webServer (see playwright-welcome-focus.config.ts).
+  testIgnore: ['**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
   workers: 1,
