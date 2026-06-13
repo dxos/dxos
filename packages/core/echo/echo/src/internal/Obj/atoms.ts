@@ -11,6 +11,7 @@ import * as Option from 'effect/Option';
 import { assertArgument } from '@dxos/invariant';
 
 import type * as Entity from '../../Entity';
+import { getLabel } from '../Annotation';
 import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
@@ -241,4 +242,34 @@ export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entit
 export const makeRelation = <T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
   assertArgument(isEntity(relation), 'relation', 'Must be a reactive ECHO relation');
   return relationFamily(relation);
+};
+
+/**
+ * Atom family for an entity's label string.
+ * Fires only when the computed label actually changes, not on every entity mutation.
+ */
+const labelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
+  return Atom.make<string | undefined>((get) => {
+    let previous = getLabel(entity);
+
+    const unsubscribe = subscribe(entity, () => {
+      const next = getLabel(entity);
+      if (next !== previous) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }).pipe(Atom.keepAlive);
+});
+
+/**
+ * Create a read-only atom for the label of a reactive ECHO entity.
+ * Re-evaluates on entity mutation; only propagates when the label string changes.
+ */
+export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
+  assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
+  return labelAtomFamily(entity);
 };

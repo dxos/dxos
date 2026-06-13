@@ -4,6 +4,7 @@
 
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Option from 'effect/Option';
+import type { Atom } from '@effect-atom/atom-react';
 
 import { Node } from '@dxos/app-graph';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
@@ -127,6 +128,7 @@ export const getCollectionGraphNodePartials = ({
 
 /** Builds an app-graph node for an ECHO object. Uses the local object ID as the graph node ID. */
 export const createObjectNode = ({
+  get,
   db,
   object,
   disposition,
@@ -134,6 +136,8 @@ export const createObjectNode = ({
   navigable = false,
   parentCollection,
 }: {
+  /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
+  get: Atom.Context;
   db: Database.Database;
   object: Obj.Unknown;
   disposition?: string;
@@ -178,7 +182,8 @@ export const createObjectNode = ({
     : graphProps;
 
   const label =
-    Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
+    get(Obj.labelAtom(object)) ||
+    getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));

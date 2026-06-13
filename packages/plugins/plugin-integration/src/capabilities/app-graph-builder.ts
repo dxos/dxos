@@ -111,6 +111,7 @@ export default Capability.makeModule(
             integrations
               .map((integration) =>
                 createObjectNode({
+                  get,
                   db: space.db,
                   object: integration,
                 }),

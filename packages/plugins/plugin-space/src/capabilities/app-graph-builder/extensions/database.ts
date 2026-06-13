@@ -158,6 +158,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           .getViewsForTypeUri(typeUri)
           .map((object: Obj.Unknown) =>
             createObjectNode({
+              get,
               db: space.db,
               object,
               droppable: false,
@@ -191,6 +192,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             .map((object: Obj.Unknown) => {
               get(Obj.atom(object));
               return createObjectNode({
+                get,
                 db: space.db,
                 object,
                 droppable: false,
