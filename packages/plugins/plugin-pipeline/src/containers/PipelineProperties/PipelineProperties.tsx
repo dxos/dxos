@@ -11,8 +11,8 @@ import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, ty
 import { type Mutable } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form, FormFieldLabel, ViewEditor } from '@dxos/react-ui-form';
+import { type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { FieldHeader, Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -154,7 +154,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   // TODO(burdon): Replace wrapper with Form.Content.
   return (
     <div className={mx('py-form-padding overflow-y-auto', classNames)}>
-      <FormFieldLabel standalone classNames='py-1' label={t('views.label')} />
+      <FieldHeader label={t('views.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}
@@ -209,11 +209,6 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-
-      {/* TODO(burdon): Move to header. */}
-      <div className='my-form-padding'>
-        <IconButton icon='ph--plus--regular' label={t('add-column.label')} onClick={handleAdd} />
-      </div>
     </div>
   );
 };
