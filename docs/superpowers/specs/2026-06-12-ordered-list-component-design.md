@@ -29,12 +29,19 @@ single-expand state machine, and the expanded-panel border wrapper — duplicate
 The original task also named a third site — an "ordered branch" of
 `packages/ui/react-ui-form/src/components/Form/fields/ArrayField.tsx`, gated by a
 `FormOrderedAnnotation`, with a synthetic-id (`DND_ID`/`idsRef`/`nextId`) reconciliation map.
-**That code does not exist** — not on this branch, any branch, or in git history. Today's
-`ArrayField` is a plain `Form` field with flex layout, add/delete, and no reorder.
+That code did not exist on `main` when this branch started — it lived on the
+`affectionate-curie` branch (the `react-ui-form` refactor that moved `ArrayField` to
+`Form/FormField/fields/ArrayField/` and added `FormOrderedAnnotation`).
 
-Decision: **out of scope for this change.** We migrate the two real `List` consumers and
-design the `OrderedList` API so a future ordered `ArrayField` (and its `FormOrderedAnnotation`)
-can adopt it. We do not build the annotation or the ordered branch here.
+Decision (updated): the first phase built `OrderedList` and migrated the two `List`
+consumers present on `main` (`FieldList`, `PipelineProperties`), designing the API to accept
+a future ordered `ArrayField`. Once `affectionate-curie` was merged into this branch, the
+ordered `ArrayField` became the genuine **third consumer** and was migrated too — it composes
+`OrderedList.Root/.Content/.Item/.DragHandle/.DeleteButton` with its own grid row (not
+`.Row`, which is master-detail chrome) and passes its synthetic `getOrderedId` straight to
+`getId`. The redundant `aria-expanded` on `OrderedList.Item` was dropped at that point so the
+row container stays neutral for non-expandable lists (disclosure state is carried by the
+expand caret button).
 
 ## Decisions
 
@@ -256,13 +263,12 @@ Add `export * from './OrderedList';` to `packages/ui/react-ui-list/src/component
 - Storybook (user runs server on :9009; reuse it): `ViewEditor` story (drag-reorder,
   expand/collapse, add/delete, hide/show), and `PipelineComponent`/`PipelineArticle` stories
   (which render `PipelineProperties`), plus the new `OrderedList` story.
-- The original acceptance item "ArrayField Ordered variant" is **moot** — that variant does
-  not exist and is out of scope (see Scope correction).
+- The `ArrayField` Ordered variant story (`ui/react-ui-form/.../ArrayField` → `Ordered`)
+  verifies the third consumer after the `affectionate-curie` merge.
 
 ## Non-goals
 
-- `FormOrderedAnnotation` and the ordered `ArrayField` branch (future follow-up).
-- Synthetic-id reconciliation implementation (seam designed via optional `getId`; not built).
+- `FormOrderedAnnotation` itself (owned by `affectionate-curie`; this branch consumes it).
 - Migrating other `List` consumers (AUDIT Phase 6, separate work).
 - Replacing `List` with `Mosaic.Stack` (deferred to Phase 6; `OrderedList` is the seam).
 ```
