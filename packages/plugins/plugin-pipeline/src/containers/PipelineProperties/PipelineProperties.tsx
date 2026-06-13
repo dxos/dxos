@@ -13,16 +13,13 @@ import { SchemaEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
-
-const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
-const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 const ColumnFormSchema = Pipeline.Column.pipe(Schema.mutable, Schema.pick('name'));
 
@@ -115,10 +112,6 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     [columns, updateColumns],
   );
 
-  const handleToggleField = useCallback((column: Pipeline.Column) => {
-    setExpandedId((prevExpandedId) => (prevExpandedId === column.view.uri ? undefined : column.view.uri));
-  }, []);
-
   const handleDelete = useCallback(
     async (column: Pipeline.Column) => {
       if (column.view.uri === expandedId) {
@@ -159,72 +152,58 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
     <div className={mx('py-form-padding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
 
-      <List.Root<Pipeline.Column>
+      <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}
         getId={(column) => column.view.uri}
         onMove={handleMove}
+        expandedId={expandedId}
+        onExpandedChange={setExpandedId}
       >
-        {({ items: columns }) => (
-          <>
-            <div role='list' className={mx(listGrid)}>
-              {columns.map((column) => (
-                <List.Item<Pipeline.Column>
-                  key={column.view.uri}
-                  item={column}
-                  classNames={listItemGrid}
-                  aria-expanded={expandedId === column.view.uri}
-                >
-                  <div className={mx(listItemGrid, 'dx-hover rounded-xs cursor-pointer min-h-10')}>
-                    <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleToggleField(column)}>
-                      {column.name || t('untitled-view.title')}
-                    </List.ItemTitle>
-                    <List.ItemDeleteButton
-                      label={t('delete-view.label')}
-                      autoHide={false}
-                      onClick={() => handleDelete(column)}
-                      data-testid='view.delete'
+        {({ items }) => (
+          <OrderedList.Content>
+            {items.map((column) => (
+              <OrderedList.Item<Pipeline.Column> key={column.view.uri} id={column.view.uri} item={column}>
+                <OrderedList.Row>
+                  <OrderedList.DragHandle />
+                  <OrderedList.Title>{column.name || t('untitled-view.title')}</OrderedList.Title>
+                  <OrderedList.DeleteButton
+                    label={t('delete-view.label')}
+                    onClick={() => handleDelete(column)}
+                    data-testid='view.delete'
+                  />
+                  <OrderedList.ExpandCaret />
+                </OrderedList.Row>
+                {column.view.target && (
+                  <OrderedList.Expanded classNames='my-2'>
+                    <Form.Root
+                      schema={ColumnFormSchema}
+                      values={column}
+                      onValuesChanged={handleColumnValuesChanged(column)}
+                    >
+                      <Form.Content>
+                        <Form.FieldSet />
+                      </Form.Content>
+                    </Form.Root>
+                    <ViewEditor
+                      ref={projectionRef}
+                      mode='tag'
+                      readonly
+                      type={type}
+                      view={column.view.target}
+                      registry={db?.graph.registry}
+                      db={db}
+                      tags={tags}
+                      types={types}
+                      onQueryChanged={handleQueryChanged}
                     />
-                    <IconButton
-                      iconOnly
-                      variant='ghost'
-                      label={t('toggle-expand.label', { ns: osTranslations })}
-                      icon={expandedId === column.view.uri ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                      onClick={() => handleToggleField(column)}
-                    />
-                  </div>
-                  {expandedId === column.view.uri && column?.view.target && (
-                    <div className='col-span-5 my-2 border border-separator rounded-md'>
-                      <Form.Root
-                        schema={ColumnFormSchema}
-                        values={column}
-                        onValuesChanged={handleColumnValuesChanged(column)}
-                      >
-                        <Form.Content>
-                          <Form.FieldSet />
-                        </Form.Content>
-                      </Form.Root>
-                      <ViewEditor
-                        ref={projectionRef}
-                        mode='tag'
-                        readonly
-                        type={type}
-                        view={column.view.target}
-                        registry={db?.graph.registry}
-                        db={db}
-                        tags={tags}
-                        types={types}
-                        onQueryChanged={handleQueryChanged}
-                      />
-                    </div>
-                  )}
-                </List.Item>
-              ))}
-            </div>
-          </>
+                  </OrderedList.Expanded>
+                )}
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
         )}
-      </List.Root>
+      </OrderedList.Root>
 
       <div className='my-form-padding'>
         <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
