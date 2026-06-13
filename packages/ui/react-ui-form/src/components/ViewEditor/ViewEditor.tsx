@@ -28,7 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 import {
   ParentLabelAnnotation,
   ProjectionModel,
@@ -36,7 +36,7 @@ import {
   createEchoChangeCallback,
   getTypeURIFromQuery,
 } from '@dxos/schema';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -286,13 +286,6 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     setExpandedField(field.id);
   }, [projectionModel, readonly]);
 
-  const handleToggleField = useCallback(
-    (field: View.FieldType) => {
-      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
-    },
-    [readonly],
-  );
-
   const handleDelete = useCallback(
     (fieldId: string) => {
       invariant(!readonly);
@@ -342,61 +335,54 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
   }
 
   return (
-    <List.Root<View.FieldType>
+    <OrderedList.Root<View.FieldType>
       items={viewSnapshot.projection.fields as View.FieldType[]}
       isItem={Schema.is(View.FieldSchema)}
       getId={(field) => field.id}
       onMove={readonly ? undefined : handleMove}
       readonly={readonly}
+      expandedId={expandedField}
+      onExpandedChange={setExpandedField}
     >
       {({ items: fields }) => (
         <>
           {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
-          <div role='list' className='grid grid-cols-[min-content_1fr_min-content_min-content_min-content]'>
-            {fields?.map((field) => {
+          <OrderedList.Content>
+            {fields.map((field) => {
               const hidden = field.visible === false;
               return (
-                <List.Item<View.FieldType>
+                <OrderedList.Item<View.FieldType>
                   key={field.id}
+                  id={field.id}
                   item={field}
-                  classNames={'grid grid-cols-subgrid col-span-5'}
-                  aria-expanded={expandedField === field.id}
+                  canDrag={!readonly && !schemaReadonly}
                 >
-                  <div className='grid grid-cols-subgrid col-span-5 rounded-xs cursor-pointer min-h-10 dx-hover'>
-                    <List.ItemDragHandle disabled={readonly || schemaReadonly} />
-                    <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
+                  <OrderedList.Row>
+                    <OrderedList.DragHandle />
+                    <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>
                       {field.path}
-                    </List.ItemTitle>
-                    <List.ItemIconButton
+                    </OrderedList.Title>
+                    <OrderedList.Action
                       label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
-                      autoHide={false}
                       disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
                       onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                     />
                     {!readonly && (
                       <>
-                        <List.ItemDeleteButton
+                        <OrderedList.DeleteButton
                           label={t('delete-field.label')}
-                          autoHide={false}
-                          disabled={readonly || schemaReadonly || viewSnapshot.projection.fields.length <= 1}
+                          disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
-                        <List.ItemIconButton
-                          iconOnly
-                          variant='ghost'
-                          label={t('toggle-expand.label', { ns: osTranslations })}
-                          icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                          onClick={() => handleToggleField(field)}
-                          data-testid='field.toggle'
-                        />
+                        <OrderedList.ExpandCaret data-testid='field.toggle' />
                       </>
                     )}
-                  </div>
-                  {expandedField === field.id && !readonly && (
-                    <div className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
+                  </OrderedList.Row>
+                  {!readonly && (
+                    <OrderedList.Expanded classNames='mt-1 mb-1'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}
                         registry={registry}
@@ -404,12 +390,12 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                         field={field}
                         onSave={handleClose}
                       />
-                    </div>
+                    </OrderedList.Expanded>
                   )}
-                </List.Item>
+                </OrderedList.Item>
               );
             })}
-          </div>
+          </OrderedList.Content>
           {!readonly && !expandedField && (
             <div className='my-form-padding'>
               <IconButton
@@ -423,7 +409,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
           )}
         </>
       )}
-    </List.Root>
+    </OrderedList.Root>
   );
 };
 
