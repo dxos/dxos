@@ -9,7 +9,9 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { Format, FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 export const SampleItem = Schema.Struct({
   // Fields are `Schema.optional` because ECHO objects start with undefined fields

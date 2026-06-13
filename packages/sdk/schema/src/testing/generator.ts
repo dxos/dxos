@@ -7,14 +7,9 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import {
-  type AnyProperties,
-  GeneratorAnnotationId,
-  type GeneratorAnnotationValue,
-  type JsonSchemaType,
-  getSchemaReference,
-  getTypeAnnotation,
-} from '@dxos/echo/internal';
+import { GeneratorAnnotationId, type GeneratorAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { type AnyProperties, getSchemaReference } from '@dxos/echo/internal';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
 import { EffectEx, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

@@ -74,6 +74,15 @@ export const MessageArticle = ({
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
   const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
+  // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).
+  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
+  // (Database/Feed/Credentials) can materialize.
+  const handleDelete = useCallback(() => {
+    if (mailbox) {
+      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
+    }
+  }, [invokePromise, mailbox, message, db]);
+
   return (
     <Message.Root
       attendableId={toolbarAttendableId}
@@ -84,6 +93,7 @@ export const MessageArticle = ({
       onReply={handleReply}
       onReplyAll={handleReplyAll}
       onForward={handleForward}
+      onDelete={mailbox ? handleDelete : undefined}
     >
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>

@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EntityId, type URI } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -497,16 +497,18 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
+export type { GetURIOptions } from './internal';
+
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical URI of the object. Returns `URI.URI` (today always an EID,
- * but future entity kinds may surface other URI schemes — narrow with
- * `EID.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
+ * Get the URI of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link GetURIOptions}).
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => {
+export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  return internal.getUri(entity);
+  return internal.getUri(entity, options);
 };
 
 /**
@@ -545,6 +547,11 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
 /**
  * Get the database the object belongs to.
  * Accepts both reactive objects and snapshots.
+ *
+ * @idiom org.dxos.echo.objGetDatabase
+ *   applies: Reaching an object's database — to query, add, or remove — when the surrounding Space is not otherwise needed
+ *   instead-of: `getSpace(obj)?.db` (resolving the whole Space just to read its `.db`)
+ *   uses: {@link getDatabase}
  */
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);
@@ -911,3 +918,11 @@ export const decodeVersion = internal.decodeVersion;
  * Accepts both reactive objects and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom = objInternal.makeAtom;
+export const atomReactive = objInternal.makeWithReactive;
+export const atomProperty = objInternal.makeProperty;

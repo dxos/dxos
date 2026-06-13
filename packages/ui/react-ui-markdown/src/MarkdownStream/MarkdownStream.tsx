@@ -48,6 +48,7 @@ import {
   documentSlots,
   xmlFormatting,
   xmlBlockDecoration,
+  lineSpacing,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -269,12 +270,16 @@ const useMarkdownStreamTextEditor = (
           [
             extendedMarkdown({ registry }),
             decorateMarkdown({
-              // `dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
+              // `echo:`/`dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
               // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
               // non-functional `LinkButton` anchor on top of the same node — e.g. for
-              // `[DXOS](dxn:echo:BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ:01KQ889PZBRNHAEECV0ANFAYX7)`.
-              skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+              // `[DXOS](echo://BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ/01KQ889PZBRNHAEECV0ANFAYX7)`.
+              skip: (node) =>
+                (node.name === 'Link' || node.name === 'Image') &&
+                (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
+            // TODO(burdon): Make optional; Removes need for '\n\n'.
+            lineSpacing(),
             preview(),
             // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
             // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks

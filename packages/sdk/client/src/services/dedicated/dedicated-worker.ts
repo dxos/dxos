@@ -120,6 +120,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             });
             log('dedicated-worker: session created', { clientId: message.clientId });
             if (message.clientId === owningClientId) {
+              performance.mark('dedicated-worker:session-ready');
               log('dedicated-worker: connecting webrtc bridge to owning client', { clientId: message.clientId });
               runtime.connectWebrtcBridge(session);
             }

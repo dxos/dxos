@@ -269,9 +269,23 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._currentConnection = connection;
 
     await connection.open();
-    // Race with restartRequired so that restart is not blocked by _connect execution.
-    // Wait on ready to attempt a reconnect if it times out.
-    await Promise.race([this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }), restartRequired]);
+
+    // The connection is only a successful start once the socket becomes ready. A socket that
+    // closes or errors before becoming ready (or never connects within the timeout) is a failed
+    // start: throwing lets PersistentLifecycle apply its backoff. Returning here would mark the
+    // attempt as successful and reset the backoff, degenerating reconnects into a hot loop when
+    // the server accepts then immediately drops the socket.
+    const becameReady = await Promise.race([
+      this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }).then(
+        () => true,
+        () => false,
+      ),
+      restartRequired.wait().then(() => false),
+    ]);
+    if (!becameReady) {
+      throw new EdgeConnectionClosedError();
+    }
+
     return connection;
   }
 

@@ -13,14 +13,14 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { shouldTriggerAgent } from '../should-trigger-agent';
-import { AgentIdentity, ThreadCapabilities } from '../types';
-import { ThreadOperation } from '../types';
+import { AgentIdentity, CommentCapabilities } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = ThreadOperation.AddMessage.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const stateAtom = yield* Capability.get(ThreadCapabilities.State);
+      const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const subjectId = Obj.getURI(subject);
       const db = Obj.getDatabase(subject);
@@ -82,7 +82,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = Thread
       const identities = yield* Capability.getAll(AgentIdentity);
       const identity = identities[0];
       if (identity && shouldTriggerAgent(thread, message, identity.name)) {
-        yield* Operation.schedule(ThreadOperation.RespondToThread, {
+        yield* Operation.schedule(CommentOperation.RespondToThread, {
           thread: Ref.make(thread),
           subject: Ref.make(subject),
         });

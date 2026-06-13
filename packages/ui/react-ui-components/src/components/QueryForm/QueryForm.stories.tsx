@@ -19,10 +19,10 @@ import { QueryForm, type QueryFormProps } from './QueryForm';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Type.getTypename(Organization.Organization), label: 'Organization' },
-  { value: Type.getTypename(Person.Person), label: 'Person' },
-  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
-  { value: Type.getTypename(Employer.Employer), label: 'Employer' },
+  { value: Type.getURI(Organization.Organization), label: 'Organization' },
+  { value: Type.getURI(Person.Person), label: 'Person' },
+  { value: Type.getURI(Pipeline.Pipeline), label: 'Project' },
+  { value: Type.getURI(Employer.Employer), label: 'Employer' },
 ];
 
 const tags = Tag.createTagList({

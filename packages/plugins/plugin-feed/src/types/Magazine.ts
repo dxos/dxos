@@ -6,11 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation, StateMap } from '@dxos/app-toolkit';
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Template } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
+import { StateMap } from '@dxos/schema';
 
 import * as Subscription from './Subscription';
 
@@ -48,7 +49,7 @@ export const Magazine = Schema.Struct({
    * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
    * curation time and take precedence over the RSS-derived defaults in display.
    */
-  postState: StateMap.field(PostState),
+  postState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
   /**
    * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
    * Older posts beyond this bound are dropped; starred posts are preserved regardless.
@@ -73,7 +74,7 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'instructions'> & {
+export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' | 'instructions' | 'postState'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
   posts?: Ref.Ref<Subscription.Post>[];
   /** The user's topic instructions (what this magazine should cover). */
@@ -87,15 +88,18 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' |
  */
 export const make = (props: MakeProps = {}): Magazine => {
   const instructions = Template.make({ source: props.instructions ?? '' });
+  const postState = StateMap.make();
   const magazine = Obj.make(Magazine, {
     name: props.name,
     feeds: props.feeds ?? [],
     posts: props.posts ?? [],
     keep: props.keep,
     instructions,
+    postState: Ref.make(postState),
   });
-  // Cascade-delete the backing Text with the magazine.
+  // Cascade-delete the backing Text and per-Post state with the magazine.
   Obj.setParent(instructions.source.target!, magazine);
+  Obj.setParent(postState, magazine);
   return magazine;
 };
 
@@ -122,16 +126,24 @@ export const CreateMagazineSchema = Schema.Struct({
 //
 
 /** Agent-assigned relevance of a Post within a Magazine, or undefined. */
-export const getRank = (magazine: Magazine | undefined, postId: EntityId): number | undefined =>
-  magazine ? StateMap.bind<PostState>(magazine, 'postState').get(postId).rank : undefined;
+export const getRank = (magazine: Magazine | undefined, postId: EntityId): number | undefined => {
+  const stateMap = magazine?.postState.target;
+  return stateMap ? StateMap.bind<PostState>(stateMap).get(postId).rank : undefined;
+};
 
 /** Returns the full magazine-scoped {@link PostState} for a Post, or an empty record. */
-export const getPostState = (magazine: Magazine | undefined, postId: EntityId): Partial<PostState> =>
-  magazine ? StateMap.bind<PostState>(magazine, 'postState').get(postId) : {};
+export const getPostState = (magazine: Magazine | undefined, postId: EntityId): Partial<PostState> => {
+  const stateMap = magazine?.postState.target;
+  return stateMap ? StateMap.bind<PostState>(stateMap).get(postId) : {};
+};
 
 /** Merges partial state into a Post's magazine-scoped {@link PostState}. */
-export const patchPostState = (magazine: Magazine, postId: EntityId, state: Partial<PostState>): void =>
-  StateMap.bind<PostState>(magazine, 'postState').patch(postId, state);
+export const patchPostState = (magazine: Magazine, postId: EntityId, state: Partial<PostState>): void => {
+  const stateMap = magazine.postState.target;
+  if (stateMap) {
+    StateMap.bind<PostState>(stateMap).patch(postId, state);
+  }
+};
 
 /** Sets the magazine-scoped rank for a Post. */
 export const setRank = (magazine: Magazine, postId: EntityId, rank: number): void =>

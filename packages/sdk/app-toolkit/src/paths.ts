@@ -5,6 +5,7 @@
 import { Node } from '@dxos/app-graph';
 import { Key, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN, EID, type URI } from '@dxos/keys';
 
 /**
  * Prefix for pinned (non-space) workspace IDs in the graph.
@@ -35,6 +36,16 @@ export const Segments = {
 export const getSpacePath = (spaceId: string): string => `${Node.RootId}/${spaceId}`;
 
 /**
+ * Well-known local segment name for the per-space virtual Home node.
+ */
+export const SPACE_HOME_SEGMENT = 'home';
+
+/**
+ * Canonical qualified path to the virtual Home node of a space.
+ */
+export const getSpaceHomePath = (spaceId: string): string => `${getSpacePath(spaceId)}/${SPACE_HOME_SEGMENT}`;
+
+/**
  * Extract the space ID segment from a qualified graph path.
  */
 export const getSpaceIdFromPath = (qualifiedPath: string) => {
@@ -45,6 +56,28 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
  * Canonical qualified path to the types section of a space.
  */
 export const getTypesPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.types}`;
+
+/**
+ * Slash- and colon-free slug identifying a type for use as a graph node id / path segment: a static
+ * schema's typename, or — for a stored (database) schema — its entity id. A full type URI cannot be
+ * used here because path segments are split on `/` and the type segment is resolved as a bare entity id.
+ */
+export const getTypeSlug = (entity: Type.AnyEntity): string =>
+  Type.getDatabase(entity) != null ? entity.id : Type.getTypename(entity);
+
+/**
+ * Reduces a type URI to its slash- and colon-free path slug: an `echo:` EID to its entity id, a
+ * `dxn:` DXN to its version-less name. The URI-boundary companion to {@link getTypeSlug} (e.g. a
+ * view-target type resolved from a query AST). Returns the input unchanged if it is neither.
+ */
+export const getTypeSlugFromUri = (uri: URI.URI): string => {
+  const eid = EID.tryParse(uri);
+  if (eid) {
+    return EID.getEntityId(eid) ?? uri;
+  }
+  const dxn = DXN.tryMake(uri);
+  return dxn ? DXN.getName(dxn) : uri;
+};
 
 /**
  * Canonical qualified path to a specific type's subtree within a space.
@@ -64,13 +97,13 @@ export const getObjectPath = (spaceId: string, typename: string, objectId: strin
 
 /**
  * Derive the canonical graph path for a reactive ECHO object.
- * Throws if the object has no database or typename.
+ * Throws if the object has no database or type URI.
  */
 export const getObjectPathFromObject = (object: Obj.Unknown): string => {
   const db = Obj.getDatabase(object);
-  const typename = Obj.getTypename(object);
-  invariant(db && typename, 'Cannot derive graph path: object has no database or typename.');
-  return getObjectPath(db.spaceId, typename, object.id);
+  const typeUri = Obj.getTypeURI(object);
+  invariant(db, 'Cannot derive graph path: object has no database.');
+  return getObjectPath(db.spaceId, getTypeSlugFromUri(typeUri), object.id);
 };
 
 /**

@@ -86,9 +86,9 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
  */
 const findOrCreateCalendar = (remoteId: string, name: string) =>
   Effect.gen(function* () {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Calendar.Calendar, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remoteId }])),
-    );
+    ).run;
     if (existing.length > 0) {
       const candidate = existing[0];
       // TODO(wittjosiah): Filter.foreignKeys typing may not narrow to Calendar; drop guard if it does.

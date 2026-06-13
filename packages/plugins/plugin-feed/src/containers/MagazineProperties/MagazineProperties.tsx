@@ -8,18 +8,19 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { TemplateEditor } from '@dxos/plugin-assistant/components';
 import { useTranslation } from '@dxos/react-ui';
+import { Form, FormFieldLabel } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Magazine } from '#types';
 
-export const MagazineProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Magazine.Magazine>) => {
+export type MagazinePropertiesProps = AppSurface.ObjectPropertiesProps<Magazine.Magazine>;
+
+export const MagazineProperties = ({ subject }: MagazinePropertiesProps) => {
   const { t } = useTranslation(meta.id);
   return (
-    <div role='none' className='flex flex-col gap-1'>
-      <span className='text-sm text-description'>{t('topic-instructions.label')}</span>
+    <Form.Section>
+      <FormFieldLabel standalone label={t('topic-instructions.label')} />
       <TemplateEditor id={Obj.getURI(subject)} source={subject.instructions.source} lineNumbers={false} />
-    </div>
+    </Form.Section>
   );
 };
-
-MagazineProperties.displayName = 'MagazineProperties';

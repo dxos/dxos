@@ -7,15 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * Root transcript object created when the user starts a transcription.
  */
 // TODO(dmaretskyi): Convert `queue` to `Ref.Ref(Feed.Feed)` (see plugin-assistant migrations for pattern).
 export const Transcript = Schema.Struct({
-  // TODO(wittjosiah): Remove?
-  // TODO(burdon): Use Date or string?
   started: Schema.optional(Schema.String),
   ended: Schema.optional(Schema.String),
 
@@ -30,8 +28,6 @@ export const Transcript = Schema.Struct({
 );
 
 export type Transcript = Type.InstanceType<typeof Transcript>;
-
-// TODO(burdon): Do these need to be kept in sync with EDGE?
 
 /**
  * First message in queue.

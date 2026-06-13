@@ -11,10 +11,9 @@ import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
-import { StackItem } from '@dxos/react-ui-stack';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -48,31 +47,35 @@ export const GraphModule = ({ space }: ModuleProps) => {
   );
 
   return (
-    <StackItem.Content toolbar classNames={['relative h-full grid', open && 'grid-rows-[min-content_1fr]']}>
-      <SearchBar space={space} onSubmit={handleSubmit} />
-      <ForceGraph classNames='min-h-[50vh]' model={model} />
+    <Panel.Root classNames='relative h-full'>
+      <Panel.Toolbar asChild>
+        <SearchBar space={space} onSubmit={handleSubmit} />
+      </Panel.Toolbar>
+      <Panel.Content classNames='relative min-h-0'>
+        <ForceGraph classNames='min-h-[50vh]' model={model} />
 
-      {open && (
-        <div
-          className={mx(
-            'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-            'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
-          )}
-        >
-          <JsonHighlighter classNames='text-sm' data={filter} />
+        {open && (
+          <div
+            className={mx(
+              'flex absolute left-2 right-2 bottom-2 h-[8rem]',
+              'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
+            )}
+          >
+            <JsonHighlighter classNames='text-sm' data={filter} />
+          </div>
+        )}
+
+        <div className='absolute bottom-4 right-4 z-10'>
+          <IconButton
+            variant='ghost'
+            icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
+            iconOnly
+            label={open ? 'Close' : 'Open'}
+            onClick={() => setOpen((open) => !open)}
+          />
         </div>
-      )}
-
-      <div className='absolute bottom-4 right-4 z-10'>
-        <IconButton
-          variant='ghost'
-          icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
-          iconOnly
-          label={open ? 'Close' : 'Open'}
-          onClick={() => setOpen((open) => !open)}
-        />
-      </div>
-    </StackItem.Content>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -11,14 +11,14 @@ import { Obj, Relation } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
-import { ThreadCapabilities } from '../types';
-import { ThreadOperation } from '../types';
+import { CommentCapabilities } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.Delete> = ThreadOperation.Delete.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOperation.Delete.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, thread: threadProp }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const stateAtom = yield* Capability.get(ThreadCapabilities.State);
+      const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const thread = threadProp ?? (Relation.getSource(anchor) as Thread.Thread);
       const subjectId = Obj.getURI(subject);
       const state = registry.get(stateAtom);

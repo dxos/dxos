@@ -58,6 +58,33 @@ const Failing = Operation.make({
   output: Schema.Void,
 });
 
+// Carries an arbitrary live reference (e.g. a model/handle) that is not JSON-serializable.
+const WithLiveRef = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.withLiveRef'), name: 'WithLiveRef' },
+  input: Schema.Struct({ ref: Schema.Any }),
+  output: Schema.Number,
+});
+
+/**
+ * Child used by {@link ParentInvoker} to exercise the parent-child SUCCEEDED state invariant.
+ */
+const ChildPassthrough = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.childPassthrough'), name: 'ChildPassthrough' },
+  input: Schema.Number,
+  output: Schema.Number,
+});
+
+/**
+ * Parent that invokes {@link ChildPassthrough} via `Operation.invoke` (blocking await).
+ * Used to reproduce the DX-999 race where a late child-exit notification can clobber
+ * a parent's SUCCEEDED status.
+ */
+const ParentInvoker = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.parentInvoker'), name: 'ParentInvoker' },
+  input: Schema.Number,
+  output: Schema.Number,
+});
+
 /**
  * Per-test gate for {@link SlowChild}; set in the repro test before spawning the parent.
  */
@@ -90,6 +117,13 @@ const handlers = OperationHandlerSet.make(
       }),
     ),
   ),
+  WithLiveRef.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ ref }) {
+        return ref.value;
+      }),
+    ),
+  ),
   SlowChild.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ value }) {
@@ -99,6 +133,20 @@ const handlers = OperationHandlerSet.make(
         yield* Queue.offer(SlowChildGate.taskSignal, undefined);
         yield* Deferred.await(SlowChildGate.completeDeferred);
         return value;
+      }),
+    ),
+  ),
+  ChildPassthrough.pipe(
+    Operation.withHandler(
+      Effect.fn(function* (input) {
+        return input;
+      }),
+    ),
+  ),
+  ParentInvoker.pipe(
+    Operation.withHandler(
+      Effect.fn(function* (input) {
+        return yield* Operation.invoke(ChildPassthrough, input);
       }),
     ),
   ),
@@ -262,6 +310,20 @@ describe('ManagerImpl', () => {
   );
 
   it.effect(
+    'invokes an operation whose input is not JSON-serializable',
+    Effect.fn(function* ({ expect }) {
+      // Operations may carry live references in their input (e.g. a model or handle).
+      // The durable process store JSON-serializes the input event; a non-serializable
+      // value (here, a cycle) must not fail the invocation. The handler still runs with
+      // the original value — persistence degrades to a best-effort null.
+      const ref: { value: number; self?: unknown } = { value: 42 };
+      ref.self = ref;
+      const result = yield* Operation.invoke(WithLiveRef, { ref });
+      expect(result).toEqual(42);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'alarms',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
@@ -411,6 +473,26 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([22]);
+      expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'parent process remains SUCCEEDED after child completes — requestChildEvent race (DX-999)',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+
+      const handle = yield* manager.spawn(Process.fromOperation(ParentInvoker, handlers));
+      const outputs = yield* handle.runAndExit({ inputs: [7] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+
+      // Drain any background child-cleanup callbacks. Without the fix in
+      // ProcessHandle.requestChildEvent, the late child-exit notification would
+      // re-enter #runHandler after the parent set #finished=true, clobbering
+      // SUCCEEDED with RUNNING and leaving the process permanently stuck.
+      yield* Effect.yieldNow();
+      yield* Effect.yieldNow();
+
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
@@ -656,7 +738,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const monitor = yield* Process.ProcessMonitorService;
       const manager = yield* ProcessManager.Service;
 
-      const conversation = 'dxn:queue:test-conversation' as DXN.DXN;
+      const conversation = 'echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000' as any;
 
       const fiber = yield* invoker.invokeFiber(
         ParentOp,

@@ -26,7 +26,10 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
       if (!echoUri || !parsedEchoUri) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDXN: parsedEchoUri });
+      // Key by the local (space-less) form so a space-qualified ref and a bare ref to the same entity index
+      // under the same key. The index is scoped to one space (entity ids are unique within it), and lookups
+      // normalize the same way (see `query`).
+      refs.push({ path, targetDXN: EID.toLocal(parsedEchoUri) });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -87,8 +90,11 @@ export class ReverseRefIndex implements Index {
     ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        // Normalize to the local form to match how references are keyed on write (space-qualified and bare
+        // EIDs for the same entity collapse to one key).
+        const normalized = EID.toLocal(targetDXN);
         // TODO(mykola): Join objectMeta table here.
-        const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${targetDXN}`;
+        const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${normalized}`;
         return rows as ReverseRef[];
       }),
   );

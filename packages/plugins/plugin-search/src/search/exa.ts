@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { ReferenceAnnotationId } from '@dxos/echo/internal';
+import { ReferenceAnnotationId } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
@@ -196,7 +196,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
           const ref = value['/'];
           if (idMap.has(ref)) {
             // TODO(dmaretskyi): Whats the best way to represent a local url.
-            return { '/': `dxn:echo:@:${idMap.get(ref)}` };
+            return { '/': `echo:/${idMap.get(ref)}` };
           } else {
             // Search URIs?
             return { '/': `search:?q=${encodeURIComponent(ref)}` };

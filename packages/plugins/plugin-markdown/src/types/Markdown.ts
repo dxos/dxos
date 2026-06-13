@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation, GraphPropsAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';

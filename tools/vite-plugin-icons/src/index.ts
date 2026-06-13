@@ -12,13 +12,24 @@ import { join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
-export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & { spriteFile: string; verbose?: boolean };
+export type IconsPluginParams = Omit<BundleParams, 'spritePath'> & {
+  spriteFile: string;
+  /**
+   * Globs of files scanned eagerly at build start, in addition to the module
+   * graph. Needed for icon names that only occur in sources the build never
+   * imports — e.g. descriptors contributed by other packages at runtime (the
+   * composer-crx page actions).
+   */
+  scanPaths?: string[];
+  verbose?: boolean;
+};
 
 export const IconsPlugin = ({
   assetPath,
   symbolPattern,
   spriteFile,
   contentPaths,
+  scanPaths,
   config,
   verbose,
 }: IconsPluginParams): Plugin[] => {
@@ -111,6 +122,21 @@ export const IconsPlugin = ({
       configResolved: (config) => {
         rootDir = resolve(config.root);
         spritePath = resolve(config.publicDir, spriteFile);
+      },
+
+      // Eager scan: symbols in files outside the module graph (transform never
+      // sees them). Runs for both build and dev server starts.
+      buildStart: () => {
+        for (const pattern of scanPaths ?? []) {
+          for (const filename of fs.globSync(pattern)) {
+            try {
+              const match = scan(fs.readFileSync(filename, 'utf8'));
+              status.updated ||= match;
+            } catch {
+              // Unreadable entries (e.g. dangling symlinks) are skipped.
+            }
+          }
+        }
       },
 
       configureServer: (_server) => {

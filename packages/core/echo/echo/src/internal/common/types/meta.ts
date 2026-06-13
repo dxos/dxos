@@ -9,24 +9,19 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
-import type * as Entity from '../../../Entity';
 import type * as Tag from '../../../Tag';
 import { Dictionary } from '../../Annotation/dictionary';
 // `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
 // Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
 import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
 import { type AnyProperties } from './base';
+import { MetaId } from './model-symbols';
 import { TagTypeDXN } from './well-known-types';
 
 /**
  * Property name for meta when object is serialized to JSON.
  */
 export const ATTR_META = '@meta';
-
-/**
- * Metadata section.
- */
-export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 
 //
 // EntityMeta
@@ -73,6 +68,18 @@ export const EntityMetaSchema = Schema.Struct({
    * Dictionary of annotations to this entity.
    */
   annotations: Dictionary,
+
+  /**
+   * Unix ms timestamp when this entity was created.
+   * Read-only; sourced from the system section of the automerge document — not stored in meta.
+   */
+  createdAt: Schema.optional(Schema.Number),
+
+  /**
+   * Unix ms timestamp of the last automerge change on this entity's document.
+   * Read-only; derived from the automerge change graph — not stored in meta.
+   */
+  updatedAt: Schema.optional(Schema.Number),
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;

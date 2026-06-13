@@ -12,7 +12,7 @@ import * as Relation from '../../../Relation';
 import { TestSchema } from '../../../testing';
 
 // Tags are stored as `Ref<Tag>`; build refs from synthetic URIs and compare by `.uri`.
-const tagRef = (id: string): Ref.Ref<any> => Ref.fromURI(URI.make(`dxn:echo:BBBBBBBBBBBBBBBBBBBBBBBBBB:${id}`));
+const tagRef = (id: string): Ref.Ref<any> => Ref.fromURI(URI.make(`echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/${id}`));
 const tagUris = (entity: Obj.Unknown | Relation.Unknown): string[] =>
   Obj.getMeta(entity as Obj.Unknown).tags.map((tag) => tag.uri);
 

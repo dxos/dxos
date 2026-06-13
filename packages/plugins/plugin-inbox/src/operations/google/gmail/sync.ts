@@ -13,7 +13,6 @@ import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
-import { Tagging } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
@@ -21,12 +20,13 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
+import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
-import { isAiServiceUnavailable } from '../../extractor/ai-gate';
+import { isAiServiceUnavailable } from '../../extractor';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -73,7 +73,10 @@ const collectMailboxRefsFromIntegration = (
       if (!target.object) {
         continue;
       }
-      const loaded = yield* Database.loadOption(target.object);
+      const loaded = yield* Database.load(target.object).pipe(
+        Effect.map(Option.some),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
+      );
       if (Option.isSome(loaded) && Mailbox.instanceOf(loaded.value)) {
         refs.push(Ref.make(loaded.value));
       }
@@ -101,6 +104,10 @@ const syncSingleMailbox = (input: {
         : defaultAfter;
 
     const feed = yield* Database.load(mailbox.feed);
+    // Resolve the child tag index so provider-label tags can be applied synchronously below.
+    if (mailbox.tags) {
+      yield* Database.load(mailbox.tags);
+    }
 
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
@@ -319,7 +326,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
           for (const labelId of labelIds) {
             const uri = labelMap.get(labelId);
             if (uri) {
-              Tagging.set(message, uri, { host: mailbox });
+              Tagging.set(message, uri, { index: mailbox.tags.target });
             }
           }
         }

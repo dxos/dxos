@@ -38,7 +38,10 @@ export const AgentRequestBegin = Trace.EventType('assistant.agentRequestBegin', 
 });
 
 export const AgentRequestEnd = Trace.EventType('assistant.agentRequestEnd', {
-  schema: Schema.Struct({}),
+  schema: Schema.Struct({
+    status: Schema.Literal('success', 'error', 'interrupted'),
+    error: Schema.optional(Schema.String),
+  }),
   isEphemeral: false,
 });
 

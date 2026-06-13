@@ -359,13 +359,47 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
             case Process.State.TERMINATED:
             case Process.State.IDLE:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
-            case Process.State.FAILED:
+            case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
               return Effect.runSync(Deferred.die(deferred, error));
+            }
+          }
+        },
+        { immediate: true },
+      );
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+      yield* Deferred.await(deferred);
+    }).pipe(Effect.scoped);
+  }
+
+  runUntilSettled(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const deferred = yield* Deferred.make<void>();
+      const unsubscribe = this.#registry.subscribe(
+        this.statusAtom,
+        (state) => {
+          switch (state.state) {
+            case Process.State.SUCCEEDED:
+            case Process.State.TERMINATED:
+            case Process.State.IDLE:
+              return Effect.runSync(Deferred.succeed(deferred, undefined));
+            // The foreground turn is done once no handler is active and no further turn work is
+            // queued (no pending alarm); remaining hybernation is only background children, which we
+            // intentionally do not wait for.
+            case Process.State.HYBERNATING:
+              return this.#alarmFiber === null ? Effect.runSync(Deferred.succeed(deferred, undefined)) : Effect.void;
+            case Process.State.FAILED: {
+              const error = state.exit.pipe(
+                Option.flatMap(Exit.causeOption),
+                Option.map(Cause.pretty),
+                Option.getOrElse(() => 'Process failed with unknown error'),
+              );
+              return Effect.runSync(Deferred.die(deferred, error));
+            }
           }
         },
         { immediate: true },
@@ -497,6 +531,15 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
     log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
+    // Guard against late child-exit notifications that arrive after the parent has already
+    // reached a terminal state. Without this, onFinished fires after the parent succeeds
+    // (the child's async cleanup outlasts the parent's handler), requestChildEvent clobbers
+    // the parent status to RUNNING via #runHandler, and #handlerCompleted exits early
+    // (finished=true) without resetting it — leaving the process permanently RUNNING.
+    if (this.#finished) {
+      log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
+      return;
+    }
     Effect.runFork(
       this.#persistence
         .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
@@ -511,6 +554,16 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   ): Effect.Effect<Fiber.RuntimeFiber<void>> {
     return Effect.uninterruptibleMask((restore) =>
       Effect.gen(this, function* () {
+        // Secondary guard: the primary guard in requestChildEvent is synchronous, but the
+        // appendEvent(IDB) call before #runHandler yields to the scheduler, during which
+        // the process may have set #finished=true. Bail cleanly rather than clobbering state.
+        if (this.#finished) {
+          log('lifecycle: handler skipped (already finished)', { name, pid: this.pid });
+          if (eventSeq !== undefined) {
+            yield* this.#persistence.removeEvent(eventSeq).pipe(Effect.ignore);
+          }
+          return yield* Effect.forkDaemon(Effect.void);
+        }
         this.#activeHandlers++;
         this.#setStatus(Process.State.RUNNING);
         log('begin handler', { pid: this.pid, state: this.#currentStatus.state, activeHandlers: this.#activeHandlers });

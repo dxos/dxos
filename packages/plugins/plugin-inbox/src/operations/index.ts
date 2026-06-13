@@ -10,12 +10,15 @@ export * from './util';
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
   () => import('./classify-email'),
+  () => import('./delete-email'),
+  () => import('./delete-event'),
   () => import('./draft-email-and-open'),
   () => import('./draft-email'),
   () => import('./extractor/contact-extractor'),
   () => import('./extractor/extract-contact'),
   () => import('./extractor/extract-message'),
   () => import('./extractor/summarize-extractor'),
+  () => import('./google/calendar/create'),
   () => import('./google/calendar/list'),
   () => import('./google/calendar/sync'),
   () => import('./google/contacts/list-groups'),
@@ -24,4 +27,5 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./google/gmail/sync'),
   () => import('./read-email'),
   () => import('./sync-contacts'),
+  () => import('./sync-draft-events'),
 );

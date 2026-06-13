@@ -11,17 +11,22 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
-import { CustomTokenDialog, IntegrationArticle, SyncTargetsDialog } from '#containers';
+import { CustomTokenDialog, IntegrationArticle, IntegrationSettingsArticle, SyncTargetsDialog } from '#containers';
 import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
-import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { INTEGRATIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'integrationsSectionArticle',
+        filter: AppSurface.literal(AppSurface.Article, INTEGRATIONS_SECTION_TYPE),
+        component: () => <IntegrationSettingsArticle />,
+      }),
       Surface.create({
         id: 'integrationArticle',
         filter: AppSurface.object(AppSurface.Article, Integration.Integration),
@@ -78,7 +83,7 @@ export default Capability.makeModule(() =>
           if (!fieldPropertyAst) {
             return null;
           }
-          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldRendererProps;
           return <SelectField {...props} options={options} />;
         },
       }),

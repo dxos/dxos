@@ -10,6 +10,7 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
+import * as objInternal from './internal/Obj';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import type * as Tag from './Tag';
@@ -185,9 +186,11 @@ export type AnyInput = Unknown | Snapshot;
  * an `EID` for object/relation instances and persisted types, or a typename
  * `DXN` for static type entities; narrow with `EID.parse(uri)` or
  * `DXN.tryMake(uri)` at the point of use.
+ *
+ * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  */
-export const getURI = (entity: AnyInput): URI.URI =>
-  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity) : internal.getUri(entity as Unknown);
+export const getURI = (entity: AnyInput, options?: internal.GetURIOptions): URI.URI =>
+  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity) : internal.getUri(entity as Unknown, options);
 
 /**
  * Get the DXN of an entity's type. For object/relation instances this is the URI
@@ -334,3 +337,9 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+
+//
+// Atoms
+//
+
+export const atom = objInternal.makeEntity;

@@ -3,15 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { registryLayer } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 
 import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
-import * as OperationRegistry from './OperationRegistry';
 import * as Template from './Template';
 
 describe('Template', () => {
@@ -86,25 +85,33 @@ describe('Template', () => {
   });
 
   describe('processTemplate', () => {
+    const GREET_KEY = DXN.make('org.example.test.greet');
+
     const greet = Operation.withHandler(
       Operation.make({
         input: Schema.Void,
         output: Schema.String,
-        meta: { key: DXN.make('org.example.test.greet') },
+        meta: { key: GREET_KEY, name: 'greet' },
       }),
       () => Effect.succeed('Alice'),
     );
 
-    const stubRegistry = (operations: Record<string, Operation.Definition.Any>) =>
-      Effect.provideService(OperationRegistry.Service, {
-        resolve: (key) => Effect.succeed(Option.fromNullable(operations[key])),
-      });
+    // Handler map: full DXN key → invocable function.
+    const handlersByKey: Record<string, (input: any) => Effect.Effect<any, any, any>> = {
+      [GREET_KEY]: (input) => greet.handler(input),
+    };
 
     const stubInvoker = Effect.provideService(Operation.Service, {
-      invoke: (op, input) => (op as any).handler(input),
+      invoke: (op: any, input: any) => {
+        const key = String(op.meta.key);
+        const handler = handlersByKey[key];
+        return handler ? handler(input) : Effect.die(`no handler for key: ${key}`);
+      },
       schedule: () => Effect.succeed(undefined),
       invokePromise: () => Promise.resolve({}),
-    } as Operation.OperationService);
+      // Operation.OperationService.invoke is a complex overloaded type; a partial test stub
+      // cannot express all overload variants without the cast.
+    } as unknown as Operation.OperationService);
 
     test('resolves a value-kind input from its default', async () => {
       const template = Template.make({
@@ -112,18 +119,22 @@ describe('Template', () => {
         inputs: [{ name: 'name', kind: 'value', default: 'world' }],
       });
 
-      const result = await Template.processTemplate(template).pipe(stubRegistry({}), stubInvoker, Effect.runPromise);
+      const result = await Template.processTemplate(template).pipe(
+        Effect.provide(registryLayer()),
+        stubInvoker,
+        Effect.runPromise,
+      );
       expect(result).toBe('Hello world!');
     });
 
     test('resolves an operation-kind input and substitutes the result', async () => {
       const template = Template.make({
         source: 'Hello {{name}}.',
-        inputs: [{ name: 'name', kind: 'operation', operation: 'test.greet' }],
+        inputs: [{ name: 'name', kind: 'operation', operation: GREET_KEY }],
       });
 
       const result = await Template.processTemplate(template).pipe(
-        stubRegistry({ 'test.greet': greet }),
+        Effect.provide(registryLayer({ initial: [Operation.serialize(greet)] })),
         stubInvoker,
         Effect.runPromise,
       );
@@ -138,7 +149,7 @@ describe('Template', () => {
       });
 
       const result = await Template.processTemplate(template).pipe(
-        stubRegistry({}),
+        Effect.provide(registryLayer()),
         stubInvoker,
         Effect.either,
         Effect.runPromise,

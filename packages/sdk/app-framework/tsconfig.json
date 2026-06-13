@@ -62,7 +62,7 @@
       "path": "../../core/compute/operation"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/mesh/edge-client"

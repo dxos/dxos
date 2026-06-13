@@ -63,8 +63,8 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -112,7 +112,7 @@
       {
         "root": "src/packlets/services/service-host.ts",
         "dependencies": [
-          "@dxos/echo-db"
+          "@dxos/echo-client"
         ]
       }
     ]

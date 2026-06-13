@@ -36,7 +36,7 @@ const PACKAGES = [
   '@dxos/functions',
   '@dxos/functions-runtime-cloudflare',
   '@dxos/ai',
-  '@dxos/echo-db',
+  '@dxos/echo-client',
   '@dxos/log',
   // Note: Causes circular dependency, if you will leave it in package.json.
   // '@dxos/assistant',

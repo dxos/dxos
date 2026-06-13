@@ -23,7 +23,7 @@ import {
 } from '@dxos/compute-hyperformula';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { Format, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/Format';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

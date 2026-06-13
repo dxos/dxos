@@ -16,6 +16,7 @@ import { Operation, Trigger } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Scope, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { FeedAnnotation } from '@dxos/schema';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
@@ -244,7 +245,7 @@ export const promptForSchemaInput = Effect.fn(function* (
         inputObj[key] = templateStr === '' && defaultValue !== undefined ? defaultValue : templateStr;
       } else {
         const annotation = Annotation.ReferenceAnnotation.getFromAst(propType).pipe(Option.getOrThrow);
-        const objects = yield* Database.runQuery(Filter.typename(annotation.typename));
+        const objects = yield* Database.query(Filter.type(DXN.make(annotation.typename))).run;
         if (objects.length === 0) {
           inputObj[key] = undefined;
         } else {
@@ -277,7 +278,7 @@ export const promptForSchemaInput = Effect.fn(function* (
  * Queries the database for functions and prompts the user to select one.
  */
 export const selectFunction = Effect.fn(function* () {
-  const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+  const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
 
   if (functions.length === 0) {
     return yield* Effect.fail(new Error('No functions available'));
@@ -301,9 +302,9 @@ export const selectFunction = Effect.fn(function* () {
  * Queries the database for triggers and prompts the user to select one.
  */
 export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
-  const triggers = yield* Database.runQuery(
+  const triggers = yield* Database.query(
     Query.select(Filter.type(Trigger.Trigger)).debugLabel('cli.trigger.selectTrigger'),
-  );
+  ).run;
   const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
 
   if (filteredTriggers.length === 0) {
@@ -345,7 +346,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
  */
 export const selectFeed = Effect.fn(function* () {
   // Query schema registry for schemas with FeedAnnotation.
-  const schemas = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const schemas = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
 
   // Filter schemas that have FeedAnnotation.
   const feedSchemas = schemas.filter((type) => {
@@ -364,8 +365,7 @@ export const selectFeed = Effect.fn(function* () {
   // Process each feed schema, resolving the Feed object reference.
   for (const schema of feedSchemas) {
     yield* Effect.gen(function* () {
-      const typename = Type.getTypename(schema);
-      const objects = yield* Database.runQuery(Filter.type(typename));
+      const objects = yield* Database.query(Filter.type(Type.getURI(schema))).run;
 
       for (const obj of objects) {
         // Access the feed property (which is a Ref<Feed>).

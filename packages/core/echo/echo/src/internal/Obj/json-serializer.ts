@@ -24,7 +24,8 @@ import {
   setSchema,
   setType,
 } from '../common/types';
-import { ATTR_META, MetaId, EntityMetaSchema } from '../common/types/meta';
+import { ATTR_META, EntityMetaSchema } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,

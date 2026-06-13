@@ -77,6 +77,8 @@ export const translations = [
 
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',
+        'remove-attendee.label': 'Remove attendee',
+        'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
@@ -97,14 +99,25 @@ export const translations = [
         'view-mode-plain.menu': 'Plain text',
 
         'event-untitled.label': 'Untitled',
+        'event-all-day.label': 'All day',
+        'event-duration.placeholder': 'Duration',
+        'event-duration-custom.label': 'Custom end…',
         'event-toolbar.menu': 'Actions',
         'event-toolbar-create-note.menu': 'Create note',
+        'event-toolbar-open.menu': 'Open',
+        'event-toolbar-save.menu': 'Save to calendar',
+        'event-toolbar-delete.menu': 'Delete event',
+
+        'calendar-toolbar.menu': 'Calendar toolbar',
+        'calendar-toolbar-create-event.menu': 'Create event',
+        'calendar-toolbar-sync.menu': 'Save events to calendar',
 
         'message-toolbar.label': 'Message toolbar',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
 

@@ -46,14 +46,26 @@ export type ConfigOptions = {
   dirname: string;
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
-  storybook?: boolean;
+  storybook?: boolean | StorybookOptions;
+};
+
+export type StorybookOptions = {
+  /**
+   * Disable per-file module isolation so the (heavy, WASM-backed) module graph — Automerge/SQLite
+   * via `@dxos/echo` — is instantiated once and shared across story files rather than re-instantiated
+   * per file. Set for packages with many ECHO-importing stories to avoid the cumulative
+   * "WebAssembly instance ran out of memory during import" exhaustion in the single headless-chromium context.
+   */
+  isolate?: boolean;
 };
 
 export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   const { dirname, node, browser, storybook } = options;
 
   const nodeProject = node ? createNodeProject(typeof node === 'boolean' ? undefined : node) : undefined;
-  const storybookProject = storybook ? createStorybookProject(dirname) : undefined;
+  const storybookProject = storybook
+    ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
+    : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
 
   return {
@@ -67,7 +79,7 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   };
 };
 
-const createStorybookProject = (dirname: string) =>
+const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
       name: 'storybook',
@@ -76,6 +88,9 @@ const createStorybookProject = (dirname: string) =>
       // subsequent story file to fail to import. Retry once so a transient
       // browser-side flake doesn't fail the whole job.
       retry: 1,
+      // Defaults to per-file isolation; opt out (see `StorybookOptions.isolate`) to share the WASM-backed
+      // module graph across story files and avoid cumulative WebAssembly memory exhaustion.
+      ...(options?.isolate !== undefined ? { isolate: options.isolate } : {}),
       browser: {
         enabled: true,
         headless: true,
@@ -130,7 +145,19 @@ const createBrowserProject = ({
       alias: { ...TIKTOKEN_ALIAS },
     },
     optimizeDeps: {
-      include: ['buffer/'],
+      // Deps discovered mid-run trigger a re-optimize + page reload, which destroys the
+      // vitest runner state (isolate: false) and fails every remaining test file with
+      // "Cannot read properties of undefined (reading 'config')". Pre-bundle the deps
+      // that tests pull in lazily (worker bundles / dynamic imports / late test files).
+      // Workspace packages are linked, so their deps need the nested `parent > dep` syntax.
+      include: [
+        'buffer/',
+        'chalk',
+        'effect/Schema',
+        '@dxos/log > @dxos/util > @hazae41/symbol-dispose-polyfill',
+        '@dxos/log > @dxos/keys > ulidx',
+        '@dxos/log > lodash.defaultsdeep',
+      ],
       esbuildOptions: {
         plugins: [
           // TODO(burdon): esbuild version mismatch.

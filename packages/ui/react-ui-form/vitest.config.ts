@@ -18,5 +18,8 @@ export default createConfig({
     setupFiles: ['./src/vitest-setup.ts'],
     plugins: [ThemePlugin({})],
   },
-  storybook: true,
+  // Share the WASM-backed (`@dxos/echo` -> Automerge/SQLite) module graph across story files; with
+  // per-file isolation the many ECHO-importing field stories re-instantiate the WASM and exhaust the
+  // headless-chromium context ("WebAssembly instance ran out of memory during import").
+  storybook: { isolate: false },
 });

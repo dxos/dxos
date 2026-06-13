@@ -9,14 +9,14 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
-import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -50,7 +50,6 @@ import {
   HueAnnotationId,
   IconAnnotationId,
   SpaceCapabilities,
-  type Settings,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -86,14 +85,11 @@ export default Capability.makeModule(
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          const spaces = useSpaces({ all: settings.showHidden });
+        component: () => {
+          const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
           return (
             <SpaceSettings
-              settings={settings}
-              onSettingsChange={updateSettings}
               spaces={spaces}
               onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
             />
@@ -225,7 +221,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldRendererProps;
           const handleChange = useCallback((nextHue: string) => onValueChange(ast, nextHue), [ast, onValueChange]);
           const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
@@ -249,7 +245,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldComponentProps;
+          const { label, readonly, getValue, onValueChange } = inputProps as any as FormFieldRendererProps;
           const handleChange = useCallback((nextIcon: string) => onValueChange(ast, nextIcon), [ast, onValueChange]);
           const handleReset = useCallback(() => onValueChange(ast, undefined), [ast, onValueChange]);
           return (
@@ -292,7 +288,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const annotation = SchemaEx.findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
           const options = useTypeOptions({ db, annotation });
@@ -321,7 +317,6 @@ export default Capability.makeModule(
             ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
             : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
-
           if (!view) {
             return null;
           }

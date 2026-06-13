@@ -26,13 +26,12 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@solid-primitives/utils": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@solidjs/testing-library": "catalog:",
     "solid-js": "catalog:",
     "vite-plugin-solid": "catalog:",

@@ -41,6 +41,7 @@ type MessageContextValue = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  onDelete?: () => void;
 };
 
 const [MessageContextProvider, useMessageContext] = createContext<MessageContextValue>('Message');
@@ -67,6 +68,7 @@ const MessageRoot = ({
   onReply,
   onReplyAll,
   onForward,
+  onDelete,
   ...props
 }: MessageRootProps) => {
   const [viewMode, setViewMode] = useState(viewModeProp);
@@ -79,6 +81,7 @@ const MessageRoot = ({
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
+      onDelete={onDelete}
       {...props}
     >
       {children}
@@ -95,7 +98,7 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
+  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onDelete } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
 
   // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
@@ -119,6 +122,7 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     onReply,
     onReplyAll,
     onForward,
+    onDelete,
   });
 
   return (
@@ -200,7 +204,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     const byId = new Map<string, Obj.Any>(relationObjects.map((object) => [object.id, object]));
     for (const id of mailboxes.flatMap((mailbox) => Mailbox.getExtractedObjectIds(mailbox, message.id))) {
       if (!byId.has(id)) {
-        const object = db?.getObjectById(id);
+        const object = db?.query(Filter.id(id)).runSync()[0];
         if (object) {
           byId.set(id, object);
         }

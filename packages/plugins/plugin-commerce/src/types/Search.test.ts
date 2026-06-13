@@ -5,7 +5,8 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Filter, Obj, Tag } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TagIndex } from '@dxos/schema';
 
 import { Result } from './Result';
 import * as Search from './Search';
@@ -33,7 +34,9 @@ describe('Search starred tags', () => {
   });
 
   test('starring a feed result via the Search tag index', async ({ expect }) => {
-    const { db, queues } = await builder.createDatabase({ types: [Feed.Feed, Tag.Tag, Search.Search, Result] });
+    const { db, queues } = await builder.createDatabase({
+      types: [Feed.Feed, Tag.Tag, Search.Search, Result, TagIndex.TagIndex],
+    });
     const search = db.add(Search.make({ name: 'Cars' }));
     await db.flush();
 

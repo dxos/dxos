@@ -9,9 +9,9 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { ThreadOperation } from '../types';
+import { CommentOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ThreadOperation.ToggleResolved> = ThreadOperation.ToggleResolved.pipe(
+const handler: Operation.WithHandler<typeof CommentOperation.ToggleResolved> = CommentOperation.ToggleResolved.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const thread = input.thread;

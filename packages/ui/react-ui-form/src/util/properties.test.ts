@@ -7,10 +7,10 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
-import { getFormProperties } from './properties';
+import { getFormProperties, getRootFormProperties } from './properties';
 
 describe('getFormProperties', () => {
   test('filters out keyword fields annotated FormInputAnnotation.set(false)', ({ expect }) => {
@@ -120,5 +120,34 @@ describe('getFormProperties', () => {
     const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
     expect(names).not.toContain('hidden');
+  });
+});
+
+describe('getRootFormProperties', () => {
+  const Timer = Schema.Struct({ kind: Schema.Literal('timer'), cron: Schema.String });
+  const Feed = Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.String });
+  const Union = Schema.Union(Timer, Feed);
+
+  test('renders a non-union root unchanged', ({ expect }) => {
+    const ast = Schema.Struct({ a: Schema.String, b: Schema.Number }).ast;
+    expect(getRootFormProperties(ast, {}).map((prop) => prop.name)).toEqual(['a', 'b']);
+  });
+
+  test('expands a top-level discriminated union to the active member by discriminator value', ({ expect }) => {
+    // `getPropertySignatures` on the union alone yields only the common `kind`; the active member's
+    // variant field (`cron`/`feed`) must also render.
+    expect(getRootFormProperties(Union.ast, { kind: 'timer' }).map((prop) => prop.name)).toEqual(['kind', 'cron']);
+    expect(getRootFormProperties(Union.ast, { kind: 'feed' }).map((prop) => prop.name)).toEqual(['kind', 'feed']);
+  });
+
+  test('keeps the discriminator field switchable (union-wide literals, not the matched single literal)', ({
+    expect,
+  }) => {
+    const kind = getRootFormProperties(Union.ast, { kind: 'feed' }).find((prop) => prop.name === 'kind');
+    expect(kind && SchemaEx.getLiteralValues(Schema.make(kind.type))).toEqual(['timer', 'feed']);
+  });
+
+  test('falls back to the discriminator alone when no value selects a member', ({ expect }) => {
+    expect(getRootFormProperties(Union.ast, {}).map((prop) => prop.name)).toEqual(['kind']);
   });
 });

@@ -37,10 +37,10 @@ import { Filter, Obj } from '@dxos/echo';
 import {
   type EchoClient,
   type EchoDatabase,
-  type EchoDatabaseImpl,
+  type DatabaseImpl,
   type QueueFactory,
   type SpaceSyncState,
-} from '@dxos/echo-db';
+} from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -141,7 +141,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   @trace.info()
   _initialized = false;
 
-  private readonly _db!: EchoDatabaseImpl;
+  private readonly _db!: DatabaseImpl;
   private readonly _internal!: SpaceInternal;
   private readonly _invitationsProxy: InvitationsProxy;
 
@@ -708,7 +708,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // Needed to have space root set to be able to make next check.
     await this._databaseInitialized.wait();
 
-    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
+    if (this._db.getNumberOfInlineObjects() > 1) {
       await this._createEpoch({
         migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
       });

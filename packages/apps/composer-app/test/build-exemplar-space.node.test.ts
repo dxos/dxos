@@ -43,7 +43,9 @@ import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
-import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { Format, FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
@@ -483,7 +485,7 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
-  const query = Query.select(Filter.typename(Type.getTypename(Organization.Organization)));
+  const query = Query.select(Filter.type(Organization.Organization));
 
   // Each view object holds its own View.View so they can be customised independently
   // (e.g. Kanban's pivot field). We share the query/jsonSchema across them.

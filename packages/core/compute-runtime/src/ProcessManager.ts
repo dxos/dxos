@@ -93,6 +93,18 @@ export interface Handle<I, O> {
   runToCompletion(): Effect.Effect<void>;
 
   /**
+   * Resolves when the process settles its current foreground turn: {@link Process.State.IDLE} or
+   * {@link Process.State.SUCCEEDED}, or {@link Process.State.HYBERNATING} with no pending alarm
+   * (i.e. only background children remain in flight).
+   *
+   * Unlike {@link runToCompletion}, this does NOT wait for background children (e.g. delegated
+   * sub-agents) to finish — so a supervisor's chat turn returns as soon as its reply is complete,
+   * while sub-agents continue running and report back out of band. Still waits through
+   * alarm-pending hybernation (more queued turn work). Defects on {@link Process.State.FAILED}.
+   */
+  runUntilSettled(): Effect.Effect<void>;
+
+  /**
    * Submits each input in order, then streams outputs until the process reaches {@link Process.State.IDLE}
    * or {@link Process.State.SUCCEEDED}. While {@link Process.State.HYBERNATING}, keeps waiting for outputs
    * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
@@ -512,11 +524,16 @@ export class ProcessManagerImpl implements Manager {
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Schema<I, any, never> };
-      // Fall back to null rather than crashing if encoding fails (e.g. operation passed undefined
-      // for a Struct({}) input schema). The handler still receives the original typed value;
-      // re-delivery after restart will see null and may also fail, but that is best-effort by design.
+      // Fall back to null rather than crashing if the input cannot be persisted. The durable
+      // store JSON-serializes this value, and a successful schema encode does not guarantee
+      // JSON-safety (e.g. Schema.Any passes a live reference straight through), so round-trip
+      // through JSON and degrade to null when it is not serializable. The handler still receives
+      // the original typed value; re-delivery after restart sees null — best-effort by design.
       const encodeInput = (input: I): Effect.Effect<unknown> =>
-        Schema.encode(defRaw.input)(input).pipe(Effect.orElseSucceed(() => null));
+        Schema.encode(defRaw.input)(input).pipe(
+          Effect.flatMap((encoded) => Effect.try((): unknown => JSON.parse(JSON.stringify(encoded)))),
+          Effect.orElseSucceed(() => null),
+        );
 
       const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,
@@ -911,6 +928,8 @@ class DormantHandle<I, O> implements Handle<I, O> {
   terminate = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
   runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  runUntilSettled = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
   runAndExit = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
 }

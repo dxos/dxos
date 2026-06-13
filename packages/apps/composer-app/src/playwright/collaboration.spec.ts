@@ -65,9 +65,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await guest.toggleSection('org.dxos.type.document.section');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -96,9 +94,7 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await guest.toggleSection('org.dxos.type.document.section');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -149,9 +145,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await guest.toggleSection('org.dxos.type.document.section');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -210,9 +204,7 @@ test.describe('Collaboration tests', () => {
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
-    await guest.toggleTypesSection();
-    await guest.toggleSchemaNode('org.dxos.type.document');
-    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await guest.toggleSection('org.dxos.type.document.section');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 

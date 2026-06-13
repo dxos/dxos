@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Query } from '@dxos/echo';
-import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
+import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from './definitions';
@@ -13,7 +13,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Snapshot> = SpaceOper
   Operation.withHandler((input) =>
     Effect.promise(async () => {
       const db = input.db as any;
-      invariant(db instanceof EchoDatabaseImpl, 'Database must be an instance of EchoDatabaseImpl');
+      invariant(db instanceof DatabaseImpl, 'Database must be an instance of DatabaseImpl');
       const backup = await new Serializer().export(db, input.query && Query.fromAst(input.query));
       return {
         snapshot: new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }),

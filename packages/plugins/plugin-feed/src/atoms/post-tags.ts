@@ -4,9 +4,8 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { TagIndex } from '@dxos/app-toolkit';
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
-import { AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { TagIndex } from '@dxos/schema';
 
 import { Subscription } from '../types';
 
@@ -27,7 +26,7 @@ const uriForTag = (tags: readonly Tag.Tag[], key: { source: string; id: string }
  * Tag set changes (rare — on first star/archive). Shared by every per-Post tag slice.
  */
 const tagUrisAtom = Atom.family((db: Database.Database) =>
-  AtomQuery.make(db, Filter.type(Tag.Tag)).pipe(
+  db.query(Filter.type(Tag.Tag)).atom.pipe(
     Atom.map((tags) => ({
       starredUri: uriForTag(tags, Subscription.SYSTEM_TAGS.starred.key),
       archivedUri: uriForTag(tags, Subscription.SYSTEM_TAGS.archived.key),
@@ -46,15 +45,19 @@ export const postTagsAtom = Atom.family((post: Subscription.Post) =>
     if (!ref) {
       return EMPTY_TAG_SLICE;
     }
-    const subscription = get(AtomRef.make(ref));
+    const subscription = get(ref.atom);
     if (!subscription) {
+      return EMPTY_TAG_SLICE;
+    }
+    const tagIndex = get(subscription.tags.atom);
+    if (!tagIndex) {
       return EMPTY_TAG_SLICE;
     }
     const db = Obj.getDatabase(subscription);
     const { starredUri, archivedUri } = db ? get(tagUrisAtom(db)) : EMPTY_TAG_URIS;
     return {
-      starred: get(TagIndex.atom(subscription, 'tags', post.id, starredUri)),
-      archived: get(TagIndex.atom(subscription, 'tags', post.id, archivedUri)),
+      starred: get(TagIndex.atom(tagIndex, post.id, starredUri)),
+      archived: get(TagIndex.atom(tagIndex, post.id, archivedUri)),
     };
   }).pipe(Atom.keepAlive),
 );

@@ -7,7 +7,7 @@ import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { random } from '@dxos/random';
 import { useQuery, useType } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -132,7 +132,7 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientStory();
-    const type = useType(space?.db, Type.getTypename(TestSchema.Person));
+    const type = useType(space?.db, Type.getURI(TestSchema.Person));
     const objects = useQuery(space?.db, type ? Filter.type(type) : Filter.nothing());
     if (!type) {
       return <div>Loading schema...</div>;

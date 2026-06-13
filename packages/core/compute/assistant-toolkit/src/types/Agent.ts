@@ -11,10 +11,11 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
-import { FormInputAnnotation } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { EID, type EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import * as Chat from './Chat';
@@ -81,6 +82,12 @@ export const Agent = Schema.Struct({
   }),
 
   /**
+   * Input feed for subscriptions.
+   * @deprecated Subscriptions will write directly to the agent.
+   */
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
+
+  /**
    * Allow the agent to filter events.
    * Related events will be added to the input queue of the agent.
    * It is recommended to enable this.
@@ -90,12 +97,6 @@ export const Agent = Schema.Struct({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
   }),
-
-  /**
-   * Input feed for subscriptions.
-   * @deprecated Subscriptions will write directly to the agent.
-   */
-  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
@@ -103,6 +104,17 @@ export const Agent = Schema.Struct({
 );
 
 export type Agent = Type.InstanceType<typeof Agent>;
+
+export type MakeProps = Omit<
+  Obj.MakeProps<typeof Agent>,
+  'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'
+> &
+  Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
+    instructions: string;
+    blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+    contextObjects?: Ref.Ref<Obj.Any>[];
+  };
+
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
@@ -111,12 +123,8 @@ export type Agent = Type.InstanceType<typeof Agent>;
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
-    Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
-      instructions: string;
-      blueprints?: Ref.Ref<Blueprint.Blueprint>[];
-      contextObjects?: Ref.Ref<Obj.Any>[];
-    },
+  props: MakeProps,
+  // TODO(burdon): Reconcile with props.blueprints.
   blueprint: Blueprint.Blueprint,
 ): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
@@ -142,6 +150,7 @@ export const makeInitialized = (
         objects: [Ref.make(agent), ...(props.contextObjects ?? [])],
       }),
     );
+
     const chat = yield* Database.add(
       Chat.make({
         [Obj.Parent]: agent,
@@ -157,7 +166,6 @@ export const makeInitialized = (
     );
 
     const inputFeed = yield* Database.add(Feed.make());
-
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
       agent.feed = Ref.make(inputFeed);
@@ -230,3 +238,37 @@ export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> 
   const agent = agents[0];
   return agent;
 });
+
+/**
+ * Adds an object to the agent's artifacts (context), resolving it by id within the agent's space.
+ *
+ * Accepts whatever reference a tool returned — a bare entity id (e.g. `01J…`) or a full ECHO URI
+ * (`echo:/…`, `echo://…`). LLMs frequently strip a returned URI down to the bare id, which is not
+ * a resolvable URI on its own; resolving by entity id within the space tolerates both forms.
+ *
+ * Returns the fully-qualified {@link Ref.Ref} that was stored (also usable for an inline message
+ * reference block).
+ */
+export const addArtifact = (
+  agent: Agent,
+  { name, id }: { name: string; id: string },
+): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
+  Effect.gen(function* () {
+    // Untyped, LLM-provided reference: normalize to the entity id, falling back to the raw value
+    // (a bare id is already an entity id) — a genuine external-data boundary.
+    const parsed = EID.tryParse(id);
+    const entityId = ((parsed ? EID.getEntityId(parsed) : undefined) ?? id) as EntityId;
+
+    // Store a FULLY-QUALIFIED ref (`echo://<space>/<id>`), not a local `echo:/<id>` one: the artifact
+    // is created by a separate tool/process invocation, and a space-less local ref does not resolve
+    // when the agent is later read from a different db view (e.g. the UI). It is not resolved here —
+    // it resolves lazily when read, by which point the artifact is persisted.
+    const { db } = yield* Database.Service;
+    const ref = db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId }));
+
+    Obj.update(agent, (agent) => {
+      agent.artifacts.push({ name, data: ref });
+    });
+    yield* Database.flush();
+    return ref;
+  });

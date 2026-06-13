@@ -18,7 +18,6 @@ import {
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
@@ -61,10 +60,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed([]);
         }
 
-        get(AtomObj.make(space.properties));
+        get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
         if (collectionRef) {
-          get(AtomObj.make(collectionRef));
+          get(Obj.atom(collectionRef));
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
@@ -104,9 +103,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const ephemeralState = get(ephemeralAtom);
 
-        get(AtomObj.make(space.properties));
+        get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
-        const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
+        const collection = collectionRef ? get(Obj.atom(collectionRef)) : undefined;
         if (!collection) {
           return Effect.succeed([]);
         }
@@ -115,7 +114,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         const objects = rawRefs
           .map((ref: any) => {
-            get(AtomObj.make(ref));
+            get(Obj.atom(ref));
             return ref.target;
           })
           .filter(isNonNullable);
@@ -144,12 +143,12 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
-        const collectionSnapshot = get(AtomObj.make(collection));
+        const collectionSnapshot = get(Obj.atom(collection));
         const refs = collectionSnapshot.objects ?? [];
 
         const objects = refs
           .map((ref: any) => {
-            get(AtomObj.make(ref));
+            get(Obj.atom(ref));
             return ref.target;
           })
           .filter(isNonNullable);
@@ -305,7 +304,7 @@ const constructObjectActions = ({
           target: parentCollection,
         }),
       properties: {
-        label: getDynamicLabel('delete object label', typename, { defaultValue: 'Delete' }),
+        label: getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

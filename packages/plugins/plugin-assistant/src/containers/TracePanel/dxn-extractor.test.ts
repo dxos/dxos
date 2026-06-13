@@ -14,27 +14,27 @@ import {
 describe('dxn-extractor', () => {
   describe('extractDxnFromString', () => {
     test('extracts plain DXN from string', ({ expect }) => {
-      const result = extractDxnFromString('Found object dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      const result = extractDxnFromString('Found object echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
       expect(result).toHaveLength(1);
-      expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result[0].toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
-    test('extracts @dxn prefixed reference from string', ({ expect }) => {
-      const result = extractDxnFromString('Reference to @dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 in text');
+    test('extracts @-prefixed reference from string', ({ expect }) => {
+      const result = extractDxnFromString('Reference to @echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4 in text');
       expect(result).toHaveLength(1);
-      expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result[0].toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
-    test('extracts multiple DXNs from string', ({ expect }) => {
+    test('extracts multiple references from string', ({ expect }) => {
       const result = extractDxnFromString(
-        'Objects: dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 and @dxn:queue:data:SPACE:QUEUE:01KG7R1ZXWFMWQ4DA1Q6TN1DG5',
+        'Objects: echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4 and @echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01KG7R1ZXWFMWQ4DA1Q6TN1DG5',
       );
       expect(result).toHaveLength(2);
     });
 
     test('deduplicates DXNs', ({ expect }) => {
       const result = extractDxnFromString(
-        'Same object dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4 and dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+        'Same object echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4 and echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
       );
       expect(result).toHaveLength(1);
     });
@@ -46,32 +46,32 @@ describe('dxn-extractor', () => {
   });
 
   describe('extractDxnsFromObject', () => {
-    test('extracts IPLD-style reference { "/": "dxn:..." }', ({ expect }) => {
+    test('extracts IPLD-style reference { "/": "echo:..." }', ({ expect }) => {
       const result = extractDxnsFromObject({
-        '/': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+        '/': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
       });
       expect(result).toHaveLength(1);
-      expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result[0].toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
-    test('extracts @dxn key reference { "@dxn": "dxn:..." }', ({ expect }) => {
+    test('extracts @uri key reference { "@uri": "echo:..." }', ({ expect }) => {
       const result = extractDxnsFromObject({
-        '@dxn': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+        '@uri': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
         name: 'Test',
       });
       expect(result).toHaveLength(1);
-      expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result[0].toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
-    test('extracts reference block { _tag: "reference", reference: { dxn: ... } }', ({ expect }) => {
+    test('extracts reference block { _tag: "reference", reference: { uri: ... } }', ({ expect }) => {
       const result = extractDxnsFromObject({
         _tag: 'reference',
         reference: {
-          dxn: 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+          uri: 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
         },
       });
       expect(result).toHaveLength(1);
-      expect(result[0].toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result[0].toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
     test('extracts DXN from nested object', ({ expect }) => {
@@ -79,7 +79,7 @@ describe('dxn-extractor', () => {
         data: {
           items: [
             {
-              ref: { '/': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
+              ref: { '/': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
             },
           ],
         },
@@ -89,15 +89,15 @@ describe('dxn-extractor', () => {
 
     test('extracts DXN from string property', ({ expect }) => {
       const result = extractDxnsFromObject({
-        message: 'Created object dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+        message: 'Created object echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
       });
       expect(result).toHaveLength(1);
     });
 
     test('extracts DXN from array', ({ expect }) => {
       const result = extractDxnsFromObject([
-        { '/': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
-        { '/': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG5' },
+        { '/': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
+        { '/': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG5' },
       ]);
       expect(result).toHaveLength(2);
     });
@@ -111,16 +111,16 @@ describe('dxn-extractor', () => {
   describe('extractFirstDxnFromToolInput', () => {
     test('extracts DXN from JSON tool input', ({ expect }) => {
       const input = JSON.stringify({
-        objectRef: { '/': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
+        objectRef: { '/': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
       });
       const result = extractFirstDxnFromToolInput(input);
-      expect(result?.toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result?.toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
     test('extracts DXN from invalid JSON string', ({ expect }) => {
-      const input = 'Invalid JSON but contains dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4';
+      const input = 'Invalid JSON but contains echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4';
       const result = extractFirstDxnFromToolInput(input);
-      expect(result?.toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(result?.toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
     test('returns undefined for input without DXNs', ({ expect }) => {
@@ -133,10 +133,10 @@ describe('dxn-extractor', () => {
   describe('extractFirstDxnFromToolResult', () => {
     test('extracts DXN from JSON tool result', ({ expect }) => {
       const result = JSON.stringify({
-        created: { '/': 'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
+        created: { '/': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4' },
       });
       const dxn = extractFirstDxnFromToolResult(result);
-      expect(dxn?.toString()).toBe('dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
+      expect(dxn?.toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');
     });
 
     test('returns undefined for undefined result', ({ expect }) => {

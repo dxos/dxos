@@ -28,6 +28,7 @@ export {
   getDiscriminatedType,
   isNestedType,
   mapAst,
+  unwrapOptional,
 } from './internal/ast';
 
 export {

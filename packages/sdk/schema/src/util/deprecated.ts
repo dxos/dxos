@@ -6,9 +6,9 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
-import { Format, TypeEnum } from '@dxos/echo/internal';
+import { Format, TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 /**
  * Get the base type; e.g., traverse through refinements.
@@ -113,12 +113,15 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; ty
 };
 
 // TODO(wittjosiah): This needs to be cleaned up.
-//   Ideally this should be something like `Query.getTypename`.
-//   It should return the typename the query is indexing, regardless or where in the AST it is.
-// TODO(burdon): Should return type or undefined not empty string.
+//   Ideally this should be something like `Query.getType`.
+//   It should return the type the query is indexing, regardless of where in the AST it is.
 // TODO(burdon): What does this actually mean? Queries may be complex (in the future) and have multiple types.
-export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string => {
-  let typename = '';
+/**
+ * Returns the type URI a query selects on — the `echo:` EID (stored schema) or `dxn:` typename DXN
+ * stored on the filter — or undefined. Compare against an entity via `Type.getURI`.
+ */
+export const getTypeURIFromQuery = (query: QueryAST.Query | undefined): URI.URI | undefined => {
+  let typeUri: URI.URI | undefined;
   query &&
     QueryAST.visit(query, (node) => {
       if (node?.type !== 'select') {
@@ -133,15 +136,10 @@ export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string 
         return;
       }
 
-      const dxn = DXN.tryMake(node.filter.typename);
-      if (!dxn) {
-        return;
-      }
-
-      typename = DXN.getName(dxn);
+      typeUri = node.filter.typename;
     });
 
-  return typename;
+  return typeUri;
 };
 
 /**

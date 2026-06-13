@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import { EchoClient } from '@dxos/echo-db';
+import { EchoClient } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';

@@ -5,7 +5,13 @@
 import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capabilities, Capability as Capability$, Plugin as Plugin$ } from '@dxos/app-framework';
+import {
+  ActivationEvent as ActivationEvent$,
+  ActivationEvents,
+  Capabilities,
+  Capability as Capability$,
+  Plugin as Plugin$,
+} from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
@@ -33,7 +39,9 @@ export namespace AppPlugin {
     assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'app-graph-builder',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupAppGraph,
+      activatesOn:
+        options.activatesOn ??
+        ActivationEvent$.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,

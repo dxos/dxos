@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, SPACE_HOME_SEGMENT } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation } from '#types';
+import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE } from '../constants';
+import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -29,6 +29,9 @@ const SPACE_HOME_NODE_LABEL: LabelTuple = ['space-home-node.label', { ns: meta.i
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const settingsAtom = capabilities.get(SupportCapabilities.Settings);
+
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       GraphBuilder.createExtension({
@@ -110,11 +113,16 @@ export default Capability.makeModule(
 
       // Deck companion: Discord community tab in the complementary sidebar (R1).
       // Renders the Discord widget iframe via the `deck-companion--discord` surface.
+      // Hidden by default; toggled via the showDiscordCompanion setting.
       GraphBuilder.createExtension({
         id: 'discord',
         match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
+        connector: (_root, get) => {
+          const settings = get(settingsAtom);
+          if (!settings.showDiscordCompanion) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('discord'),
               label: DISCORD_LABEL,
@@ -122,7 +130,8 @@ export default Capability.makeModule(
               data: null,
               position: 'first',
             }),
-          ]),
+          ]);
+        },
       }),
 
       // Per-space Home virtual node, hoisted to the top of every space's navtree. The node is fully
@@ -140,7 +149,7 @@ export default Capability.makeModule(
         connector: (space) =>
           Effect.succeed([
             {
-              id: SPACE_HOME_NODE_ID,
+              id: SPACE_HOME_SEGMENT,
               type: SPACE_HOME_NODE_TYPE,
               data: SPACE_HOME_NODE_TYPE,
               properties: {

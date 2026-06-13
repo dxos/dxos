@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';

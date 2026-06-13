@@ -8,7 +8,6 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
-import { type Message } from '@dxos/types';
 
 import { InboxResolver } from '../../services';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
@@ -33,7 +32,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       // A LIVE, reactive ECHO proxy (`isProxy`) is needed to use the source as a relation/tag
       // endpoint. The operation runs in a separate process, so `source` is a snapshot; re-resolve
       // it from the space db via `getObjectById` (live proxy, or undefined for feed-stored items).
-      const live = db.getObjectById<Message.Message>(source.id);
+      const live = db.query(Filter.id(source.id)).runSync()[0];
       const sourceIsLive = live !== undefined;
 
       // Resolve the owning Mailbox (feed membership via the source id; no live proxy required).

@@ -21,7 +21,7 @@ import {
   RelationDelete,
   TagAdd,
   TagRemove,
-} from './functions';
+} from './operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.database';
 

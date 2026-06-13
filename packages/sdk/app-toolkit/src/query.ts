@@ -10,13 +10,8 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Database, Filter, Key, Query, type QueryAST, Scope, Type } from '@dxos/echo';
-import {
-  ReferenceAnnotationId,
-  type ReferenceAnnotationValue,
-  getTypeAnnotation,
-  unwrapOptional,
-} from '@dxos/echo/internal';
-import { EffectEx } from '@dxos/effect';
+import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { EffectEx, SchemaEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -83,7 +78,9 @@ const resolveType = (
             Option.map((type) => SchemaAST.getPropertySignatures(Type.getSchema(type).ast)),
             Option.flatMap((properties) => Array.findFirst(properties, (p) => p.name === property)),
             Option.flatMap((property) =>
-              SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(unwrapOptional(property)),
+              SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(
+                SchemaEx.unwrapOptional(property),
+              ),
             ),
             Option.map((annotation) => annotation.typename),
           ),

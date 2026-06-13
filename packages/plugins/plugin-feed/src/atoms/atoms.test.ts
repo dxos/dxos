@@ -7,7 +7,8 @@ import * as Data from 'effect/Data';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { StateMap, TagIndex } from '@dxos/schema';
 
 import { Magazine, Subscription } from '../types';
 import { postCurationAtom } from './post-curation';
@@ -27,7 +28,9 @@ describe('postReadAtom', () => {
   });
 
   test('fires when this post is marked read', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     await db.flush();
@@ -45,7 +48,9 @@ describe('postReadAtom', () => {
   });
 
   test('does not fire when a sibling post is marked read', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     const postB = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -63,7 +68,9 @@ describe('postReadAtom', () => {
   });
 
   test('does not fire when an unrelated subscription field changes', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     await db.flush();
@@ -94,7 +101,9 @@ describe('postTagsAtom', () => {
   });
 
   test('fires when this post is starred', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     await db.flush();
@@ -115,7 +124,9 @@ describe('postTagsAtom', () => {
   });
 
   test('does not fire when a sibling post is starred (after tag warm-up)', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
+    const { db } = await builder.createDatabase({
+      types: [Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
+    });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
     const postB = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -150,7 +161,15 @@ describe('postCurationAtom', () => {
 
   test('fires when this post gets a curated snippet', async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
+      types: [
+        Tag.Tag,
+        Feed.Feed,
+        Subscription.Subscription,
+        Subscription.Post,
+        Magazine.Magazine,
+        StateMap.StateMap,
+        TagIndex.TagIndex,
+      ],
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -172,7 +191,15 @@ describe('postCurationAtom', () => {
 
   test('does not fire when a sibling post gets a snippet', async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
+      types: [
+        Tag.Tag,
+        Feed.Feed,
+        Subscription.Subscription,
+        Subscription.Post,
+        Magazine.Magazine,
+        StateMap.StateMap,
+        TagIndex.TagIndex,
+      ],
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -193,7 +220,15 @@ describe('postCurationAtom', () => {
 
   test('does not fire when an unrelated magazine field changes', async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
+      types: [
+        Tag.Tag,
+        Feed.Feed,
+        Subscription.Subscription,
+        Subscription.Post,
+        Magazine.Magazine,
+        StateMap.StateMap,
+        TagIndex.TagIndex,
+      ],
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -227,7 +262,15 @@ describe('postDisplayAtom', () => {
 
   test('prefers agent snippet over RSS description', async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
+      types: [
+        Tag.Tag,
+        Feed.Feed,
+        Subscription.Subscription,
+        Subscription.Post,
+        Magazine.Magazine,
+        StateMap.StateMap,
+        TagIndex.TagIndex,
+      ],
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Feed', url: 'https://example.com' }));
     const post = db.add(
@@ -251,7 +294,15 @@ describe('postDisplayAtom', () => {
 
   test('fires on read state change', async ({ expect }) => {
     const { db } = await builder.createDatabase({
-      types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
+      types: [
+        Tag.Tag,
+        Feed.Feed,
+        Subscription.Subscription,
+        Subscription.Post,
+        Magazine.Magazine,
+        StateMap.StateMap,
+        TagIndex.TagIndex,
+      ],
     });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Feed', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));

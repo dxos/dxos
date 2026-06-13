@@ -5,7 +5,7 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { createDocAccessor, createObject } from '@dxos/echo-client';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';

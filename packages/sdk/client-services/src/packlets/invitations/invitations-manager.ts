@@ -11,7 +11,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { type IMetadataStore, hasInvitationExpired } from '@dxos/echo-pipeline';
+import { type IMetadataStore, hasInvitationExpired } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

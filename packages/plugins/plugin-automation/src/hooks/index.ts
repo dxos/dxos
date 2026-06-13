@@ -3,5 +3,4 @@
 //
 
 // TODO(wittjosiah): Factor out.
-export * from './useEdgeTriggersDispatcherStatus';
 export * from './useTriggerRuntimeControls';

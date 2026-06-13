@@ -19,12 +19,20 @@ import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-fram
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
+import {
+  Agent,
+  AgentBlueprint,
+  AgentHandlers,
+  DelegationBlueprint,
+  DelegationHandlers,
+  PlanningBlueprint,
+  PlanningHandlers,
+} from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -90,6 +98,9 @@ const buildPluginManagerOptions = ({
   createAgent,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
+  // Fire SetupSettings so plugins (e.g. AssistantPlugin) contribute their settings capabilities,
+  // which surfaces such as the TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
+  setupEvents: [AppActivationEvents.SetupSettings],
   plugins: [
     ...corePlugins(),
     ClientPlugin({
@@ -185,7 +196,10 @@ const PluginManagerHost = ({
     };
   }, [manager, contextId, children]);
 
-  const App = useApp({ pluginManager: manager });
+  // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
+  // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy
+  // `withPluginManager` path forwards them automatically).
+  const App = useApp({ pluginManager: manager, setupEvents: options.setupEvents });
   return <App />;
 };
 
@@ -276,11 +290,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
-        // TODO(burdon): Needs attention!!!
+        // TODO(burdon): Clean up.
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, DelegationBlueprint),
         Capability.contributes(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
         Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
         Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
         Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
@@ -294,9 +310,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       const space = client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
-      // Ensure workspace is set.
+      // Ensure workspace is set. NOTE: the active workspace that surfaces read via
+      // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
+      // activation context resolves a different AtomRegistry than the UI).
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
+      // Create agent.
       if (createAgent) {
         const agentOptions = typeof createAgent === 'object' ? createAgent : {};
         const agent = yield* Agent.makeInitialized(

@@ -6,7 +6,7 @@ import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-index
 
 import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { LevelDBStorageAdapter } from '@dxos/echo-pipeline';
+import { LevelDBStorageAdapter } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

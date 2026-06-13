@@ -139,13 +139,14 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
     const result = changed
       .map(({ id, created }) => {
         // Look up the live object to get its typename.
+        // TODO(dmaretskyi): Migrate to `space.db.query(Filter.id(id)).runSync()[0]` once space.db is properly typed here.
         const live = (space.db as any).getObjectById?.(id);
         const typename = live ? Obj.getTypename(live) : undefined;
         const kind = kindForTypename(typename);
         if (!kind) {
           return undefined;
         }
-        const uri = live ? Obj.getURI(live) : `uri:echo:@:${id}`;
+        const uri = live ? Obj.getURI(live) : `echo:/${id}`;
         return { kind, uri, created };
       })
       .filter((x): x is { kind: string; uri: string; created: boolean } => x !== undefined)

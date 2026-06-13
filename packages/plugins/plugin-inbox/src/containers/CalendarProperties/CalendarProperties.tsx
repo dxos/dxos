@@ -8,7 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
@@ -38,22 +39,30 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   }, [invokePromise, db]);
 
   return (
-    <div className='flex flex-col gap-4'>
-      <h2>{t('calendar-sync.label')}</h2>
-      <div className='p-1 flex flex-row gap-1'>
-        <ButtonGroup>
-          <Button onClick={handleToggleSync} disabled={pending}>
-            {pending
-              ? t('enabling-background-sync.label')
-              : syncEnabled
-                ? t('disable-background-sync.label')
-                : t('enable-background-sync.label')}
-          </Button>
-          {syncTrigger && (
-            <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
-          )}
-        </ButtonGroup>
-      </div>
-    </div>
+    <Form.Section>
+      <Input.Root>
+        <Input.Label>{t('calendar-sync.label')}</Input.Label>
+        {/* TODO(burdon): Replace custom components with Input.Switch. */}
+        <div className='flex gap-1'>
+          <ButtonGroup>
+            <Button onClick={handleToggleSync} disabled={pending}>
+              {pending
+                ? t('enabling-background-sync.label')
+                : syncEnabled
+                  ? t('disable-background-sync.label')
+                  : t('enable-background-sync.label')}
+            </Button>
+            {syncTrigger && (
+              <IconButton
+                iconOnly
+                icon='ph--gear--regular'
+                label={t('view-trigger.label')}
+                onClick={handleViewTrigger}
+              />
+            )}
+          </ButtonGroup>
+        </div>
+      </Input.Root>
+    </Form.Section>
   );
 };

@@ -21,16 +21,19 @@ import {
   LinearBlueprint,
   PlanningBlueprint,
   WebSearchBlueprint,
+  WebSearchHandlers,
   MemoryBlueprint,
   AutomationBlueprint,
+  DelegationBlueprint,
+  DelegationHandlers,
+  makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint } from '@dxos/compute';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import { AssistantBlueprint } from '#blueprints';
 
-// TODO(dmaretskyi): Force this type for all Capability.makeModule calls.
-const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]> = Capability.makeModule(() =>
+// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
+const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]> = () =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, BrowserBlueprint),
@@ -44,13 +47,19 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(AppCapabilities.BlueprintDefinition, AutomationBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, BlueprintManagerBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, AgentWizardBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, DelegationBlueprint),
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentBlueprintHandlers),
     Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
     Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
+    Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
-  ]),
-);
+    Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
+
+    // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
+    // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
+    Capability.contributes(AutomationCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+  ]);
 
 export default blueprintDefinition;

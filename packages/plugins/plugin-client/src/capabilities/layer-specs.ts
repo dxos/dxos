@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
 import { Credential, LayerSpec } from '@dxos/compute';
 import { Database, Feed } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { credentialsLayerFromDatabase } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 

@@ -70,9 +70,8 @@ export const DEFAULT_PACKAGES = [
 
   // packages/core/echo
   '@dxos/echo',
-  '@dxos/echo-atom',
-  '@dxos/echo-db',
-  '@dxos/echo-pipeline',
+  '@dxos/echo-client',
+  '@dxos/echo-host',
   '@dxos/echo-protocol',
   '@dxos/echo-query',
   '@dxos/echo-react',
@@ -161,7 +160,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-syntax-highlighter',
   '@dxos/react-ui-table',
   '@dxos/react-ui-tabs',
-  '@dxos/react-ui-text-tooltip',
   '@dxos/react-ui-thread',
   '@dxos/solid-ui',
   '@dxos/solid-ui-geo',

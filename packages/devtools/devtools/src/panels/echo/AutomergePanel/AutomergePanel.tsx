@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -65,7 +65,7 @@ export const AutomergePanel = (props: { space?: Space }) => {
       client.spaces
         .get()
         .find((s) => s.id === space.id)
-        ?.internal.db.coreDatabase?.getLoadedDocumentHandles()) ??
+        ?.internal.db.getLoadedDocumentHandles()) ??
     [];
 
   const [filter, setFilter] = useState('');

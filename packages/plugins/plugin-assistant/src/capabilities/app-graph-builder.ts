@@ -18,10 +18,9 @@ import {
 } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Filter, Obj, Type, type Ref } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
+import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -113,28 +112,6 @@ export default Capability.makeModule(
                 icon: 'ph--brackets-curly--regular',
               },
             }),
-            Node.makeAction({
-              id: 'resetBlueprints',
-              data: Effect.fnUntraced(function* () {
-                const capabilities = yield* Capability.Service;
-                const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
-                if (!space) {
-                  return;
-                }
-                const blueprints = yield* Effect.promise(
-                  (): Promise<Blueprint.Blueprint[]> => space.db.query(Filter.type(Blueprint.Blueprint)).run(),
-                );
-                for (const blueprint of blueprints) {
-                  space.db.remove(blueprint);
-                }
-                yield* Database.flush();
-              }),
-              properties: {
-                label: ['reset-blueprints.label', { ns: meta.id }],
-                icon: 'ph--arrow-clockwise--regular',
-              },
-            }),
           ]),
       }),
 
@@ -153,7 +130,7 @@ export default Capability.makeModule(
               Option.fromNullable(state.currentChat[objectUri]),
               Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryMake(dxnStr))),
               Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
-              Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
+              Option.map((ref) => get(Obj.atom(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
               Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,
@@ -203,8 +180,15 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: one Chat.Chat per space, hidden when empty.
-      createTypeSectionExtension(Chat.Chat),
+      // Section node: standalone Chat.Chat objects per space (companions are excluded).
+      createTypeSectionExtension(Chat.Chat, {
+        // Exclude chats that are the source of a CompanionTo relation; those belong to
+        // their primary object's companion panel and should not appear in the top-level list.
+        query: Query.without(
+          Query.select(Filter.type(Chat.Chat)),
+          Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
+        ),
+      }),
 
       // Create-chat action on the Chats section header.
       GraphBuilder.createExtension({

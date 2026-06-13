@@ -3,8 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
+import type { OperationHandlerSet } from '@dxos/compute';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import type { AssistantPluginOptions } from '#types';
 
@@ -20,6 +20,12 @@ export const IntegrationProvider = Capability.lazy(
   () => import('./integration-provider'),
 );
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+// Explicit annotation: the contributed capability type references `Template` from @dxos/plugin-automation,
+// so the inferred lazy type needs annotating to stay portable (TS2883).
+export const AutomationTemplates: Capability.LazyCapability<
+  void,
+  Capability.Capability<typeof AutomationCapabilities.Template>[]
+> = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CompanionChatProvisioner = Capability.lazy(
   'CompanionChatProvisioner',
