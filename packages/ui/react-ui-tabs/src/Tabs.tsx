@@ -7,14 +7,17 @@ import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithoutRef, type MouseEvent, forwardRef, useCallback, useLayoutEffect } from 'react';
+import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
 import {
   Button,
   type ButtonProps,
   IconButton,
   type IconButtonProps,
+  type SlottableProps,
   type ThemedClassName,
+  composableProps,
+  slottable,
   useForwardedRef,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -46,7 +49,7 @@ const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TA
 // Root
 //
 
-type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
+type TabsRootCustomProps = TabsPrimitive.TabsProps &
   Partial<
     Pick<TabsContextValue, 'activePart' | 'attendableId'> & {
       onActivePartChange: (nextActivePart: TabsActivePart) => void;
@@ -56,11 +59,12 @@ type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
     }
   >;
 
-const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
+type TabsRootProps = SlottableProps<TabsRootCustomProps>;
+
+const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
   (
     {
       children,
-      classNames,
       activePart: propsActivePart,
       onActivePartChange,
       defaultActivePart,
@@ -71,6 +75,7 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
       activationMode = 'manual',
       attendableId,
       suppressRegionFocus = false,
+      asChild,
       ...props
     },
     forwardedRef,
@@ -78,8 +83,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
     const tabsRoot = useForwardedRef(forwardedRef);
 
     // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
-    const _1 = useArrowNavigationGroup();
-    const _2 = useFocusableGroup();
+    useArrowNavigationGroup();
+    useFocusableGroup();
     const [activePart = 'list', setActivePart] = useControllableState({
       prop: propsActivePart,
       onChange: onActivePartChange,
@@ -140,8 +145,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
         attendableId={attendableId}
       >
         <TabsPrimitive.Root
-          {...props}
-          className={mx(classNames)}
+          {...composableProps<HTMLDivElement>(props)}
+          asChild={asChild}
           orientation={orientation}
           activationMode={activationMode}
           data-active={activePart}
@@ -162,19 +167,22 @@ TabsRoot.displayName = 'Tabs.Root';
 // Viewport
 //
 
-type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  asChild?: boolean;
-};
+type TabsViewportProps = SlottableProps<
+  Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
+>;
 
-const TabsViewport = ({ classNames, children, asChild, ...props }: TabsViewportProps) => {
+const TabsViewport = slottable<
+  HTMLDivElement,
+  Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
+>(({ children, asChild, ...props }, forwardedRef) => {
   const { activePart } = useTabsContext('TabsViewport');
   const Comp = asChild ? Slot : 'div';
   return (
-    <Comp {...props} data-active={activePart} className={mx(classNames)}>
+    <Comp {...composableProps<HTMLDivElement>(props)} data-active={activePart} ref={forwardedRef}>
       {children}
     </Comp>
   );
-};
+});
 
 TabsViewport.displayName = 'Tabs.Viewport';
 
