@@ -197,9 +197,16 @@ export const OrderedListDeleteButton = ({
  * Expand/collapse caret; reflects and toggles the item's expanded state via the disclosure
  * trigger's `aria-expanded` + `aria-controls`.
  */
-export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
+export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButtonProps>) => {
   const { t } = useTranslation(osTranslations);
   const { expanded, toggle, triggerProps } = useOrderedListItemContext('OrderedListExpandCaret');
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      toggle();
+      onClick?.(event);
+    },
+    [toggle, onClick],
+  );
   return (
     <ToggleIconButton
       iconOnly
@@ -211,7 +218,7 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
       // rather than the title.
       aria-expanded={triggerProps['aria-expanded']}
       aria-controls={triggerProps['aria-controls']}
-      onClick={toggle}
+      onClick={handleClick}
       {...props}
     />
   );
@@ -272,7 +279,14 @@ export const OrderedListDetailItem = <T extends ListItemRecord>({
       <OrderedListDragHandle />
       <div className='flex flex-col ring-1 ring-subdued-separator rounded-sm overflow-hidden'>
         <div className='flex items-center min-h-[var(--dx-rail-item)]'>
-          <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
+          {expandable ? (
+            <OrderedListTitle classNames={mx('px-2', titleClassNames)}>{title}</OrderedListTitle>
+          ) : (
+            // When the row is not expandable, render a plain (non-toggling) title so a click
+            // doesn't mutate hidden disclosure state. Mirrors `OrderedListTitle`'s structure
+            // minus the trigger plumbing.
+            <div className={mx('flex grow items-center truncate px-2', titleClassNames)}>{title}</div>
+          )}
           {actions}
           {expandable && <OrderedListExpandCaret />}
         </div>
