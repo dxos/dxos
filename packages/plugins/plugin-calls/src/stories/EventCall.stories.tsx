@@ -10,8 +10,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Config } from '@dxos/react-client';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { Calendar } from '@dxos/plugin-inbox/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
@@ -45,13 +46,17 @@ const DefaultStory = (_: StoryProps) => {
     <div className='grid grid-cols-2 min-h-0 is-full bs-full'>
       <div className='min-h-0 border-ie border-separator'>
         <Surface.Surface
-          role={AppSurface.Article.role}
-          data={{ subject: event, companionTo: calendar }}
+          type={AppSurface.Article}
+          data={{ subject: event, companionTo: calendar, attendableId: Obj.getURI(event) }}
           limit={1}
         />
       </div>
       <div className='min-h-0'>
-        <Surface.Surface role={AppSurface.Article.role} data={{ subject: call }} limit={1} />
+        <Surface.Surface
+          type={AppSurface.Article}
+          data={{ subject: call, attendableId: Obj.getURI(call) }}
+          limit={1}
+        />
       </div>
     </div>
   );
@@ -68,6 +73,15 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Calendar.Calendar, Event.Event, Transcript.Transcript, Call.Call, Text.Text],
+          // CallManager requires the edge service config to construct (it throws otherwise).
+          config: new Config({
+            runtime: {
+              services: {
+                edge: { url: 'https://edge.dxos.workers.dev/' },
+                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+              },
+            },
+          }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
