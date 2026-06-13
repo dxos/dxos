@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { Call } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -23,7 +23,7 @@ import { Config } from '@dxos/react-client';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Actor, Event, Transcript } from '@dxos/types';
+import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
 import { Meeting } from '../types';
@@ -36,27 +36,36 @@ const DefaultStory = (_: StoryProps) => {
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const events = useQuery(db, Filter.type(Event.Event));
   const meetings = useQuery(db, Filter.type(Meeting.Meeting));
+  const calls = useQuery(db, Filter.type(Call.Call));
   const calendar = calendars[0];
   const event = events[0];
   const meeting = meetings[0];
+  const call = calls[0];
 
-  if (!db || !calendar || !event || !meeting) {
+  if (!db || !calendar || !event || !meeting || !calls) {
     return <Loading data={{ db: !!db, calendar: !!calendar, event: !!event, meeting: !!meeting }} />;
   }
 
   return (
-    <div className='grid grid-cols-2 min-h-0 is-full bs-full'>
-      <div className='min-h-0 border-ie border-separator'>
+    <div className='dx-container grid grid-cols-3'>
+      <div className='dx-expander'>
         <Surface.Surface
           type={AppSurface.Article}
-          data={{ subject: event, companionTo: calendar, attendableId: Obj.getURI(event) }}
+          data={{ subject: event, attendableId: Obj.getURI(event), companionTo: calendar }}
           limit={1}
         />
       </div>
-      <div className='min-h-0'>
+      <div className='dx-expander'>
         <Surface.Surface
           type={AppSurface.Article}
           data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
+          limit={1}
+        />
+      </div>
+      <div className='dx-expander'>
+        <Surface.Surface
+          type={AppSurface.Article}
+          data={{ subject: call, attendableId: Obj.getURI(meeting) }}
           limit={1}
         />
       </div>
@@ -81,6 +90,7 @@ const meta = {
             Transcript.Transcript,
             Call.Call,
             Meeting.Meeting,
+            AnchoredTo.AnchoredTo,
             Text.Text,
           ],
           // CallManager requires the edge service config to construct (it throws otherwise).
@@ -106,7 +116,7 @@ const meta = {
               const eventNotes = personalSpace.db.add(
                 Text.make({ content: '# Agenda\n\n- Review roadmap\n- Assign owners\n- Schedule follow-up' }),
               );
-              personalSpace.db.add(
+              const event = personalSpace.db.add(
                 Event.make({
                   title: 'Quarterly Planning',
                   description: 'Plan the next quarter.',
@@ -136,7 +146,7 @@ const meta = {
                   transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(transportConfig) },
                 }),
               );
-              personalSpace.db.add(
+              const meeting = personalSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
                   created: new Date().toISOString(),
@@ -147,6 +157,9 @@ const meta = {
                   call: Ref.make(call),
                 }),
               );
+
+              // Anchor the meeting to the event so it surfaces as a relation chip in the Event header.
+              personalSpace.db.add(AnchoredTo.make({ [Relation.Source]: meeting, [Relation.Target]: event }));
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
