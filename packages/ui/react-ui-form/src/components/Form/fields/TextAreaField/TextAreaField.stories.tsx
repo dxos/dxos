@@ -24,7 +24,11 @@ const DefaultStory = () => {
   const [values, setValues] = useState<Values>({ notes: 'Multi-line\nplain text.' });
   return (
     <TestLayout json={values}>
-      <Form.Root schema={schema} values={values} onValuesChanged={(values) => setValues((prev) => ({ ...prev, ...values }))}>
+      <Form.Root
+        schema={schema}
+        values={values}
+        onValuesChanged={(values) => setValues((prev) => ({ ...prev, ...values }))}
+      >
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
@@ -36,7 +40,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/fields/TextAreaField',
+  title: 'ui/react-ui-form/Form/fields/TextAreaField',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },

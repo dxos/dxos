@@ -110,6 +110,19 @@ const values: Partial<Person> = {
   reminderAt: '09:00:00',
 };
 
+/**
+ * Build a data-entry surface by handing an Effect schema to `Form.Root` — the form derives its fields,
+ * types, validation, and selects from the schema, so you don't hand-wire one control per property.
+ * Customize individual fields with `fieldMap` (keyed by JSON path), render discriminated unions
+ * conditionally via the discriminator, and label ref-picker options by their parent object with
+ * `ParentLabelAnnotation`.
+ *
+ * @idiom org.dxos.react-ui-form.schemaForm
+ *   applies: Any data-entry section bound to an Effect schema — settings, object/article editors, create dialogs
+ *   instead-of: Hand-wiring Input/Select/Switch controls per field in bespoke React
+ *   uses: {@link Form.Root}, {@link Form.FieldSet}
+ *   related: org.dxos.react-ui-menu.toolbarMenu
+ */
 export const Default: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
     schema: omitId(PersonSchema),

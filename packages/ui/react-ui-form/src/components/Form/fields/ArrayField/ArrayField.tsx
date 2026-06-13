@@ -13,12 +13,11 @@ import { List } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '#translations';
-
-import { getFormProperties } from '../../../../util';
-import { useFormValues } from '../../../../hooks';
-import { FormField, IconBlock, type FormFieldProps } from '../../FormField';
 import { type FormFieldStateProps } from '#types';
-import { FormFieldLabel } from '../../FormField';
+
+import { useFormValues } from '../../../../hooks';
+import { getFormProperties } from '../../../../util';
+import { FormFieldLabel, FormField, IconBlock, type FormFieldProps } from '../../FormField';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form
 // values have no stable identity, so drag-and-drop (which requires a stable key

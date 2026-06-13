@@ -157,8 +157,8 @@ const TranscriptTabs = ({
 }: TranscriptTabsProps) => {
   const { t } = useTranslation(meta.id);
   return (
-    <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
-      <Panel.Root role={role}>
+    <Panel.Root asChild role={role}>
+      <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
@@ -189,7 +189,7 @@ const TranscriptTabs = ({
             </Tabs.Panel>
           </Tabs.Viewport>
         </Panel.Content>
-      </Panel.Root>
-    </Tabs.Root>
+      </Tabs.Root>
+    </Panel.Root>
   );
 };

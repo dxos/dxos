@@ -102,7 +102,10 @@ export type RefFieldDataProps = {
   // TODO(burdon): Replace hooks with callbacks?
   useType?: (db?: Database.Database, typeUri?: URI.URI) => Type.AnyEntity;
   useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
-  getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
+  getOptions?: (
+    objects: Entity.Any[],
+    options?: { parentLabel?: boolean; getTypePlaceholder?: (typename: string) => string },
+  ) => RefOption[];
   /**
    * Persist a newly-created object. Called after the user fills out the inline create form and
    * clicks Save. Should add the object to the database and return it (sync or async). The returned

@@ -16,7 +16,7 @@ import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldOptions, type RefFieldDataProps } from '#types';
 
 import { type FormHandlerProps, useFormValues } from '../../../hooks';
-import { getFormProperties } from '../../../util';
+import { getRootFormProperties } from '../../../util';
 import { FormField, FormFieldErrorBoundary, FormFieldLabel, type FormFieldProps } from '../FormField';
 import { FormLayout } from '../FormLayout';
 
@@ -163,7 +163,7 @@ const useFormFieldSetProperties = ({
     }
 
     // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
-    const schemaProps = getFormProperties(schema.ast);
+    const schemaProps = getRootFormProperties(schema.ast, values);
     const filteredProps = exclude ? exclude(schemaProps) : schemaProps;
 
     // Use projection-based field management when view and projection are available.

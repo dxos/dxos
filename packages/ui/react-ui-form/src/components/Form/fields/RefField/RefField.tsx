@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dx
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { DXN, URI } from '@dxos/keys';
+import { DXN, EID, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -32,13 +32,57 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
-  results.map((result) => {
-    const id = Entity.getURI(result, { prefer: 'named' });
-    const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
-    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
-    return { id, label: label ?? id };
+/**
+ * Find the option a ref-like form value points at. Matches on the local (entity-id) form so a bare local EID
+ * (`echo:/<id>`, produced by `Ref.make`) still resolves against an option keyed by the entity's qualified
+ * self URI (`echo://<space>/<id>`). Returns `undefined` when the value is not a ref or no option matches.
+ *
+ * Comparing by entity id is only sound within one space (ids are unique there, not globally). Two EIDs that
+ * both carry a space authority must therefore agree on it: a qualified value and a qualified option from
+ * different spaces never match, even when their entity ids coincide.
+ */
+export const findRefOption = (value: unknown, options: RefOption[]): RefOption | undefined => {
+  const isRef = Ref.isRef(value);
+  if (!isRef && !isRefSnapshot(value)) {
+    return undefined;
+  }
+  const valueEid = EID.tryParse(isRef ? value.uri : value['/']);
+  if (!valueEid) {
+    return undefined;
+  }
+  const valueSpaceId = EID.getSpaceId(valueEid);
+  const valueLocal = EID.toLocal(valueEid);
+  return options.find((option) => {
+    const optionEid = EID.tryParse(option.id);
+    if (!optionEid) {
+      return false;
+    }
+    const optionSpaceId = EID.getSpaceId(optionEid);
+    if (valueSpaceId != null && optionSpaceId != null && valueSpaceId !== optionSpaceId) {
+      return false;
+    }
+    return EID.equals(EID.toLocal(optionEid), valueLocal);
   });
+};
+
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
+  results,
+  { parentLabel, getTypePlaceholder } = {},
+) =>
+  results
+    // When labeling by parent, only surface objects that actually have a parent — an unparented object
+    // (e.g. a system feed) has no meaningful parent to label by.
+    .filter((result) => !parentLabel || Obj.getParent(result as Obj.Unknown) != null)
+    .map((result) => {
+      const id = Entity.getURI(result, { prefer: 'named' });
+      const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
+      const labelEntity = parent ?? result;
+      const typename = Entity.getTypename(labelEntity);
+      // Fall back to the entity's type placeholder when it has no label of its own — matching the
+      // app-graph/navtree (`object-name.placeholder` in the entity's typename namespace).
+      const label = Entity.getLabel(labelEntity) ?? (typename ? getTypePlaceholder?.(typename) : undefined) ?? id;
+      return { id, label };
+    });
 
 const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
   useQuery(
@@ -83,26 +127,25 @@ export const RefField = (props: RefFieldProps) => {
     [type],
   );
 
+  // Resolve a type-based placeholder label for entities that have no label of their own — the entity's
+  // `object-name.placeholder` in its own typename namespace, like the app-graph/navtree. Falls back to a
+  // humanized typename segment so we never surface a raw DXN for a type that hasn't registered one.
+  const getTypePlaceholder = useCallback(
+    (placeholderTypename: string): string => {
+      const segment = placeholderTypename.split(/[.:/]/).filter(Boolean).pop() ?? placeholderTypename;
+      const humanized = segment.charAt(0).toUpperCase() + segment.slice(1);
+      return t('object-name.placeholder', { ns: placeholderTypename, defaultValue: humanized });
+    },
+    [t],
+  );
+
   const results = useResults(db, typename);
   const options = useMemo(() => {
     const parentLabel = type ? SchemaEx.findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
-    return getOptions(results, { parentLabel });
-  }, [results, getOptions, type]);
+    return getOptions(results, { parentLabel, getTypePlaceholder });
+  }, [results, getOptions, type, getTypePlaceholder]);
 
-  const handleGetValue = useCallback(() => {
-    const formValue = getValue();
-
-    const unknownToRefOption = (value: unknown) => {
-      const isRef = Ref.isRef(value);
-      if (isRef || isRefSnapshot(value)) {
-        const uri = isRef ? value.uri : value['/'];
-        return options.find((option) => option.id === uri);
-      }
-      return undefined;
-    };
-
-    return unknownToRefOption(formValue);
-  }, [options, getValue]);
+  const handleGetValue = useCallback(() => findRefOption(getValue(), options), [options, getValue]);
 
   const item = handleGetValue();
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);

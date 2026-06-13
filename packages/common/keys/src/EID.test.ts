@@ -125,3 +125,23 @@ describe('EID.equals', () => {
     expect(EID.equals(a, b)).toBe(false);
   });
 });
+
+describe('EID.toLocal', () => {
+  test('drops the space from a qualified ref', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(EID.make({ entityId: OBJECT }));
+  });
+
+  test('leaves a local ref unchanged', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ entityId: OBJECT }))).toBe(EID.make({ entityId: OBJECT }));
+  });
+
+  test('collapses qualified and bare refs to the same value', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(
+      EID.toLocal(EID.make({ entityId: OBJECT })),
+    );
+  });
+
+  test('returns space-only refs unchanged', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE }))).toBe(EID.make({ spaceId: SPACE }));
+  });
+});

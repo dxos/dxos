@@ -17,22 +17,22 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '#translations';
+import { type FormFieldMap } from '#types';
 
 import { getFormProperties } from '../../util';
-import { type FormFieldMap } from '#types';
 import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form';
 
-export type FieldEditorProps = {
+export type FieldEditorProps = Pick<FormRootProps<any>, 'readonly'> & {
   projection: ProjectionModel;
   field: View.FieldType;
   registry?: Registry.Registry;
   view?: Obj.Unknown;
   onSave: () => void;
   onCancel?: () => void;
-} & Pick<FormRootProps<any>, 'readonly'>;
+};
 
 /**
- * Displays a Form representing the metadata for a given `Field` and `View`.
+ * Displays a Form representing the metadata for a `Field` within a given `View`.
  */
 export const FieldEditor = ({ readonly, projection, field, registry, view, onSave, onCancel }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);

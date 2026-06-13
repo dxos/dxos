@@ -58,6 +58,16 @@ export const Default: Story = {
   },
 };
 
+/** Email is the primary login method (no passkey handler). Used by welcome-focus.spec.ts. */
+export const EmailPrimary: Story = {
+  decorators: [withClientProvider()],
+  args: {
+    onJoinIdentity: () => console.log('join identity'),
+    onRecoverIdentity: () => console.log('recover identity'),
+    onRecoverWithOAuth: async () => console.log('recover oauth'),
+  },
+};
+
 export const WithIdentity: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
   args: {},

@@ -31,7 +31,11 @@ const DefaultStory = () => {
   });
   return (
     <TestLayout json={values}>
-      <Form.Root schema={schema} values={values} onValuesChanged={(values) => setValues((prev) => ({ ...prev, ...values }))}>
+      <Form.Root
+        schema={schema}
+        values={values}
+        onValuesChanged={(values) => setValues((prev) => ({ ...prev, ...values }))}
+      >
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
@@ -43,7 +47,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/fields/DateField',
+  title: 'ui/react-ui-form/Form/fields/DateField',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },
