@@ -182,7 +182,7 @@ export const ArrayField = ({
                   key={getOrderedId(item)}
                   id={getOrderedId(item)}
                   item={item}
-                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0.5'
+                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0 pb-1'
                 >
                   <OrderedList.DragHandle />
                   {renderField(item.index, item.index === items.length - 1)}

@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentProps, type PropsWithChildren, useCallback } from 'react';
 
-import { type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type IconButtonProps, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { List, type ListItemRecord } from '../List';
@@ -106,12 +106,12 @@ export const OrderedListExpandCaret = (props: Partial<IconButtonProps>) => {
   // Disclosure semantics: this button controls the expanded panel so assistive tech can
   // announce the open/closed state and navigate to the controlled region.
   return (
-    <List.ItemIconButton
+    <ToggleIconButton
       iconOnly
       variant='ghost'
-      autoHide={false}
+      active={expanded}
+      icon='ph--caret-right--regular'
       label={t('toggle-expand.label')}
-      icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
       aria-expanded={expanded}
       aria-controls={`${id}-panel`}
       onClick={toggle}

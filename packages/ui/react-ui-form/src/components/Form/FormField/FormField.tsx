@@ -260,7 +260,7 @@ FormField.displayName = 'Form.FormField';
 
 export const CompactIconButton = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
   return (
-    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col pt-2.5')}>
+    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'border flex-col pt-0.5')}>
       <IconButton variant='ghost' density='xs' square iconOnly {...props} />
     </div>
   );

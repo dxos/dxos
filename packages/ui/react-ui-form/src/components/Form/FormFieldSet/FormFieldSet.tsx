@@ -8,8 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation } from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { ToggleIconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldOptions, type RefFieldDataProps } from '#types';
@@ -111,13 +110,13 @@ export const FormFieldSet = ({
           path={SchemaEx.createJsonPath(path ?? [])}
           button={
             collapsible && (
-              <IconButton
+              <ToggleIconButton
+                active={!collapsed}
                 classNames='px-1 mr-0.5'
                 variant='ghost'
                 density='xs'
                 iconOnly
                 icon='ph--caret-right--regular'
-                iconClassNames={mx('transition-transform', !collapsed && 'rotate-90')}
                 label={t(collapsed ? 'expand-fields.label' : 'collapse-fields.label')}
               />
             )

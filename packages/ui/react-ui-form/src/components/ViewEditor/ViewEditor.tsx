@@ -26,7 +26,7 @@ import {
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, Message, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
@@ -355,27 +355,31 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                   id={field.id}
                   item={field}
                   canDrag={!readonly && !schemaReadonly}
-                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0.5'
+                  classNames='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 p-0 pb-1'
                 >
                   {/* Drag handle and delete flank the central column; the name row and the
                       expanded editor live inside it (mirrors the ordered ArrayField layout). */}
                   <OrderedList.DragHandle />
                   <div className='flex flex-col border border-subdued-separator rounded-sm'>
-                    <div className='flex items-center px-2'>
-                      <OrderedList.Title classNames={hidden ? 'text-subdued' : undefined}>
+                    <div className='flex items-center'>
+                      <OrderedList.Title classNames={mx('px-2', hidden ? 'text-subdued' : undefined)}>
                         {field.path}
                       </OrderedList.Title>
-                      <OrderedList.Action
+                      <ToggleIconButton
+                        iconOnly
+                        variant='ghost'
+                        active={hidden}
+                        icon='ph--eye--regular'
+                        activeIcon='ph--eye-closed--regular'
                         label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                         data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
-                        icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                         disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
                         onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                       />
                       {!readonly && <OrderedList.ExpandCaret data-testid='field.toggle' />}
                     </div>
                     {!readonly && expandedField === field.id && (
-                      <div className='px-2 pb-2'>
+                      <div className='px-2'>
                         <FieldEditor
                           readonly={readonly || schemaReadonly}
                           registry={registry}
@@ -388,7 +392,6 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                   </div>
                   {!readonly && (
                     <CompactIconButton
-                      inline
                       icon='ph--x--regular'
                       label={t('delete-field.label')}
                       disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
