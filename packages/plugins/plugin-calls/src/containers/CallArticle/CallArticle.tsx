@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Panel } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 
 import { type Call as CallType, CallsCapabilities } from '#types';
@@ -35,14 +35,19 @@ export const CallArticle = (_props: CallArticleProps) => {
   }, [callManager, leaveSound]);
 
   return (
-    <Panel.Root>
-      <Panel.Content>
-        <Call.Root>
-          <Call.Audio />
-          <Call.Grid />
-          <Call.Toolbar onLeave={handleLeave} />
-        </Call.Root>
-      </Panel.Content>
-    </Panel.Root>
+    <Call.Root>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Call.Viewport>
+            <Call.Audio />
+            <Call.Grid />
+            <Call.Toolbar onLeave={handleLeave} />
+          </Call.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Call.Root>
   );
 };
