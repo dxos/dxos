@@ -82,7 +82,8 @@ export const formattingStyles = EditorView.theme({
   },
   '& .cm-codeblock-line': {
     background: 'var(--color-cm-codeblock)',
-    paddingInline: '1rem !important',
+    paddingLeft: '1rem !important',
+    paddingRight: '1.5rem !important',
   },
   '& .cm-codeblock-start': {
     borderTopLeftRadius: '.25rem',
