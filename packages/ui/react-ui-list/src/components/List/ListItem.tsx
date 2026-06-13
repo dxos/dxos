@@ -26,6 +26,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import {
+  IconBlock,
   IconButton,
   type IconButtonProps,
   ListItem as NaturalListItem,
@@ -83,6 +84,8 @@ export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
       item: T;
       asChild?: boolean;
       selected?: boolean;
+      /** Apply the `dx-hover` row-hover affordance. Defaults to true. */
+      hover?: boolean;
     } & HTMLAttributes<HTMLDivElement>
   >
 >;
@@ -96,6 +99,7 @@ export const ListItem = <T extends ListItemRecord>({
   item,
   asChild,
   selected,
+  hover = true,
   ...props
 }: ListItemProps<T>) => {
   const Comp = asChild ? Slot : 'div';
@@ -185,7 +189,7 @@ export const ListItem = <T extends ListItemRecord>({
         {...props}
         role='listitem'
         aria-selected={selected}
-        className={mx('relative p-1 dx-selected dx-hover', classNames, stateStyles[state.type])}
+        className={mx('relative dx-selected', hover && 'dx-hover', classNames, stateStyles[state.type])}
         ref={rootRef}
       >
         {children}
@@ -236,25 +240,28 @@ export const ListItemDeleteButton = ({
   const isDisabled = state.type !== 'idle' || disabled;
   const { t } = useTranslation(osTranslations);
   return (
-    <IconButton
-      {...props}
-      variant='ghost'
-      disabled={isDisabled}
-      icon={icon}
-      iconOnly
-      label={label ?? t('delete.label')}
-      classNames={[classNames, autoHide && disabled && 'hidden']}
-    />
+    <IconBlock classNames='my-[1px]'>
+      <IconButton
+        {...props}
+        variant='ghost'
+        disabled={isDisabled}
+        icon={icon}
+        iconOnly
+        label={label ?? t('delete.label')}
+        classNames={[classNames, autoHide && disabled && 'hidden']}
+      />
+    </IconBlock>
   );
 };
 
-export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
+export const ListItemDragHandle = ({ disabled, noTooltip }: Pick<IconButtonProps, 'disabled' | 'noTooltip'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
   const { t } = useTranslation(osTranslations);
   return (
     <IconButton
       variant='ghost'
       disabled={disabled}
+      noTooltip={noTooltip}
       icon='ph--dots-six-vertical--regular'
       iconOnly
       label={t('drag-handle.label')}

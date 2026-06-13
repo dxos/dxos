@@ -107,7 +107,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
             ...message,
             id: message.id,
           }),
-          completedAt: new Date().toISOString(),
         });
 
         yield* Feed.append(feed, [relation]);

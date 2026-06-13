@@ -33,7 +33,6 @@ export const translations = [
         'pipeline-automation.label': 'Automations',
         'toggle-expand.label': 'Toggle expand',
         'delete-view.label': 'Delete view',
-        'add-view.label': 'Add view',
       },
     },
   },

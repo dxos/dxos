@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'agentProperties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
         component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),

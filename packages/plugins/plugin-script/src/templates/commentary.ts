@@ -187,7 +187,6 @@ export default Commentary.pipe(
             Relation.make(HasSubject.HasSubject, {
               [Relation.Source]: document,
               [Relation.Target]: chessGame,
-              completedAt: new Date().toISOString(),
             }),
           );
         } else {

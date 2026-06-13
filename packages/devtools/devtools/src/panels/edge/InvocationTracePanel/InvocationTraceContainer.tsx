@@ -214,13 +214,8 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const isLogQueue = 'logs' === contents || objects.length === 0;
 
   return (
-    <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator'>
-      <Tabs.Root
-        classNames='grid grid-rows-[min-content_1fr] min-h-0 [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'
-        orientation='horizontal'
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
+    <Tabs.Root asChild orientation='horizontal' value={activeTab} onValueChange={setActiveTab}>
+      <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
         <Tabs.Tablist classNames='border-b border-separator'>
           <Tabs.Tab value='input'>Input</Tabs.Tab>
           {isLogQueue && <Tabs.Tab value='logs'>Logs</Tabs.Tab>}
@@ -257,8 +252,8 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
             <ExecutionGraphPanel objects={objects} />
           </Tabs.Panel>
         )}
-      </Tabs.Root>
-    </div>
+      </div>
+    </Tabs.Root>
   );
 };
 

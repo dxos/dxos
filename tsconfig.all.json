@@ -727,9 +727,6 @@
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {

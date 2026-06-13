@@ -103,13 +103,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
           </Card.Header>
           {flightDetails ? (
             <Card.Body>
-              <Form.Root
-                schema={Segment.FlightDetails}
-                defaultValues={flightDetails}
-                layout='static'
-                readonly
-                tooltips={false}
-              >
+              <Form.Root schema={Segment.FlightDetails} defaultValues={flightDetails} layout='static' readonly>
                 {/*
                  * No `Form.Viewport`: it would nest its own full-bleed Column +
                  * gutter, so the fields wouldn't line up with the header. Rendering

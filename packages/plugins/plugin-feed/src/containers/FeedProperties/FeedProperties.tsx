@@ -11,23 +11,14 @@ import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
-const ensureSyncFeedOperation = async (db: NonNullable<ReturnType<typeof Obj.getDatabase>>) => {
-  const existing = await db
-    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(FeedOperation.SyncFeed.meta.key)))
-    .run();
-  const [existingOperation] = existing;
-  if (existingOperation) {
-    return existingOperation;
-  }
+export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
-  return db.add(Operation.serialize(FeedOperation.SyncFeed));
-};
-
-export const FeedProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Subscription.Subscription>) => {
+export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
@@ -83,20 +74,34 @@ export const FeedProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Sub
   }, [invokePromise, db]);
 
   return (
-    <Input.Root>
-      <Input.Label>{t('feed-sync.label')}</Input.Label>
-      <div className='flex flex-row items-center'>
-        <Input.Switch
-          checked={syncEnabled ?? false}
-          disabled={pending}
-          onCheckedChange={() => {
-            void handleToggleSync();
-          }}
-        />
-        {syncTrigger && (
-          <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
-        )}
-      </div>
-    </Input.Root>
+    <Form.Section>
+      <Input.Root>
+        <Input.Label>{t('feed-sync.label')}</Input.Label>
+        <div className='flex flex-row items-center'>
+          <Input.Switch
+            checked={syncEnabled ?? false}
+            disabled={pending}
+            onCheckedChange={() => {
+              void handleToggleSync();
+            }}
+          />
+          {syncTrigger && (
+            <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+          )}
+        </div>
+      </Input.Root>
+    </Form.Section>
   );
+};
+
+const ensureSyncFeedOperation = async (db: NonNullable<ReturnType<typeof Obj.getDatabase>>) => {
+  const existing = await db
+    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(FeedOperation.SyncFeed.meta.key)))
+    .run();
+  const [existingOperation] = existing;
+  if (existingOperation) {
+    return existingOperation;
+  }
+
+  return db.add(Operation.serialize(FeedOperation.SyncFeed));
 };

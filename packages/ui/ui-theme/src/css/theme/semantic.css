@@ -35,9 +35,9 @@
   --dx-elevation-7: light-dark(white, var(--color-neutral-750));
 
   /* Surfaces — each maps to exactly one elevation level */
+  --color-deck-surface: var(--dx-elevation-1);
   --color-sidebar-surface: var(--dx-elevation-2);
   --color-header-surface: var(--dx-elevation-2);
-  --color-deck-surface: var(--dx-elevation-3);
   --color-base-surface: var(--dx-elevation-3);
   --color-card-surface: var(--dx-elevation-3);
   --color-group-surface: var(--dx-elevation-4);
@@ -93,6 +93,15 @@
   --dx-hover-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-850));
   --color-hover-surface: var(--dx-hover-surface-base);
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+
+  /*
+   * Subtle region hover for large highlight targets (list rows, tiles) where the full
+   * control-strength hover reads as too heavy. Tracks --color-hover-surface by default, so it
+   * is identical to the control hover everywhere except on surfaces that re-derive a gentler
+   * value (see surface.css). Consumed by `.dx-hover` / `.dx-hover-row`; controls (buttons) keep
+   * --color-hover-surface.
+   */
+  --color-hover-surface-subtle: var(--color-hover-surface);
 
   /* current (aria-current) */
   --dx-current-surface-base: light-dark(var(--color-neutral-150), var(--color-neutral-800));
