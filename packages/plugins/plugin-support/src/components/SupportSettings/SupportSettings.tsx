@@ -21,9 +21,11 @@ export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: S
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <SettingsForm.Item title={t('show-welcome.label')}>
-          <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
-        </SettingsForm.Item>
+        {onShowWelcome && (
+          <SettingsForm.Item title={t('show-welcome.label')}>
+            <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
+          </SettingsForm.Item>
+        )}
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Settings.Settings}

@@ -81,11 +81,11 @@ describe('Ref', () => {
     const contactData = {
       id: EntityId.random(),
       name: 'John Doe',
-      tasks: [{ '/': `dxn:echo:@:${id}` }],
+      tasks: [{ '/': `echo:/${id}` }],
     };
 
     const contact = Type.getSchema(Contact).pipe(Schema.decodeUnknownSync)(contactData);
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
-    expect(contact.tasks[0].uri.toString()).toEqual(`dxn:echo:@:${id}`);
+    expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
   });
 });

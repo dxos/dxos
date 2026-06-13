@@ -12,7 +12,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { type GeoMarker } from '@dxos/react-ui-geo';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { Map, MapCapabilities } from '#types';
@@ -25,9 +25,9 @@ import { Map, MapCapabilities } from '#types';
 const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
   const db = subject && Obj.getDatabase(subject);
   const [view] = useObject(subject?.view);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
-  const schema = useType(db, typename);
+  const schema = useType(db, typeUri);
   const baseFilter = useSchemaFilter(schema);
   const query = useMemo(
     () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
@@ -60,7 +60,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 
-  return { markers, selection: typename ? { contextId: typename, mode: 'multi' } : undefined };
+  return { markers, selection: typeUri ? { contextId: typeUri, mode: 'multi' } : undefined };
 };
 
 /** Built-in provider plotting a {@link Map.Map}'s view rows. */

@@ -243,7 +243,7 @@ export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> 
  * Adds an object to the agent's artifacts (context), resolving it by id within the agent's space.
  *
  * Accepts whatever reference a tool returned — a bare entity id (e.g. `01J…`) or a full ECHO URI
- * (`echo:/…`, `dxn:echo:…`). LLMs frequently strip a returned URI down to the bare id, which is not
+ * (`echo:/…`, `echo://…`). LLMs frequently strip a returned URI down to the bare id, which is not
  * a resolvable URI on its own; resolving by entity id within the space tolerates both forms.
  *
  * Returns the fully-qualified {@link Ref.Ref} that was stored (also usable for an inline message

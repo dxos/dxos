@@ -20,6 +20,7 @@ export const translations = [
         'add-object.label': 'Add trip',
         'rename-object.label': 'Rename trip',
         'delete-object.label': 'Delete trip',
+        'object-deleted.label': 'Trip deleted',
       },
       [Type.getTypename(Booking.Booking)]: {
         'typename.label': 'Booking',
@@ -30,6 +31,7 @@ export const translations = [
         'add-object.label': 'Add booking',
         'rename-object.label': 'Rename booking',
         'delete-object.label': 'Delete booking',
+        'object-deleted.label': 'Booking deleted',
       },
       [meta.id]: {
         'plugin.name': 'Trip',

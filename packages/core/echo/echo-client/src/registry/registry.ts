@@ -8,10 +8,10 @@ import * as Layer from 'effect/Layer';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, Query, type Filter, type QueryResult, Registry, Type } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo-host/filter';
+import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, PublicKey, URI } from '@dxos/keys';
+import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 
 import { QueryResultCache } from '../query';
 
@@ -173,13 +173,15 @@ const getEntityId = (entity: Entity.Unknown): string => {
 };
 
 /**
- * Returns the identifier DXN (`dxn:echo:@:<objectId>`) under which a persisted
+ * Returns the identifier EID (`echo:/<objectId>`) under which a persisted
  * (database-attached) type entity is indexed, or `undefined` for in-memory
  * static type declarations. Used to avoid colliding with static schemas that
  * share the same typename/version.
  */
 const getPersistedIdentifierDXN = (type: Type.AnyEntity): string | undefined =>
-  Type.getDatabase(type) != null && typeof type.id === 'string' ? `dxn:echo:@:${type.id}` : undefined;
+  Type.getDatabase(type) != null && typeof type.id === 'string'
+    ? EID.make({ entityId: EntityId.make(type.id) })
+    : undefined;
 
 /**
  * Returns the canonical DXN string key for a type entity.
@@ -247,11 +249,10 @@ const getEntityUris = (entity: Entity.Unknown): URI.URI[] => {
 
 /**
  * Normalizes a URI string to the canonical key form used by `#entitiesByUri`.
- * Tries `DXN.tryMake` first (strips the legacy `dxn:type:` prefix and validates
- * the type-DXN grammar); falls back to `EID.tryParse` for echo identifier
- * URIs (`dxn:echo:@:<objectId>`, normalized to canonical `echo:` form), and
- * finally passes unrecognized strings through unchanged. Both `DXN` and `EID`
- * are branded URIs, so the result is always a {@link URI.URI} key.
+ * Tries `DXN.tryMake` first (validates the type-DXN grammar); falls back to
+ * `EID.tryParse` for echo identifier URIs (`echo:/<objectId>`), and finally
+ * passes unrecognized strings through unchanged. Both `DXN` and `EID` are
+ * branded URIs, so the result is always a {@link URI.URI} key.
  */
 const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(uri) ?? URI.make(uri);
 
@@ -362,5 +363,4 @@ const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.
   }
 };
 
-const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean =>
-  filterMatchObjectJSON(filter, Entity.toJSON(entity));
+const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => filterMatchEntity(filter, entity);

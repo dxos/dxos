@@ -8158,6 +8158,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-search':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-search
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -9354,9 +9357,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-graph':
+      '@dxos/plugin-automation':
         specifier: workspace:*
-        version: link:../plugin-graph
+        version: link:../plugin-automation
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -34967,6 +34970,10 @@ packages:
     resolution: {integrity: sha512-fKzAra0rGJUUBwGBgNkHZuToZcn+TtXHpeCgmkMJMMYx1sQDYaCSyjJBSCa2nH1DGm7s3n1oBnohoVTBaN7Lww==}
     engines: {node: '>=8'}
 
+  is-wsl@3.1.0:
+    resolution: {integrity: sha512-UcVfVfaK4Sc4m7X3dUSoHoozQGBEFeDC+zVo06t98xe8CzHSZZBekNXH+tu0NalHolcJ/QAGqS46Hef7QXBIMw==}
+    engines: {node: '>=16'}
+
   is-wsl@3.1.1:
     resolution: {integrity: sha512-e6rvdUCiQCAuumZslxRJWR/Doq4VpPR82kqclvcS0efgt430SlGIk05vdCN58+VrzgtIcfNODjozVielycD4Sw==}
     engines: {node: '>=16'}
@@ -52124,7 +52131,7 @@ snapshots:
   clipboardy@4.0.0:
     dependencies:
       execa: 8.0.1
-      is-wsl: 3.1.1
+      is-wsl: 3.1.0
       is64bit: 2.0.0
 
   cliui@6.0.0:
@@ -55850,6 +55857,10 @@ snapshots:
   is-wsl@2.2.0:
     dependencies:
       is-docker: 2.2.1
+
+  is-wsl@3.1.0:
+    dependencies:
+      is-inside-container: 1.0.0
 
   is-wsl@3.1.1:
     dependencies:

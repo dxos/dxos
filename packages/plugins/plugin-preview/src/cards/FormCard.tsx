@@ -39,8 +39,8 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
   // dynamic types whose schema isn't reachable via `Obj.getSchema` (DXN mismatch).
   const staticType = Obj.getType(subject);
   const db = Obj.getDatabase(subject);
-  const typename = Obj.getTypename(subject);
-  const runtimeType = useType(db, staticType ? undefined : typename);
+  // Obj.getTypeURI throws for corrupted objects; only evaluate it on the fallback path.
+  const runtimeType = useType(db, staticType ? undefined : Obj.getTypeURI(subject));
   const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
     const resolvedType = runtimeType ?? staticType;
     return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;

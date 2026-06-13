@@ -62,7 +62,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       }
 
       const space = client.spaces.get(spaceId);
-      const object = space?.db.getObjectById(objectId);
+      const object = space?.db.query(Filter.id(objectId)).runSync()[0];
       if (!space || !isInstanceOf(Script.Script, object)) {
         return;
       }

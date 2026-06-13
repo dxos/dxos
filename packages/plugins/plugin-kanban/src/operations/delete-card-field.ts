@@ -6,7 +6,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanOperation } from '../types';
 
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = K
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');
       const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
-      const schema = types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast));
+      const schema = types.find((t) => Type.getURI(t) === getTypeURIFromQuery(view.query.ast));
       invariant(schema, 'Schema not found');
 
       invariant(Type.isType(schema), 'expected stored Type.Type for card schema');

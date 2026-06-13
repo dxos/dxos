@@ -6,13 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Show closed spaces.
-     */
-    showHidden: Schema.Boolean,
-  }),
-);
+export const Settings = Schema.mutable(Schema.Struct({}));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

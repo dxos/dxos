@@ -8,6 +8,7 @@ import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
+import { type URI } from '@dxos/keys';
 
 import type * as Collection from './Collection';
 import * as Database from './Database';
@@ -75,10 +76,10 @@ export interface Query<T> {
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
   'referencedBy'<S extends Type$.AnyEntity>(
-    target: S | string,
+    target: S | URI.URI,
     key: RefPropKey<Type$.InstanceType<S>>,
   ): Query<Type$.InstanceType<S>>;
-  'referencedBy'<S extends Type$.AnyEntity>(target: S | string): Query<Type$.InstanceType<S>>;
+  'referencedBy'<S extends Type$.AnyEntity>(target: S | URI.URI): Query<Type$.InstanceType<S>>;
   'referencedBy'(): Query<any>;
 
   /**
@@ -88,7 +89,7 @@ export interface Query<T> {
    * @param predicates - Predicates to filter the relation objects.
    */
   'sourceOf'<R extends Type$.AnyRelation>(
-    relation?: R | string,
+    relation?: R | URI.URI,
     predicates?: Filter.Props<Type$.InstanceType<R>>,
   ): Query<Type$.InstanceType<R>>;
 
@@ -99,7 +100,7 @@ export interface Query<T> {
    * @param predicates - Predicates to filter the relation objects.
    */
   'targetOf'<R extends Type$.AnyRelation>(
-    relation?: R | string,
+    relation?: R | URI.URI,
     predicates?: Filter.Props<Type$.InstanceType<R>>,
   ): Query<Type$.InstanceType<R>>;
 
@@ -265,7 +266,7 @@ class QueryClass implements Any {
     });
   }
 
-  referencedBy(target?: Type$.AnyEntity | string, key?: string): Any {
+  referencedBy(target?: Type$.AnyEntity | URI.URI, key?: string): Any {
     const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -275,7 +276,7 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(relation?: Type$.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -284,7 +285,7 @@ class QueryClass implements Any {
     });
   }
 
-  targetOf(relation?: Type$.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(relation?: Type$.AnyRelation | URI.URI, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -541,8 +542,8 @@ export const type: {
     union: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
-  (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
-} = (type: Type$.AnyEntity | string, predicates?: Filter.Props<unknown>): Any => {
+  (uri: URI.URI, predicates?: Filter.Props<unknown>): Query<any>;
+} = (type: Type$.AnyEntity | URI.URI, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
     filter: Filter.type(type, predicates).ast,

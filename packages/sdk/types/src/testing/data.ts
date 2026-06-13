@@ -3,7 +3,7 @@
 //
 
 import type { Space } from '@dxos/client-protocol';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { TestSchema } from '@dxos/schema/testing';
 
@@ -544,7 +544,7 @@ export const seedTestData = async (space: Space) => {
   ];
 
   for (const object of objects) {
-    if (!space.db.getObjectById(object.id)) {
+    if (!space.db.query(Filter.id(object.id)).runSync()[0]) {
       space.db.add(object);
     }
   }

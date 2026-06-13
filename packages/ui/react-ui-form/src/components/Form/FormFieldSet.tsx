@@ -13,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { type FormHandlerProps } from '../../hooks';
-import { getFormProperties } from '../../util';
+import { getRootFormProperties } from '../../util';
 import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
 import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
@@ -177,7 +177,7 @@ const useFormFieldSetProperties = ({
     }
 
     // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
-    const schemaProps = getFormProperties(schema.ast);
+    const schemaProps = getRootFormProperties(schema.ast, values);
     const filteredProps = exclude ? exclude(schemaProps) : schemaProps;
 
     // Use projection-based field management when view and projection are available.

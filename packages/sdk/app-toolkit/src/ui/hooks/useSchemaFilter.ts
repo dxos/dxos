@@ -5,6 +5,7 @@
 import { useMemo } from 'react';
 
 import { Filter, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 // TODO(wittjosiah): This should use the full query AST directly.
 //   RuntimeType-backed spaces can contain objects tagged with either the schema object DXN
@@ -17,7 +18,7 @@ export const useSchemaFilter = (schema: Type.AnyEntity | undefined): Filter.Any 
 
     if (Type.getDatabase(schema) != null) {
       const typename = Type.getTypename(schema);
-      return typename != null ? Filter.or(Filter.type(schema), Filter.typename(typename)) : Filter.type(schema);
+      return typename != null ? Filter.or(Filter.type(schema), Filter.type(DXN.make(typename))) : Filter.type(schema);
     }
 
     return Filter.type(schema);

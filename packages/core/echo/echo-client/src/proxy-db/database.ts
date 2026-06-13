@@ -28,7 +28,7 @@ import {
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -301,7 +301,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       [MetaId]: { keys: [], key: meta.typename, version: meta.version },
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
-    const typeId = `dxn:echo:@:${schemaToStore.id}`;
+    const typeId = EID.make({ entityId: EntityId.make(schemaToStore.id) });
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
@@ -337,6 +337,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   // TODO(burdon): Type check.
+  /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
@@ -481,7 +482,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
       const objects = await this._coreDatabase.graph
-        .query(Query.select(Filter.typeURI(migration.fromType)).from(this))
+        .query(Query.select(Filter.type(migration.fromType)).from(this))
         .run();
       log.verbose('migrate', {
         from: migration.fromType,

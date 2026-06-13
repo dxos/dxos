@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { printObject } from '../util';
 
@@ -18,7 +19,7 @@ export const handler = ({ typename }: { typename: Option.Option<string> }) =>
     const { json } = yield* CommandConfig;
     const filter = Option.match(typename, {
       onNone: () => Filter.everything(),
-      onSome: (typename) => Filter.typename(typename),
+      onSome: (typename) => Filter.type(DXN.make(typename)),
     });
     const objects = yield* Database.query(filter).run;
 
