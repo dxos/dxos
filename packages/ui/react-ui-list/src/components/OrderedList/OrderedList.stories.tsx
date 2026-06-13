@@ -300,16 +300,13 @@ const NestedStory = () => {
     [],
   );
 
-  const handleSubDelete = useCallback(
-    (groupId: string, subId: string) => {
-      setGroups((prev) =>
-        prev.map((group) =>
-          group.id === groupId ? { ...group, subItems: group.subItems.filter((sub) => sub.id !== subId) } : group,
-        ),
-      );
-    },
-    [],
-  );
+  const handleSubDelete = useCallback((groupId: string, subId: string) => {
+    setGroups((prev) =>
+      prev.map((group) =>
+        group.id === groupId ? { ...group, subItems: group.subItems.filter((sub) => sub.id !== subId) } : group,
+      ),
+    );
+  }, []);
 
   return (
     <OrderedList.Root<Group>
