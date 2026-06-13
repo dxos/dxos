@@ -9,6 +9,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type ElementDragPayload,
   draggable,
@@ -347,7 +348,21 @@ export const useReorderItem = <T>(controller: ReorderListController<T>, id: stri
   };
 };
 
-// NOTE: `useReorderAutoScroll` is intentionally not implemented in this PR. It would wrap
-// `@atlaskit/pragmatic-drag-and-drop-auto-scroll` and apply to scrollable surfaces
-// (Mosaic.Stack territory). None of the current `react-ui-list` compounds need it, so we
-// avoid pulling the dep here; add when Mosaic adopts `useReorder`.
+/**
+ * Wire pragmatic-dnd's auto-scroll on a scrollable container. While any pragmatic-dnd drag
+ * is in flight, hovering near the edges of the registered element scrolls the container
+ * automatically. Pair with `OrderedList.Viewport` (or any caller-owned ScrollArea) so long
+ * lists can be reordered without manually scrolling first.
+ *
+ * `autoScrollForElements` is global — it activates on every drag regardless of which list
+ * started it — so it's safe to register one element per scroll surface.
+ */
+export const useReorderAutoScroll = (containerRef: { current: HTMLElement | null }) => {
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return;
+    }
+    return autoScrollForElements({ element });
+  }, [containerRef]);
+};

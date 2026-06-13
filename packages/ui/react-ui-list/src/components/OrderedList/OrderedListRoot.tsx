@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useMemo, useRef } from 'react';
 
 import {
   ScrollArea,
@@ -21,6 +21,7 @@ import {
   type UseListDisclosureReturn,
   useListDisclosure,
   useListNavigation,
+  useReorderAutoScroll,
   useReorderList,
 } from '../../aspects';
 
@@ -138,10 +139,13 @@ export const OrderedListContent = ({ classNames, children }: ThemedClassName<Pro
 };
 
 /**
- * Optional ScrollArea wrapper for the list. Mirrors `Listbox.Viewport` — include when the
+ * Optional ScrollArea wrapper for the list. Mirrors `Listbox.Viewport`. Include when the
  * list needs to fill a constrained pane and scroll independently; omit for static lists
- * that flow with their parent. Auto-scroll during drag-reorder is not wired here; add when
- * `useReorderList` gains the `useReorderAutoScroll` companion (see design doc).
+ * that flow with their parent.
+ *
+ * Wires `useReorderAutoScroll` on the inner viewport so pragmatic-dnd auto-scrolls the
+ * container when a drag hovers near its edges — long lists can be reordered without
+ * scrolling manually first.
  */
 type OrderedListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
 
@@ -149,6 +153,8 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
   const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
     OrderedListViewportProps & Record<string, unknown>
   >;
+  const viewportRef = useRef<HTMLDivElement>(null);
+  useReorderAutoScroll(viewportRef);
   return (
     <ScrollArea.Root
       {...composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' })}
@@ -156,7 +162,7 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
       orientation='vertical'
       ref={forwardedRef}
     >
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+      <ScrollArea.Viewport ref={viewportRef}>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 });

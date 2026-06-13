@@ -20114,6 +20114,9 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: 'catalog:'
         version: 1.7.7
+      '@atlaskit/pragmatic-drag-and-drop-auto-scroll':
+        specifier: 'catalog:'
+        version: 2.1.2
       '@atlaskit/pragmatic-drag-and-drop-hitbox':
         specifier: 'catalog:'
         version: 1.1.0
