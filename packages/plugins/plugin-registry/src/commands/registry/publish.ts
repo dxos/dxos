@@ -7,25 +7,24 @@ import * as Options from '@effect/cli/Options';
 import * as PlatformCommand from '@effect/platform/Command';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as FileSystem from '@effect/platform/FileSystem';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Path from '@effect/platform/Path';
-import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, createSession, putRecord, resolveCredentials } from './util';
+import { type Client, ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
+import { EdgeHttpClient } from '@dxos/edge-client';
 
-const DEFAULT_REGISTRY_URL = 'https://edge.dxos.workers.dev';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, createSession, putRecord, resolveCredentials } from './util';
 
 type PluginConfig = {
   id: string;
   name: string;
   build?: { command?: string; outdir?: string };
-  publish?: { registryUrl?: string; assetBaseUrl?: string };
+  publish?: { assetBaseUrl?: string };
 };
 
 /** Manifest emitted by the build (subset consumed here). */
@@ -46,8 +45,6 @@ type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
 const PluginsDocSchema = Schema.Struct({
   package: Schema.optional(Schema.Struct({ plugins: Schema.optional(Schema.Array(Schema.Unknown)) })),
 });
-
-const UploadResponseSchema = Schema.Struct({ data: Schema.Struct({ moduleUrl: Schema.String }) });
 
 const ensureTrailingSlash = (url: string): string => (url.endsWith('/') ? url : `${url}/`);
 
@@ -90,8 +87,10 @@ export const publish = Command.make(
       Options.withDescription('Skip upload and point the release at an already-hosted bundle directory.'),
       Options.optional,
     ),
-    registryUrl: Options.text('registry-url').pipe(
-      Options.withDescription('Edge registry base URL for uploads.'),
+    edgeUrl: Options.text('edge-url').pipe(
+      Options.withDescription(
+        'Edge base URL for bundle upload (e.g. http://localhost:8787). Bypasses profile config; auth is skipped (requires WORKER_ENV=dev on the server).',
+      ),
       Options.optional,
     ),
   },
@@ -116,11 +115,13 @@ export const publish = Command.make(
           return yield* Effect.fail(new Error(moduleId ? `No plugin '${moduleId}' in dx.yml.` : 'dx.yml declares no plugins.'));
         }
 
-        // Build (unless skipped).
+        // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
+        // locally-installed tools (e.g. `vite`) resolve like they do in an npm script.
         const buildCommand = plugin.build?.command;
         if (!options.noBuild && buildCommand) {
           yield* Console.log(`Building: ${buildCommand}`);
-          const exitCode = yield* PlatformCommand.make('sh', '-c', buildCommand).pipe(
+          const binDir = path.join(dir, 'node_modules', '.bin');
+          const exitCode = yield* PlatformCommand.make('sh', '-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`).pipe(
             PlatformCommand.workingDirectory(dir),
             PlatformCommand.stdout('inherit'),
             PlatformCommand.stderr('inherit'),
@@ -144,15 +145,24 @@ export const publish = Command.make(
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
 
         // Resolve hosting → moduleUrl.
-        const registryUrl =
-          Option.getOrUndefined(options.registryUrl) ?? plugin.publish?.registryUrl ?? DEFAULT_REGISTRY_URL;
         const assetBaseUrl = Option.getOrUndefined(options.assetBaseUrl) ?? plugin.publish?.assetBaseUrl;
         let moduleUrl: string;
         if (assetBaseUrl) {
           moduleUrl = new URL('manifest.json', ensureTrailingSlash(assetBaseUrl)).toString();
           yield* Console.log(`Self-hosted: ${moduleUrl}`);
         } else {
-          moduleUrl = yield* uploadBundle({ registryUrl, slug, version, outdir });
+          // Upload to the edge registry via the authenticated edge client (hub-identity VP).
+          // When --edge-url is provided we bypass the profile's edge config and post directly
+          // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
+          const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
+          if (explicitEdgeUrl) {
+            const http = new EdgeHttpClient(explicitEdgeUrl);
+            moduleUrl = yield* uploadBundleDirect({ http, slug, version, outdir });
+          } else {
+            const client = yield* ClientService;
+            const hasIdentity = !!client.halo.identity.get();
+            moduleUrl = yield* uploadBundle({ client, slug, version, outdir, auth: hasIdentity });
+          }
           yield* Console.log(`Uploaded:  ${moduleUrl}`);
         }
 
@@ -204,26 +214,28 @@ export const publish = Command.make(
 ).pipe(Command.withDescription('Build, host, and publish the plugin in the current directory to the registry.'));
 
 /**
- * Upload the build output to the edge registry. Auth uses a shared upload token
- * (`$REGISTRY_UPLOAD_TOKEN`); release integrity is anchored by the signed
- * record's `manifestHash`, not the transport. Returns the canonical `moduleUrl`
- * (the hosted `manifest.json`).
+ * Upload the build output to the edge registry via the authenticated edge client.
+ * The edge gates `/registry/upload` on the caller's hub identity (verifiable
+ * presentation; bypassed for local dev). Release integrity is anchored by the
+ * signed record's `manifestHash`, not the transport. Returns the canonical
+ * `moduleUrl` (the hosted `manifest.json`), targeting the client's configured edge.
  */
 const uploadBundle = ({
-  registryUrl,
+  client,
   slug,
   version,
   outdir,
+  auth = true,
 }: {
-  registryUrl: string;
+  client: Client;
   slug: string;
   version: string;
   outdir: string;
+  auth?: boolean;
 }) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const uploadToken = yield* Config.string('REGISTRY_UPLOAD_TOKEN');
 
     const entries = yield* fs.readDirectory(outdir, { recursive: true });
     const files: { path: string; content: string }[] = [];
@@ -237,14 +249,46 @@ const uploadBundle = ({
       files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
     }
 
-    const client = yield* HttpClient.HttpClient;
-    const response = yield* HttpClientRequest.post(`${ensureTrailingSlash(registryUrl)}registry/upload`).pipe(
-      HttpClientRequest.setHeaders({ Authorization: `Bearer ${uploadToken}` }),
-      HttpClientRequest.bodyJson({ slug, version, files }),
-      Effect.flatMap((req) => client.execute(req)),
-      Effect.flatMap((res) => res.json),
-      Effect.flatMap(Schema.decodeUnknown(UploadResponseSchema)),
-      Effect.scoped,
+    const { moduleUrl } = yield* Effect.tryPromise(() =>
+      client.edge.http.uploadPluginBundle(Context.default(), { slug, version, files }, { auth }),
     );
-    return response.data.moduleUrl;
+    return moduleUrl;
+  });
+
+/**
+ * Upload using a standalone EdgeHttpClient (no DXOS profile required).
+ * Auth is skipped — the server must have WORKER_ENV=dev to accept unauthenticated uploads.
+ */
+const uploadBundleDirect = ({
+  http,
+  slug,
+  version,
+  outdir,
+}: {
+  http: EdgeHttpClient;
+  slug: string;
+  version: string;
+  outdir: string;
+}) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+
+    const entries = yield* fs.readDirectory(outdir, { recursive: true });
+    const files: { path: string; content: string }[] = [];
+    for (const entry of entries) {
+      const full = path.join(outdir, entry);
+      const info = yield* fs.stat(full);
+      if (info.type !== 'File') {
+        continue;
+      }
+      const bytes = yield* fs.readFile(full);
+      files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
+    }
+
+    const result = (yield* Effect.tryPromise(() =>
+      http.uploadPluginBundle(Context.default(), { slug, version, files }, { auth: false }),
+    )) as { moduleUrl: string };
+    const moduleUrl = result.moduleUrl;
+    return moduleUrl;
   });

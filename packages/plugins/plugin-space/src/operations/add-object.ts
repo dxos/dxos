@@ -19,6 +19,24 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       const object = input.object as Obj.Unknown;
       const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
       invariant(db, 'Database not found.');
+      // #region agent log
+      fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
+        body: JSON.stringify({
+          sessionId: 'cf2e73',
+          location: 'add-object.ts:handler',
+          message: 'AddObject start',
+          data: {
+            objectId: object.id,
+            typename: Obj.getTypename(object),
+            hidden: input.hidden,
+          },
+          timestamp: Date.now(),
+          hypothesisId: 'H,I',
+        }),
+      }).catch(() => {});
+      // #endregion
 
       yield* CollectionModel.add({
         object,
@@ -65,11 +83,30 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         viewTargetSlug: viewTargetUri ? Paths.getTypeSlugFromUri(viewTargetUri) : undefined,
       });
 
-      return {
+      const result = {
         id: Obj.getURI(object),
         subject: [subject],
         object,
       };
+      // #region agent log
+      fetch('http://127.0.0.1:7573/ingest/be433d03-95c9-4e1b-8101-7c98f0669cc0', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'cf2e73' },
+        body: JSON.stringify({
+          sessionId: 'cf2e73',
+          location: 'add-object.ts:handler',
+          message: 'AddObject success',
+          data: {
+            objectId: object.id,
+            typename: Obj.getTypename(object),
+            subject,
+          },
+          timestamp: Date.now(),
+          hypothesisId: 'H,I',
+        }),
+      }).catch(() => {});
+      // #endregion
+      return result;
     }),
   ),
 );
