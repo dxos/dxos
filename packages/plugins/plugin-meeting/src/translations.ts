@@ -35,8 +35,11 @@ export const translations = [
         'select-meeting.label': 'Set Active',
         'share-call-link.label': 'Share call link',
 
+        'meeting-toolbar.menu': 'Meeting',
+        'meeting-tabs.menu': 'View',
         'meeting-companion.label': 'Meeting Notes',
         'notes.label': 'Notes',
+        'transcript.label': 'Transcript',
         'stats.label': 'Stats',
         'summary.label': 'Summary',
         'regenerate-summary.label': 'Regenerate Summary',

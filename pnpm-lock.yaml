@@ -11790,9 +11790,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/react-ui-stack':
+      '@dxos/react-ui-menu':
         specifier: workspace:*
-        version: link:../../ui/react-ui-stack
+        version: link:../../ui/react-ui-menu
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
