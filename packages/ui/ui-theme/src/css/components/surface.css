@@ -1,5 +1,13 @@
 /**
  * Surfaces
+ *
+ * A surface zone paints a background AND publishes its colour as `--surface-bg`, so descendant
+ * controls can derive a visible hover/current highlight from the actual surface (see the
+ * derivation block below) and surface-matching elements (avatars, gradients) can read it directly.
+ *
+ * Always enter a surface via one of these `dx-*-surface` classes. A bare `bg-*-surface` utility
+ * paints the colour but does NOT publish `--surface-bg`, so control hover collapses onto the
+ * base-surface fallback and can become invisible when the surface shares that elevation.
  */
 
 @layer dx-components {
@@ -8,9 +16,39 @@
     --surface-bg: var(--color-base-surface);
   }
 
+  .dx-deck-surface {
+    @apply bg-deck-surface text-base-fg;
+    --surface-bg: var(--color-deck-surface);
+  }
+
   .dx-sidebar-surface {
     @apply bg-sidebar-surface text-base-fg;
     --surface-bg: var(--color-sidebar-surface);
+  }
+
+  .dx-header-surface {
+    @apply bg-header-surface text-base-fg;
+    --surface-bg: var(--color-header-surface);
+  }
+
+  .dx-card-surface {
+    @apply bg-card-surface text-base-fg;
+    --surface-bg: var(--color-card-surface);
+  }
+
+  .dx-group-surface {
+    @apply bg-group-surface text-base-fg;
+    --surface-bg: var(--color-group-surface);
+  }
+
+  .dx-input-surface {
+    @apply bg-input-surface text-base-fg;
+    --surface-bg: var(--color-input-surface);
+  }
+
+  .dx-toolbar-surface {
+    @apply bg-toolbar-surface text-base-fg;
+    --surface-bg: var(--color-toolbar-surface);
   }
 
   .dx-modal-surface {
@@ -18,39 +56,43 @@
     --surface-bg: var(--color-modal-surface);
   }
 
-  .dx-attention-surface {
-    @apply bg-attention-surface text-base-fg;
-    --surface-bg: var(--color-attention-surface);
-  }
-
   .dx-popover-surface {
     @apply bg-popover-surface text-base-fg backdrop-blur-md;
     --surface-bg: var(--color-popover-surface);
   }
 
-  .dx-card-surface {
-    @apply bg-card-surface text-base-fg;
-    --surface-bg: var(--color-card-surface);
+  .dx-attention-surface {
+    @apply bg-attention-surface text-base-fg;
+    --surface-bg: var(--color-attention-surface);
   }
 }
 
 @layer dx-tokens {
   /*
-   * Some surfaces share an elevation with the un-offset hover/current base tokens, so the state
-   * colours collide with the surface itself (e.g. in dark mode the card surface and hover surface
-   * are both neutral-850 → the highlight is invisible). Re-derive the state colours off the actual
-   * surface (--surface-bg) via relative oklch — darker in light mode, lighter in dark — so
-   * highlights stay visible regardless of how the surface tokens are tuned.
-   * Mirrors the .dx-main-sidebar offset in state.css.
+   * Re-derive the state colours (hover, current, selected) off the host surface for every context
+   * that publishes its own --surface-bg. Custom-property substitution runs once per scope, so the
+   * formula must be repeated here (it cannot simply inherit from semantic.css, which resolved it
+   * against the root surface). Listing all surface zones in one block keeps the offsets identical
+   * across surfaces — there is no per-surface divergence to tune.
+   *
+   * Magnitudes mirror semantic.css; selected-* track current-* via the aliases declared there.
    */
+  .dx-base-surface,
+  .dx-deck-surface,
+  .dx-sidebar-surface,
+  .dx-header-surface,
+  .dx-card-surface,
+  .dx-group-surface,
+  .dx-input-surface,
+  .dx-toolbar-surface,
   .dx-modal-surface,
   .dx-popover-surface,
-  .dx-card-surface {
+  .dx-attention-surface,
+  .dx-main-sidebar {
     --color-hover-surface: light-dark(
       oklch(from var(--surface-bg) calc(l - 0.08) c h),
       oklch(from var(--surface-bg) calc(l + 0.08) c h)
     );
-    /* Gentler offset for full-row/region hover (`.dx-hover`) so it does not read as heavily as a control. */
     --color-hover-surface-subtle: light-dark(
       oklch(from var(--surface-bg) calc(l - 0.02) c h),
       oklch(from var(--surface-bg) calc(l + 0.02) c h)
