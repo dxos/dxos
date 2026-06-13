@@ -19,9 +19,9 @@
    *   2    chrome   L1/R sidebars, header
    *   3    card     card
    *   4    raised   group, input, focus/attention
-   *   5    bar      toolbar (sticky, drop-shadowed)
-   *   6    modal    dialog, modal
-   *   7    float    popover, menu, toast, tooltip
+   *   5    bar      dialog/modal, toolbar (sticky, drop-shadowed)
+   *   6    modal    popover, menu, toast, tooltip
+   *   7    float    
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
@@ -76,6 +76,10 @@
 
   --color-card-surface: var(--dx-elevation-3);
 
+  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
+  --color-attention-surface: var(--dx-elevation-3);
+  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
+
   /** 
    * Elevation 4
    */
@@ -85,10 +89,6 @@
   --color-focus-ring: light-dark(var(--color-blue-400), var(--color-blue-600));
   --color-focus-ring-subtle: light-dark(var(--color-neutral-300), var(--color-neutral-600));
 
-  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
-  --color-attention-surface: var(--dx-elevation-4);
-  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
-
   --color-group-surface: var(--dx-elevation-4);
   /* Subtle alternate of group-surface for zebra striping (e.g. calendar months) — offset off
    * elevation-4 via relative oklch so it tracks the ramp: darker in light mode, lighter in dark. */
@@ -96,6 +96,7 @@
     oklch(from var(--dx-elevation-4) calc(l - 0.03) c h),
     oklch(from var(--dx-elevation-4) calc(l + 0.03) c h)
   );
+
   --color-input-surface: var(--dx-elevation-4);
 
   /**
@@ -104,17 +105,17 @@
 
   --color-toolbar-surface: var(--dx-elevation-5);
 
+  --color-modal-surface: var(--dx-elevation-5);
+
   /**
    * Elevation 6
    */
 
-  --color-modal-surface: var(--dx-elevation-6);
+  --color-popover-surface: var(--dx-elevation-6);
 
   /**
    * Elevation 7
    */
-
-  --color-popover-surface: var(--dx-elevation-7);
 
   /**
    * Misc
