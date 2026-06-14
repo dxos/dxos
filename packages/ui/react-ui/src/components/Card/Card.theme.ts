@@ -26,7 +26,10 @@ const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) 
 
 const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
-    'dx-card__header dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! shadow-none [contain:none]',
+    'dx-card__header col-span-3 grid grid-cols-subgrid items-center',
+    '[&>[data-slot=start]]:col-start-1',
+    '[&>[data-slot=end]]:col-start-3',
+    '[&>*:not([data-slot])]:col-start-2',
     ...etc,
   );
 

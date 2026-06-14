@@ -5,24 +5,23 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, { CSSProperties, JSX, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
+import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
 
 import { iconSize } from '@dxos/ui-theme';
-import { type Density } from '@dxos/ui-types';
+import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Column } from '../Column';
-import { Icon, IconBlock, type IconBlockProps, type IconProps } from '../Icon';
+import { Icon, IconBlock } from '../Icon';
 import { Image, type ImageProps } from '../Image';
 import {
   Toolbar,
   type ToolbarActionIconButtonProps,
   ToolbarDragHandleProps,
   type ToolbarMenuProps,
-  type ToolbarRootProps,
 } from '../Toolbar';
 
 //
@@ -82,20 +81,30 @@ CardRoot.displayName = CARD_ROOT_NAME;
 
 const CARD_HEADER_NAME = 'Card.Header';
 
-type CardHeaderProps = ToolbarRootProps;
+type CardHeaderProps = SlottableProps;
 
 /**
- * Top "header" slot of a Card. Despite the name, this renders as an ARIA
- * toolbar (`role="toolbar"`) so its action children get keyboard navigation
- * for free — `<header>` is allowed to contain a toolbar.
+ * Top header row of a Card. Renders as a `<header>` and shares `Card.Row`'s subgrid +
+ * `data-slot` layout: `Card.Block` children land in the gutters, anonymous children
+ * (e.g. `Card.Title`) in the center. Sets `--icon-size` 5 — header icons are larger than
+ * row icons (which use 4). Not a toolbar: most headers carry 0–1 controls, so `role="toolbar"`
+ * was inaccurate; controls are reached by normal tab order.
  */
-const CardHeader = composable<HTMLDivElement, CardHeaderProps>(({ children, classNames, ...props }, forwardedRef) => {
+const CardHeader = slottable<HTMLDivElement, CardHeaderProps>(({ children, asChild, style, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  const { className, ...rest } = composableProps(props);
+  // `@radix-ui/react-primitive` has no `header` node; the intrinsic element handles asChild via Slot.
+  const Comp = asChild ? Slot : 'header';
 
   return (
-    <Toolbar.Root {...props} style={iconSize(5)} classNames={[tx('card.header', {}), classNames]} ref={forwardedRef}>
+    <Comp
+      {...rest}
+      style={{ ...iconSize(5), ...style }}
+      className={tx('card.header', {}, className)}
+      ref={forwardedRef}
+    >
       {children}
-    </Toolbar.Root>
+    </Comp>
   );
 });
 
@@ -111,9 +120,9 @@ type CardDragHandleProps = ToolbarDragHandleProps;
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock>
+    <CardBlock>
       <Toolbar.DragHandle {...props} ref={forwardedRef} />
-    </CardIconBlock>
+    </CardBlock>
   );
 });
 
@@ -129,9 +138,9 @@ type CardActionIconButtonProps = ToolbarActionIconButtonProps;
 
 const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock>
+    <CardBlock end>
       <Toolbar.ActionIconButton {...props} ref={forwardedRef} />
-    </CardIconBlock>
+    </CardBlock>
   );
 });
 
@@ -147,41 +156,36 @@ type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
 function CardMenu<T extends any | void = void>({ context, items, ...props }: CardMenuProps<T>) {
   return (
-    <CardIconBlock>
+    <CardBlock end>
       <Toolbar.Menu {...props} context={context} items={items ?? []} />
-    </CardIconBlock>
+    </CardBlock>
   );
 }
 
 CardMenu.displayName = CARD_MENU_NAME;
 
 //
-// Icon
+// Block
 //
 
-const CARD_ICON_NAME = 'Card.Icon';
+const CARD_BLOCK_NAME = 'Card.Block';
 
-function CardIcon(props: IconProps) {
+type CardBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?: boolean }>;
+
+/**
+ * Leading (default) or trailing (`end`) gutter slot of a Card row/header. Sized to the
+ * rail-item square so a passive `<Icon>` aligns with an `IconButton`. Defaults text color to
+ * `subdued` so a decorative `<Icon>` child needs no styling; interactive children set their own.
+ */
+const CardBlock = slottable<HTMLDivElement, CardBlockProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <CardIconBlock>
-      <Icon {...props} />
-    </CardIconBlock>
+    <Column.Block {...props} classNames={['text-subdued', classNames]} ref={forwardedRef}>
+      {children}
+    </Column.Block>
   );
-}
-
-CardIcon.displayName = CARD_ICON_NAME;
-
-//
-// IconBlock
-//
-
-const CARD_ICON_BLOCK_NAME = 'Card.IconBlock';
-
-const CardIconBlock = forwardRef<HTMLDivElement, IconBlockProps>((props, forwardedRef) => {
-  return <IconBlock {...props} ref={forwardedRef} />;
 });
 
-CardIconBlock.displayName = CARD_ICON_BLOCK_NAME;
+CardBlock.displayName = CARD_BLOCK_NAME;
 
 //
 // Title
@@ -271,32 +275,28 @@ CardSection.displayName = CARD_SECTION_NAME;
 
 const CARD_ROW_NAME = 'Card.Row';
 
-type CardRowProps = { icon?: string | JSX.Element; fullWidth?: boolean };
+type CardRowProps = { fullWidth?: boolean };
 
 /**
  * A row inside a Card.
- * - Default: spans all 3 columns and establishes a subgrid so children align to the Card's columns.
- *   An optional `icon` lands in the first column; when omitted, the first column is left empty.
- * - `fullWidth`: spans all columns without a subgrid — children do their own internal layout.
- *   The `icon` prop is ignored in this mode.
+ * - Default: spans all 3 columns as a subgrid; children align via `data-slot` — `Card.Block`
+ *   lands in the gutters (start/end), anonymous children in the center. Sets `--icon-size` 4.
+ * - `fullWidth`: spans all columns without a subgrid — children do their own internal layout;
+ *   `Card.Block` placement is inert in this mode.
  */
 const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, icon: iconProp, fullWidth, ...props }, forwardedRef) => {
+  ({ children, asChild, fullWidth, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const icon =
-      typeof iconProp === 'string' ? (
-        <CardIcon classNames='text-subdued' icon={iconProp as string} size={4} />
-      ) : iconProp ? (
-        iconProp
-      ) : (
-        <div />
-      );
 
     return (
-      <Comp {...rest} className={tx('card.row', { fullWidth }, className)} ref={forwardedRef}>
-        {!fullWidth && icon}
+      <Comp
+        {...rest}
+        style={{ ...iconSize(4), ...style }}
+        className={tx('card.row', { fullWidth }, className)}
+        ref={forwardedRef}
+      >
         {children}
       </Comp>
     );
@@ -414,9 +414,19 @@ function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {icon ? <CardIcon classNames='text-subdued' icon={icon} size={4} /> : <div />}
+      {icon ? (
+        <IconBlock classNames='text-subdued'>
+          <Icon icon={icon} size={4} />
+        </IconBlock>
+      ) : (
+        <div />
+      )}
       <span className={tx('card.action-label', {}, !actionIcon ? 'col-span-2' : undefined)}>{label}</span>
-      {actionIcon && <CardIcon icon={actionIcon} size={4} />}
+      {actionIcon && (
+        <IconBlock>
+          <Icon icon={actionIcon} size={4} />
+        </IconBlock>
+      )}
     </Button>
   );
 }
@@ -435,9 +445,13 @@ function CardLink({ label, href }: CardLinkProps) {
   const { tx } = useThemeContext();
   return (
     <a className={tx('card.link', {})} data-variant='ghost' href={href} target='_blank' rel='noreferrer'>
-      <CardIcon classNames='text-subdued' icon='ph--link--regular' />
+      <IconBlock classNames='text-subdued'>
+        <Icon icon='ph--link--regular' />
+      </IconBlock>
       <span className={tx('card.link-label', {})}>{label}</span>
-      <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
+      <IconBlock classNames='invisible group-hover:visible'>
+        <Icon icon='ph--arrow-square-out--regular' />
+      </IconBlock>
     </a>
   );
 }
@@ -454,12 +468,11 @@ export const Card = {
   // Header
   Header: CardHeader,
 
-  // Header parts
-  IconBlock: CardIconBlock,
+  // Header / row parts
+  Block: CardBlock,
   DragHandle: CardDragHandle,
   ActionIconButton: CardActionIconButton,
   Menu: CardMenu,
-  Icon: CardIcon,
   Title: CardTitle,
 
   // Body
@@ -478,6 +491,7 @@ export const Card = {
 export type {
   CardRootProps,
   CardHeaderProps,
+  CardBlockProps,
   CardDragHandleProps,
   CardActionIconButtonProps,
   CardMenuProps,
