@@ -39,6 +39,8 @@ export {
   switchBranch,
   mergeBranch,
   deleteBranch,
+  branchStateAtom,
+  type BranchState,
 } from './echo-handler';
 export { type ProxyTarget } from './echo-handler';
 export {

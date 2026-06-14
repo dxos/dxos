@@ -137,6 +137,9 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
+  /** Fires after any branch operation (create / switch / merge / delete) for reactive branch UI. */
+  readonly branchesChanged = new Event<void>();
+
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /** Fires when service connection is re-established after a leader change. */
@@ -682,6 +685,7 @@ export class CoreDatabase {
       doc.branches[rootObjectId] ??= {};
       doc.branches[rootObjectId][name] = { members: memberUrls, baseHeads, createdAt };
     });
+    this.branchesChanged.emit();
   }
 
   /**
@@ -711,6 +715,7 @@ export class CoreDatabase {
     }
     this._persistCurrentBranches();
     this._scheduleThrottledUpdate([...memberIds]);
+    this.branchesChanged.emit();
   }
 
   /**
@@ -752,6 +757,7 @@ export class CoreDatabase {
     if (orphaned.length > 0) {
       void this.switchBranch(rootObjectId, 'main');
     }
+    this.branchesChanged.emit();
   }
 
   /** BFS the object's referenced subtree (loading members as needed). */

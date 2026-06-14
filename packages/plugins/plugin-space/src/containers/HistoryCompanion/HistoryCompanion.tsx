@@ -3,15 +3,14 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import {
+  branchStateAtom,
   clearTimeTravel,
   createBranch,
   deleteBranch,
-  getBranches,
-  getCurrentBranch,
   mergeBranch,
   setTimeTravel,
   switchBranch,
@@ -43,15 +42,12 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
   const objectRef = useRef(companionTo);
   const object = objectRef.current;
 
-  // Re-read the (synced) branch registry after create/merge/delete, which mutate the space root
-  // rather than the object itself (so they don't fire the object's atom).
-  const [, refreshBranches] = useReducer((value: number) => value + 1, 0);
-
   const timelineAtom = useMemo(() => createHistoryTimelineAtom(object), [object]);
   const { versions, histories, plan } = useAtomValue(timelineAtom);
 
-  const branches = getBranches(object);
-  const currentBranch = getCurrentBranch(object);
+  // Reactive branch state: updates on any branch op, including create/delete (which mutate the space
+  // root, not the object), so the picker stays in sync without manual refresh.
+  const { branches, current: currentBranch } = useAtomValue(branchStateAtom(object));
 
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>(undefined);
   const index = selectedIndex ?? Math.max(versions.length - 1, 0);
@@ -102,7 +98,7 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
 
   const handleCreate = useCallback(async () => {
     // A unique, human-readable branch name.
-    const existing = new Set(getBranches(object));
+    const existing = new Set(branches);
     let suffix = existing.size;
     let name = `branch-${suffix}`;
     while (existing.has(name)) {
@@ -116,15 +112,13 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
     setSelectedIndex(undefined);
     await createBranch(object, name, fromHeads ? { fromHeads } : undefined);
     await switchBranch(object, name);
-    refreshBranches();
-  }, [object, histories, scrubbing, rootHeadsAtIndex]);
+  }, [object, branches, histories, scrubbing, rootHeadsAtIndex]);
 
   const handleMerge = useCallback(async () => {
     if (currentBranch === 'main') {
       return;
     }
     await mergeBranch(object, currentBranch);
-    refreshBranches();
   }, [object, currentBranch]);
 
   const handleDelete = useCallback(async () => {
@@ -133,7 +127,6 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
     }
     deleteBranch(object, currentBranch);
     await switchBranch(object, 'main');
-    refreshBranches();
   }, [object, currentBranch]);
 
   return (

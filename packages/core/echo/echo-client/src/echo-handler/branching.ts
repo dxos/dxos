@@ -3,6 +3,7 @@
 //
 
 import { type Heads } from '@automerge/automerge';
+import * as Atom from '@effect-atom/atom/Atom';
 
 import { type Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -66,3 +67,27 @@ export const deleteBranch = (obj: Obj.Unknown, name: string): void => {
   const { db, id } = resolve(obj);
   db.deleteBranch(id, name);
 };
+
+export type BranchState = {
+  /** Available branch names, including the implicit `'main'` (always first). */
+  branches: string[];
+  /** The branch this device currently views the object on. */
+  current: string;
+};
+
+/**
+ * Reactive atom of an object's branch state (list + current selection). Recomputes on any branch
+ * operation — including create/delete, which mutate the space root rather than the object itself —
+ * so UIs stay in sync without manual refresh.
+ */
+const branchStateFamily = Atom.family((obj: Obj.Unknown) =>
+  Atom.make<BranchState>((get) => {
+    const { db, id } = resolve(obj);
+    const compute = (): BranchState => ({ branches: db.listBranches(id), current: db.getCurrentBranch(id) });
+    const unsubscribe = db.branchesChanged.on(() => get.setSelf(compute()));
+    get.addFinalizer(() => unsubscribe());
+    return compute();
+  }).pipe(Atom.keepAlive),
+);
+
+export const branchStateAtom = (obj: Obj.Unknown): Atom.Atom<BranchState> => branchStateFamily(obj);
