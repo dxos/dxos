@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, IconButton, Icon, useTranslation } from '@dxos/react-ui';
+import { Card, IconButton, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -78,14 +78,7 @@ export const EventDetails = ({
 
   // The leading gutter (column 1) is the star toggle when starring is available, else a static event icon.
   const leading = onToggleStar ? (
-    <IconButton
-      iconOnly
-      variant='ghost'
-      icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-      iconClassNames={starred ? 'text-rose-text' : undefined}
-      label={t(starred ? 'unstar-event.label' : 'star-event.label')}
-      onClick={onToggleStar}
-    />
+    <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
   ) : (
     <Icon icon='ph--check--regular' />
   );

@@ -615,17 +615,23 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           <div key={key} style={style} className='grid'>
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
               {Array.from({ length: 7 }).map((_, i) => {
+                const dateClassNames = {
+                  today: 'border-amber-500',
+                  active: 'border-primary-500',
+                  busy: 'border-green-700 border-dashed',
+                };
+
                 const date = getDate(start, index, i, weekStartsOn);
                 const inRange = isInRange(date, activeRange);
                 const marker = getMarker(date);
-                const border = isSameDay(date, selected)
-                  ? 'border-primary-500'
+                const dateClassName = isSameDay(date, selected)
+                  ? dateClassNames.active
                   : isSameDay(date, today)
-                    ? 'border-amber-500'
+                    ? dateClassNames.today
                     : marker?.tag
                       ? getStyles(marker.tag).border
                       : marker
-                        ? 'border-green-700 border-dashed'
+                        ? dateClassNames.busy
                         : undefined;
 
                 return (
@@ -642,10 +648,10 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                   >
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
                     <span className='relative text-description text-sm'>{date.getDate()}</span>
-                    {!border && date.getDate() === 1 && (
+                    {!dateClassName && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {border && <div className={mx('absolute inset-1 border-2 rounded-full', border)} />}
+                    {dateClassName && <div className={mx('absolute inset-1 border-2 rounded-full', dateClassName)} />}
                   </div>
                 );
               })}

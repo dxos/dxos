@@ -101,7 +101,7 @@ export const MessageArticle = ({
         </Panel.Toolbar>
         <Panel.Content className='grid grid-rows-[auto_1fr]'>
           <Message.Header onContactCreate={handleContactCreate} />
-          <Message.Viewport role={role}>
+          <Message.Viewport role={role} classNames='border'>
             <Message.Body />
           </Message.Viewport>
         </Panel.Content>

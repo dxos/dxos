@@ -277,11 +277,11 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
 
   return (
     <MarkdownViewer
+      classNames={['dx-expander border', classNames]}
       content={content}
       markdown={viewMode !== 'plain'}
       loadRemoteImages={loadRemoteImages}
       slots={{ content: { className: 'mx-4!' } }}
-      classNames={classNames}
     />
   );
 };

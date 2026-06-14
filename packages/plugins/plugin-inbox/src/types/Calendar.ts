@@ -52,17 +52,8 @@ export const make = (props: CalendarProps = {}) => {
   return calendar;
 };
 
-export const TAG_STARRED = { label: 'Starred', hue: 'rose' } as const;
 export const TAG_ACTIVE = { label: 'Active', hue: 'teal' } as const;
-
-/** Whether the event carries the starred tag (pass the resolved starred-tag uri). */
-export const isStarred = (
-  calendar: Calendar | Obj.Snapshot<Calendar>,
-  event: Event.Event,
-  starredUri: string | undefined,
-): boolean =>
-  // `tags` is absent on calendars created before the field existed.
-  !!starredUri && !!calendar.tags?.target && Tagging.get(event, { index: calendar.tags.target }).includes(starredUri);
+export const TAG_STARRED = { label: 'Starred', hue: 'amber' } as const;
 
 /** Event ids carrying the starred tag (pass the resolved starred-tag uri). */
 export const getStarredEventIds = (

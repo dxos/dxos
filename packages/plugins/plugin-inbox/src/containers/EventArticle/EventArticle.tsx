@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
@@ -10,10 +11,14 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
+import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
 import { Calendar, InboxOperation, DraftEvent } from '#types';
+
+// Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
+const NOT_STARRED = Atom.make(false);
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
@@ -30,12 +35,17 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
   const { integration } = useTargetIntegration(calendar);
 
-  // Starring uses the calendar's TagIndex (events are feed objects). Resolve the "starred" tag uri
-  // reactively; `isStarred` reads the live index so the toggle reflects changes immediately.
+  // Starring uses the calendar's TagIndex (events are feed objects). Subscribe to the index via
+  // `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
   const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
   const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.TAG_STARRED.label);
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const starred = !!eventCalendar && Calendar.isStarred(eventCalendar, event, starredUri);
+  const tagIndex = eventCalendar?.tags?.target;
+  const starredAtom = useMemo(
+    () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, event.id, starredUri) : NOT_STARRED),
+    [tagIndex, event.id, starredUri],
+  );
+  const starred = useAtomValue(starredAtom);
   const handleToggleStar = useCallback(() => {
     if (eventCalendar && db) {
       void Calendar.toggleStar(eventCalendar, event, db);

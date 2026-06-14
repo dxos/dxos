@@ -3,7 +3,7 @@
 //
 
 import { addHours, isSameDay, startOfHour } from 'date-fns';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -60,10 +60,15 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   // The currently active event (selected in the stack/deck); its date drives the grid's highlight.
   const activeEvent = useMemo(() => events.find((event) => event.id === currentId), [events, currentId]);
 
-  // Starred events get a rose marker. `getStarredEventIds` reads the calendar's live TagIndex, so the
-  // grid re-renders when an event is starred/unstarred. The hue feeds Calendar.Grid's per-date border.
+  // Starred events get a rose marker. The TagIndex mutates in place, which `useQuery` doesn't observe,
+  // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
   const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.TAG_STARRED.label);
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const tagIndex = calendar.tags?.target;
+  const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => {
+    return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
+  }, [tagIndex]);
   const starredIds = Calendar.getStarredEventIds(calendar, starredUri);
   const dates = useMemo<CalendarMarker[]>(
     () =>
