@@ -113,9 +113,6 @@ const meta = {
               // query resolves the live, reactive object (feed-only events are not queryable by id).
               const now = new Date();
               const owner: Actor.Actor = { name: 'Alice', email: 'alice@example.com' };
-              const eventNotes = personalSpace.db.add(
-                Text.make({ content: '# Agenda\n\n- Review roadmap\n- Assign owners\n- Schedule follow-up' }),
-              );
               const event = personalSpace.db.add(
                 Event.make({
                   title: 'Quarterly Planning',
@@ -124,7 +121,6 @@ const meta = {
                   attendees: [owner, { name: 'Bob', email: 'bob@example.com' }],
                   startDate: now.toISOString(),
                   endDate: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
-                  notes: Ref.make(eventNotes),
                 }),
               );
 

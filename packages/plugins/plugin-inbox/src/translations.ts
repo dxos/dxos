@@ -103,7 +103,6 @@ export const translations = [
         'event-duration.placeholder': 'Duration',
         'event-duration-custom.label': 'Custom end…',
         'event-toolbar.menu': 'Actions',
-        'event-toolbar-create-note.menu': 'Create note',
         'event-toolbar-open.menu': 'Open',
         'event-toolbar-save.menu': 'Save to calendar',
         'event-toolbar-delete.menu': 'Delete event',

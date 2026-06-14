@@ -11,7 +11,6 @@ import { type ViewMode, viewModeGroup } from '../ViewMode';
 export type UseEventToolbarActionsProps = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  onNoteCreate?: () => void;
   /** Promote the event from a companion to the main view (shown only when displayed as a companion). */
   onOpen?: () => void;
   /** Push the (draft) event to Google Calendar (shown only when the event is draft). */
@@ -25,7 +24,6 @@ export type UseEventToolbarActionsProps = {
 export const useEventToolbarActions = ({
   viewMode,
   setViewMode,
-  onNoteCreate,
   onOpen,
   onSave,
   saveDisabled,
@@ -45,14 +43,6 @@ export const useEventToolbarActions = ({
               )),
         )
         .subgraph(viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'] }))
-        .action(
-          'createNote',
-          {
-            label: ['event-toolbar-create-note.menu', { ns: meta.id }],
-            icon: 'ph--note--regular',
-          },
-          () => onNoteCreate?.(),
-        )
         .separator()
         .subgraph(
           onSave &&
@@ -77,6 +67,6 @@ export const useEventToolbarActions = ({
               )),
         )
         .build(),
-    [viewMode, setViewMode, onNoteCreate, onOpen, onSave, saveDisabled, onDelete],
+    [viewMode, setViewMode, onOpen, onSave, saveDisabled, onDelete],
   );
 };

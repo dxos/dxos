@@ -4,32 +4,26 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Panel } from '@dxos/react-ui';
-import { Text } from '@dxos/schema';
 import { AnchoredTo, Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
-import { useShadowObject } from '#hooks';
 import { InboxOperation, DraftEvent } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
 export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
-  const id = Obj.getURI(subject);
   const db = Obj.getDatabase(calendar);
   // Resolve the live (mutable, reactive) db object so edits to a draft re-render the controlled
   // inputs. The companion subject can be a non-reactive snapshot; querying by id yields the proxy.
   const live = useQuery(db, Query.select(Filter.id(subject.id)))[0];
   const event = live ?? subject;
-  const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
-  const notes = shadowedEvent?.notes?.target;
   // A draft event (locally created, not yet synced) is editable and savable.
   const draft = DraftEvent.instanceOf(event);
   // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
@@ -43,17 +37,6 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
     },
     [invokePromise],
   );
-
-  const handleNoteCreate = useCallback(async () => {
-    invariant(db);
-    const event = createShadowEvent();
-    const notes = await event.notes?.load();
-    if (!notes) {
-      Obj.update(event, (event) => {
-        event.notes = Ref.make(Text.make());
-      });
-    }
-  }, [id, subject, db, shadowedEvent]);
 
   const handleContactCreate = useCallback<NonNullable<EventHeaderProps['onContactCreate']>>(
     (actor) => {
@@ -91,7 +74,6 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
         <Panel.Toolbar asChild>
           <Event.Toolbar
             alwaysActive
-            onNoteCreate={handleNoteCreate}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
             saveDisabled={!integration}
@@ -112,10 +94,6 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
               </div>
             )}
             <Event.Body editable={draft} />
-            {/* TODO(burdon): Suppress markdown toolbar if section. */}
-            {notes && (
-              <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />
-            )}
           </Event.Viewport>
         </Panel.Content>
       </Panel.Root>
