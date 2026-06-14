@@ -236,7 +236,9 @@ export const translations = [
         'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
         'object-history.label': 'History',
-        'history-fork.label': 'Fork to new object',
+        'branch-create.label': 'Create branch',
+        'branch-merge.label': 'Merge branch into main',
+        'branch-delete.label': 'Delete branch',
         'settings-features.label': 'Features',
         'field-deleted.label': 'Field deleted',
 

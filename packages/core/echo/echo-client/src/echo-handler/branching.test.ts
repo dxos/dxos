@@ -239,3 +239,45 @@ describe('branching replication', () => {
     expect(db2.coreDatabase.getCurrentBranch(root1.id)).toBe('b1');
   });
 });
+
+describe('branching persistence', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('the current branch survives a reload (device-local)', async () => {
+    await using peer = await builder.createPeer();
+    const db = await peer.createDatabase();
+    const child: any = db.add(Obj.make(TestSchema.Expando, { content: 'child-v0' }));
+    const root: any = db.add(Obj.make(TestSchema.Expando, { title: 'root-v0', child: Ref.make(child) }));
+    await db.flush();
+    const rootId = root.id;
+    const childId = child.id;
+
+    await createBranch(root, 'b1');
+    await switchBranch(root, 'b1');
+    Obj.update(root, (root: any) => {
+      root.title = 'root-b1';
+    });
+    Obj.update(child, (child: any) => {
+      child.content = 'child-b1';
+    });
+    await db.flush();
+    await peer.host.updateIndexes();
+
+    // Simulate a client restart: ECHO is recreated but the device-local branch store survives.
+    await peer.reload();
+    const db2 = await peer.openLastDatabase();
+    await db2.coreDatabase.loadObjectCoreById(rootId);
+
+    expect(db2.coreDatabase.getCurrentBranch(rootId)).toBe('b1');
+    expect(db2.coreDatabase.getObjectCoreById(rootId)?.getDecoded(['data', 'title'])).toBe('root-b1');
+    expect(db2.coreDatabase.getObjectCoreById(childId)?.getDecoded(['data', 'content'])).toBe('child-b1');
+  });
+});

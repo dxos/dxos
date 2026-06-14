@@ -3,18 +3,25 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
+import {
+  clearTimeTravel,
+  createBranch,
+  deleteBranch,
+  getBranches,
+  getCurrentBranch,
+  mergeBranch,
+  setTimeTravel,
+  switchBranch,
+} from '@dxos/echo-client';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { clearTimeTravel, setTimeTravel } from '@dxos/echo-client';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { HistoryScrubber } from '@dxos/react-ui-components';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { SpaceOperation } from '#operations';
 
 import { createHistoryTimelineAtom } from './history-timeline';
 
@@ -24,50 +31,55 @@ export type HistoryCompanionProps = Pick<
 >;
 
 /**
- * History scrubber companion: builds a single timeline from the primary object AND its child
- * objects (so a document's referenced text is included), and drives an in-place time-travel preview
- * of all of them via the core `setTimeTravel`/`clearTimeTravel` API. The opted-in surface reads
- * read-only off the primary's `Entity.timeTravelAtom`. The one write path is "Fork", which persists
- * a new object (and its children) seeded at the selected version.
+ * History scrubber + branch companion. Builds a single timeline from the primary object AND its
+ * referenced children (so a document's text is included) and drives an in-place time-travel preview
+ * via `setTimeTravel`/`clearTimeTravel`. Branch controls (switch / create / merge / delete) drive the
+ * core branching API; creating a branch can fork from the live tip or from the scrubbed position.
  */
 export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
 
-  // The subject identity is stable across scrubbing (time-travel happens in place, never swapping
-  // the subject), but capture it on mount anyway so the timeline atom is keyed to a stable object.
+  // The subject identity is stable across scrubbing and branch switching (both happen in place).
   const objectRef = useRef(companionTo);
   const object = objectRef.current;
 
-  // Derive the timeline via an atom that subscribes to the primary and its children through ECHO's
-  // `Obj.atom`, so reactivity lives in the atom (not React effects): it recomputes whenever the
-  // primary's own fields (e.g. the document name) or any child's content change. The atom is keyed
-  // to the stable `object`, so it is created once.
+  // Re-read the (synced) branch registry after create/merge/delete, which mutate the space root
+  // rather than the object itself (so they don't fire the object's atom).
+  const [, refreshBranches] = useReducer((value: number) => value + 1, 0);
+
   const timelineAtom = useMemo(() => createHistoryTimelineAtom(object), [object]);
   const { versions, histories, plan } = useAtomValue(timelineAtom);
 
-  // Default to the newest version; tracks the timeline growing as children load until the user scrubs.
+  const branches = getBranches(object);
+  const currentBranch = getCurrentBranch(object);
+
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>(undefined);
   const index = selectedIndex ?? Math.max(versions.length - 1, 0);
+  const scrubbing = index < versions.length - 1;
 
   const latestPointers = useCallback(() => histories.map(({ diffs }) => diffs.length - 1), [histories]);
 
-  // Drive in-place time-travel from the current scrub position. Side-effecting, so it lives in an
-  // effect keyed on `index`; `scrubbing` is true for any step other than the latest and keeps the
-  // primary (article subject) locked read-only for the whole session, since its referenced children
-  // may still be historical even when its own content is current. The cleanup (on index change and
-  // on unmount) always restores the live objects.
+  // The root's heads at the current scrub position (for "create branch from this point").
+  const rootHeadsAtIndex = useCallback(() => {
+    const rootIndex = histories.findIndex(({ object: obj }) => obj === object);
+    if (rootIndex < 0) {
+      return undefined;
+    }
+    const pointers = plan[index] ?? latestPointers();
+    const diffs = histories[rootIndex].diffs;
+    const at = Math.min(pointers[rootIndex] ?? diffs.length - 1, diffs.length - 1);
+    return diffs[at]?.heads;
+  }, [histories, plan, index, object, latestPointers]);
+
+  // Drive in-place time-travel from the current scrub position. The cleanup (on index change and on
+  // unmount) always restores the live objects.
   useEffect(() => {
-    const scrubbing = index < versions.length - 1;
     const pointers = plan[index] ?? latestPointers();
     histories.forEach(({ object: obj, diffs }, objectIndex) => {
       const at = Math.min(pointers[objectIndex] ?? diffs.length - 1, diffs.length - 1);
       if (at >= diffs.length - 1 && !(scrubbing && obj === object)) {
-        // At its latest version and not the locked primary → live/editable.
         clearTimeTravel(obj);
       } else {
-        // Historical step, or the primary locked read-only for the session (pinned at its latest
-        // heads so the plank stays read-only while showing live content).
         setTimeTravel(obj, diffs[at].heads);
       }
     });
@@ -76,75 +88,89 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
         clearTimeTravel(obj);
       }
     };
-  }, [index, versions.length, histories, plan, object, latestPointers]);
+  }, [index, versions.length, histories, plan, object, latestPointers, scrubbing]);
 
   const preview = useCallback((eventIndex: number) => setSelectedIndex(eventIndex), []);
 
-  const handleFork = useCallback(async () => {
-    const db = Obj.getDatabase(object);
-    if (!db || histories.length === 0) {
+  const handleSwitch = useCallback(
+    async (name: string) => {
+      setSelectedIndex(undefined); // Exit scrub mode; switching is a harder navigation.
+      await switchBranch(object, name);
+    },
+    [object],
+  );
+
+  const handleCreate = useCallback(async () => {
+    // A unique, human-readable branch name.
+    const existing = new Set(getBranches(object));
+    let suffix = existing.size;
+    let name = `branch-${suffix}`;
+    while (existing.has(name)) {
+      name = `branch-${++suffix}`;
+    }
+    const fromHeads = scrubbing ? rootHeadsAtIndex() : undefined;
+    // Exit scrub mode and drop pins before mutating branches.
+    for (const { object: obj } of histories) {
+      clearTimeTravel(obj);
+    }
+    setSelectedIndex(undefined);
+    await createBranch(object, name, fromHeads ? { fromHeads } : undefined);
+    await switchBranch(object, name);
+    refreshBranches();
+  }, [object, histories, scrubbing, rootHeadsAtIndex]);
+
+  const handleMerge = useCallback(async () => {
+    if (currentBranch === 'main') {
       return;
     }
+    await mergeBranch(object, currentBranch);
+    refreshBranches();
+  }, [object, currentBranch]);
 
-    // The live objects are already pinned to the selected version in place (by the effect above), so
-    // reading their fields yields the historical values. Clone each LIVE object so the clone keeps
-    // its schema; the clone is seeded from the latest doc, then overwritten with the historical
-    // values below.
-    const clones = new Map<string, { clone: Obj.Unknown; source: Obj.Unknown }>();
-    histories.forEach(({ object: liveObject }) => {
-      clones.set(liveObject.id, { clone: Obj.clone(liveObject), source: liveObject });
-    });
-
-    // Persist children directly; add the primary via AddObject, which also resolves the canonical
-    // navigation path (the same resolution the create flow uses) — don't construct the path here.
-    const primaryClone = clones.get(object.id)!.clone;
-    for (const [id, { clone }] of clones) {
-      if (id !== object.id) {
-        db.add(clone);
-      }
+  const handleDelete = useCallback(async () => {
+    if (currentBranch === 'main') {
+      return;
     }
-    const added = await invokePromise(SpaceOperation.AddObject, { object: primaryClone, target: db, hidden: false });
-
-    // Overwrite each clone's fields with the historical values (read from the time-traveling live
-    // source), rewiring refs to the cloned children.
-    const rewire = (value: unknown): unknown => {
-      if (Ref.isRef(value)) {
-        const replacement = value.target ? clones.get(value.target.id)?.clone : undefined;
-        return replacement ? Ref.make(replacement) : value;
-      }
-      return value;
-    };
-    for (const { clone, source } of clones.values()) {
-      Obj.update(clone, (clone) => {
-        for (const key of Object.getOwnPropertyNames(source)) {
-          if (key === 'id') {
-            continue;
-          }
-          const value = (source as any)[key];
-          (clone as any)[key] = Array.isArray(value) ? value.map(rewire) : rewire(value);
-        }
-      });
-    }
-
-    const subject = added.data?.subject;
-    if (subject) {
-      await invokePromise(LayoutOperation.Open, { subject: [...subject], navigation: 'immediate' });
-    }
-  }, [object, histories, invokePromise]);
+    deleteBranch(object, currentBranch);
+    await switchBranch(object, 'main');
+    refreshBranches();
+  }, [object, currentBranch]);
 
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
+          {branches.map((name) => (
+            <Button
+              key={name}
+              variant={name === currentBranch ? 'primary' : 'default'}
+              onClick={() => void handleSwitch(name)}
+            >
+              {name}
+            </Button>
+          ))}
+          <div role='none' className='grow' />
           <Toolbar.IconButton
             icon='ph--git-branch--regular'
-            label={t('history-fork.label')}
-            onClick={() => void handleFork()}
+            label={t('branch-create.label')}
+            onClick={() => void handleCreate()}
+          />
+          <Toolbar.IconButton
+            icon='ph--git-merge--regular'
+            label={t('branch-merge.label')}
+            disabled={currentBranch === 'main'}
+            onClick={() => void handleMerge()}
+          />
+          <Toolbar.IconButton
+            icon='ph--trash--regular'
+            label={t('branch-delete.label')}
+            disabled={currentBranch === 'main'}
+            onClick={() => void handleDelete()}
           />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <div className='p-2'>
+        <div className={mx('p-2')}>
           <HistoryScrubber versions={versions} value={index} onValueChange={preview} />
         </div>
       </Panel.Content>

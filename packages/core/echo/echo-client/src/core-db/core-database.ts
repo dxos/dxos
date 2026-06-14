@@ -47,7 +47,7 @@ import {
   type ObjectDocumentLoaded,
   type ObjectUnavailable,
 } from './automerge-doc-loader';
-import { forkDump, referencedObjectIds } from './branching';
+import { type BranchStore, forkDump, referencedObjectIds } from './branching';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
 
@@ -59,6 +59,8 @@ export type CoreDatabaseProps = {
   queryService: QueryService;
   spaceId: SpaceId;
   spaceKey: PublicKey;
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 };
 
 /**
@@ -96,9 +98,12 @@ export class CoreDatabase {
 
   /**
    * Device-local, non-synced: object id -> currently-selected branch name ('main' omitted).
-   * In-memory for this slice; host-metadata persistence (survive reload) is wired in a follow-up.
+   * Hydrated from {@link _branchStore} on open (if provided) and persisted on switch.
    */
   private readonly _currentBranches = new Map<string, string>();
+
+  /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
+  private readonly _branchStore?: BranchStore;
 
   /**
    * DXN string -> EntityId.
@@ -137,12 +142,13 @@ export class CoreDatabase {
   /** Fires when service connection is re-established after a leader change. */
   private readonly _reconnected = new Event<void>();
 
-  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
+  constructor({ graph, dataService, queryService, spaceId, spaceKey, branchStore }: CoreDatabaseProps) {
     this._hypergraph = graph;
     this._dataService = dataService;
     this._queryService = queryService;
     this._spaceId = spaceId;
     this._spaceKey = spaceKey;
+    this._branchStore = branchStore;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
@@ -218,6 +224,40 @@ export class CoreDatabase {
 
     this._state = CoreDatabaseState.OPEN;
     this.opened.wake();
+
+    // Restore device-local branch selections (e.g. after a reload) and re-bind each branched subtree
+    // to its selected branch — objects otherwise load on `main`.
+    if (this._branchStore) {
+      await this._hydrateCurrentBranches();
+    }
+  }
+
+  private async _hydrateCurrentBranches(): Promise<void> {
+    try {
+      const entries = await this._branchStore!.load();
+      for (const [objectId, name] of Object.entries(entries)) {
+        this._currentBranches.set(objectId, name);
+      }
+      const reapplied = new Set<string>();
+      for (const [objectId, name] of Object.entries(entries)) {
+        if (name === 'main' || reapplied.has(objectId) || !this.getBranchRegistry(objectId)?.[name]) {
+          continue;
+        }
+        reapplied.add(objectId);
+        await this.switchBranch(objectId, name);
+      }
+    } catch (err) {
+      log.warn('failed to hydrate current branches', { err });
+    }
+  }
+
+  private _persistCurrentBranches(): void {
+    if (!this._branchStore) {
+      return;
+    }
+    void this._branchStore
+      .save(Object.fromEntries(this._currentBranches))
+      .catch((err) => log.warn('failed to persist current branches', { err }));
   }
 
   // TODO(dmaretskyi): Cant close while opening.
@@ -669,6 +709,7 @@ export class CoreDatabase {
         this._currentBranches.set(memberId, name);
       }
     }
+    this._persistCurrentBranches();
     this._scheduleThrottledUpdate([...memberIds]);
   }
 
@@ -764,6 +805,9 @@ export class CoreDatabase {
     if (!core) {
       return;
     }
+    // A branch switch is a harder navigation than a time-travel scrub; drop any active pin so reads
+    // reflect the (live) target branch rather than a stale historical view of the previous doc.
+    core.clearTimeTravel();
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (url) {
