@@ -55,6 +55,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     DraftEvent.belongsTo(event, calendar.id),
   );
   const events = useMemo(() => [...syncedEvents, ...draftEvents].toSorted(byDate()), [syncedEvents, draftEvents]);
+  // The currently active event (selected in the stack/deck); its date drives the grid's highlight.
+  const activeEvent = useMemo(() => events.find((event) => event.id === currentId), [events, currentId]);
 
   // Starred events get a rose marker. `getStarredEventIds` reads the calendar's live TagIndex, so the
   // grid re-renders when an event is starred/unstarred. The hue feeds Calendar.Grid's per-date border.
@@ -190,7 +192,12 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
+              <NaturalCalendar.Grid
+                dates={dates}
+                selected={activeEvent ? new Date(activeEvent.startDate) : undefined}
+                onSelect={handleDateSelect}
+                onSelectRange={handleRangeSelect}
+              />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>

@@ -226,6 +226,11 @@ type CalendarGridProps = {
    */
   initialDate?: Date;
   /**
+   * Externally-controlled selected date (e.g. the currently active event). When it changes, the grid
+   * highlights that day (primary border) and scrolls it into view. User clicks still set selection locally.
+   */
+  selected?: Date;
+  /**
    * Weeks of context kept above a date when scrolling it into view (on mount and via the controller's
    * `scrollTo`), so the date sits below the top edge rather than pinned to it. Defaults to 2.
    */
@@ -242,7 +247,17 @@ type CalendarGridProps = {
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
   (
-    { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
+    {
+      classNames,
+      rows,
+      dates = [],
+      initialDate,
+      selected: selectedProp,
+      scrollMargin = 2,
+      onSelect,
+      onSelectRange,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
@@ -295,6 +310,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         }
       });
     }, [event, start, weekStartsOn, scrollMargin]);
+
+    // Reflect an externally-selected date (e.g. the active event): highlight it and scroll it into view.
+    useEffect(() => {
+      if (!selectedProp) {
+        return;
+      }
+      setSelected(selectedProp);
+      const index = getRowIndex(start, selectedProp, weekStartsOn);
+      listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
+    }, [selectedProp, start, weekStartsOn, scrollMargin, setSelected]);
 
     const days = useMemo(() => {
       const weekStart = startOfWeek(new Date(), { weekStartsOn });
