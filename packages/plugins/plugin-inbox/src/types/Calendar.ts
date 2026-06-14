@@ -5,10 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { FeedAnnotation, TagIndex, Tagging } from '@dxos/schema';
-import { type Event } from '@dxos/types';
+import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
 
@@ -50,48 +49,4 @@ export const make = (props: CalendarProps = {}) => {
   Obj.setParent(feed, calendar);
   Obj.setParent(tags, calendar);
   return calendar;
-};
-
-// TODO(burdon): Factor the common "star" operations (the keyed tag + toggleStar/getStarredEventIds)
-//   into a shared TagIndex utility. The same toggle/membership pattern is reimplemented per object type
-//   (cf. Mailbox.applyTag); a single helper would own the well-known tag and the index provisioning.
-
-/**
- * Well-known "starred" tag. The stable foreign `key` lets {@link Tag.findOrCreate} dedupe by identity
- * (not label), so every starring site resolves the same tag — see {@link toggleStar}.
- */
-export const TAG_STARRED = {
-  key: { source: 'org.dxos.org', id: 'starred' },
-  label: 'Starred',
-  hue: 'amber',
-} as const;
-
-/** Event ids carrying the starred tag (pass the resolved starred-tag uri). */
-export const getStarredEventIds = (
-  calendar: Calendar | Obj.Snapshot<Calendar>,
-  starredUri: string | undefined,
-): ReadonlySet<string> =>
-  starredUri && calendar.tags?.target
-    ? new Set(TagIndex.bind(calendar.tags.target).objects(starredUri))
-    : new Set<string>();
-
-/** Toggle the starred tag on an event, creating the tag (and the calendar's tag index) on first use. */
-export const toggleStar = async (calendar: Calendar, event: Event.Event, db: Database.Database): Promise<void> => {
-  // Lazily provision the tag index for calendars created before the `tags` field existed.
-  let index = calendar.tags?.target;
-  if (!index) {
-    index = db.add(TagIndex.make());
-    Obj.setParent(index, calendar);
-    Obj.update(calendar, (calendar) => {
-      calendar.tags = Ref.make(index!);
-    });
-  }
-
-  const tag = await Tag.findOrCreate(db, TAG_STARRED);
-  const uri = Obj.getURI(tag).toString();
-  if (Tagging.get(event, { index }).includes(uri)) {
-    Tagging.unset(event, uri, { index });
-  } else {
-    Tagging.set(event, uri, { index });
-  }
 };

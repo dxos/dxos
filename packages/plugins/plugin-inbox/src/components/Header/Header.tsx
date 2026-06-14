@@ -7,7 +7,16 @@ import React, { useCallback, useRef } from 'react';
 
 import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { Card, DxAnchorActivate, Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import {
+  Card,
+  DxAnchorActivate,
+  Icon,
+  IconButton,
+  type IconButtonProps,
+  SystemIconButton,
+  Tag,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type Actor } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
 
@@ -234,6 +243,38 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) => {
 HeaderTagsRow.displayName = 'Header.TagsRow';
 
 //
+// StarButton
+//
+
+type HeaderStarButtonProps = {
+  starred?: boolean;
+  /** Toggle handler; the button renders only when provided. */
+  onToggle?: () => void;
+};
+
+/**
+ * Star toggle for a `Card.Block` leading gutter (shared by event/message tiles and headers). Stops
+ * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
+ */
+const HeaderStarButton = ({ starred, onToggle }: HeaderStarButtonProps) => {
+  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+    (event) => {
+      event.stopPropagation();
+      onToggle?.();
+    },
+    [onToggle],
+  );
+
+  if (!onToggle) {
+    return null;
+  }
+
+  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+};
+
+HeaderStarButton.displayName = 'Header.StarButton';
+
+//
 // Header
 //
 
@@ -242,4 +283,5 @@ export const Header = {
   ObjectRow: HeaderObjectRow,
   PersonRow: HeaderPersonRow,
   TagsRow: HeaderTagsRow,
+  StarButton: HeaderStarButton,
 };

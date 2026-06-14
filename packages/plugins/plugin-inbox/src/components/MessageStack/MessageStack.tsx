@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type ComponentProps,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -14,7 +13,7 @@ import React, {
 } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
+import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
@@ -29,6 +28,7 @@ export type MessageStackAction =
   | { type: 'current-thread'; threadId: string; messageId: string }
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
+  | { type: 'star'; messageId: string }
   | { type: 'save'; filter: string };
 
 export type MessageStackActionHandler = (action: MessageStackAction) => void;
@@ -57,6 +57,8 @@ export type MessageStackProps = {
   currentId?: string;
   /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
+  /** IDs of starred messages; drives the per-tile star toggle. */
+  starredIds?: ReadonlySet<string>;
   /**
    * When true, messages are grouped by `threadId` and only the most recent message
    * in each thread is displayed. Messages without a threadId form singleton threads.
@@ -69,7 +71,7 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, tags, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
+  ({ messages, tags, currentId, selectedIds, starredIds, threads, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const threadGroups = useMemo(() => {
@@ -102,12 +104,19 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           threadId,
           messages: threadMessages,
           tags,
+          // Threads show the latest message; star reflects/toggles that message.
+          starred: starredIds?.has(threadMessages[0]?.id),
           onAction,
         }));
       }
 
-      return messages?.map((message) => ({ message, tags: tags?.[message.id], onAction }));
-    }, [threadGroups, messages, tags, onAction]);
+      return messages?.map((message) => ({
+        message,
+        tags: tags?.[message.id],
+        starred: starredIds?.has(message.id),
+        onAction,
+      }));
+    }, [threadGroups, messages, tags, starredIds, onAction]);
 
     // In threaded view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by thread ID.
@@ -192,38 +201,28 @@ const TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border b
 
 type MessageStackTileProps = Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
   id: string;
-  hue?: ComponentProps<typeof DxAvatar>['hue'];
-  fallback?: ComponentProps<typeof DxAvatar>['fallback'];
   /** Header title content (rendered in a flex row). */
   title: ReactNode;
+  /** Whether the tile's message is starred; the star toggle renders only when `onToggleStar` is set. */
+  starred?: boolean;
   onCurrentChange: () => void;
-  onAvatarClick?: (event: MouseEvent) => void;
+  onToggleStar?: () => void;
   onClick?: (event: MouseEvent) => void;
   children?: ReactNode;
 };
 
 /**
- * Shared shell for message/thread tiles: `Mosaic.Tile` → `Focus.Item` → `Card.Root` with an avatar
- * header (icon · title · menu). Callers supply the title and the `Card.Body` content as children.
+ * Shared shell for message/thread tiles: `Mosaic.Tile` → `Focus.Item` → `Card.Root` with a header
+ * (star · title · menu). The sender avatar lives in the body (supplied by callers as children).
  */
 const MessageStackTile = forwardRef<HTMLDivElement, MessageStackTileProps>(
-  (
-    { id, data, location, current, hue, fallback, title, onCurrentChange, onAvatarClick, onClick, children },
-    forwardedRef,
-  ) => (
+  ({ id, data, location, current, title, starred, onCurrentChange, onToggleStar, onClick, children }, forwardedRef) => (
     <Mosaic.Tile asChild classNames={TILE_CLASSNAMES} id={id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
         <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef}>
           <Card.Header>
             <Card.Block>
-              <DxAvatar
-                hue={hue}
-                hueVariant='surface'
-                variant='square'
-                size={6}
-                fallback={fallback}
-                onClick={onAvatarClick}
-              />
+              <Header.StarButton starred={starred} onToggle={onToggleStar} />
             </Card.Block>
             <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
             <Card.Menu />
@@ -240,13 +239,14 @@ MessageStackTile.displayName = 'MessageStackTile';
 type MessageTileData = {
   message: Message.Message;
   tags?: MessageStackTag[];
+  starred?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tags, onAction } = data;
+  const { message, tags, starred, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
 
@@ -263,6 +263,11 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       event.stopPropagation();
       onAction?.({ type: 'select', messageId: message.id });
     },
+    [message.id, onAction],
+  );
+
+  const handleToggleStar = useCallback(
+    () => onAction?.({ type: 'star', messageId: message.id }),
     [message.id, onAction],
   );
 
@@ -283,10 +288,9 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       data={data}
       location={location}
       current={current}
-      hue={hue}
-      fallback={from}
+      starred={starred}
       onCurrentChange={handleCurrentChange}
-      onAvatarClick={handleAvatarClick}
+      onToggleStar={onAction ? handleToggleStar : undefined}
       title={
         <>
           <span className='grow truncate font-medium'>{subject}</span>
@@ -296,7 +300,14 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     >
       <Card.Row>
         <Card.Block>
-          <Icon icon='ph--user--regular' />
+          <DxAvatar
+            hue={hue}
+            hueVariant='surface'
+            variant='circle'
+            size={6}
+            fallback={from}
+            onClick={handleAvatarClick}
+          />
         </Card.Block>
         <Card.Text>{from}</Card.Text>
       </Card.Row>
@@ -322,15 +333,16 @@ type ThreadTileData = {
   threadId: string;
   messages: Message.Message[];
   tags?: MessageTagsIndex;
+  starred?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
 type ThreadTileProps = Pick<MosaicTileProps<ThreadTileData>, 'data' | 'location' | 'current'>;
 
 const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location, current }, forwardedRef) => {
-  const { threadId, messages, onAction } = data;
+  const { threadId, messages, starred, onAction } = data;
   const latest = messages[0];
-  const { hue, from, subject } = getMessageProps(latest, new Date());
+  const { subject } = getMessageProps(latest, new Date());
   const { setCurrentId, setSelected } = useMosaicContainer('ThreadTile');
 
   // Click / Enter commit current + selection using the LATEST message's ID, not
@@ -359,6 +371,8 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
     [onAction],
   );
 
+  const handleToggleStar = useCallback(() => onAction?.({ type: 'star', messageId: latest.id }), [latest.id, onAction]);
+
   return (
     <MessageStackTile
       ref={forwardedRef}
@@ -366,19 +380,19 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
       data={data}
       location={location}
       current={current}
-      hue={hue}
-      fallback={from}
+      starred={starred}
       onCurrentChange={handleCurrentChange}
+      onToggleStar={onAction ? handleToggleStar : undefined}
       onClick={handleThreadClick}
       title={<span className='grow truncate font-medium'>{subject}</span>}
     >
       {/* TODO(burdon): Currently limits to last n messages. */}
       {messages.slice(0, 4).map((message) => {
-        const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
+        const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
         return (
           <Card.Row key={message.id}>
             <Card.Block>
-              <Icon icon='ph--user--duotone' />
+              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
             </Card.Block>
             <div className='flex flex-col' onClick={(event) => handleMessageClick(event, message.id)}>
               <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>

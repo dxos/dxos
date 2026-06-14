@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, IconButton, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -76,27 +76,14 @@ export const EventDetails = ({
     return <EventEditor event={event} db={db} onContactCreate={onContactCreate} />;
   }
 
-  // The leading gutter (column 1) is the star toggle when starring is available, else a static event icon.
-  // Stop propagation so toggling the star in a stack tile doesn't also select the tile / change the current item.
-  const leading = onToggleStar ? (
-    <SystemIconButton.Star
-      iconOnly
-      variant='ghost'
-      active={starred}
-      onClick={(event) => {
-        event.stopPropagation();
-        onToggleStar();
-      }}
-    />
-  ) : (
-    <Icon icon='ph--check--regular' />
-  );
-
+  // TODO(burdon): Refactor common elements with MessageStackTile.
   return (
     <>
       {title === 'heading' && (
         <Card.Row>
-          <Card.Block>{leading}</Card.Block>
+          <Card.Block>
+            <Header.StarButton starred={starred} onToggle={onToggleStar} />
+          </Card.Block>
           <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
             <IconButton
@@ -112,7 +99,9 @@ export const EventDetails = ({
 
       {title === 'text' && (
         <Card.Row>
-          <Card.Block>{leading}</Card.Block>
+          <Card.Block>
+            <Header.StarButton starred={starred} onToggle={onToggleStar} />
+          </Card.Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}
