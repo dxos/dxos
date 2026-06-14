@@ -27,6 +27,7 @@ export const translations = [
         'meetings.label': 'All Meetings',
         'meeting.label': 'Meeting',
 
+        'start-call.label': 'Start call',
         'start-transcription.label': 'Start transcription',
         'stop-transcription.label': 'Stop transcription',
 
