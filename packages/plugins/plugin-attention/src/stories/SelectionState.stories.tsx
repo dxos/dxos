@@ -1,29 +1,31 @@
+//
 // Copyright 2026 DXOS.org
+//
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withAttention } from '@dxos/react-ui-attention/testing';
+import { useThemeContext } from '@dxos/react-ui';
 import {
+  type ViewStateManager,
+  defineViewState,
   useSelection,
   useSelectionActions,
   useViewStateManager,
-  defineViewState,
-  type ViewStateManager,
 } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
+  EditorSelectionStateSchema,
+  type EditorStateStore,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   documentId,
   selectionState,
-  type EditorStateStore,
-  EditorSelectionStateSchema,
 } from '@dxos/ui-editor';
-import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
@@ -89,7 +91,7 @@ const ITEMS: StoryItem[] = [
 ];
 
 const isItem = (value: unknown): value is StoryItem =>
-  !!value && typeof value === 'object' && typeof (value as StoryItem).id === 'string';
+  typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string';
 
 //
 // ItemEditor — mounts a CodeMirror editor for the selected item, wired to the
@@ -113,7 +115,7 @@ const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
         selectionState(editorStore),
       ],
     }),
-    [item.id, themeMode],
+    [item.id, themeMode, editorStore],
   );
 
   return <div ref={parentRef} className='flex-1 overflow-hidden' />;
@@ -173,13 +175,14 @@ const SelectionStateStory = () => {
 // Storybook meta.
 //
 
-const meta: Meta = {
+const meta: Meta<typeof SelectionStateStory> = {
   title: 'plugins/plugin-attention/SelectionState',
+  component: SelectionStateStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention()],
 };
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { render: () => <SelectionStateStory /> };
