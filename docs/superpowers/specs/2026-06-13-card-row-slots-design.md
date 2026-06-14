@@ -95,15 +95,20 @@ Behavior:
   (`<Card.Block><Icon …/></Card.Block>` for the passive case). The standalone
   `IconBlock` primitive is **untouched** — `Column.Block` reuses its `icon.block` theme.
 
-### 3. `Dialog` — adopt the same mechanism
+### 3. `Dialog` — deferred (gutter geometry mismatch)
 
-`Dialog.Content` already wraps children in `Column.Root` (gutter `sm`).
+**Decision (during implementation): not adopted in this change.** `Dialog.Content` wraps
+children in `Column.Root` with gutter `sm` (1rem). The rail-item block is `2rem`
+(`--dx-rail-item` = `--dx-rail-content` 3rem − 1rem), which is exactly the card `md`
+gutter (2rem) but **2× the dialog `sm` gutter**. So a gutter-placed `Card.Block`-style
+slot overflows in a dialog — which is precisely why `Dialog.Header` uses `flex
+justify-between` rather than a subgrid today.
 
-- **`Dialog.Header`**: convert from `flex justify-between` to the shared `data-slot`
-  routing (title → content/anonymous; close/actions → `end`). Visually equivalent for
-  the common title-left/close-right case, now with true gutter alignment.
-- **Add `Dialog.Row`** = themed `Column.Row` (parallels `Card.Row`).
-- **Add `Dialog.Block`** = themed `Column.Block` (dialog density).
+Adopting the gutter-slot model in `Dialog` therefore requires a separate decision about
+dialog gutter width (e.g. a `md`-gutter dialog variant) before it is geometrically
+sound. The mechanism now lives in `Column` (`Column.Block` + `Column.Row` routing), so
+`Dialog` can opt in later without rework. `Dialog.Header` is left unchanged; no
+`Dialog.Row`/`Dialog.Block` shipped (YAGNI — zero current consumers).
 
 ### Resulting usage
 
@@ -133,9 +138,8 @@ Behavior:
 | `IconBlock` (public, standalone) | **kept** — `Column.Block` reuses its geometry |
 | `Card.IconBlock` | removed → `Card.Block` |
 | `Card.Icon` | removed → `<Card.Block><Icon/></Card.Block>` |
-| — | `Column.Block`, `Card.Block`, `Dialog.Block` |
-| — | `Dialog.Row` |
-| `Dialog.Header` flex | `data-slot` routing |
+| — | `Column.Block`, `Card.Block` |
+| `Dialog.Header` flex | unchanged (gutter too narrow for slots — deferred) |
 | `Card.Header` = `Toolbar.Root` (`role="toolbar"`) | plain `<header>`, shared Row layout, `--icon-size` 5 |
 | `Card.Header` icon via helpers/`IconBlock` | `data-slot` routing + `Card.Block` |
 
