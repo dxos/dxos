@@ -89,23 +89,25 @@ type CardHeaderProps = SlottableProps;
  * row icons (which use 4). Not a toolbar: most headers carry 0–1 controls, so `role="toolbar"`
  * was inaccurate; controls are reached by normal tab order.
  */
-const CardHeader = slottable<HTMLDivElement, CardHeaderProps>(({ children, asChild, style, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const { className, ...rest } = composableProps(props);
-  // `@radix-ui/react-primitive` has no `header` node; the intrinsic element handles asChild via Slot.
-  const Comp = asChild ? Slot : 'header';
+const CardHeader = slottable<HTMLDivElement, CardHeaderProps>(
+  ({ children, asChild, style, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
+    // `@radix-ui/react-primitive` has no `header` node; the intrinsic element handles asChild via Slot.
+    const Comp = asChild ? Slot : 'header';
 
-  return (
-    <Comp
-      {...rest}
-      style={{ ...iconSize(5), ...style }}
-      className={tx('card.header', {}, className)}
-      ref={forwardedRef}
-    >
-      {children}
-    </Comp>
-  );
-});
+    return (
+      <Comp
+        {...rest}
+        style={{ ...iconSize(5), ...style }}
+        className={tx('card.header', {}, className)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
 
 CardHeader.displayName = CARD_HEADER_NAME;
 

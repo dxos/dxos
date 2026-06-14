@@ -38,7 +38,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
     <Card.Body>
       <Avatar.Root>
         {image && (
-          <Card.Row className='py-1'>
+          <Card.Row>
             <Avatar.Content
               imgSrc={image}
               icon='ph--user--regular'
