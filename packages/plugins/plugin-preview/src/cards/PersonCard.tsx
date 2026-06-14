@@ -36,33 +36,33 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
 
   return (
     <Card.Body>
-      <Avatar.Root>
-        {image && (
-          <Card.Row>
+      {image && (
+        <Card.Row>
+          <Avatar.Root>
             <Avatar.Content
               imgSrc={image}
               icon='ph--user--regular'
               size={20}
-              classNames={!image && 'opacity-50'}
+              classNames={[!image && 'opacity-50']}
               hue='neutral'
               variant='square'
             />
-          </Card.Row>
-        )}
-        {organization?.name && (
-          <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
-        )}
-        {emails.map(({ value }) => (
-          <Card.Row key={value}>
-            <Card.Block>
-              <Icon icon='ph--at--regular' />
-            </Card.Block>
-            <Card.Text truncate className='text-primary-text'>
-              {value}
-            </Card.Text>
-          </Card.Row>
-        ))}
-      </Avatar.Root>
+          </Avatar.Root>
+        </Card.Row>
+      )}
+      {organization?.name && (
+        <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
+      )}
+      {emails.map(({ value }) => (
+        <Card.Row key={value}>
+          <Card.Block>
+            <Icon icon='ph--at--regular' />
+          </Card.Block>
+          <Card.Text truncate className='text-primary-text'>
+            {value}
+          </Card.Text>
+        </Card.Row>
+      ))}
     </Card.Body>
   );
 };
