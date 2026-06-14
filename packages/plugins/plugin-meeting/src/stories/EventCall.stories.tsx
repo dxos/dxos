@@ -145,7 +145,6 @@ const meta = {
               const meeting = personalSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
-                  created: new Date().toISOString(),
                   participants: [],
                   transcript: Ref.make(transcript),
                   notes: Ref.make(meetingNotes),

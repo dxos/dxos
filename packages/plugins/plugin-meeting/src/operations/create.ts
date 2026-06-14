@@ -22,7 +22,6 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOp
       const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { space });
       const meeting = Obj.make(Meeting.Meeting, {
         name,
-        created: new Date().toISOString(),
         participants: [],
         transcript: Ref.make(transcript),
         notes: Ref.make(Text.make()),

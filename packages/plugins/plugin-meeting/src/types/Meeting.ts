@@ -20,13 +20,6 @@ export const Meeting = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   /**
-   * The time the meeting was created.
-   * Used to generate a fallback name if one is not provided.
-   */
-  // TODO(wittjosiah): Remove. Rely on object meta.
-  created: Schema.String.annotations({ description: 'ISO timestamp' }).pipe(FormInputAnnotation.set(false)),
-
-  /**
    * List of dids of identities which joined some portion of the meeting.
    */
   participants: Schema.Array(IdentityDidSchema).pipe(FormInputAnnotation.set(false)),
