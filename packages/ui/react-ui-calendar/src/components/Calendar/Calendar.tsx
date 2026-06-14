@@ -225,6 +225,11 @@ type CalendarGridProps = {
    * re-scroll on every render.
    */
   initialDate?: Date;
+  /**
+   * Weeks of context kept above a date when scrolling it into view (on mount and via the controller's
+   * `scrollTo`), so the date sits below the top edge rather than pinned to it. Defaults to 2.
+   */
+  scrollMargin?: number;
   /** Fired when a user selects a single date (click or arrow key). */
   onSelect?: (event: { date: Date }) => void;
   /**
@@ -236,7 +241,10 @@ type CalendarGridProps = {
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, dates = [], initialDate, onSelect, onSelectRange, ...props }, forwardedRef) => {
+  (
+    { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
+    forwardedRef,
+  ) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
       useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
@@ -272,20 +280,21 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
       const index = getRowIndex(start, initialDate ?? today, weekStartsOn);
-      listRef.current?.scrollToRow(index);
-    }, [initialized, start, today, initialDate, weekStartsOn]);
+      // Keep `scrollMargin` weeks of context above the target row.
+      listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
+    }, [initialized, start, today, initialDate, weekStartsOn, scrollMargin]);
 
     useEffect(() => {
       return event.on((event) => {
         switch (event.type) {
           case 'scroll': {
             const index = getRowIndex(start, event.date, weekStartsOn);
-            listRef.current?.scrollToRow(index);
+            listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
             break;
           }
         }
       });
-    }, [event]);
+    }, [event, start, weekStartsOn, scrollMargin]);
 
     const days = useMemo(() => {
       const weekStart = startOfWeek(new Date(), { weekStartsOn });
