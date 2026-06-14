@@ -1,0 +1,20 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@dxos/typings"
+    ]
+  },
+  "include": [
+    "scripts",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../context"
+    }
+  ]
+}

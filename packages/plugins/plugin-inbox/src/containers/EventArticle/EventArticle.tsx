@@ -4,47 +4,50 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
-import { useShadowObject } from '#hooks';
-import { InboxOperation, DraftEvent } from '#types';
+import { Calendar, InboxOperation, DraftEvent } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
-export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
+export const EventArticle = ({ role, subject, attendableId, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
-  const id = Obj.getURI(subject);
+  const { graph } = useAppGraph();
   const db = Obj.getDatabase(calendar);
   // Resolve the live (mutable, reactive) db object so edits to a draft re-render the controlled
   // inputs. The companion subject can be a non-reactive snapshot; querying by id yields the proxy.
   const live = useQuery(db, Query.select(Filter.id(subject.id)))[0];
   const event = live ?? subject;
-  const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
-  const notes = shadowedEvent?.notes?.target;
   // A draft event (locally created, not yet synced) is editable and savable.
   const draft = DraftEvent.instanceOf(event);
   // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
   const { integration } = useTargetIntegration(calendar);
 
-  const handleNoteCreate = useCallback(async () => {
-    invariant(db);
-    const event = createShadowEvent();
-    const notes = await event.notes?.load();
-    if (!notes) {
-      Obj.update(event, (event) => {
-        event.notes = Ref.make(Text.make());
-      });
+  // Starring uses the calendar's TagIndex (events are feed objects). Resolve the "starred" tag uri
+  // reactively; `isStarred` reads the live index so the toggle reflects changes immediately.
+  const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
+  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.STARRED_TAG.label);
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const starred = !!eventCalendar && Calendar.isStarred(eventCalendar, event, starredUri);
+  const handleToggleStar = useCallback(() => {
+    if (eventCalendar && db) {
+      void Calendar.toggleStar(eventCalendar, event, db);
     }
-  }, [id, subject, db, shadowedEvent]);
+  }, [eventCalendar, event, db]);
+
+  const handleOpenObject = useCallback(
+    (object: Obj.Unknown) => {
+      void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
+    },
+    [invokePromise],
+  );
 
   const handleContactCreate = useCallback<NonNullable<EventHeaderProps['onContactCreate']>>(
     (actor) => {
@@ -77,26 +80,30 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
   }, [invokePromise, calendar, event, db]);
 
   return (
-    <Event.Root event={event}>
+    <Event.Root event={event} attendableId={attendableId}>
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
           <Event.Toolbar
             alwaysActive
-            onNoteCreate={handleNoteCreate}
+            graph={graph}
+            editing={draft}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
             saveDisabled={!integration}
             onDelete={calendar ? handleDelete : undefined}
           />
         </Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Content className='grid grid-rows-[auto_1fr]'>
+          <Event.Header
+            db={db}
+            editable={draft}
+            onContactCreate={handleContactCreate}
+            onOpenObject={handleOpenObject}
+            starred={starred}
+            onToggleStar={eventCalendar ? handleToggleStar : undefined}
+          />
           <Event.Viewport>
-            <Event.Header db={db} editable={draft} onContactCreate={handleContactCreate} />
             <Event.Body editable={draft} />
-            {/* TODO(burdon): Suppress markdown toolbar if section. */}
-            {notes && (
-              <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />
-            )}
           </Event.Viewport>
         </Panel.Content>
       </Panel.Root>

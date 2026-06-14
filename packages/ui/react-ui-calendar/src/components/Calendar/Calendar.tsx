@@ -24,7 +24,7 @@ import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 import { Event } from '@dxos/async';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -209,16 +209,27 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
 
+/**
+ * A date (or inclusive date range) to mark on the grid. `tag` is a hue name (e.g. `'rose'`) that
+ * colours the marker border (resolved via the theme palette); omit it for a plain "has-event" marker.
+ */
+export type CalendarMarker = { startDate: Date; endDate?: Date; tag?: string };
+
 type CalendarGridProps = {
   rows?: number;
-  /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
-  dates?: Date[];
+  /** Dates to mark on the grid; each marked day gets a border (coloured by `tag` when present). */
+  dates?: CalendarMarker[];
   /**
    * Date the grid scrolls into view on mount, and whenever this value changes.
    * Defaults to today. Pass a stable (memoized) Date so the grid does not
    * re-scroll on every render.
    */
   initialDate?: Date;
+  /**
+   * Weeks of context kept above a date when scrolling it into view (on mount and via the controller's
+   * `scrollTo`), so the date sits below the top edge rather than pinned to it. Defaults to 2.
+   */
+  scrollMargin?: number;
   /** Fired when a user selects a single date (click or arrow key). */
   onSelect?: (event: { date: Date }) => void;
   /**
@@ -230,7 +241,10 @@ type CalendarGridProps = {
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, dates = [], initialDate, onSelect, onSelectRange, ...props }, forwardedRef) => {
+  (
+    { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
+    forwardedRef,
+  ) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
       useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
@@ -239,28 +253,48 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const gridRef = useRef<HTMLDivElement>(null);
     const today = useMemo(() => new Date(), []);
 
-    // Build a set of ISO date strings (YYYY-MM-DD) for O(1) per-cell lookup.
-    const dateSet = useMemo(() => new Set(dates.map((date) => startOfDay(date).toISOString())), [dates]);
+    // Map each marked ISO day to its tag (hue), expanding ranges. A tagged marker (e.g. a starred
+    // event) wins over a plain one on the same day, so the day shows the coloured border.
+    const dateMarkers = useMemo(() => {
+      const markers = new Map<string, string | undefined>();
+      for (const { startDate, endDate, tag } of dates) {
+        const end = endDate ? startOfDay(endDate) : startOfDay(startDate);
+        for (let date = startOfDay(startDate); date <= end; date = addDays(date, 1)) {
+          const iso = date.toISOString();
+          if (tag || !markers.has(iso)) {
+            markers.set(iso, tag ?? markers.get(iso));
+          }
+        }
+      }
+      return markers;
+    }, [dates]);
 
-    const hasDate = useCallback((date: Date) => dateSet.has(startOfDay(date).toISOString()), [dateSet]);
+    const getMarker = useCallback(
+      (date: Date): { tag?: string } | undefined => {
+        const iso = startOfDay(date).toISOString();
+        return dateMarkers.has(iso) ? { tag: dateMarkers.get(iso) } : undefined;
+      },
+      [dateMarkers],
+    );
 
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
       const index = getRowIndex(start, initialDate ?? today, weekStartsOn);
-      listRef.current?.scrollToRow(index);
-    }, [initialized, start, today, initialDate, weekStartsOn]);
+      // Keep `scrollMargin` weeks of context above the target row.
+      listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
+    }, [initialized, start, today, initialDate, weekStartsOn, scrollMargin]);
 
     useEffect(() => {
       return event.on((event) => {
         switch (event.type) {
           case 'scroll': {
             const index = getRowIndex(start, event.date, weekStartsOn);
-            listRef.current?.scrollToRow(index);
+            listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
             break;
           }
         }
       });
-    }, [event]);
+    }, [event, start, weekStartsOn, scrollMargin]);
 
     const days = useMemo(() => {
       const weekStart = startOfWeek(new Date(), { weekStartsOn });
@@ -576,13 +610,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
                 const inRange = isInRange(date, activeRange);
+                const marker = getMarker(date);
                 const border = isSameDay(date, selected)
                   ? 'border-primary-500'
                   : isSameDay(date, today)
                     ? 'border-amber-500'
-                    : hasDate(date)
-                      ? 'border-neutral-700 border-dashed'
-                      : undefined;
+                    : marker?.tag
+                      ? getStyles(marker.tag).border
+                      : marker
+                        ? 'border-green-700 border-dashed'
+                        : undefined;
 
                 return (
                   <div
@@ -609,7 +646,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           </div>
         );
       },
-      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, hasDate, selected, weekStartsOn],
+      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, getMarker, selected, weekStartsOn],
     );
 
     return (

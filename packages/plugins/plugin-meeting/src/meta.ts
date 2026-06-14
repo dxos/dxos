@@ -20,8 +20,8 @@ export const meta = Plugin.makeMeta({
     AI summarisation sends the combined transcript and notes content to a language model, which returns a structured markdown document containing key discussion points, verbatim quotes, and a checklist of clearly assigned action items.
     The summary is written back to ECHO and replicated to all peers; the meeting article view displays a generate button on first use and a regenerate button once a summary exists.
   `,
-  icon: 'ph--note--regular',
-  iconHue: 'rose',
+  icon: 'ph--handshake--regular',
+  iconHue: 'yellow',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-meeting',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],

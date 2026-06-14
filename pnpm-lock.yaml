@@ -1446,9 +1446,6 @@ catalogs:
     posthog-js:
       specifier: ^1.353.0
       version: 1.353.0
-    preact:
-      specifier: ^10.26.10
-      version: 10.28.3
     prettier:
       specifier: ^3.6.2
       version: 3.6.2
@@ -3618,6 +3615,15 @@ importers:
       '@types/zen-observable':
         specifier: 'catalog:'
         version: 0.8.3
+
+  packages/common/av:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../context
 
   packages/common/codec-protobuf:
     dependencies:
@@ -8531,6 +8537,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/av':
+        specifier: workspace:*
+        version: link:../../common/av
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -8549,6 +8558,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8585,9 +8597,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
-      '@dxos/react-ui-syntax-highlighter':
+      '@dxos/schema':
         specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
+        version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -8610,6 +8622,15 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
     devDependencies:
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -11727,9 +11748,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -11751,9 +11769,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -11766,18 +11781,18 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/react-ui-stack':
+      '@dxos/react-ui-menu':
         specifier: workspace:*
-        version: link:../../ui/react-ui-stack
+        version: link:../../ui/react-ui-menu
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -11793,28 +11808,34 @@ importers:
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
-      '@effect/experimental':
-        specifier: 'catalog:'
-        version: 0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2)
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@dxos/plugin-attention':
+      '@dxos/echo-client':
         specifier: workspace:*
-        version: link:../plugin-attention
+        version: link:../../core/echo/echo-client
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -11824,27 +11845,18 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect/platform':
+      '@storybook/react-vite':
         specifier: 'catalog:'
-        version: 0.96.1(effect@3.21.3)
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(esbuild@0.28.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.14)(prettier@3.6.2)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.41(@swc/helpers@0.5.17))(esbuild@0.28.0))
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
-      effect:
-        specifier: 3.21.3
-        version: 3.21.3
-      preact:
-        specifier: 'catalog:'
-        version: 10.28.3
-      react:
+      '@types/react-dom':
         specifier: ~19.2.3
-        version: 19.2.6
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.6(react@19.2.6)
-      tailwindcss:
-        specifier: 'catalog:'
-        version: 4.3.0
+        version: 19.2.3(@types/react@19.2.14)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/plugins/plugin-mermaid:
     dependencies:
@@ -15158,6 +15170,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/av':
+        specifier: workspace:*
+        version: link:../../common/av
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -15185,9 +15200,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-calls':
-        specifier: workspace:*
-        version: link:../plugin-calls
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -49229,7 +49241,7 @@ snapshots:
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 8.56.2
-      '@types/estree': 1.0.9
+      '@types/estree': 1.0.8
 
   '@types/eslint@8.56.2':
     dependencies:

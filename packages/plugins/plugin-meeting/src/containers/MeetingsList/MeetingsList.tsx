@@ -15,8 +15,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#types';
-import { Meeting } from '#types';
+import { Meeting, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
@@ -54,13 +53,14 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
   const db = Obj.getDatabase(channel);
   const meetings = useQuery(db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
-  const sortedMeetings = useMemo(() => {
-    return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
-  }, [meetings]);
+  const sortedMeetings = useMemo(
+    () => meetings.toSorted((a, b) => (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '')),
+    [meetings],
+  );
 
   const getLabel = useCallback(
-    (meeting: Meeting.Meeting) => Obj.getLabel(meeting) ?? new Date(meeting.created).toLocaleString(),
-    [],
+    (meeting: Meeting.Meeting) => Obj.getLabel(meeting) ?? t('meeting.label') ?? meeting.id,
+    [t],
   );
 
   const handleCreateMeeting = useCallback(async () => {

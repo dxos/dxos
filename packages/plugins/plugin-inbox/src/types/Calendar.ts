@@ -5,9 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { FeedAnnotation } from '@dxos/schema';
+import { FeedAnnotation, TagIndex, Tagging } from '@dxos/schema';
+import { type Event } from '@dxos/types';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
 
@@ -15,6 +16,9 @@ export const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+  // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
+  // items, so their tag associations live in this child `TagIndex` rather than in object meta.
+  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   FeedAnnotation.set(true),
   Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
@@ -31,16 +35,50 @@ export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 
-type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed'>;
+type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'tags'>;
 
-/** Creates a calendar object with a backing feed. */
+/** Creates a calendar object with a backing feed and tag index. */
 export const make = (props: CalendarProps = {}) => {
   const feed = Feed.make();
+  const tags = TagIndex.make();
   const calendar = Obj.make(Calendar, {
     feed: Ref.make(feed),
+    tags: Ref.make(tags),
     ...props,
   });
   // TODO(wittjosiah): Parent should be declarative in the schema.
   Obj.setParent(feed, calendar);
+  Obj.setParent(tags, calendar);
   return calendar;
+};
+
+/** The single built-in "starred" tag applied to events; rendered with a rose accent. */
+export const STARRED_TAG = { label: 'Starred', hue: 'rose' } as const;
+
+/** Whether the event carries the starred tag (pass the resolved starred-tag uri). */
+export const isStarred = (calendar: Calendar, event: Event.Event, starredUri: string | undefined): boolean =>
+  !!starredUri && !!calendar.tags.target && Tagging.get(event, { index: calendar.tags.target }).includes(starredUri);
+
+/** Event ids carrying the starred tag (pass the resolved starred-tag uri). */
+export const getStarredEventIds = (
+  calendar: Calendar | Obj.Snapshot<Calendar>,
+  starredUri: string | undefined,
+): ReadonlySet<string> =>
+  starredUri && calendar.tags.target
+    ? new Set(TagIndex.bind(calendar.tags.target).objects(starredUri))
+    : new Set<string>();
+
+/** Toggle the starred tag on an event, creating the tag on first use. */
+export const toggleStar = async (calendar: Calendar, event: Event.Event, db: Database.Database): Promise<void> => {
+  const tag = await Tag.findOrCreate(db, { label: STARRED_TAG.label, hue: STARRED_TAG.hue });
+  const uri = Obj.getURI(tag).toString();
+  const index = calendar.tags.target;
+  if (!index) {
+    return;
+  }
+  if (Tagging.get(event, { index }).includes(uri)) {
+    Tagging.unset(event, uri, { index });
+  } else {
+    Tagging.set(event, uri, { index });
+  }
 };
