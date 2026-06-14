@@ -52,8 +52,8 @@ export const make = (props: CalendarProps = {}) => {
   return calendar;
 };
 
-/** The single built-in "starred" tag applied to events; rendered with a rose accent. */
-export const STARRED_TAG = { label: 'Starred', hue: 'rose' } as const;
+export const TAG_STARRED = { label: 'Starred', hue: 'rose' } as const;
+export const TAG_ACTIVE = { label: 'Active', hue: 'teal' } as const;
 
 /** Whether the event carries the starred tag (pass the resolved starred-tag uri). */
 export const isStarred = (
@@ -84,7 +84,7 @@ export const toggleStar = async (calendar: Calendar, event: Event.Event, db: Dat
       calendar.tags = Ref.make(index!);
     });
   }
-  const tag = await Tag.findOrCreate(db, { label: STARRED_TAG.label, hue: STARRED_TAG.hue });
+  const tag = await Tag.findOrCreate(db, { label: TAG_STARRED.label, hue: TAG_STARRED.hue });
   const uri = Obj.getURI(tag).toString();
   if (Tagging.get(event, { index }).includes(uri)) {
     Tagging.unset(event, uri, { index });

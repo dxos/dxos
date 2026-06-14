@@ -33,7 +33,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // Starring uses the calendar's TagIndex (events are feed objects). Resolve the "starred" tag uri
   // reactively; `isStarred` reads the live index so the toggle reflects changes immediately.
   const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
-  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.STARRED_TAG.label);
+  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.TAG_STARRED.label);
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const starred = !!eventCalendar && Calendar.isStarred(eventCalendar, event, starredUri);
   const handleToggleStar = useCallback(() => {

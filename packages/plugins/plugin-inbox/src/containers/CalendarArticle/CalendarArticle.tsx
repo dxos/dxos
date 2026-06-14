@@ -62,7 +62,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   // Starred events get a rose marker. `getStarredEventIds` reads the calendar's live TagIndex, so the
   // grid re-renders when an event is starred/unstarred. The hue feeds Calendar.Grid's per-date border.
-  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.STARRED_TAG.label);
+  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.TAG_STARRED.label);
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const starredIds = Calendar.getStarredEventIds(calendar, starredUri);
   const dates = useMemo<CalendarMarker[]>(
@@ -70,7 +70,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
       events.map((event) => ({
         startDate: new Date(event.startDate),
         endDate: event.endDate ? new Date(event.endDate) : undefined,
-        tag: starredIds.has(event.id) ? Calendar.STARRED_TAG.hue : undefined,
+        tag: starredIds.has(event.id) ? Calendar.TAG_STARRED.hue : undefined,
       })),
     // `starredIds` is a fresh Set each render; key the memo on its membership so it stays stable.
     [events, [...starredIds].sort().join(',')],

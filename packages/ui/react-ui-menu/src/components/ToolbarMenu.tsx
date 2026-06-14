@@ -113,8 +113,7 @@ const DropdownMenuToolbarItem = ({
       // TODO(thure): Handle other menu item types.
       (activeItem as MenuAction)?.properties.icon) ||
     group.properties.icon;
-  // Follow the same `applyActive` rule for `iconClassNames` so a per-item
-  // accent (e.g. tag colour) tracks the displayed icon.
+  // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g., tag colour) tracks the displayed icon.
   const iconClassNames =
     ((group.properties as any).applyActive && (activeItem as MenuAction)?.properties.iconClassNames) ||
     (group.properties as { iconClassNames?: any }).iconClassNames;

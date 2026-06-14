@@ -92,7 +92,6 @@ export const useEventToolbarActions = ({
                   icon: 'ph--dots-three-vertical--regular',
                   iconOnly: true,
                   variant: 'dropdownMenu',
-                  // The ⋮ icon already signals an overflow menu; suppress the redundant caret.
                   caretDown: false,
                 },
                 (group) =>
