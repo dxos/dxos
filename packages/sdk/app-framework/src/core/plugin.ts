@@ -208,9 +208,9 @@ export type Meta = {
   spec?: string;
 
   /**
-   * URL of screenshot.
+   * Preview images. Each entry is a URL, or a record of theme-specific URLs `{ light?, dark? }`.
    */
-  screenshots?: string[];
+  screenshots?: (string | { light?: string; dark?: string })[];
 
   /**
    * Tags to help categorize the plugin.

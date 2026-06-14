@@ -27,6 +27,36 @@ const readPackageVersion = (dir: string): string => {
 };
 
 /**
+ * Snapshot the project's declared `dependencies`, resolving each to its concrete
+ * installed version (read from `node_modules/<name>/package.json`) so the manifest
+ * records exactly what the plugin was built against — the host derives SDK
+ * compatibility from the `@dxos/*` subset. Falls back to the declared spec when a
+ * dependency can't be resolved on disk.
+ */
+const readResolvedDependencies = (dir: string): Record<string, string> | undefined => {
+  try {
+    const declared = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).dependencies as
+      | Record<string, string>
+      | undefined;
+    if (!declared) {
+      return undefined;
+    }
+    const resolved: Record<string, string> = {};
+    for (const name of Object.keys(declared)) {
+      try {
+        const version = JSON.parse(readFileSync(join(dir, 'node_modules', name, 'package.json'), 'utf-8')).version;
+        resolved[name] = typeof version === 'string' ? version : declared[name];
+      } catch {
+        resolved[name] = declared[name];
+      }
+    }
+    return Object.keys(resolved).length > 0 ? resolved : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
  * Whether an import should be externalized by the plugin bundle.
  * Uses the shared-package predicate directly so plugins automatically pick up any
  * new `@dxos/*` (non-plugin) package the host provides, without a code change here.
@@ -118,7 +148,11 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   // the caller doesn't pass `meta` explicitly, derive it from config — the same
   // `#meta` resolver below makes `import { meta } from '#meta'` resolve in dev/build.
   const pluginEntry = readPluginMetaEntry(projectRoot);
-  const meta = options?.meta ?? (pluginEntry ? toBuildMeta(pluginEntry, readPackageVersion(projectRoot)) : undefined);
+  const meta =
+    options?.meta ??
+    (pluginEntry
+      ? toBuildMeta(pluginEntry, readPackageVersion(projectRoot), readResolvedDependencies(projectRoot))
+      : undefined);
   const resolved = new Set<string>();
   let base = '/';
 
@@ -275,13 +309,13 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       name: 'composer-plugin:meta',
       enforce: 'pre',
       resolveId: (id, importer) => {
-        if (id !== '#meta') return undefined;
+        if (id !== '#meta') {return undefined;}
         // Only intercept `#meta` imports from the plugin's own source, not from
         // bundled node_modules (e.g. @dxos/plugin-space). Those packages have their
         // own `#meta` entry in their package.json#imports and must resolve to their
         // own metadata — returning our synthesized module here would give them the
         // wrong plugin ID, corrupting capability identifiers like CreateObjectEntry.
-        if (importer && importer.includes('node_modules')) return undefined;
+        if (importer && importer.includes('node_modules')) {return undefined;}
         return '\0dxos:plugin-meta';
       },
       load: (id) => (id === '\0dxos:plugin-meta' ? synthesizePluginMetaSource(pluginEntry) : undefined),

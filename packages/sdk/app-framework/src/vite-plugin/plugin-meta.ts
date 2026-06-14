@@ -30,7 +30,7 @@ export type PluginMetaEntry = {
   homePage?: string;
   source?: string;
   spec?: string;
-  screenshots?: string[];
+  screenshots?: (string | { light?: string; dark?: string })[];
   icon?: string;
   iconHue?: string;
   tags?: string[];
@@ -105,9 +105,15 @@ export const synthesizePluginMetaSource = (plugin: PluginMetaEntry): string => {
 
 /**
  * Builds the {@link BuildMeta} used for manifest emission from a dx.yml plugin
- * entry, injecting the build-time `version` (from the package's `package.json`).
+ * entry, injecting the build-time `version` (from the package's `package.json`)
+ * and an optional resolved `dependencies` snapshot.
  */
-export const toBuildMeta = (plugin: PluginMetaEntry, version: string): BuildMeta => ({
+export const toBuildMeta = (
+  plugin: PluginMetaEntry,
+  version: string,
+  dependencies?: Record<string, string>,
+): BuildMeta => ({
   ...Plugin.makeMeta({ key: DXN.make(plugin.id, version), ...pickMetaFields(plugin) }),
   version,
+  ...(dependencies ? { dependencies } : {}),
 });

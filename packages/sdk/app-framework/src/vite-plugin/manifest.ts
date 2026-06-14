@@ -22,10 +22,13 @@ export const ENTRY_FILENAME = PLUGIN_ENTRY_FILENAME;
 /**
  * Plugin metadata required to emit a manifest at build time.
  *
- * Extends `Plugin.Meta` with a build-time `version` field that is not
- * relevant to the runtime plugin definition itself.
+ * Extends `Plugin.Meta` with build-time fields not relevant to the runtime plugin
+ * definition: the package `version`, and a `dependencies` snapshot (every declared
+ * dependency resolved to its concrete installed version). The host derives SDK
+ * compatibility from the subset of `dependencies` it shares with the plugin (the
+ * externalized `@dxos/*` packages); the rest are recorded for transparency.
  */
-export type BuildMeta = Plugin.Meta & { version: string };
+export type BuildMeta = Plugin.Meta & { version: string; dependencies?: Record<string, string> };
 
 /**
  * Serializes a plugin's public metadata + bundle layout into the format consumed

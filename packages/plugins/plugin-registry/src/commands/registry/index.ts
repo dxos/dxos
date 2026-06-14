@@ -21,7 +21,7 @@ import { verify } from './verify';
  * - `publish-package` — low-level: write profile + release records from flags.
  * - `publish-publisher` — write the publisher's own profile record.
  * - `unpublish` — remove a package (profile + releases) from your PDS.
- * - `verify` — curator-only; vouch for a publisher DID.
+ * - `verify` — write a publisher.verification record (indexed only from the configured verifier).
  * - `records` — list everything the authenticated repo has published under `org.dxos.experimental.*`.
  */
 export const registry: Command.Command<any, any, any, any> = Command.make('registry').pipe(

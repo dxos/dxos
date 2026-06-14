@@ -21,7 +21,7 @@ export type PluginMetaEntry = {
   homePage?: string;
   source?: string;
   spec?: string;
-  screenshots?: string[];
+  screenshots?: (string | { light?: string; dark?: string })[];
   icon?: string;
   iconHue?: string;
   tags?: string[];

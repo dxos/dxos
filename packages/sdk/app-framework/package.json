@@ -50,8 +50,10 @@
       "types": "./dist/types/src/plugin/index.d.ts"
     },
     "./meta": {
-      "types": "./meta/index.d.ts",
-      "default": "./meta/index.js"
+      "source": "./src/meta.ts",
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": "./dist/lib/node-esm/meta.mjs",
+      "types": "./dist/types/src/meta.d.ts"
     },
     "./PluginManager": {
       "source": "./src/core/plugin-manager.ts",

@@ -18,7 +18,7 @@ import { type Client, ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, createSession, putRecord, resolveCredentials } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
 type PluginConfig = {
   id: string;
@@ -38,7 +38,12 @@ const ManifestSchema = Schema.Struct({
   icon: Schema.optional(Schema.String),
   iconHue: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
-  screenshots: Schema.optional(Schema.Array(Schema.String)),
+  screenshots: Schema.optional(
+    Schema.Array(
+      Schema.Union(Schema.String, Schema.Struct({ light: Schema.optional(Schema.String), dark: Schema.optional(Schema.String) })),
+    ),
+  ),
+  dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
 
@@ -167,11 +172,12 @@ export const publish = Command.make(
         }
 
         // Authenticate and write records.
-        const { handle, appPassword } = yield* resolveCredentials({
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
+          client,
         });
-        const session = yield* createSession(handle, appPassword);
         const createdAt = new Date().toISOString();
 
         const profile: Record<string, unknown> = { slug, name: manifest.name, createdAt };
@@ -200,12 +206,13 @@ export const publish = Command.make(
         const profileResult = yield* putRecord(session, NSID.PackageProfile, slug, profile);
         yield* Console.log(`Profile    ${profileResult.uri}`);
 
-        const releaseResult = yield* putRecord(session, NSID.PackageRelease, `${slug}_${version}`, {
+        const releaseResult = yield* putRecord(session, NSID.PackageRelease, `${slug}:${version}`, {
           package: slug,
           version,
           moduleUrl,
           manifestHash,
           createdAt,
+          ...(manifest.dependencies ? { dependencies: manifest.dependencies } : {}),
         });
         yield* Console.log(`Release    ${releaseResult.uri}`);
       }),
