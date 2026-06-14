@@ -44,8 +44,14 @@ Deferred (not this change):
 
 - Bulk migration of the ~40+ Add/Delete/Edit/Close call sites. The static presets ship with the
   storybook; existing sites migrate incrementally afterwards.
-- The `rootProps as any` cast in `ToolbarMenu.tsx` (the union-typed props hack). Revisit after the
-  presets land.
+
+Done alongside this work (was previously deferred):
+
+- The `rootProps as any` cast in `ToolbarMenu.tsx` was removed by splitting the dropdown trigger into
+  two typed branches.
+- `caretDown` is now a common `Button` prop (shared with `IconButton`), and is opt-out-able per menu
+  group via `MenuItemGroupProperties.caretDown` (defaults `true`; set `false` when the icon already
+  signals a menu, e.g. an overflow ⋮).
 
 ## Design
 

@@ -4,13 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { useState } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
+import { translations } from '../../translations';
 import { Tooltip } from '../Tooltip';
 import { Button } from './Button';
 import { IconButton, type IconButtonProps } from './IconButton';
+import { SystemIconButton } from './SystemIconButton';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (
@@ -60,6 +63,76 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
   );
 };
 
+type SystemPresetVariantProps = Partial<Pick<IconButtonProps, 'variant' | 'iconOnly'>>;
+
+const SystemPresetRow = ({
+  name,
+  button,
+}: {
+  name: string;
+  button: (props: SystemPresetVariantProps) => React.ReactNode;
+}) => (
+  <div className='grid grid-cols-subgrid col-span-full gap-x-8 items-center'>
+    <div className='text-xs font-mono'>{name}</div>
+    <div>{button({})}</div>
+    <div>{button({ variant: 'ghost' })}</div>
+    <div>{button({ variant: 'ghost', iconOnly: true })}</div>
+  </div>
+);
+
+const SystemStory = () => {
+  const [state, setState] = useState<Record<string, boolean>>({});
+
+  return (
+    <Tooltip.Provider>
+      <div className='grid grid-cols-[auto_1fr_1fr_auto] gap-y-3 items-center'>
+        <div className='grid grid-cols-subgrid col-span-full gap-x-8'>
+          <div />
+          <div className='text-xs text-subdued uppercase'>default</div>
+          <div className='text-xs text-subdued uppercase'>ghost</div>
+          <div className='text-xs text-subdued uppercase'>iconOnly</div>
+        </div>
+
+        <SystemPresetRow
+          name='Star'
+          button={(props) => (
+            <SystemIconButton.Star
+              active={state.star}
+              onClick={() => setState((prev) => ({ ...prev, star: !prev.star }))}
+              {...props}
+            />
+          )}
+        />
+        <SystemPresetRow
+          name='Bookmark'
+          button={(props) => (
+            <SystemIconButton.Bookmark
+              active={state.bookmark}
+              onClick={() => setState((prev) => ({ ...prev, bookmark: !prev.bookmark }))}
+              {...props}
+            />
+          )}
+        />
+        <SystemPresetRow
+          name='Expander'
+          button={(props) => (
+            <SystemIconButton.Expander
+              active={state.expander}
+              onClick={() => setState((prev) => ({ ...prev, expander: !prev.expander }))}
+              {...props}
+            />
+          )}
+        />
+        <br />
+        <SystemPresetRow name='Add' button={(props) => <SystemIconButton.Add {...props} />} />
+        <SystemPresetRow name='Delete' button={(props) => <SystemIconButton.Delete {...props} />} />
+        <SystemPresetRow name='Edit' button={(props) => <SystemIconButton.Edit {...props} />} />
+        <SystemPresetRow name='Close' button={(props) => <SystemIconButton.Close {...props} />} />
+      </div>
+    </Tooltip.Provider>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-core/components/IconButton',
   component: IconButton,
@@ -67,6 +140,7 @@ const meta = {
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
+    translations,
   },
 } satisfies Meta<typeof IconButton>;
 
@@ -88,5 +162,12 @@ export const Ghost: Story = {
     label: 'Close',
     icon: 'ph--x--regular',
     variant: 'ghost',
+  },
+};
+
+export const System: Story = {
+  render: SystemStory as any,
+  args: {
+    label: 'System',
   },
 };
