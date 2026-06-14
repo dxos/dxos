@@ -3,11 +3,13 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
+import { Entity } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
 import { mainIntrinsicSize } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
@@ -48,6 +50,9 @@ const smoothScrollTo = (element: HTMLElement, target: number, duration: number) 
 // NOTE: Calibrated to show PLANK + COMPANION on MBP 16" screen.
 export const DEFAULT_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_COMPANION_SIZE = 35 satisfies StackItemSize;
+
+// Stable fallback so the time-travel hook can run unconditionally when the subject is not an entity.
+const EMPTY_FALSE_ATOM = Atom.make<boolean>(() => false).pipe(Atom.keepAlive);
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;
@@ -131,6 +136,18 @@ export const PlankComponent = memo(
     // Companions share attention with their primary, so they attend to the primary's id
     // (matching the plank's attention container, which keys to `primary?.id ?? id`).
     const attendableId = isCompanion ? (primary?.id ?? id) : id;
+
+    // The read-only mode is applied here, at an always-rendered (and therefore reactive) layer,
+    // rather than in the graph-node connector — connectors are not guaranteed to re-run while a
+    // plank is open, so a node's properties can go stale. The subject's own time-travel state is the
+    // reactive source of truth: while it is time-traveling, surfaces show historical content in place
+    // (the subject reads its own historical values) and the plank renders read-only.
+    const timeTravelingAtom = useMemo(
+      () =>
+        node?.data != null && Entity.isEntity(node.data) ? Entity.timeTravelAtom(node.data) : EMPTY_FALSE_ATOM,
+      [node?.data],
+    );
+    const timeTraveling = useAtomValue(timeTravelingAtom);
     const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
         node && {
@@ -138,11 +155,13 @@ export const PlankComponent = memo(
           subject: node.data,
           companionTo: primary?.data,
           properties: node.properties,
+          // `'readonly'` while time-traveling so write-capable surfaces render non-editable.
+          mode: timeTraveling ? 'readonly' : node.properties?.mode,
           variant,
           path,
           popoverAnchorId,
         },
-      [node, node?.data, node?.properties, path, popoverAnchorId, primary?.data, variant, attendableId],
+      [node, node?.data, node?.properties, timeTraveling, path, popoverAnchorId, primary?.data, variant, attendableId],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.

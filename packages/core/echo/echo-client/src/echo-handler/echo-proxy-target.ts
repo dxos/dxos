@@ -10,7 +10,7 @@ import { inspectCustom } from '@dxos/debug';
 import type { Entity, Type } from '@dxos/echo';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import { EventId } from '@dxos/echo/internal';
+import { EventId, LatestEventId } from '@dxos/echo/internal';
 import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';
@@ -134,7 +134,12 @@ export type ProxyTarget = {
   [SchemaId]?: Schema.Schema.AnyNoContext;
 
   /**
-   * For modifications.
+   * For modifications. Default/display channel — fires on real changes and time-travel scrubbing.
    */
   [EventId]: Event<void>;
+
+  /**
+   * Latest channel for `latestOnly` subscribers — fires on real changes only, never on scrubbing.
+   */
+  [LatestEventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

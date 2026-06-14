@@ -30,7 +30,8 @@ export { type CloneOptions, clone } from './echo-handler';
 export { createDocAccessor } from './echo-handler';
 export { createObject, EchoReactiveHandler, initEchoReactiveObjectRootProxy } from './echo-handler';
 export { isEchoObject } from './echo-handler';
-export { getEditHistory, checkoutVersion } from './echo-handler';
+export { getEditHistory, getEditHistoryWithDiffs, type VersionDiff, checkoutVersion } from './echo-handler';
+export { setTimeTravel, clearTimeTravel } from './echo-handler';
 export { type ProxyTarget } from './echo-handler';
 export {
   MutationOutsideChangeContextError,

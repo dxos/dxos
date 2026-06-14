@@ -15,8 +15,9 @@ import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
-import { subscribe } from '../common/proxy/reactive';
-import { isEntity, getDatabase } from '../Entity';
+import { withLatestRead } from '../common/proxy/latest-read-context';
+import { type SubscribeOptions, subscribe } from '../common/proxy/reactive';
+import { TimeTravelingId, isEntity, getDatabase } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
 import { loadRefTarget } from '../Ref/utils';
 import { getSnapshot } from './snapshot';
@@ -52,6 +53,29 @@ const objectFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.
 });
 
 /**
+ * `latestOnly` variant of {@link objectFamily}: subscribes on the latest channel (no scrub firing)
+ * and reads the latest committed value (via {@link withLatestRead}) even while the object is
+ * time-traveling. Keyed by object reference, parallel to {@link objectFamily} (not a tuple key —
+ * ECHO proxies are not structurally hashable).
+ */
+const objectLatestFamily = Atom.family(<T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>> => {
+  return Atom.make<Obj.Snapshot<T>>((get) => {
+    const unsubscribe = subscribe(
+      obj,
+      () => {
+        // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
+        get.setSelf(withLatestRead(() => getSnapshot(obj)) as unknown as Obj.Snapshot<T>);
+      },
+      { latestOnly: true },
+    );
+
+    get.addFinalizer(() => unsubscribe());
+
+    return withLatestRead(() => getSnapshot(obj)) as unknown as Obj.Snapshot<T>;
+  }).pipe(Atom.keepAlive);
+});
+
+/**
  * Atom family for ECHO refs (snapshot version).
  * Uses ref as key — same ref returns same atom.
  * Subscribes to target object changes after loading.
@@ -67,6 +91,35 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
         get.setSelf(getSnapshot(target) as unknown as Obj.Snapshot<T>);
       });
       return getSnapshot(target) as unknown as Obj.Snapshot<T>;
+    };
+
+    get.addFinalizer(() => {
+      unsubscribeTarget?.();
+    });
+
+    return loadRefTarget(ref, get, setupTargetSubscription);
+  }).pipe(Atom.keepAlive);
+});
+
+/**
+ * `latestOnly` variant of {@link refFamily}: subscribes to the resolved target on the latest channel
+ * and reads its latest committed value even while the target is time-traveling.
+ */
+const refLatestFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined> => {
+  return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
+    let unsubscribeTarget: (() => void) | undefined;
+
+    const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
+      unsubscribeTarget?.();
+      unsubscribeTarget = subscribe(
+        target,
+        () => {
+          // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
+          get.setSelf(withLatestRead(() => getSnapshot(target)) as unknown as Obj.Snapshot<T>);
+        },
+        { latestOnly: true },
+      );
+      return withLatestRead(() => getSnapshot(target)) as unknown as Obj.Snapshot<T>;
     };
 
     get.addFinalizer(() => {
@@ -111,6 +164,34 @@ const propertyFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
       get.addFinalizer(() => unsubscribe2());
 
       return snapshotForComparison(obj[key]);
+    }).pipe(Atom.keepAlive);
+  }),
+);
+
+/**
+ * `latestOnly` variant of {@link propertyFamily}: reads the latest committed property value and
+ * never fires on scrubbing.
+ */
+const propertyLatestFamily = Atom.family(<T extends Obj.Unknown>(obj: T) =>
+  Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K]> => {
+    return Atom.make<T[K]>((get) => {
+      let previousSnapshot = withLatestRead(() => snapshotForComparison(obj[key]));
+
+      const unsubscribe2 = subscribe(
+        obj,
+        () => {
+          const newSnapshot = withLatestRead(() => snapshotForComparison(obj[key]));
+          if (newSnapshot !== previousSnapshot) {
+            previousSnapshot = newSnapshot;
+            get.setSelf(newSnapshot);
+          }
+        },
+        { latestOnly: true },
+      );
+
+      get.addFinalizer(() => unsubscribe2());
+
+      return previousSnapshot;
     }).pipe(Atom.keepAlive);
   }),
 );
@@ -167,6 +248,26 @@ const entityFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Ato
 });
 
 /**
+ * `latestOnly` variant of {@link entityFamily}.
+ */
+const entityLatestFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
+  return Atom.make<Entity.Snapshot>((get) => {
+    const unsubscribe = subscribe(
+      entity,
+      () => {
+        // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
+        get.setSelf(withLatestRead(() => getSnapshot(entity)) as unknown as Entity.Snapshot);
+      },
+      { latestOnly: true },
+    );
+
+    get.addFinalizer(() => unsubscribe());
+
+    return withLatestRead(() => getSnapshot(entity)) as unknown as Entity.Snapshot;
+  }).pipe(Atom.keepAlive);
+});
+
+/**
  * Atom family for ECHO relations — returns a typed relation snapshot.
  */
 const relationFamily = Atom.family(<T extends Relation.Unknown>(relation: T): Atom.Atom<Relation.Snapshot<T>> => {
@@ -188,25 +289,29 @@ const relationFamily = Atom.family(<T extends Relation.Unknown>(relation: T): At
  * For refs, subscribes to target object changes after loading.
  */
 export const makeAtom: {
-  <T extends Obj.Unknown>(obj: T): Atom.Atom<Obj.Snapshot<T>>;
-  <T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined>;
-} = (objOrRef: Obj.Unknown | Ref.Ref<any>): Atom.Atom<any> => {
+  <T extends Obj.Unknown>(obj: T, opts?: SubscribeOptions): Atom.Atom<Obj.Snapshot<T>>;
+  <T extends Obj.Unknown>(ref: Ref.Ref<T>, opts?: SubscribeOptions): Atom.Atom<Obj.Snapshot<T> | undefined>;
+} = (objOrRef: Obj.Unknown | Ref.Ref<any>, opts?: SubscribeOptions): Atom.Atom<any> => {
   if (isRef(objOrRef)) {
-    return refFamily(objOrRef as any);
+    return opts?.latestOnly ? refLatestFamily(objOrRef as any) : refFamily(objOrRef as any);
   }
 
   const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return objectFamily(obj as any);
+  return opts?.latestOnly ? objectLatestFamily(obj as any) : objectFamily(obj as any);
 };
 
 /**
  * Create a read-only atom for a specific property of a reactive object.
  * Only fires updates when the property value actually changes.
  */
-export const makeProperty = <T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom.Atom<T[K]> => {
+export const makeProperty = <T extends Obj.Unknown, K extends keyof T>(
+  obj: T,
+  key: K,
+  opts?: SubscribeOptions,
+): Atom.Atom<T[K]> => {
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
-  return propertyFamily(obj)(key);
+  return (opts?.latestOnly ? propertyLatestFamily(obj) : propertyFamily(obj))(key);
 };
 
 /**
@@ -230,9 +335,12 @@ export const makeWithReactive: {
  * Create a read-only snapshot atom for any ECHO entity (obj or relation).
  * Updates automatically when the entity is mutated.
  */
-export const makeEntity = <T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
+export const makeEntity = <T extends Entity.Unknown>(
+  entity: T,
+  opts?: SubscribeOptions,
+): Atom.Atom<Entity.Snapshot> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return entityFamily(entity);
+  return opts?.latestOnly ? entityLatestFamily(entity) : entityFamily(entity);
 };
 
 /**
@@ -266,10 +374,69 @@ const labelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.
 });
 
 /**
+ * `latestOnly` variant of {@link labelAtomFamily}: tracks the latest committed label, ignoring
+ * the historical label while scrubbing.
+ */
+const labelLatestAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
+  return Atom.make<string | undefined>((get) => {
+    let previous = withLatestRead(() => getLabel(entity));
+
+    const unsubscribe = subscribe(
+      entity,
+      () => {
+        const next = withLatestRead(() => getLabel(entity));
+        if (next !== previous) {
+          previous = next;
+          get.setSelf(next);
+        }
+      },
+      { latestOnly: true },
+    );
+
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }).pipe(Atom.keepAlive);
+});
+
+/**
+ * Atom family for an entity's time-travel state.
+ * Subscribes on the default (display) channel so it re-evaluates on set/clear/scrub, but only
+ * propagates when the boolean flips (set <-> clear), not on scrub-to-scrub transitions.
+ */
+const timeTravelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<boolean> => {
+  return Atom.make<boolean>((get) => {
+    let previous = (entity as any)[TimeTravelingId] === true;
+
+    const unsubscribe = subscribe(entity, () => {
+      const next = (entity as any)[TimeTravelingId] === true;
+      if (next !== previous) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }).pipe(Atom.keepAlive);
+});
+
+/**
  * Create a read-only atom for the label of a reactive ECHO entity.
  * Re-evaluates on entity mutation; only propagates when the label string changes.
  */
-export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
+export const makeLabelAtom = <T extends Entity.Unknown>(
+  entity: T,
+  opts?: SubscribeOptions,
+): Atom.Atom<string | undefined> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
-  return labelAtomFamily(entity);
+  return opts?.latestOnly ? labelLatestAtomFamily(entity) : labelAtomFamily(entity);
+};
+
+/**
+ * Create a read-only atom reflecting whether a reactive ECHO entity is currently time-traveling.
+ * Re-evaluates on time-travel transitions; only propagates when the boolean flips.
+ */
+export const makeTimeTravelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<boolean> => {
+  assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
+  return timeTravelAtomFamily(entity);
 };

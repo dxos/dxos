@@ -235,6 +235,9 @@ export const translations = [
         'row-details-no-selection.label': 'No objects selected',
         'companion-related.label': 'Related',
         'companion-selected-objects.label': 'Selected',
+        'object-history.label': 'History',
+        'history-fork.label': 'Fork to new object',
+        'settings-features.label': 'Features',
         'field-deleted.label': 'Field deleted',
 
         'members-panel.label': 'Members',

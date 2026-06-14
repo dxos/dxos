@@ -39,7 +39,7 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
 
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   (
-    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, viewMode, ...props },
+    { role, subject: object, id, attendableId, mode, settings, extensionProviders, onSelectObject, viewMode, ...props },
     forwardedRef,
   ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
@@ -130,7 +130,13 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar classNames='bg-toolbar-surface'>
-                  <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
+                  {/* While the node is locked read-only (e.g. time-traveling) every toolbar action is
+                      disabled, so the controls stay visible but inert rather than disappearing. */}
+                  <MarkdownEditor.Toolbar
+                    classNames='dx-document'
+                    customActions={customActions}
+                    disabled={mode === 'readonly'}
+                  />
                 </Panel.Toolbar>
               )}
               <Panel.Content>

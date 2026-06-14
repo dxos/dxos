@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppNode } from '@dxos/app-toolkit';
+import { Capability } from '@dxos/app-framework';
+import { AppNode, TimeTravelAnnotation } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -13,6 +14,7 @@ import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
 //
 // Extension Factory
@@ -20,8 +22,12 @@ import { meta } from '#meta';
 
 /** Creates companion panel extensions: object settings and selected-objects. */
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/plugin-graph types (TS2883).
-export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.BuilderExtension[][]> = Effect.fnUntraced(
-  function* () {
+export const createCompanionExtensions: () => Effect.Effect<
+  GraphBuilder.BuilderExtension[][],
+  never,
+  Capability.Service
+> = Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
     return yield* Effect.all([
       // Object settings plank companion.
       GraphBuilder.createExtension({
@@ -84,6 +90,40 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
               data: 'selected-objects',
             }),
           ]),
+      }),
+
+      // History scrubber plank companion (only for types that opt in via TimeTravelAnnotation).
+      GraphBuilder.createExtension({
+        id: 'history',
+        match: (node) => {
+          if (!Obj.isObject(node.data)) {
+            return Option.none();
+          }
+
+          const type = Obj.getType(node.data);
+          const supportsTimeTravel = type
+            ? TimeTravelAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
+            : false;
+
+          return supportsTimeTravel ? Option.some(node) : Option.none();
+        },
+        connector: (node, get) => {
+          // Gated by the space-plugin setting (enabled by default); reactive to toggling it.
+          const settings = get(capabilities.get(SpaceCapabilities.Settings));
+          if (settings.enableHistory === false) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('history'),
+              label: ['object-history.label', { ns: meta.id }],
+              icon: 'ph--clock-counter-clockwise--regular',
+              data: 'history',
+              position: 'last',
+            }),
+          ]);
+        },
       }),
     ]);
   },

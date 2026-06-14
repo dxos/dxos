@@ -250,6 +250,12 @@ export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[
 export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);
 
 /**
+ * Check if an entity is currently in a historical (time-travel) read mode.
+ * Synchronous guard — use before mutating to avoid the time-travel write error.
+ */
+export const isTimeTraveling = (entity: Unknown | Snapshot): boolean => internal.isTimeTraveling(entity);
+
+/**
  * Get the label of an entity.
  *
  * @param options.fallback `'typename'` returns the entity's typename when no
@@ -285,8 +291,12 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSO
  * Subscribe to changes on an entity (object or relation).
  * @returns Unsubscribe function.
  */
-export const subscribe = (entity: Unknown, callback: () => void): (() => void) => {
-  return internal.subscribe(entity, callback);
+export const subscribe = (
+  entity: Unknown,
+  callback: () => void,
+  opts?: internal.SubscribeOptions,
+): (() => void) => {
+  return internal.subscribe(entity, callback, opts);
 };
 
 //
@@ -345,3 +355,9 @@ export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void
 export const atom = objInternal.makeEntity;
 export const labelAtom = objInternal.makeLabelAtom;
 export const labelProperty = internal.getLabelProperty;
+
+/**
+ * Reactive atom reflecting whether an entity is currently time-traveling.
+ * Drives read-only UI; re-evaluates on time-travel transitions and only propagates when it flips.
+ */
+export const timeTravelAtom = objInternal.makeTimeTravelAtom;

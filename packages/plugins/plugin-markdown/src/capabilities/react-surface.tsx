@@ -32,7 +32,9 @@ export default Capability.makeModule(() =>
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
+        filter: (
+          data,
+        ): data is { subject: Markdown.Document; attendableId: string; variant: undefined; mode?: string } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
         component: ({ data, role, ref }) => {
           return (
@@ -41,6 +43,7 @@ export default Capability.makeModule(() =>
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
+              mode={data.mode}
               ref={ref}
             />
           );
@@ -96,7 +99,7 @@ export default Capability.makeModule(() =>
 const Container = forwardRef<
   HTMLDivElement,
   AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
->(({ id, attendableId, subject, role }, forwardedRef) => {
+>(({ id, attendableId, subject, role, mode }, forwardedRef) => {
   const selectionManager = useCapability(AttentionCapabilities.Selection);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
@@ -104,7 +107,9 @@ const Container = forwardRef<
   const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
   const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
-  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+  // A read-only subject (e.g. while time-traveling) forces the editor's read-only view mode.
+  const viewMode: EditorViewMode =
+    mode === 'readonly' ? 'readonly' : (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
   const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
     (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
     [id, setState],
@@ -116,6 +121,7 @@ const Container = forwardRef<
       subject={subject}
       id={id}
       attendableId={attendableId}
+      mode={mode}
       settings={settings}
       selectionManager={selectionManager}
       extensionProviders={extensionProviders}

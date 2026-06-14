@@ -3,6 +3,7 @@
 //
 
 export * from './AnimatedBorder';
+export * from './HistoryScrubber';
 export * from './Matrix';
 export * from './NumericTabs';
 export * from './ProgressBar';

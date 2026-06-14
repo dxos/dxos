@@ -29,6 +29,96 @@ export const getEditHistory = (object: Obj.Unknown): State<any>[] => {
 };
 
 /**
+ * A single point in an object's edit history annotated with the magnitude of the change.
+ * Magnitudes are intentionally unitless ("changes"): text edits contribute character counts
+ * while scalar field sets contribute one each, so callers should not treat them as characters.
+ */
+export type VersionDiff = {
+  /** Cumulative automerge frontier identifying this version (all changes up to and including it). */
+  heads: Heads;
+  /** Wall-clock time of the change in epoch milliseconds. */
+  time: number;
+  /** Opaque automerge actor id that authored the change. */
+  actor: string;
+  /** Optional commit message. */
+  message?: string;
+  /** Number of additions introduced relative to the previous version. */
+  added: number;
+  /** Number of deletions introduced relative to the previous version. */
+  removed: number;
+};
+
+/**
+ * Returns the object's edit history with per-version add/remove magnitudes, suitable for a
+ * timeline visualization. Magnitudes are derived from automerge patches between consecutive
+ * versions; the first version is diffed against the empty document so it counts as all-additions.
+ *
+ * Each version's `heads` is the cumulative frontier of all changes up to and including that point,
+ * not the single change hash. A bare change hash is not a usable version identifier once history
+ * branches (concurrent edits or merges): `A.view` at one branch tip omits the other branch's
+ * content, so reconstructing a version would drop edits made on a sibling branch. Replaying the
+ * changes in topological order and reading the frontier after each yields heads that round-trip
+ * through `A.view`/`checkoutVersion` regardless of branching.
+ */
+export const getEditHistoryWithDiffs = (object: Obj.Unknown): VersionDiff[] => {
+  assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
+
+  const objectCore = getObjectCore(object);
+  const doc = objectCore.getDoc() as Doc<any>;
+  const history = A.getHistory(doc);
+  const changes = A.getAllChanges(doc);
+
+  let accumulator = A.init<any>();
+  let before: Heads = [];
+  return history.map((state, index): VersionDiff => {
+    const { change } = state;
+    [accumulator] = A.applyChanges(accumulator, [changes[index]]);
+    const after = A.getHeads(accumulator);
+    const patches = A.diff(doc, before, after);
+    before = after;
+
+    let added = 0;
+    let removed = 0;
+    for (const patch of patches) {
+      switch (patch.action) {
+        case 'splice':
+          // Text insertion: `value` is the inserted string.
+          added += patch.value.length;
+          break;
+        case 'insert':
+          // List/text insertion: count elements (or characters for string elements).
+          for (const value of patch.values) {
+            added += typeof value === 'string' ? value.length : 1;
+          }
+          break;
+        case 'del':
+          // `length` is absent for single-element deletions.
+          removed += patch.length ?? 1;
+          break;
+        case 'put':
+        case 'inc':
+          // Scalar set / counter bump counts as one change.
+          added += 1;
+          break;
+        default:
+          // mark / unmark / conflict carry no magnitude.
+          break;
+      }
+    }
+
+    return {
+      heads: after,
+      // Automerge stores change time in epoch seconds.
+      time: change.time * 1000,
+      actor: change.actor,
+      message: change.message ?? undefined,
+      added,
+      removed,
+    };
+  });
+};
+
+/**
  * @returns Raw object data at the given version.
  */
 // TODO(burdon): Also Relation?

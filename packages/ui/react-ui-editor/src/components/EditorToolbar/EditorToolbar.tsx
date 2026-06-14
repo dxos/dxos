@@ -45,13 +45,16 @@ export type EditorToolbarProps = ThemedClassName<
   {
     role?: string;
     attendableId?: string;
+    /** When true, every toolbar action renders disabled (e.g. while the editor is read-only / time-traveling). */
+    disabled?: boolean;
     /** Handler for executing actions. Required when customActions use Operation.invoke. */
     onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
   } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
 >;
 
-export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
-  const menuActions = useMarkdownMenuActions(props);
+export const EditorToolbar = memo(
+  ({ classNames, role, attendableId, disabled, onAction, ...props }: EditorToolbarProps) => {
+    const menuActions = useMarkdownMenuActions({ ...props, disabled });
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
@@ -63,19 +66,20 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
 });
 
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
-  EditorToolbarFeatureFlags;
+  EditorToolbarFeatureFlags & { disabled?: boolean };
 
 // TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
-const useMarkdownMenuActions = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
+const useMarkdownMenuActions = ({ state, getView, customActions, disabled, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
-    () => createMarkdownActions({ state, getView, customActions, ...features }),
+    () => createMarkdownActions({ state, getView, customActions, disabled, ...features }),
     [
       state,
       getView,
       customActions,
+      disabled,
       features?.showHeadings,
       features?.showFormatting,
       features?.showLists,
@@ -93,12 +97,13 @@ const createMarkdownActions = ({
   state,
   getView,
   customActions,
+  disabled,
   ...features
 }: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
-    return MenuBuilder.make()
+    const graph = MenuBuilder.make()
       .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
       .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
       .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
@@ -109,5 +114,16 @@ const createMarkdownActions = ({
       .subgraph(features?.showSearch !== false && addSearch(getView))
       .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange))
       .build();
+
+    // When disabled (e.g. the editor is read-only while time-traveling), render every action
+    // disabled rather than hiding the toolbar, so its controls stay visible but inert.
+    if (disabled) {
+      return {
+        ...graph,
+        nodes: graph.nodes.map((node) => ({ ...node, properties: { ...node.properties, disabled: true } })),
+      };
+    }
+
+    return graph;
   });
 };

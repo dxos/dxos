@@ -23,3 +23,9 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
   id: 'org.dxos.annotation.graph-props',
   schema: Schema.Struct({ managesAutofocus: Schema.optional(Schema.Boolean) }),
 });
+
+/** Marks a schema type as supporting time-travel (history scrubbing) in the UI. */
+export const TimeTravelAnnotation = Annotation.make<boolean>({
+  id: 'org.dxos.annotation.time-travel',
+  schema: Schema.Boolean,
+});

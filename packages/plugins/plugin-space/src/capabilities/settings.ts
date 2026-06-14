@@ -16,7 +16,8 @@ export default Capability.makeModule(() =>
     const settingsAtom = createKvsStore({
       key: meta.id,
       schema: Settings.Settings,
-      defaultValue: () => ({}),
+      // History scrubber starts enabled while the feature is being tested.
+      defaultValue: () => ({ enableHistory: true }),
     });
 
     return [

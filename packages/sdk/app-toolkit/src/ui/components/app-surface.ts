@@ -260,6 +260,11 @@ export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = 
   variant?: string;
   path?: string[];
   popoverAnchorId?: string;
+  /**
+   * Rendering mode for the subject, mirrored from the node's `mode` property. `'readonly'` asks
+   * write-capable surfaces to lock editing (e.g. while time-traveling); `undefined` is normal.
+   */
+  mode?: string;
 } & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
   Props;
 
