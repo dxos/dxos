@@ -18,7 +18,7 @@ import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button, IconButton } from '../Button';
 import { Column } from '../Column';
-import { Icon, IconBlock } from '../Icon';
+import { Icon } from '../Icon';
 import { Image, type ImageProps } from '../Image';
 import { DropdownMenu } from '../Menu';
 import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
@@ -470,18 +470,16 @@ function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {icon ? (
-        <IconBlock classNames='text-subdued'>
+      {icon && (
+        <CardBlock>
           <Icon icon={icon} size={4} />
-        </IconBlock>
-      ) : (
-        <div />
+        </CardBlock>
       )}
-      <span className={tx('card.action-label', {}, !actionIcon ? 'col-span-2' : undefined)}>{label}</span>
+      <span className={tx('card.action-label', {})}>{label}</span>
       {actionIcon && (
-        <IconBlock>
+        <CardBlock end>
           <Icon icon={actionIcon} size={4} />
-        </IconBlock>
+        </CardBlock>
       )}
     </Button>
   );
@@ -501,13 +499,13 @@ function CardLink({ label, href }: CardLinkProps) {
   const { tx } = useThemeContext();
   return (
     <a className={tx('card.link', {})} data-variant='ghost' href={href} target='_blank' rel='noreferrer'>
-      <IconBlock classNames='text-subdued'>
-        <Icon icon='ph--link--regular' />
-      </IconBlock>
+      <CardBlock>
+        <Icon icon='ph--link--regular' size={4} />
+      </CardBlock>
       <span className={tx('card.link-label', {})}>{label}</span>
-      <IconBlock classNames='invisible group-hover:visible'>
-        <Icon icon='ph--arrow-square-out--regular' />
-      </IconBlock>
+      <CardBlock end classNames='invisible group-hover:visible'>
+        <Icon icon='ph--arrow-square-out--regular' size={4} />
+      </CardBlock>
     </a>
   );
 }

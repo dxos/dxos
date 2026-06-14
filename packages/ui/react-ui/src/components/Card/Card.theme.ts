@@ -53,13 +53,19 @@ const posterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);
 
 const action: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__acztion col-span-3 !grid grid-cols-subgrid p-0! w-full text-start overflow-hidden', ...etc);
+  mx(
+    'dx-card__action col-span-3 !grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2 p-0! w-full text-start overflow-hidden',
+    ...etc,
+  );
 
 const actionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
 
 const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__link col-span-3 !grid grid-cols-subgrid group p-0! dx-button dx-focus-ring min-h-1!', ...etc);
+  mx(
+    'dx-card__link col-span-3 !grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2 group p-0! dx-button dx-focus-ring min-h-1!',
+    ...etc,
+  );
 
 const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
