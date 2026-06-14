@@ -53,16 +53,18 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       {organization?.name && (
         <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
       )}
-      {emails.map(({ value }) => (
-        <Card.Row key={value}>
+      {emails.length > 0 && (
+        <Card.Row>
           <Card.Block>
             <Icon icon='ph--at--regular' />
           </Card.Block>
-          <Card.Text truncate className='text-primary-text'>
-            {value}
+          <Card.Text truncate className='text-primary-text text-sm'>
+            {emails.map(({ value }) => (
+              <div key={value}>{value}</div>
+            ))}
           </Card.Text>
         </Card.Row>
-      ))}
+      )}
     </Card.Body>
   );
 };

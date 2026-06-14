@@ -78,7 +78,10 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
               icon='ph--x--regular'
               iconOnly
               label={t('delete-object.button')}
-              onClick={() => onDelete?.(item.id)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete?.(item.id);
+              }}
             />
           </Card.Block>
         )}

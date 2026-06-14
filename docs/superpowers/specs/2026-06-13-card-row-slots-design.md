@@ -160,9 +160,9 @@ Touch every call site in the same change:
 3. Trailing buttons living inside row content → wrap in `<Card.Block end>`.
 4. Replace `Card.IconBlock` / `Card.Icon` usages with `Card.Block`. **Standalone
    `IconBlock` usages are left as-is.**
-5. `Dialog.Header` close/action buttons → `end` slot; add `Dialog.Row` where dialogs
-   hand-rolled gutter rows.
-6. Update `Card.stories.tsx` and any `Dialog` stories.
+5. Update `Card.stories.tsx`.
+6. **Dialog is deferred** (see §3) — `Dialog.Header` and dialog call sites are left
+   unchanged in this work.
 
 Known call sites (non-exhaustive): `plugin-feed/PostStack`, `plugin-inbox/Header` & `Message`, `plugin-preview/PersonCard`, `plugin-trip/SegmentCard`, plus `react-ui` stories.
 
@@ -170,16 +170,14 @@ Known call sites (non-exhaustive): `plugin-feed/PostStack`, `plugin-inbox/Header
 
 - Storybook: `Card` stories cover start-only, end-only, both, `asChild`, conditional
   (falsy) block, `fullWidth` (blocks inert), Header-vs-Row icon size (5 vs 4), and a
-  passive-icon-vs-`IconButton` alignment story proving identical geometry. Add
-  equivalent `Dialog` stories.
+  passive-icon-vs-`IconButton` alignment story proving identical geometry.
+  (Dialog slot stories deferred with Dialog adoption.)
 - Visual regression via existing storybook snapshots where available.
 - Build + lint + `react-ui` tests green; audit diff for new casts.
 
 ## Risks / open questions
 
 - Broad call-site churn across plugins (accepted: full replace).
-- `Dialog.Header` restyle could subtly shift spacing for non-title/close layouts —
-  verify each dialog visually.
 - Dropping `Toolbar.Root` from `Card.Header` removes arrow-key roving for the ~20
   multi-control headers (accepted trade for correct ARIA semantics). Verify those
   headers still tab through their controls normally.

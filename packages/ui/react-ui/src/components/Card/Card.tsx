@@ -233,12 +233,12 @@ type CardBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?
  * rail-item square so a passive `<Icon>` aligns with an `IconButton`. Defaults text color to
  * `subdued` so a decorative `<Icon>` child needs no styling; interactive children set their own.
  */
-const CardBlock = composable<HTMLDivElement, CardBlockProps>(({ children, classNames, ...props }, forwardedRef) => {
+const CardBlock = composable<HTMLDivElement, CardBlockProps>(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props);
 
   return (
-    <Column.Block {...rest} classNames={tx('card.block', {}, classNames)} ref={forwardedRef}>
+    <Column.Block {...rest} classNames={tx('card.block', {}, className)} ref={forwardedRef}>
       {children}
     </Column.Block>
   );

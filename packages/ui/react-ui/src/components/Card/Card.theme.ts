@@ -69,7 +69,7 @@ const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   );
 
 const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
+  mx('dx-card__link-label min-w-0 flex-1 truncate text-sm!', ...etc);
 
 const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
   mx(
