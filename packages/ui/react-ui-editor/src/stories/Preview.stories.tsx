@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
-import { Card, Popover, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, Popover, Toolbar } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -60,7 +60,9 @@ const PreviewCard = () => {
         <Popover.Viewport classNames='dx-card-popover-width'>
           <Card.Root border={false}>
             <Card.Header>
-              <Card.Icon icon='ph--file-text--regular' />
+              <Card.Block>
+                <Icon icon='ph--file-text--regular' />
+              </Card.Block>
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
                 <Card.ActionIconButton action='close' />
@@ -166,7 +168,9 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
       <Card.Root classNames={hoverableControls}>
         {!view?.state.readOnly && (
           <Card.Header>
-            <Card.Icon icon='ph--bookmark--regular' />
+            <Card.Block>
+              <Icon icon='ph--bookmark--regular' />
+            </Card.Block>
             <Card.Title>{link.label}</Card.Title>
             {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
             <Menu.Trigger asChild disabled={!menuItems?.length}>

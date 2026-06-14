@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Avatar } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Icon } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
@@ -53,7 +53,10 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
           <Card.Action icon='ph--buildings--regular' label={organization.name} onClick={handleOrganizationClick} />
         )}
         {emails.map(({ value }) => (
-          <Card.Row key={value} icon='ph--at--regular'>
+          <Card.Row key={value}>
+            <Card.Block>
+              <Icon icon='ph--at--regular' />
+            </Card.Block>
             <Card.Text truncate className='text-primary-text'>
               {value}
             </Card.Text>

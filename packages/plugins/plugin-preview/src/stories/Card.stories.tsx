@@ -165,7 +165,7 @@ export const _Json = {
         <div className='dx-card-min-width dx-card-max-width'>
           <Card.Root>
             <Card.Header>
-              <Card.IconBlock />
+              <Card.Block />
               <Card.Title>JSON</Card.Title>
             </Card.Header>
             <JsonCard data={data} />

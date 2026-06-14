@@ -6,7 +6,7 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
@@ -89,10 +89,16 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 <Menu.Content items={items} />
               </Card.Header>
               {/* TODO(burdon): Replace with surface. */}
-              <Card.Row icon='ph--note--regular' classNames='text-description'>
+              <Card.Row classNames='text-description'>
+                <Card.Block>
+                  <Icon icon='ph--note--regular' />
+                </Card.Block>
                 <Card.Text>{description}</Card.Text>
               </Card.Row>
-              <Card.Row icon='ph--tag--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--tag--regular' />
+                </Card.Block>
                 {label && (
                   <div className='shrink-0 flex gap-1 items-center text-xs'>
                     <Tag palette={getHashStyles(label).hue}>{label}</Tag>

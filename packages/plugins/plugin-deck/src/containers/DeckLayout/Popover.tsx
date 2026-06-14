@@ -10,6 +10,7 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
   Card,
+  Icon,
   Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
@@ -129,10 +130,10 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
-                  <Card.IconBlock>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
+                  <Card.Block>{icon && <Icon icon={icon} />}</Card.Block>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                  <Card.IconBlock>
+                  <Card.Block end>
                     <Menu.Trigger asChild disabled={!objectMenuItems.length}>
                       <Toolbar.IconButton
                         variant='ghost'
@@ -143,7 +144,7 @@ export const PopoverContent = () => {
                       />
                     </Menu.Trigger>
                     <Menu.Content items={objectMenuItems} />
-                  </Card.IconBlock>
+                  </Card.Block>
                 </Card.Header>
 
                 {content && 'subject' in content ? (

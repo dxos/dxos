@@ -10,7 +10,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Card, type ThemedClassName } from '@dxos/react-ui';
+import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -217,7 +217,10 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
       <Card.Body>
         {/* Subject row. */}
-        <Card.Row icon='ph--envelope-open--regular'>
+        <Card.Row>
+          <Card.Block>
+            <Icon icon='ph--envelope-open--regular' />
+          </Card.Block>
           <div className='flex flex-col gap-1 overflow-hidden'>
             <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
             {message.created && (

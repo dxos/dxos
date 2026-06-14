@@ -12,7 +12,7 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -146,17 +146,17 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
   return (
     <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
       <Card.Header>
-        <Card.IconBlock>
-          <Card.Icon icon={icon} />
-        </Card.IconBlock>
+        <Card.Block>
+          <Icon icon={icon} />
+        </Card.Block>
         <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-        <Card.IconBlock>
+        <Card.Block end>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
-        </Card.IconBlock>
+        </Card.Block>
       </Card.Header>
       <Card.Body>
         <Surface.Surface
