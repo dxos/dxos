@@ -132,7 +132,6 @@ const SystemStory = () => {
   );
 };
 
-
 const meta = {
   title: 'ui/react-ui-core/components/IconButton',
   component: IconButton,
