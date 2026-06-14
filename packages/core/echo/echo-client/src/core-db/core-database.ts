@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Heads, getHeads } from '@automerge/automerge';
+import { type Doc, type Heads, getHeads, next as A } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import {
@@ -21,7 +21,8 @@ import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
 import {
-  type DatabaseDirectory,
+  type BranchRecord,
+  DatabaseDirectory,
   EncodedReference,
   type EntityMeta,
   type EntityStructure,
@@ -46,6 +47,7 @@ import {
   type ObjectDocumentLoaded,
   type ObjectUnavailable,
 } from './automerge-doc-loader';
+import { forkDump, referencedObjectIds } from './branching';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
 
@@ -91,6 +93,12 @@ export class CoreDatabase {
   private readonly _queryService: QueryService;
   private readonly _repoProxy: RepoProxy;
   private readonly _objects = new Map<string, ObjectCore>();
+
+  /**
+   * Device-local, non-synced: object id -> currently-selected branch name ('main' omitted).
+   * In-memory for this slice; host-metadata persistence (survive reload) is wired in a follow-up.
+   */
+  private readonly _currentBranches = new Map<string, string>();
 
   /**
    * DXN string -> EntityId.
@@ -559,6 +567,228 @@ export class CoreDatabase {
         delete doc.links![objectId];
       }
     });
+  }
+
+  //
+  // Branching.
+  // A branch is a writable alternate timeline of an object subtree: each member's document is forked
+  // into a separate (synced) branch document; the space-root `branches` registry maps branch name ->
+  // member doc url. The currently-selected branch is device-local (never synced).
+  //
+
+  /** The branch name this device currently views the object on; `'main'` (the object's main doc) by default. */
+  getCurrentBranch(objectId: string): string {
+    return this._currentBranches.get(objectId) ?? 'main';
+  }
+
+  /** The synced branch registry for a subtree-root object (undefined if it has no branches). */
+  getBranchRegistry(rootObjectId: string): Record<string, BranchRecord> | undefined {
+    return DatabaseDirectory.getBranches(this._automergeDocLoader.getSpaceRootDocHandle().doc(), rootObjectId);
+  }
+
+  /**
+   * All branch names available for an object, including the implicit `'main'` (always first).
+   * Works for a subtree root or any of its members (members inherit the root's branches).
+   */
+  listBranches(objectId: string): string[] {
+    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
+    return ['main', ...Object.keys((rootId && this.getBranchRegistry(rootId)) || {})];
+  }
+
+  /** The subtree root that owns the branch set containing `objectId`, if any. */
+  private _findBranchRootFor(objectId: string): string | undefined {
+    const branches = this._automergeDocLoader.getSpaceRootDocHandle().doc().branches ?? {};
+    for (const [rootId, byName] of Object.entries(branches)) {
+      for (const record of Object.values(byName)) {
+        if (record.members[objectId]) {
+          return rootId;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Fork the object and its referenced subtree into a new branch. Does not switch to it.
+   * @param opts.fromHeads Fork the root from a historical frontier instead of its tip.
+   */
+  async createBranch(rootObjectId: string, name: string, opts?: { fromHeads?: Heads }): Promise<void> {
+    invariant(name !== 'main', "'main' is the implicit default branch");
+    invariant(!this.getBranchRegistry(rootObjectId)?.[name], `branch already exists: ${name}`);
+    const rootCore = this._objects.get(rootObjectId) ?? (await this.loadObjectCoreById(rootObjectId)) ?? undefined;
+    invariant(rootCore, 'root object not found');
+
+    const members = await this._collectSubtree(rootCore);
+    const memberUrls: BranchRecord['members'] = {};
+    for (const member of members) {
+      invariant(this._hasOwnDocument(member.id), 'cannot branch an inline object (promotion not yet implemented)');
+      // `fromHeads` is the root's historical frontier; children fork at their own current heads.
+      const atHeads = opts?.fromHeads && member.id === rootObjectId ? opts.fromHeads : undefined;
+      // No `change` listener here: the object stays on its current branch; the branch doc only needs
+      // to exist and replicate (referenced via the registry below). A listener is attached on switch.
+      const handle = this._repo.import<DatabaseDirectory>(forkDump(member.getDoc() as Doc<any>, atHeads));
+      await handle.whenReady();
+      invariant(handle.url, 'branch document has no url');
+      memberUrls[member.id] = handle.url;
+    }
+
+    const spaceRoot = this._automergeDocLoader.getSpaceRootDocHandle();
+    const baseHeads = opts?.fromHeads ?? getHeads(rootCore.getDoc() as Doc<any>);
+    const createdAt = Date.now();
+    spaceRoot.change((doc: DatabaseDirectory) => {
+      // Assign through re-read doc proxies (not a chained `??=` result, which returns the orphan
+      // literal under Automerge and silently drops the write).
+      doc.branches ??= {};
+      doc.branches[rootObjectId] ??= {};
+      doc.branches[rootObjectId][name] = { members: memberUrls, baseHeads, createdAt };
+    });
+  }
+
+  /**
+   * Switch the object's subtree to a branch (or back to `'main'`). Cascades to every subtree member
+   * and rebinds each `ObjectCore` to that branch's document, so the object shows the branch
+   * consistently regardless of how it is later accessed. The selection is device-local.
+   */
+  async switchBranch(rootObjectId: string, name: string): Promise<void> {
+    const registry = this.getBranchRegistry(rootObjectId);
+    if (name !== 'main') {
+      invariant(registry?.[name], `branch not found: ${name}`);
+    }
+    // Membership is consistent across branches, so the union covers every member to (re)bind.
+    const memberIds = new Set<string>([rootObjectId]);
+    for (const record of Object.values(registry ?? {})) {
+      for (const id of Object.keys(record.members)) {
+        memberIds.add(id);
+      }
+    }
+    for (const memberId of memberIds) {
+      await this._rebindMemberToBranch(memberId, name, registry);
+      if (name === 'main') {
+        this._currentBranches.delete(memberId);
+      } else {
+        this._currentBranches.set(memberId, name);
+      }
+    }
+    this._scheduleThrottledUpdate([...memberIds]);
+  }
+
+  /**
+   * Fold a branch's changes back into main across the subtree via `A.merge` (well-defined because
+   * the branch shares fork ancestry with main). Then switch back to main; optionally delete.
+   */
+  async mergeBranch(rootObjectId: string, name: string, opts?: { deleteAfter?: boolean }): Promise<void> {
+    invariant(name !== 'main', 'cannot merge main into itself');
+    const record = this.getBranchRegistry(rootObjectId)?.[name];
+    invariant(record, `branch not found: ${name}`);
+    for (const [memberId, urlData] of Object.entries(record.members)) {
+      const branchHandle = this._repo.find<DatabaseDirectory>(urlData.toString() as DocumentId);
+      await branchHandle.whenReady();
+      const branchDoc = branchHandle.doc() as Doc<any>;
+      const mainHandle = await this._mainDocHandle(memberId);
+      mainHandle.update((doc) => A.merge(doc as Doc<any>, branchDoc) as any);
+    }
+    await this.switchBranch(rootObjectId, 'main');
+    if (opts?.deleteAfter) {
+      this.deleteBranch(rootObjectId, name);
+    }
+  }
+
+  /** Remove a branch from the registry (its documents lose their sync reference). Cannot delete main. */
+  deleteBranch(rootObjectId: string, name: string): void {
+    invariant(name !== 'main', 'cannot delete the main branch');
+    const spaceRoot = this._automergeDocLoader.getSpaceRootDocHandle();
+    const memberIds = Object.keys(this.getBranchRegistry(rootObjectId)?.[name]?.members ?? {});
+    spaceRoot.change((doc: DatabaseDirectory) => {
+      if (doc.branches?.[rootObjectId]) {
+        delete doc.branches[rootObjectId][name];
+        if (Object.keys(doc.branches[rootObjectId]).length === 0) {
+          delete doc.branches[rootObjectId];
+        }
+      }
+    });
+    // Members currently viewing the deleted branch fall back to main.
+    const orphaned = memberIds.filter((id) => this._currentBranches.get(id) === name);
+    if (orphaned.length > 0) {
+      void this.switchBranch(rootObjectId, 'main');
+    }
+  }
+
+  /** BFS the object's referenced subtree (loading members as needed). */
+  private async _collectSubtree(rootCore: ObjectCore): Promise<ObjectCore[]> {
+    const seen = new Set<string>();
+    const result: ObjectCore[] = [];
+    const queue: ObjectCore[] = [rootCore];
+    while (queue.length > 0) {
+      const core = queue.shift()!;
+      if (seen.has(core.id)) {
+        continue;
+      }
+      seen.add(core.id);
+      result.push(core);
+      for (const id of referencedObjectIds(core.getObjectStructure())) {
+        if (seen.has(id)) {
+          continue;
+        }
+        const child = this._objects.get(id) ?? (await this.loadObjectCoreById(id)) ?? undefined;
+        if (child) {
+          queue.push(child);
+        }
+      }
+    }
+    return result;
+  }
+
+  /** Whether the object has its own linked document (not inlined in the space root). */
+  private _hasOwnDocument(objectId: string): boolean {
+    return this._automergeDocLoader.getSpaceRootDocHandle().doc().links?.[objectId] != null;
+  }
+
+  /** Resolve the object's main (default-branch) document handle. */
+  private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
+    const spaceRoot = this._automergeDocLoader.getSpaceRootDocHandle();
+    const url = spaceRoot.doc().links?.[objectId]?.toString();
+    if (!url) {
+      return spaceRoot; // Inline object.
+    }
+    const handle = this._repo.find<DatabaseDirectory>(url as DocumentId);
+    await handle.whenReady();
+    return handle;
+  }
+
+  private async _rebindMemberToBranch(
+    memberId: string,
+    name: string,
+    registry: Record<string, BranchRecord> | undefined,
+  ): Promise<void> {
+    const core = this._objects.get(memberId) ?? (await this.loadObjectCoreById(memberId)) ?? undefined;
+    if (!core) {
+      return;
+    }
+    const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
+    let handle: DocHandleProxy<DatabaseDirectory>;
+    if (url) {
+      handle = this._repo.find<DatabaseDirectory>(url as DocumentId);
+      await handle.whenReady();
+    } else {
+      // 'main', or a member absent from this branch's set, binds to its main document.
+      handle = await this._mainDocHandle(memberId);
+    }
+    if (handle === core.docHandle) {
+      return; // Already bound to the target doc.
+    }
+    // Move the change listener to the newly-bound doc. `_processDocumentUpdate` rebinds an object to
+    // whichever doc fires a change, so a non-current branch doc holding the same object id must NOT
+    // carry the listener. The space root (shared by inline objects) keeps its listener.
+    const spaceRoot = this._automergeDocLoader.getSpaceRootDocHandle();
+    if (core.docHandle && core.docHandle !== spaceRoot) {
+      core.docHandle.off('change', this._onDocumentUpdate);
+    }
+    if (handle !== spaceRoot) {
+      handle.off('change', this._onDocumentUpdate);
+      handle.on('change', this._onDocumentUpdate);
+    }
+    core.bind({ db: this, docHandle: handle, path: ['objects', memberId], assignFromLocalState: false });
+    this._automergeDocLoader.onObjectBoundToDocument(handle, memberId);
   }
 
   /**

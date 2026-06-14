@@ -32,6 +32,14 @@ export { createObject, EchoReactiveHandler, initEchoReactiveObjectRootProxy } fr
 export { isEchoObject } from './echo-handler';
 export { getEditHistory, getEditHistoryWithDiffs, type VersionDiff, checkoutVersion } from './echo-handler';
 export { setTimeTravel, clearTimeTravel } from './echo-handler';
+export {
+  getBranches,
+  getCurrentBranch,
+  createBranch,
+  switchBranch,
+  mergeBranch,
+  deleteBranch,
+} from './echo-handler';
 export { type ProxyTarget } from './echo-handler';
 export {
   MutationOutsideChangeContextError,
