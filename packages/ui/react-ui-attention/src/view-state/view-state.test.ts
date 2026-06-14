@@ -6,8 +6,8 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { ViewStateManager, defineViewState } from './view-state';
 import { createDefaultBackends } from './backends';
+import { ViewStateManager, defineViewState } from './view-state';
 
 const Counter = defineViewState({
   key: 'counter',
@@ -37,7 +37,9 @@ describe('ViewStateManager', () => {
   test('subscribe fires on change for that context', ({ expect }) => {
     const manager = make();
     let calls = 0;
-    const dispose = manager.subscribe(Counter, 'a', () => { calls++; });
+    const dispose = manager.subscribe(Counter, 'a', () => {
+      calls++;
+    });
     manager.set(Counter, 'a', { value: 1 });
     expect(calls).toBeGreaterThan(0);
     dispose();

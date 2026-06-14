@@ -34,7 +34,10 @@ export const ViewStateProvider = ({
   manager: managerProp,
 }: PropsWithChildren<{ manager?: ViewStateManager }>) => {
   const registry = useContext(RegistryContext);
-  const manager = useDefaultValue(managerProp, () => new ViewStateManager({ registry, backends: createDefaultBackends(registry) }));
+  const manager = useDefaultValue(
+    managerProp,
+    () => new ViewStateManager({ registry, backends: createDefaultBackends(registry) }),
+  );
   return <ViewStateContextProvider manager={manager}>{children}</ViewStateContextProvider>;
 };
 
@@ -68,9 +71,21 @@ export const useViewStateActions = <T,>(slice: SliceDef<T>, contextId?: string):
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return useMemo<UseViewStateActions<T>>(
     () => ({
-      set: (value) => { if (contextId) {manager?.set(slice, contextId, value);} },
-      update: (fn) => { if (contextId) {manager?.update(slice, contextId, fn);} },
-      clear: () => { if (contextId) {manager?.set(slice, contextId, slice.defaultValue());} },
+      set: (value) => {
+        if (contextId) {
+          manager?.set(slice, contextId, value);
+        }
+      },
+      update: (fn) => {
+        if (contextId) {
+          manager?.update(slice, contextId, fn);
+        }
+      },
+      clear: () => {
+        if (contextId) {
+          manager?.set(slice, contextId, slice.defaultValue());
+        }
+      },
     }),
     [manager, slice, contextId],
   );

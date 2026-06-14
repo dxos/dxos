@@ -20,7 +20,9 @@ const Editor = defineViewState({
 const fakeStorage = (): Storage => {
   const map = new Map<string, string>();
   return {
-    get length() { return map.size; },
+    get length() {
+      return map.size;
+    },
     clear: () => map.clear(),
     getItem: (key) => (map.has(key) ? map.get(key)! : null),
     key: (index) => [...map.keys()][index] ?? null,

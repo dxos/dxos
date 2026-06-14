@@ -32,18 +32,17 @@ type CommentDisabledParams = {
  * Atom family to derive whether the comment button should be disabled.
  * Uses a composite key to ensure proper caching.
  */
-const commentDisabledFamily = Atom.family(
-  ({ stateAtom, viewState, objectId, commentsType }: CommentDisabledParams) =>
-    Atom.make((get) => {
-      const stateAtoms = get(stateAtom);
-      const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
-      const toolbar = state?.toolbar ?? {};
-      const selection = get(viewState.atom(selectionSlice, objectId));
-      const anchor = getAnchor(selection);
-      const invalidSelection = !anchor;
-      const overlappingComment = toolbar[objectId];
-      return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
-    }),
+const commentDisabledFamily = Atom.family(({ stateAtom, viewState, objectId, commentsType }: CommentDisabledParams) =>
+  Atom.make((get) => {
+    const stateAtoms = get(stateAtom);
+    const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
+    const toolbar = state?.toolbar ?? {};
+    const selection = get(viewState.atom(selectionSlice, objectId));
+    const anchor = getAnchor(selection);
+    const invalidSelection = !anchor;
+    const overlappingComment = toolbar[objectId];
+    return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
+  }),
 );
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
