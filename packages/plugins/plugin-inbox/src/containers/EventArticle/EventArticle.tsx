@@ -79,7 +79,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
             onDelete={calendar ? handleDelete : undefined}
           />
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content className='grid grid-rows-[auto_1fr]'>
           <Event.Header
             db={db}
             editable={draft}

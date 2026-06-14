@@ -69,10 +69,20 @@ export const useEventToolbarActions = ({
         .subgraph(
           onDelete &&
             ((b) =>
-              b.action(
-                'delete',
-                { label: ['event-toolbar-delete.menu', { ns: meta.id }], icon: 'ph--trash--regular' },
-                onDelete,
+              b.group(
+                'more',
+                {
+                  label: ['event-toolbar-more.menu', { ns: meta.id }],
+                  icon: 'ph--dots-three-vertical--regular',
+                  iconOnly: true,
+                  variant: 'dropdownMenu',
+                },
+                (group) =>
+                  group.action(
+                    'delete',
+                    { label: ['event-toolbar-delete.menu', { ns: meta.id }], icon: 'ph--trash--regular' },
+                    onDelete,
+                  ),
               )),
         )
         .build(),

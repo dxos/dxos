@@ -105,6 +105,7 @@ export const translations = [
         'event-toolbar.menu': 'Actions',
         'event-toolbar-open.menu': 'Open',
         'event-toolbar-save.menu': 'Save to calendar',
+        'event-toolbar-more.menu': 'More',
         'event-toolbar-delete.menu': 'Delete event',
 
         'calendar-toolbar.menu': 'Calendar toolbar',
