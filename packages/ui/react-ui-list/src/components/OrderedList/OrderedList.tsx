@@ -8,11 +8,18 @@ import {
   type OrderedListDetailItemProps,
   OrderedListDragHandle,
   OrderedListExpandCaret,
+  OrderedListIconButton,
   OrderedListItem,
   type OrderedListItemProps,
   OrderedListTitle,
 } from './OrderedListItem';
-import { OrderedListContent, OrderedListRoot, type OrderedListRootProps } from './OrderedListRoot';
+import {
+  OrderedListContent,
+  OrderedListRoot,
+  type OrderedListRootProps,
+  OrderedListViewport,
+  type OrderedListViewportProps,
+} from './OrderedListRoot';
 
 /**
  * Reorderable, single-expandable master-detail list.
@@ -42,13 +49,15 @@ import { OrderedListContent, OrderedListRoot, type OrderedListRootProps } from '
  */
 export const OrderedList = {
   Root: OrderedListRoot,
+  Viewport: OrderedListViewport,
   Content: OrderedListContent,
   Item: OrderedListItem,
   DetailItem: OrderedListDetailItem,
   DragHandle: OrderedListDragHandle,
   Title: OrderedListTitle,
+  IconButton: OrderedListIconButton,
   DeleteButton: OrderedListDeleteButton,
   ExpandCaret: OrderedListExpandCaret,
 };
 
-export type { OrderedListRootProps, OrderedListItemProps, OrderedListDetailItemProps };
+export type { OrderedListRootProps, OrderedListItemProps, OrderedListDetailItemProps, OrderedListViewportProps };
