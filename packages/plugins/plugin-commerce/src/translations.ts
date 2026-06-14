@@ -50,6 +50,7 @@ export const translations = [
         'regenerate.toast.error.description': 'Could not analyze the provider. See the console for details.',
         'search-fields.label': 'Search fields',
         'search-fields.message': 'Not generated yet — click Regenerate.',
+        'view-filter.label': 'Filter results',
         'view-all.title': 'All',
         'view-all.label': 'All results',
         'view-starred.title': 'Starred',

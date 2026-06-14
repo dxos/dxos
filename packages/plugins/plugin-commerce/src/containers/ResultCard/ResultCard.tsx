@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/react-client/echo';
-import { Card, IconButton, composable, useTranslation } from '@dxos/react-ui';
+import { Card, SystemIconButton, composable, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Result } from '../../types/Result';
@@ -62,15 +62,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
         )}
         <Card.Header>
           <Card.Block>
-            <IconButton
-              variant='ghost'
-              iconOnly
-              square
-              size={4}
-              label={starred ? t('unstar.label') : t('star.label')}
-              icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-              onClick={handleToggleStar}
-            />
+            <SystemIconButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
           </Card.Block>
           <div className='flex flex-col gap-0.5 min-w-0 py-2'>
             <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>

@@ -5,7 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/react-client/echo';
-import { Carousel, IconButton, useTranslation } from '@dxos/react-ui';
+import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Result } from '../../types';
@@ -38,13 +38,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
       <div className='grid grid-cols-[minmax(0,1fr)_min-content_min-content] items-start gap-2'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
-        <IconButton
-          iconOnly
-          variant='ghost'
-          icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-          label={starred ? t('unstar.label') : t('star.label')}
-          onClick={onToggleStar}
-        />
+        <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
         {onClose && (
           <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
