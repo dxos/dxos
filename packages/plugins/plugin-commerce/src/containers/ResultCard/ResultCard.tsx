@@ -61,7 +61,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
           />
         )}
         <Card.Header>
-          <Card.IconBlock>
+          <Card.Block>
             <IconButton
               variant='ghost'
               iconOnly
@@ -71,12 +71,12 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
               icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
               onClick={handleToggleStar}
             />
-          </Card.IconBlock>
+          </Card.Block>
           <div className='flex flex-col gap-0.5 min-w-0 py-2'>
             <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>
             {price && <span className='text-sm text-description'>{price}</span>}
           </div>
-          <Card.IconBlock />
+          <Card.Block end />
         </Card.Header>
       </Card.Root>
     );

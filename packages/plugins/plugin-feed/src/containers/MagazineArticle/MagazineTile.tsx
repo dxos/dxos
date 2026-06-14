@@ -50,7 +50,7 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
           <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.IconBlock>
+          <Card.Block>
             <IconButton
               variant='ghost'
               iconOnly
@@ -60,9 +60,9 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
               icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
               onClick={handleToggleStar}
             />
-          </Card.IconBlock>
+          </Card.Block>
           {snapshot.title ? <Card.Title classNames='line-clamp-2'>{snapshot.title}</Card.Title> : <div />}
-          <Card.IconBlock />
+          <Card.Block end />
         </Card.Header>
         <Card.Body>
           {snippet && (

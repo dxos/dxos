@@ -7,7 +7,7 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -40,7 +40,9 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root classNames='dx-card-max-width'>
               <Card.Header>
-                <Card.Icon icon={icon} />
+                <Card.Block>
+                  <Icon icon={icon} />
+                </Card.Block>
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
               <Card.Body>

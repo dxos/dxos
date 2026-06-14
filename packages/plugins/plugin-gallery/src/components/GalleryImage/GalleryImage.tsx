@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Card, Icon, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { File } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,14 +37,16 @@ export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) 
         <Icon icon='ph--image--regular' size={5} />
         <Card.Title>{file?.name ?? ''}</Card.Title>
         {onDelete && (
-          <Toolbar.IconButton
-            icon='ph--trash--regular'
-            iconOnly
-            variant='ghost'
-            label={t('delete-image.label')}
-            classNames='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
-            onClick={onDelete}
-          />
+          <Card.Block end>
+            <IconButton
+              icon='ph--trash--regular'
+              iconOnly
+              variant='ghost'
+              label={t('delete-image.label')}
+              classNames='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
+              onClick={onDelete}
+            />
+          </Card.Block>
         )}
       </Card.Header>
     </Card.Root>

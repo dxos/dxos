@@ -13,11 +13,7 @@ export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organiz
 
   return (
     <Card.Body>
-      <Card.Poster
-        alt={name ?? ''}
-        {...(image ? { image } : { icon: 'ph--building-office--regular' })}
-        classNames={!image && 'opacity-50'}
-      />
+      {image && <Card.Poster alt={name ?? ''} image={image} />}
       {description && (
         <Card.Row>
           <Card.Text variant='description'>{description}</Card.Text>
