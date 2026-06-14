@@ -86,7 +86,8 @@ const cellDate = (el: Element | null): Date | undefined => {
 //
 
 type CalendarEvent = {
-  type: 'scroll';
+  /** `scroll` brings a date into view; `select` also sets it as the grid's selected day. */
+  type: 'scroll' | 'select';
   date: Date;
 };
 
@@ -112,7 +113,10 @@ const [CalendarContextProvider, useCalendarContext] = createContext<CalendarCont
 //
 
 type CalendarController = {
+  /** Bring a date into view without changing the selection. */
   scrollTo: (date: Date) => void;
+  /** Set the grid's selected day (and scroll it into view) — e.g. when the active event changes. */
+  select: (date: Date) => void;
 };
 
 //
@@ -134,6 +138,9 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
       () => ({
         scrollTo: (date: Date) => {
           event.emit({ type: 'scroll', date });
+        },
+        select: (date: Date) => {
+          event.emit({ type: 'select', date });
         },
       }),
       [event],
@@ -226,11 +233,6 @@ type CalendarGridProps = {
    */
   initialDate?: Date;
   /**
-   * Externally-controlled selected date (e.g. the currently active event). When it changes, the grid
-   * highlights that day (primary border) and scrolls it into view. User clicks still set selection locally.
-   */
-  selected?: Date;
-  /**
    * Weeks of context kept above a date when scrolling it into view (on mount and via the controller's
    * `scrollTo`), so the date sits below the top edge rather than pinned to it. Defaults to 2.
    */
@@ -247,17 +249,7 @@ type CalendarGridProps = {
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
   (
-    {
-      classNames,
-      rows,
-      dates = [],
-      initialDate,
-      selected: selectedProp,
-      scrollMargin = 2,
-      onSelect,
-      onSelectRange,
-      ...props
-    },
+    { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
     forwardedRef,
   ) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
@@ -301,25 +293,15 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     useEffect(() => {
       return event.on((event) => {
-        switch (event.type) {
-          case 'scroll': {
-            const index = getRowIndex(start, event.date, weekStartsOn);
-            listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
-            break;
-          }
+        // `select` also sets the grid's selection (e.g. when the active event changes); the grid still
+        // owns selection — a user click sets it locally and isn't overwritten until the next `select`.
+        if (event.type === 'select') {
+          setSelected(event.date);
         }
+        const index = getRowIndex(start, event.date, weekStartsOn);
+        listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
       });
-    }, [event, start, weekStartsOn, scrollMargin]);
-
-    // Reflect an externally-selected date (e.g. the active event): highlight it and scroll it into view.
-    useEffect(() => {
-      if (!selectedProp) {
-        return;
-      }
-      setSelected(selectedProp);
-      const index = getRowIndex(start, selectedProp, weekStartsOn);
-      listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
-    }, [selectedProp, start, weekStartsOn, scrollMargin, setSelected]);
+    }, [event, start, weekStartsOn, scrollMargin, setSelected]);
 
     const days = useMemo(() => {
       const weekStart = startOfWeek(new Date(), { weekStartsOn });

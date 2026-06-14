@@ -3,7 +3,7 @@
 //
 
 import { addHours, isSameDay, startOfHour } from 'date-fns';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -105,10 +105,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleNavigate = useCallback(
     (eventId: string) => {
       const event = events.find((entry) => entry.id === eventId);
-      // Bring the event's date into view on the month grid.
-      if (event) {
-        calendarRef.current?.scrollTo(new Date(event.startDate));
-      }
+      // Setting the current item updates `activeEvent`, which selects + scrolls the grid (effect below).
       void showItem({
         contextId: id,
         selectionId: eventId,
@@ -118,6 +115,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     },
     [events, id, showItem],
   );
+
+  // The active event drives the grid's selection: set + scroll it once whenever the active event changes
+  // (keyed on id/startDate, not a fresh Date each render, so the grid keeps its own selection between changes).
+  useEffect(() => {
+    if (activeEvent) {
+      calendarRef.current?.select(new Date(activeEvent.startDate));
+    }
+  }, [activeEvent?.id, activeEvent?.startDate]);
 
   const handleAction = useCallback<EventStackActionHandler>(
     (action) => {
@@ -193,12 +198,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid
-                dates={dates}
-                selected={activeEvent ? new Date(activeEvent.startDate) : undefined}
-                onSelect={handleDateSelect}
-                onSelectRange={handleRangeSelect}
-              />
+              <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
