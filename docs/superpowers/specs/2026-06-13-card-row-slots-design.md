@@ -88,9 +88,13 @@ Behavior:
   accepted trade for correct semantics and a uniform layout. `CardHeaderProps` becomes
   `SlottableProps` (+ `density?`), no longer `ToolbarRootProps`.
 - **Header helpers reconciliation:** `Card.DragHandle` / `Card.ActionIconButton` /
-  `Card.Menu` no longer render inside `CardIconBlock` or rely on toolbar item roles.
-  They carry `data-slot` for placement and render plain `IconButton`s (`iconOnly
-  square`, already rail-item sized), so they need no geometry wrapper.
+  `Card.Menu` are reimplemented on the base `IconButton`/`DropdownMenu` (no
+  `Toolbar.*` primitives) and wrapped in `Card.Block` (`end` for actions/menus).
+  Because `Card.Header` no longer provides a `RovingFocusGroup`, **any raw
+  `Toolbar.IconButton`/`Toolbar.Separator` placed directly in a `Card.Header` at a
+  call site throws at runtime** and must be swapped for the base `IconButton`
+  (wrapped in `Card.Block`) — ~15 call sites. This is part of the migration, not
+  optional.
 - **Remove** `Card.IconBlock` and `Card.Icon`; `Card.Block` replaces both
   (`<Card.Block><Icon …/></Card.Block>` for the passive case). The standalone
   `IconBlock` primitive is **untouched** — `Column.Block` reuses its `icon.block` theme.
