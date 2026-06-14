@@ -104,6 +104,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [results, currentId],
   );
 
+  // TODO(burdon): Rebuild toolbar from idiom.
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar>
