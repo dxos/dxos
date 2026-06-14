@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
-import { Card, Toolbar } from '@dxos/react-ui';
+import { Card, IconButton } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -98,7 +98,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
                 <Card.Title>{result.label ?? (result.object && Entity.getLabel(result.object))}</Card.Title>
                 <Card.Block end>
                   <Menu.Trigger asChild disabled={!menuItems?.length}>
-                    <Toolbar.IconButton
+                    <IconButton
                       iconOnly
                       variant='ghost'
                       icon='ph--dots-three-vertical--regular'

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
-import { Card, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
@@ -59,7 +59,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
           <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Card.Block end>
             <Menu.Trigger asChild disabled={!menuItems?.length}>
-              <Toolbar.IconButton
+              <IconButton
                 iconOnly
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'

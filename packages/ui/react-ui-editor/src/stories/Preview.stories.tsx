@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
-import { Card, Icon, Popover, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Popover } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -173,9 +173,11 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
             </Card.Block>
             <Card.Title>{link.label}</Card.Title>
             {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-            <Menu.Trigger asChild disabled={!menuItems?.length}>
-              <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-            </Menu.Trigger>
+            <Card.Block end>
+              <Menu.Trigger asChild disabled={!menuItems?.length}>
+                <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+              </Menu.Trigger>
+            </Card.Block>
             <Menu.Content items={menuItems} />
           </Card.Header>
         )}

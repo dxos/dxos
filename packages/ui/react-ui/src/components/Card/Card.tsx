@@ -6,23 +6,22 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
 import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { iconSize } from '@dxos/ui-theme';
 import { type Density, type SlottableProps } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 import { useThemeContext } from '../../hooks';
 import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
-import { Button } from '../Button';
+import { Button, IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon, IconBlock } from '../Icon';
 import { Image, type ImageProps } from '../Image';
-import {
-  Toolbar,
-  type ToolbarActionIconButtonProps,
-  ToolbarDragHandleProps,
-  type ToolbarMenuProps,
-} from '../Toolbar';
+import { DropdownMenu } from '../Menu';
+import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
 
 //
 // Root
@@ -118,13 +117,27 @@ const CARD_DRAG_HANDLE_NAME = 'Card.DragHandle';
 
 type CardDragHandleProps = ToolbarDragHandleProps;
 
-const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props, forwardedRef) => {
-  return (
-    <CardBlock>
-      <Toolbar.DragHandle {...props} ref={forwardedRef} />
-    </CardBlock>
-  );
-});
+const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(
+  ({ testId = 'drag-handle', label }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    return (
+      <CardBlock>
+        <IconButton
+          data-testid={testId}
+          tabIndex={-1}
+          noTooltip
+          iconOnly
+          icon='ph--dots-six-vertical--regular'
+          variant='ghost'
+          label={label ?? t('toolbar-drag-handle.label')}
+          classNames='dx-focus-ring-none cursor-pointer'
+          disabled={!forwardedRef}
+          ref={forwardedRef}
+        />
+      </CardBlock>
+    );
+  },
+);
 
 CardDragHandle.displayName = CARD_DRAG_HANDLE_NAME;
 
@@ -136,13 +149,28 @@ const CARD_ACTION_ICON_BUTTON_NAME = 'Card.ActionIconButton';
 
 type CardActionIconButtonProps = ToolbarActionIconButtonProps;
 
-const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonProps>((props, forwardedRef) => {
-  return (
-    <CardBlock end>
-      <Toolbar.ActionIconButton {...props} ref={forwardedRef} />
-    </CardBlock>
-  );
-});
+const CARD_ACTION_ICONS = { close: 'ph--x--regular', delete: 'ph--trash--regular' } as const;
+
+const CARD_ACTION_LABEL_KEYS = { close: 'toolbar-close.label', delete: 'toolbar-delete.label' } as const;
+
+const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonProps>(
+  ({ action, onClick, label }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    return (
+      <CardBlock end>
+        <IconButton
+          iconOnly
+          icon={CARD_ACTION_ICONS[action]}
+          variant='ghost'
+          label={label ?? t(CARD_ACTION_LABEL_KEYS[action])}
+          classNames='cursor-pointer'
+          onClick={onClick}
+          ref={forwardedRef}
+        />
+      </CardBlock>
+    );
+  },
+);
 
 CardActionIconButton.displayName = CARD_ACTION_ICON_BUTTON_NAME;
 
@@ -154,10 +182,36 @@ const CARD_MENU_NAME = 'Card.Menu';
 
 type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
-function CardMenu<T extends any | void = void>({ context, items, ...props }: CardMenuProps<T>) {
+function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps<T>) {
+  const { t } = useTranslation(translationKey);
   return (
     <CardBlock end>
-      <Toolbar.Menu {...props} context={context} items={items ?? []} />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger disabled={!items?.length} asChild>
+          <IconButton
+            iconOnly
+            variant='ghost'
+            icon='ph--dots-three-vertical--regular'
+            label={t('toolbar-menu.label')}
+          />
+        </DropdownMenu.Trigger>
+        {(items?.length ?? 0) > 0 && (
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                {items?.map(({ label, onClick: onSelect }, index) => (
+                  // `context` is the generic payload threaded to each handler; the cast is the
+                  // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
+                  <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                    {label}
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        )}
+      </DropdownMenu.Root>
     </CardBlock>
   );
 }

@@ -12,7 +12,7 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Icon, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -153,7 +153,7 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
         <Card.Block end>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
         </Card.Block>

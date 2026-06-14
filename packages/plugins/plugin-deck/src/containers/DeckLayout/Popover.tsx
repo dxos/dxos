@@ -11,10 +11,10 @@ import { Obj } from '@dxos/echo';
 import {
   Card,
   Icon,
+  IconButton,
   Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
-  Toolbar,
   useTranslation,
 } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -135,7 +135,7 @@ export const PopoverContent = () => {
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                   <Card.Block end>
                     <Menu.Trigger asChild disabled={!objectMenuItems.length}>
-                      <Toolbar.IconButton
+                      <IconButton
                         variant='ghost'
                         density='sm'
                         icon='ph--dots-three-vertical--regular'
