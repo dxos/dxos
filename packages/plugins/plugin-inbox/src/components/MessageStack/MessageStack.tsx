@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
@@ -215,7 +215,7 @@ const MessageStackTile = forwardRef<HTMLDivElement, MessageStackTileProps>(
       <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
         <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef}>
           <Card.Header>
-            <Card.IconBlock>
+            <Card.Block>
               <DxAvatar
                 hue={hue}
                 hueVariant='surface'
@@ -224,7 +224,7 @@ const MessageStackTile = forwardRef<HTMLDivElement, MessageStackTileProps>(
                 fallback={fallback}
                 onClick={onAvatarClick}
               />
-            </Card.IconBlock>
+            </Card.Block>
             <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
             <Card.Menu />
           </Card.Header>
@@ -294,7 +294,10 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         </>
       }
     >
-      <Card.Row icon='ph--user--regular'>
+      <Card.Row>
+        <Card.Block>
+          <Icon icon='ph--user--regular' />
+        </Card.Block>
         <Card.Text>{from}</Card.Text>
       </Card.Row>
 
@@ -373,7 +376,10 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
       {messages.slice(0, 4).map((message) => {
         const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
         return (
-          <Card.Row key={message.id} icon='ph--user--duotone'>
+          <Card.Row key={message.id}>
+            <Card.Block>
+              <Icon icon='ph--user--duotone' />
+            </Card.Block>
             <div className='flex flex-col' onClick={(event) => handleMessageClick(event, message.id)}>
               <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
                 {from && <span className='truncate'>{from}</span>}

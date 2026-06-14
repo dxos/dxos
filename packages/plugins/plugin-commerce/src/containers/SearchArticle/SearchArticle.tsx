@@ -9,9 +9,10 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
-import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 import { Result, Search } from '../../types';
@@ -104,28 +105,44 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [results, currentId],
   );
 
+  // Reactive toolbar built from the menu action-graph idiom; the builder reads `view` so the active
+  // toggle and the starred icon track the current filter.
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .group(
+          'view',
+          {
+            label: ['view-filter.label', { ns: meta.id }],
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: view,
+          },
+          (group) => {
+            group.action('all', { label: ['view-all.label', { ns: meta.id }], icon: 'ph--list--regular' }, () =>
+              setView('all'),
+            );
+            group.action(
+              'starred',
+              {
+                label: ['view-starred.label', { ns: meta.id }],
+                icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
+              },
+              () => setView('starred'),
+            );
+          },
+        )
+        .build(),
+    [view],
+  );
+
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Toolbar.Root>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={view}
-            onValueChange={(value) => setView(value === 'starred' ? 'starred' : 'all')}
-          >
-            <Toolbar.ToggleGroupItem value='all' aria-label={t('view-all.label')} title={t('view-all.title')}>
-              <Icon icon='ph--list--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-            <Toolbar.ToggleGroupItem
-              value='starred'
-              aria-label={t('view-starred.label')}
-              title={t('view-starred.title')}
-            >
-              <Icon icon={view === 'starred' ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <Menu.Root {...menuActions} attendableId={id}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content>
         {(selectedResult && (
           <ResultDetail

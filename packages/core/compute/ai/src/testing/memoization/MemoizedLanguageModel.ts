@@ -105,6 +105,14 @@ export const SPACE_ID_PATTERN = /(?<![A-Z2-7])B[A-Z2-7]{32}(?![A-Z2-7])/;
  */
 export const ENTITY_ID_PATTERN = /(?<![0-9A-HJKMNP-TV-Z])[0-9A-HJKMNP-TV-Z]{26}(?![0-9A-HJKMNP-TV-Z])/;
 
+/**
+ * Matches an ISO 8601 timestamp with milliseconds.
+ * Use this when a prompt embeds TestClock-derived timestamps (e.g. alarm fire times) whose
+ * exact millisecond value varies across replay runs depending on TestClock advancement rate.
+ * @example 1970-01-01T01:00:00.050Z
+ */
+export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/;
+
 const dynamicPlaceholder = (index: number): string => `<memoized-dynamic-${index}>`;
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
