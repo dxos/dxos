@@ -131,9 +131,16 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           handleNavigate(action.eventId);
           break;
         }
+        case 'star': {
+          const event = events.find((entry) => entry.id === action.eventId);
+          if (event && db && Calendar.instanceOf(calendar)) {
+            void Calendar.toggleStar(calendar, event, db);
+          }
+          break;
+        }
       }
     },
-    [handleNavigate],
+    [handleNavigate, events, db, calendar],
   );
 
   // Create a draft event (defaulting to the selected day, else now), rounding the start up to the
@@ -219,6 +226,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
                 id={id}
                 events={events}
                 currentId={currentId}
+                starredIds={starredIds}
                 controllerRef={eventStackRef}
                 onAction={handleAction}
               />

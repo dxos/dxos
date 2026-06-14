@@ -76,13 +76,25 @@ export const EventDetails = ({
     return <EventEditor event={event} db={db} onContactCreate={onContactCreate} />;
   }
 
+  // The leading gutter (column 1) is the star toggle when starring is available, else a static event icon.
+  const leading = onToggleStar ? (
+    <IconButton
+      iconOnly
+      variant='ghost'
+      icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
+      iconClassNames={starred ? 'text-rose-text' : undefined}
+      label={t(starred ? 'unstar-event.label' : 'star-event.label')}
+      onClick={onToggleStar}
+    />
+  ) : (
+    <Icon icon='ph--check--regular' />
+  );
+
   return (
     <>
       {title === 'heading' && (
         <Card.Row>
-          <Card.Block>
-            <Icon icon='ph--check--regular' />
-          </Card.Block>
+          <Card.Block>{leading}</Card.Block>
           <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
             <IconButton
@@ -93,23 +105,12 @@ export const EventDetails = ({
               onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
             />
           )}
-          {onToggleStar && (
-            <Card.Block end>
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-                iconClassNames={starred ? 'text-rose-text' : undefined}
-                label={t(starred ? 'unstar-event.label' : 'star-event.label')}
-                onClick={onToggleStar}
-              />
-            </Card.Block>
-          )}
         </Card.Row>
       )}
 
       {title === 'text' && (
         <Card.Row>
+          <Card.Block>{leading}</Card.Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}

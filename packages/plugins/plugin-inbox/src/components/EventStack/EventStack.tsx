@@ -17,7 +17,10 @@ import { type Event } from '@dxos/types';
 
 import { EventDetails } from '../Event';
 
-export type EventStackAction = { type: 'current'; eventId: string } | { type: 'select'; eventId: string };
+export type EventStackAction =
+  | { type: 'current'; eventId: string }
+  | { type: 'select'; eventId: string }
+  | { type: 'star'; eventId: string };
 
 export type EventStackActionHandler = (action: EventStackAction) => void;
 
@@ -31,15 +34,20 @@ export type EventStackProps = {
   currentId?: string;
   /** IDs of selected events (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
+  /** IDs of starred events; drives the per-tile star toggle. */
+  starredIds?: ReadonlySet<string>;
   /** Imperative handle to scroll the stack to an event without changing the current item. */
   controllerRef?: Ref<MosaicScrollController>;
   onAction?: EventStackActionHandler;
 };
 
 export const EventStack = composable<HTMLDivElement, EventStackProps>(
-  ({ events = [], currentId, selectedIds, controllerRef, onAction, ...props }, forwardedRef) => {
+  ({ events = [], currentId, selectedIds, starredIds, controllerRef, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const items = useMemo(() => events.map((event) => ({ event, onAction })), [events, onAction]);
+    const items = useMemo(
+      () => events.map((event) => ({ event, starred: starredIds?.has(event.id), onAction })),
+      [events, starredIds, onAction],
+    );
 
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
@@ -104,13 +112,14 @@ const TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border b
 
 type EventTileData = {
   event: Event.Event;
+  starred?: boolean;
   onAction?: EventStackActionHandler;
 };
 
 type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' | 'current'>;
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
-  const { event } = data;
+  const { event, starred, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('EventTile');
 
   // Click / Enter commit both current and selection. Arrow keys only move focus.
@@ -119,12 +128,20 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
     setSelected(event.id, true);
   }, [event.id, setCurrentId, setSelected]);
 
+  const handleToggleStar = useCallback(() => onAction?.({ type: 'star', eventId: event.id }), [onAction, event.id]);
+
   return (
     <Mosaic.Tile asChild classNames={TILE_CLASSNAMES} id={event.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Body>
-            <EventDetails event={event} title='text' maxAttendees={8} />
+            <EventDetails
+              event={event}
+              title='text'
+              maxAttendees={8}
+              starred={starred}
+              onToggleStar={onAction ? handleToggleStar : undefined}
+            />
           </Card.Body>
         </Card.Root>
       </Focus.Item>
