@@ -44,7 +44,9 @@ export interface LocalBackendOptions {
 /** localStorage-backed backend: seeds atoms from storage, persists on set, syncs across tabs. */
 export class LocalBackend implements ViewStateBackend {
   readonly #registry: Registry.Registry;
-  readonly #storage: Storage;
+  // Absent in non-browser contexts (SSR/tests without injection); the backend then degrades to
+  // ephemeral, in-memory behaviour rather than crashing on a missing `localStorage`.
+  readonly #storage: Storage | undefined;
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
   // Reverse map: storage key -> (slice, contextId) so `storage` events can target the right atom.
   readonly #byStorageKey = new Map<string, { slice: SliceDef<unknown>; contextId: string }>();
@@ -53,7 +55,7 @@ export class LocalBackend implements ViewStateBackend {
   constructor({ registry, storage = globalThis.localStorage }: LocalBackendOptions) {
     this.#registry = registry;
     this.#storage = storage;
-    if (typeof globalThis.addEventListener === 'function') {
+    if (this.#storage && typeof globalThis.addEventListener === 'function') {
       this.#storageListener = (event) => {
         if (!event.key || !event.key.startsWith(STORAGE_PREFIX)) {
           return;
@@ -82,10 +84,13 @@ export class LocalBackend implements ViewStateBackend {
   }
 
   persist<T>(slice: SliceDef<T>, contextId: string, value: T): void {
-    this.#storage.setItem(storageKeyFor(slice, contextId), JSON.stringify(Schema.encodeSync(slice.schema)(value)));
+    this.#storage?.setItem(storageKeyFor(slice, contextId), JSON.stringify(Schema.encodeSync(slice.schema)(value)));
   }
 
   contexts<T>(slice: SliceDef<T>): string[] {
+    if (!this.#storage) {
+      return [];
+    }
     const prefix = storageKeyFor(slice, '');
     const ids: string[] = [];
     for (let index = 0; index < this.#storage.length; index++) {
@@ -101,10 +106,13 @@ export class LocalBackend implements ViewStateBackend {
     if (this.#storageListener && typeof globalThis.removeEventListener === 'function') {
       globalThis.removeEventListener('storage', this.#storageListener);
     }
+    // Allow safe reuse after disposal: drop cached atoms and their reverse-key entries.
+    this.#atoms.clear();
+    this.#byStorageKey.clear();
   }
 
   #read<T>(slice: SliceDef<T>, storageKey: string): T {
-    const raw = this.#storage.getItem(storageKey);
+    const raw = this.#storage?.getItem(storageKey);
     if (raw == null) {
       return slice.defaultValue();
     }
