@@ -10,7 +10,7 @@ import { type BackendName, type SliceDef, type ViewStateBackend } from './view-s
 // Only the stable `key` string is needed to form the map key; avoids variance issues with SliceDef<T>.
 const cacheKey = (slice: { key: string }, contextId: string) => `${slice.key}:${contextId}`;
 
-/** In-memory backend: reproduces the legacy `SelectionManager` behaviour. */
+/** In-memory backend: state is ephemeral and scoped to the session (never persisted). */
 export class MemoryBackend implements ViewStateBackend {
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
 
