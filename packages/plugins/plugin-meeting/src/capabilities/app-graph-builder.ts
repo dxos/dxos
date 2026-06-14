@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -188,8 +188,8 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Contribute a "Create meeting" action onto Event nodes (plugin-inbox stays meeting-agnostic),
-      // shown only while the event has no meeting anchored to it yet.
+      // Contribute meeting actions onto Event nodes (plugin-inbox stays meeting-agnostic): "Create meeting"
+      // while the event has no meeting yet, otherwise "Open meeting" (where the call is started/joined).
       GraphBuilder.createTypeExtension({
         id: 'createMeetingForEvent',
         type: Event.Event,
@@ -200,7 +200,18 @@ export default Capability.makeModule(
           }
           const meeting = yield* Effect.promise(() => Meeting.getMeetingForEvent(db, event));
           if (meeting) {
-            return [];
+            return [
+              {
+                id: 'action.openMeetingForEvent',
+                data: Effect.fnUntraced(function* () {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(meeting)] });
+                }),
+                properties: {
+                  label: ['open-meeting-for-event.label', { ns: meta.id }],
+                  icon: 'ph--handshake--regular',
+                },
+              },
+            ];
           }
           return [
             {

@@ -12,7 +12,7 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ meetingId, transcriptDXN, transcriptionEnabled }) {
+    Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const store = yield* Capability.get(MeetingCapabilities.State);
       const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
@@ -28,9 +28,9 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
 
       const enabled = !!transcriptionEnabled;
       const { transcriptionManager } = store.state;
-      if (space && transcriptDXN && transcriptionManager) {
+      if (space && transcriptDxn && transcriptionManager) {
         // Resolve the feed object from its queue/echo URI.
-        const echoUri = EID.tryParse(transcriptDXN);
+        const echoUri = EID.tryParse(transcriptDxn);
         const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
         const feed = feedObjectId
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())

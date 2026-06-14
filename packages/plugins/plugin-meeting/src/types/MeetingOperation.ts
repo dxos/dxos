@@ -56,7 +56,8 @@ export const HandlePayload = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     meetingId: Schema.optional(Schema.String),
-    transcriptDXN: Schema.optional(Schema.String),
+    // Matches the protobuf wire field `transcript_dxn` (MeetingPayload), carried verbatim from the call activity.
+    transcriptDxn: Schema.optional(Schema.String),
     transcriptionEnabled: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,

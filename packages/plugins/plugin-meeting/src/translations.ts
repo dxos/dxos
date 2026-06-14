@@ -34,6 +34,7 @@ export const translations = [
         'meeting-list.label': 'Meetings',
         'create-meeting.label': 'Start New Meeting',
         'create-meeting-for-event.label': 'Create meeting',
+        'open-meeting-for-event.label': 'Open meeting',
         'select-meeting.label': 'Set Active',
         'share-call-link.label': 'Share call link',
 
