@@ -10,6 +10,8 @@ import { withColumn } from './withColumn';
 export type ColumnStyleProps = {};
 
 export type ColumnBlockStyleProps = {
+  /** Trailing gutter (column 3) instead of the default leading gutter (column 1). */
+  end?: boolean;
   compact?: boolean;
   /** Constrain to a square (1:1) slot rather than the default rail-item width. */
   square?: boolean;
@@ -21,32 +23,28 @@ const root: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 
 /**
  * Three-column subgrid row spanning all 3 columns of the parent Column.Root grid.
- * Children are placed by `data-slot`, not by source order:
- * - `start` → column 1 (leading gutter)
- * - `end`   → column 3 (trailing gutter)
- * - anything without a `data-slot` (anonymous content) → column 2 (center)
- * Attribute-driven placement is robust to conditional children (a falsy leading slot
- * never shifts content into a gutter).
+ * Placement is explicit, not source-order based:
+ * - `Column.Block` self-places into column 1 (leading) or column 3 (trailing, `end`) and
+ *   carries the `dx-gutter` marker class.
+ * - Every other (content) child is placed in column 2 via `[&>*:not(.dx-gutter)]`.
+ * Class-based placement (rather than `[data-slot=…]`) is used because Tailwind does not
+ * generate arbitrary variants that nest a square-bracket attribute selector.
+ * Robust to conditional children: a falsy leading slot never shifts content into a gutter.
  * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
 const row: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx(
-    'col-span-3 grid grid-cols-subgrid',
-    '[&>[data-slot=start]]:col-start-1',
-    '[&>[data-slot=end]]:col-start-3',
-    '[&>*:not([data-slot])]:col-start-2',
-    ...etc,
-  );
+  return mx('col-span-3 grid grid-cols-subgrid', '[&>*:not(.dx-gutter)]:col-start-2', ...etc);
 };
 
 /**
  * Gutter slot geometry: a `--dx-rail-item` square that centers its child, so a passive
- * `<Icon>` and an interactive `IconButton` line up to the pixel. Column placement (1/3) is
- * applied by the parent `row` via `data-slot`.
+ * `<Icon>` and an interactive `IconButton` line up to the pixel. Self-places into column 1
+ * (default) or column 3 (`end`); the `dx-gutter` marker keeps it out of the content track.
  */
-const block: ComponentFunction<ColumnBlockStyleProps> = ({ compact, square }, ...etc) =>
+const block: ComponentFunction<ColumnBlockStyleProps> = ({ end, compact, square }, ...etc) =>
   mx(
-    'grid place-items-center [&>img]:max-w-[1.5rem]',
+    'dx-gutter grid place-items-center [&>img]:max-w-[1.5rem]',
+    end ? 'col-start-3' : 'col-start-1',
     square ? 'aspect-square' : 'w-[var(--dx-rail-item)]',
     compact ? '' : 'h-[var(--dx-rail-item)]',
     ...etc,

@@ -27,9 +27,7 @@ const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) 
 const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
     'dx-card__header col-span-3 grid grid-cols-subgrid items-center',
-    '[&>[data-slot=start]]:col-start-1',
-    '[&>[data-slot=end]]:col-start-3',
-    '[&>*:not([data-slot])]:col-start-2',
+    '[&>*:not(.dx-gutter)]:col-start-2',
     ...etc,
   );
 
@@ -67,7 +65,11 @@ const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
 const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
-  mx('dx-card__row', fullWidth ? 'col-span-full' : 'col-span-3 grid grid-cols-subgrid', ...etc);
+  mx(
+    'dx-card__row',
+    fullWidth ? 'col-span-full' : 'col-span-3 grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2',
+    ...etc,
+  );
 
 // NOTE: Direct children that lack an explicit `col-*` utility default to the
 // Column.Root center track (via `--dx-col`); see `ui-theme`'s `css/components/card.css`.

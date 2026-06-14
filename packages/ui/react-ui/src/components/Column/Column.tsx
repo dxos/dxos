@@ -175,7 +175,7 @@ const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
       <Comp
         {...rest}
         data-slot={end ? 'end' : 'start'}
-        className={tx('column.block', { compact, square }, className)}
+        className={tx('column.block', { end, compact, square }, className)}
         ref={forwardedRef}
       >
         {children}
