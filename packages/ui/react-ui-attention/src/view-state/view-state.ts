@@ -16,6 +16,8 @@ export type BackendName = 'memory' | 'local';
 export interface SliceDef<T> {
   readonly key: string;
   readonly backend: BackendName;
+  // Encoded type is intentionally unconstrained: persisted backends serialize `T` through the
+  // schema to an arbitrary wire form, and only the decoded `T` matters to consumers.
   readonly schema: Schema.Schema<T, any>;
   readonly defaultValue: () => T;
 }
