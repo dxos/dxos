@@ -68,7 +68,7 @@ Backends:
 
   Storage keys are derived uniformly by the `local` backend (no per-aspect overrides):
 
-  ```
+  ```text
   dxos:view-state:${aspect.key}:${contextId}
   ```
 
