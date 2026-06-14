@@ -17,6 +17,9 @@ describe('selection helpers', () => {
     expect(resolveSelection({ mode: 'single', id: 'x' }, 'single')).toEqual('x');
     expect(resolveSelection({ mode: 'multi', ids: ['a', 'b'] }, 'multi')).toEqual(['a', 'b']);
     expect(resolveSelection({ mode: 'range', from: 'a', to: 'b' }, 'range')).toEqual({ from: 'a', to: 'b' });
+    expect(resolveSelection({ mode: 'multi-range', ranges: [{ from: 'a', to: 'b' }] }, 'multi-range')).toEqual([
+      { from: 'a', to: 'b' },
+    ]);
   });
 
   test('resolveSelection returns the requested-mode default on mismatch or undefined', ({ expect }) => {
