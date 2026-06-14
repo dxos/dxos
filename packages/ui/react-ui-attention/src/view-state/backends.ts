@@ -77,6 +77,8 @@ export class LocalBackend implements ViewStateBackend {
       const storageKey = storageKeyFor(slice, contextId);
       atom = Atom.make<unknown>(this.#read(slice, storageKey));
       this.#atoms.set(key, atom);
+      // Cast erases the per-slice value type so the reverse map can hold slices of any `T`; the
+      // stored slice is only used to re-read/decode its own value, so the erasure is safe.
       this.#byStorageKey.set(storageKey, { slice: slice as SliceDef<unknown>, contextId });
     }
     // Cast bridges the per-slice value type erased by the shared atom map; safe by construction.

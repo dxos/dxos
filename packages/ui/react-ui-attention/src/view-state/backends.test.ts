@@ -75,4 +75,23 @@ describe('LocalBackend', () => {
     manager.set(Editor, 'doc-2', { scrollTo: 2 });
     expect(new Set(manager.contexts(Editor))).toEqual(new Set(['doc-1', 'doc-2']));
   });
+
+  test('a cross-tab storage event re-reads the atom from storage', ({ expect }) => {
+    const registry = Registry.make();
+    const storage = fakeStorage();
+    const local = new LocalBackend({ registry, storage });
+    const manager = new ViewStateManager({ registry, backends: { memory: local, local } });
+
+    // Touch the context so its atom is registered and observed by the storage listener.
+    const key = 'dxos:view-state:editor:doc-4';
+    expect(manager.get(Editor, 'doc-4')).toEqual({});
+
+    // Simulate another tab's write: update storage, then fire the `storage` event (the listener
+    // re-reads from storage rather than trusting the event payload).
+    storage.setItem(key, JSON.stringify({ scrollTo: 99 }));
+    globalThis.dispatchEvent(new StorageEvent('storage', { key, newValue: storage.getItem(key) }));
+
+    expect(manager.get(Editor, 'doc-4')).toEqual({ scrollTo: 99 });
+    local.dispose();
+  });
 });

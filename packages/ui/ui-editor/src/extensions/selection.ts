@@ -86,7 +86,9 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
           key: 'Ctrl-r', // TODO(burdon): Setting to jump back to selection.
           run: (view) => {
             const state = getState(view.state.facet(documentId));
-            if (state) {
+            // Only restore when something was actually stored; a store may return an empty state
+            // (no scroll/selection) for an unseen document, which would otherwise dispatch a no-op.
+            if (state && (state.scrollTo != null || state.selection)) {
               view.dispatch(createEditorStateTransaction(state));
             }
             return true;
