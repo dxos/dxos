@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type MenuActionProperties } from '@dxos/ui-types';
@@ -29,6 +29,8 @@ export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'var
   variant: 'dropdownMenu';
   icon: string;
   applyActive?: boolean;
+  /** Whether to show the trailing caret. Defaults to `true`; set `false` when the icon already signals a menu. */
+  caretDown?: boolean;
 };
 
 export type ToolbarMenuToggleGroupActionGroup = Omit<MenuActionProperties, 'variant'> & {
@@ -103,45 +105,47 @@ const DropdownMenuToolbarItem = ({
   group,
   items: propsItems,
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
-  const { iconOnly, disabled, testId } = group.properties;
   const { t } = useTranslation(translationKey);
   const { iconSize } = useMenuScoped('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
-  const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked);
+  // This handler only renders `variant: 'dropdownMenu'` groups, so the dropdown properties are known.
+  const properties = group.properties as ToolbarMenuDropdownMenuActionGroup;
+  const { iconOnly, disabled, testId, applyActive, caretDown = true } = properties;
+  const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
-    ((group.properties as any).applyActive &&
+    (applyActive &&
       // TODO(thure): Handle other menu item types.
-      (activeItem as MenuAction)?.properties.icon) ||
-    group.properties.icon;
-  // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g., tag colour) tracks the displayed icon.
-  const iconClassNames =
-    ((group.properties as any).applyActive && (activeItem as MenuAction)?.properties.iconClassNames) ||
-    (group.properties as { iconClassNames?: any }).iconClassNames;
-  const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
-  const labelAction = (group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group;
-  const rootProps = icon
-    ? {
-        icon,
-        size: iconSize,
-        iconOnly,
-        iconClassNames,
-        label: actionLabel(labelAction, t),
-        // The caret signals "opens a menu"; an icon that already means that (e.g. an overflow ⋮) opts out.
-        caretDown: (group.properties as { caretDown?: boolean }).caretDown ?? true,
-      }
-    : {
-        children: (
-          <>
-            <ActionLabel action={labelAction} />
-            <Icon size={3} icon='ph--caret-down--bold' classNames='ms-1' />
-          </>
-        ),
-      };
+      activeItem?.properties.icon) ||
+    properties.icon;
+  // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g. tag colour) tracks the displayed icon.
+  const iconClassNames = (applyActive && activeItem?.properties.iconClassNames) || properties.iconClassNames;
+  const labelAction = applyActive && activeItem ? activeItem : group;
 
   return (
     <DropdownMenu.Root group={group} items={items}>
       <DropdownMenu.Trigger asChild>
-        <Root variant='ghost' disabled={disabled} {...(rootProps as any)} {...(testId && { 'data-testid': testId })} />
+        {icon ? (
+          <NaturalToolbar.IconButton
+            variant='ghost'
+            disabled={disabled}
+            icon={icon}
+            size={iconSize}
+            iconOnly={iconOnly}
+            iconClassNames={iconClassNames}
+            label={actionLabel(labelAction, t)}
+            caretDown={caretDown}
+            {...(testId && { 'data-testid': testId })}
+          />
+        ) : (
+          <NaturalToolbar.Button
+            variant='ghost'
+            disabled={disabled}
+            caretDown={caretDown}
+            {...(testId && { 'data-testid': testId })}
+          >
+            <ActionLabel action={labelAction} />
+          </NaturalToolbar.Button>
+        )}
       </DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );

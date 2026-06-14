@@ -63,6 +63,12 @@ interface TestLayerOptions {
   disableLlmMemoization?: boolean;
 
   /**
+   * Patterns matching run-specific values (e.g. timestamps derived from TestClock) that should be
+   * canonicalized for memoized-conversation matching. Forwarded to `TestAiService`. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
+
+  /**
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
@@ -115,7 +121,11 @@ export const AssistantTestLayer = (
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??
-        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+        TestAiService({
+          preset: options.aiServicePreset,
+          disableMemoization: options.disableLlmMemoization,
+          dynamicValuePatterns: options.dynamicValuePatterns,
+        }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
