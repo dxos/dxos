@@ -55,17 +55,20 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
 
   const latestPointers = useCallback(() => histories.map(({ diffs }) => diffs.length - 1), [histories]);
 
-  // The root's heads at the current scrub position (for "create branch from this point").
-  const rootHeadsAtIndex = useCallback(() => {
-    const rootIndex = histories.findIndex(({ object: obj }) => obj === object);
-    if (rootIndex < 0) {
-      return undefined;
-    }
+  // Per-member heads at the current scrub position, so "create branch from this point" forks the
+  // WHOLE subtree (including a document's text child) at the scrubbed version, not just the root.
+  const memberHeadsAtIndex = useCallback((): Record<string, string[]> => {
     const pointers = plan[index] ?? latestPointers();
-    const diffs = histories[rootIndex].diffs;
-    const at = Math.min(pointers[rootIndex] ?? diffs.length - 1, diffs.length - 1);
-    return diffs[at]?.heads;
-  }, [histories, plan, index, object, latestPointers]);
+    const result: Record<string, string[]> = {};
+    histories.forEach(({ object: obj, diffs }, objectIndex) => {
+      const at = Math.min(pointers[objectIndex] ?? diffs.length - 1, diffs.length - 1);
+      const heads = diffs[at]?.heads;
+      if (heads) {
+        result[obj.id] = heads;
+      }
+    });
+    return result;
+  }, [histories, plan, index, latestPointers]);
 
   // Drive in-place time-travel from the current scrub position. The cleanup (on index change and on
   // unmount) always restores the live objects.
@@ -104,7 +107,7 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
     while (existing.has(name)) {
       name = `branch-${++suffix}`;
     }
-    const fromHeads = scrubbing ? rootHeadsAtIndex() : undefined;
+    const fromHeads = scrubbing ? memberHeadsAtIndex() : undefined;
     // Exit scrub mode and drop pins before mutating branches.
     for (const { object: obj } of histories) {
       clearTimeTravel(obj);
@@ -112,7 +115,7 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
     setSelectedIndex(undefined);
     await createBranch(object, name, fromHeads ? { fromHeads } : undefined);
     await switchBranch(object, name);
-  }, [object, branches, histories, scrubbing, rootHeadsAtIndex]);
+  }, [object, branches, histories, scrubbing, memberHeadsAtIndex]);
 
   const handleMerge = useCallback(async () => {
     if (currentBranch === 'main') {

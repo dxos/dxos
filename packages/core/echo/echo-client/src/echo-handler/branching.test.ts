@@ -142,6 +142,32 @@ describe('branching', () => {
     expect(root.title).toBe('root-v2');
   });
 
+  test('createBranch with per-member fromHeads forks the whole subtree at a scrubbed position', async () => {
+    const { db, root, child } = await setup();
+    const rootHeadsV0 = getVersion(root).heads;
+    const childHeadsV0 = getVersion(child).heads;
+    // Advance both members past the captured frontier.
+    Obj.update(root, (root: any) => {
+      root.title = 'root-v1';
+    });
+    Obj.update(child, (child: any) => {
+      child.content = 'child-v1';
+    });
+    await db.flush();
+
+    // Fork each member at its own historical frontier (mirrors what the scrubber's plan provides).
+    await createBranch(root, 'snap', { fromHeads: { [root.id]: rootHeadsV0, [child.id]: childHeadsV0 } });
+    await switchBranch(root, 'snap');
+
+    // Both the root AND the child are at their scrubbed (v0) state — not the latest (v1).
+    expect(root.title).toBe('root-v0');
+    expect(child.content).toBe('child-v0');
+
+    await switchBranch(root, 'main');
+    expect(root.title).toBe('root-v1');
+    expect(child.content).toBe('child-v1');
+  });
+
   test('mergeBranch folds branch changes back into main across the subtree, then deleteBranch', async () => {
     const { db, root, child } = await setup();
     await createBranch(root, 'b1');

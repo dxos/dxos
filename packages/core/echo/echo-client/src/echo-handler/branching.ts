@@ -37,9 +37,15 @@ export const getCurrentBranch = (obj: Obj.Unknown): string => {
 
 /**
  * Fork the object and its referenced subtree into a new branch (does not switch to it).
- * @param opts.fromHeads Fork the root from a historical version (e.g. a scrubbed point) instead of its tip.
+ * @param opts.fromHeads Fork from a historical version (e.g. a scrubbed point) instead of the tip.
+ *   A `Heads` array forks only the root; a `{ objectId -> Heads }` map forks each subtree member
+ *   from its own frontier (use this to capture a scrubbed position across the whole subtree).
  */
-export const createBranch = (obj: Obj.Unknown, name: string, opts?: { fromHeads?: Heads }): Promise<void> => {
+export const createBranch = (
+  obj: Obj.Unknown,
+  name: string,
+  opts?: { fromHeads?: Heads | Record<string, Heads> },
+): Promise<void> => {
   const { db, id } = resolve(obj);
   return db.createBranch(id, name, opts);
 };

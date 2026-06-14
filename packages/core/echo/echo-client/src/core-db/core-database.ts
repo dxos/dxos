@@ -653,30 +653,41 @@ export class CoreDatabase {
 
   /**
    * Fork the object and its referenced subtree into a new branch. Does not switch to it.
-   * @param opts.fromHeads Fork the root from a historical frontier instead of its tip.
+   * @param opts.fromHeads Fork from a historical frontier instead of the tip. A `Heads` array forks
+   *   only the root from that frontier (children fork at their tip); a `{ objectId -> Heads }` map
+   *   forks each member from its own frontier (e.g. the scrubbed position across the whole subtree).
    */
-  async createBranch(rootObjectId: string, name: string, opts?: { fromHeads?: Heads }): Promise<void> {
+  async createBranch(
+    rootObjectId: string,
+    name: string,
+    opts?: { fromHeads?: Heads | Record<string, Heads> },
+  ): Promise<void> {
     invariant(name !== 'main', "'main' is the implicit default branch");
     invariant(!this.getBranchRegistry(rootObjectId)?.[name], `branch already exists: ${name}`);
     const rootCore = this._objects.get(rootObjectId) ?? (await this.loadObjectCoreById(rootObjectId)) ?? undefined;
     invariant(rootCore, 'root object not found');
 
+    // Normalize to a per-member frontier map; a bare `Heads` applies to the root only.
+    const memberHeads: Record<string, Heads> = Array.isArray(opts?.fromHeads)
+      ? { [rootObjectId]: opts.fromHeads }
+      : (opts?.fromHeads ?? {});
+
     const members = await this._collectSubtree(rootCore);
     const memberUrls: BranchRecord['members'] = {};
     for (const member of members) {
       invariant(this._hasOwnDocument(member.id), 'cannot branch an inline object (promotion not yet implemented)');
-      // `fromHeads` is the root's historical frontier; children fork at their own current heads.
-      const atHeads = opts?.fromHeads && member.id === rootObjectId ? opts.fromHeads : undefined;
       // No `change` listener here: the object stays on its current branch; the branch doc only needs
       // to exist and replicate (referenced via the registry below). A listener is attached on switch.
-      const handle = this._repo.import<DatabaseDirectory>(forkDump(member.getDoc() as Doc<any>, atHeads));
+      const handle = this._repo.import<DatabaseDirectory>(
+        forkDump(member.getDoc() as Doc<any>, memberHeads[member.id]),
+      );
       await handle.whenReady();
       invariant(handle.url, 'branch document has no url');
       memberUrls[member.id] = handle.url;
     }
 
     const spaceRoot = this._automergeDocLoader.getSpaceRootDocHandle();
-    const baseHeads = opts?.fromHeads ?? getHeads(rootCore.getDoc() as Doc<any>);
+    const baseHeads = memberHeads[rootObjectId] ?? getHeads(rootCore.getDoc() as Doc<any>);
     const createdAt = Date.now();
     spaceRoot.change((doc: DatabaseDirectory) => {
       // Assign through re-read doc proxies (not a chained `??=` result, which returns the orphan

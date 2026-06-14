@@ -73,6 +73,12 @@ const buildTimeline = (histories: ObjectHistory[]): Pick<HistoryTimeline, 'versi
       removed += diff.removed;
       last = diff;
     }
+    // Skip no-op steps (e.g. an empty Automerge change emitted when an editor rebinds on branch
+    // switch): they have nothing to scrub to. The pointer advances are kept so later steps remain
+    // correct, and they fold into the previous emitted step's position.
+    if (added === 0 && removed === 0) {
+      continue;
+    }
     plan.push(pointers.slice());
     versions.push({ time: last.time, author: last.actor, label: last.message, added, removed });
   }
