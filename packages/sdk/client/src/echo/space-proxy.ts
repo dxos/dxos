@@ -70,6 +70,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { createLocalStorageBranchStore } from './branch-store';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
@@ -183,6 +184,8 @@ export class SpaceProxy implements Space, CustomInspectable {
       spaceId: this.id,
       spaceKey: this.key,
       owningObject: this,
+      // Device-local persistence for the current-branch selection (survives reload, never syncs).
+      branchStore: createLocalStorageBranchStore(this.id),
     });
     this._queues = echoClient.constructQueueFactory(this.id);
 

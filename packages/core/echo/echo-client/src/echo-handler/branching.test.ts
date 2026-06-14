@@ -12,7 +12,15 @@ import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder } from '../testing';
-import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching';
+import {
+  createBranch,
+  deleteBranch,
+  getBranchActivity,
+  getBranches,
+  getCurrentBranch,
+  mergeBranch,
+  switchBranch,
+} from './branching';
 import { getEditHistoryWithDiffs } from './edit-history';
 import { getVersion } from './version';
 
@@ -166,6 +174,31 @@ describe('branching', () => {
     await switchBranch(root, 'main');
     expect(root.title).toBe('root-v1');
     expect(child.content).toBe('child-v1');
+  });
+
+  test('getBranchActivity reports a last-updated time per branch (incl. main), driven by subtree edits', async () => {
+    const { db, root, child } = await setup();
+    await createBranch(root, 'b1');
+    await createBranch(root, 'b2');
+
+    // Edit b1's CHILD (mirrors a document whose text — not the root — changes) so the branch's
+    // activity must reflect the max across the subtree, not just the root doc.
+    await switchBranch(root, 'b1');
+    Obj.update(child, (child: any) => {
+      child.content = 'child-b1-edited';
+    });
+    await db.flush();
+    await switchBranch(root, 'main');
+
+    const activity = await getBranchActivity(root);
+    expect(Object.keys(activity).sort()).toEqual(['b1', 'b2', 'main']);
+    for (const time of Object.values(activity)) {
+      expect(time).toBeGreaterThan(0);
+    }
+    // The edited branch is at least as recent as the untouched ones (second-granular change times
+    // may collide, so this is `>=`); the edit happened strictly after b2/main were last touched.
+    expect(activity.b1).toBeGreaterThanOrEqual(activity.b2);
+    expect(activity.b1).toBeGreaterThanOrEqual(activity.main);
   });
 
   test('mergeBranch folds branch changes back into main across the subtree, then deleteBranch', async () => {

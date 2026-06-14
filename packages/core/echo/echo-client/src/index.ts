@@ -10,6 +10,7 @@ export {
   CoreDatabase,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
+  type BranchStore,
   type CoreDatabaseProps,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
@@ -35,6 +36,7 @@ export { setTimeTravel, clearTimeTravel } from './echo-handler';
 export {
   getBranches,
   getCurrentBranch,
+  getBranchActivity,
   createBranch,
   switchBranch,
   mergeBranch,

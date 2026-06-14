@@ -21,7 +21,7 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { HistoryCompanion } from './HistoryCompanion';
+import { BranchesCompanion } from './BranchesCompanion';
 
 // A minimal type that opts into time-travel via the annotation. Mirrors markdown: the editable text
 // lives in a referenced Text.Text child, so the scrubber must aggregate the child's history too.
@@ -73,14 +73,14 @@ const DefaultStory = () => {
         <PrimaryPreview object={doc} />
       </div>
       <div className='min-w-0 flex-[2]'>
-        <HistoryCompanion role='article' companionTo={doc} />
+        <BranchesCompanion role='article' companionTo={doc} />
       </div>
     </div>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-space/containers/HistoryCompanion',
+  title: 'plugins/plugin-space/containers/BranchesCompanion',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),

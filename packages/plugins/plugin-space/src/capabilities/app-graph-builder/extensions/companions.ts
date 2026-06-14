@@ -92,9 +92,10 @@ export const createCompanionExtensions: () => Effect.Effect<
           ]),
       }),
 
-      // History scrubber plank companion (only for types that opt in via TimeTravelAnnotation).
+      // Branches plank companion: history scrubber + branch list (only for types that opt in via
+      // TimeTravelAnnotation).
       GraphBuilder.createExtension({
-        id: 'history',
+        id: 'branches',
         match: (node) => {
           if (!Obj.isObject(node.data)) {
             return Option.none();
@@ -110,16 +111,16 @@ export const createCompanionExtensions: () => Effect.Effect<
         connector: (node, get) => {
           // Gated by the space-plugin setting (enabled by default); reactive to toggling it.
           const settings = get(capabilities.get(SpaceCapabilities.Settings));
-          if (settings.enableHistory === false) {
+          if (settings.enableBranches === false) {
             return Effect.succeed([]);
           }
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('history'),
-              label: ['object-history.label', { ns: meta.id }],
-              icon: 'ph--clock-counter-clockwise--regular',
-              data: 'history',
+              id: linkedSegment('branches'),
+              label: ['branches-companion.label', { ns: meta.id }],
+              icon: 'ph--git-branch--regular',
+              data: 'branches',
               position: 'last',
             }),
           ]);

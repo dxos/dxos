@@ -11,7 +11,7 @@ import { EID } from '@dxos/keys';
  * Device-local, non-synced persistence for the current-branch selection of a single space.
  * The current branch a device views an object on must survive a client reload but never replicate
  * to peers, so it is stored outside the synced documents. Provided by the embedding layer (the
- * browser client backs it with the worker's metadata store; tests back it with a per-peer store).
+ * browser client backs it with localStorage; tests back it with a per-peer store).
  */
 export interface BranchStore {
   /** Load the persisted selections: object id -> branch name (`'main'` is omitted). */

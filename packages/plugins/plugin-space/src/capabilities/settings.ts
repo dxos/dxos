@@ -16,8 +16,8 @@ export default Capability.makeModule(() =>
     const settingsAtom = createKvsStore({
       key: meta.id,
       schema: Settings.Settings,
-      // History scrubber starts enabled while the feature is being tested.
-      defaultValue: () => ({ enableHistory: true }),
+      // Branches companion starts enabled while the feature is being tested.
+      defaultValue: () => ({ enableBranches: true }),
     });
 
     return [

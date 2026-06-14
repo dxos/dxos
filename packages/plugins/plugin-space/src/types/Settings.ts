@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.mutable(
   Schema.Struct({
-    /** Show the time-travel history scrubber companion on supported objects. */
-    enableHistory: Schema.optional(Schema.Boolean.annotations({ title: 'Show object history scrubber' })),
+    /** Show the branches companion (history scrubber + branch list) on supported objects. */
+    enableBranches: Schema.optional(Schema.Boolean.annotations({ title: 'Show object branches' })),
   }),
 );
 

@@ -652,6 +652,63 @@ export class CoreDatabase {
   }
 
   /**
+   * Latest edit time (epoch ms) per branch, keyed by branch name (including `'main'`), for ordering
+   * branches by recency. The activity of a branch is the most recent automerge change across its
+   * whole subtree — a document's content edits live in a child doc, so the max over all members is
+   * the meaningful "last updated" signal. The implicit `'main'` branch reads the subtree's main
+   * documents. Loads branch member docs as needed (they replicate, so this is local).
+   */
+  async getBranchActivity(objectId: string): Promise<Record<string, number>> {
+    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
+    const registry = (rootId && this.getBranchRegistry(rootId)) || {};
+    // Membership is consistent across branches, so the union covers every subtree member.
+    const memberIds = new Set<string>([rootId ?? objectId]);
+    for (const record of Object.values(registry)) {
+      for (const id of Object.keys(record.members)) {
+        memberIds.add(id);
+      }
+    }
+
+    const activity: Record<string, number> = {};
+    try {
+      const mainHandles = await Promise.all([...memberIds].map((id) => this._mainDocHandle(id)));
+      activity.main = this._latestChangeAcross(mainHandles);
+    } catch {
+      activity.main = 0;
+    }
+    for (const [name, record] of Object.entries(registry)) {
+      try {
+        const handles = await Promise.all(
+          Object.values(record.members).map(async (url) => {
+            const handle = this._repo.find<DatabaseDirectory>(url.toString() as DocumentId);
+            await handle.whenReady();
+            return handle;
+          }),
+        );
+        // Fall back to creation time for a freshly forked branch with no post-fork edits yet.
+        activity[name] = this._latestChangeAcross(handles) || record.createdAt || 0;
+      } catch {
+        // A branch doc that has not replicated to this device yet falls back to its creation time.
+        activity[name] = record.createdAt ?? 0;
+      }
+    }
+    return activity;
+  }
+
+  /** The most recent automerge change time (epoch ms) across the given document handles. */
+  private _latestChangeAcross(handles: DocHandleProxy<DatabaseDirectory>[]): number {
+    let latest = 0;
+    for (const handle of handles) {
+      // Automerge change times are epoch seconds; the last history entry is the document's tip.
+      const time = A.getHistory(handle.doc() as Doc<any>).at(-1)?.change.time;
+      if (time) {
+        latest = Math.max(latest, time * 1000);
+      }
+    }
+    return latest;
+  }
+
+  /**
    * Fork the object and its referenced subtree into a new branch. Does not switch to it.
    * @param opts.fromHeads Fork from a historical frontier instead of the tip. A `Heads` array forks
    *   only the root from that frontier (children fork at their tip); a `{ objectId -> Heads }` map

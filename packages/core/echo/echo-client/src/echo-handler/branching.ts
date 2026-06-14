@@ -36,6 +36,16 @@ export const getCurrentBranch = (obj: Obj.Unknown): string => {
 };
 
 /**
+ * @returns Latest edit time (epoch ms) per branch, keyed by branch name (including `'main'`). The
+ *   activity of a branch is the most recent automerge change across its whole subtree, so it is the
+ *   meaningful "last updated" signal for ordering branches by recency. Loads branch docs as needed.
+ */
+export const getBranchActivity = (obj: Obj.Unknown): Promise<Record<string, number>> => {
+  const { db, id } = resolve(obj);
+  return db.getBranchActivity(id);
+};
+
+/**
  * Fork the object and its referenced subtree into a new branch (does not switch to it).
  * @param opts.fromHeads Fork from a historical version (e.g. a scrubbed point) instead of the tip.
  *   A `Heads` array forks only the root; a `{ objectId -> Heads }` map forks each subtree member

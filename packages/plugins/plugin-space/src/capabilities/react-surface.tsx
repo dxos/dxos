@@ -22,12 +22,12 @@ import { ViewAnnotation } from '@dxos/schema';
 
 import { SpaceSettings } from '#components';
 import {
+  BranchesCompanion,
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
   CreateSpaceDialog,
   ImportSpaceDialog,
-  HistoryCompanion,
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
@@ -118,12 +118,12 @@ export default Capability.makeModule(
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: 'companion.history',
+        id: 'companion.branches',
         filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'history'),
+          AppSurface.literal(AppSurface.Article, 'branches'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data, role }) => <HistoryCompanion role={role} companionTo={data.companionTo} />,
+        component: ({ data, role }) => <BranchesCompanion role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'spaceSettingsProperties',

@@ -11,31 +11,33 @@ import {
   clearTimeTravel,
   createBranch,
   deleteBranch,
+  getBranchActivity,
   mergeBranch,
   setTimeTravel,
   switchBranch,
 } from '@dxos/echo-client';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { HistoryScrubber } from '@dxos/react-ui-components';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
+import { BranchList } from './BranchList';
 import { createHistoryTimelineAtom } from './history-timeline';
 
-export type HistoryCompanionProps = Pick<
+export type BranchesCompanionProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
   'role' | 'companionTo'
 >;
 
 /**
- * History scrubber + branch companion. Builds a single timeline from the primary object AND its
- * referenced children (so a document's text is included) and drives an in-place time-travel preview
- * via `setTimeTravel`/`clearTimeTravel`. Branch controls (switch / create / merge / delete) drive the
- * core branching API; creating a branch can fork from the live tip or from the scrubbed position.
+ * Branches companion: a history scrubber plus the object's branch list. Builds a single timeline
+ * from the primary object AND its referenced children (so a document's text is included) and drives
+ * an in-place time-travel preview via `setTimeTravel`/`clearTimeTravel`. Branches are listed below
+ * the scrubber, each row carrying its own switch / merge / delete control; the toolbar holds only
+ * the create-branch action, which can fork from the live tip or from the scrubbed position.
  */
-export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) => {
+export const BranchesCompanion = ({ role, companionTo }: BranchesCompanionProps) => {
   const { t } = useTranslation(meta.id);
 
   // The subject identity is stable across scrubbing and branch switching (both happen in place).
@@ -46,8 +48,34 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
   const { versions, histories, plan } = useAtomValue(timelineAtom);
 
   // Reactive branch state: updates on any branch op, including create/delete (which mutate the space
-  // root, not the object), so the picker stays in sync without manual refresh.
+  // root, not the object), so the list stays in sync without manual refresh.
   const { branches, current: currentBranch } = useAtomValue(branchStateAtom(object));
+
+  // Ordering by most-recently-updated is snapshotted once at mount so rows do not reorder under the
+  // user while they interact (or while a branch they are editing advances). Membership stays
+  // reactive: branches created after mount surface first (they are the newest), deleted ones drop.
+  const [orderedNames, setOrderedNames] = useState<string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void getBranchActivity(object).then((activity) => {
+      if (!cancelled) {
+        setOrderedNames(Object.keys(activity).sort((a, b) => (activity[b] ?? 0) - (activity[a] ?? 0)));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [object]);
+
+  const displayBranches = useMemo(() => {
+    const known = new Set(orderedNames);
+    // Branches created after the snapshot are the newest; surface them on top, newest-first
+    // (registry insertion order is oldest→newest, so reverse). Existing rows keep their snapshot
+    // order below, so editing a branch never reshuffles the list.
+    const fresh = branches.filter((name) => !known.has(name)).reverse();
+    const kept = orderedNames.filter((name) => branches.includes(name));
+    return [...fresh, ...kept];
+  }, [orderedNames, branches]);
 
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>(undefined);
   const index = selectedIndex ?? Math.max(versions.length - 1, 0);
@@ -74,9 +102,16 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
   // unmount) always restores the live objects.
   useEffect(() => {
     const pointers = plan[index] ?? latestPointers();
+    // Each object's latest MEANINGFUL version is its pointer at the final scrubber step. Trailing
+    // no-op changes (e.g. the empty change appended when a doc rebinds on a branch switch) inflate
+    // `diffs.length` without adding a step, so "at latest" must compare against the plan's final
+    // pointers — comparing against the raw history length would read as not-latest and leave the
+    // object needlessly pinned (read-only) after switching branches.
+    const finalPointers = plan[plan.length - 1] ?? latestPointers();
     histories.forEach(({ object: obj, diffs }, objectIndex) => {
       const at = Math.min(pointers[objectIndex] ?? diffs.length - 1, diffs.length - 1);
-      if (at >= diffs.length - 1 && !(scrubbing && obj === object)) {
+      const atLatest = at >= (finalPointers[objectIndex] ?? diffs.length - 1);
+      if (atLatest && !(scrubbing && obj === object)) {
         clearTimeTravel(obj);
       } else {
         setTimeTravel(obj, diffs[at].heads);
@@ -87,7 +122,7 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
         clearTimeTravel(obj);
       }
     };
-  }, [index, versions.length, histories, plan, object, latestPointers, scrubbing]);
+  }, [index, histories, plan, object, latestPointers, scrubbing]);
 
   const preview = useCallback((eventIndex: number) => setSelectedIndex(eventIndex), []);
 
@@ -117,57 +152,34 @@ export const HistoryCompanion = ({ role, companionTo }: HistoryCompanionProps) =
     await switchBranch(object, name);
   }, [object, branches, histories, scrubbing, memberHeadsAtIndex]);
 
-  const handleMerge = useCallback(async () => {
-    if (currentBranch === 'main') {
-      return;
-    }
-    await mergeBranch(object, currentBranch);
-  }, [object, currentBranch]);
+  const handleMerge = useCallback((name: string) => void mergeBranch(object, name), [object]);
 
-  const handleDelete = useCallback(async () => {
-    if (currentBranch === 'main') {
-      return;
-    }
-    deleteBranch(object, currentBranch);
-    await switchBranch(object, 'main');
-  }, [object, currentBranch]);
+  const handleDelete = useCallback((name: string) => deleteBranch(object, name), [object]);
 
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          {branches.map((name) => (
-            <Button
-              key={name}
-              variant={name === currentBranch ? 'primary' : 'default'}
-              onClick={() => void handleSwitch(name)}
-            >
-              {name}
-            </Button>
-          ))}
-          <div role='none' className='grow' />
           <Toolbar.IconButton
             icon='ph--git-branch--regular'
             label={t('branch-create.label')}
             onClick={() => void handleCreate()}
           />
-          <Toolbar.IconButton
-            icon='ph--git-merge--regular'
-            label={t('branch-merge.label')}
-            disabled={currentBranch === 'main'}
-            onClick={() => void handleMerge()}
-          />
-          <Toolbar.IconButton
-            icon='ph--trash--regular'
-            label={t('branch-delete.label')}
-            disabled={currentBranch === 'main'}
-            onClick={() => void handleDelete()}
-          />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <div className={mx('p-2')}>
+        <div className='p-2'>
           <HistoryScrubber versions={versions} value={index} onValueChange={preview} />
+        </div>
+        <div className='border-bs border-separator p-2'>
+          <h2 className='mbe-1 text-xs text-description'>{t('branches.label')}</h2>
+          <BranchList
+            branches={displayBranches}
+            current={currentBranch}
+            onSwitch={(name) => void handleSwitch(name)}
+            onMerge={handleMerge}
+            onDelete={handleDelete}
+          />
         </div>
       </Panel.Content>
     </Panel.Root>
