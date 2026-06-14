@@ -272,7 +272,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
               </Panel.Toolbar>
               <Panel.Content asChild>
                 <NaturalCalendar.Grid
-                  dates={calendarDates}
+                  dates={calendarDates.map((startDate) => ({ startDate }))}
                   onSelect={handleDateSelect}
                   onSelectRange={handleDateRangeSelect}
                 />

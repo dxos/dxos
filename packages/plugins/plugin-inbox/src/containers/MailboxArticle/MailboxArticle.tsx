@@ -3,7 +3,7 @@
 //
 
 import { useAtomSet } from '@effect-atom/atom-react';
-import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type Ref, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -23,7 +23,7 @@ import { Message } from '@dxos/types';
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox } from '#types';
+import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -117,6 +117,15 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     });
   }
 
+  // Starred messages drive the per-tile star toggle. Tagging mutates the child `TagIndex` in place,
+  // which `useQuery` doesn't observe, so subscribe to that index directly and re-derive on change.
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const tagIndex = mailbox.tags?.target;
+  const [, bumpStarred] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, bumpStarred) : undefined), [tagIndex]);
+  const starredIds = Starred.getStarredIds(mailbox, starredUri);
+
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
@@ -206,6 +215,14 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           break;
         }
 
+        case 'star': {
+          const message = sortedMessages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void Starred.toggleStarred(subject, message, db);
+          }
+          break;
+        }
+
         case 'select-tag': {
           setFilterText((prevFilterText) => {
             // Check if tag already exists.
@@ -275,6 +292,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             messages={sortedMessages}
             currentId={currentId}
             tags={messageTagsMap}
+            starredIds={starredIds}
             threads={settings.threads}
             onAction={handleAction}
           />

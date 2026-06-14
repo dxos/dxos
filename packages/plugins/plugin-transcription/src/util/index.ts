@@ -4,5 +4,4 @@
 
 export * from './array';
 export * from './get-time-str';
-export * from './monitor-audio-level';
 export * from './render-byline';

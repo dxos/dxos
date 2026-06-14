@@ -88,6 +88,7 @@ export const MessageArticle = ({
       attendableId={toolbarAttendableId}
       viewMode={viewMode}
       message={message}
+      mailbox={mailbox}
       sender={sender}
       onOpen={companionTo ? handleOpen : undefined}
       onReply={handleReply}
@@ -99,11 +100,9 @@ export const MessageArticle = ({
         <Panel.Toolbar asChild>
           <Message.Toolbar />
         </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Message.Viewport role={role}>
-            <Message.Header onContactCreate={handleContactCreate} />
-            <Message.Body />
-          </Message.Viewport>
+        <Panel.Content className='grid grid-rows-[auto_1fr]'>
+          <Message.Header onContactCreate={handleContactCreate} />
+          <Message.Body />
         </Panel.Content>
       </Panel.Root>
     </Message.Root>

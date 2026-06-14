@@ -4,6 +4,7 @@
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AnchoredTo } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -26,7 +27,7 @@ const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilitie
 export const MeetingPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting] }),
+  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting, AnchoredTo.AnchoredTo] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

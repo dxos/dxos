@@ -14,7 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "scripts": {
-    "build-exemplar": "vitest run test/build-exemplar-space.node.test.ts",
+    "build-exemplar": "vitest run ./scripts/build-exemplar-space.node.test.ts",
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
     "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
     "demo": "vite-node ./playwright/demos/grid.ts",

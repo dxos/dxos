@@ -8,9 +8,10 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CallDebugPanel, CallSidebar } from '#containers';
-import { CallsCapabilities } from '#types';
+import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
+import { Call, CallsCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -28,6 +29,13 @@ export default Capability.makeModule(() =>
           const state = useAtomValue(call.stateAtom);
           return <CallDebugPanel state={state} />;
         },
+      }),
+      Surface.create({
+        id: 'call',
+        filter: AppSurface.object(AppSurface.Article, Call.Call),
+        component: ({ role, data }) => (
+          <CallArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
     ]),
   ),

@@ -64,7 +64,7 @@
   }
 
   .dx-card-popover {
-    @apply inline-card-max-width bg-card-surface;
+    @apply inline-card-max-width bg-popover-surface;
     max-width: min(var(--radix-popper-available-width), var(--spacing-card-max-width));
     max-height: min(var(--radix-popper-available-height), var(--spacing-card-max-height));
   }

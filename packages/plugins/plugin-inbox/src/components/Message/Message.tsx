@@ -7,18 +7,18 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
+import { TagIndex } from '@dxos/schema';
 import { type Actor, type Message as MessageType } from '@dxos/types';
-import { decorateMarkdown, preview } from '@dxos/ui-editor';
 
-import { InboxCapabilities, Mailbox } from '#types';
+import { InboxCapabilities, Mailbox, Starred } from '#types';
 
-import { hideRemoteImages } from '../../extensions';
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
@@ -36,6 +36,8 @@ type MessageContextValue = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
+  /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
+  mailbox?: Mailbox.Mailbox;
   sender: EID.EID | undefined;
   onOpen?: () => void;
   onReply?: () => void;
@@ -50,6 +52,9 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 // (e.g., in standalone storybook contexts). Keeps Message renderable without the plugin manager
 // providing settings.
 const FALLBACK_SETTINGS_ATOM = Atom.make({ loadRemoteImages: false });
+
+// Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
+const NOT_STARRED = Atom.make(false);
 
 //
 // Root
@@ -112,7 +117,11 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     [setSettings],
   );
 
+  // Optional: the graph capability isn't present in standalone (no-graph-plugin) stories.
+  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
   const menuActions = useMessageActions({
+    graph,
+    nodeId: attendableId,
     message,
     viewMode,
     setViewMode,
@@ -174,7 +183,7 @@ type MessageHeaderProps = ThemedClassName<{
 }>;
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { message } = useMessageContext(MESSAGE_HEADER_NAME);
+  const { message, mailbox } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
   const relationObjects = useExtractedObjects(db, message);
@@ -196,6 +205,22 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     const tag = tagByUri.get(uri);
     return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
   });
+
+  // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
+  // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
+  const starredTag = useQuery(db, Filter.foreignKeys(EchoTag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const tagIndex = mailbox?.tags?.target;
+  const starredAtom = useMemo(
+    () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, message.id, starredUri) : NOT_STARRED),
+    [tagIndex, message.id, starredUri],
+  );
+  const starred = useAtomValue(starredAtom);
+  const handleToggleStar = useCallback(() => {
+    if (mailbox && db) {
+      void Starred.toggleStarred(mailbox, message, db);
+    }
+  }, [mailbox, message, db]);
 
   // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
   // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),
@@ -219,7 +244,11 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         {/* Subject row. */}
         <Card.Row>
           <Card.Block>
-            <Icon icon='ph--envelope-open--regular' />
+            {mailbox ? (
+              <Header.StarButton starred={starred} onToggle={handleToggleStar} />
+            ) : (
+              <Icon icon='ph--envelope-open--regular' />
+            )}
           </Card.Block>
           <div className='flex flex-col gap-1 overflow-hidden'>
             <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
@@ -272,43 +301,13 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
     return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
-  const markdown = viewMode !== 'plain';
-
-  // Message-specific decorations layered on the shared MarkdownViewer core (which already provides
-  // read-only / markdown / theme / open-links). Only meaningful in markdown/enriched views.
-  const extensions = useMemo(
-    () =>
-      markdown
-        ? [
-            decorateMarkdown({
-              skip: (node) => {
-                // Skip dxn: links and images entirely (handled by preview()).
-                if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
-                  return true;
-                }
-                // When remote-image loading is disabled, suppress http(s) image rendering;
-                // `hideRemoteImages` below also omits the raw markdown source entirely.
-                if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
-                  return true;
-                }
-                return false;
-              },
-            }),
-            preview(),
-            // When remote images are disabled, completely omit the image markdown (no visible link).
-            ...(loadRemoteImages ? [] : [hideRemoteImages()]),
-          ]
-        : [],
-    [markdown, loadRemoteImages],
-  );
-
   return (
     <MarkdownViewer
-      content={content}
-      markdown={markdown}
-      slots={{ content: { className: 'mx-4!' } }}
-      extensions={extensions}
       classNames={classNames}
+      content={content}
+      markdown={viewMode !== 'plain'}
+      loadRemoteImages={loadRemoteImages}
+      slots={{ content: { className: 'mx-4!' } }}
     />
   );
 };
