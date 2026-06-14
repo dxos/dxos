@@ -22,7 +22,7 @@ describe('ViewStateManager', () => {
     return new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
   };
 
-  test('returns the slice default for an unwritten context', ({ expect }) => {
+  test('returns the aspect default for an unwritten context', ({ expect }) => {
     const manager = make();
     expect(manager.get(Counter, 'a')).toEqual({ value: 0 });
   });
@@ -45,7 +45,7 @@ describe('ViewStateManager', () => {
     dispose();
   });
 
-  test('contexts enumerates touched contexts for a slice', ({ expect }) => {
+  test('contexts enumerates touched contexts for an aspect', ({ expect }) => {
     const manager = make();
     manager.set(Counter, 'a', { value: 1 });
     manager.set(Counter, 'b', { value: 2 });

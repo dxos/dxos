@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { type SliceDef, type ViewStateManager, defineViewState } from './view-state';
+import { type AspectDef, type ViewStateManager, defineViewState } from './view-state';
 
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 
@@ -51,7 +51,7 @@ export type SelectionResult<T extends SelectionMode> = T extends 'single'
         : never;
 
 /** Selection state for a context, stored in memory (ephemeral, per-device session). */
-export const selectionSlice: SliceDef<Selection> = defineViewState<Selection>({
+export const selectionAspect: AspectDef<Selection> = defineViewState<Selection>({
   key: 'selection',
   backend: 'memory',
   schema: SelectionSchema,
@@ -86,8 +86,8 @@ export const toggleSelection = (selection: Selection | undefined, id: string): S
 /** Union of all multi-selected ids across every selection context, plus an optional explicit id. */
 export const getSelectionSet = (manager: ViewStateManager, contextId?: string): Set<string> => {
   const ids = new Set<string>(contextId ? [contextId] : []);
-  for (const context of manager.contexts(selectionSlice)) {
-    const selection = manager.get(selectionSlice, context);
+  for (const context of manager.contexts(selectionAspect)) {
+    const selection = manager.get(selectionAspect, context);
     if (selection.mode === 'multi') {
       for (const id of selection.ids) {
         ids.add(id);

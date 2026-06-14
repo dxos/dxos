@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the in-memory-only `SelectionManager` with a generic, pluggable-backend `ViewState` mechanism (memory + localStorage now, ECHO/personal-space later), make selection one slice of it, and migrate the markdown editor's bespoke `EditorStateStore` onto it.
+**Goal:** Replace the in-memory-only `SelectionManager` with a generic, pluggable-backend `ViewState` mechanism (memory + localStorage now, ECHO/personal-space later), make selection one aspect of it, and migrate the markdown editor's bespoke `EditorStateStore` onto it.
 
-**Architecture:** A `ViewStateManager` holds a set of declared _slices_ (`defineViewState({ key, backend, schema, defaultValue })`) and routes each `(slice, contextId)` pair to a reactive `Atom.Writable<T>` produced by a named backend. The `memory` backend keeps atoms in a `Map`; the `local` backend seeds atoms from `localStorage`, persists on `set`, and reacts to cross-tab `storage` events. The contract permits asynchronous hydration so a future `personal` (ECHO) backend slots in without interface changes. Selection becomes a memory-backed slice plus pure helpers; thin `useSelection` / `useSelectionActions` hooks preserve today's ergonomics. The editor exemplar swaps `createEditorStateStore` for a `local`-backed slice adapter.
+**Architecture:** A `ViewStateManager` holds a set of declared _aspects_ (`defineViewState({ key, backend, schema, defaultValue })`) and routes each `(aspect, contextId)` pair to a reactive `Atom.Writable<T>` produced by a named backend. The `memory` backend keeps atoms in a `Map`; the `local` backend seeds atoms from `localStorage`, persists on `set`, and reacts to cross-tab `storage` events. The contract permits asynchronous hydration so a future `personal` (ECHO) backend slots in without interface changes. Selection becomes a memory-backed aspect plus pure helpers; thin `useSelection` / `useSelectionActions` hooks preserve today's ergonomics. The editor exemplar swaps `createEditorStateStore` for a `local`-backed aspect adapter.
 
 **Tech Stack:** TypeScript, Effect Schema, `@effect-atom/atom-react` (Atom/Registry), React, vitest, moon.
 
@@ -27,14 +27,14 @@
 
 ## File structure (Phase 1)
 
-- Create `packages/ui/react-ui-attention/src/view-state/view-state.ts` — `SliceDef`, `BackendName`, `defineViewState`, `ViewStateBackend`, `ViewStateManager`.
+- Create `packages/ui/react-ui-attention/src/view-state/view-state.ts` — `AspectDef`, `BackendName`, `defineViewState`, `ViewStateBackend`, `ViewStateManager`.
 - Create `packages/ui/react-ui-attention/src/view-state/backends.ts` — `MemoryBackend`, `LocalBackend`, `createDefaultBackends`.
 - Create `packages/ui/react-ui-attention/src/view-state/index.ts` — barrel.
 - Create tests `view-state.test.ts`, `backends.test.ts` alongside.
 
 ---
 
-### Task 1: Slice definition + types
+### Task 1: Aspect definition + types
 
 **Files:**
 
@@ -68,7 +68,7 @@ describe('ViewStateManager', () => {
     return new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
   };
 
-  test('returns the slice default for an unwritten context', ({ expect }) => {
+  test('returns the aspect default for an unwritten context', ({ expect }) => {
     const manager = make();
     expect(manager.get(Counter, 'a')).toEqual({ value: 0 });
   });
@@ -91,7 +91,7 @@ describe('ViewStateManager', () => {
     dispose();
   });
 
-  test('contexts enumerates touched contexts for a slice', ({ expect }) => {
+  test('contexts enumerates touched contexts for an aspect', ({ expect }) => {
     const manager = make();
     manager.set(Counter, 'a', { value: 1 });
     manager.set(Counter, 'b', { value: 2 });
@@ -123,7 +123,7 @@ export type BackendName = 'memory' | 'local';
 /**
  * Declares a kind of per-context UI state. The value type `T` is inferred from the schema.
  */
-export interface SliceDef<T> {
+export interface AspectDef<T> {
   readonly key: string;
   readonly backend: BackendName;
   readonly schema: Schema.Schema<T, any>;
@@ -133,20 +133,20 @@ export interface SliceDef<T> {
 /**
  * Identity helper that pins the value type from the schema while keeping the literal `key`/`backend`.
  */
-export const defineViewState = <T>(def: SliceDef<T>): SliceDef<T> => def;
+export const defineViewState = <T>(def: AspectDef<T>): AspectDef<T> => def;
 
 /**
- * A backend produces a reactive, writable atom for each `(slice, contextId)` pair. Backends may
- * hydrate asynchronously (an ECHO backend would), yielding `slice.defaultValue()` until loaded;
+ * A backend produces a reactive, writable atom for each `(aspect, contextId)` pair. Backends may
+ * hydrate asynchronously (an ECHO backend would), yielding `aspect.defaultValue()` until loaded;
  * the memory and local backends resolve synchronously.
  */
 export interface ViewStateBackend {
   /** Stable atom for the pair; created (and seeded) on first access, cached thereafter. */
-  atom: <T>(slice: SliceDef<T>, contextId: string) => Atom.Writable<T>;
+  atom: <T>(aspect: AspectDef<T>, contextId: string) => Atom.Writable<T>;
   /** Persist a value after the atom is updated. No-op for in-memory backends. */
-  persist?: <T>(slice: SliceDef<T>, contextId: string, value: T) => void;
-  /** Context ids that currently hold a value for the slice. */
-  contexts: (slice: SliceDef<unknown>) => string[];
+  persist?: <T>(aspect: AspectDef<T>, contextId: string, value: T) => void;
+  /** Context ids that currently hold a value for the aspect. */
+  contexts: (aspect: AspectDef<unknown>) => string[];
   /** Release listeners/timers (used by tests; app-lifetime managers do not call this). */
   dispose?: () => void;
 }
@@ -157,7 +157,7 @@ export interface ViewStateManagerOptions {
 }
 
 /**
- * Routes per-context UI state to the backend declared by each slice. Reads/writes go through the
+ * Routes per-context UI state to the backend declared by each aspect. Reads/writes go through the
  * effect-atom registry so React hooks and graph atoms observe changes uniformly.
  */
 export class ViewStateManager {
@@ -169,32 +169,32 @@ export class ViewStateManager {
     this.#backends = backends;
   }
 
-  /** Reactive atom for `(slice, contextId)`; pass to `registry.get` inside derived atoms/hooks. */
-  atom<T>(slice: SliceDef<T>, contextId: string): Atom.Writable<T> {
-    return this.#backends[slice.backend].atom(slice, contextId);
+  /** Reactive atom for `(aspect, contextId)`; pass to `registry.get` inside derived atoms/hooks. */
+  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+    return this.#backends[aspect.backend].atom(aspect, contextId);
   }
 
-  get<T>(slice: SliceDef<T>, contextId: string): T {
-    return this.#registry.get(this.atom(slice, contextId));
+  get<T>(aspect: AspectDef<T>, contextId: string): T {
+    return this.#registry.get(this.atom(aspect, contextId));
   }
 
-  set<T>(slice: SliceDef<T>, contextId: string, value: T): void {
-    const backend = this.#backends[slice.backend];
-    this.#registry.set(backend.atom(slice, contextId), value);
-    backend.persist?.(slice, contextId, value);
+  set<T>(aspect: AspectDef<T>, contextId: string, value: T): void {
+    const backend = this.#backends[aspect.backend];
+    this.#registry.set(backend.atom(aspect, contextId), value);
+    backend.persist?.(aspect, contextId, value);
   }
 
-  update<T>(slice: SliceDef<T>, contextId: string, fn: (prev: T) => T): void {
-    this.set(slice, contextId, fn(this.get(slice, contextId)));
+  update<T>(aspect: AspectDef<T>, contextId: string, fn: (prev: T) => T): void {
+    this.set(aspect, contextId, fn(this.get(aspect, contextId)));
   }
 
-  subscribe<T>(slice: SliceDef<T>, contextId: string, cb: (value: T) => void): () => void {
-    const atom = this.atom(slice, contextId);
+  subscribe<T>(aspect: AspectDef<T>, contextId: string, cb: (value: T) => void): () => void {
+    const atom = this.atom(aspect, contextId);
     return this.#registry.subscribe(atom, () => cb(this.#registry.get(atom)));
   }
 
-  contexts<T>(slice: SliceDef<T>): string[] {
-    return this.#backends[slice.backend].contexts(slice);
+  contexts<T>(aspect: AspectDef<T>): string[] {
+    return this.#backends[aspect.backend].contexts(aspect);
   }
 }
 ```
@@ -210,26 +210,26 @@ Create `packages/ui/react-ui-attention/src/view-state/backends.ts` with the `Mem
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { type BackendName, type SliceDef, type ViewStateBackend } from './view-state';
+import { type AspectDef, type BackendName, type ViewStateBackend } from './view-state';
 
-const cacheKey = (slice: SliceDef<unknown>, contextId: string) => `${slice.key}:${contextId}`;
+const cacheKey = (aspect: AspectDef<unknown>, contextId: string) => `${aspect.key}:${contextId}`;
 
 /** In-memory backend: reproduces the legacy `SelectionManager` behaviour. */
 export class MemoryBackend implements ViewStateBackend {
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
 
-  atom<T>(slice: SliceDef<T>, contextId: string): Atom.Writable<T> {
-    const key = cacheKey(slice, contextId);
+  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+    const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
-      atom = Atom.make<unknown>(slice.defaultValue());
+      atom = Atom.make<unknown>(aspect.defaultValue());
       this.#atoms.set(key, atom);
     }
     return atom as Atom.Writable<T>;
   }
 
-  contexts(slice: SliceDef<unknown>): string[] {
-    const prefix = `${slice.key}:`;
+  contexts(aspect: AspectDef<unknown>): string[] {
+    const prefix = `${aspect.key}:`;
     return [...this.#atoms.keys()].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
   }
 }
@@ -249,7 +249,7 @@ Expected: PASS (4 tests).
 
 ```bash
 git add packages/ui/react-ui-attention/src/view-state/
-git commit -m "feat(react-ui-attention): add ViewStateManager + slice definitions
+git commit -m "feat(react-ui-attention): add ViewStateManager + aspect definitions
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -359,7 +359,7 @@ Add to `backends.ts` (keep `MemoryBackend`; replace the `local: memory` wiring):
 import * as Schema from 'effect/Schema';
 
 const STORAGE_PREFIX = 'dxos:view-state:';
-const storageKeyFor = (slice: SliceDef<unknown>, contextId: string) => `${STORAGE_PREFIX}${slice.key}:${contextId}`;
+const storageKeyFor = (aspect: AspectDef<unknown>, contextId: string) => `${STORAGE_PREFIX}${aspect.key}:${contextId}`;
 
 export interface LocalBackendOptions {
   readonly registry: Registry.Registry;
@@ -372,8 +372,8 @@ export class LocalBackend implements ViewStateBackend {
   readonly #registry: Registry.Registry;
   readonly #storage: Storage;
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
-  // Reverse map: storage key -> (slice, contextId) so `storage` events can target the right atom.
-  readonly #byStorageKey = new Map<string, { slice: SliceDef<unknown>; contextId: string }>();
+  // Reverse map: storage key -> (aspect, contextId) so `storage` events can target the right atom.
+  readonly #byStorageKey = new Map<string, { aspect: AspectDef<unknown>; contextId: string }>();
   #storageListener?: (event: StorageEvent) => void;
 
   constructor({ registry, storage = globalThis.localStorage }: LocalBackendOptions) {
@@ -385,33 +385,33 @@ export class LocalBackend implements ViewStateBackend {
           return;
         }
         const entry = this.#byStorageKey.get(event.key);
-        const atom = entry && this.#atoms.get(cacheKey(entry.slice, entry.contextId));
+        const atom = entry && this.#atoms.get(cacheKey(entry.aspect, entry.contextId));
         if (entry && atom) {
-          this.#registry.set(atom, this.#read(entry.slice, event.key));
+          this.#registry.set(atom, this.#read(entry.aspect, event.key));
         }
       };
       globalThis.addEventListener('storage', this.#storageListener);
     }
   }
 
-  atom<T>(slice: SliceDef<T>, contextId: string): Atom.Writable<T> {
-    const key = cacheKey(slice, contextId);
+  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+    const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
-      const storageKey = storageKeyFor(slice, contextId);
-      atom = Atom.make<unknown>(this.#read(slice, storageKey));
+      const storageKey = storageKeyFor(aspect, contextId);
+      atom = Atom.make<unknown>(this.#read(aspect, storageKey));
       this.#atoms.set(key, atom);
-      this.#byStorageKey.set(storageKey, { slice, contextId });
+      this.#byStorageKey.set(storageKey, { aspect, contextId });
     }
     return atom as Atom.Writable<T>;
   }
 
-  persist<T>(slice: SliceDef<T>, contextId: string, value: T): void {
-    this.#storage.setItem(storageKeyFor(slice, contextId), JSON.stringify(Schema.encodeSync(slice.schema)(value)));
+  persist<T>(aspect: AspectDef<T>, contextId: string, value: T): void {
+    this.#storage.setItem(storageKeyFor(aspect, contextId), JSON.stringify(Schema.encodeSync(aspect.schema)(value)));
   }
 
-  contexts(slice: SliceDef<unknown>): string[] {
-    const prefix = storageKeyFor(slice, '');
+  contexts(aspect: AspectDef<unknown>): string[] {
+    const prefix = storageKeyFor(aspect, '');
     const ids: string[] = [];
     for (let index = 0; index < this.#storage.length; index++) {
       const key = this.#storage.key(index);
@@ -428,16 +428,16 @@ export class LocalBackend implements ViewStateBackend {
     }
   }
 
-  #read<T>(slice: SliceDef<T>, storageKey: string): T {
+  #read<T>(aspect: AspectDef<T>, storageKey: string): T {
     const raw = this.#storage.getItem(storageKey);
     if (raw == null) {
-      return slice.defaultValue();
+      return aspect.defaultValue();
     }
     try {
-      return Schema.decodeUnknownSync(slice.schema)(JSON.parse(raw));
+      return Schema.decodeUnknownSync(aspect.schema)(JSON.parse(raw));
     } catch {
       // Tolerate stale/corrupt entries (e.g. a prior schema shape) by falling back to the default.
-      return slice.defaultValue();
+      return aspect.defaultValue();
     }
   }
 }
@@ -484,18 +484,18 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
-# Phase 2 — Selection as a slice + hooks + call-site migration
+# Phase 2 — Selection as an aspect + hooks + call-site migration
 
 ## File structure (Phase 2)
 
-- Modify `packages/ui/react-ui-attention/src/selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`SelectionSchema`/`defaultSelection`; add `selectionSlice` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
+- Modify `packages/ui/react-ui-attention/src/selection.ts` — keep `SelectionMode`/`Selection`/`SelectionResult`/`SelectionSchema`/`defaultSelection`; add `selectionAspect` + pure helpers (`resolveSelection`, `toggleSelection`); reimplement `getSelectionSet` against `ViewStateManager`; **remove the `SelectionManager` class**.
 - Rename dir `components/SelectionProvider/` → `components/ViewStateProvider/`; file `ViewStateProvider.tsx` exporting `ViewStateProvider`, `useViewStateManager`, `useViewState`, `useViewStateActions`, `useSelection`, `useSelectionActions`.
 - Update `components/index.ts`, `src/index.ts`, `src/types/index.ts`.
 - Migrate all consumers (Tasks 5–8).
 
 ---
 
-### Task 3: Selection slice + pure helpers
+### Task 3: Selection aspect + pure helpers
 
 **Files:**
 
@@ -511,13 +511,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 import { describe, test } from 'vitest';
 
-import { resolveSelection, selectionSlice, toggleSelection } from './selection';
+import { resolveSelection, selectionAspect, toggleSelection } from './selection';
 
 describe('selection helpers', () => {
-  test('selectionSlice declares a memory-backed slice', ({ expect }) => {
-    expect(selectionSlice.key).toEqual('selection');
-    expect(selectionSlice.backend).toEqual('memory');
-    expect(selectionSlice.defaultValue()).toEqual({ mode: 'multi', ids: [] });
+  test('selectionAspect declares a memory-backed aspect', ({ expect }) => {
+    expect(selectionAspect.key).toEqual('selection');
+    expect(selectionAspect.backend).toEqual('memory');
+    expect(selectionAspect.defaultValue()).toEqual({ mode: 'multi', ids: [] });
   });
 
   test('resolveSelection extracts the value for the requested mode', ({ expect }) => {
@@ -546,7 +546,7 @@ describe('selection helpers', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `moon run react-ui-attention:test -- src/selection.test.ts`
-Expected: FAIL — `selectionSlice` / `resolveSelection` / `toggleSelection` not exported.
+Expected: FAIL — `selectionAspect` / `resolveSelection` / `toggleSelection` not exported.
 
 - [ ] **Step 3: Rewrite `selection.ts`**
 
@@ -557,7 +557,7 @@ import { defineViewState } from './view-state';
 import type { ViewStateManager } from './view-state';
 
 /** Selection state for a context, stored in memory (ephemeral, per-device session). */
-export const selectionSlice = defineViewState<Selection>({
+export const selectionAspect = defineViewState<Selection>({
   key: 'selection',
   backend: 'memory',
   schema: SelectionSchema,
@@ -591,8 +591,8 @@ export const toggleSelection = (selection: Selection | undefined, id: string): S
 /** Union of all multi-selected ids across every selection context, plus an optional explicit id. */
 export const getSelectionSet = (manager: ViewStateManager, contextId?: string): Set<string> => {
   const ids = new Set<string>(contextId ? [contextId] : []);
-  for (const context of manager.contexts(selectionSlice)) {
-    const selection = manager.get(selectionSlice, context);
+  for (const context of manager.contexts(selectionAspect)) {
+    const selection = manager.get(selectionAspect, context);
     if (selection.mode === 'multi') {
       for (const id of selection.ids) {
         ids.add(id);
@@ -614,7 +614,7 @@ Expected: PASS (4 tests). The package will not fully build yet (SelectionProvide
 
 ```bash
 git add packages/ui/react-ui-attention/src/selection.ts packages/ui/react-ui-attention/src/selection.test.ts
-git commit -m "refactor(react-ui-attention): make selection a ViewState slice with pure helpers
+git commit -m "refactor(react-ui-attention): make selection a ViewState aspect with pure helpers
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -707,17 +707,17 @@ import {
   type SelectionMode,
   type SelectionResult,
   resolveSelection,
-  selectionSlice,
+  selectionAspect,
   toggleSelection,
 } from '../../selection';
-import { type SliceDef, ViewStateManager, createDefaultBackends } from '../../view-state';
+import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
 
 const VIEW_STATE_NAME = 'ViewState';
 
 type ViewStateContextValue = { manager: ViewStateManager };
 
 // Default value lets consumers render outside a provider (isolated stories/tests) without throwing;
-// `manager` reads as `undefined` and hooks fall back to slice defaults / no-op actions.
+// `manager` reads as `undefined` and hooks fall back to aspect defaults / no-op actions.
 const [ViewStateContextProvider, useViewStateContext] = createContext<ViewStateContextValue>(VIEW_STATE_NAME, {
   manager: undefined as unknown as ViewStateManager,
 });
@@ -737,20 +737,20 @@ export const ViewStateProvider = ({
 
 export const useViewStateManager = (): ViewStateManager => useViewStateContext(VIEW_STATE_NAME).manager;
 
-/** Reactive read of a slice value for a context; yields the slice default when unset or unprovided. */
-export const useViewState = <T,>(slice: SliceDef<T>, contextId?: string): T => {
+/** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
+export const useViewState = <T,>(aspect: AspectDef<T>, contextId?: string): T => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   const [value, setValue] = useState<T>(() =>
-    contextId && manager ? manager.get(slice, contextId) : slice.defaultValue(),
+    contextId && manager ? manager.get(aspect, contextId) : aspect.defaultValue(),
   );
   useEffect(() => {
     if (!contextId || !manager) {
-      setValue(slice.defaultValue());
+      setValue(aspect.defaultValue());
       return;
     }
-    setValue(manager.get(slice, contextId));
-    return manager.subscribe(slice, contextId, setValue);
-  }, [manager, slice, contextId]);
+    setValue(manager.get(aspect, contextId));
+    return manager.subscribe(aspect, contextId, setValue);
+  }, [manager, aspect, contextId]);
   return value;
 };
 
@@ -760,21 +760,21 @@ export type UseViewStateActions<T> = {
   clear: () => void;
 };
 
-export const useViewStateActions = <T,>(slice: SliceDef<T>, contextId?: string): UseViewStateActions<T> => {
+export const useViewStateActions = <T,>(aspect: AspectDef<T>, contextId?: string): UseViewStateActions<T> => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return useMemo<UseViewStateActions<T>>(
     () => ({
-      set: (value) => contextId && manager?.set(slice, contextId, value),
-      update: (fn) => contextId && manager?.update(slice, contextId, fn),
-      clear: () => contextId && manager?.set(slice, contextId, slice.defaultValue()),
+      set: (value) => contextId && manager?.set(aspect, contextId, value),
+      update: (fn) => contextId && manager?.update(aspect, contextId, fn),
+      clear: () => contextId && manager?.set(aspect, contextId, aspect.defaultValue()),
     }),
-    [manager, slice, contextId],
+    [manager, aspect, contextId],
   );
 };
 
 /** Resolved selection value for `contextId` in the requested `mode` (default `multi`). */
 export const useSelection = <T extends SelectionMode>(contextId?: string, mode: T = 'multi' as T): SelectionResult<T> =>
-  resolveSelection(useViewState(selectionSlice, contextId), mode);
+  resolveSelection(useViewState(selectionAspect, contextId), mode);
 
 export type UseSelectionActions = {
   single: (id: string) => void;
@@ -786,7 +786,7 @@ export type UseSelectionActions = {
 
 /** Selection mutators for a single context, built on the generic ViewState actions. */
 export const useSelectionActions = (contextId?: string): UseSelectionActions => {
-  const { update, clear } = useViewStateActions(selectionSlice, contextId);
+  const { update, clear } = useViewStateActions(selectionAspect, contextId);
   return useMemo<UseSelectionActions>(
     () => ({
       single: (id) => update(() => ({ mode: 'single', id })),
@@ -961,13 +961,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `packages/plugins/plugin-trip/src/capabilities/app-graph-builder.ts`
 - Modify: `packages/plugins/plugin-comments/src/capabilities/app-graph-builder.ts`
 
-- [ ] **Step 1: plugin-trip.** Replace the `SelectionManager` import with `ViewStateManager`, `selectionSlice`; consume `AttentionCapabilities.ViewState`. Rewrite `resolvePlanningWindow` and `selectedId`:
+- [ ] **Step 1: plugin-trip.** Replace the `SelectionManager` import with `ViewStateManager`, `selectionAspect`; consume `AttentionCapabilities.ViewState`. Rewrite `resolvePlanningWindow` and `selectedId`:
 
 ```ts
-import { linkedSegment, selectionSlice, type ViewStateManager } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 // ...
 const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { from: Date; to: Date } => {
-  const selection = viewState.get(selectionSlice, getCalendarRangeSelectionId(nodeId));
+  const selection = viewState.get(selectionAspect, getCalendarRangeSelectionId(nodeId));
   const range =
     selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }
@@ -981,7 +981,7 @@ const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { f
 const viewState = yield * Capability.get(AttentionCapabilities.ViewState);
 const selectedId = Atom.family((nodeId: string) =>
   Atom.make((get) => {
-    const selection = get(viewState.atom(selectionSlice, nodeId));
+    const selection = get(viewState.atom(selectionAspect, nodeId));
     return selection.mode === 'single' ? selection.id : undefined;
   }),
 );
@@ -989,20 +989,20 @@ const selectedId = Atom.family((nodeId: string) =>
 
 Update the `resolvePlanningWindow(selectionManager, …)` call site to pass `viewState`.
 
-- [ ] **Step 2: plugin-comments.** Replace imports with `selectionSlice, type ViewStateManager` (drop `SelectionMode`/`defaultSelection` unless still referenced for `selectionMode` config — keep `SelectionMode` import if the `selectionMode` field type uses it). Change the `selectionManager: SelectionManager` field to `viewState: ViewStateManager`. Rewrite the reactive read (current lines 43–46):
+- [ ] **Step 2: plugin-comments.** Replace imports with `selectionAspect, type ViewStateManager` (drop `SelectionMode`/`defaultSelection` unless still referenced for `selectionMode` config — keep `SelectionMode` import if the `selectionMode` field type uses it). Change the `selectionManager: SelectionManager` field to `viewState: ViewStateManager`. Rewrite the reactive read (current lines 43–46):
 
 ```ts
-const selection = get(viewState.atom(selectionSlice, objectId));
+const selection = get(viewState.atom(selectionAspect, objectId));
 const anchor = getAnchor(selection);
 ```
 
 And the imperative read (current line 118):
 
 ```ts
-const selection = viewState.get(selectionSlice, objectUri);
+const selection = viewState.get(selectionAspect, objectUri);
 ```
 
-Update the capability lookup (line 100) to `AttentionCapabilities.ViewState` and the params object key (`selectionManager` → `viewState`). The `selectionMode` config and `getAnchor` logic are unchanged; the slice default (`multi`) already stands in for the previous `defaultSelection(selectionMode)` fallback when a context is unwritten.
+Update the capability lookup (line 100) to `AttentionCapabilities.ViewState` and the params object key (`selectionManager` → `viewState`). The `selectionMode` config and `getAnchor` logic are unchanged; the aspect default (`multi`) already stands in for the previous `defaultSelection(selectionMode)` fallback when a context is unwritten.
 
 - [ ] **Step 3: Build.**
 
@@ -1027,10 +1027,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Modify: `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`
 - Modify: `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`
 
-- [ ] **Step 1: Update the writer.** In `useExtensions.tsx`: replace the `SelectionManager` import/type with `ViewStateManager` + `selectionSlice`. Rename the `selectionManager?: SelectionManager` option to `viewState?: ViewStateManager`. Rewrite `selectionChange` to write a `multi-range` selection through the manager:
+- [ ] **Step 1: Update the writer.** In `useExtensions.tsx`: replace the `SelectionManager` import/type with `ViewStateManager` + `selectionAspect`. Rename the `selectionManager?: SelectionManager` option to `viewState?: ViewStateManager`. Rewrite `selectionChange` to write a `multi-range` selection through the manager:
 
 ```ts
-import { selectionSlice, type ViewStateManager } from '@dxos/react-ui-attention';
+import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 // ...
 const selectionChange = (viewState: ViewStateManager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
@@ -1040,7 +1040,7 @@ const selectionChange = (viewState: ViewStateManager) => {
     const ranges = selection.ranges
       .filter((range) => range.to > range.from)
       .map((range) => ({ from: cursorConverter.toCursor(range.from), to: cursorConverter.toCursor(range.to) }));
-    viewState.set(selectionSlice, id, { mode: 'multi-range', ranges });
+    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {
@@ -1076,7 +1076,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## File structure (Phase 3)
 
 - Modify `packages/ui/ui-editor/src/extensions/selection.ts` — add an Effect Schema for `EditorSelectionState`; **delete `createEditorStateStore`**; keep `EditorStateStore` type + `selectionState` extension (the get/set seam stays).
-- Modify `packages/plugins/plugin-markdown/src/capabilities/state.ts` — build the editor store from the `ViewStateManager` editor slice instead of `createEditorStateStore`.
+- Modify `packages/plugins/plugin-markdown/src/capabilities/state.ts` — build the editor store from the `ViewStateManager` editor aspect instead of `createEditorStateStore`.
 - Modify `packages/plugins/plugin-markdown/src/types/MarkdownCapabilities.ts` — unchanged type, but the value is now manager-backed (no code change unless import path changes).
 - Modify `packages/ui/react-ui-editor/src/stories/components/util.tsx` — story helper uses an in-memory store (already does via `global` Map); replace any `createEditorStateStore` usage.
 
@@ -1161,14 +1161,14 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
-### Task 10: Back editor state with the ViewState local slice
+### Task 10: Back editor state with the ViewState local aspect
 
 **Files:**
 
 - Modify: `packages/plugins/plugin-markdown/src/capabilities/state.ts`
-- Create: `packages/plugins/plugin-markdown/src/capabilities/editor-view-state.ts` (the slice + adapter)
+- Create: `packages/plugins/plugin-markdown/src/capabilities/editor-view-state.ts` (the aspect + adapter)
 
-- [ ] **Step 1: Define the editor slice + an `EditorStateStore` adapter.** Create `editor-view-state.ts`:
+- [ ] **Step 1: Define the editor aspect + an `EditorStateStore` adapter.** Create `editor-view-state.ts`:
 
 ```ts
 //
@@ -1179,7 +1179,7 @@ import { type ViewStateManager, defineViewState } from '@dxos/react-ui-attention
 import { type EditorStateStore, EditorSelectionStateSchema } from '@dxos/ui-editor';
 
 /** Per-document editor scroll/caret state, persisted to localStorage on this device. */
-export const editorViewStateSlice = defineViewState({
+export const editorViewStateAspect = defineViewState({
   key: 'editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
@@ -1188,12 +1188,12 @@ export const editorViewStateSlice = defineViewState({
 
 /** Adapts the imperative editor store seam onto the ViewState manager (local backend). */
 export const createEditorViewStateStore = (manager: ViewStateManager): EditorStateStore => ({
-  getState: (id) => manager.get(editorViewStateSlice, id),
-  setState: (id, state) => manager.set(editorViewStateSlice, id, state),
+  getState: (id) => manager.get(editorViewStateAspect, id),
+  setState: (id, state) => manager.set(editorViewStateAspect, id, state),
 });
 ```
 
-> `EditorStateStore.getState` returns `EditorSelectionState | undefined`; the adapter returns the slice default `{}` instead of `undefined`. Confirm `selectionState`/`MarkdownEditorContent` treat `{}` the same as `undefined` (they read `scrollTo`/`selection` which are simply absent). If any code branches on the whole object being undefined, adjust it to check the fields. Verify by reading `MarkdownEditorContent.tsx:89` and `ui-editor/.../selection.ts` Ctrl-r handler.
+> `EditorStateStore.getState` returns `EditorSelectionState | undefined`; the adapter returns the aspect default `{}` instead of `undefined`. Confirm `selectionState`/`MarkdownEditorContent` treat `{}` the same as `undefined` (they read `scrollTo`/`selection` which are simply absent). If any code branches on the whole object being undefined, adjust it to check the fields. Verify by reading `MarkdownEditorContent.tsx:89` and `ui-editor/.../selection.ts` Ctrl-r handler.
 
 - [ ] **Step 2: Wire it in `state.ts`.** The `state.ts` makeModule must obtain the `ViewStateManager`. Resolve the attention capability inside the module:
 
@@ -1222,7 +1222,7 @@ Expected: success.
 
 ```bash
 git add packages/plugins/plugin-markdown/src
-git commit -m "feat(plugin-markdown): back editor scroll/caret state with ViewState local slice
+git commit -m "feat(plugin-markdown): back editor scroll/caret state with ViewState local aspect
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```

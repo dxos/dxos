@@ -23,7 +23,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionSlice } from '@dxos/react-ui-attention';
+import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -49,7 +49,7 @@ export default Capability.makeModule(
     // Derive a single-mode selected id per context from the ViewStateManager selection slice.
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionSlice, nodeId));
+        const selection = get(viewState.atom(selectionAspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );

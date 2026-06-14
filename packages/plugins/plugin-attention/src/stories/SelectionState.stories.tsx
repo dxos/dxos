@@ -29,12 +29,12 @@ import {
 import { mx } from '@dxos/ui-theme';
 
 //
-// Editor ViewState slice — local (localStorage) backed, per document id.
+// Editor ViewState aspect — local (localStorage) backed, per document id.
 // Mirrors plugin-markdown's editor-view-state.ts but defined inline so
 // plugin-attention does not depend on plugin-markdown.
 //
 
-const editorViewStateSlice = defineViewState({
+const editorViewStateAspect = defineViewState({
   key: 'story-editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
@@ -42,8 +42,8 @@ const editorViewStateSlice = defineViewState({
 });
 
 const makeEditorStore = (manager: ViewStateManager): EditorStateStore => ({
-  getState: (id) => manager.get(editorViewStateSlice, id),
-  setState: (id, state) => manager.set(editorViewStateSlice, id, state),
+  getState: (id) => manager.get(editorViewStateAspect, id),
+  setState: (id, state) => manager.set(editorViewStateAspect, id, state),
 });
 
 //

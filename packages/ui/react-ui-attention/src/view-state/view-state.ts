@@ -13,7 +13,7 @@ export type BackendName = 'memory' | 'local';
 /**
  * Declares a kind of per-context UI state. The value type `T` is inferred from the schema.
  */
-export interface SliceDef<T> {
+export interface AspectDef<T> {
   readonly key: string;
   readonly backend: BackendName;
   // Encoded type is intentionally unconstrained: persisted backends serialize `T` through the
@@ -25,20 +25,20 @@ export interface SliceDef<T> {
 /**
  * Identity helper that pins the value type from the schema while keeping the literal `key`/`backend`.
  */
-export const defineViewState = <T>(def: SliceDef<T>): SliceDef<T> => def;
+export const defineViewState = <T>(def: AspectDef<T>): AspectDef<T> => def;
 
 /**
- * A backend produces a reactive, writable atom for each `(slice, contextId)` pair. Backends may
- * hydrate asynchronously (an ECHO backend would), yielding `slice.defaultValue()` until loaded;
+ * A backend produces a reactive, writable atom for each `(aspect, contextId)` pair. Backends may
+ * hydrate asynchronously (an ECHO backend would), yielding `aspect.defaultValue()` until loaded;
  * the memory and local backends resolve synchronously.
  */
 export interface ViewStateBackend {
   /** Stable atom for the pair; created (and seeded) on first access, cached thereafter. */
-  atom: <T>(slice: SliceDef<T>, contextId: string) => Atom.Writable<T>;
+  atom: <T>(aspect: AspectDef<T>, contextId: string) => Atom.Writable<T>;
   /** Persist a value after the atom is updated. No-op for in-memory backends. */
-  persist?: <T>(slice: SliceDef<T>, contextId: string, value: T) => void;
-  /** Context ids that currently hold a value for the slice. */
-  contexts: <T>(slice: SliceDef<T>) => string[];
+  persist?: <T>(aspect: AspectDef<T>, contextId: string, value: T) => void;
+  /** Context ids that currently hold a value for the aspect. */
+  contexts: <T>(aspect: AspectDef<T>) => string[];
   /** Release listeners/timers (used by tests; app-lifetime managers do not call this). */
   dispose?: () => void;
 }
@@ -49,7 +49,7 @@ export interface ViewStateManagerOptions {
 }
 
 /**
- * Routes per-context UI state to the backend declared by each slice. Reads/writes go through the
+ * Routes per-context UI state to the backend declared by each aspect. Reads/writes go through the
  * effect-atom registry so React hooks and graph atoms observe changes uniformly.
  */
 export class ViewStateManager {
@@ -61,31 +61,31 @@ export class ViewStateManager {
     this.#backends = backends;
   }
 
-  /** Reactive atom for `(slice, contextId)`; pass to `registry.get` inside derived atoms/hooks. */
-  atom<T>(slice: SliceDef<T>, contextId: string): Atom.Writable<T> {
-    return this.#backends[slice.backend].atom(slice, contextId);
+  /** Reactive atom for `(aspect, contextId)`; pass to `registry.get` inside derived atoms/hooks. */
+  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+    return this.#backends[aspect.backend].atom(aspect, contextId);
   }
 
-  get<T>(slice: SliceDef<T>, contextId: string): T {
-    return this.#registry.get(this.atom(slice, contextId));
+  get<T>(aspect: AspectDef<T>, contextId: string): T {
+    return this.#registry.get(this.atom(aspect, contextId));
   }
 
-  set<T>(slice: SliceDef<T>, contextId: string, value: T): void {
-    const backend = this.#backends[slice.backend];
-    this.#registry.set(backend.atom(slice, contextId), value);
-    backend.persist?.(slice, contextId, value);
+  set<T>(aspect: AspectDef<T>, contextId: string, value: T): void {
+    const backend = this.#backends[aspect.backend];
+    this.#registry.set(backend.atom(aspect, contextId), value);
+    backend.persist?.(aspect, contextId, value);
   }
 
-  update<T>(slice: SliceDef<T>, contextId: string, fn: (prev: T) => T): void {
-    this.set(slice, contextId, fn(this.get(slice, contextId)));
+  update<T>(aspect: AspectDef<T>, contextId: string, fn: (prev: T) => T): void {
+    this.set(aspect, contextId, fn(this.get(aspect, contextId)));
   }
 
-  subscribe<T>(slice: SliceDef<T>, contextId: string, cb: (value: T) => void): () => void {
-    const atom = this.atom(slice, contextId);
+  subscribe<T>(aspect: AspectDef<T>, contextId: string, cb: (value: T) => void): () => void {
+    const atom = this.atom(aspect, contextId);
     return this.#registry.subscribe(atom, () => cb(this.#registry.get(atom)));
   }
 
-  contexts<T>(slice: SliceDef<T>): string[] {
-    return this.#backends[slice.backend].contexts(slice);
+  contexts<T>(aspect: AspectDef<T>): string[] {
+    return this.#backends[aspect.backend].contexts(aspect);
   }
 }

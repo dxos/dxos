@@ -7,7 +7,7 @@ import { type ViewStateManager, defineViewState } from '@dxos/react-ui-attention
 import { type EditorStateStore, EditorSelectionStateSchema } from '@dxos/ui-editor';
 
 /** Per-document editor scroll/caret state, persisted to localStorage on this device. */
-export const editorViewStateSlice = defineViewState({
+export const editorViewStateAspect = defineViewState({
   key: 'editor',
   backend: 'local',
   schema: EditorSelectionStateSchema,
@@ -19,10 +19,10 @@ export const createEditorViewStateStore = (manager: ViewStateManager): EditorSta
   getState: (id) => {
     // Guard against an unset document id, which would key state under a literal "undefined".
     invariant(id);
-    return manager.get(editorViewStateSlice, id);
+    return manager.get(editorViewStateAspect, id);
   },
   setState: (id, state) => {
     invariant(id);
-    manager.set(editorViewStateSlice, id, state);
+    manager.set(editorViewStateAspect, id, state);
   },
 });

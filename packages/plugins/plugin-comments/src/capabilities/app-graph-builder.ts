@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment, selectionSlice, type ViewStateManager } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -37,7 +37,7 @@ const commentDisabledFamily = Atom.family(({ stateAtom, viewState, objectId, com
     const stateAtoms = get(stateAtom);
     const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
     const toolbar = state?.toolbar ?? {};
-    const selection = get(viewState.atom(selectionSlice, objectId));
+    const selection = get(viewState.atom(selectionAspect, objectId));
     const anchor = getAnchor(selection);
     const invalidSelection = !anchor;
     const overlappingComment = toolbar[objectId];
@@ -109,7 +109,7 @@ export default Capability.makeModule(
               id: 'comment',
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
-                const selection = viewState.get(selectionSlice, objectUri);
+                const selection = viewState.get(selectionAspect, objectUri);
                 const anchor =
                   (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
                 const name = config.getAnchorLabel?.(object, anchor);

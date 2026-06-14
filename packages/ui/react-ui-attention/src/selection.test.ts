@@ -5,14 +5,14 @@
 import { Registry } from '@effect-atom/atom-react';
 import { describe, test } from 'vitest';
 
-import { getSelectionSet, resolveSelection, selectionSlice, toggleSelection } from './selection';
+import { getSelectionSet, resolveSelection, selectionAspect, toggleSelection } from './selection';
 import { ViewStateManager, createDefaultBackends } from './view-state';
 
 describe('selection helpers', () => {
-  test('selectionSlice declares a memory-backed slice', ({ expect }) => {
-    expect(selectionSlice.key).toEqual('selection');
-    expect(selectionSlice.backend).toEqual('memory');
-    expect(selectionSlice.defaultValue()).toEqual({ mode: 'multi', ids: [] });
+  test('selectionAspect declares a memory-backed aspect', ({ expect }) => {
+    expect(selectionAspect.key).toEqual('selection');
+    expect(selectionAspect.backend).toEqual('memory');
+    expect(selectionAspect.defaultValue()).toEqual({ mode: 'multi', ids: [] });
   });
 
   test('resolveSelection extracts the value for the requested mode', ({ expect }) => {
@@ -48,16 +48,16 @@ describe('getSelectionSet', () => {
 
   test('unions multi-selected ids across every context', ({ expect }) => {
     const manager = makeManager();
-    manager.set(selectionSlice, 'ctx-a', { mode: 'multi', ids: ['a1', 'a2'] });
-    manager.set(selectionSlice, 'ctx-b', { mode: 'multi', ids: ['a2', 'b1'] });
+    manager.set(selectionAspect, 'ctx-a', { mode: 'multi', ids: ['a1', 'a2'] });
+    manager.set(selectionAspect, 'ctx-b', { mode: 'multi', ids: ['a2', 'b1'] });
     // Single-mode contexts contribute nothing to the set.
-    manager.set(selectionSlice, 'ctx-c', { mode: 'single', id: 'c1' });
+    manager.set(selectionAspect, 'ctx-c', { mode: 'single', id: 'c1' });
     expect(getSelectionSet(manager)).toEqual(new Set(['a1', 'a2', 'b1']));
   });
 
   test('seeds the set with the optional explicit contextId', ({ expect }) => {
     const manager = makeManager();
-    manager.set(selectionSlice, 'ctx-a', { mode: 'multi', ids: ['a1'] });
+    manager.set(selectionAspect, 'ctx-a', { mode: 'multi', ids: ['a1'] });
     expect(getSelectionSet(manager, 'explicit')).toEqual(new Set(['explicit', 'a1']));
   });
 

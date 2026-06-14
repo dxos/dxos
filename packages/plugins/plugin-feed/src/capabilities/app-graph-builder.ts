@@ -14,7 +14,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment, selectionSlice } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
@@ -27,7 +27,7 @@ export default Capability.makeModule(
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const selection = get(viewState.atom(selectionSlice, nodeId));
+        const selection = get(viewState.atom(selectionAspect, nodeId));
         return selection.mode === 'single' ? selection.id : undefined;
       }),
     );

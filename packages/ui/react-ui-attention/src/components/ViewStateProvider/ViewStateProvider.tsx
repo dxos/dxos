@@ -13,17 +13,17 @@ import {
   type SelectionMode,
   type SelectionResult,
   resolveSelection,
-  selectionSlice,
+  selectionAspect,
   toggleSelection,
 } from '../../selection';
-import { type SliceDef, ViewStateManager, createDefaultBackends } from '../../view-state';
+import { type AspectDef, ViewStateManager, createDefaultBackends } from '../../view-state';
 
 const VIEW_STATE_NAME = 'ViewState';
 
 type ViewStateContextValue = { manager?: ViewStateManager };
 
 // Default value lets consumers render outside a provider (isolated stories/tests) without throwing;
-// `manager` reads as `undefined` and hooks fall back to slice defaults / no-op actions.
+// `manager` reads as `undefined` and hooks fall back to aspect defaults / no-op actions.
 const [ViewStateContextProvider, useViewStateContext] = createContext<ViewStateContextValue>(VIEW_STATE_NAME, {
   manager: undefined,
 });
@@ -48,20 +48,20 @@ export const useViewStateManager = (): ViewStateManager => {
   return manager;
 };
 
-/** Reactive read of a slice value for a context; yields the slice default when unset or unprovided. */
-export const useViewState = <T,>(slice: SliceDef<T>, contextId?: string): T => {
+/** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
+export const useViewState = <T,>(aspect: AspectDef<T>, contextId?: string): T => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   const [value, setValue] = useState<T>(() =>
-    contextId && manager ? manager.get(slice, contextId) : slice.defaultValue(),
+    contextId && manager ? manager.get(aspect, contextId) : aspect.defaultValue(),
   );
   useEffect(() => {
     if (!contextId || !manager) {
-      setValue(slice.defaultValue());
+      setValue(aspect.defaultValue());
       return;
     }
-    setValue(manager.get(slice, contextId));
-    return manager.subscribe(slice, contextId, setValue);
-  }, [manager, slice, contextId]);
+    setValue(manager.get(aspect, contextId));
+    return manager.subscribe(aspect, contextId, setValue);
+  }, [manager, aspect, contextId]);
   return value;
 };
 
@@ -71,33 +71,33 @@ export type UseViewStateActions<T> = {
   clear: () => void;
 };
 
-export const useViewStateActions = <T,>(slice: SliceDef<T>, contextId?: string): UseViewStateActions<T> => {
+export const useViewStateActions = <T,>(aspect: AspectDef<T>, contextId?: string): UseViewStateActions<T> => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);
   return useMemo<UseViewStateActions<T>>(
     () => ({
       set: (value) => {
         if (contextId) {
-          manager?.set(slice, contextId, value);
+          manager?.set(aspect, contextId, value);
         }
       },
       update: (fn) => {
         if (contextId) {
-          manager?.update(slice, contextId, fn);
+          manager?.update(aspect, contextId, fn);
         }
       },
       clear: () => {
         if (contextId) {
-          manager?.set(slice, contextId, slice.defaultValue());
+          manager?.set(aspect, contextId, aspect.defaultValue());
         }
       },
     }),
-    [manager, slice, contextId],
+    [manager, aspect, contextId],
   );
 };
 
 /** Resolved selection value for `contextId` in the requested `mode` (default `multi`). */
 export const useSelection = <T extends SelectionMode>(contextId?: string, mode: T = 'multi' as T): SelectionResult<T> =>
-  resolveSelection(useViewState(selectionSlice, contextId), mode);
+  resolveSelection(useViewState(selectionAspect, contextId), mode);
 
 export type UseSelectionActions = {
   single: (id: string) => void;
@@ -109,7 +109,7 @@ export type UseSelectionActions = {
 
 /** Selection mutators for a single context, built on the generic ViewState actions. */
 export const useSelectionActions = (contextId?: string): UseSelectionActions => {
-  const { update, clear } = useViewStateActions(selectionSlice, contextId);
+  const { update, clear } = useViewStateActions(selectionAspect, contextId);
   return useMemo<UseSelectionActions>(
     () => ({
       single: (id) => update(() => ({ mode: 'single', id })),

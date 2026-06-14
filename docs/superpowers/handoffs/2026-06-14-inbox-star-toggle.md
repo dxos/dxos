@@ -63,7 +63,7 @@ activeIcon, ...IconButtonProps }`. Use `icon='ph--star--regular'`, `activeIcon='
    - (a) a `flagged`/`starred` boolean added to the object (schema change; cross-device via ECHO),
    - (b) a reserved tag/label using the inbox's existing tag mechanism (messages already tagged;
      events have no tag index — would need one),
-   - (c) a **device-local `ViewState` slice** (`starred`, `local` backend, keyed by object id) —
+   - (c) a **device-local `ViewState` aspect** (`starred`, `local` backend, keyed by object id) —
      no schema change, consistent with PR #11820's mechanism, but device-specific.
      The user was asked this and dismissed the question — re-confirm before implementing.
 2. **Message tile leading slot:** does the star **replace** the avatar in column 1, or sit next

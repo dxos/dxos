@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext } from '@dxos/react-ui';
-import { selectionSlice, type ViewStateManager } from '@dxos/react-ui-attention';
+import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -213,7 +213,7 @@ const selectionChange = (viewState: ViewStateManager) => {
         to: cursorConverter.toCursor(range.to),
       }));
 
-    viewState.set(selectionSlice, id, { mode: 'multi-range', ranges });
+    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {

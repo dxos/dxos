@@ -5,35 +5,35 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
-import { type BackendName, type SliceDef, type ViewStateBackend } from './view-state';
+import { type AspectDef, type BackendName, type ViewStateBackend } from './view-state';
 
-// Only the stable `key` string is needed to form the map key; avoids variance issues with SliceDef<T>.
-const cacheKey = (slice: { key: string }, contextId: string) => `${slice.key}:${contextId}`;
+// Only the stable `key` string is needed to form the map key; avoids variance issues with AspectDef<T>.
+const cacheKey = (aspect: { key: string }, contextId: string) => `${aspect.key}:${contextId}`;
 
 /** In-memory backend: state is ephemeral and scoped to the session (never persisted). */
 export class MemoryBackend implements ViewStateBackend {
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
 
-  atom<T>(slice: SliceDef<T>, contextId: string): Atom.Writable<T> {
-    const key = cacheKey(slice, contextId);
+  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+    const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
-      atom = Atom.make<unknown>(slice.defaultValue());
+      atom = Atom.make<unknown>(aspect.defaultValue());
       this.#atoms.set(key, atom);
     }
-    // Cast bridges the per-slice value type erased by the shared atom map; safe by construction.
+    // Cast bridges the per-aspect value type erased by the shared atom map; safe by construction.
     return atom as Atom.Writable<T>;
   }
 
-  contexts<T>(slice: SliceDef<T>): string[] {
-    const prefix = `${slice.key}:`;
+  contexts<T>(aspect: AspectDef<T>): string[] {
+    const prefix = `${aspect.key}:`;
     return [...this.#atoms.keys()].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
   }
 }
 
 const STORAGE_PREFIX = 'dxos:view-state:';
 
-const storageKeyFor = (slice: { key: string }, contextId: string) => `${STORAGE_PREFIX}${slice.key}:${contextId}`;
+const storageKeyFor = (aspect: { key: string }, contextId: string) => `${STORAGE_PREFIX}${aspect.key}:${contextId}`;
 
 // Accessing `globalThis.localStorage` can throw a SecurityError in sandboxed iframes or when
 // storage is blocked; degrade to in-memory behaviour instead of crashing.
@@ -58,8 +58,8 @@ export class LocalBackend implements ViewStateBackend {
   // ephemeral, in-memory behaviour rather than crashing on a missing `localStorage`.
   readonly #storage: Storage | undefined;
   readonly #atoms = new Map<string, Atom.Writable<unknown>>();
-  // Reverse map: storage key -> (slice, contextId) so `storage` events can target the right atom.
-  readonly #byStorageKey = new Map<string, { slice: SliceDef<unknown>; contextId: string }>();
+  // Reverse map: storage key -> (aspect, contextId) so `storage` events can target the right atom.
+  readonly #byStorageKey = new Map<string, { aspect: AspectDef<unknown>; contextId: string }>();
   #storageListener?: (event: StorageEvent) => void;
 
   constructor({ registry, storage }: LocalBackendOptions) {
@@ -71,41 +71,41 @@ export class LocalBackend implements ViewStateBackend {
           return;
         }
         const entry = this.#byStorageKey.get(event.key);
-        const atom = entry && this.#atoms.get(cacheKey(entry.slice, entry.contextId));
+        const atom = entry && this.#atoms.get(cacheKey(entry.aspect, entry.contextId));
         if (entry && atom) {
-          this.#registry.set(atom, this.#read(entry.slice, event.key));
+          this.#registry.set(atom, this.#read(entry.aspect, event.key));
         }
       };
       globalThis.addEventListener('storage', this.#storageListener);
     }
   }
 
-  atom<T>(slice: SliceDef<T>, contextId: string): Atom.Writable<T> {
-    const key = cacheKey(slice, contextId);
+  atom<T>(aspect: AspectDef<T>, contextId: string): Atom.Writable<T> {
+    const key = cacheKey(aspect, contextId);
     let atom = this.#atoms.get(key);
     if (!atom) {
-      const storageKey = storageKeyFor(slice, contextId);
-      atom = Atom.make<unknown>(this.#read(slice, storageKey));
+      const storageKey = storageKeyFor(aspect, contextId);
+      atom = Atom.make<unknown>(this.#read(aspect, storageKey));
       this.#atoms.set(key, atom);
-      // Cast erases the per-slice value type so the reverse map can hold slices of any `T`; the
-      // stored slice is only used to re-read/decode its own value, so the erasure is safe.
-      this.#byStorageKey.set(storageKey, { slice: slice as SliceDef<unknown>, contextId });
+      // Cast erases the per-aspect value type so the reverse map can hold aspects of any `T`; the
+      // stored aspect is only used to re-read/decode its own value, so the erasure is safe.
+      this.#byStorageKey.set(storageKey, { aspect: aspect as AspectDef<unknown>, contextId });
     }
-    // Cast bridges the per-slice value type erased by the shared atom map; safe by construction.
+    // Cast bridges the per-aspect value type erased by the shared atom map; safe by construction.
     return atom as Atom.Writable<T>;
   }
 
-  persist<T>(slice: SliceDef<T>, contextId: string, value: T): void {
-    this.#storage?.setItem(storageKeyFor(slice, contextId), JSON.stringify(Schema.encodeSync(slice.schema)(value)));
+  persist<T>(aspect: AspectDef<T>, contextId: string, value: T): void {
+    this.#storage?.setItem(storageKeyFor(aspect, contextId), JSON.stringify(Schema.encodeSync(aspect.schema)(value)));
   }
 
-  contexts<T>(slice: SliceDef<T>): string[] {
+  contexts<T>(aspect: AspectDef<T>): string[] {
     if (!this.#storage) {
       // No persistent storage: fall back to the in-memory atoms (mirrors `atom()`'s ephemeral path).
-      const prefix = `${slice.key}:`;
+      const prefix = `${aspect.key}:`;
       return [...this.#atoms.keys()].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
     }
-    const prefix = storageKeyFor(slice, '');
+    const prefix = storageKeyFor(aspect, '');
     const ids: string[] = [];
     for (let index = 0; index < this.#storage.length; index++) {
       const key = this.#storage.key(index);
@@ -125,16 +125,16 @@ export class LocalBackend implements ViewStateBackend {
     this.#byStorageKey.clear();
   }
 
-  #read<T>(slice: SliceDef<T>, storageKey: string): T {
+  #read<T>(aspect: AspectDef<T>, storageKey: string): T {
     const raw = this.#storage?.getItem(storageKey);
     if (raw == null) {
-      return slice.defaultValue();
+      return aspect.defaultValue();
     }
     try {
-      return Schema.decodeUnknownSync(slice.schema)(JSON.parse(raw));
+      return Schema.decodeUnknownSync(aspect.schema)(JSON.parse(raw));
     } catch {
       // Tolerate stale/corrupt entries (e.g. a prior schema shape) by falling back to the default.
-      return slice.defaultValue();
+      return aspect.defaultValue();
     }
   }
 }
