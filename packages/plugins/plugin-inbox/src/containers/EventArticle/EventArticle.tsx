@@ -17,7 +17,7 @@ import { InboxOperation, DraftEvent } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
-export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
+export const EventArticle = ({ role, subject, attendableId, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const db = Obj.getDatabase(calendar);
@@ -68,7 +68,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
   }, [invokePromise, calendar, event, db]);
 
   return (
-    <Event.Root event={event}>
+    <Event.Root event={event} attendableId={attendableId}>
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
           <Event.Toolbar
