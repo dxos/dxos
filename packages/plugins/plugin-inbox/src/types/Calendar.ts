@@ -56,26 +56,36 @@ export const make = (props: CalendarProps = {}) => {
 export const STARRED_TAG = { label: 'Starred', hue: 'rose' } as const;
 
 /** Whether the event carries the starred tag (pass the resolved starred-tag uri). */
-export const isStarred = (calendar: Calendar, event: Event.Event, starredUri: string | undefined): boolean =>
-  !!starredUri && !!calendar.tags.target && Tagging.get(event, { index: calendar.tags.target }).includes(starredUri);
+export const isStarred = (
+  calendar: Calendar | Obj.Snapshot<Calendar>,
+  event: Event.Event,
+  starredUri: string | undefined,
+): boolean =>
+  // `tags` is absent on calendars created before the field existed.
+  !!starredUri && !!calendar.tags?.target && Tagging.get(event, { index: calendar.tags.target }).includes(starredUri);
 
 /** Event ids carrying the starred tag (pass the resolved starred-tag uri). */
 export const getStarredEventIds = (
   calendar: Calendar | Obj.Snapshot<Calendar>,
   starredUri: string | undefined,
 ): ReadonlySet<string> =>
-  starredUri && calendar.tags.target
+  starredUri && calendar.tags?.target
     ? new Set(TagIndex.bind(calendar.tags.target).objects(starredUri))
     : new Set<string>();
 
-/** Toggle the starred tag on an event, creating the tag on first use. */
+/** Toggle the starred tag on an event, creating the tag (and the calendar's tag index) on first use. */
 export const toggleStar = async (calendar: Calendar, event: Event.Event, db: Database.Database): Promise<void> => {
+  // Lazily provision the tag index for calendars created before the `tags` field existed.
+  let index = calendar.tags?.target;
+  if (!index) {
+    index = db.add(TagIndex.make());
+    Obj.setParent(index, calendar);
+    Obj.update(calendar, (calendar) => {
+      calendar.tags = Ref.make(index!);
+    });
+  }
   const tag = await Tag.findOrCreate(db, { label: STARRED_TAG.label, hue: STARRED_TAG.hue });
   const uri = Obj.getURI(tag).toString();
-  const index = calendar.tags.target;
-  if (!index) {
-    return;
-  }
   if (Tagging.get(event, { index }).includes(uri)) {
     Tagging.unset(event, uri, { index });
   } else {
