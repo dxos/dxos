@@ -8,11 +8,22 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, branchDiffAtom, clearBranchDiff, setBranchDiff } from '@dxos/app-toolkit/ui';
+import { branchStateAtom } from '@dxos/echo-client';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Card, Icon, Message as MessageHint, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import {
+  Card,
+  Icon,
+  Message as MessageHint,
+  Panel,
+  ScrollArea,
+  Select,
+  Toolbar,
+  Trans,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type ObjectTileComponent } from '@dxos/react-ui-thread';
@@ -105,8 +116,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [anchorSorts, subject],
   );
 
+  // Branch a comment pertains to. Comments are scoped to the active review branch: the branch being
+  // compared in a diff, else the branch currently in view. `undefined` tag = main/unbranched.
+  const { branches, current: currentBranch } = useAtomValue(branchStateAtom(subject));
+  const diffRequest = useAtomValue(branchDiffAtom(subject.id));
+  const activeBranch = diffRequest?.compareTo ?? currentBranch;
+
+  // Selecting a branch here reviews it: turn on the diff against it (unless it is the branch already
+  // in view, in which case just show its comments with no diff).
+  const handleSelectBranch = useCallback(
+    (branch: string) => (branch === currentBranch ? clearBranchDiff(subject.id) : setBranchDiff(subject.id, branch)),
+    [subject, currentBranch],
+  );
+
   const db = Obj.getDatabase(subject);
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
+  // Resolving a thread mutates the Thread object, not the AnchoredTo relation the query above tracks;
+  // subscribe to threads so the resolved filter (below) re-applies when a thread's status changes.
+  useQuery(db, Filter.type(Thread.Thread));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
     .filter((anchor) => {
@@ -117,7 +144,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return false;
       }
     })
-    .concat(drafts ?? []);
+    .concat(drafts ?? [])
+    .filter((anchor) => (anchor.branch ?? 'main') === activeBranch);
 
   const handleChangeViewState = useCallback(
     (nextValue: string) => {
@@ -219,6 +247,25 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [invokePromise, subject],
   );
 
+  const handleAcceptChange = useCallback(
+    async (anchor: AnchoredTo.AnchoredTo) => {
+      // The branch to cherry-pick from: the comment's own branch tag, or — for a comment left on the
+      // base (untagged/main) while reviewing — the branch currently under review.
+      const branch = anchor.branch ?? diffRequest?.compareTo;
+      if (!anchor.anchor || !branch) {
+        return;
+      }
+      // Cherry-pick the latest version of this change from the branch, then resolve the thread.
+      await invokePromise(CollaborationOperation.AcceptChange, {
+        subject,
+        anchor: anchor.anchor,
+        branch,
+      });
+      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+    },
+    [invokePromise, subject, diffRequest],
+  );
+
   // Scroll the current thread into view when it changes.
   useEffect(() => {
     if (currentId) {
@@ -269,6 +316,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               onMessageDelete={handleMessageDelete}
               onThreadDelete={handleThreadDelete}
               onAcceptProposal={handleAcceptProposal}
+              onAcceptChange={diffRequest?.compareTo ? handleAcceptChange : undefined}
             />
           );
         })}
@@ -292,6 +340,27 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 {t('show-all.label')}
               </Tabs.Tab>
             </Tabs.Tablist>
+            {branches.length > 1 && (
+              <>
+                <div role='none' className='grow' />
+                {/* Review a branch: shows its comments and, unless it is the branch in view, the diff. */}
+                <Select.Root value={activeBranch} onValueChange={handleSelectBranch}>
+                  <Select.TriggerButton classNames='text-sm' placeholder={t('select-branch.placeholder')} />
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {branches.map((branch) => (
+                          <Select.Option key={branch} value={branch}>
+                            {branch}
+                          </Select.Option>
+                        ))}
+                      </Select.Viewport>
+                      <Select.Arrow />
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </>
+            )}
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>

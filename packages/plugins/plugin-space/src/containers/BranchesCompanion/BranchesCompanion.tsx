@@ -151,10 +151,6 @@ export const BranchesCompanion = ({ role, companionTo }: BranchesCompanionProps)
     [object, comparing],
   );
 
-  // Dismiss the diff when the companion closes so the article never stays in diff mode with no
-  // affordance to exit it.
-  useEffect(() => () => clearBranchDiff(object.id), [object]);
-
   const handleCreate = useCallback(async () => {
     // A unique, human-readable branch name.
     const existing = new Set(branches);

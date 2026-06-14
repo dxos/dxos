@@ -21,6 +21,14 @@ const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => 
       views.delete(attendableId);
     },
     get: (attendableId) => views.get(attendableId),
+    getByDocumentId: (documentId) => {
+      for (const entry of views.values()) {
+        if (entry.documentId === documentId) {
+          return entry;
+        }
+      }
+      return undefined;
+    },
   };
 };
 
