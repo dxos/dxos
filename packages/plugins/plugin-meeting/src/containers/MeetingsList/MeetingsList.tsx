@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { Row, RowList } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -34,10 +34,14 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
   );
 
   return (
-    <Row id={meeting.id} classNames='grid grid-cols-[1fr_auto] items-center'>
+    <Listbox.Item id={meeting.id} classNames='grid grid-cols-[1fr_auto] items-center' onClick={handleSelectMeeting}>
       <span className='truncate'>{getLabel(meeting)}</span>
-      <Button onClick={handleSelectMeeting}>{t('select-meeting.label')}</Button>
-    </Row>
+      {/* Visual affordance only — listbox options can't legally contain focusable
+          descendants, so the row itself drives selection via onClick above. */}
+      <Button tabIndex={-1} aria-hidden onClick={handleSelectMeeting}>
+        {t('select-meeting.label')}
+      </Button>
+    </Listbox.Item>
   );
 };
 
@@ -77,15 +81,15 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
       <div className='px-2 min-h-[3rem] flex justify-end items-center'>
         <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
       </div>
-      <RowList.Root>
-        <RowList.Viewport>
-          <RowList.Content aria-label={t('meeting-list.label')}>
+      <Listbox.Root>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label={t('meeting-list.label')}>
             {sortedMeetings.map((meeting) => (
               <MeetingItem key={meeting.id} meeting={meeting} getLabel={getLabel} />
             ))}
-          </RowList.Content>
-        </RowList.Viewport>
-      </RowList.Root>
+          </Listbox.Content>
+        </Listbox.Viewport>
+      </Listbox.Root>
     </div>
   );
 };

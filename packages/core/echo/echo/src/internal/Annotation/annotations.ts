@@ -599,6 +599,21 @@ export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
 };
 
 /**
+ * Returns the primary label property key for an entity.
+ * Reads the first accessor from {@link LabelAnnotation}, defaulting to 'name'.
+ */
+export const getLabelProperty = (entity: AnyProperties): string => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return 'name';
+  }
+  return LabelAnnotation.get(schema).pipe(
+    Option.flatMap((fields) => Option.fromNullable(fields[0])),
+    Option.getOrElse(() => 'name'),
+  );
+};
+
+/**
  * Get the description of an entity.
  * Accepts both reactive entities and snapshots.
  */
