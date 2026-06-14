@@ -121,8 +121,8 @@ catalogs:
       specifier: ^6.5.2
       version: 6.5.2
     '@codemirror/lint':
-      specifier: 6.9.6
-      version: 6.9.6
+      specifier: 6.9.7
+      version: 6.9.7
     '@codemirror/search':
       specifier: ^6.7.0
       version: 6.7.0
@@ -13066,7 +13066,7 @@ importers:
         version: 6.12.3
       '@codemirror/lint':
         specifier: 'catalog:'
-        version: 6.9.6
+        version: 6.9.7
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.6.0
@@ -13231,7 +13231,7 @@ importers:
         version: 2.3.1(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)(@lezer/common@1.5.2)
       '@valtown/codemirror-ts':
         specifier: 'catalog:'
-        version: 2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.6)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
       codemirror:
         specifier: 'catalog:'
         version: 6.0.2
@@ -15969,7 +15969,7 @@ importers:
         version: 6.12.3
       '@codemirror/lint':
         specifier: 'catalog:'
-        version: 6.9.6
+        version: 6.9.7
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.6.0
@@ -19228,7 +19228,7 @@ importers:
         version: 6.5.2
       '@codemirror/lint':
         specifier: 'catalog:'
-        version: 6.9.6
+        version: 6.9.7
       '@codemirror/search':
         specifier: 'catalog:'
         version: 6.7.0
@@ -19327,7 +19327,7 @@ importers:
         version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
       '@replit/codemirror-vscode-keymap':
         specifier: 'catalog:'
-        version: 6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.6)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
       '@uiw/codemirror-theme-vscode':
         specifier: 'catalog:'
         version: 4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
@@ -21379,7 +21379,7 @@ importers:
         version: 6.5.2
       '@codemirror/lint':
         specifier: 'catalog:'
-        version: 6.9.6
+        version: 6.9.7
       '@codemirror/search':
         specifier: 'catalog:'
         version: 6.7.0
@@ -21460,7 +21460,7 @@ importers:
         version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
       '@replit/codemirror-vscode-keymap':
         specifier: 'catalog:'
-        version: 6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.6)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
       '@uiw/codemirror-theme-vscode':
         specifier: 'catalog:'
         version: 4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
@@ -23604,8 +23604,8 @@ packages:
   '@codemirror/lint@6.8.5':
     resolution: {integrity: sha512-s3n3KisH7dx3vsoeGMxsbRAgKe4O1vbrnKBClm99PU0fWxmxsx5rR2PfqQgIt+2MMJBHbiJ5rfIdLYfB9NNvsA==}
 
-  '@codemirror/lint@6.9.6':
-    resolution: {integrity: sha512-6Kp7r6XfCi/D/5sdXieMfg9pJU1bUEx96WITuLU6ESaKizCz0QHFMjY/TaFSbigDdEAIgi93itLBIUETP4oK+A==}
+  '@codemirror/lint@6.9.7':
+    resolution: {integrity: sha512-28/+iWLYxKxsvGYhSYL7zaCZqLz5+FFFDq9tVsvGv9kv8RY4fFAchJ5WX9M3YrrRlTIsECjsXPqeNgnSmNP2dg==}
 
   '@codemirror/search@6.5.11':
     resolution: {integrity: sha512-KmWepDE6jUdL6n8cAAqIpRmLPBZ5ZKnicE8oGU/s3QrAVID+0VhLFrzUucVKHG5035/BSykhExDL/Xm7dHthiA==}
@@ -43066,7 +43066,7 @@ snapshots:
     dependencies:
       '@codemirror/autocomplete': 6.20.2
       '@codemirror/language': 6.12.3
-      '@codemirror/lint': 6.9.6
+      '@codemirror/lint': 6.9.7
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.0
       '@lezer/common': 1.5.2
@@ -43240,7 +43240,7 @@ snapshots:
       '@codemirror/view': 6.43.0
       crelt: 1.0.6
 
-  '@codemirror/lint@6.9.6':
+  '@codemirror/lint@6.9.7':
     dependencies:
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.0
@@ -47308,12 +47308,12 @@ snapshots:
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.0
 
-  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.6)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
     dependencies:
       '@codemirror/autocomplete': 6.20.2
       '@codemirror/commands': 6.10.3
       '@codemirror/language': 6.12.3
-      '@codemirror/lint': 6.9.6
+      '@codemirror/lint': 6.9.7
       '@codemirror/search': 6.7.0
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.0
@@ -49766,10 +49766,10 @@ snapshots:
       '@codemirror/view': 6.43.0
       '@lezer/common': 1.5.2
 
-  '@valtown/codemirror-ts@2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.6)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@valtown/codemirror-ts@2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
     dependencies:
       '@codemirror/autocomplete': 6.20.2
-      '@codemirror/lint': 6.9.6
+      '@codemirror/lint': 6.9.7
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.43.0
 
