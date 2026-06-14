@@ -134,18 +134,22 @@ export default Capability.makeModule(
                     count: categoryCount(registryCategoryId('labs')),
                   },
                 }),
-                Node.make({
-                  id: registryCategoryId('registry'),
-                  type: 'category',
-                  data: registryCategoryId('registry'),
-                  properties: {
-                    label: ['registry-plugins.label', { ns: meta.id }],
-                    icon: 'ph--users-three--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.registry',
-                    count: registryCount,
-                  },
-                }),
+                ...(registryCount > 0
+                  ? [
+                      Node.make({
+                        id: registryCategoryId('registry'),
+                        type: 'category',
+                        data: registryCategoryId('registry'),
+                        properties: {
+                          label: ['registry-plugins.label', { ns: meta.id }],
+                          icon: 'ph--users-three--regular',
+                          key: REGISTRY_KEY,
+                          testId: 'pluginRegistry.registry',
+                          count: registryCount,
+                        },
+                      }),
+                    ]
+                  : []),
               ],
             }),
           ]);

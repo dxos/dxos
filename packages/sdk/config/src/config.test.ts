@@ -48,11 +48,11 @@ test('Basic config', () => {
   });
 });
 
-test('Runtime and module config', () => {
+test('Runtime and plugin config', () => {
   const config = new Config(
     {
       package: {
-        modules: [
+        plugins: [
           {
             name: 'example:app/tasks',
             record: {
@@ -80,7 +80,7 @@ test('Runtime and module config', () => {
   expect(config.values).toEqual({
     version: 1,
     package: {
-      modules: [
+      plugins: [
         {
           name: 'example:app/tasks',
           record: {

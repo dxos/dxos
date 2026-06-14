@@ -53,6 +53,12 @@ export const Manifest = Schema.Struct({
   version: Schema.String,
   assets: Schema.Array(Schema.String),
   devEntry: Schema.String.pipe(Schema.optional),
+  /**
+   * The plugin's declared dependencies resolved to concrete installed versions at
+   * build time. The host derives SDK compatibility from the `@dxos/*` subset it
+   * shares with the plugin. Optional — absent means "unknown" (legacy plugin).
+   */
+  dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 
 export type Manifest = Schema.Schema.Type<typeof Manifest>;
@@ -71,6 +77,8 @@ export type ResolvedManifest = {
   entryUrl: string;
   assetUrls: readonly string[];
   dev: boolean;
+  /** Resolved build-time dependency versions (see {@link Manifest.dependencies}). */
+  dependencies?: Record<string, string>;
 };
 
 /**
@@ -87,6 +95,7 @@ const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => {
     entryUrl: new URL(dev ? manifest.devEntry! : PLUGIN_ENTRY_FILENAME, manifestUrl).toString(),
     assetUrls: manifest.assets.map((asset) => new URL(asset, manifestUrl).toString()),
     dev,
+    ...(manifest.dependencies !== undefined ? { dependencies: manifest.dependencies } : {}),
   };
 };
 

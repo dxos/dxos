@@ -11,6 +11,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/cli/index.ts'
       - '--entryPoint=src/core/activation-event.ts'
       - '--entryPoint=src/core/capability.ts'

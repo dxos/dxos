@@ -2,16 +2,59 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { type Plugin as VitePlugin } from 'vite';
 
 import { PLUGIN_DEV_SERVER_PORT } from '../../core';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
+import { readPluginMetaEntry, synthesizePluginMetaSource, toBuildMeta } from '../plugin-meta';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
 export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
+
+/** Reads `version` from the project's `package.json`; falls back to `0.0.0`. */
+const readPackageVersion = (dir: string): string => {
+  try {
+    return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+};
+
+/**
+ * Snapshot the project's declared `dependencies`, resolving each to its concrete
+ * installed version (read from `node_modules/<name>/package.json`) so the manifest
+ * records exactly what the plugin was built against — the host derives SDK
+ * compatibility from the `@dxos/*` subset. Falls back to the declared spec when a
+ * dependency can't be resolved on disk.
+ */
+const readResolvedDependencies = (dir: string): Record<string, string> | undefined => {
+  try {
+    const declared = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).dependencies as
+      | Record<string, string>
+      | undefined;
+    if (!declared) {
+      return undefined;
+    }
+    const resolved: Record<string, string> = {};
+    for (const name of Object.keys(declared)) {
+      try {
+        const version = JSON.parse(readFileSync(join(dir, 'node_modules', name, 'package.json'), 'utf-8')).version;
+        resolved[name] = typeof version === 'string' ? version : declared[name];
+      } catch {
+        resolved[name] = declared[name];
+      }
+    }
+    return Object.keys(resolved).length > 0 ? resolved : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * Whether an import should be externalized by the plugin bundle.
@@ -71,10 +114,12 @@ export type ComposerPluginOptions = {
   /** Dev server port. Defaults to {@link PLUGIN_DEV_SERVER_PORT}. */
   port?: number;
   /**
-   * Plugin metadata. When provided, a `manifest.json` asset is emitted alongside the bundle
-   * listing every emitted file. The host fetches this manifest at install time and persists
-   * the declared assets in its offline cache so the plugin works without network. The bundle's
-   * entry module is always written as {@link ENTRY_FILENAME} (`index.mjs`).
+   * Plugin metadata. Optional — when omitted it is derived from the project's `dx.yml`
+   * (`package.plugins[0]`) plus the `package.json` version. When present (explicitly or
+   * derived), a `manifest.json` asset is emitted alongside the bundle listing every emitted
+   * file. The host fetches this manifest at install time and persists the declared assets in
+   * its offline cache so the plugin works without network. The bundle's entry module is
+   * always written as {@link ENTRY_FILENAME} (`index.mjs`).
    */
   meta?: BuildMeta;
 };
@@ -97,7 +142,17 @@ export type ComposerPluginOptions = {
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
   const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
-  const meta = options?.meta;
+  const projectRoot = process.cwd();
+
+  // Plugin metadata is the source of truth in `dx.yml` (`package.plugins[0]`). When
+  // the caller doesn't pass `meta` explicitly, derive it from config — the same
+  // `#meta` resolver below makes `import { meta } from '#meta'` resolve in dev/build.
+  const pluginEntry = readPluginMetaEntry(projectRoot);
+  const meta =
+    options?.meta ??
+    (pluginEntry
+      ? toBuildMeta(pluginEntry, readPackageVersion(projectRoot), readResolvedDependencies(projectRoot))
+      : undefined);
   const resolved = new Set<string>();
   let base = '/';
 
@@ -245,6 +300,27 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       },
     },
   ];
+
+  if (pluginEntry) {
+    // Resolve `#meta` to a module synthesized from dx.yml (dev + build), mirroring the
+    // dx-compile esbuild adapter so plugin metadata has a single source of truth. The
+    // synthesized module's `@dxos/*` imports are externalized like the rest of the bundle.
+    plugins.push({
+      name: 'composer-plugin:meta',
+      enforce: 'pre',
+      resolveId: (id, importer) => {
+        if (id !== '#meta') {return undefined;}
+        // Only intercept `#meta` imports from the plugin's own source, not from
+        // bundled node_modules (e.g. @dxos/plugin-space). Those packages have their
+        // own `#meta` entry in their package.json#imports and must resolve to their
+        // own metadata — returning our synthesized module here would give them the
+        // wrong plugin ID, corrupting capability identifiers like CreateObjectEntry.
+        if (importer && importer.includes('node_modules')) {return undefined;}
+        return '\0dxos:plugin-meta';
+      },
+      load: (id) => (id === '\0dxos:plugin-meta' ? synthesizePluginMetaSource(pluginEntry) : undefined),
+    });
+  }
 
   if (meta) {
     // Emit `manifest.json` alongside the built module listing every emitted asset, so the

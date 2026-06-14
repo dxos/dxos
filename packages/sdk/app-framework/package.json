@@ -49,6 +49,12 @@
       "node": "./dist/lib/node-esm/plugin/index.mjs",
       "types": "./dist/types/src/plugin/index.d.ts"
     },
+    "./meta": {
+      "source": "./src/meta.ts",
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": "./dist/lib/node-esm/meta.mjs",
+      "types": "./dist/types/src/meta.d.ts"
+    },
     "./PluginManager": {
       "source": "./src/core/plugin-manager.ts",
       "browser": "./dist/lib/browser/plugin-manager/index.mjs",
@@ -124,7 +130,9 @@
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
     "idb-keyval": "catalog:",
-    "solid-js": "catalog:"
+    "oxc-resolver": "catalog:",
+    "solid-js": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",

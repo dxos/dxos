@@ -12,17 +12,28 @@ import { log } from '@dxos/log';
  * A registry plugin entry as seen by the plugin manager layer.
  * Populated from the registry catalog; represents the latest available version of a plugin.
  *
- * Independently defined from @dxos/protocols PluginEntry — similar shape but not the same type.
+ * Independently defined from @dxos/protocols PluginView — similar shape but not the same type.
  * Implementations of {@link PluginProvider} (e.g. {@link EdgeRegistryPluginProvider})
  * are responsible for mapping their wire-format entries to this shape.
  */
 export type Plugin = {
+  /**
+   * Composer plugin id — a bare NSID, e.g. `org.dxos.plugin.excalidraw`.
+   * Equals `slug` on the wire-format PluginView. Used for `manager.enable(id)`,
+   * `DXN.make(id, version)`, install-version tracking, and all catalog lookups.
+   */
   id: string;
   name: string;
   description?: string;
+  /**
+   * Publisher/provenance, not self-declared by the plugin: for registry plugins
+   * this is the verified publisher (AT Protocol handle, falling back to DID); for
+   * bundled plugins the host supplies a default at registration time.
+   */
+  author?: string;
   homePage?: string;
   source?: string;
-  screenshots?: string[];
+  screenshots?: (string | { light?: string; dark?: string })[];
   tags?: string[];
   icon?: string;
   iconHue?: string;
@@ -34,12 +45,9 @@ export type Plugin = {
   dependsOn?: string[];
   /** URL to dynamic-import the latest version of this plugin module. */
   moduleUrl: string;
-  /** GitHub repository slug, e.g. `owner/name`. Used to fetch version history. */
-  repo: string;
   /**
-   * Latest known version string, e.g. `v1.2.0`.
-   * Corresponds to releaseTag in the wire-format PluginEntry; named `version` here
-   * because the plugin manager layer speaks versions, not release tags.
+   * Latest known version string, e.g. `0.8.3`.
+   * Combined with `id`, yields the canonical `Plugin.Meta.key` via `DXN.make(id, version)`.
    */
   version: string;
 };
@@ -67,23 +75,22 @@ export type PluginVersion = {
  */
 export interface PluginProvider {
   /**
-   * Returns all healthy registry plugins (latest version of each).
+   * Returns all registry plugins (latest version of each).
    */
   listPlugins(): Effect.Effect<readonly Plugin[], Error>;
 
   /**
-   * Returns all known versions of a plugin identified by its GitHub repo slug.
-   * Until the backend implements a versions endpoint, implementations MUST
-   * return at least one entry representing the current/latest release.
+   * Returns all known versions of a plugin, identified by its composer plugin id (NSID).
+   * Ordered newest-first. Must return at least one entry.
    */
-  listVersions(repo: string): Effect.Effect<readonly PluginVersion[], Error>;
+  listVersions(id: string): Effect.Effect<readonly PluginVersion[], Error>;
 
   /**
-   * Returns a single plugin entry for the given repo.
+   * Returns a single plugin entry for the given id.
    * If `version` is omitted, returns the latest.
-   * Fails if the specified version is not found.
+   * Fails if the plugin or version is not found.
    */
-  getPlugin(repo: string, version?: string): Effect.Effect<Plugin, Error>;
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin, Error>;
 }
 
 /**
@@ -152,12 +159,12 @@ export class Manager {
   }
 
   /** Forwards to the underlying provider. */
-  listVersions(repo: string): Effect.Effect<readonly PluginVersion[], Error> {
-    return this.#provider.listVersions(repo);
+  listVersions(id: string): Effect.Effect<readonly PluginVersion[], Error> {
+    return this.#provider.listVersions(id);
   }
 
   /** Forwards to the underlying provider. */
-  getPlugin(repo: string, version?: string): Effect.Effect<Plugin, Error> {
-    return this.#provider.getPlugin(repo, version);
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin, Error> {
+    return this.#provider.getPlugin(id, version);
   }
 }
