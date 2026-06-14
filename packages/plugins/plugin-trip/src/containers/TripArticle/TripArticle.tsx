@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -38,7 +38,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   const [segmentRefs] = useObject(reactiveSubject, 'segments');
 
   const id = attendableId ?? Obj.getURI(subject);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
 
   // Reactively load + subscribe to the segment ref targets. Without this the refs are read
   // synchronously via `.target` and render empty on first mount (only appearing after a later
@@ -293,7 +293,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         </div>
 
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
-            markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
+            markers via the contributed MarkerProvider and reads the current selection via useSelection. */}
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>

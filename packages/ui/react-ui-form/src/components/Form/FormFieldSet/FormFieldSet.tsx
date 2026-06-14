@@ -60,7 +60,7 @@ export const FormFieldSet = ({
   const { t } = useTranslation(translationKey);
   const values = useFormValues(FORM_FIELDSET_NAME, path);
   const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
-  // TODO(burdon): Generalize collapse state (cf. useSelected in react-ui-attention, plugin-markdown cursor state).
+  // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
   const [collapsed, setCollapsed] = useState(false);
   if ((readonly || layout === 'static') && values == null) {
     return null;

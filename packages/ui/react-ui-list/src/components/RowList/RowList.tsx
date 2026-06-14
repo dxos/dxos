@@ -34,12 +34,12 @@
 //
 //   This layer ships single-select (`selectedId: string | undefined`).
 //   Selection follows focus, so arrow keys + click both update it. This
-//   matches the codebase's existing `useSelected(_, 'single')` convention
+//   matches the codebase's existing `useSelection(_, 'single')` convention
 //   from `@dxos/react-ui-attention`.
 //
 //   Multi-select (`selectedIds: ReadonlySet<string>` + per-row checkbox
 //   affordance) is a future expansion point. When it lands it'll likely
-//   plumb through `react-ui-attention`'s `SelectionManager` for
+//   plumb through `react-ui-attention`'s `ViewStateManager` for
 //   cross-context state sharing — but RowList itself can stay
 //   provider-agnostic, with consumers wiring it as they need.
 //
