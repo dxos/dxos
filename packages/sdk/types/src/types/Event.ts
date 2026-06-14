@@ -35,6 +35,8 @@ export const Event = Schema.Struct({
    * Physical location of the event (https://schema.org/Event `location`).
    */
   location: Schema.optional(Geo.PostalAddress),
+
+  // TODO(burdon): Video link(s).
 }).pipe(
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),

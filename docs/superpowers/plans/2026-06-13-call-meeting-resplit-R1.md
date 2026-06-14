@@ -15,19 +15,19 @@
 
 ## Naming map
 
-| Post-P1 (plugin-calls) | Target |
-| --- | --- |
-| `Call` (hub: name/created/participants/transcript/notes/summary) | `Meeting` in **plugin-meeting** (same fields **+ `call?: Ref<Call>`**, DXN `org.dxos.type.meeting`) |
-| — (no transport today) | **new** slim `Call` in **plugin-calls**: `{ name?, created, transport: { kind, config } }`, DXN `org.dxos.type.call` |
-| `CallOperation` (Create/SetActive/HandlePayload/Summarize) | `MeetingOperation.*` in plugin-meeting |
-| `CallsCapabilities.{Settings,RecordState}` | `MeetingCapabilities.{Settings,State}` in plugin-meeting |
-| `CallRecordState`/`CallRecordStore`, `activeCall` | `MeetingState`/`MeetingStore`, `activeMeeting` |
-| `containers/CallArticle` (record: notes+summary) | `MeetingArticle` in plugin-meeting |
-| `containers/CallsList` | `MeetingsList` in plugin-meeting |
-| `summarize.ts` (`getCallContent`) | plugin-meeting `summarize.ts` (`getMeetingContent`) |
-| `capabilities/{operation-handler,call-extension,settings,state}` | plugin-meeting capabilities |
-| (kept in plugin-calls) `CallManager`, `calls/`, `components/{Call,Lobby,Media,Participant,ResponsiveGrid}`, `CallsCapabilities.{Manager,EventHandler}`, `hooks/` | unchanged |
-| **new** `plugin-calls` `CallArticle` | the **live video grid** surface for a `Call` object (reuse `components/Call` + `CallSidebar`) |
+| Post-P1 (plugin-calls)                                                                                                                                           | Target                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Call` (hub: name/created/participants/transcript/notes/summary)                                                                                                 | `Meeting` in **plugin-meeting** (same fields **+ `call?: Ref<Call>`**, DXN `org.dxos.type.meeting`)                  |
+| — (no transport today)                                                                                                                                           | **new** slim `Call` in **plugin-calls**: `{ name?, created, transport: { kind, config } }`, DXN `org.dxos.type.call` |
+| `CallOperation` (Create/SetActive/HandlePayload/Summarize)                                                                                                       | `MeetingOperation.*` in plugin-meeting                                                                               |
+| `CallsCapabilities.{Settings,RecordState}`                                                                                                                       | `MeetingCapabilities.{Settings,State}` in plugin-meeting                                                             |
+| `CallRecordState`/`CallRecordStore`, `activeCall`                                                                                                                | `MeetingState`/`MeetingStore`, `activeMeeting`                                                                       |
+| `containers/CallArticle` (record: notes+summary)                                                                                                                 | `MeetingArticle` in plugin-meeting                                                                                   |
+| `containers/CallsList`                                                                                                                                           | `MeetingsList` in plugin-meeting                                                                                     |
+| `summarize.ts` (`getCallContent`)                                                                                                                                | plugin-meeting `summarize.ts` (`getMeetingContent`)                                                                  |
+| `capabilities/{operation-handler,call-extension,settings,state}`                                                                                                 | plugin-meeting capabilities                                                                                          |
+| (kept in plugin-calls) `CallManager`, `calls/`, `components/{Call,Lobby,Media,Participant,ResponsiveGrid}`, `CallsCapabilities.{Manager,EventHandler}`, `hooks/` | unchanged                                                                                                            |
+| **new** `plugin-calls` `CallArticle`                                                                                                                             | the **live video grid** surface for a `Call` object (reuse `components/Call` + `CallSidebar`)                        |
 
 Keep DXN `org.dxos.type.call` for the new slim `Call` (no migration concern — labs).
 
@@ -87,18 +87,21 @@ Keep DXN `org.dxos.type.call` for the new slim `Call` (no migration concern — 
 **Files:** rewrite `plugin-calls/src/types/Call.ts`; add `CallTransport` + `CallTransportProvider` per AUDIT/PLUGIN.mdl; repoint `containers/CallArticle` to the live grid; fix `CallsPlugin.tsx`.
 
 - [ ] **Step 1:** Replace `plugin-calls/src/types/Call.ts` with the slim type:
+
 ```ts
 export const Call = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   created: Schema.String.pipe(FormInputAnnotation.set(false)),
-  transport: CallTransport,   // { kind: string, config: Ref<Obj.Unknown> }
+  transport: CallTransport, // { kind: string, config: Ref<Obj.Unknown> }
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--phone-call--regular', hue: 'indigo' }),
   Type.makeObject(DXN.make('org.dxos.type.call', '0.1.0')),
 );
 ```
+
 Define `CallTransport` (`{ kind, config: Ref.Ref(Obj.Unknown) }`) and a `make()` that takes `{ name?, transport }`. Keep `Call` exported from `types/index.ts`.
+
 - [ ] **Step 2:** Add `CallsCapabilities.CallTransportProvider` (key + `CallTransportProvider` interface type) per PLUGIN.mdl. (Implementing the Cloudflare provider is a later plan; the key + type are enough here.)
 - [ ] **Step 3:** Make `plugin-calls/src/containers/CallArticle` render the **live video grid** for a `Call` (compose `components/Call` / `CallSidebar` / `ParticipantGrid`), replacing the moved-out record view. Its surface filter: `AppSurface.object(AppSurface.Article, Call.Call)`.
 - [ ] **Step 4:** Trim `CallsPlugin.tsx`: remove the meeting modules (OperationHandler/Settings/State/CallExtension/meeting schema); keep AppGraphBuilder, ReactRoot, ReactSurface, CallManager module, translations; `addSchemaModule({ schema: [Call.Call] })` for the slim Call. Remove `operations/`, `summarize.ts`, `containers/CallsList`, and meeting capability files from plugin-calls (now in plugin-meeting). Remove now-unused deps from plugin-calls `package.json` (ai/assistant if only used by summarize).

@@ -130,13 +130,13 @@ Transcript (sdk/types)
 ### Attaching a Meeting (the single primitive)
 
 A naked `Event` has no `Meeting`. **"Attach Meeting"** is the one creation action — create the
-`Meeting` hub + `AnchoredTo`(Event, occurrence) + an empty `notes` `Text` (≤1 per occurrence; reused
-after). Three intents all funnel through it (create-or-reuse):
+`Meeting` hub + `AnchoredTo`(Event, occurrence) + an empty `notes` `Text` (≤1 per occurrence;
+reused after). Three intents all funnel through it (create-or-reuse):
 
-| Intent | Action | Effect on the hub |
-| --- | --- | --- |
-| (a) Planning | Attach meeting / open Notes | `Meeting` + `notes`; edit `Meeting.notes`. |
-| (b) In-person notes | Attach meeting / open Notes | same — notes without any `Call`. |
+| Intent                | Action                          | Effect on the hub                                                     |
+| --------------------- | ------------------------------- | --------------------------------------------------------------------- |
+| (a) Planning          | Attach meeting / open Notes     | `Meeting` + `notes`; edit `Meeting.notes`.                            |
+| (b) In-person notes   | Attach meeting / open Notes     | same — notes without any `Call`.                                      |
 | (c) Plan/start a call | Attach meeting → provision call | `Meeting` + `Meeting.call` (room/link ahead); join via `CallManager`. |
 
 Transcript and summary attach to the `Meeting` as used. Attaching a Meeting is also what flips the
@@ -184,7 +184,7 @@ a **higher-priority** Event companion whose filter requires a linked `Meeting`; 
 wins and renders instead — same Event header/description, plus a tab strip:
 
 ```
-[ Notes · Transcript · Summary ]      # Meeting.notes / Meeting.transcript / Meeting.summary
+[ Notes · Transcript · Summary ] # Meeting.notes / Meeting.transcript / Meeting.summary
 ```
 
 - `Event.description` stays in the Event header (synced; read-only unless draft).

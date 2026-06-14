@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { type Database } from '@dxos/echo';
+import { type Database, type Obj } from '@dxos/echo';
 import { Card, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
@@ -61,11 +61,14 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete'> &
+type EventToolbarProps = Pick<
+  UseEventToolbarActionsProps,
+  'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
+> &
   Pick<MenuRootProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
-  ({ alwaysActive, onOpen, onSave, saveDisabled, onDelete, ...props }, forwardedRef) => {
+  ({ alwaysActive, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
     const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
     const menuActions = useEventToolbarActions({
       viewMode,
@@ -74,6 +77,7 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
       onSave,
       saveDisabled,
       onDelete,
+      editing,
     });
 
     return (
@@ -115,9 +119,10 @@ type EventHeaderProps = {
   /** When true, the title and date range become editable (used for draft events). */
   editable?: boolean;
   onContactCreate?: (actor: Actor.Actor) => void;
+  onOpenObject?: (object: Obj.Unknown) => void;
 };
 
-const EventHeader = ({ db, editable, onContactCreate }: EventHeaderProps) => {
+const EventHeader = ({ db, editable, onContactCreate, onOpenObject }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
@@ -128,7 +133,14 @@ const EventHeader = ({ db, editable, onContactCreate }: EventHeaderProps) => {
       classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-1')}
     >
       <Card.Body>
-        <EventDetails event={event} title='heading' editable={editable} db={db} onContactCreate={onContactCreate} />
+        <EventDetails
+          event={event}
+          title='heading'
+          editable={editable}
+          db={db}
+          onContactCreate={onContactCreate}
+          onOpenObject={onOpenObject}
+        />
       </Card.Body>
     </Card.Root>
   );

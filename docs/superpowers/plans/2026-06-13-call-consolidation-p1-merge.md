@@ -14,26 +14,26 @@
 
 ## Naming Map (apply consistently everywhere)
 
-| Old (plugin-meeting) | New (plugin-calls) |
-|---|---|
-| package `@dxos/plugin-meeting` | (deleted; merged into `@dxos/plugin-calls`) |
-| `Meeting` namespace / `Meeting.Meeting` type | `Call` namespace / `Call.Call` type |
-| DXN `org.dxos.type.meeting` | DXN `org.dxos.type.call` (no back-compat) |
-| `types/Meeting.ts` | `types/Call.ts` |
-| `MeetingOperation` (`types/MeetingOperation.ts`) | `CallOperation` (`types/CallOperation.ts`) |
-| `MeetingOperationHandlerSet` | `CallOperationHandlerSet` |
-| `MeetingCapabilities.Settings` | `CallsCapabilities.Settings` |
-| `MeetingCapabilities.State` | `CallsCapabilities.RecordState` |
-| `MeetingState` (type) | `CallRecordState` (type) |
-| `MeetingStateStore` (type) | `CallRecordStore` (type) |
-| `MeetingState.activeMeeting` field | `CallRecordState.activeCall` field |
-| container `MeetingArticle` | container `CallArticle` |
-| container `MeetingsList` | container `CallsList` |
-| `getMeetingContent()` (summarize.ts) | `getCallContent()` |
+| Old (plugin-meeting)                                | New (plugin-calls)                                  |
+| --------------------------------------------------- | --------------------------------------------------- |
+| package `@dxos/plugin-meeting`                      | (deleted; merged into `@dxos/plugin-calls`)         |
+| `Meeting` namespace / `Meeting.Meeting` type        | `Call` namespace / `Call.Call` type                 |
+| DXN `org.dxos.type.meeting`                         | DXN `org.dxos.type.call` (no back-compat)           |
+| `types/Meeting.ts`                                  | `types/Call.ts`                                     |
+| `MeetingOperation` (`types/MeetingOperation.ts`)    | `CallOperation` (`types/CallOperation.ts`)          |
+| `MeetingOperationHandlerSet`                        | `CallOperationHandlerSet`                           |
+| `MeetingCapabilities.Settings`                      | `CallsCapabilities.Settings`                        |
+| `MeetingCapabilities.State`                         | `CallsCapabilities.RecordState`                     |
+| `MeetingState` (type)                               | `CallRecordState` (type)                            |
+| `MeetingStateStore` (type)                          | `CallRecordStore` (type)                            |
+| `MeetingState.activeMeeting` field                  | `CallRecordState.activeCall` field                  |
+| container `MeetingArticle`                          | container `CallArticle`                             |
+| container `MeetingsList`                            | container `CallsList`                               |
+| `getMeetingContent()` (summarize.ts)                | `getCallContent()`                                  |
 | `MeetingSettings`, `MeetingState` capability lazies | `CallSettings`, `CallRecordState` capability lazies |
-| translation namespace key (Meeting typename DXN) | Call typename DXN |
+| translation namespace key (Meeting typename DXN)    | Call typename DXN                                   |
 
-> **Why `RecordState`/`CallRecordState`, not `CallState`:** `plugin-calls` already defines a live `CallState` type in `src/calls/types.ts` (the in-call aggregate: joined/users/tracks). The meeting store (`{ activeMeeting?, transcriptionManager? }`) is a *different* concept. Renaming it to `CallState` would collide. Use `RecordState` / `CallRecordState` / `CallRecordStore`.
+> **Why `RecordState`/`CallRecordState`, not `CallState`:** `plugin-calls` already defines a live `CallState` type in `src/calls/types.ts` (the in-call aggregate: joined/users/tracks). The meeting store (`{ activeMeeting?, transcriptionManager? }`) is a _different_ concept. Renaming it to `CallState` would collide. Use `RecordState` / `CallRecordState` / `CallRecordStore`.
 
 > **No collision for `CallArticle`:** there is no existing `CallArticle.tsx` in plugin-calls. The live in-call UI is `components/Call/Call.tsx` surfaced via `CallSidebar`; the article surface of a persistent `Call` object is the record view (notes/summary). These are distinct.
 
@@ -79,6 +79,7 @@ Deleted entirely: `packages/plugins/plugin-meeting/`.
 ### Task 0: Extract `@dxos/av` to break the calls↔transcription cycle
 
 **Files:**
+
 - Create: `packages/common/av/` (package.json, moon.yml, tsconfig.json, vitest.config.ts, LICENSE, README.md, `src/index.ts`, `src/SpeakingMonitor.ts`, `src/monitor-audio-level.ts`)
 - Modify: `packages/plugins/plugin-calls/src/calls/media-manager.ts`, `packages/plugins/plugin-calls/src/calls/speaking-monitor.ts` (delete), `packages/plugins/plugin-calls/src/calls/util/audio.ts` (remove `monitorAudioLevel`), `packages/plugins/plugin-calls/src/calls/util/index.ts`, `packages/plugins/plugin-calls/src/calls/index.ts`
 - Modify: `packages/plugins/plugin-transcription/src/util/monitor-audio-level.ts` (delete), `packages/plugins/plugin-transcription/src/util/index.ts`, `packages/plugins/plugin-transcription/src/stories/common.ts`, and any other transcription consumers of its local `monitorAudioLevel`
@@ -90,6 +91,7 @@ Deleted entirely: `packages/plugins/plugin-meeting/`.
 - [ ] **Step 1: Scaffold the package**
 
 Use `packages/common/display-name` as the structural template (same `package.json` skeleton, `moon.yml`, `tsconfig.json`, `vitest.config.ts`). Create `packages/common/av/package.json`:
+
 ```json
 {
   "name": "@dxos/av",
@@ -120,6 +122,7 @@ Use `packages/common/display-name` as the structural template (same `package.jso
   "publishConfig": { "access": "public" }
 }
 ```
+
 > `"private": true` is REQUIRED for new packages (per CLAUDE.md). Copy `moon.yml` from `display-name` and set the compile `--entryPoint=src/index.ts`. Copy `tsconfig.json` / `vitest.config.ts` and adjust the package name. Copy `LICENSE`; write a one-line `README.md`.
 
 - [ ] **Step 2: Move `monitorAudioLevel` (canonical copy)**
@@ -133,6 +136,7 @@ Create `packages/common/av/src/SpeakingMonitor.ts` with the body from `packages/
 - [ ] **Step 4: Barrel**
 
 `packages/common/av/src/index.ts`:
+
 ```ts
 export * from './SpeakingMonitor';
 export * from './monitor-audio-level';
@@ -166,6 +170,7 @@ moon run av:build
 moon run plugin-calls:build
 moon run plugin-transcription:build
 ```
+
 Expected: all PASS. `grep -rn "@dxos/plugin-calls" packages/plugins/plugin-transcription` returns nothing.
 
 - [ ] **Step 9: Commit**
@@ -180,6 +185,7 @@ git commit -m "refactor(av): extract @dxos/av (SpeakingMonitor, monitorAudioLeve
 ### Task 1: Add plugin-meeting's workspace + external deps to plugin-calls
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-calls/package.json`
 
 `plugin-meeting` pulls in deps `plugin-calls` does not yet have. Add the union (keep existing). Workspace deps use `workspace:*`; external use `catalog:`.
@@ -198,10 +204,12 @@ Add any of these not already present (these are the ones `plugin-meeting` uses a
 `@dxos/ai`, `@dxos/assistant`, `@dxos/compute`, `@dxos/edge-client`, `@dxos/effect`, `@dxos/invariant`, `@dxos/keys`, `@dxos/log`, `@dxos/plugin-client`, `@dxos/plugin-graph`, `@dxos/plugin-space`, `@dxos/plugin-transcription`, `@dxos/protocols`, `@dxos/react-client`, `@dxos/react-ui`, `@dxos/react-ui-attention`, `@dxos/react-ui-form`, `@dxos/react-ui-list`, `@dxos/react-ui-stack`, `@dxos/react-ui-theme`, `@dxos/schema`, `@dxos/types`, `@dxos/util` → value `"workspace:*"`.
 External: `@effect/ai`, `@effect/experimental` → value `"catalog:"` (only if not present; `@effect-atom/atom-react` already present).
 
-Use the catalog command for any *new external* package rather than hand-editing versions, e.g.:
+Use the catalog command for any _new external_ package rather than hand-editing versions, e.g.:
+
 ```bash
 pnpm add --filter @dxos/plugin-calls --save-catalog @effect/ai @effect/experimental
 ```
+
 For `@dxos/*` workspace deps, hand-edit `package.json` to `"workspace:*"` (do NOT use the catalog for workspace packages).
 
 - [ ] **Step 3: Verify the package resolves**
@@ -209,6 +217,7 @@ For `@dxos/*` workspace deps, hand-edit `package.json` to `"workspace:*"` (do NO
 ```bash
 CI=true pnpm install
 ```
+
 Expected: completes; the `DEPOT_TOKEN` warning is normal and ignorable.
 
 - [ ] **Step 4: Commit**
@@ -223,6 +232,7 @@ git commit -m "chore(plugin-calls): add deps absorbed from plugin-meeting"
 ### Task 2: Move + rename the `Call` type (was `Meeting`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-calls/src/types/Call.ts` (from meeting `types/Meeting.ts`)
 - Modify: `packages/plugins/plugin-calls/src/types/index.ts`
 
@@ -236,6 +246,7 @@ cp packages/plugins/plugin-meeting/src/types/Meeting.ts packages/plugins/plugin-
 - [ ] **Step 2: Rename symbols + DXN inside `Call.ts`**
 
 In `packages/plugins/plugin-calls/src/types/Call.ts`:
+
 - Replace the exported `export const Meeting = Schema.Struct({...})` with `export const Call = Schema.Struct({...})` (rename the const only; keep all fields exactly).
 - Replace the type alias `export type Meeting = ...` with `export type Call = Type.InstanceType<typeof Call>;`
 - Change the DXN in `Type.makeObject(DXN.make('org.dxos.type.meeting', '0.1.0'))` to `Type.makeObject(DXN.make('org.dxos.type.call', '0.1.0'))`.
@@ -258,11 +269,13 @@ export const make = (props: {
     summary: props.summary ?? Ref.make(Text.make()),
   });
 ```
+
 Ensure imports include `Obj`, `Ref` from `@dxos/echo`, `Text` from `@dxos/schema`, `Transcript` from `@dxos/types`.
 
 - [ ] **Step 3: Export the namespace from `types/index.ts`**
 
 In `packages/plugins/plugin-calls/src/types/index.ts`, add (after the existing `CallsCapabilities` export):
+
 ```ts
 export * as Call from './Call';
 ```
@@ -272,6 +285,7 @@ export * as Call from './Call';
 ```bash
 moon run plugin-calls:build
 ```
+
 Expected: PASS (other moved files not added yet, so this builds the type in isolation only if no other file references the not-yet-moved code; if build pulls everything, defer this check to Task 9). If it fails only due to not-yet-moved operations/capabilities, that is expected — proceed.
 
 - [ ] **Step 5: Commit**
@@ -286,6 +300,7 @@ git commit -m "feat(plugin-calls): add Call type (renamed from Meeting)"
 ### Task 3: Merge `MeetingCapabilities` into `CallsCapabilities`
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-calls/src/types/CallsCapabilities.ts`
 
 - [ ] **Step 1: Append the settings + record-state capability to `CallsCapabilities.ts`**
@@ -329,6 +344,7 @@ git commit -m "feat(plugin-calls): merge meeting Settings/State into CallsCapabi
 ### Task 4: Move `Settings` type and the `CallOperation` definitions
 
 **Files:**
+
 - Create: `packages/plugins/plugin-calls/src/types/Settings.ts` (from meeting)
 - Create: `packages/plugins/plugin-calls/src/types/CallOperation.ts` (from meeting `MeetingOperation.ts`)
 - Modify: `packages/plugins/plugin-calls/src/types/index.ts`
@@ -338,6 +354,7 @@ git commit -m "feat(plugin-calls): merge meeting Settings/State into CallsCapabi
 ```bash
 cp packages/plugins/plugin-meeting/src/types/Settings.ts packages/plugins/plugin-calls/src/types/Settings.ts
 ```
+
 No symbol rename needed (it's just `Settings`).
 
 - [ ] **Step 2: Move + rename operations definitions**
@@ -345,15 +362,18 @@ No symbol rename needed (it's just `Settings`).
 ```bash
 cp packages/plugins/plugin-meeting/src/types/MeetingOperation.ts packages/plugins/plugin-calls/src/types/CallOperation.ts
 ```
+
 In `CallOperation.ts`: rename any references `Meeting.Meeting` → `Call.Call`, update the import to `import { Call } from './Call'` (or `* as Call`), and keep operation member names (`Create`, `SetActive`, `HandlePayload`, `Summarize`). Update each operation's `meta.key` string if it embeds `meeting` (e.g. `org.dxos.plugin.meeting.operation.create` → `org.dxos.plugin.calls.operation.create`).
 
 - [ ] **Step 3: Export from `types/index.ts`**
 
 Add:
+
 ```ts
 export * as CallOperation from './CallOperation';
 export * as Settings from './Settings';
 ```
+
 (Match the existing namespace-export convention.)
 
 - [ ] **Step 4: Commit**
@@ -368,6 +388,7 @@ git commit -m "feat(plugin-calls): add CallOperation + Settings types (from meet
 ### Task 5: Move the operation handlers
 
 **Files:**
+
 - Create: `packages/plugins/plugin-calls/src/operations/{index,create,set-active,handle-payload,summarize}.ts`
 
 - [ ] **Step 1: Copy the directory**
@@ -379,6 +400,7 @@ cp -r packages/plugins/plugin-meeting/src/operations packages/plugins/plugin-cal
 - [ ] **Step 2: Rename references in every operations file**
 
 In all of `packages/plugins/plugin-calls/src/operations/*.ts`, apply the Naming Map:
+
 - `MeetingOperation` → `CallOperation`
 - `Meeting.Meeting` → `Call.Call`; `Obj.make(Meeting.Meeting, ...)` → `Call.make(...)` in `create.ts`
 - `MeetingCapabilities.State` → `CallsCapabilities.RecordState`; `.activeMeeting` → `.activeCall`
@@ -401,10 +423,13 @@ export const CallOperationHandlerSet = OperationHandlerSet.lazy(
 - [ ] **Step 4: Add `#operations` import alias + moon entrypoint**
 
 In `packages/plugins/plugin-calls/package.json` `imports`, add:
+
 ```json
 "#operations": "./src/operations/index.ts"
 ```
+
 In `packages/plugins/plugin-calls/moon.yml` `compile.args`, add:
+
 ```yaml
 - '--entryPoint=src/operations/index.ts'
 ```
@@ -421,6 +446,7 @@ git commit -m "feat(plugin-calls): add Call operation handlers (from meeting)"
 ### Task 6: Move capability modules (operation-handler, call-extension, settings, state)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-calls/src/capabilities/{operation-handler,call-extension,settings,state}.ts`
 - Modify: `packages/plugins/plugin-calls/src/capabilities/index.ts`
 
@@ -435,6 +461,7 @@ done
 - [ ] **Step 2: Rename references**
 
 In each moved file apply the Naming Map. Specifically:
+
 - `operation-handler.ts`: `MeetingOperationHandlerSet` → `CallOperationHandlerSet` (import from `#operations`).
 - `state.ts`: `MeetingCapabilities.State` → `CallsCapabilities.RecordState`; type `MeetingState`/`MeetingStateStore` → `CallRecordState`/`CallRecordStore`; field `activeMeeting` → `activeCall`. Capability contributed = `CallsCapabilities.RecordState`.
 - `settings.ts`: `MeetingCapabilities.Settings` → `CallsCapabilities.Settings`.
@@ -443,6 +470,7 @@ In each moved file apply the Naming Map. Specifically:
 - [ ] **Step 3: Add the lazy capability exports to `capabilities/index.ts`**
 
 Append:
+
 ```ts
 export const OperationHandler = Capability.lazy('OperationHandler', () => import('./operation-handler'));
 export const CallExtension = Capability.lazy('CallExtension', () => import('./call-extension'));
@@ -462,6 +490,7 @@ git commit -m "feat(plugin-calls): add operation-handler/call-extension/settings
 ### Task 7: Merge app-graph extensions + Call surfaces
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-calls/src/capabilities/app-graph-builder.ts`
 - Modify: `packages/plugins/plugin-calls/src/capabilities/react-surface.tsx`
 
@@ -475,6 +504,7 @@ sed -n '1,120p' packages/plugins/plugin-calls/src/capabilities/app-graph-builder
 - [ ] **Step 2: Merge the meeting graph extensions into plugin-calls's builder**
 
 Port these four extensions from meeting into the contributed array of `plugin-calls/src/capabilities/app-graph-builder.ts` (applying the Naming Map — `MeetingOperation`→`CallOperation`, `Meeting.Meeting`→`Call.Call`, `activeMeeting`→`activeCall`, `RecordState`):
+
 1. `shareCallLink` (Channel) — "Share call link" action.
 2. `callCompanion` (Channel) — companion → `CallsList` or `CallArticle`.
 3. `callTranscript` (Channel) — start/stop transcription action + transcript companion.
@@ -491,6 +521,7 @@ Port meeting's two surfaces (`meeting` article, `meetingCompanion`) into `plugin
 ```bash
 moon run plugin-calls:build
 ```
+
 Expected: errors referencing `CallArticle`/`CallsList` (moved in Task 8). Other errors are real — fix before continuing.
 
 - [ ] **Step 5: Commit**
@@ -505,6 +536,7 @@ git commit -m "feat(plugin-calls): merge meeting app-graph extensions + Call sur
 ### Task 8: Move containers + summarize + translations
 
 **Files:**
+
 - Create: `packages/plugins/plugin-calls/src/containers/CallArticle/*`, `CallsList/*`
 - Modify: `packages/plugins/plugin-calls/src/containers/index.ts`
 - Create: `packages/plugins/plugin-calls/src/summarize.ts`
@@ -528,6 +560,7 @@ mv packages/plugins/plugin-calls/src/containers/CallsList/MeetingsList.tsx packa
 - [ ] **Step 3: Update `containers/index.ts`**
 
 Append:
+
 ```ts
 export const CallArticle: ComponentType<any> = lazy(() => import('./CallArticle'));
 export const CallsList: ComponentType<any> = lazy(() => import('./CallsList'));
@@ -538,6 +571,7 @@ export const CallsList: ComponentType<any> = lazy(() => import('./CallsList'));
 ```bash
 cp packages/plugins/plugin-meeting/src/summarize.ts packages/plugins/plugin-calls/src/summarize.ts
 ```
+
 In `summarize.ts`: `getMeetingContent`→`getCallContent`, `Meeting.Meeting`→`Call.Call`. Keep `summarizeTranscript` + `SUMMARIZE_PROMPT`.
 Open `packages/plugins/plugin-meeting/src/translations.ts` and merge its entries into `packages/plugins/plugin-calls/src/translations.ts`: re-key the Meeting typename block to the `Call.Call` typename, and merge the `meta.id`-scoped strings (start-transcription, meeting-list→call-list, create-meeting→create-call, notes, summary, …) under the calls `meta.id`.
 
@@ -553,6 +587,7 @@ git commit -m "feat(plugin-calls): add CallArticle/CallsList + summarize + trans
 ### Task 9: Wire the new modules into `CallsPlugin` and build
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-calls/src/CallsPlugin.tsx`
 
 - [ ] **Step 1: Extend the `.pipe()` chain**
@@ -624,6 +659,7 @@ export default CallsPlugin;
 ```bash
 moon run plugin-calls:build
 ```
+
 Expected: PASS. Fix any remaining `Meeting*`/`activeMeeting`/`MeetingOperation` references the Naming Map missed.
 
 - [ ] **Step 3: Lint**
@@ -644,6 +680,7 @@ git commit -m "feat(plugin-calls): wire merged meeting modules into CallsPlugin"
 ### Task 10: Port the plugin test
 
 **Files:**
+
 - Create: `packages/plugins/plugin-calls/src/CallsPlugin.test.ts` (from meeting `MeetingPlugin.test.ts`)
 
 - [ ] **Step 1: Copy + rename the test**
@@ -651,6 +688,7 @@ git commit -m "feat(plugin-calls): wire merged meeting modules into CallsPlugin"
 ```bash
 cp packages/plugins/plugin-meeting/src/MeetingPlugin.test.ts packages/plugins/plugin-calls/src/CallsPlugin.test.ts
 ```
+
 Apply the Naming Map throughout (imports from `#plugin`/`#types`, `MeetingPlugin`→`CallsPlugin`, `Meeting.Meeting`→`Call.Call`, `MeetingOperation`→`CallOperation`). If the existing `plugin-calls` already has a plugin test, MERGE the meeting assertions into it instead of adding a second file (per the testing guideline: prefer extending existing suites).
 
 - [ ] **Step 2: Run it (expect fail first if any symbol mismatch)**
@@ -658,6 +696,7 @@ Apply the Naming Map throughout (imports from `#plugin`/`#types`, `MeetingPlugin
 ```bash
 moon run plugin-calls:test -- src/CallsPlugin.test.ts
 ```
+
 Expected: PASS once symbols line up. If FAIL, read the error and fix the rename.
 
 - [ ] **Step 3: Run the whole package test suite**
@@ -665,6 +704,7 @@ Expected: PASS once symbols line up. If FAIL, read the error and fix the rename.
 ```bash
 moon run plugin-calls:test
 ```
+
 Expected: PASS.
 
 - [ ] **Step 4: Commit**
@@ -679,6 +719,7 @@ git commit -m "test(plugin-calls): port meeting plugin test"
 ### Task 11: Repoint the one external consumer (composer-app) and root config
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 - Modify: `packages/apps/composer-app/package.json`
 - Modify: `packages/apps/composer-app/tsconfig.json`
@@ -687,6 +728,7 @@ git commit -m "test(plugin-calls): port meeting plugin test"
 - [ ] **Step 1: Remove MeetingPlugin from composer-app**
 
 In `packages/apps/composer-app/src/plugin-defs.tsx`:
+
 - Delete the import `import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';` (line ~49).
 - Delete the `MeetingPlugin.meta.id` entry from the labs defaults list (line ~148).
 - Delete `MeetingPlugin(),` from the `getPlugins()` array (line ~223).
@@ -698,6 +740,7 @@ In `packages/apps/composer-app/src/plugin-defs.tsx`:
 ```bash
 cd /Users/burdon/Code/dxos/dxos/.claude/worktrees/elated-vaughan-a5f04c
 ```
+
 - Remove `"@dxos/plugin-meeting": "workspace:*"` from `packages/apps/composer-app/package.json`.
 - Remove the `@dxos/plugin-meeting` path mapping from `packages/apps/composer-app/tsconfig.json` (references array) and from root `tsconfig.paths.json` (both `@dxos/plugin-meeting` and `@dxos/plugin-meeting/*`).
 - Remove the `packages/plugins/plugin-meeting` entry from `tsconfig.all.json` references and from `release-please-config.json`.
@@ -707,6 +750,7 @@ cd /Users/burdon/Code/dxos/dxos/.claude/worktrees/elated-vaughan-a5f04c
 ```bash
 grep -rn "@dxos/plugin-meeting" --include='*.ts' --include='*.tsx' --include='*.json' . | grep -v node_modules
 ```
+
 Expected: no results. Fix any that remain (apply Naming Map; import from `@dxos/plugin-calls` instead).
 
 - [ ] **Step 4: Commit**
@@ -721,6 +765,7 @@ git commit -m "refactor(composer-app): drop plugin-meeting; CallsPlugin now owns
 ### Task 12: Delete plugin-meeting
 
 **Files:**
+
 - Delete: `packages/plugins/plugin-meeting/`
 
 - [ ] **Step 1: Remove the package**
@@ -736,6 +781,7 @@ CI=true pnpm install
 moon run plugin-calls:build
 moon run composer-app:build
 ```
+
 Expected: both PASS.
 
 - [ ] **Step 3: Repo-wide grep sanity**
@@ -743,6 +789,7 @@ Expected: both PASS.
 ```bash
 grep -rn "plugin-meeting\|MeetingPlugin\|MeetingOperation\|MeetingCapabilities" --include='*.ts' --include='*.tsx' --include='*.json' . | grep -v node_modules
 ```
+
 Expected: no results.
 
 - [ ] **Step 4: Commit**
@@ -757,6 +804,7 @@ git commit -m "refactor: delete plugin-meeting (absorbed into plugin-calls)"
 ### Task 13: Update the spec + final verification
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-calls/PLUGIN.mdl` (already specifies Call; just confirm F-9.5 satisfied)
 
 - [ ] **Step 1: Full lint + test + fmt for the touched packages**
@@ -767,6 +815,7 @@ moon run plugin-calls:test
 moon run composer-app:build
 pnpm format
 ```
+
 Expected: all green.
 
 - [ ] **Step 2: Cast audit (per CLAUDE.md)**
@@ -774,6 +823,7 @@ Expected: all green.
 ```bash
 git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as' || echo "no new casts"
 ```
+
 Expected: `no new casts` (or each justified at a real boundary).
 
 - [ ] **Step 3: Confirm spec coverage**
@@ -792,6 +842,7 @@ git commit -m "chore(plugin-calls): format + lint after meeting merge"
 ## Self-Review
 
 **Spec coverage (against `plugin-calls/PLUGIN.mdl`):**
+
 - F-9.1 (Call type replaces Meeting) → Tasks 2, 12. ✓
 - F-9.3 (Call article: notes + summary) → Task 8 (CallArticle). ✓
 - F-9.5 (no Meeting/plugin-meeting/compat re-exports) → Tasks 11, 12 + greps. ✓

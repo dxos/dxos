@@ -4,7 +4,7 @@
 
 **Goal:** Make `Meeting` the hub in practice: (1) strip `transcript`/`notes`/`summary`/`thread` off `Event`; (2) replace inbox's "Create note" with a plugin-meeting-contributed **"Create meeting"** action on the Event menu that creates a `Meeting` + `Meeting --AnchoredTo--> Event`; (3) add **"Start call"** to `MeetingArticle` that provisions a slim `Call`, sets `Meeting.call`, and joins via `CallManager`.
 
-**Architecture:** Cohesive cross-package change (sdk/types + plugin-inbox + plugin-meeting + the story). plugin-inbox stays meeting-agnostic — it only *loses* the note affordance; the create-meeting action is contributed by plugin-meeting via an app-graph type-extension on `Event.Event` (mirrors how meeting adds actions to Channel nodes).
+**Architecture:** Cohesive cross-package change (sdk/types + plugin-inbox + plugin-meeting + the story). plugin-inbox stays meeting-agnostic — it only _loses_ the note affordance; the create-meeting action is contributed by plugin-meeting via an app-graph type-extension on `Event.Event` (mirrors how meeting adds actions to Channel nodes).
 
 ---
 

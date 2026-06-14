@@ -21,7 +21,7 @@ export const meta = Plugin.makeMeta({
     The summary is written back to ECHO and replicated to all peers; the meeting article view displays a generate button on first use and a regenerate button once a summary exists.
   `,
   icon: 'ph--handshake--regular',
-  iconHue: 'rose',
+  iconHue: 'yellow',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-meeting',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],

@@ -167,7 +167,10 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
         />
       }
     >
-      <h3 className='truncate'>{actor.name || actor.email}</h3>
+      <div className='flex items-center overflow-hidden'>
+        <span className='truncate'>{actor.name || actor.email}</span>
+      </div>
+
       {/* Trailing action column. */}
       {onRemove && (
         <IconButton

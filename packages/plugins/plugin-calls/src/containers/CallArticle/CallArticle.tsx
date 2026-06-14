@@ -13,7 +13,7 @@ import { useSoundEffect } from '@dxos/react-ui-audio';
 
 import { type Call as CallType, CallsCapabilities } from '#types';
 
-import { Call } from '../../components/Call';
+import { Call } from '../../components';
 
 export type CallArticleProps = AppSurface.ObjectArticleProps<CallType.Call>;
 

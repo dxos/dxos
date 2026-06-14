@@ -19,6 +19,8 @@ export type UseEventToolbarActionsProps = {
   saveDisabled?: boolean;
   /** Delete the event (locally, and on Google Calendar when synced). */
   onDelete?: () => void;
+  /** Editing (draft) mode — disables the open + view-mode actions (irrelevant while editing). */
+  editing?: boolean;
 };
 
 export const useEventToolbarActions = ({
@@ -28,6 +30,7 @@ export const useEventToolbarActions = ({
   onSave,
   saveDisabled,
   onDelete,
+  editing,
 }: UseEventToolbarActionsProps) => {
   return useMenuBuilder(
     () =>
@@ -38,11 +41,17 @@ export const useEventToolbarActions = ({
             ((b) =>
               b.action(
                 'open',
-                { label: ['event-toolbar-open.menu', { ns: meta.id }], icon: 'ph--arrow-square-out--regular' },
+                {
+                  label: ['event-toolbar-open.menu', { ns: meta.id }],
+                  icon: 'ph--arrow-square-out--regular',
+                  disabled: editing,
+                },
                 onOpen,
               )),
         )
-        .subgraph(viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'] }))
+        .subgraph(
+          viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
+        )
         .separator()
         .subgraph(
           onSave &&
@@ -67,6 +76,6 @@ export const useEventToolbarActions = ({
               )),
         )
         .build(),
-    [viewMode, setViewMode, onOpen, onSave, saveDisabled, onDelete],
+    [viewMode, setViewMode, onOpen, onSave, saveDisabled, onDelete, editing],
   );
 };

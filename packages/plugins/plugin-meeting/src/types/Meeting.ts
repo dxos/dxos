@@ -8,7 +8,7 @@ import { type Database, DXN, Annotation, Filter, Obj, Query, Ref, Type } from '@
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Call } from '@dxos/plugin-calls/types';
 import { Text } from '@dxos/schema';
-import { AnchoredTo, type Event, Transcript } from '@dxos/types';
+import { Event, Transcript } from '@dxos/types';
 
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
@@ -44,19 +44,26 @@ export const Meeting = Schema.Struct({
    * At most one per meeting; provisioned ahead and resumable.
    */
   call: Ref.Ref(Call.Call).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * The calendar event this meeting is for, if any. A `Ref` (not a relation) so it can point at a
+   * feed/queue event synced from the calendar — relation endpoints require live db objects.
+   */
+  event: Ref.Ref(Event.Event).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--handshake--regular', hue: 'rose' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--handshake--regular', hue: 'yellow' }),
   Type.makeObject(DXN.make('org.dxos.type.meeting', '0.1.0')),
 );
 
 export type Meeting = Type.InstanceType<typeof Meeting>;
 
 /**
- * Resolves the meeting anchored to the given event (via a `Meeting --AnchoredTo--> Event` relation),
- * or `undefined` if none exists. At most one meeting is expected per event.
+ * Resolves the meeting whose `event` ref points at the given event, or `undefined` if none exists.
+ * Matches by ref DXN so it works for feed/queue events. At most one meeting is expected per event.
  */
 export const getMeetingForEvent = async (db: Database.Database, event: Event.Event): Promise<Meeting | undefined> => {
-  const sources = await db.query(Query.select(Filter.id(event.id)).targetOf(AnchoredTo.AnchoredTo).source()).run();
-  return sources.find((object): object is Meeting => Obj.instanceOf(Meeting, object));
+  const meetings = await db.query(Query.select(Filter.type(Meeting))).run();
+  const eventUri = Obj.getURI(event);
+  return meetings.find((meeting) => meeting.event?.uri === eventUri);
 };

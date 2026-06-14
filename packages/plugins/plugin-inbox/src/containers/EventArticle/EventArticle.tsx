@@ -9,8 +9,8 @@ import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Icon, Panel } from '@dxos/react-ui';
-import { AnchoredTo, Event as EventType } from '@dxos/types';
+import { Panel } from '@dxos/react-ui';
+import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
 import { InboxOperation, DraftEvent } from '#types';
@@ -29,8 +29,6 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
   // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
   const { integration } = useTargetIntegration(calendar);
 
-  // Objects anchored to this event (e.g. a Meeting) surfaced as relation chips in the header.
-  const relatedObjects = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo).source());
   const handleOpenObject = useCallback(
     (object: Obj.Unknown) => {
       void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
@@ -74,25 +72,21 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
         <Panel.Toolbar asChild>
           <Event.Toolbar
             alwaysActive
+            editing={draft}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
             saveDisabled={!integration}
             onDelete={calendar ? handleDelete : undefined}
           />
         </Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Content>
+          <Event.Header
+            db={db}
+            editable={draft}
+            onContactCreate={handleContactCreate}
+            onOpenObject={handleOpenObject}
+          />
           <Event.Viewport>
-            <Event.Header db={db} editable={draft} onContactCreate={handleContactCreate} />
-            {relatedObjects.length > 0 && (
-              <div role='none' className='flex flex-wrap gap-1 px-2 py-1 border-b border-subdued-separator'>
-                {relatedObjects.map((object) => (
-                  <Button key={object.id} variant='ghost' onClick={() => handleOpenObject(object)} classNames='gap-1'>
-                    <Icon icon='ph--link--regular' size={4} />
-                    <span className='truncate'>{Obj.getLabel(object) ?? object.id}</span>
-                  </Button>
-                ))}
-              </div>
-            )}
             <Event.Body editable={draft} />
           </Event.Viewport>
         </Panel.Content>

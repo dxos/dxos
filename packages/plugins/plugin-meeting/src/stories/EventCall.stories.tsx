@@ -10,7 +10,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-client';
+import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { Call } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -33,21 +35,24 @@ type StoryProps = {};
 const DefaultStory = (_: StoryProps) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0]?.id);
-  const calendars = useQuery(db, Filter.type(Calendar.Calendar));
-  const events = useQuery(db, Filter.type(Event.Event));
-  const meetings = useQuery(db, Filter.type(Meeting.Meeting));
-  const calls = useQuery(db, Filter.type(Call.Call));
-  const calendar = calendars[0];
+  const [calendar] = useQuery(db, Filter.type(Calendar.Calendar));
+  // Events live in the calendar's feed (simulating Google sync), so query from the feed, not the db.
+  const feed = calendar?.feed?.target;
+  const events = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
+  );
+  const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
+  const [call] = useQuery(db, Filter.type(Call.Call));
+  // The selected feed event (first by chronological order from the builder).
   const event = events[0];
-  const meeting = meetings[0];
-  const call = calls[0];
 
-  if (!db || !calendar || !event || !meeting || !calls) {
+  if (!db || !calendar || !event || !meeting) {
     return <Loading data={{ db: !!db, calendar: !!calendar, event: !!event, meeting: !!meeting }} />;
   }
 
   return (
-    <div className='dx-container grid grid-cols-3'>
+    <div className='dx-container grid grid-cols-3 gap-2'>
       <div className='dx-expander'>
         <Surface.Surface
           type={AppSurface.Article}
@@ -106,23 +111,49 @@ const meta = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
 
-              // Calendar (with backing feed) acts as the EventArticle companion and supplies the db.
+              // Calendar with a backing feed. Events are appended to the feed to simulate the
+              // Google Calendar sync (synced events live in the feed, not the db).
               const calendar = personalSpace.db.add(Calendar.make({ name: 'My Calendar' }));
-
-              // Standalone Event added directly to the db so EventArticle's `Filter.id(subject.id)`
-              // query resolves the live, reactive object (feed-only events are not queryable by id).
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
+              invariant(feed, 'Calendar is feed-backed.');
               const now = new Date();
               const owner: Actor.Actor = { name: 'Alice', email: 'alice@example.com' };
-              const event = personalSpace.db.add(
-                Event.make({
+              const hour = 60 * 60 * 1000;
+              // Stamp a Google foreign key so these read as *synced* (read-only) events, not local drafts.
+              // Without it `DraftEvent.isDraft` is true and EventArticle renders the live editor, which
+              // throws on a feed snapshot ("expect obj to be a LiveObject").
+              const makeSyncedEvent = (id: string, props: Parameters<typeof Event.make>[0]) =>
+                Obj.make(Event.Event, {
+                  [Obj.Meta]: { keys: [{ source: 'google.com', id }] },
+                  attendees: [],
+                  ...props,
+                });
+              const events = [
+                makeSyncedEvent('event-1', {
                   title: 'Quarterly Planning',
                   description: 'Plan the next quarter.',
                   owner,
                   attendees: [owner, { name: 'Bob', email: 'bob@example.com' }],
                   startDate: now.toISOString(),
-                  endDate: new Date(now.getTime() + 60 * 60 * 1000).toISOString(),
+                  endDate: new Date(now.getTime() + hour).toISOString(),
                 }),
+                makeSyncedEvent('event-2', {
+                  title: 'Design Review',
+                  owner,
+                  attendees: [owner],
+                  startDate: new Date(now.getTime() + 2 * hour).toISOString(),
+                  endDate: new Date(now.getTime() + 3 * hour).toISOString(),
+                }),
+              ];
+              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              // Re-read via the queue query: these objects carry their queue URI, so `Ref.make` produces a
+              // ref the Meeting can hold (a plain `db.query(...).from(feed)` snapshot would not).
+              const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
+                Effect.provide(createFeedServiceLayer(personalSpace.queues)),
               );
+              const event = synced[0];
 
               // The Meeting hub owns notes + summary + transcript; the MeetingArticle reads them.
               const transcriptFeed = personalSpace.db.add(Feed.make());
@@ -142,6 +173,7 @@ const meta = {
                   transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(transportConfig) },
                 }),
               );
+              // `event` is a Ref to the feed event (works for queue objects); EventDetails reverse-matches it.
               const meeting = personalSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
@@ -150,11 +182,9 @@ const meta = {
                   notes: Ref.make(meetingNotes),
                   summary: Ref.make(meetingSummary),
                   call: Ref.make(call),
+                  ...(event ? { event: Ref.make(event) } : {}),
                 }),
               );
-
-              // Anchor the meeting to the event so it surfaces as a relation chip in the Event header.
-              personalSpace.db.add(AnchoredTo.make({ [Relation.Source]: meeting, [Relation.Target]: event }));
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),

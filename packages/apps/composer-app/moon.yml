@@ -56,7 +56,7 @@ tasks:
     deps:
       - ^:compile
     inputs:
-      - test/build-exemplar-space.node.test.ts
+      - scripts/build-exemplar-space.node.test.ts
       - src/plugins/welcome/content/welcome.md
       - src/plugins/welcome/content/about-bramble.md
     outputs:

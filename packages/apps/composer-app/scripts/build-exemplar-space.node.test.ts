@@ -1296,7 +1296,8 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
 //   Column width: 190 px  →  total canvas: 760 × 340 px
 const makeFlavorWheelContent = (): Record<string, unknown> => {
   const PAGE = 'page:flavor-wheel';
-  const COL_W = 190;
+  const COL_W = 180;
+  const COL_GAP = 10;
   const g = (
     id: string,
     idx: string,
@@ -1309,24 +1310,26 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
     fill: string,
   ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
+  const x = (col: number) => col * COL_W + Math.max(0, col - 1) * COL_GAP;
+
   return makeTLCanvas(PAGE, 'Spring Blend Flavor Wheel', [
     // Row 0: title
-    g('fw-title', 'a1', 0, 0, 4 * COL_W, 60, 'Spring Blend — Flavor Profile', 'black', 'semi'),
+    g('fw-title', 'a1', 0, 0, x(3) + COL_W, 60, 'Spring Blend — Flavor Profile', 'black', 'semi'),
     // Row 1: category headers
-    g('fw-cat-fruit', 'a2', 0, 80, COL_W, 80, 'Fruit', 'red', 'semi'),
-    g('fw-cat-choc', 'a3', COL_W, 80, COL_W, 80, 'Chocolate', 'orange', 'semi'),
-    g('fw-cat-floral', 'a4', 2 * COL_W, 80, COL_W, 80, 'Floral', 'violet', 'semi'),
-    g('fw-cat-spice', 'a5', 3 * COL_W, 80, COL_W, 80, 'Spice', 'yellow', 'semi'),
+    g('fw-cat-fruit', 'a2', x(0), 80, COL_W, 80, 'Fruit', 'red', 'semi'),
+    g('fw-cat-choc', 'a3', x(1), 80, COL_W, 80, 'Chocolate', 'orange', 'semi'),
+    g('fw-cat-floral', 'a4', x(2), 80, COL_W, 80, 'Floral', 'violet', 'semi'),
+    g('fw-cat-spice', 'a5', x(3), 80, COL_W, 80, 'Spice', 'yellow', 'semi'),
     // Row 2: first tasting note per family
-    g('fw-n1-fruit', 'a6', 0, 180, COL_W, 60, 'Berry', 'red', 'none'),
-    g('fw-n1-choc', 'a7', COL_W, 180, COL_W, 60, 'Dark Cacao', 'orange', 'none'),
-    g('fw-n1-floral', 'a8', 2 * COL_W, 180, COL_W, 60, 'Jasmine', 'violet', 'none'),
-    g('fw-n1-spice', 'a9', 3 * COL_W, 180, COL_W, 60, 'Cardamom', 'yellow', 'none'),
+    g('fw-n1-fruit', 'a6', x(0), 180, COL_W, 60, 'Berry', 'red', 'none'),
+    g('fw-n1-choc', 'a7', x(1), 180, COL_W, 60, 'Dark Cacao', 'orange', 'none'),
+    g('fw-n1-floral', 'a8', x(2), 180, COL_W, 60, 'Jasmine', 'violet', 'none'),
+    g('fw-n1-spice', 'a9', x(3), 180, COL_W, 60, 'Cardamom', 'yellow', 'none'),
     // Row 3: second tasting note per family
-    g('fw-n2-fruit', 'a10', 0, 260, COL_W, 60, 'Stone Fruit', 'red', 'none'),
-    g('fw-n2-choc', 'a11', COL_W, 260, COL_W, 60, 'Hazelnut', 'orange', 'none'),
-    g('fw-n2-floral', 'a12', 2 * COL_W, 260, COL_W, 60, 'Rose', 'violet', 'none'),
-    g('fw-n2-spice', 'a13', 3 * COL_W, 260, COL_W, 60, 'Cinnamon', 'yellow', 'none'),
+    g('fw-n2-fruit', 'a10', x(0), 260, COL_W, 60, 'Stone Fruit', 'red', 'none'),
+    g('fw-n2-choc', 'a11', x(1), 260, COL_W, 60, 'Hazelnut', 'orange', 'none'),
+    g('fw-n2-floral', 'a12', x(2), 260, COL_W, 60, 'Rose', 'violet', 'none'),
+    g('fw-n2-spice', 'a13', x(3), 260, COL_W, 60, 'Cinnamon', 'yellow', 'none'),
   ]);
 };
 

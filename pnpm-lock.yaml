@@ -11818,6 +11818,9 @@ importers:
         specifier: ~19.2.3
         version: 19.2.6(react@19.2.6)
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox

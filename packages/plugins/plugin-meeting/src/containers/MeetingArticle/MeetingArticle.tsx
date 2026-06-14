@@ -8,7 +8,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Call, CallsCapabilities } from '@dxos/plugin-calls/types';
-import { IconButton, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Text } from '@dxos/schema';
 
@@ -142,25 +142,7 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            {data ? (
-              <Surface.Surface type={AppSurface.Section} data={data} />
-            ) : tab === 'summary' ? (
-              <div className='grid place-items-center min-h-32'>
-                <IconButton
-                  icon='ph--book-open-text--regular'
-                  label={t('generate-summary.label')}
-                  onClick={handleGenerateSummary}
-                />
-              </div>
-            ) : (
-              <div className='grid place-items-center min-h-32 text-description'>{t(`${tab}.label`)}</div>
-            )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
+      <Panel.Content>{data && <Surface.Surface type={AppSurface.Section} data={data} />}</Panel.Content>
     </Panel.Root>
   );
 };
