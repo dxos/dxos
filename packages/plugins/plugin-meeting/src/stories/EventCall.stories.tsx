@@ -68,11 +68,7 @@ const DefaultStory = (_: StoryProps) => {
         />
       </div>
       <div className='dx-expander'>
-        <Surface.Surface
-          type={AppSurface.Article}
-          data={{ subject: call, attendableId: Obj.getURI(call) }}
-          limit={1}
-        />
+        <Surface.Surface type={AppSurface.Article} data={{ subject: call, attendableId: Obj.getURI(call) }} limit={1} />
       </div>
     </div>
   );

@@ -10,14 +10,14 @@
 messages") but are modelled differently, forcing every consumer to pick one and giving us two article
 components, two append paths, and two mental models.
 
-| | `Thread` (`org.dxos.type.thread@0.2.0`) | `Channel` (`org.dxos.type.channel@0.2.0`) |
-|---|---|---|
-| Messages | `messages: Ref<Message>[]` (local ECHO) | resolved via `backend` provider (Feed queue, ATProto, …) |
-| Append | push a `Ref` onto the array | `provider.send()` via `ChannelBackendProvider` |
-| Extra fields | `status?`, `agent?: AgentConfig` | `backend: { kind, config: Ref }` |
-| Anchoring | `AnchoredTo` relations (comments on docs) | standalone, first-class |
-| Read-only | no | yes, when backend is foreign-keyed |
-| Consumers | plugin-comments (heavy), plugin-thread | plugin-thread, plugin-meeting, plugin-calls, plugin-bluesky |
+|              | `Thread` (`org.dxos.type.thread@0.2.0`)   | `Channel` (`org.dxos.type.channel@0.2.0`)                   |
+| ------------ | ----------------------------------------- | ----------------------------------------------------------- |
+| Messages     | `messages: Ref<Message>[]` (local ECHO)   | resolved via `backend` provider (Feed queue, ATProto, …)    |
+| Append       | push a `Ref` onto the array               | `provider.send()` via `ChannelBackendProvider`              |
+| Extra fields | `status?`, `agent?: AgentConfig`          | `backend: { kind, config: Ref }`                            |
+| Anchoring    | `AnchoredTo` relations (comments on docs) | standalone, first-class                                     |
+| Read-only    | no                                        | yes, when backend is foreign-keyed                          |
+| Consumers    | plugin-comments (heavy), plugin-thread    | plugin-thread, plugin-meeting, plugin-calls, plugin-bluesky |
 
 Counts: ~32 files import `Thread`, ~35 import `Channel` (heavy overlap in plugin-thread).
 
@@ -27,6 +27,7 @@ pattern is the established direction in the codebase.
 ## Options
 
 ### Option A — Channel absorbs Thread (RECOMMENDED end-state)
+
 `Channel` becomes the single conversation type. Add `status?` + `agent?` to it, support `AnchoredTo`,
 and introduce a **`local-ref` backend** (`org.dxos.channel.backend.ref`) whose config holds the
 `Ref<Message>[]` — preserving Thread's local append semantics behind the backend interface. Migrate
@@ -38,15 +39,18 @@ existing `Thread` objects → `Channel{ backend.kind: 'org.dxos.channel.backend.
 - ➖ Data migration for all existing Thread objects.
 
 ### Option B — Thread absorbs Channel
+
 Give `Thread` an optional `backend`; channels become backed threads. Less natural (the `messages: Ref[]`
 array is the degenerate local case) and inverts the more-general abstraction. Not recommended.
 
 ### Option C — New `Conversation` type
+
 Supersede both with `org.dxos.type.conversation@0.1.0`; Thread/Channel become deprecated aliases with
 migration. Cleanest naming, highest churn (every import changes), double migration. Recommended only if
 we want the rename anyway.
 
 ### Option D — UI/abstraction merge only (low-risk first step)
+
 Keep both DXNs. Extract a shared `Conversation` interface, a single `useMessages`, and one unified
 article component so consumers stop branching on the concrete type. Defer the schema/data migration.
 
@@ -58,7 +62,7 @@ article component so consumers stop branching on the concrete type. Defer the sc
 
 **D first (this/next PR), then A (dedicated follow-up).** D removes the duplicate UI/hook surface
 without a migration; A finishes the consolidation once the unified surface is proven. The single
-product decision below picks the *end-state* (A vs C) and whether D is an acceptable interim.
+product decision below picks the _end-state_ (A vs C) and whether D is an acceptable interim.
 
 ## Phased plan (Option A end-state)
 
