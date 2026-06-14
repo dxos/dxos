@@ -31,15 +31,19 @@ Status: Proposed
 
 ### 1. `Column` — the layout primitive
 
-`Column.Row` already spans all three columns via subgrid. Add explicit `data-slot` routing to its theme (mirroring `Panel`):
+`Column.Row` already spans all three columns via subgrid. Placement is explicit (not DOM-order), so conditional children (`{cond && <Block/>}`) never shift content into a gutter:
 
-```
-[&>[data-slot=start]]:[grid-column:1]
-[&>[data-slot=end]]:[grid-column:3]
-[&>*:not([data-slot])]:[grid-column:2]   // anonymous children → content track
-```
+- `Column.Block` **self-places** into column 1 (leading) or column 3 (`end`) with a plain
+  `col-start-1` / `col-start-3` utility, and carries a `dx-gutter` marker class.
+- The row places every non-gutter (content) child into column 2 via
+  `[&>*:not(.dx-gutter)]:col-start-2`.
 
-Placement is driven by `data-slot`, not DOM order, so conditional children (`{cond && <Block/>}`) never shift content into a gutter.
+**Implementation note:** the original design routed by `data-slot`
+(`[&>[data-slot=start]]:col-start-1`), mirroring `Panel`. That does not work here —
+Tailwind does not generate arbitrary variants that nest a square-bracket attribute
+selector, so the rule silently no-ops. Class-based placement (`dx-gutter` + `:not(.dx-gutter)`)
+is the pattern the codebase already uses (`withColumn.propagate`) and generates correctly.
+The `data-slot` attribute is still set on the block as a semantic marker.
 
 Add **`Column.Block`** — the gutter slot component. It **reuses `IconBlock`'s geometry** (the `icon.block` theme / `--dx-rail-item` square) and adds grid placement. It is a **pure geometry slot**: no `icon` shortcut, callers always pass a real child (`<Icon>`, `<IconButton>`, `<Avatar>`, …):
 
@@ -53,10 +57,10 @@ type ColumnBlockProps = SlottableProps<{
 
 Behavior:
 
-- Renders a `data-slot={end ? 'end' : 'start'}` element sized to `--dx-rail-item`
-  (`grid place-items-center`, the current `IconBlock` theme verbatim). The child is
-  centered in the rail-item square; a passive `<Icon>` and an `IconButton` align to the
-  pixel by construction.
+- Renders a `dx-gutter` element sized to `--dx-rail-item` (`grid place-items-center`, the
+  current `IconBlock` theme verbatim) that self-places into column 1 or 3. Also sets
+  `data-slot={end ? 'end' : 'start'}` as a semantic marker. The child is centered in the
+  rail-item square; a passive `<Icon>` and an `IconButton` align to the pixel by construction.
 - **No `icon` / `size` props.** A decorative `<Icon>` child carries no explicit `size`,
   so it inherits the `--icon-size` CSS var set by the enclosing row/header (via the
   existing `iconSize()` helper) — `Card.Row` sets 4, `Card.Header` sets 5. The same
