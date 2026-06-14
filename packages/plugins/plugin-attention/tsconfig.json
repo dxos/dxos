@@ -24,6 +24,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -36,7 +39,22 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-graph"
