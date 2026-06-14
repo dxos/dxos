@@ -23,10 +23,10 @@ export type InboxMarkdownOptions = {
  */
 export const inboxMarkdown = ({ loadRemoteImages = false }: InboxMarkdownOptions = {}): Extension[] =>
   [
+    openLinksInNewTab,
     !loadRemoteImages && hideRemoteImages(),
     decorateInboxMarkdown(loadRemoteImages),
     replacePatterns(INBOX_REPLACE_PATTERNS),
-    openLinksInNewTab,
   ].filter(isTruthy);
 
 const decorateInboxMarkdown = (loadRemoteImages: boolean): Extension =>
