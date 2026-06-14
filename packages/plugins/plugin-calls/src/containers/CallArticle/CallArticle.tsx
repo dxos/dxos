@@ -42,7 +42,6 @@ export const CallArticle = (_props: CallArticleProps) => {
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Call.Viewport>
-            <Call.Audio />
             <Call.Grid />
             <Call.Toolbar onLeave={handleLeave} />
           </Call.Viewport>

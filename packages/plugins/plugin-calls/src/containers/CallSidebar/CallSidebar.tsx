@@ -32,7 +32,6 @@ export const CallSidebar = () => {
       <Panel.Root>
         <Panel.Content asChild>
           <Call.Viewport>
-            <Call.Audio />
             <Call.Grid />
             <Call.Toolbar onLeave={handleLeave} />
           </Call.Viewport>

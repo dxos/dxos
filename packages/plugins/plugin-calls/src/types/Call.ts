@@ -40,13 +40,6 @@ export const Call = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   /**
-   * The time the call was created.
-   * Used to generate a fallback name if one is not provided.
-   */
-  // TODO(wittjosiah): Remove. Rely on object meta.
-  created: Schema.String.annotations({ description: 'ISO timestamp' }).pipe(FormInputAnnotation.set(false)),
-
-  /**
    * Selects the live transport and holds its persistent reconnection config.
    */
   transport: CallTransport.pipe(FormInputAnnotation.set(false)),
@@ -61,6 +54,5 @@ export type Call = Type.InstanceType<typeof Call>;
 export const make = (props: { name?: string; transport: CallTransport }) =>
   Obj.make(Call, {
     name: props.name,
-    created: new Date().toISOString(),
     transport: props.transport,
   });

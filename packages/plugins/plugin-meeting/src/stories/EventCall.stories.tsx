@@ -47,8 +47,8 @@ const DefaultStory = (_: StoryProps) => {
   // The selected feed event (first by chronological order from the builder).
   const event = events[0];
 
-  if (!db || !calendar || !event || !meeting) {
-    return <Loading data={{ db: !!db, calendar: !!calendar, event: !!event, meeting: !!meeting }} />;
+  if (!db || !calendar || !event || !meeting || !call) {
+    return <Loading data={{ db: !!db, calendar: !!calendar, event: !!event, meeting: !!meeting, call: !!call }} />;
   }
 
   return (
@@ -70,7 +70,7 @@ const DefaultStory = (_: StoryProps) => {
       <div className='dx-expander'>
         <Surface.Surface
           type={AppSurface.Article}
-          data={{ subject: call, attendableId: Obj.getURI(meeting) }}
+          data={{ subject: call, attendableId: Obj.getURI(call) }}
           limit={1}
         />
       </div>

@@ -59,17 +59,16 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
       return;
     }
     const roomId = Obj.getURI(meeting);
-    let call = await meeting.call?.load();
-    if (!call) {
+    if (!(await meeting.call?.load())) {
       const config = db.add(Text.make({ content: roomId }));
-      call = db.add(
+      const call = db.add(
         Call.make({
           name: meeting.name,
           transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(config) },
         }),
       );
       Obj.update(meeting, (meeting) => {
-        meeting.call = Ref.make(call!);
+        meeting.call = Ref.make(call);
       });
     }
     callManager.setRoomId(roomId);

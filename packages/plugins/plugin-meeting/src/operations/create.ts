@@ -16,7 +16,16 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOp
     Effect.fnUntraced(function* ({ name, channel, event }) {
       const eventTarget = event && (yield* Effect.promise(() => event.load()));
       // Space is derived from whichever anchor is supplied (channel for in-call meetings, event otherwise).
-      const space = getSpace(channel ?? eventTarget);
+      // Both anchors must resolve to the same space, else the meeting would be written to one DB while
+      // linking an event in another — breaking event→meeting lookup.
+      const channelSpace = channel ? getSpace(channel) : undefined;
+      const eventSpace = eventTarget ? getSpace(eventTarget) : undefined;
+      invariant(channelSpace || eventSpace, 'create meeting requires a channel or event anchor');
+      invariant(
+        !channelSpace || !eventSpace || channelSpace === eventSpace,
+        'channel and event must belong to the same space',
+      );
+      const space = channelSpace ?? eventSpace;
       invariant(space);
       const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { space });
       // `event` is a Ref (works for feed/queue events, unlike a relation endpoint).

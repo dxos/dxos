@@ -190,7 +190,7 @@ type CallTransportProvider
     CallsCapabilities.CallTransportProvider. The built-in Cloudflare provider
     wraps CallManager + CallsService. Methods (declared on the capability
     interface, not as schema fields):
-      makeConfig(roomId: RoomId) -> Obj.Unknown   # persisted into Call.transport.config
+      makeConfig(roomId: string) -> Obj.Unknown   # persisted into Call.transport.config
       join(call: Call)                            # establish live session
       leave(call: Call)
   fields:

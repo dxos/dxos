@@ -58,10 +58,13 @@ export const EventDetails = ({
 
   // The Meeting for this event, if any — found by reverse-matching its `event` ref to this event's
   // URI. (A ref, not a relation, since the event is a feed object; queried by typename to keep
-  // plugin-inbox free of a plugin-meeting dependency.)
+  // plugin-inbox free of a plugin-meeting dependency.) Only resolved on the interactive heading path:
+  // EventDetails is shared by cards/tiles, so an unconditional query would subscribe every instance to
+  // the full Meeting set just to discard it.
+  const showMeeting = !editable && title === 'heading' && !!onOpenObject;
   const eventUri = Obj.getURI(event);
-  const meetings = useQuery(db, Filter.type(DXN.make(MEETING_TYPENAME)));
-  const meeting = meetings.find((candidate) => candidate.event?.uri === eventUri);
+  const meetings = useQuery(db, showMeeting ? Filter.type(DXN.make(MEETING_TYPENAME)) : Filter.nothing());
+  const meeting = showMeeting ? meetings.find((candidate) => candidate.event?.uri === eventUri) : undefined;
 
   if (editable) {
     return <EventEditor event={event} db={db} onContactCreate={onContactCreate} />;
