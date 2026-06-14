@@ -165,10 +165,12 @@ test.describe('Comments tests', () => {
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = random.lorem.paragraphs(3);
-    const firstMessage = editorText.slice(0, 10);
-    const secondMessage = editorText.slice(100, 115);
-    const thirdMessage = editorText.slice(-20);
+    // Each selection must stay within a single paragraph: cm-comment decorations cannot span newlines.
+    const [p1, p2, p3] = [random.lorem.paragraph(), random.lorem.paragraph(), random.lorem.paragraph()];
+    const editorText = `${p1}\n\n${p2}\n\n${p3}`;
+    const firstMessage = p1.slice(0, 10);
+    const secondMessage = p2.slice(5, 20);
+    const thirdMessage = p3.slice(-15);
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, firstMessage);
     await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
