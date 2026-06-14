@@ -49,9 +49,9 @@ Add **`Column.Block`** — the gutter slot component. It **reuses `IconBlock`'s 
 
 ```tsx
 type ColumnBlockProps = SlottableProps<{
-  end?: boolean;        // default: start (column 1). `end` opts into column 3.
-  compact?: boolean;    // from IconBlock: omit height constraint.
-  square?: boolean;     // from IconBlock: aspect-square vs width-only.
+  end?: boolean; // default: start (column 1). `end` opts into column 3.
+  compact?: boolean; // from IconBlock: omit height constraint.
+  square?: boolean; // from IconBlock: aspect-square vs width-only.
 }>;
 ```
 
@@ -140,16 +140,16 @@ sound. The mechanism now lives in `Column` (`Column.Block` + `Column.Row` routin
 
 ## Surface change summary
 
-| Before | After |
-| --- | --- |
-| `Card.Row` `icon?: string \| JSX.Element` | removed |
-| `IconBlock` (public, standalone) | **kept** — `Column.Block` reuses its geometry |
-| `Card.IconBlock` | removed → `Card.Block` |
-| `Card.Icon` | removed → `<Card.Block><Icon/></Card.Block>` |
-| — | `Column.Block`, `Card.Block` |
-| `Dialog.Header` flex | unchanged (gutter too narrow for slots — deferred) |
+| Before                                            | After                                                |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| `Card.Row` `icon?: string \| JSX.Element`         | removed                                              |
+| `IconBlock` (public, standalone)                  | **kept** — `Column.Block` reuses its geometry        |
+| `Card.IconBlock`                                  | removed → `Card.Block`                               |
+| `Card.Icon`                                       | removed → `<Card.Block><Icon/></Card.Block>`         |
+| —                                                 | `Column.Block`, `Card.Block`                         |
+| `Dialog.Header` flex                              | unchanged (gutter too narrow for slots — deferred)   |
 | `Card.Header` = `Toolbar.Root` (`role="toolbar"`) | plain `<header>`, shared Row layout, `--icon-size` 5 |
-| `Card.Header` icon via helpers/`IconBlock` | `data-slot` routing + `Card.Block` |
+| `Card.Header` icon via helpers/`IconBlock`        | `data-slot` routing + `Card.Block`                   |
 
 ## Migration (full replace, per repo no-shim policy)
 

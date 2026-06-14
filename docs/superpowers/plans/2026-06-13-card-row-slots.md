@@ -19,6 +19,7 @@ Spec: `docs/superpowers/specs/2026-06-13-card-row-slots-design.md`
 ### Task 1: `data-slot` grid routing in `Column.Row` theme
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Column/Column.theme.ts:22-24` (the `row` fn)
 
 - [ ] **Step 1: Update the `row` theme to route slots by `data-slot`**
@@ -59,6 +60,7 @@ git commit -m "feat(react-ui): route Column.Row children by data-slot"
 ### Task 2: Add `Column.Block`
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Column/Column.tsx` (add component + export)
 - Modify: `packages/ui/react-ui/src/components/Column/Column.theme.ts` (add `block` style)
 
@@ -185,6 +187,7 @@ git commit -m "feat(react-ui): add Column.Block gutter slot"
 ### Task 3: Add `Card.Block`, remove `Card.Icon`/`Card.IconBlock`, rework helpers
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Card/Card.tsx`
 - Modify: `packages/ui/react-ui/src/components/Card/Card.theme.ts`
 
@@ -308,6 +311,7 @@ git commit -m "feat(react-ui): add Card.Block; remove Card.Icon/Card.IconBlock"
 ### Task 4: `Card.Row` — drop `icon`; set `--icon-size` 4
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Card/Card.tsx` (`CardRow`)
 
 - [ ] **Step 1: Rewrite `CardRow`** to remove the `icon` prop and set the row's icon size:
@@ -359,6 +363,7 @@ git commit -m "feat(react-ui): drop Card.Row icon prop; inherit icon size"
 ### Task 5: `Card.Header` — plain `<header>`, `--icon-size` 5, drop Toolbar
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Card/Card.tsx` (`CardHeader`)
 - Modify: `packages/ui/react-ui/src/components/Card/Card.theme.ts` (`header`)
 
@@ -378,7 +383,7 @@ const CardHeader = slottable<HTMLDivElement, CardHeaderProps>(
     const Comp = asChild ? Slot : Primitive.header;
     return (
       <Comp
-        {...composableProps({ ...props, classNames }).rest ?? {}}
+        {...(composableProps({ ...props, classNames }).rest ?? {})}
         style={{ ...iconSize(5), ...style }}
         className={tx('card.header', {}, classNames)}
         ref={forwardedRef}
@@ -422,13 +427,16 @@ git commit -m "feat(react-ui): Card.Header is a plain header sharing Row layout"
 ### Task 6: Update `Card.stories.tsx`
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Card/Card.stories.tsx`
 
 - [ ] **Step 1: Migrate existing stories** off `Card.Row icon=`/`Card.Icon`/`Card.IconBlock` to `Card.Block`, and add stories proving: start-only, end-only, both, `asChild`, conditional (falsy) block, `fullWidth` (blocks inert), Header vs Row icon size (5 vs 4), and passive-`Icon`-vs-`IconButton` alignment.
 
 ```tsx
 <Card.Row>
-  <Card.Block><Icon icon='ph--dot-outline--regular' /></Card.Block>
+  <Card.Block>
+    <Icon icon='ph--dot-outline--regular' />
+  </Card.Block>
   <Card.Text>Card.Text (default)</Card.Text>
   <Card.Block end>
     <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Remove' onClick={() => {}} />
@@ -455,6 +463,7 @@ git commit -m "test(react-ui): Card.Block stories"
 ### Task 7: `Dialog.Block`, `Dialog.Row`, `Dialog.Header` routing
 
 **Files:**
+
 - Modify: `packages/ui/react-ui/src/components/Dialog/Dialog.tsx`
 - Modify: `packages/ui/react-ui/src/components/Dialog/Dialog.theme.ts`
 
@@ -480,7 +489,12 @@ const DialogBlock = slottable<HTMLDivElement, DialogBlockProps>(
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...rest} data-slot={end ? 'end' : 'start'} className={tx('dialog.block', { compact, square }, className)} ref={forwardedRef}>
+      <Comp
+        {...rest}
+        data-slot={end ? 'end' : 'start'}
+        className={tx('dialog.block', { compact, square }, className)}
+        ref={forwardedRef}
+      >
         {children}
       </Comp>
     );
@@ -506,8 +520,16 @@ const header: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
 const row: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__row col-span-3 grid grid-cols-subgrid items-center', ...etc);
 
-const block: ComponentFunction<DialogStyleProps & { compact?: boolean; square?: boolean }> = ({ compact, square }, ...etc) =>
-  mx('grid place-items-center', square ? 'aspect-square' : 'w-[var(--dx-rail-item)]', compact ? '' : 'h-[var(--dx-rail-item)]', ...etc);
+const block: ComponentFunction<DialogStyleProps & { compact?: boolean; square?: boolean }> = (
+  { compact, square },
+  ...etc
+) =>
+  mx(
+    'grid place-items-center',
+    square ? 'aspect-square' : 'w-[var(--dx-rail-item)]',
+    compact ? '' : 'h-[var(--dx-rail-item)]',
+    ...etc,
+  );
 ```
 
 Add `row` and `block` to `dialogTheme`.
@@ -547,6 +569,7 @@ For each package below: edit files, run `moon run <pkg>:build`, fix, then commit
 ### Task 8: Migrate `react-ui` sibling packages
 
 **Files (per `grep` inventory):**
+
 - `react-ui-mosaic`: `src/testing/DefaultStackTile.tsx`, `src/components/SearchStack/SearchStack.tsx`, `src/components/Board/Item.tsx`
 - `react-ui-board`: `src/components/Board/Board.stories.tsx`
 - `react-ui-masonry`: `src/Masonry.stories.tsx`
@@ -559,6 +582,7 @@ For each package below: edit files, run `moon run <pkg>:build`, fix, then commit
 ### Task 9: Migrate plugins — group A (preview, feed, trip, inbox)
 
 **Files:**
+
 - `plugin-preview`: `cards/PersonCard.tsx`, `cards/OrganizationCard.tsx`, `cards/TaskCard.tsx`, `cards/FormCard.tsx`, `stories/Card.stories.tsx`
 - `plugin-feed`: `components/SubscriptionStack/SubscriptionStack.tsx`, `components/PostStack/PostStack.tsx`, `containers/PostCard/PostCard.tsx`, `containers/MagazineArticle/MagazineTile.tsx`
 - `plugin-trip`: `components/SegmentCard/SegmentEditableCard.tsx`, `components/SegmentCard/SegmentCard.tsx`, `components/OfferStack/OfferStack.tsx`
@@ -569,6 +593,7 @@ For each package below: edit files, run `moon run <pkg>:build`, fix, then commit
 ### Task 10: Migrate plugins — group B (rest)
 
 **Files:**
+
 - `plugin-deck`: `containers/DeckLayout/Popover.tsx`
 - `plugin-bookmarks`: `containers/BookmarkCard/BookmarkCard.tsx`, `containers/BookmarkArticle/BookmarkArticle.tsx`
 - `plugin-markdown`: `containers/MarkdownCard/MarkdownCard.tsx`, `containers/EditableMarkdownCard/EditableMarkdownCard.tsx`
@@ -588,9 +613,11 @@ For each package below: edit files, run `moon run <pkg>:build`, fix, then commit
 - [ ] **Step 1: Grep for any remaining removed symbols**
 
 Run:
+
 ```bash
 cd /Users/burdon/Code/dxos/dxos && grep -rn "Card\.Icon\b\|Card\.IconBlock\|Card\.Row[^>]*icon=" packages --include="*.tsx"
 ```
+
 Expected: no matches (only the standalone `IconBlock` remains).
 
 - [ ] **Step 2: Visually verify the ~20 multi-control `Card.Header`s** still tab through controls and align (Storybook + a few plugin stories via preview tools). Reslot any header whose buttons should sit in the trailing gutter using `<Card.Block end>`.

@@ -98,12 +98,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
                 <Card.Title>{result.label ?? (result.object && Entity.getLabel(result.object))}</Card.Title>
                 <Card.Block end>
                   <Menu.Trigger asChild disabled={!menuItems?.length}>
-                    <IconButton
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--dots-three-vertical--regular'
-                      label='Actions'
-                    />
+                    <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                   </Menu.Trigger>
                   <Menu.Content items={menuItems} />
                 </Card.Block>
