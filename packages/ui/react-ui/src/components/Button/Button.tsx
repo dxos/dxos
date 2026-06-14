@@ -71,9 +71,16 @@ const Button = memo(
           )}
           {...(props.disabled && { disabled: true })}
         >
-          {children}
-          {/* `asChild` forwards props to a single child via Slot, which cannot accept extra siblings. */}
-          {caretDown && !asChild && <Icon size={3} icon='ph--caret-down--bold' />}
+          {/* `asChild` forwards to a single child via Slot, which rejects extra siblings — even a falsy
+              expression renders as a second child array entry — so pass `children` alone in that case. */}
+          {asChild ? (
+            children
+          ) : (
+            <>
+              {children}
+              {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}
+            </>
+          )}
         </Comp>
       );
     },
