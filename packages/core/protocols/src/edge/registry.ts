@@ -5,6 +5,24 @@
 import * as Schema from 'effect/Schema';
 
 /**
+ * A plugin preview image: either a single URL, or a record of theme-specific URLs
+ * (`light` / `dark`). See `packages/sdk/app-framework/docs/registry-spec.md`.
+ */
+export const ScreenshotSchema = Schema.Union(
+  Schema.String,
+  Schema.Struct({ light: Schema.optional(Schema.String), dark: Schema.optional(Schema.String) }),
+);
+export type Screenshot = Schema.Schema.Type<typeof ScreenshotSchema>;
+
+/**
+ * A snapshot of a plugin's declared dependencies resolved to concrete installed versions at build
+ * time (`{ "@dxos/app-framework": "0.8.3", "react": "19.2.0", … }`). The host derives SDK
+ * compatibility from the subset it shares with the plugin (the externalized `@dxos/*` packages).
+ */
+export const DependencyMapSchema = Schema.Record({ key: Schema.String, value: Schema.String });
+export type DependencyMap = Schema.Schema.Type<typeof DependencyMapSchema>;
+
+/**
  * Hydrated plugin metadata, mirroring the @dxos/app-framework `Plugin.Meta` shape.
  *
  * Defined locally rather than imported from @dxos/app-framework to keep the protocols
@@ -21,7 +39,7 @@ export const PluginMetaSchema = Schema.Struct({
   author: Schema.optional(Schema.String),
   homePage: Schema.optional(Schema.String),
   source: Schema.optional(Schema.String),
-  screenshots: Schema.optional(Schema.Array(Schema.String)),
+  screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
   tags: Schema.optional(Schema.Array(Schema.String)),
   icon: Schema.optional(Schema.String),
   iconHue: Schema.optional(Schema.String),
@@ -54,6 +72,8 @@ export const PluginManifestSchema = Schema.Struct({
    * Must include {@link PLUGIN_ENTRY_FILENAME}; consumers verify on parse.
    */
   assets: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
+  /** Declared dependencies resolved to installed versions at build time (SDK-compat source). */
+  dependencies: Schema.optional(DependencyMapSchema),
 });
 export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
 
@@ -68,6 +88,11 @@ export const PluginReleaseSchema = Schema.Struct({
   version: Schema.String.pipe(Schema.nonEmptyString()),
   /** URL the host dynamic-imports to install this specific version. */
   moduleUrl: Schema.String.pipe(Schema.nonEmptyString()),
+  /**
+   * Dependencies this release was built against, resolved to installed versions. The host derives
+   * SDK compatibility from the `@dxos/*` subset to decide whether to offer this release.
+   */
+  dependencies: Schema.optional(DependencyMapSchema),
 });
 export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
 
@@ -84,7 +109,7 @@ export const PluginProfileSchema = Schema.Struct({
   /** Source repository URL. */
   source: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
-  screenshots: Schema.optional(Schema.Array(Schema.String)),
+  screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
   icon: Schema.optional(Schema.String),
   iconHue: Schema.optional(Schema.String),
 });

@@ -33,7 +33,7 @@ export type Plugin = {
   author?: string;
   homePage?: string;
   source?: string;
-  screenshots?: string[];
+  screenshots?: (string | { light?: string; dark?: string })[];
   tags?: string[];
   icon?: string;
   iconHue?: string;

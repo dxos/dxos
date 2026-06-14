@@ -10,16 +10,19 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, createSession, putRecord, resolveCredentials } from './util';
+import { ClientService } from '@dxos/client';
+
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
 /**
  * `dx registry publish-package` — publishes both the mutable
- * `package.profile` (rkey = slug) and an immutable `package.release`
- * (rkey = `<slug>_<version>`) record to the authenticated user's PDS.
+ * `package.profile` (rkey = slug) and a `package.release`
+ * (rkey = `<slug>:<version>`) record to the authenticated user's PDS.
  *
- * The two writes are independent createRecord calls; if the second fails the
+ * The two writes are independent `putRecord` (upsert) calls; if the second fails the
  * first is left in place (the indexer treats a profile with no releases as
- * present-but-unpublishable, so a half-success is benign).
+ * present-but-unpublishable, so a half-success is benign). Releases are conceptually
+ * single-write per version but not enforced — see docs/registry-spec.md (Integrity).
  */
 export const publishPackage = Command.make(
   'publish-package',
@@ -41,7 +44,7 @@ export const publishPackage = Command.make(
       Options.withDefault(''),
     ),
     version: Options.text('version').pipe(
-      Options.withDescription('Semver version (no build metadata). The release rkey is `<slug>_<version>`.'),
+      Options.withDescription('Semver version (no build metadata). The release rkey is `<slug>:<version>`.'),
     ),
     moduleUrl: Options.text('module-url').pipe(
       Options.withDescription('HTTPS URL to the bundle or manifest for this release.'),
@@ -61,12 +64,12 @@ export const publishPackage = Command.make(
   (options) =>
     Function.pipe(
       Effect.gen(function* () {
-        const { handle, appPassword } = yield* resolveCredentials({
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
+          client,
         });
-
-        const session = yield* createSession(handle, appPassword);
         const createdAt = new Date().toISOString();
 
         const profile: Record<string, unknown> = {
@@ -108,7 +111,7 @@ export const publishPackage = Command.make(
         const releaseResult = yield* putRecord(
           session,
           NSID.PackageRelease,
-          `${options.slug}_${options.version}`,
+          `${options.slug}:${options.version}`,
           release,
         );
         yield* Console.log(`Release  ${releaseResult.uri}`);

@@ -20,24 +20,6 @@ import { getEdgeAuthHeader } from './edge-auth-header';
 export const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes.
 
 /**
- * Generates the HTML for the OAuth relay page.
- * This page redirects to the authUrl. When Edge completes OAuth and there's no window.opener,
- * Edge will redirect back to /redirect/oauth with the token in the URL.
- */
-export const getRelayPageHtml = (authUrl: string) => `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <script>
-    window.location.href = '${authUrl.replace(/'/g, "\\'")}';
-  </script>
-</head>
-<body></body>
-</html>
-`;
-
-/**
  * OAuth server provider interface.
  * Platform-specific implementations provide this.
  */

@@ -102,13 +102,13 @@ export const chat = Command.make(
       const [conversation, setConversation] = createSignal<AiSession.Session | undefined>(undefined);
 
       if (!client.halo.identity) {
-        yield* Console.error('No HALO identity configured. Run `dx halo create --displayName "<name>"` first.');
+        yield* Console.error('No HALO identity configured. Run `dx account login` first.');
         return;
       }
       const space = getPersonalSpace(client) ?? client.spaces.get()[0];
       if (!space) {
         yield* Console.error(
-          'No space available for chat. Run `dx halo create` (creates one automatically) or `dx space create --name "<name>"`.',
+          'No space available for chat. Run `dx account login` or `dx space create --name "<name>"`.',
         );
         return;
       }
