@@ -241,6 +241,7 @@ export const translations = [
         'branch-create.label': 'Create branch',
         'branch-switch.label': 'Switch to branch',
         'branch-current.label': 'Current branch',
+        'branch-compare.label': 'Compare with current branch',
         'branch-merge.label': 'Merge branch into main',
         'branch-delete.label': 'Delete branch',
         'settings-features.label': 'Features',

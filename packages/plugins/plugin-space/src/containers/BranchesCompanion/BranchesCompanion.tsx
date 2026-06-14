@@ -5,6 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import {
   branchStateAtom,
@@ -16,11 +17,12 @@ import {
   setTimeTravel,
   switchBranch,
 } from '@dxos/echo-client';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, branchDiffAtom, clearBranchDiff, setBranchDiff } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { HistoryScrubber } from '@dxos/react-ui-components';
 
 import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
 import { BranchList } from './BranchList';
 import { createHistoryTimelineAtom } from './history-timeline';
@@ -50,6 +52,15 @@ export const BranchesCompanion = ({ role, companionTo }: BranchesCompanionProps)
   // Reactive branch state: updates on any branch op, including create/delete (which mutate the space
   // root, not the object), so the list stays in sync without manual refresh.
   const { branches, current: currentBranch } = useAtomValue(branchStateAtom(object));
+
+  // Per-branch diff: enabled only when the object's type opted into a diff view. The active
+  // comparison drives the article's `'diff'` mode via the shared branch-diff view-state atom.
+  const diffSupport = useCapabilities(SpaceCapabilities.BranchDiffSupport);
+  const diffSupported = useMemo(() => {
+    const typename = Obj.getTypename(object);
+    return !!typename && diffSupport.some((entry) => entry.typename === typename);
+  }, [diffSupport, object]);
+  const comparing = useAtomValue(branchDiffAtom(object.id))?.compareTo;
 
   // Ordering by most-recently-updated is snapshotted once at mount so rows do not reorder under the
   // user while they interact (or while a branch they are editing advances). Membership stays
@@ -129,10 +140,20 @@ export const BranchesCompanion = ({ role, companionTo }: BranchesCompanionProps)
   const handleSwitch = useCallback(
     async (name: string) => {
       setSelectedIndex(undefined); // Exit scrub mode; switching is a harder navigation.
+      clearBranchDiff(object.id); // The comparison basis (the current branch) is changing; drop any diff.
       await switchBranch(object, name);
     },
     [object],
   );
+
+  const handleCompare = useCallback(
+    (name: string) => (comparing === name ? clearBranchDiff(object.id) : setBranchDiff(object.id, name)),
+    [object, comparing],
+  );
+
+  // Dismiss the diff when the companion closes so the article never stays in diff mode with no
+  // affordance to exit it.
+  useEffect(() => () => clearBranchDiff(object.id), [object]);
 
   const handleCreate = useCallback(async () => {
     // A unique, human-readable branch name.
@@ -176,7 +197,10 @@ export const BranchesCompanion = ({ role, companionTo }: BranchesCompanionProps)
           <BranchList
             branches={displayBranches}
             current={currentBranch}
+            diffSupported={diffSupported}
+            comparing={comparing}
             onSwitch={(name) => void handleSwitch(name)}
+            onCompare={handleCompare}
             onMerge={handleMerge}
             onDelete={handleDelete}
           />

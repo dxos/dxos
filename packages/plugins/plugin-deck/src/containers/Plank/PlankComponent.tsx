@@ -7,7 +7,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, type BranchDiffRequest, branchDiffAtom } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { Entity } from '@dxos/echo';
 import { type Node } from '@dxos/plugin-graph';
@@ -53,6 +53,7 @@ export const DEFAULT_COMPANION_SIZE = 35 satisfies StackItemSize;
 
 // Stable fallback so the time-travel hook can run unconditionally when the subject is not an entity.
 const EMPTY_FALSE_ATOM = Atom.make<boolean>(() => false).pipe(Atom.keepAlive);
+const EMPTY_DIFF_ATOM = Atom.make<BranchDiffRequest | undefined>(() => undefined).pipe(Atom.keepAlive);
 
 export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;
@@ -148,6 +149,14 @@ export const PlankComponent = memo(
       [node?.data],
     );
     const timeTraveling = useAtomValue(timeTravelingAtom);
+    // A device-local branch-diff view request (set by the Branches companion) drives the distinct
+    // `'diff'` article mode. Read reactively here for the same reason as time-travel: node properties
+    // can go stale while a plank is open.
+    const diffAtom = useMemo(
+      () => (node?.data != null && Entity.isEntity(node.data) ? branchDiffAtom(node.data.id) : EMPTY_DIFF_ATOM),
+      [node?.data],
+    );
+    const diff = useAtomValue(diffAtom);
     const data = useMemo<AppSurface.ArticleData | undefined>(
       () =>
         node && {
@@ -155,13 +164,26 @@ export const PlankComponent = memo(
           subject: node.data,
           companionTo: primary?.data,
           properties: node.properties,
-          // `'readonly'` while time-traveling so write-capable surfaces render non-editable.
-          mode: timeTraveling ? 'readonly' : node.properties?.mode,
+          // Distinct rendering modes: `'readonly'` while time-traveling, `'diff'` while comparing
+          // branches (carrying the comparison target). A subject can't sensibly be both at once.
+          mode: timeTraveling ? 'readonly' : diff ? 'diff' : node.properties?.mode,
+          compareBranch: diff?.compareTo,
           variant,
           path,
           popoverAnchorId,
         },
-      [node, node?.data, node?.properties, timeTraveling, path, popoverAnchorId, primary?.data, variant, attendableId],
+      [
+        node,
+        node?.data,
+        node?.properties,
+        timeTraveling,
+        diff,
+        path,
+        popoverAnchorId,
+        primary?.data,
+        variant,
+        attendableId,
+      ],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.

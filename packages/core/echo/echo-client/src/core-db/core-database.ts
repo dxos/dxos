@@ -36,7 +36,7 @@ import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
+import { chunkArray, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
@@ -693,6 +693,31 @@ export class CoreDatabase {
       }
     }
     return activity;
+  }
+
+  /**
+   * Read an object's stored structure on a specific branch WITHOUT switching to it (read-only).
+   * Resolves the object's document for that branch — the registered branch member doc for a named
+   * branch, or the object's main doc for `'main'` (and for a non-member, which binds to main on any
+   * branch) — and reads the structure at the live core's mount path (forks preserve doc shape).
+   * Used to fetch the "other side" of a branch diff. Returns undefined if the object can't be loaded.
+   */
+  async getObjectStructureOnBranch(objectId: string, branchName: string): Promise<EntityStructure | undefined> {
+    const core = this._objects.get(objectId) ?? (await this.loadObjectCoreById(objectId)) ?? undefined;
+    if (!core) {
+      return undefined;
+    }
+    let handle: DocHandleProxy<DatabaseDirectory>;
+    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
+    const url = branchName !== 'main' && rootId ? this.getBranchRegistry(rootId)?.[branchName]?.members[objectId]?.toString() : undefined;
+    if (url) {
+      handle = this._repo.find<DatabaseDirectory>(url as DocumentId);
+      await handle.whenReady();
+    } else {
+      // 'main', or a member absent from this branch's set, reads its main document.
+      handle = await this._mainDocHandle(objectId);
+    }
+    return getDeep(handle.doc(), core.mountPath) as EntityStructure | undefined;
   }
 
   /** The most recent automerge change time (epoch ms) across the given document handles. */

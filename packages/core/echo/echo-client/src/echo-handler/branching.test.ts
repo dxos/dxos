@@ -18,6 +18,7 @@ import {
   getBranchActivity,
   getBranches,
   getCurrentBranch,
+  getObjectOnBranch,
   mergeBranch,
   switchBranch,
 } from './branching';
@@ -199,6 +200,33 @@ describe('branching', () => {
     // may collide, so this is `>=`); the edit happened strictly after b2/main were last touched.
     expect(activity.b1).toBeGreaterThanOrEqual(activity.b2);
     expect(activity.b1).toBeGreaterThanOrEqual(activity.main);
+  });
+
+  test('getObjectOnBranch reads each branch content (root + child) without switching', async () => {
+    const { db, root, child } = await setup();
+    await createBranch(root, 'b1');
+    await switchBranch(root, 'b1');
+    Obj.update(root, (root: any) => {
+      root.title = 'root-b1';
+    });
+    Obj.update(child, (child: any) => {
+      child.content = 'child-b1';
+    });
+    await db.flush();
+    await switchBranch(root, 'main');
+    expect(getCurrentBranch(root)).toBe('main');
+
+    // Read both branches' content without switching to them.
+    expect((await getObjectOnBranch(root, 'main'))?.title).toBe('root-v0');
+    expect((await getObjectOnBranch(root, 'b1'))?.title).toBe('root-b1');
+    // The child is a subtree member, so its branch content is read the same way.
+    expect((await getObjectOnBranch(child, 'main'))?.content).toBe('child-v0');
+    expect((await getObjectOnBranch(child, 'b1'))?.content).toBe('child-b1');
+
+    // The reads are non-destructive: the device stays on main and the live object is unchanged.
+    expect(getCurrentBranch(root)).toBe('main');
+    expect(root.title).toBe('root-v0');
+    expect(child.content).toBe('child-v0');
   });
 
   test('mergeBranch folds branch changes back into main across the subtree, then deleteBranch', async () => {

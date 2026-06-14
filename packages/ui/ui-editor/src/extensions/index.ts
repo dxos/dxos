@@ -11,6 +11,7 @@ export * from './blocks';
 export * from './bookmarks';
 export * from './comments';
 export * from './debug';
+export * from './diff';
 export * from './dnd';
 export * from './factories';
 export * from './focus';

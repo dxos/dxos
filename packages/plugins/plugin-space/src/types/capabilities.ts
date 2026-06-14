@@ -96,4 +96,12 @@ export namespace SpaceCapabilities {
     initialFormValues?: Record<string, any>;
     onCreateObject: (data: Record<string, any>) => void | Promise<void>;
   };
+
+  /**
+   * Opt-in contributed per typename by plugins whose article renders a branch diff when its surface
+   * receives `mode === 'diff'`. The Branches companion uses this to enable the per-branch compare
+   * control only for objects of a supported type.
+   */
+  export type BranchDiffSupport = Readonly<{ typename: string }>;
+  export const BranchDiffSupport = Capability.make<BranchDiffSupport>(`${meta.id}.capability.branch-diff-support`);
 }

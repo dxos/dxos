@@ -37,6 +37,7 @@ export {
   getBranches,
   getCurrentBranch,
   getBranchActivity,
+  getObjectOnBranch,
   createBranch,
   switchBranch,
   mergeBranch,

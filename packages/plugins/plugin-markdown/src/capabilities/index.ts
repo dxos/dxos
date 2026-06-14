@@ -17,6 +17,7 @@ export const CommentConfig: Capability.LazyCapability<
   Capability.Capability<typeof AppCapabilities.CommentConfig>
 > = Capability.lazy('CommentConfig', () => import('./comment-config'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const BranchDiffSupport = Capability.lazy('BranchDiffSupport', () => import('./branch-diff'));
 // The contributed capability type references Blueprint types from @dxos/compute, so the lazy
 // wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
 export const BlueprintDefinition: Capability.LazyCapability<

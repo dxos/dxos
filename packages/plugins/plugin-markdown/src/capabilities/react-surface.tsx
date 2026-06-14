@@ -34,8 +34,13 @@ export default Capability.makeModule(() =>
         role: ['article', 'section', 'tabpanel'],
         filter: (
           data,
-        ): data is { subject: Markdown.Document; attendableId: string; variant: undefined; mode?: string } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        ): data is {
+          subject: Markdown.Document;
+          attendableId: string;
+          variant: undefined;
+          mode?: string;
+          compareBranch?: string;
+        } => typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
         component: ({ data, role, ref }) => {
           return (
             <Container
@@ -44,6 +49,7 @@ export default Capability.makeModule(() =>
               subject={data.subject}
               role={role}
               mode={data.mode}
+              compareBranch={data.compareBranch}
               ref={ref}
             />
           );
@@ -99,7 +105,7 @@ export default Capability.makeModule(() =>
 const Container = forwardRef<
   HTMLDivElement,
   AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
->(({ id, attendableId, subject, role, mode }, forwardedRef) => {
+>(({ id, attendableId, subject, role, mode, compareBranch }, forwardedRef) => {
   const selectionManager = useCapability(AttentionCapabilities.Selection);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
@@ -122,6 +128,7 @@ const Container = forwardRef<
       id={id}
       attendableId={attendableId}
       mode={mode}
+      compareBranch={compareBranch}
       settings={settings}
       selectionManager={selectionManager}
       extensionProviders={extensionProviders}

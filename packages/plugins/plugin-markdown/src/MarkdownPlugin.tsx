@@ -13,6 +13,7 @@ import {
   NavigationResolver,
   AppGraphSerializer,
   BlueprintDefinition,
+  BranchDiffSupport,
   CommentConfig,
   CreateObject,
   MarkdownSettings,
@@ -30,6 +31,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupAppGraph, activate: BranchDiffSupport }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({

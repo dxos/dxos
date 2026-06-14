@@ -46,6 +46,16 @@ export const getBranchActivity = (obj: Obj.Unknown): Promise<Record<string, numb
 };
 
 /**
+ * Read the object's data on a specific branch WITHOUT switching to it (read-only). Used to fetch the
+ * "other side" of a branch diff — e.g. a document's text content on another branch. Returns the
+ * decoded data section (or undefined if the object has no document on that branch).
+ */
+export const getObjectOnBranch = (obj: Obj.Unknown, branchName: string): Promise<Record<string, any> | undefined> => {
+  const { db, id } = resolve(obj);
+  return db.getObjectStructureOnBranch(id, branchName).then((structure) => structure?.data);
+};
+
+/**
  * Fork the object and its referenced subtree into a new branch (does not switch to it).
  * @param opts.fromHeads Fork from a historical version (e.g. a scrubbed point) instead of the tip.
  *   A `Heads` array forks only the root; a `{ objectId -> Heads }` map forks each subtree member
