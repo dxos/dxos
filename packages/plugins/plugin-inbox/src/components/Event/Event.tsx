@@ -122,9 +122,11 @@ type EventHeaderProps = {
   editable?: boolean;
   onContactCreate?: (actor: Actor.Actor) => void;
   onOpenObject?: (object: Obj.Unknown) => void;
+  starred?: boolean;
+  onToggleStar?: () => void;
 };
 
-const EventHeader = ({ db, editable, onContactCreate, onOpenObject }: EventHeaderProps) => {
+const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onToggleStar }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
@@ -142,6 +144,8 @@ const EventHeader = ({ db, editable, onContactCreate, onOpenObject }: EventHeade
           db={db}
           onContactCreate={onContactCreate}
           onOpenObject={onOpenObject}
+          starred={starred}
+          onToggleStar={onToggleStar}
         />
       </Card.Body>
     </Card.Root>

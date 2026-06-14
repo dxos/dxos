@@ -24,7 +24,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { Text } from '@dxos/schema';
+import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
@@ -93,6 +93,8 @@ const meta = {
             Meeting.Meeting,
             AnchoredTo.AnchoredTo,
             Text.Text,
+            // Calendar.make() creates a child TagIndex (for starred events); register so it persists.
+            TagIndex.TagIndex,
           ],
           // CallManager requires the edge service config to construct (it throws otherwise).
           config: new Config({

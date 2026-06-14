@@ -106,6 +106,8 @@ export const translations = [
         'event-toolbar-open.menu': 'Open',
         'event-toolbar-save.menu': 'Save to calendar',
         'event-toolbar-more.menu': 'More',
+        'star-event.label': 'Star event',
+        'unstar-event.label': 'Unstar event',
         'event-toolbar-delete.menu': 'Delete event',
 
         'calendar-toolbar.menu': 'Calendar toolbar',

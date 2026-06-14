@@ -7,13 +7,13 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
-import { InboxOperation, DraftEvent } from '#types';
+import { Calendar, InboxOperation, DraftEvent } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
@@ -29,6 +29,18 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   const draft = DraftEvent.instanceOf(event);
   // Saving (pushing to Google Calendar) requires an integration targeting the calendar.
   const { integration } = useTargetIntegration(calendar);
+
+  // Starring uses the calendar's TagIndex (events are feed objects). Resolve the "starred" tag uri
+  // reactively; `isStarred` reads the live index so the toggle reflects changes immediately.
+  const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
+  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.STARRED_TAG.label);
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const starred = !!eventCalendar && Calendar.isStarred(eventCalendar, event, starredUri);
+  const handleToggleStar = useCallback(() => {
+    if (eventCalendar && db) {
+      void Calendar.toggleStar(eventCalendar, event, db);
+    }
+  }, [eventCalendar, event, db]);
 
   const handleOpenObject = useCallback(
     (object: Obj.Unknown) => {
@@ -87,6 +99,8 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
             editable={draft}
             onContactCreate={handleContactCreate}
             onOpenObject={handleOpenObject}
+            starred={starred}
+            onToggleStar={eventCalendar ? handleToggleStar : undefined}
           />
           <Event.Viewport>
             <Event.Body editable={draft} />

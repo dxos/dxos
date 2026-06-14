@@ -32,6 +32,10 @@ export type EventDetailsProps = {
   onContactCreate?: (actor: Actor.Actor) => void;
   /** Navigate to an object anchored to this event (e.g. its Meeting). Chips are static when omitted. */
   onOpenObject?: (object: Obj.Unknown) => void;
+  /** Whether the event is starred; shown as a filled star in the heading top-right. */
+  starred?: boolean;
+  /** Toggle the event's starred tag; the star toggle renders only when provided. */
+  onToggleStar?: () => void;
 };
 
 /**
@@ -49,6 +53,8 @@ export const EventDetails = ({
   db,
   onContactCreate,
   onOpenObject,
+  starred,
+  onToggleStar,
 }: EventDetailsProps) => {
   const { t } = useTranslation(meta.id);
   // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly — `useObject`
@@ -86,6 +92,18 @@ export const EventDetails = ({
               label={Obj.getLabel(meeting) ?? 'Meeting'}
               onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
             />
+          )}
+          {onToggleStar && (
+            <Card.Block end>
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
+                iconClassNames={starred ? 'text-rose-text' : undefined}
+                label={t(starred ? 'unstar-event.label' : 'star-event.label')}
+                onClick={onToggleStar}
+              />
+            </Card.Block>
           )}
         </Card.Row>
       )}

@@ -8,17 +8,17 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
-import { Calendar as NaturalCalendar, type CalendarController } from '@dxos/react-ui-calendar';
+import { Calendar as NaturalCalendar, type CalendarController, type CalendarMarker } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetIntegration } from '#components';
 import { meta } from '#meta';
-import { type Calendar, InboxOperation, DraftEvent } from '#types';
+import { Calendar, InboxOperation, DraftEvent } from '#types';
 
 import { getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
@@ -55,6 +55,22 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     DraftEvent.belongsTo(event, calendar.id),
   );
   const events = useMemo(() => [...syncedEvents, ...draftEvents].toSorted(byDate()), [syncedEvents, draftEvents]);
+
+  // Starred events get a rose marker. `getStarredEventIds` reads the calendar's live TagIndex, so the
+  // grid re-renders when an event is starred/unstarred. The hue feeds Calendar.Grid's per-date border.
+  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.STARRED_TAG.label);
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const starredIds = Calendar.getStarredEventIds(calendar, starredUri);
+  const dates = useMemo<CalendarMarker[]>(
+    () =>
+      events.map((event) => ({
+        startDate: new Date(event.startDate),
+        endDate: event.endDate ? new Date(event.endDate) : undefined,
+        tag: starredIds.has(event.id) ? Calendar.STARRED_TAG.hue : undefined,
+      })),
+    // `starredIds` is a fresh Set each render; key the memo on its membership so it stays stable.
+    [events, [...starredIds].sort().join(',')],
+  );
 
   const handleDateSelect = useCallback(
     ({ date }: { date: Date }) => {
@@ -174,11 +190,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid
-                dates={events.map((event) => new Date(event.startDate))}
-                onSelect={handleDateSelect}
-                onSelectRange={handleRangeSelect}
-              />
+              <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
