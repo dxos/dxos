@@ -3,8 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
-import { useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
@@ -70,7 +69,7 @@ const SystemPresetRow = ({
   button,
 }: {
   name: string;
-  button: (props: SystemPresetVariantProps) => React.ReactNode;
+  button: (props: SystemPresetVariantProps) => ReactNode;
 }) => (
   <div className='grid grid-cols-subgrid col-span-full gap-x-8 items-center'>
     <div className='text-xs font-mono'>{name}</div>
@@ -133,6 +132,7 @@ const SystemStory = () => {
   );
 };
 
+
 const meta = {
   title: 'ui/react-ui-core/components/IconButton',
   component: IconButton,
@@ -166,7 +166,7 @@ export const Ghost: Story = {
 };
 
 export const System: Story = {
-  render: SystemStory as any,
+  render: SystemStory,
   args: {
     label: 'System',
   },

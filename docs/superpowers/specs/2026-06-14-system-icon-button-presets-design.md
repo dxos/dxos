@@ -22,10 +22,10 @@ declare intent (`SystemIconButton.Star`) instead of re-specifying icons and rota
 Introduce a new `SystemIconButton` namespace that collects the standard presets. The namespace is a
 plain object of thin wrapper components — it does not itself render a button.
 
-The existing components are left untouched:
+The base components keep their roles:
 
-- `IconButton` — unchanged. `caretDown` **stays** (removing it pushed complexity into `ToolbarMenu`
-  and lost the tooltip behaviour; out of scope here).
+- `IconButton` — no longer renders its own caret. `caretDown` moved up to `Button` as a common prop
+  (see "Done alongside this work"); `IconButton` inherits it.
 - `ToggleIconButton` — unchanged generic boolean-toggle button (`active` / `icon` / `activeIcon`,
   rotate-90 when `activeIcon` is omitted). Presets wrap it; its own definition is not polluted with
   preset-specific defaults.
@@ -34,16 +34,18 @@ The existing components are left untouched:
 
 In scope:
 
-- Stateful presets: `SystemIconButton.Star`, `SystemIconButton.Expander`.
+- Stateful presets: `SystemIconButton.Star`, `SystemIconButton.Bookmark`, `SystemIconButton.Expander`.
 - Static presets: `SystemIconButton.Add`, `SystemIconButton.Delete`, `SystemIconButton.Edit`,
   `SystemIconButton.Close`.
+- Default labels: each preset defaults its `label` via `useTranslation` (`system-button.*` keys);
+  callers can override.
 - Migrate genuine `IconButton` / `ToggleIconButton` star/expander call sites to the presets.
 - A storybook covering all presets.
 
 Deferred (not this change):
 
 - Bulk migration of the ~40+ Add/Delete/Edit/Close call sites. The static presets ship with the
-  storybook; existing sites migrate incrementally afterwards.
+  storybook; existing sites migrate incrementally afterward.
 
 Done alongside this work (was previously deferred):
 
@@ -61,6 +63,7 @@ Done alongside this work (was previously deferred):
 export const SystemIconButton = {
   // Stateful (wrap ToggleIconButton).
   Star,
+  Bookmark,
   Expander,
   // Static (wrap IconButton).
   Add,
@@ -70,19 +73,23 @@ export const SystemIconButton = {
 };
 ```
 
-Each preset is a `forwardRef` component presetting only the icon(s) and behaviour. All other props
-(`label`, `variant`, `density`, `iconOnly`, `size`, `onClick`, …) pass through.
+Each preset is a `forwardRef` component presetting the icon(s)/behaviour and a default `label`. All
+other props (`variant`, `density`, `iconOnly`, `size`, `onClick`, …) pass through; `label` is
+optional and defaults via `useTranslation` (overridable by the caller).
 
 **Stateful presets** wrap `ToggleIconButton`; prop types derive from `ToggleIconButtonProps` with
-`icon` (and `activeIcon` where fixed) omitted, so a preset cannot be handed a conflicting icon.
+`icon`, `activeIcon`, and `label` omitted, so a preset cannot be handed a conflicting icon. Their
+default label tracks `active`.
 
 - **`SystemIconButton.Star`** — `icon='ph--star--regular'`, `activeIcon='ph--star--fill'`. `active`
-  means starred. `iconClassNames` remains overridable so a call site can tint the filled star.
+  means starred (label Star/Unstar). `iconClassNames` remains overridable to tint the filled star.
+- **`SystemIconButton.Bookmark`** — `icon='ph--bookmark-simple--regular'`,
+  `activeIcon='ph--bookmark-simple--fill'`. `active` means bookmarked (label Bookmark/Remove bookmark).
 - **`SystemIconButton.Expander`** — `icon='ph--caret-right--regular'`, no `activeIcon` (so the base
-  applies the 90° rotation). `active` means expanded/open.
+  applies the 90° rotation). `active` means expanded/open (label Expand/Collapse).
 
-**Static presets** wrap `IconButton`; prop types derive from `IconButtonProps` with `icon` omitted.
-They preset the icon only — `label` stays caller-supplied (it is context- and i18n-specific).
+**Static presets** wrap `IconButton`; prop types derive from `IconButtonProps` with `icon` and
+`label` omitted. They preset the icon and a default label.
 
 - **`SystemIconButton.Add`** — `icon='ph--plus--regular'`.
 - **`SystemIconButton.Delete`** — `icon='ph--trash--regular'` (destructive delete).
@@ -96,47 +103,40 @@ Add `export * from './SystemIconButton';` to
 
 ### Storybook
 
-New `packages/ui/react-ui/src/components/Button/SystemIconButton.stories.tsx`, mirroring the existing
-`IconButton.stories.tsx` layout: stateful presets (`Star`, `Expander`) shown in inactive/active
-states; static presets (`Add`, `Delete`, `Edit`, `Close`) shown in a single row across densities.
+A `System` story added to `packages/ui/react-ui/src/components/Button/IconButton.stories.tsx` (rather
+than a separate file). It registers `translations` so default labels resolve, and lays every preset
+out in a subgrid with `default` / `ghost` / `iconOnly` columns; stateful presets (`Star`, `Bookmark`,
+`Expander`) are toggleable.
 
 ## Migrations
 
-### `SystemIconButton.Star` (real `IconButton` toggles only)
+### `SystemIconButton.Star` — done
 
 - `packages/plugins/plugin-feed/src/containers/MagazineArticle/MagazineTile.tsx`
 - `packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx`
 - `packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultDetail.tsx`
 
-Each currently uses `IconButton` with `icon={starred ? fill : regular}` and a starred label; replace
-with `SystemIconButton.Star active={starred}`.
+Each previously used `IconButton` with `icon={starred ? fill : regular}` and a starred label; now
+`SystemIconButton.Star active={starred}` (default labels).
 
-**Not migrated** (not buttons, leave as-is):
+Additionally, `SearchArticle.tsx`'s toolbar was rebuilt from the `useMenuBuilder` action-graph idiom
+(a single-select `toggleGroup`), replacing the hand-wired `Toolbar.ToggleGroup` and its plain `<Icon>`.
 
-- `MagazineToolbar.tsx`, `PostToolbar.tsx` — menu-action config objects (`icon: …`), not components.
-- `SearchArticle.tsx` — a plain `<Icon>` inside a `ToggleGroup.Item`.
+**Not migrated** (menu-action config objects, not components):
 
-### `SystemIconButton.Expander` (disclosure/rotate sites)
+- `MagazineToolbar.tsx`, `PostToolbar.tsx` — `icon: …` properties in a `MenuBuilder` action.
 
-- `packages/ui/react-ui-form/src/components/Form/FormFieldSet/FormFieldSet.tsx`
-- `packages/ui/react-ui-form/src/components/Form/FormField/fields/SelectOptionField/SelectOptionField.tsx`
-- `packages/ui/react-ui-list/src/components/OrderedList/OrderedListItem.tsx`
-- `packages/plugins/plugin-preview/src/cards/JsonCard.tsx`
+### `SystemIconButton.Expander` — deferred
 
-These use `ToggleIconButton` with `icon='ph--caret-right--regular'` and no `activeIcon`; replace with
-`SystemIconButton.Expander active={…}`.
-
-**Not migrated:**
-
-- `ViewEditor.tsx` — uses `ToggleIconButton` with `activeIcon` (eye / eye-closed icon swap), which is
-  a generic toggle, not an expander. Stays on `ToggleIconButton`.
+The disclosure/rotate sites (FormFieldSet, SelectOptionField, OrderedListItem, JsonCard) still use the
+generic `ToggleIconButton`; migrating them to `SystemIconButton.Expander` is a follow-up. `ViewEditor`
+uses an `activeIcon` swap (eye / eye-closed) and stays on `ToggleIconButton` regardless.
 
 ## Testing
 
-- Storybook renders both presets in inactive/active states.
-- `moon run react-ui:test`, `react-ui-form:test`, `react-ui-list:test`, and the affected plugin
-  builds pass.
-- Lint clean; no new casts introduced (audit the diff per repo policy).
+- Storybook `System` story renders every preset; stateful presets toggle and default labels resolve.
+- `react-ui`, `react-ui-menu`, `plugin-feed`, `plugin-commerce` builds + lint pass.
+- No new casts introduced (audit the diff per repo policy).
 
 ## Risks
 

@@ -71,15 +71,15 @@ const Button = memo(
           )}
           {...(props.disabled && { disabled: true })}
         >
-          {/* `asChild` forwards to a single child via Slot, which rejects extra siblings — even a falsy
-              expression renders as a second child array entry — so pass `children` alone in that case. */}
-          {asChild ? (
-            children
-          ) : (
+          {/* `asChild` forwards a single child via Slot (React.Children.only); only add the caret in
+              the non-`asChild` case so Slot still receives exactly one child. */}
+          {caretDown && !asChild ? (
             <>
               {children}
-              {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}
+              <Icon size={3} icon='ph--caret-down--bold' />
             </>
+          ) : (
+            children
           )}
         </Comp>
       );

@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Focus, IconButton } from '@dxos/react-ui';
+import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
@@ -51,13 +51,12 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
         )}
         <Card.Header>
           <Card.Block>
-            <IconButton
+            <SystemIconButton.Star
               variant='ghost'
               iconOnly
               square
               size={4}
-              label={starred ? 'Unstar' : 'Star'}
-              icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
+              active={starred}
               onClick={handleToggleStar}
             />
           </Card.Block>

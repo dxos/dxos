@@ -117,7 +117,7 @@ const DropdownMenuToolbarItem = ({
       // TODO(thure): Handle other menu item types.
       activeItem?.properties.icon) ||
     properties.icon;
-  // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g., tag colour) tracks the displayed icon.
+  // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g. tag colour) tracks the displayed icon.
   const iconClassNames = (applyActive && activeItem?.properties.iconClassNames) || properties.iconClassNames;
   const labelAction = applyActive && activeItem ? activeItem : group;
 
@@ -128,12 +128,12 @@ const DropdownMenuToolbarItem = ({
           <NaturalToolbar.IconButton
             variant='ghost'
             disabled={disabled}
-            caretDown={caretDown}
-            size={iconSize}
             icon={icon}
+            size={iconSize}
             iconOnly={iconOnly}
             iconClassNames={iconClassNames}
             label={actionLabel(labelAction, t)}
+            caretDown={caretDown}
             {...(testId && { 'data-testid': testId })}
           />
         ) : (
