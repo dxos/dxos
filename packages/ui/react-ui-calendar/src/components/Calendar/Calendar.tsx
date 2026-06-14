@@ -40,9 +40,9 @@ const EDGE_SCROLL_ZONE = 32; // px
 const EDGE_SCROLL_MAX_SPEED = 12; // px per frame
 
 const DATE_CLASS_NAMES = {
-  today: 'border-2 border-amber-500',
   current: 'ring-2 ring-primary-500',
-  busy: 'border-2 border-dashed border-green-700',
+  today: 'border-2 border-amber-500 bg-amber-500/50 text-inverse-fg',
+  busy: 'border border-green-700',
   starred: 'border-2 border-dashed border-amber-500',
 };
 
@@ -629,15 +629,15 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
                 const marker = getMarker(date);
-                const dateClassNames = isSameDay(date, selected)
-                  ? DATE_CLASS_NAMES.current
-                  : isSameDay(date, today)
-                    ? DATE_CLASS_NAMES.today
-                    : marker?.tag === 'star'
-                      ? DATE_CLASS_NAMES.starred
-                      : marker
-                        ? DATE_CLASS_NAMES.busy
-                        : undefined;
+                const isToday = isSameDay(date, today);
+                const isCurrent = isSameDay(date, selected);
+                const dateClassNames = isToday
+                  ? DATE_CLASS_NAMES.today
+                  : marker?.tag === 'star'
+                    ? DATE_CLASS_NAMES.starred
+                    : marker
+                      ? DATE_CLASS_NAMES.busy
+                      : undefined;
 
                 const inRange = isInRange(date, activeRange);
 
@@ -645,20 +645,28 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                   <div
                     key={i}
                     data-date={startOfDay(date).toISOString()}
-                    className={mx(
-                      'relative flex justify-center items-center cursor-pointer select-none',
-                      getBgColor(date),
-                    )}
+                    className={mx('relative flex justify-center cursor-pointer select-none', getBgColor(date))}
                     onPointerDown={(ev) => handleDayPointerDown(date, ev)}
                     onPointerEnter={() => handleDayPointerEnter(date)}
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
+                    {/* Selection range */}
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
-                    <span className='relative text-description text-sm'>{date.getDate()}</span>
+                    {/* Month */}
                     {!dateClassNames && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {dateClassNames && <div className={mx('absolute inset-1 rounded-full', dateClassNames)} />}
+                    {/* Day + Marker */}
+                    <div
+                      className={mx(
+                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-description',
+                        dateClassNames,
+                      )}
+                    >
+                      {date.getDate()}
+                    </div>
+                    {/* Current */}
+                    {isCurrent && <div className={mx('absolute inset-0.5 rounded-full', DATE_CLASS_NAMES.current)} />}
                   </div>
                 );
               })}
