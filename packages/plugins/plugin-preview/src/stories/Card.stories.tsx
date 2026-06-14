@@ -114,11 +114,25 @@ export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   },
 };
 
+export const _PersonNoImage: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: PersonCard,
+    createObject: createPerson,
+  },
+};
+
 export const _Organization: StoryObj<typeof DefaultStory<Organization.Organization>> = {
   args: {
     Component: OrganizationCard,
     createObject: createOrganization,
     image: true,
+  },
+};
+
+export const _OrganizationNoImage: StoryObj<typeof DefaultStory<Organization.Organization>> = {
+  args: {
+    Component: OrganizationCard,
+    createObject: createOrganization,
   },
 };
 
