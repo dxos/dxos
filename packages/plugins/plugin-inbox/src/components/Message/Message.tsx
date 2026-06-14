@@ -7,7 +7,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -111,7 +111,8 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     [setSettings],
   );
 
-  const { graph } = useAppGraph();
+  // Optional: the graph capability isn't present in standalone (no-graph-plugin) stories.
+  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
   const menuActions = useMessageActions({
     graph,
     nodeId: attendableId,

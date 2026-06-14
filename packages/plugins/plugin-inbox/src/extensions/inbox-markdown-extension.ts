@@ -6,11 +6,41 @@ import { EditorView, type Extension, decorateMarkdown } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
 import { hideRemoteImages } from './hide-images-extension';
-import { replacePatterns } from './replace-patterns-extension';
+import { type Pattern, replacePatterns } from './replace-patterns-extension';
 
-const INBOX_REPLACE_PATTERNS = [
-  // Gmail-style angle-bracket mailto: `<[rich@example.com](mailto:rich@example.com)\>`.
-  /<\[([^\]]+)\]\(mailto:\1\)\\>/,
+// Permissive PSTN dial-in: `+` then digits/separators, `,,` pause, conference digits, `#`.
+const DIAL_IN = String.raw`\+[\d][\d\s\-()]*,,[\d]+#`;
+
+/** Visible dial string immediately followed by a `<tel:…>` link (Teams / Outlook invites). */
+const DIAL_IN_WITH_TEL_LINK = new RegExp(`(${DIAL_IN})<tel:[^>]+>`);
+
+/** Bare conference dial-in (e.g. Zoom "One tap mobile" lines). */
+const DIAL_IN_BARE = new RegExp(`(${DIAL_IN})(?!<tel:)`);
+
+/** Gmail-style angle-bracket tel markdown. */
+const DIAL_IN_ANGLED_TEL = new RegExp(String.raw`<\[(${DIAL_IN})\]\(tel:[^)]+\)\\>`);
+
+const INBOX_REPLACE_PATTERNS: Pattern[] = [
+  // Gmail-style angle-bracket mailto: `<[alice@example.com](mailto:alice@example.com)\>`.
+  {
+    pattern: /<\[([^\]]+)\]\(mailto:\1\)\\>/,
+    classNames: 'text-accent-text',
+  },
+  // Teams / Outlook dial-in: `+1 323-849-4874,,766918553#<tel:+13238494874,,766918553#>`.
+  {
+    pattern: DIAL_IN_WITH_TEL_LINK,
+    classNames: 'tabular-nums text-accent-text',
+  },
+  // Gmail-style angle-bracket tel: `<[+16469313860,,91535833310#](tel:+16469313860,,91535833310#)\>`.
+  {
+    pattern: DIAL_IN_ANGLED_TEL,
+    classNames: 'tabular-nums text-accent-text',
+  },
+  // Zoom / Teams bare dial-in: `+16469313860,,91535833310# US`.
+  {
+    pattern: DIAL_IN_BARE,
+    classNames: 'tabular-nums text-accent-text',
+  },
 ];
 
 export type InboxMarkdownOptions = {
@@ -23,10 +53,10 @@ export type InboxMarkdownOptions = {
  */
 export const inboxMarkdown = ({ loadRemoteImages = false }: InboxMarkdownOptions = {}): Extension[] =>
   [
-    openLinksInNewTab,
-    !loadRemoteImages && hideRemoteImages(),
     decorateInboxMarkdown(loadRemoteImages),
+    !loadRemoteImages && hideRemoteImages(),
     replacePatterns(INBOX_REPLACE_PATTERNS),
+    openLinksInNewTab,
   ].filter(isTruthy);
 
 const decorateInboxMarkdown = (loadRemoteImages: boolean): Extension =>

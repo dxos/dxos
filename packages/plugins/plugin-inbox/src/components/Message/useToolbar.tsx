@@ -15,8 +15,8 @@ import { useExtractorActions } from './useExtractorActions';
 const isToolbarAction = (action: Node.ActionLike) => action.properties.disposition === 'toolbar';
 
 export type UseMessageToolbarActionsProps = {
-  /** App graph used to source contributed (`disposition: 'toolbar'`) actions for the message node. */
-  graph: Graph.ReadableGraph;
+  /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */
+  graph?: Graph.ReadableGraph;
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
   message: Message.Message;
