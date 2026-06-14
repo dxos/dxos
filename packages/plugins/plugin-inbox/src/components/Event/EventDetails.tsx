@@ -77,8 +77,17 @@ export const EventDetails = ({
   }
 
   // The leading gutter (column 1) is the star toggle when starring is available, else a static event icon.
+  // Stop propagation so toggling the star in a stack tile doesn't also select the tile / change the current item.
   const leading = onToggleStar ? (
-    <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
+    <SystemIconButton.Star
+      iconOnly
+      variant='ghost'
+      active={starred}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggleStar();
+      }}
+    />
   ) : (
     <Icon icon='ph--check--regular' />
   );

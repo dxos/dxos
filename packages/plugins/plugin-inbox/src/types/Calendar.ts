@@ -52,8 +52,19 @@ export const make = (props: CalendarProps = {}) => {
   return calendar;
 };
 
-export const TAG_ACTIVE = { label: 'Active', hue: 'teal' } as const;
-export const TAG_STARRED = { label: 'Starred', hue: 'amber' } as const;
+// TODO(burdon): Factor the common "star" operations (the keyed tag + toggleStar/getStarredEventIds)
+//   into a shared TagIndex utility. The same toggle/membership pattern is reimplemented per object type
+//   (cf. Mailbox.applyTag); a single helper would own the well-known tag and the index provisioning.
+
+/**
+ * Well-known "starred" tag. The stable foreign `key` lets {@link Tag.findOrCreate} dedupe by identity
+ * (not label), so every starring site resolves the same tag — see {@link toggleStar}.
+ */
+export const TAG_STARRED = {
+  key: { source: 'org.dxos.org', id: 'starred' },
+  label: 'Starred',
+  hue: 'amber',
+} as const;
 
 /** Event ids carrying the starred tag (pass the resolved starred-tag uri). */
 export const getStarredEventIds = (
@@ -75,7 +86,8 @@ export const toggleStar = async (calendar: Calendar, event: Event.Event, db: Dat
       calendar.tags = Ref.make(index!);
     });
   }
-  const tag = await Tag.findOrCreate(db, { label: TAG_STARRED.label, hue: TAG_STARRED.hue });
+
+  const tag = await Tag.findOrCreate(db, TAG_STARRED);
   const uri = Obj.getURI(tag).toString();
   if (Tagging.get(event, { index }).includes(uri)) {
     Tagging.unset(event, uri, { index });

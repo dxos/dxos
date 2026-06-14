@@ -24,7 +24,7 @@ import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 import { Event } from '@dxos/async';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -38,6 +38,13 @@ const defaultWidth = 7 * size;
 // Auto-scroll while dragging near a vertical edge.
 const EDGE_SCROLL_ZONE = 32; // px
 const EDGE_SCROLL_MAX_SPEED = 12; // px per frame
+
+const DATE_CLASS_NAMES = {
+  today: 'border-2 border-amber-500',
+  current: 'ring-2 ring-primary-500',
+  busy: 'border-2 border-dashed border-green-700',
+  starred: 'border-2 border-dashed border-amber-500',
+};
 
 //
 // Range
@@ -216,16 +223,19 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
 
+/** Semantic kind of a {@link DateMarker}; the grid maps each kind to its own border treatment. */
+export type DateMarkerTag = 'busy' | 'star';
+
 /**
- * A date (or inclusive date range) to mark on the grid. `tag` is a hue name (e.g. `'rose'`) that
- * colours the marker border (resolved via the theme palette); omit it for a plain "has-event" marker.
- */
-export type CalendarMarker = { startDate: Date; endDate?: Date; tag?: string };
+ * A date (or inclusive date range) to mark on the grid. */
+export type DateMarker = { startDate: Date; endDate?: Date; tag?: DateMarkerTag };
 
 type CalendarGridProps = {
   rows?: number;
-  /** Dates to mark on the grid; each marked day gets a border (coloured by `tag` when present). */
-  dates?: CalendarMarker[];
+  /**
+   * Dates to mark on the grid; each marked day gets a border keyed off its `tag` kind (defaults to `busy`).
+   */
+  dates?: DateMarker[];
   /**
    * Date the grid scrolls into view on mount, and whenever this value changes.
    * Defaults to today. Pass a stable (memoized) Date so the grid does not
@@ -260,26 +270,28 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const gridRef = useRef<HTMLDivElement>(null);
     const today = useMemo(() => new Date(), []);
 
-    // Map each marked ISO day to its tag (hue), expanding ranges. A tagged marker (e.g. a starred
-    // event) wins over a plain one on the same day, so the day shows the coloured border.
+    // Map each marked ISO day to its tag kind, expanding ranges. `star` wins over `busy` on the same
+    // day so a starred event keeps its highlighted border.
     const dateMarkers = useMemo(() => {
-      const markers = new Map<string, string | undefined>();
-      for (const { startDate, endDate, tag } of dates) {
+      const markers = new Map<string, DateMarkerTag>();
+      for (const { startDate, endDate, tag = 'busy' } of dates) {
         const end = endDate ? startOfDay(endDate) : startOfDay(startDate);
         for (let date = startOfDay(startDate); date <= end; date = addDays(date, 1)) {
           const iso = date.toISOString();
-          if (tag || !markers.has(iso)) {
-            markers.set(iso, tag ?? markers.get(iso));
+          if (markers.get(iso) !== 'star') {
+            markers.set(iso, tag);
           }
         }
       }
+
       return markers;
     }, [dates]);
 
     const getMarker = useCallback(
-      (date: Date): { tag?: string } | undefined => {
+      (date: Date): { tag: DateMarkerTag } | undefined => {
         const iso = startOfDay(date).toISOString();
-        return dateMarkers.has(iso) ? { tag: dateMarkers.get(iso) } : undefined;
+        const tag = dateMarkers.get(iso);
+        return tag ? { tag } : undefined;
       },
       [dateMarkers],
     );
@@ -615,24 +627,19 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           <div key={key} style={style} className='grid'>
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
               {Array.from({ length: 7 }).map((_, i) => {
-                const dateClassNames = {
-                  today: 'border-amber-500',
-                  active: 'border-primary-500',
-                  busy: 'border-green-700 border-dashed',
-                };
-
                 const date = getDate(start, index, i, weekStartsOn);
-                const inRange = isInRange(date, activeRange);
                 const marker = getMarker(date);
-                const dateClassName = isSameDay(date, selected)
-                  ? dateClassNames.active
+                const dateClassNames = isSameDay(date, selected)
+                  ? DATE_CLASS_NAMES.current
                   : isSameDay(date, today)
-                    ? dateClassNames.today
-                    : marker?.tag
-                      ? getStyles(marker.tag).border
+                    ? DATE_CLASS_NAMES.today
+                    : marker?.tag === 'star'
+                      ? DATE_CLASS_NAMES.starred
                       : marker
-                        ? dateClassNames.busy
+                        ? DATE_CLASS_NAMES.busy
                         : undefined;
+
+                const inRange = isInRange(date, activeRange);
 
                 return (
                   <div
@@ -648,10 +655,10 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                   >
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
                     <span className='relative text-description text-sm'>{date.getDate()}</span>
-                    {!dateClassName && date.getDate() === 1 && (
+                    {!dateClassNames && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {dateClassName && <div className={mx('absolute inset-1 border-2 rounded-full', dateClassName)} />}
+                    {dateClassNames && <div className={mx('absolute inset-1 rounded-full', dateClassNames)} />}
                   </div>
                 );
               })}

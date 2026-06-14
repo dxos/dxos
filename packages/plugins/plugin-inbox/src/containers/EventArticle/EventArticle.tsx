@@ -38,7 +38,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // Starring uses the calendar's TagIndex (events are feed objects). Subscribe to the index via
   // `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
   const eventCalendar = calendar && Calendar.instanceOf(calendar) ? calendar : undefined;
-  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.TAG_STARRED.label);
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Calendar.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = eventCalendar?.tags?.target;
   const starredAtom = useMemo(

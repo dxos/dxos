@@ -12,7 +12,7 @@ import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
-import { Calendar as NaturalCalendar, type CalendarController, type CalendarMarker } from '@dxos/react-ui-calendar';
+import { Calendar as NaturalCalendar, type CalendarController, type DateMarker } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
@@ -62,7 +62,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   // Starred events get a rose marker. The TagIndex mutates in place, which `useQuery` doesn't observe,
   // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
-  const starredTag = useQuery(db, Filter.type(Tag.Tag)).find((tag) => tag.label === Calendar.TAG_STARRED.label);
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Calendar.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = calendar.tags?.target;
   const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
@@ -70,12 +70,12 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
   }, [tagIndex]);
   const starredIds = Calendar.getStarredEventIds(calendar, starredUri);
-  const dates = useMemo<CalendarMarker[]>(
+  const dates = useMemo<DateMarker[]>(
     () =>
       events.map((event) => ({
         startDate: new Date(event.startDate),
         endDate: event.endDate ? new Date(event.endDate) : undefined,
-        tag: starredIds.has(event.id) ? Calendar.TAG_STARRED.hue : undefined,
+        tag: starredIds.has(event.id) ? 'star' : 'busy',
       })),
     // `starredIds` is a fresh Set each render; key the memo on its membership so it stays stable.
     [events, [...starredIds].sort().join(',')],
