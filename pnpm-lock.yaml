@@ -1075,8 +1075,8 @@ catalogs:
       specifier: ^0.0.9
       version: 0.0.9
     esbuild-plugin-raw:
-      specifier: 0.3.0
-      version: 0.3.0
+      specifier: 0.4.2
+      version: 0.4.2
     esbuild-plugin-wasm:
       specifier: ^1.1.0
       version: 1.1.0
@@ -2131,7 +2131,7 @@ importers:
         version: 1.4.1(esbuild@0.28.0)
       esbuild-plugin-raw:
         specifier: 'catalog:'
-        version: 0.3.0(esbuild@0.28.0)
+        version: 0.4.2(esbuild@0.28.0)
       esbuild-plugin-yaml:
         specifier: 'catalog:'
         version: 0.0.1
@@ -33114,8 +33114,8 @@ packages:
   esbuild-plugin-inline-image@0.0.9:
     resolution: {integrity: sha512-pw3ZgN2phh32Z7BpKrhRDtmI+iVCl+Gc0BLOT9croXg1MnMjRuN7aXhIQirhLeK39erkIwfFlhy6xieroBGc1Q==}
 
-  esbuild-plugin-raw@0.3.0:
-    resolution: {integrity: sha512-zO9UzFr/VVvSUPeYxV7Un4d2Uxb+TPOEx545rE/V9tL8ORQB0B8eXDgN1rk6FioB9ZjDKuB8tsu65eTNOH9tVw==}
+  esbuild-plugin-raw@0.4.2:
+    resolution: {integrity: sha512-a5uYNDg4uqrcMUiNlPkoqS7vSH99XA/KlAhAnS+FYgVNwYGCpIJvQ9fb4Ze7hfxi2rNQMmyS/tO4RlHdo1LH3g==}
     peerDependencies:
       esbuild: '>=0.28.0'
 
@@ -53574,7 +53574,7 @@ snapshots:
 
   esbuild-plugin-inline-image@0.0.9: {}
 
-  esbuild-plugin-raw@0.3.0(esbuild@0.28.0):
+  esbuild-plugin-raw@0.4.2(esbuild@0.28.0):
     dependencies:
       esbuild: 0.28.0
 

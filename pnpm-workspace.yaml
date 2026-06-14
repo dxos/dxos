@@ -398,10 +398,10 @@ catalog:
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
-  esbuild: 0.28.0
+  esbuild: 0.28.1
   esbuild-plugin-glsl: ^1.4.1
   esbuild-plugin-inline-image: ^0.0.9
-  esbuild-plugin-raw: 0.3.0
+  esbuild-plugin-raw: 0.4.2
   esbuild-plugin-wasm: ^1.1.0
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.3
