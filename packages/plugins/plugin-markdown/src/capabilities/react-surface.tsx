@@ -97,7 +97,7 @@ const Container = forwardRef<
   HTMLDivElement,
   AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
 >(({ id, attendableId, subject, role }, forwardedRef) => {
-  const selectionManager = useCapability(AttentionCapabilities.Selection);
+  const viewState = useCapability(AttentionCapabilities.ViewState);
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
   const editorState = useCapability(MarkdownCapabilities.EditorState);
@@ -117,7 +117,7 @@ const Container = forwardRef<
       id={id}
       attendableId={attendableId}
       settings={settings}
-      selectionManager={selectionManager}
+      viewState={viewState}
       extensionProviders={extensionProviders}
       editorStateStore={editorState}
       viewMode={viewMode}

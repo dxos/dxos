@@ -97,16 +97,16 @@ Estimated: one PR, ~3-4 file changes. Low risk.
 
 ~9 plugin call sites still rolling their own `<ul>`/`<li>` + `<button>` rows:
 
-| File                                                                                | Replacement                                                |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `plugin-code/src/components/FileTree/FileTree.tsx`                                  | Reuse `react-ui-list/Tree` (after C1)                      |
-| `plugin-sidekick/src/components/ActionItems.tsx`                                    | `Listbox` + a per-row checkbox affordance (multi-select)   |
-| `plugin-assistant/src/components/ChatPrompt/ChatReferences.tsx`                     | `Listbox` (tag-pill row variant)                           |
-| `plugin-assistant/src/components/ChatPrompt/ChatMcpErrors.tsx`                      | `Listbox`                                                  |
-| `plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx`                | `Listbox`                                                  |
-| `plugin-help/.../WelcomeTour.stories.tsx`                                           | `Listbox`                                                  |
-| `plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx`                       | already on `Listbox`; drop the inner `<div role='list'>`   |
-| (one more in plugin-script)                                                         | `Listbox`                                                  |
+| File                                                                 | Replacement                                              |
+| -------------------------------------------------------------------- | -------------------------------------------------------- |
+| `plugin-code/src/components/FileTree/FileTree.tsx`                   | Reuse `react-ui-list/Tree` (after C1)                    |
+| `plugin-sidekick/src/components/ActionItems.tsx`                     | `Listbox` + a per-row checkbox affordance (multi-select) |
+| `plugin-assistant/src/components/ChatPrompt/ChatReferences.tsx`      | `Listbox` (tag-pill row variant)                         |
+| `plugin-assistant/src/components/ChatPrompt/ChatMcpErrors.tsx`       | `Listbox`                                                |
+| `plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx` | `Listbox`                                                |
+| `plugin-help/.../WelcomeTour.stories.tsx`                            | `Listbox`                                                |
+| `plugin-meeting/src/containers/MeetingsList/MeetingsList.tsx`        | already on `Listbox`; drop the inner `<div role='list'>` |
+| (one more in plugin-script)                                          | `Listbox`                                                |
 
 Each is a small PR; parallelise across maintainers. High aggregate value (consistent
 `dx-selected` grammar), low per-PR risk.
@@ -129,6 +129,7 @@ Pick the cheaper option once B1 lands and the call-sites are visible.
 #### C1. `Tree` → aspects
 
 Refactor `react-ui-list/Tree` to compose:
+
 - `useReorderList` + `useReorderItem` for hierarchical DnD (above / below / into via
   pragmatic-dnd's `attachClosestEdge` + a `canDrop` predicate that reads `depth`).
 - `useListDisclosure({ mode: 'multi' })` for multi-branch expand state.
@@ -138,6 +139,7 @@ Refactor `react-ui-list/Tree` to compose:
   follow-up.
 
 Affects:
+
 - `plugin-navtree` (6 files — `state.ts`, `L1Panel`, `types.ts`, `NavTreeContainer`,
   `useNavTreeModel`, `update-state.ts`)
 - `devtools/ObjectsTree.tsx`
@@ -169,6 +171,7 @@ live inside the (still-unimplemented) `useListVirtualizer` aspect so consumers d
 re-derive it.
 
 Sequence:
+
 1. Implement `useListVirtualizer` with the `{ reorder }` slot from the design doc.
 2. Migrate `Mosaic.Stack` to `useReorderList` (no virtualization). Cross-stack drag stays
    via `canDrop`/`getInitialData` payloads.
@@ -203,6 +206,7 @@ Mosaic.Stack which handles this automatically." Still ~6 consumers (plugin-deck,
 plugin-script, plugin-stack, plugin-meeting). Independent of the aspect work above.
 
 Strands:
+
 1. Each consumer migrates to `Mosaic.Stack`. Per-consumer PR; can parallelise.
 2. After consumer count hits zero: delete `packages/ui/react-ui-stack/` entirely (source +
    `PLAN.md` + dependencies + tests).
