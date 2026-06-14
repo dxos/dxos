@@ -2,11 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import {
+  Focus,
+  Mosaic,
+  type MosaicScrollController,
+  type MosaicTileProps,
+  useMosaicContainer,
+} from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
 import { EventDetails } from '../Event';
@@ -25,11 +31,13 @@ export type EventStackProps = {
   currentId?: string;
   /** IDs of selected events (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
+  /** Imperative handle to scroll the stack to an event without changing the current item. */
+  controllerRef?: Ref<MosaicScrollController>;
   onAction?: EventStackActionHandler;
 };
 
 export const EventStack = composable<HTMLDivElement, EventStackProps>(
-  ({ events = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
+  ({ events = [], currentId, selectedIds, controllerRef, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => events.map((event) => ({ event, onAction })), [events, onAction]);
 
@@ -61,6 +69,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
         <Mosaic.Container
           asChild
           withFocus
+          controllerRef={controllerRef}
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
           selectedIds={selectedIds}

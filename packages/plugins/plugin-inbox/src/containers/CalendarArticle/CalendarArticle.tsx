@@ -14,6 +14,7 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar, type CalendarController, type CalendarMarker } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetIntegration } from '#components';
@@ -41,6 +42,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const db = Obj.getDatabase(calendar);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
+  const eventStackRef = useRef<MosaicScrollController>(null);
   // Syncing drafts to Google Calendar requires an integration targeting this calendar.
   const { integration } = useTargetIntegration(subject);
 
@@ -77,15 +79,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleDateSelect = useCallback(
     ({ date }: { date: Date }) => {
       setSelectedDate(date);
+      // Scroll the stack to the first event of the selected day WITHOUT changing the current item
+      // (the grid owns its own date selection; selecting an event is a separate action).
       const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
-        void invokePromise(LayoutOperation.Select, {
-          contextId: id,
-          subject: { mode: 'single', id: match.id },
-        });
+        eventStackRef.current?.scrollToItem(match.id);
       }
     },
-    [events, id, invokePromise],
+    [events],
   );
 
   // Persist a committed multi-day range into the selection manager (as ISO date strings) so actions
@@ -214,7 +215,13 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
-              <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
+              <EventStack
+                id={id}
+                events={events}
+                currentId={currentId}
+                controllerRef={eventStackRef}
+                onAction={handleAction}
+              />
             )}
           </Panel.Content>
         </Panel.Root>
