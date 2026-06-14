@@ -39,8 +39,19 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
   // dynamic types whose schema isn't reachable via `Obj.getSchema` (DXN mismatch).
   const staticType = Obj.getType(subject);
   const db = Obj.getDatabase(subject);
-  // Obj.getTypeURI throws for corrupted objects; only evaluate it on the fallback path.
-  const runtimeType = useType(db, staticType ? undefined : Obj.getTypeURI(subject));
+  // `Obj.getTypeURI` throws on corrupted objects that are missing a type; swallow that
+  // and fall through to the "unable to create preview" path rather than crashing the card.
+  const fallbackTypeUri = useMemo(() => {
+    if (staticType) {
+      return undefined;
+    }
+    try {
+      return Obj.getTypeURI(subject);
+    } catch {
+      return undefined;
+    }
+  }, [staticType, subject]);
+  const runtimeType = useType(db, fallbackTypeUri);
   const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
     const resolvedType = runtimeType ?? staticType;
     return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;

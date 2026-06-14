@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { Card, DxAnchorActivate, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Card, DxAnchorActivate, Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { type Actor } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
 
@@ -98,7 +98,10 @@ const HeaderDateRow = ({ start, end }: HeaderDateRowProps) => {
   const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
 
   return (
-    <Card.Row icon='ph--calendar--regular'>
+    <Card.Row>
+      <Card.Block>
+        <Icon icon='ph--calendar--regular' />
+      </Card.Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-description'>{format(start, 'PPp')}</div>
         {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
@@ -124,7 +127,10 @@ const HeaderObjectRow = ({ object }: HeaderObjectRowProps) => {
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   return (
-    <Card.Row icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
+    <Card.Row>
+      <Card.Block>
+        <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
+      </Card.Block>
       <h3 className='truncate text-primary-text'>{label}</h3>
     </Card.Row>
   );
@@ -153,8 +159,8 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
 
   // TODO(burdon): Reconcile with Avatar if space member.
   return (
-    <Card.Row
-      icon={
+    <Card.Row>
+      <Card.Block>
         <AnchorIconButton
           compact
           icon='ph--user--regular'
@@ -165,21 +171,22 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
           value={contactDXN}
           onClick={onContactCreate ? handleContactCreate : undefined}
         />
-      }
-    >
+      </Card.Block>
       <div className='flex items-center overflow-hidden'>
         <span className='truncate'>{actor.name || actor.email}</span>
       </div>
 
       {/* Trailing action column. */}
       {onRemove && (
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--x--regular'
-          label={t('remove-attendee.label')}
-          onClick={onRemove}
-        />
+        <Card.Block end>
+          <IconButton
+            variant='ghost'
+            iconOnly
+            icon='ph--x--regular'
+            label={t('remove-attendee.label')}
+            onClick={onRemove}
+          />
+        </Card.Block>
       )}
     </Card.Row>
   );
@@ -206,7 +213,10 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) => {
   }
 
   return (
-    <Card.Row icon='ph--tag--regular'>
+    <Card.Row>
+      <Card.Block>
+        <Icon icon='ph--tag--regular' />
+      </Card.Block>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag

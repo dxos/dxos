@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Card, IconButton, Icon, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -73,7 +73,10 @@ export const EventDetails = ({
   return (
     <>
       {title === 'heading' && (
-        <Card.Row icon='ph--check--regular'>
+        <Card.Row>
+          <Card.Block>
+            <Icon icon='ph--check--regular' />
+          </Card.Block>
           <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
             <IconButton
