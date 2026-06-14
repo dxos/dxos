@@ -64,6 +64,18 @@ Backends:
   - Schema-encode + write on set,
   - `storage` event listener for cross-tab sync,
   - resolves synchronously (localStorage is sync).
+
+  Storage keys are derived uniformly by the `local` backend (no per-slice overrides):
+
+  ```
+  dxos:view-state:${slice.key}:${contextId}
+  ```
+
+  - Fixed `dxos:view-state:` namespace prefix → one greppable, clearable family.
+  - `slice.key` is the slice's declared id (`'editor'`, …); `contextId` is the consumer's
+    scoping id (for the editor, the document id → `dxos:view-state:editor:<docId>`).
+  - Value is `JSON.stringify(Schema.encodeSync(slice.schema)(value))`; decode validates on read
+    and falls back to `defaultValue()` on miss/parse/validation failure.
 - **`personal`** *(future)* — atom backed by an ECHO query in the personal space; hydrates
   asynchronously, updates from other devices. The contract already permits async hydration, so
   no interface change is required.
@@ -87,7 +99,8 @@ Backends:
 - `useViewStateActions<T>(slice, contextId): { set, update, clear }` where
   `update: (fn: (prev: T) => T) => void`.
 
-The previous `useSelected` / `useSelectionActions` / `useSelectionManager` are removed.
+`useSelected` and `useSelectionManager` are removed; `useSelectionActions` is re-defined (see
+the Selection section) as a thin wrapper over these generic hooks.
 
 ## Selection as a slice
 
@@ -102,18 +115,46 @@ const Selection = defineViewState({
 });
 ```
 
-Selection **modes** and rich operations (`toggle`, `rangeSelect`, `multiSelect`,
-`resolve(value, mode)`) are genuine selection domain logic, not generic. They become small pure
-helpers exported alongside the slice (e.g. a `Selection` namespace: `Selection.toggle`,
-`Selection.resolve`), applied by call sites via `useViewStateActions`.
+Selection lives in a `Selection.ts` `@import-as-namespace` module holding the slice plus pure
+helpers (`Selection.slice`, `Selection.resolve(value, mode)`, `Selection.toggle(value, id)`,
+`Selection.single(id)`, `Selection.empty(mode)`, `Selection.range(from, to)`). Modes and rich
+operations are genuine selection domain logic, kept out of the generic core.
+
+### Selection hooks (thin wrappers over the generic core — option B)
+
+To keep the 40+ call sites ergonomic and near-identical to today, selection retains a thin
+hook layer built directly on `useViewState` / `useViewStateActions` (not a parallel manager):
+
+```ts
+// returns the resolved value for the requested mode
+export const useSelection = <T extends SelectionMode>(contextId?: string, mode?: T): SelectionResult<T> =>
+  Selection.resolve(useViewState(Selection.slice, contextId), mode);
+
+// wraps update() with the selection helpers
+export const useSelectionActions = (contextId: string) => {
+  const { update, clear } = useViewStateActions(Selection.slice, contextId);
+  return {
+    single: (id: string) => update((prev) => Selection.single(id)),
+    multi:  (ids: string[]) => update(() => ({ mode: 'multi', ids })),
+    range:  (from: string, to: string) => update(() => Selection.range(from, to)),
+    toggle: (id: string) => update((prev) => Selection.toggle(prev, id)),
+    clear,
+  };
+};
+```
+
+These wrappers hide `Selection.slice` so consumers never name it.
 
 ### Call-site migration
 
-All current `useSelected` / `useSelectionActions` consumers migrate:
+All current consumers migrate:
 
-- `useSelected(id, 'single')` → `Selection.resolve(useViewState(Selection, id), 'single')`
-  (or a thin convenience helper if the pattern is ubiquitous — decided during planning).
-- Action sites use `useViewStateActions(Selection, id)` plus the selection helpers.
+- `useSelected(id, 'single')` → `useSelection(id, 'single')`.
+- `useSelectionActions([id])` → `useSelectionActions(id)` (single `contextId`, not an array),
+  with method names `single` / `multi` / `range` / `toggle` / `clear`.
+- `useSelectionManager()` is removed; nothing should reach the manager directly — uses route
+  through the hooks. If a non-React consumer needs raw access, it takes the
+  `ViewStateManager` explicitly.
 
 Known consumers include: `react-ui-table` (`useTableModel`), plugin-trip, plugin-map,
 plugin-feed, plugin-inbox (mailbox/calendar/drafts), plus the `SelectionProvider` mount points.
@@ -137,10 +178,9 @@ const EditorViewState = defineViewState({
 - `plugin-markdown`: `createEditorStateStore` and the `EditorState` capability are removed;
   `MarkdownEditorContent` reads initial `{ scrollTo, selection }` from the ViewState slice
   keyed by document id, and the editor extension persists via the same slice.
-- Preserve the existing key namespace (`org.dxos.plugin.markdown.editor/{docId}`) so existing
-  users' stored positions survive: the `local` backend's storage key for this slice must map to
-  the same string. The slice/backend may need an optional key-mapping override to honor a legacy
-  prefix; otherwise a one-time read-through migration on first access.
+- No legacy-key migration. Editor state moves to the uniform key
+  `dxos:view-state:editor:<docId>`; old `org.dxos.plugin.markdown.editor/*` entries are
+  abandoned and users re-establish scroll/caret on next open.
 - Delete `createEditorStateStore`; update all references.
 
 ## Placement
@@ -163,17 +203,16 @@ The package's UI-free `./types` entry point continues to re-export the non-DOM p
   - `memory` backend: isolation across contexts; default values.
   - `local` backend: persistence round-trip via an injected fake `Storage`; Schema
     encode/decode; cross-tab `storage` event; default on parse failure.
-  - Selection helpers (`toggle`, `resolve`, `rangeSelect`) as pure-function tests.
-  - Editor-state slice: legacy-key compatibility (reads a value written under the old prefix).
+  - Selection helpers (`toggle`, `resolve`, `range`, `single`) as pure-function tests.
+  - Editor-state slice: encode/decode round-trip matches the existing serialized shape.
 - Extend the existing selection test suite rather than forking a new one where applicable.
 - Backends are injected (Storage, Registry) so no real localStorage/DOM is required.
 
 ## Risks / open items
 
-- **Selection call-site churn (largest blast radius).** Each `useSelected` site now resolves
-  the mode via a helper; semantics must not drift. Planning will decide whether a thin
-  convenience helper reduces churn without re-introducing the old hook.
-- **Legacy localStorage key compatibility** for editor state — must not silently lose users'
-  saved scroll/caret positions.
+- **Selection call-site churn (largest blast radius).** Sites move to the new
+  `useSelection` / `useSelectionActions` wrappers; signatures are near-identical to today, but
+  `useSelectionActions` now takes a single `contextId` (not an array) and exposes
+  `single`/`multi`/`range`/`toggle`/`clear`. Semantics must not drift.
 - **Schema for `EditorSelectionState`** is new; ensure it matches the existing serialized shape
-  exactly.
+  exactly (no migration safety net, so the encode/decode round-trip must be correct).
