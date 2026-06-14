@@ -63,14 +63,16 @@ const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
 type EventToolbarProps = Pick<
   UseEventToolbarActionsProps,
-  'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
+  'graph' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
 > &
   Pick<MenuRootProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
-  ({ alwaysActive, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
+  ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
     const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
     const menuActions = useEventToolbarActions({
+      graph,
+      nodeId: attendableId,
       viewMode,
       setViewMode,
       onOpen,
@@ -166,9 +168,13 @@ const EventBody = ({ classNames, editable }: EventBodyProps) => {
     return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
   }
 
-  return event.description ? (
+  if (!event.description) {
+    return null;
+  }
+
+  return (
     <MarkdownViewer content={event.description} markdown={viewMode !== 'plain'} classNames={mx('p-3', classNames)} />
-  ) : null;
+  );
 };
 
 EventBody.displayName = EVENT_BODY_NAME;

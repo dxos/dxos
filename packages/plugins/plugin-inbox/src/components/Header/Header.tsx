@@ -65,7 +65,7 @@ const AnchorIconButton = ({
 
   return (
     <IconButton
-      classNames={compact && 'min-h-0'}
+      classNames={compact ? 'min-h-0' : 'aspect-square'}
       variant='ghost'
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
@@ -162,7 +162,6 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
     <Card.Row>
       <Card.Block>
         <AnchorIconButton
-          compact
           icon='ph--user--regular'
           fallbackIcon='ph--user-plus--regular'
           label={t('show-contact.label')}
@@ -172,11 +171,7 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
           onClick={onContactCreate ? handleContactCreate : undefined}
         />
       </Card.Block>
-      <div className='flex items-center overflow-hidden'>
-        <span className='truncate'>{actor.name || actor.email}</span>
-      </div>
-
-      {/* Trailing action column. */}
+      <Card.Text>{actor.name || actor.email}</Card.Text>
       {onRemove && (
         <Card.Block end>
           <IconButton

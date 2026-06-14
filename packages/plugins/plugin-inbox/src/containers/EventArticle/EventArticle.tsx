@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -19,6 +19,7 @@ export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj
 
 export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
+  const { graph } = useAppGraph();
   const db = Obj.getDatabase(calendar);
   // Resolve the live (mutable, reactive) db object so edits to a draft re-render the controlled
   // inputs. The companion subject can be a non-reactive snapshot; querying by id yields the proxy.
@@ -72,6 +73,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
         <Panel.Toolbar asChild>
           <Event.Toolbar
             alwaysActive
+            graph={graph}
             editing={draft}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}

@@ -581,7 +581,8 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                   : isSameDay(date, today)
                     ? 'border-amber-500'
                     : hasDate(date)
-                      ? 'border-neutral-700 border-dashed'
+                      ? // TOOD(burdon): Reflect labels.
+                        'border-green-700 border-dashed'
                       : undefined;
 
                 return (

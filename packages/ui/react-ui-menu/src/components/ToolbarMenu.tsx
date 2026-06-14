@@ -127,7 +127,8 @@ const DropdownMenuToolbarItem = ({
         iconOnly,
         iconClassNames,
         label: actionLabel(labelAction, t),
-        caretDown: true,
+        // The caret signals "opens a menu"; an icon that already means that (e.g. an overflow ⋮) opts out.
+        caretDown: (group.properties as { caretDown?: boolean }).caretDown ?? true,
       }
     : {
         children: (

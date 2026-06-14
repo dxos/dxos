@@ -99,9 +99,9 @@ export const MessageArticle = ({
         <Panel.Toolbar asChild>
           <Message.Toolbar />
         </Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Content className='grid grid-rows-[auto_1fr]'>
+          <Message.Header onContactCreate={handleContactCreate} />
           <Message.Viewport role={role}>
-            <Message.Header onContactCreate={handleContactCreate} />
             <Message.Body />
           </Message.Viewport>
         </Panel.Content>

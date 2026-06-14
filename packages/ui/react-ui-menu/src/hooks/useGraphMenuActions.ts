@@ -70,19 +70,19 @@ export const buildGraphMenu = (
  * graph's action atoms through `get`, so contributed actions appear/disappear as extensions update.
  */
 export const graphActions = (
-  graph: Graph.ReadableGraph,
+  graph: Graph.ReadableGraph | undefined,
   get: Atom.Context,
   nodeId: string | undefined,
   options?: GraphMenuOptions,
 ): ActionGraphProps =>
-  nodeId ? buildGraphMenu((id) => get(graph.actions(id)), nodeId, options) : { nodes: [], edges: [] };
+  graph && nodeId ? buildGraphMenu((id) => get(graph.actions(id)), nodeId, options) : { nodes: [], edges: [] };
 
 /**
  * Menu actions sourced entirely from a node's app-graph contributions — the common "show every action
  * the graph offers for this object" toolbar/menu. Compose with hand-built items via {@link graphActions}.
  */
 export const useGraphMenuActions = (
-  graph: Graph.ReadableGraph,
+  graph: Graph.ReadableGraph | undefined,
   nodeId: string | undefined,
   options?: GraphMenuOptions,
 ): MenuActions => {

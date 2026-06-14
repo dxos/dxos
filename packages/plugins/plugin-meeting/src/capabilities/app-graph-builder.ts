@@ -209,6 +209,8 @@ export default Capability.makeModule(
                 properties: {
                   label: ['open-meeting-for-event.label', { ns: meta.id }],
                   icon: 'ph--handshake--regular',
+                  // Surface in the Event article toolbar (not just the node context menu).
+                  disposition: 'toolbar',
                 },
               },
             ];
@@ -222,6 +224,8 @@ export default Capability.makeModule(
               properties: {
                 label: ['create-meeting-for-event.label', { ns: meta.id }],
                 icon: 'ph--handshake--regular',
+                // Surface in the Event article toolbar (not just the node context menu).
+                disposition: 'toolbar',
               },
             },
           ];

@@ -7,6 +7,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -14,11 +15,9 @@ import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
-import { decorateMarkdown, preview } from '@dxos/ui-editor';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { hideRemoteImages } from '../../extensions';
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
@@ -112,7 +111,10 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     [setSettings],
   );
 
+  const { graph } = useAppGraph();
   const menuActions = useMessageActions({
+    graph,
+    nodeId: attendableId,
     message,
     viewMode,
     setViewMode,
@@ -272,42 +274,12 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
     return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
-  const markdown = viewMode !== 'plain';
-
-  // Message-specific decorations layered on the shared MarkdownViewer core (which already provides
-  // read-only / markdown / theme / open-links). Only meaningful in markdown/enriched views.
-  const extensions = useMemo(
-    () =>
-      markdown
-        ? [
-            decorateMarkdown({
-              skip: (node) => {
-                // Skip dxn: links and images entirely (handled by preview()).
-                if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
-                  return true;
-                }
-                // When remote-image loading is disabled, suppress http(s) image rendering;
-                // `hideRemoteImages` below also omits the raw markdown source entirely.
-                if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
-                  return true;
-                }
-                return false;
-              },
-            }),
-            preview(),
-            // When remote images are disabled, completely omit the image markdown (no visible link).
-            ...(loadRemoteImages ? [] : [hideRemoteImages()]),
-          ]
-        : [],
-    [markdown, loadRemoteImages],
-  );
-
   return (
     <MarkdownViewer
       content={content}
-      markdown={markdown}
+      markdown={viewMode !== 'plain'}
+      loadRemoteImages={loadRemoteImages}
       slots={{ content: { className: 'mx-4!' } }}
-      extensions={extensions}
       classNames={classNames}
     />
   );
