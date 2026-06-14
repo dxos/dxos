@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Ref, Type } from '@dxos/echo';
+import { type Database, DXN, Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Call } from '@dxos/plugin-calls/types';
 import { Text } from '@dxos/schema';
-import { Transcript } from '@dxos/types';
+import { AnchoredTo, type Event, Transcript } from '@dxos/types';
 
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
@@ -53,8 +53,17 @@ export const Meeting = Schema.Struct({
   call: Ref.Ref(Call.Call).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--handshake--regular', hue: 'rose' }),
   Type.makeObject(DXN.make('org.dxos.type.meeting', '0.1.0')),
 );
 
 export type Meeting = Type.InstanceType<typeof Meeting>;
+
+/**
+ * Resolves the meeting anchored to the given event (via a `Meeting --AnchoredTo--> Event` relation),
+ * or `undefined` if none exists. At most one meeting is expected per event.
+ */
+export const getMeetingForEvent = async (db: Database.Database, event: Event.Event): Promise<Meeting | undefined> => {
+  const sources = await db.query(Query.select(Filter.id(event.id)).targetOf(AnchoredTo.AnchoredTo).source()).run();
+  return sources.find((object): object is Meeting => Obj.instanceOf(Meeting, object));
+};

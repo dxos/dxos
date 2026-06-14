@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Channel } from '@dxos/types';
+import { Channel, Event } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -23,7 +23,9 @@ export const Create = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    channel: Type.getSchema(Channel.Channel),
+    channel: Schema.optional(Type.getSchema(Channel.Channel)),
+    /** Anchor the new meeting to this event (creates a `Meeting --AnchoredTo--> Event` relation). */
+    event: Schema.optional(Ref.Ref(Event.Event)),
   }),
   output: Schema.Struct({
     object: Type.getSchema(Meeting.Meeting),

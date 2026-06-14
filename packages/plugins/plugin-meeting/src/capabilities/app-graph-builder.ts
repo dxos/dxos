@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Feed, Obj, Type } from '@dxos/echo';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
@@ -17,7 +17,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { Channel } from '@dxos/types';
+import { Channel, Event } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
@@ -90,7 +90,7 @@ export default Capability.makeModule(
             AppNode.makeCompanion({
               id: 'meeting',
               label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
-              icon: 'ph--note--regular',
+              icon: 'ph--handshake--regular',
               data,
               position: 'first',
             }),
@@ -186,6 +186,35 @@ export default Capability.makeModule(
               position: 'first',
             }),
           ]),
+      }),
+
+      // Contribute a "Create meeting" action onto Event nodes (plugin-inbox stays meeting-agnostic),
+      // shown only while the event has no meeting anchored to it yet.
+      GraphBuilder.createTypeExtension({
+        id: 'createMeetingForEvent',
+        type: Event.Event,
+        actions: Effect.fnUntraced(function* (event) {
+          const db = Obj.getDatabase(event);
+          if (!db) {
+            return [];
+          }
+          const meeting = yield* Effect.promise(() => Meeting.getMeetingForEvent(db, event));
+          if (meeting) {
+            return [];
+          }
+          return [
+            {
+              id: 'action.createMeetingForEvent',
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
+              }),
+              properties: {
+                label: ['create-meeting-for-event.label', { ns: meta.id }],
+                icon: 'ph--handshake--regular',
+              },
+            },
+          ];
+        }),
       }),
     ]);
 
