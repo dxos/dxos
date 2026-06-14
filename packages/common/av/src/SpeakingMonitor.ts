@@ -5,7 +5,7 @@
 import { DeferredTask, Event, sleep } from '@dxos/async';
 import { Resource } from '@dxos/context';
 
-import { monitorAudioLevel } from './util';
+import { monitorAudioLevel } from './monitor-audio-level';
 
 const NOT_SPEAKING_AFTER = 500; // [ms]
 const START_SPEAKING_THRESHOLD = 0.05;
@@ -37,7 +37,7 @@ export class SpeakingMonitor extends Resource {
   protected override async _open(): Promise<void> {
     this._deferredUpdate = new DeferredTask(this._ctx, async () => this._emitSpeakingChanged());
 
-    let timeout: NodeJS.Timeout | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const cleanup = monitorAudioLevel({
       mediaStreamTrack: this._mediaStreamTrack,
       onMeasure: (vol) => {

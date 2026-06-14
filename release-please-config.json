@@ -60,6 +60,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/av/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/codec-protobuf/package.json",
           "jsonpath": "$.version"
         },

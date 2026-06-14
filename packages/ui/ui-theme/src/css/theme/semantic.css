@@ -219,10 +219,10 @@
    * lightest in light mode and the darkest in dark mode. Keep these as explicit neutrals/accents;
    * do not fold them into --dx-elevation-*.
    */
+  --color-axis-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-axis-text: light-dark(var(--color-neutral-700), var(--color-neutral-300));
   --color-axis-selected-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-axis-selected-text: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-axis-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
-  --color-axis-text: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
