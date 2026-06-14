@@ -10,14 +10,6 @@ import { describe, test } from 'vitest';
 import { ViewStateManager, createDefaultBackends } from '../../view-state';
 import { ViewStateProvider, useSelection, useSelectionActions } from './ViewStateProvider';
 
-const wrapper =
-  (manager: ViewStateManager, registry: Registry.Registry) =>
-  ({ children }: PropsWithChildren) => (
-    <RegistryContext.Provider value={registry}>
-      <ViewStateProvider manager={manager}>{children}</ViewStateProvider>
-    </RegistryContext.Provider>
-  );
-
 describe('useSelection / useSelectionActions', () => {
   test('single select updates the resolved value', ({ expect }) => {
     const registry = Registry.make();
@@ -43,3 +35,11 @@ describe('useSelection / useSelectionActions', () => {
     expect(value.current).toEqual(['b']);
   });
 });
+
+const wrapper =
+  (manager: ViewStateManager, registry: Registry.Registry) =>
+  ({ children }: PropsWithChildren) => (
+    <RegistryContext.Provider value={registry}>
+      <ViewStateProvider manager={manager}>{children}</ViewStateProvider>
+    </RegistryContext.Provider>
+  );

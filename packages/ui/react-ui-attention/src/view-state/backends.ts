@@ -35,6 +35,16 @@ const STORAGE_PREFIX = 'dxos:view-state:';
 
 const storageKeyFor = (slice: { key: string }, contextId: string) => `${STORAGE_PREFIX}${slice.key}:${contextId}`;
 
+// Accessing `globalThis.localStorage` can throw a SecurityError in sandboxed iframes or when
+// storage is blocked; degrade to in-memory behaviour instead of crashing.
+const safeLocalStorage = (): Storage | undefined => {
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return undefined;
+  }
+};
+
 export interface LocalBackendOptions {
   readonly registry: Registry.Registry;
   /** Injectable for tests; defaults to `window.localStorage`. */
@@ -52,9 +62,9 @@ export class LocalBackend implements ViewStateBackend {
   readonly #byStorageKey = new Map<string, { slice: SliceDef<unknown>; contextId: string }>();
   #storageListener?: (event: StorageEvent) => void;
 
-  constructor({ registry, storage = globalThis.localStorage }: LocalBackendOptions) {
+  constructor({ registry, storage }: LocalBackendOptions) {
     this.#registry = registry;
-    this.#storage = storage;
+    this.#storage = storage ?? safeLocalStorage();
     if (this.#storage && typeof globalThis.addEventListener === 'function') {
       this.#storageListener = (event) => {
         if (!event.key || !event.key.startsWith(STORAGE_PREFIX)) {
@@ -91,7 +101,9 @@ export class LocalBackend implements ViewStateBackend {
 
   contexts<T>(slice: SliceDef<T>): string[] {
     if (!this.#storage) {
-      return [];
+      // No persistent storage: fall back to the in-memory atoms (mirrors `atom()`'s ephemeral path).
+      const prefix = `${slice.key}:`;
+      return [...this.#atoms.keys()].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length));
     }
     const prefix = storageKeyFor(slice, '');
     const ids: string[] = [];

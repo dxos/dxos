@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, describe, test } from 'vitest';
 
 import { LocalBackend } from './backends';
 import { ViewStateManager, defineViewState } from './view-state';
@@ -32,10 +32,17 @@ const fakeStorage = (): Storage => {
 };
 
 describe('LocalBackend', () => {
+  // Dispose every backend after each test so its global `storage` listener does not leak across the suite.
+  const disposables: LocalBackend[] = [];
+  afterEach(() => {
+    disposables.splice(0).forEach((backend) => backend.dispose());
+  });
+
   const make = () => {
     const registry = Registry.make();
     const storage = fakeStorage();
     const local = new LocalBackend({ registry, storage });
+    disposables.push(local);
     const manager = new ViewStateManager({ registry, backends: { memory: local, local } });
     return { manager, storage };
   };

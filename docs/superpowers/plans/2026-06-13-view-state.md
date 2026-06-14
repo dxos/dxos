@@ -4,7 +4,7 @@
 
 **Goal:** Replace the in-memory-only `SelectionManager` with a generic, pluggable-backend `ViewState` mechanism (memory + localStorage now, ECHO/personal-space later), make selection one slice of it, and migrate the markdown editor's bespoke `EditorStateStore` onto it.
 
-**Architecture:** A `ViewStateManager` holds a set of declared *slices* (`defineViewState({ key, backend, schema, defaultValue })`) and routes each `(slice, contextId)` pair to a reactive `Atom.Writable<T>` produced by a named backend. The `memory` backend keeps atoms in a `Map`; the `local` backend seeds atoms from `localStorage`, persists on `set`, and reacts to cross-tab `storage` events. The contract permits asynchronous hydration so a future `personal` (ECHO) backend slots in without interface changes. Selection becomes a memory-backed slice plus pure helpers; thin `useSelection` / `useSelectionActions` hooks preserve today's ergonomics. The editor exemplar swaps `createEditorStateStore` for a `local`-backed slice adapter.
+**Architecture:** A `ViewStateManager` holds a set of declared _slices_ (`defineViewState({ key, backend, schema, defaultValue })`) and routes each `(slice, contextId)` pair to a reactive `Atom.Writable<T>` produced by a named backend. The `memory` backend keeps atoms in a `Map`; the `local` backend seeds atoms from `localStorage`, persists on `set`, and reacts to cross-tab `storage` events. The contract permits asynchronous hydration so a future `personal` (ECHO) backend slots in without interface changes. Selection becomes a memory-backed slice plus pure helpers; thin `useSelection` / `useSelectionActions` hooks preserve today's ergonomics. The editor exemplar swaps `createEditorStateStore` for a `local`-backed slice adapter.
 
 **Tech Stack:** TypeScript, Effect Schema, `@effect-atom/atom-react` (Atom/Registry), React, vitest, moon.
 
@@ -15,7 +15,7 @@
 - Work only in the assigned worktree: `/Users/burdon/Code/dxos/dxos/.claude/worktrees/wizardly-lehmann-7712e4`.
 - Package commands use moon. Build: `moon run react-ui-attention:build`. Test a single file: `moon run react-ui-attention:test -- src/view-state/view-state.test.ts`. Lint: `moon run react-ui-attention:lint -- --fix`.
 - Tests: vitest, `describe`/`test`, `test('…', ({ expect }) => …)`. Place tests next to the module as `module.test.ts`.
-- Single quotes, arrow functions, no default exports for new code, JSDoc with trailing periods, comments state the *why*.
+- Single quotes, arrow functions, no default exports for new code, JSDoc with trailing periods, comments state the _why_.
 - No `as`-casts to silence the checker (`as const` is fine). Fix types at the source.
 - After moving code, update every call site — no compatibility re-exports/shims.
 - Commit after each task with a conventional-commit message; co-author line:
@@ -37,6 +37,7 @@
 ### Task 1: Slice definition + types
 
 **Files:**
+
 - Create: `packages/ui/react-ui-attention/src/view-state/view-state.ts`
 - Test: `packages/ui/react-ui-attention/src/view-state/view-state.test.ts`
 
@@ -82,7 +83,9 @@ describe('ViewStateManager', () => {
   test('subscribe fires on change for that context', ({ expect }) => {
     const manager = make();
     let calls = 0;
-    const dispose = manager.subscribe(Counter, 'a', () => { calls++; });
+    const dispose = manager.subscribe(Counter, 'a', () => {
+      calls++;
+    });
     manager.set(Counter, 'a', { value: 1 });
     expect(calls).toBeGreaterThan(0);
     dispose();
@@ -256,6 +259,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 2: Local (localStorage) backend
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-attention/src/view-state/backends.ts`
 - Test: `packages/ui/react-ui-attention/src/view-state/backends.test.ts`
 
@@ -284,7 +288,9 @@ const Editor = defineViewState({
 const fakeStorage = (): Storage => {
   const map = new Map<string, string>();
   return {
-    get length() { return map.size; },
+    get length() {
+      return map.size;
+    },
     clear: () => map.clear(),
     getItem: (key) => (map.has(key) ? map.get(key)! : null),
     key: (index) => [...map.keys()][index] ?? null,
@@ -492,6 +498,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 3: Selection slice + pure helpers
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-attention/src/selection.ts`
 - Test: `packages/ui/react-ui-attention/src/selection.test.ts`
 
@@ -617,6 +624,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 4: ViewStateProvider + generic hooks + selection wrappers
 
 **Files:**
+
 - Create: `packages/ui/react-ui-attention/src/components/ViewStateProvider/ViewStateProvider.tsx`
 - Create: `packages/ui/react-ui-attention/src/components/ViewStateProvider/index.ts`
 - Delete: `packages/ui/react-ui-attention/src/components/SelectionProvider/` (whole dir)
@@ -640,7 +648,8 @@ import { createDefaultBackends } from '../../view-state';
 import { ViewStateManager } from '../../view-state';
 import { ViewStateProvider, useSelection, useSelectionActions } from './ViewStateProvider';
 
-const wrapper = (manager: ViewStateManager, registry: Registry.Registry) =>
+const wrapper =
+  (manager: ViewStateManager, registry: Registry.Registry) =>
   ({ children }: PropsWithChildren) => (
     <RegistryContext.Provider value={registry}>
       <ViewStateProvider manager={manager}>{children}</ViewStateProvider>
@@ -694,7 +703,13 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState
 
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { type SelectionMode, type SelectionResult, resolveSelection, selectionSlice, toggleSelection } from '../../selection';
+import {
+  type SelectionMode,
+  type SelectionResult,
+  resolveSelection,
+  selectionSlice,
+  toggleSelection,
+} from '../../selection';
 import { type SliceDef, ViewStateManager, createDefaultBackends } from '../../view-state';
 
 const VIEW_STATE_NAME = 'ViewState';
@@ -708,9 +723,15 @@ const [ViewStateContextProvider, useViewStateContext] = createContext<ViewStateC
 });
 
 /** Provides the per-context UI state manager. Replaces the former `SelectionProvider`. */
-export const ViewStateProvider = ({ children, manager: managerProp }: PropsWithChildren<{ manager?: ViewStateManager }>) => {
+export const ViewStateProvider = ({
+  children,
+  manager: managerProp,
+}: PropsWithChildren<{ manager?: ViewStateManager }>) => {
   const registry = useContext(RegistryContext);
-  const manager = useDefaultValue(managerProp, () => new ViewStateManager({ registry, backends: createDefaultBackends(registry) }));
+  const manager = useDefaultValue(
+    managerProp,
+    () => new ViewStateManager({ registry, backends: createDefaultBackends(registry) }),
+  );
   return <ViewStateContextProvider manager={manager}>{children}</ViewStateContextProvider>;
 };
 
@@ -782,6 +803,7 @@ export const useSelectionActions = (contextId?: string): UseSelectionActions => 
 - [ ] **Step 4: Add barrel + update exports + delete old dir**
 
 `components/ViewStateProvider/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -795,6 +817,7 @@ Edit `packages/ui/react-ui-attention/src/components/index.ts`: replace `export *
 Edit `packages/ui/react-ui-attention/src/index.ts`: add `export * from './view-state';` (selection/components already exported). Edit `src/types/index.ts`: add `export * from './view-state';` after the selection export (UI-free core belongs in the types entrypoint).
 
 Delete the directory:
+
 ```bash
 git rm -r packages/ui/react-ui-attention/src/components/SelectionProvider
 ```
@@ -824,6 +847,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 5: Migrate plugin-attention (provides the manager)
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-attention/src/AttentionPlugin.ts`
 - Modify: `packages/plugins/plugin-attention/src/types/capabilities.ts`
 - Modify: `packages/plugins/plugin-attention/src/capabilities/react-context.tsx`
@@ -835,6 +859,7 @@ import { type AttentionManager, type ViewStateManager } from '@dxos/react-ui-att
 // ...
 export const ViewState = Capability.make<ViewStateManager>(`${meta.id}.capability.view-state`);
 ```
+
 Remove the old `Selection` capability export.
 
 - [ ] **Step 2: Construct the manager.** In `AttentionPlugin.ts`:
@@ -875,21 +900,21 @@ These are mechanical hook swaps. Apply each exact change, then build each packag
 
 - [ ] **Step 1: Read-only `useSelected` → `useSelection`** (identical signature). In each file, change the import `useSelected` → `useSelection` and the call `useSelected(` → `useSelection(`:
 
-| File | Line |
-|------|------|
-| `packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx` | 13, 37 |
-| `packages/plugins/plugin-feed/src/containers/MagazineArticle/MagazineArticle.tsx` | 17, 37 |
-| `packages/plugins/plugin-feed/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx` | 16, 31 |
-| `packages/plugins/plugin-inbox/src/components/MessageStack/MessageStack.stories.tsx` | 20, 51 |
-| `packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx` | 14, 40 |
-| `packages/plugins/plugin-inbox/src/containers/DraftsArticle/DraftsArticle.tsx` | 13, 37 |
-| `packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx` | 17, 47 |
-| `packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx` | 10, 114 |
-| `packages/plugins/plugin-space/src/containers/ObjectCardStack/ObjectCardStack.tsx` | 10, 33 |
-| `packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx` | 16, 41 |
-| `packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.stories.tsx` | 21, 156 |
-| `packages/plugins/plugin-video/src/containers/VideoSection/VideoSection.tsx` | 8, 26 |
-| `packages/stories/stories-assistant/src/components/MessageModule.tsx` | 13, 23 |
+| File                                                                                        | Line    |
+| ------------------------------------------------------------------------------------------- | ------- |
+| `packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx`           | 13, 37  |
+| `packages/plugins/plugin-feed/src/containers/MagazineArticle/MagazineArticle.tsx`           | 17, 37  |
+| `packages/plugins/plugin-feed/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx` | 16, 31  |
+| `packages/plugins/plugin-inbox/src/components/MessageStack/MessageStack.stories.tsx`        | 20, 51  |
+| `packages/plugins/plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx`          | 14, 40  |
+| `packages/plugins/plugin-inbox/src/containers/DraftsArticle/DraftsArticle.tsx`              | 13, 37  |
+| `packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx`            | 17, 47  |
+| `packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx`                      | 10, 114 |
+| `packages/plugins/plugin-space/src/containers/ObjectCardStack/ObjectCardStack.tsx`          | 10, 33  |
+| `packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx`                   | 16, 41  |
+| `packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.stories.tsx`           | 21, 156 |
+| `packages/plugins/plugin-video/src/containers/VideoSection/VideoSection.tsx`                | 8, 26   |
+| `packages/stories/stories-assistant/src/components/MessageModule.tsx`                       | 13, 23  |
 
 For files importing `useArticleKeyboardNavigation` / `linkedSegment` alongside, keep those; only swap `useSelected`.
 
@@ -906,14 +931,16 @@ For files importing `useArticleKeyboardNavigation` / `linkedSegment` alongside, 
   - `packages/ui/react-ui-list/src/components/RowList/RowList.tsx:37,42`
   - `packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx:67`
   - `packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx:296`
-  Replace `useSelected` with `useSelection` in prose and `SelectionManager` with `ViewStateManager` where mentioned.
+    Replace `useSelected` with `useSelection` in prose and `SelectionManager` with `ViewStateManager` where mentioned.
 
 - [ ] **Step 4: Build affected packages.**
 
 Run:
+
 ```bash
 moon run plugin-commerce:build plugin-feed:build plugin-inbox:build plugin-map:build plugin-space:build plugin-video:build react-ui-table:build
 ```
+
 Expected: success for all.
 
 - [ ] **Step 5: Commit**
@@ -930,6 +957,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 7: Migrate plugin-trip + plugin-comments graph builders
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-trip/src/capabilities/app-graph-builder.ts`
 - Modify: `packages/plugins/plugin-comments/src/capabilities/app-graph-builder.ts`
 
@@ -950,7 +978,7 @@ const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { f
   return { from, to };
 };
 // in the module body:
-const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+const viewState = yield * Capability.get(AttentionCapabilities.ViewState);
 const selectedId = Atom.family((nodeId: string) =>
   Atom.make((get) => {
     const selection = get(viewState.atom(selectionSlice, nodeId));
@@ -958,6 +986,7 @@ const selectedId = Atom.family((nodeId: string) =>
   }),
 );
 ```
+
 Update the `resolvePlanningWindow(selectionManager, …)` call site to pass `viewState`.
 
 - [ ] **Step 2: plugin-comments.** Replace imports with `selectionSlice, type ViewStateManager` (drop `SelectionMode`/`defaultSelection` unless still referenced for `selectionMode` config — keep `SelectionMode` import if the `selectionMode` field type uses it). Change the `selectionManager: SelectionManager` field to `viewState: ViewStateManager`. Rewrite the reactive read (current lines 43–46):
@@ -966,10 +995,13 @@ Update the `resolvePlanningWindow(selectionManager, …)` call site to pass `vie
 const selection = get(viewState.atom(selectionSlice, objectId));
 const anchor = getAnchor(selection);
 ```
+
 And the imperative read (current line 118):
+
 ```ts
 const selection = viewState.get(selectionSlice, objectUri);
 ```
+
 Update the capability lookup (line 100) to `AttentionCapabilities.ViewState` and the params object key (`selectionManager` → `viewState`). The `selectionMode` config and `getAnchor` logic are unchanged; the slice default (`multi`) already stands in for the previous `defaultSelection(selectionMode)` fallback when a context is unwritten.
 
 - [ ] **Step 3: Build.**
@@ -991,6 +1023,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 8: Migrate plugin-markdown collaborative selection writer
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx`
 - Modify: `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`
 
@@ -1017,6 +1050,7 @@ const selectionChange = (viewState: ViewStateManager) => {
   });
 };
 ```
+
 Update the place that calls `selectionChange(selectionManager)` to pass the renamed `viewState` option (search within the file).
 
 - [ ] **Step 2: Update the prop plumbing.** In `MarkdownArticle.tsx`: rename the `selectionManager?: SelectionManager` prop to `viewState?: ViewStateManager` (import `ViewStateManager`), and update where it is sourced (it is read from the attention capability — change to `AttentionCapabilities.ViewState`) and passed into `useExtensions`. Grep the markdown plugin for the prop name to catch all hand-offs: `grep -rn "selectionManager" packages/plugins/plugin-markdown/src`.
@@ -1051,6 +1085,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 9: Editor selection-state schema + delete legacy store
 
 **Files:**
+
 - Modify: `packages/ui/ui-editor/src/extensions/selection.ts`
 - Test: `packages/ui/ui-editor/src/extensions/selection.test.ts` (create or extend)
 
@@ -1100,6 +1135,7 @@ export const EditorSelectionStateSchema = Schema.Struct({
   selection: Schema.optional(EditorSelectionSchema),
 }).pipe(Schema.mutable);
 ```
+
 Keep `EditorSelection`/`EditorSelectionState` types (or derive them with `Schema.Schema.Type`). Delete the `createEditorStateStore` function (current lines 45–56) and the now-unused `invariant` import if nothing else uses it. Keep `EditorStateStore`, `createEditorStateTransaction`, and `selectionState`.
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -1128,6 +1164,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ### Task 10: Back editor state with the ViewState local slice
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/capabilities/state.ts`
 - Create: `packages/plugins/plugin-markdown/src/capabilities/editor-view-state.ts` (the slice + adapter)
 
@@ -1166,9 +1203,10 @@ import { AttentionCapabilities } from '@dxos/plugin-attention/types';
 
 import { createEditorViewStateStore } from './editor-view-state';
 // ...
-const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+const viewState = yield * Capability.get(AttentionCapabilities.ViewState);
 const editorState = createEditorViewStateStore(viewState);
 ```
+
 Remove the `createEditorStateStore` import and the `// TODO(wittjosiah): Fold into state.` line. Keep the `Capability.contributes(MarkdownCapabilities.EditorState, editorState)` line unchanged.
 
 > Check that `plugin-markdown` already depends on `@dxos/plugin-attention` (it consumes the attention capability elsewhere). If not, add it: `pnpm add --filter @dxos/plugin-markdown --save-catalog @dxos/plugin-attention` — but as a workspace dep it must be `workspace:*` in package.json, not from the catalog. Verify the import path for `AttentionCapabilities` matches how other plugins import it (e.g. `#types` is internal to plugin-attention; external consumers import from the package entrypoint — confirm the exported path).
@@ -1200,6 +1238,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```bash
 grep -rnE "useSelected\b|useSelectionManager\b|SelectionManager\b|createEditorStateStore\b" packages --include="*.ts" --include="*.tsx" | grep -v node_modules
 ```
+
 Expected: no results in source (only possibly in this plan/spec docs). Fix any remaining references.
 
 - [ ] **Step 2: Cast audit.**
@@ -1207,6 +1246,7 @@ Expected: no results in source (only possibly in this plan/spec docs). Fix any r
 ```bash
 git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'
 ```
+
 Expected: only the two `SelectionResult<T>` casts inside `resolveSelection` (carried over from the original `getSelected`, justified by the `Match` return type not relating to `T`) and the backend `as Atom.Writable<T>` / `as unknown as ViewStateManager` context-default casts. Justify each with a comment or remove; do not add new unjustified casts.
 
 - [ ] **Step 3: Build everything.**
@@ -1214,6 +1254,7 @@ Expected: only the two `SelectionResult<T>` casts inside `resolveSelection` (car
 ```bash
 moon exec --on-failure continue --quiet :build
 ```
+
 Expected: no failures. Investigate and fix any.
 
 - [ ] **Step 4: Targeted tests.**
@@ -1221,6 +1262,7 @@ Expected: no failures. Investigate and fix any.
 ```bash
 moon run react-ui-attention:test ui-editor:test plugin-comments:test plugin-trip:test react-ui-table:test
 ```
+
 Expected: PASS.
 
 - [ ] **Step 5: Lint.**
@@ -1228,6 +1270,7 @@ Expected: PASS.
 ```bash
 moon run :lint -- --fix
 ```
+
 Expected: clean (or only auto-fixed formatting).
 
 - [ ] **Step 6: Manual smoke (storybook).** Reuse the user's storybook on :9009 (curl check first; never kill it). Verify: a list/table story selects rows (`react-ui-table` or an article story), and a markdown editor story restores scroll/caret on remount. If :9009 is busy, start on another port. Capture confirmation.

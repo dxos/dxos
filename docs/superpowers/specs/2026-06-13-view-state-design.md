@@ -14,7 +14,7 @@ Status: Approved (design)
    deck configuration, etc.
 
 Today these concerns are fragmented. Notably, the markdown editor already persists scroll +
-caret position through a *separate* mechanism (`EditorStateStore` /
+caret position through a _separate_ mechanism (`EditorStateStore` /
 `createEditorStateStore` in `packages/ui/ui-editor/src/extensions/selection.ts`), which is
 exactly the kind of per-context, device-local state this design should own. Selection itself
 is purely in-memory and unpersisted.
@@ -43,7 +43,8 @@ is purely in-memory and unpersisted.
   - `schema: Schema.Schema<T>` — Effect Schema; validates and (de)serializes persisted values.
   - `defaultValue: () => T`.
 - **Context** — a string id scoping the state (object URI, article id, document id) — the same
-  notion as today's `contextId`. Persisted storage key is `${slice.key}:${contextId}`.
+  notion as today's `contextId`. Persisted storage keys use the canonical `local`-backend form
+  `dxos:view-state:${slice.key}:${contextId}` (see the Backend contract below).
 
 ## Backend contract (reactive, async-tolerant)
 
@@ -76,7 +77,8 @@ Backends:
     scoping id (for the editor, the document id → `dxos:view-state:editor:<docId>`).
   - Value is `JSON.stringify(Schema.encodeSync(slice.schema)(value))`; decode validates on read
     and falls back to `defaultValue()` on miss/parse/validation failure.
-- **`personal`** *(future)* — atom backed by an ECHO query in the personal space; hydrates
+
+- **`personal`** _(future)_ — atom backed by an ECHO query in the personal space; hydrates
   asynchronously, updates from other devices. The contract already permits async hydration, so
   no interface change is required.
 
@@ -135,8 +137,8 @@ export const useSelectionActions = (contextId: string) => {
   const { update, clear } = useViewStateActions(Selection.slice, contextId);
   return {
     single: (id: string) => update((prev) => Selection.single(id)),
-    multi:  (ids: string[]) => update(() => ({ mode: 'multi', ids })),
-    range:  (from: string, to: string) => update(() => Selection.range(from, to)),
+    multi: (ids: string[]) => update(() => ({ mode: 'multi', ids })),
+    range: (from: string, to: string) => update(() => Selection.range(from, to)),
     toggle: (id: string) => update((prev) => Selection.toggle(prev, id)),
     clear,
   };

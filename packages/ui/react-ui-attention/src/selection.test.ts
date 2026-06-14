@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import { describe, test } from 'vitest';
 
-import { resolveSelection, selectionSlice, toggleSelection } from './selection';
+import { getSelectionSet, resolveSelection, selectionSlice, toggleSelection } from './selection';
+import { ViewStateManager, createDefaultBackends } from './view-state';
 
 describe('selection helpers', () => {
   test('selectionSlice declares a memory-backed slice', ({ expect }) => {
@@ -35,5 +37,31 @@ describe('selection helpers', () => {
     expect(toggleSelection({ mode: 'multi', ids: ['a', 'b'] }, 'b')).toEqual({ mode: 'multi', ids: ['a'] });
     // Tolerate a non-multi current value by starting fresh.
     expect(toggleSelection({ mode: 'single', id: 'x' }, 'b')).toEqual({ mode: 'multi', ids: ['b'] });
+  });
+});
+
+describe('getSelectionSet', () => {
+  const makeManager = () => {
+    const registry = Registry.make();
+    return new ViewStateManager({ registry, backends: createDefaultBackends(registry) });
+  };
+
+  test('unions multi-selected ids across every context', ({ expect }) => {
+    const manager = makeManager();
+    manager.set(selectionSlice, 'ctx-a', { mode: 'multi', ids: ['a1', 'a2'] });
+    manager.set(selectionSlice, 'ctx-b', { mode: 'multi', ids: ['a2', 'b1'] });
+    // Single-mode contexts contribute nothing to the set.
+    manager.set(selectionSlice, 'ctx-c', { mode: 'single', id: 'c1' });
+    expect(getSelectionSet(manager)).toEqual(new Set(['a1', 'a2', 'b1']));
+  });
+
+  test('seeds the set with the optional explicit contextId', ({ expect }) => {
+    const manager = makeManager();
+    manager.set(selectionSlice, 'ctx-a', { mode: 'multi', ids: ['a1'] });
+    expect(getSelectionSet(manager, 'explicit')).toEqual(new Set(['explicit', 'a1']));
+  });
+
+  test('returns an empty set when nothing is selected', ({ expect }) => {
+    expect(getSelectionSet(makeManager())).toEqual(new Set());
   });
 });

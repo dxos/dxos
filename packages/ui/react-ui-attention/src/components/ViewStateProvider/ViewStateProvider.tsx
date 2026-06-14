@@ -6,6 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { useDefaultValue } from '@dxos/react-hooks';
 
 import {
@@ -19,13 +20,12 @@ import { type SliceDef, ViewStateManager, createDefaultBackends } from '../../vi
 
 const VIEW_STATE_NAME = 'ViewState';
 
-type ViewStateContextValue = { manager: ViewStateManager };
+type ViewStateContextValue = { manager?: ViewStateManager };
 
 // Default value lets consumers render outside a provider (isolated stories/tests) without throwing;
 // `manager` reads as `undefined` and hooks fall back to slice defaults / no-op actions.
 const [ViewStateContextProvider, useViewStateContext] = createContext<ViewStateContextValue>(VIEW_STATE_NAME, {
-  // Cast supplies the context default; consumers guard on `manager` being undefined at runtime.
-  manager: undefined as unknown as ViewStateManager,
+  manager: undefined,
 });
 
 /** Provides the per-context UI state manager. Replaces the former `SelectionProvider`. */
@@ -41,8 +41,12 @@ export const ViewStateProvider = ({
   return <ViewStateContextProvider manager={manager}>{children}</ViewStateContextProvider>;
 };
 
-/** Access the underlying ViewStateManager from context. */
-export const useViewStateManager = (): ViewStateManager => useViewStateContext(VIEW_STATE_NAME).manager;
+/** Access the underlying ViewStateManager from context. Throws when used outside a `ViewStateProvider`. */
+export const useViewStateManager = (): ViewStateManager => {
+  const { manager } = useViewStateContext(VIEW_STATE_NAME);
+  invariant(manager, 'useViewStateManager() requires a ViewStateProvider ancestor.');
+  return manager;
+};
 
 /** Reactive read of a slice value for a context; yields the slice default when unset or unprovided. */
 export const useViewState = <T,>(slice: SliceDef<T>, contextId?: string): T => {
