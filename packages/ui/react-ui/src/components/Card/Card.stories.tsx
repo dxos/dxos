@@ -212,27 +212,3 @@ export const Slots: Story = {
     );
   },
 };
-
-export const Mock = () => (
-  <div className='grid grid-cols-[2rem_1fr_2rem] w-full dx-card-min-width dx-card-max-width border border-separator rounded-xs'>
-    <div className='grid grid-cols-subgrid col-span-full'>
-      <div className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
-        <Icon icon='ph--dots-six-vertical--regular' />
-      </div>
-      <div className='p-1 whitespace-normal break-words text-description items-center'>
-        This line is very very long and it should wrap.
-      </div>
-      <div className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
-        <Icon icon='ph--x--regular' />
-      </div>
-    </div>
-    <div className='grid grid-cols-subgrid col-span-3'>
-      <div className='grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center'>
-        <Icon icon='ph--dots-six-vertical--regular' />
-      </div>
-      <div className='p-1 text-description items-center col-span-2'>
-        This line is very very long and it should wrap.
-      </div>
-    </div>
-  </div>
-);

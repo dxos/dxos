@@ -17,8 +17,7 @@ export type CardStyleProps = {
 
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
-    'dx-card-surface',
+    'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
     border && 'border border-subdued-separator rounded-sm dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
@@ -33,7 +32,9 @@ const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
 
 const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
-const body: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__body contents pb-1 last:pb-0', ...etc);
+const body: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__body contents', ...etc);
+
+const block: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__block', ...etc);
 
 const text: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
@@ -47,7 +48,7 @@ const textSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', trun
   mx(variant === 'description' && 'text-sm text-description line-clamp-3', truncate && 'truncate', ...etc);
 
 const poster: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__poster col-span-3 max-h-[200px]', ...etc);
+  mx('dx-card__poster col-span-3 max-h-[200px] select-none pointer-events-none', ...etc);
 
 const posterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);
@@ -72,7 +73,7 @@ const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 
 const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
   mx(
-    'dx-card__row',
+    'dx-card__row overflow-hidden',
     fullWidth
       ? 'col-span-full'
       : // The `>*` selector reaches the real grid item when a content child is `display: contents`
@@ -95,6 +96,7 @@ export const cardTheme: Theme<CardStyleProps> = {
   header,
   title,
   body,
+  block,
   row,
   section,
   'section-title': sectionTitle,

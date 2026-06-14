@@ -132,7 +132,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(
           icon='ph--dots-six-vertical--regular'
           variant='ghost'
           label={label ?? t('toolbar-drag-handle.label')}
-          classNames='dx-focus-ring-none cursor-pointer'
+          classNames='dx-focus-ring-none cursor-pointer text-base-fg'
           disabled={!forwardedRef}
           ref={forwardedRef}
         />
@@ -233,9 +233,12 @@ type CardBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?
  * rail-item square so a passive `<Icon>` aligns with an `IconButton`. Defaults text color to
  * `subdued` so a decorative `<Icon>` child needs no styling; interactive children set their own.
  */
-const CardBlock = slottable<HTMLDivElement, CardBlockProps>(({ children, classNames, ...props }, forwardedRef) => {
+const CardBlock = composable<HTMLDivElement, CardBlockProps>(({ children, classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { className, ...rest } = composableProps(props);
+
   return (
-    <Column.Block {...props} classNames={['text-subdued', classNames]} ref={forwardedRef}>
+    <Column.Block {...rest} classNames={tx('card.block', {}, classNames)} ref={forwardedRef}>
       {children}
     </Column.Block>
   );
@@ -435,15 +438,21 @@ type CardPosterProps = ThemedClassName<
     Omit<ImageProps, 'src' | 'alt' | 'classNames'>
 >;
 
-function CardPoster({ classNames, alt, aspect: aspectProp, image, icon, ...imageProps }: CardPosterProps) {
+function CardPoster({
+  classNames,
+  alt,
+  aspect: aspectProp,
+  image,
+  icon,
+  fit = 'cover',
+  ...imageProps
+}: CardPosterProps) {
   const { tx } = useThemeContext();
   const aspect = aspectProp === 'auto' ? 'aspect-auto' : 'aspect-video';
 
   if (image) {
     return (
-      <div className='col-span-full'>
-        <Image classNames={[tx('card.poster', {}), aspect, classNames]} src={image} alt={alt} {...imageProps} />
-      </div>
+      <Image classNames={[tx('card.poster', {}), aspect, classNames]} src={image} alt={alt} fit={fit} {...imageProps} />
     );
   }
 
