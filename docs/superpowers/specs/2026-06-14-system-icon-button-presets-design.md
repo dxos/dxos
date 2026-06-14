@@ -9,7 +9,8 @@ call site:
   and commerce plugins.
 - **Expander open/close** — a caret that rotates 90° to signal disclosure, repeated across form and
   list components (already partly served by the generic `ToggleIconButton`).
-- **Add** (`ph--plus`) and **Delete** (`ph--x`) — conventional icon + label pairs.
+- **Add / Delete / Edit / Close** — conventional icon + label pairs (`ph--plus`, `ph--trash`,
+  `ph--pen`, `ph--x`) repeated across dozens of call sites.
 
 A `caretDown` boolean was recently added directly to `IconButton` to support the dropdown-trigger
 caret. That made the base component heavier without addressing the broader pattern. The base
@@ -33,13 +34,16 @@ The existing components are left untouched:
 
 In scope:
 
-- `SystemIconButton.Star` and `SystemIconButton.Expander`.
-- Migrate genuine `IconButton` / `ToggleIconButton` call sites to the presets.
-- A storybook for the new presets.
+- Stateful presets: `SystemIconButton.Star`, `SystemIconButton.Expander`.
+- Static presets: `SystemIconButton.Add`, `SystemIconButton.Delete`, `SystemIconButton.Edit`,
+  `SystemIconButton.Close`.
+- Migrate genuine `IconButton` / `ToggleIconButton` star/expander call sites to the presets.
+- A storybook covering all presets.
 
 Deferred (not this change):
 
-- `SystemIconButton.Add` / `SystemIconButton.Delete` presets.
+- Bulk migration of the ~40+ Add/Delete/Edit/Close call sites. The static presets ship with the
+  storybook; existing sites migrate incrementally afterwards.
 - The `rootProps as any` cast in `ToolbarMenu.tsx` (the union-typed props hack). Revisit after the
   presets land.
 
@@ -49,22 +53,35 @@ Deferred (not this change):
 
 ```ts
 export const SystemIconButton = {
+  // Stateful (wrap ToggleIconButton).
   Star,
   Expander,
+  // Static (wrap IconButton).
+  Add,
+  Delete,
+  Edit,
+  Close,
 };
 ```
 
-Each preset is a `forwardRef` component that wraps `ToggleIconButton`, presetting only the icon(s)
-and behaviour. All other props (`label`, `active`, `variant`, `density`, `iconOnly`, `size`,
-`onClick`, …) pass through.
+Each preset is a `forwardRef` component presetting only the icon(s) and behaviour. All other props
+(`label`, `variant`, `density`, `iconOnly`, `size`, `onClick`, …) pass through.
+
+**Stateful presets** wrap `ToggleIconButton`; prop types derive from `ToggleIconButtonProps` with
+`icon` (and `activeIcon` where fixed) omitted, so a preset cannot be handed a conflicting icon.
 
 - **`SystemIconButton.Star`** — `icon='ph--star--regular'`, `activeIcon='ph--star--fill'`. `active`
   means starred. `iconClassNames` remains overridable so a call site can tint the filled star.
 - **`SystemIconButton.Expander`** — `icon='ph--caret-right--regular'`, no `activeIcon` (so the base
   applies the 90° rotation). `active` means expanded/open.
 
-Prop types derive from `ToggleIconButtonProps` with `icon` (and `activeIcon` where fixed) omitted,
-so a preset cannot be handed a conflicting icon.
+**Static presets** wrap `IconButton`; prop types derive from `IconButtonProps` with `icon` omitted.
+They preset the icon only — `label` stays caller-supplied (it is context- and i18n-specific).
+
+- **`SystemIconButton.Add`** — `icon='ph--plus--regular'`.
+- **`SystemIconButton.Delete`** — `icon='ph--trash--regular'` (destructive delete).
+- **`SystemIconButton.Edit`** — `icon='ph--pen--regular'`.
+- **`SystemIconButton.Close`** — `icon='ph--x--regular'` (dismiss / close).
 
 ### Exports
 
@@ -73,9 +90,9 @@ Add `export * from './SystemIconButton';` to
 
 ### Storybook
 
-New `packages/ui/react-ui/src/components/Button/SystemIconButton.stories.tsx` demonstrating each
-preset in its inactive and active states across densities, mirroring the existing
-`IconButton.stories.tsx` layout.
+New `packages/ui/react-ui/src/components/Button/SystemIconButton.stories.tsx`, mirroring the existing
+`IconButton.stories.tsx` layout: stateful presets (`Star`, `Expander`) shown in inactive/active
+states; static presets (`Add`, `Delete`, `Edit`, `Close`) shown in a single row across densities.
 
 ## Migrations
 
