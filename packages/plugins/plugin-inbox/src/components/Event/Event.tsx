@@ -17,7 +17,7 @@ import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode } from '../ViewMode';
 import { EventBodyEditor } from './EventBodyEditor';
 import { EventDetails } from './EventDetails';
-import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useEventToolbarActions';
+import { type UseEventToolbarActionsProps, useEventToolbarActions } from './EventToolbar';
 
 //
 // Context
