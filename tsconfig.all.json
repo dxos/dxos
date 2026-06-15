@@ -214,9 +214,6 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-host-e2e/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"
     },
     {
@@ -590,9 +587,6 @@
     },
     {
       "path": "packages/sdk/client-services/tsconfig.json"
-    },
-    {
-      "path": "packages/sdk/client-services-e2e/tsconfig.json"
     },
     {
       "path": "packages/sdk/config/tsconfig.json"

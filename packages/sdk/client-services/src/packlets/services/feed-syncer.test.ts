@@ -9,7 +9,6 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { FeedSyncer } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
@@ -23,6 +22,8 @@ import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { bufferToArray } from '@dxos/util';
+
+import { FeedSyncer } from './feed-syncer';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 

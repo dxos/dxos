@@ -1,14 +1,19 @@
 //
+// Copyright 2025 example.com
+//
+
+//
 // Copyright 2025 DXOS.org
 //
 
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Order, Query, Ref } from '@dxos/echo';
-import { QueryPlanner } from '@dxos/echo-host';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
+
+import { QueryPlanner } from './query-planner';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();

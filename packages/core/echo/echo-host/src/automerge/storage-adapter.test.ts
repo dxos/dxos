@@ -5,10 +5,11 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
-import { LevelDBStorageAdapter } from '@dxos/echo-host';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
+
+import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 describe('LevelDBStorageAdapter', () => {
   const createAdapter = async (root?: string) => {

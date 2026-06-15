@@ -5,10 +5,11 @@
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Ref, Type } from '@dxos/echo';
-import { type MatchedDoc, filterMatchDoc } from '@dxos/echo-host';
 import { EntityStructure } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+
+import { type MatchedDoc, filterMatchDoc } from './filter-match';
 
 describe('filterMatch', () => {
   test('everything', () => {

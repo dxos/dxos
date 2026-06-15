@@ -4,9 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { MetadataStore } from '@dxos/echo-host';
 import { PublicKey } from '@dxos/keys';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
+
+import { MetadataStore } from './metadata-store';
 
 describe('MetadataStore', () => {
   describe('deleted spaces', () => {

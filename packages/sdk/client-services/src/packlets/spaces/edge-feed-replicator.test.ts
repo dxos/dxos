@@ -7,7 +7,6 @@ import { getPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { EdgeFeedReplicator } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { valueEncoding } from '@dxos/echo-host';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
@@ -21,6 +20,8 @@ import { createStorage } from '@dxos/random-access-storage';
 import { openAndClose } from '@dxos/test-utils';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
+
+import { EdgeFeedReplicator } from './edge-feed-replicator';
 
 describe('EdgeFeedReplicator', () => {
   test('requests metadata after connection is open', async () => {

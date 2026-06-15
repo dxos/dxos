@@ -5,7 +5,6 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Identity } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
 import {
@@ -29,6 +28,8 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
+
+import { Identity } from './identity';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });

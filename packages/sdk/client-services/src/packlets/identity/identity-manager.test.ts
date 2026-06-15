@@ -4,7 +4,6 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { IdentityManager } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { AuthStatus, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-host';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
@@ -14,6 +13,8 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
+
+import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {
   const setupPeer = async ({

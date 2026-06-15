@@ -9,7 +9,9 @@ import { asyncTimeout, latch } from '@dxos/async';
 import { schema } from '@dxos/protocols/proto';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { Muxer, type RpcPort } from '@dxos/teleport';
+
+import { Muxer } from './muxer';
+import { type RpcPort } from './rpc-port';
 
 const setupPeers = () => {
   const peer1 = new Muxer();

@@ -5,15 +5,15 @@
 import { cbor } from '@automerge/automerge-repo';
 import { describe, test } from 'vitest';
 
+import { ProfileArchiveEntryType } from '@dxos/protocols';
+
+import { decodeProfileArchive, encodeProfileArchive } from './profile-archive';
 import {
-  OPFS_SQLITE_DB_FILENAME,
   createSqliteProfileArchive,
-  decodeProfileArchive,
-  encodeProfileArchive,
   getSqliteProfileEntries,
   isValidSqliteDatabase,
-} from '@dxos/client-services';
-import { ProfileArchiveEntryType } from '@dxos/protocols';
+  OPFS_SQLITE_DB_FILENAME,
+} from './profile-archive-sqlite';
 
 const sqliteHeader = (): Uint8Array => {
   const bytes = new Uint8Array(16);

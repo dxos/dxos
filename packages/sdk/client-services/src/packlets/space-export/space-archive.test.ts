@@ -5,15 +5,6 @@
 import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import {
-  SpaceArchiveWriter,
-  buildDatabaseDirectoryFromObjects,
-  detectSpaceArchiveFormat,
-  extractSpaceArchive,
-  objectStructureToObjJson,
-  orderObjJsonFields,
-  readSerializedSpaceArchive,
-} from '@dxos/client-services';
 import { type SerializedSpace } from '@dxos/echo-client';
 import { EntityId, SpaceId, URI } from '@dxos/keys';
 import {
@@ -23,6 +14,12 @@ import {
   SpaceArchiveVersion,
 } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+
+import { detectSpaceArchiveFormat } from './archive-format';
+import { buildDatabaseDirectoryFromObjects, readSerializedSpaceArchive } from './serialized-space-reader';
+import { objectStructureToObjJson, orderObjJsonFields } from './serialized-space-writer';
+import { extractSpaceArchive } from './space-archive-reader';
+import { SpaceArchiveWriter } from './space-archive-writer';
 
 describe('SpaceArchive', () => {
   describe('SpaceArchiveWriter', () => {

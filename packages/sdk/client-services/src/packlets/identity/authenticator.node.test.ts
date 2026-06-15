@@ -5,12 +5,13 @@
 import { describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { TrustedKeySetAuthVerifier, createAuthProvider } from '@dxos/client-services';
 import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
+
+import { TrustedKeySetAuthVerifier, createAuthProvider } from './authenticator';
 
 describe('identity/authenticator', () => {
   test('verifies credentials', async () => {

@@ -17,10 +17,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/teleport": "workspace:*",
-    "randombytes": "catalog:"
-  },
-  "devDependencies": {
-    "@types/randombytes": "catalog:"
+    "@dxos/teleport": "workspace:*"
   }
 }

@@ -380,11 +380,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/echo-host-e2e/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/echo/echo-protocol/package.json",
           "jsonpath": "$.version"
         },
@@ -1011,11 +1006,6 @@
         {
           "type": "json",
           "path": "packages/sdk/client-services/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/sdk/client-services-e2e/package.json",
           "jsonpath": "$.version"
         },
         {
