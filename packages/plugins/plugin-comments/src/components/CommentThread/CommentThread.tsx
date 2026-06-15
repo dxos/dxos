@@ -31,21 +31,30 @@ export type CommentThreadProps = {
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 };
 
+// TODO(jdw): Factor out to @dxos/echo-react.
+// Returns undefined instead of throwing when the relation source is transiently
+// unavailable (e.g. during a batched delete before the query result updates).
+const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.SourceOf<T> | undefined => {
+  try {
+    return Relation.getSource(relation);
+  } catch {
+    return undefined;
+  }
+};
+
 type CommentThreadImplProps = CommentThreadProps & { thread: ThreadType.Thread };
 
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
  *
- * Wraps `CommentThreadImpl` with a guard that returns null while the anchor's
- * source thread is transiently unavailable — e.g. when a batched delete causes
- * proxy signals to fire before React has a chance to update the query results.
+ * Returns null while the anchor's source thread is transiently unavailable
+ * (e.g. when a batched delete fires proxy signals before React processes
+ * the updated query results).
  */
 export const CommentThread = (props: CommentThreadProps): ReactElement | null => {
-  let thread: ThreadType.Thread;
-  try {
-    thread = Relation.getSource(props.anchor) as ThreadType.Thread;
-  } catch {
+  const thread = useRelationSource(props.anchor) as ThreadType.Thread | undefined;
+  if (!thread) {
     return null;
   }
   return <CommentThreadImpl {...props} thread={thread} />;
