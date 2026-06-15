@@ -393,22 +393,38 @@ export default Capability.makeModule(
           // companion resolves a locally-created event too.
           const fromDb = eventId ? get(db.query(Query.select(Filter.id(eventId))).atom)[0] : undefined;
           const event = fromFeed ?? fromDb;
-          return Effect.succeed([
+          const nodes = [
             AppNode.makeCompanion({
               id: linkedSegment('event'),
               label: ['event.label', { ns: meta.id }],
               icon: 'ph--calendar-dot--regular',
               data: event ?? 'event',
             }),
-          ]);
+          ];
+          if (event) {
+            // Produce an event-specific hidden node so graph extensions can attach
+            // `whenEchoType(Event.Event)` actions (e.g. plugin-meeting's "Create meeting")
+            // regardless of whether the event has been navigated to.
+            nodes.push(
+              Node.make({
+                id: linkedSegment(event.id),
+                type: Type.getTypename(Event.Event),
+                data: event,
+                properties: {
+                  label: event.title ?? ['event.label', { ns: meta.id }],
+                  icon: 'ph--calendar-dot--regular',
+                  disposition: 'hidden',
+                },
+              }),
+            );
+          }
+          return Effect.succeed(nodes);
         },
       }),
 
-      // Event object node extension: resolves a hidden, URI-keyed node for a calendar event so that
-      // plugins (e.g. plugin-meeting's "Create meeting") can attach `whenEchoType(Event.Event)` actions
-      // to the Event article. The article's `attendableId` is the event's URI (`Obj.getURI(event)`), so
-      // the node is keyed by that URI directly. Events live in a calendar's feed (Google sync), with a
-      // space-db fallback for locally-created drafts — mirroring the `calendarEvent` companion connector.
+      // Resolves a URI-keyed event node for deep-link / bookmark paths that use the EID format
+      // (e.g. navigating directly to echo:<spaceId>/<eventId>). Events live in a calendar's feed
+      // (Google sync), with a space-db fallback for locally-created drafts.
       GraphBuilder.createExtension({
         id: 'eventObjectNode',
         match: () => Option.none(),

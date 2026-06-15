@@ -3,13 +3,15 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { Graph } from '@dxos/plugin-graph';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
+import { linkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
@@ -69,6 +71,24 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     [db, invokePromise],
   );
 
+  // nodeId always points to root/…/calendarId/~<eventId> — the event-specific node that
+  // plugin extensions (e.g. plugin-meeting) attach actions to.
+  // In companion mode attendableId is the calendar path; in primary mode it's already the event path.
+  const eventSegment = linkedSegment(event.id);
+  const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
+  const nodeId = isEventNode ? attendableId : attendableId ? `${attendableId}/${eventSegment}` : undefined;
+
+  useEffect(() => {
+    if (isEventNode || !nodeId) {
+      return;
+    }
+    // The event-specific node is produced by the `calendarEvent` connector which does not
+    // trigger automatic action expansion (unlike resolver-created nodes in primary mode).
+    // Explicitly expand here so extensions — e.g. plugin-meeting's "Create meeting" — attach
+    // to this node's toolbar for the one event whose companion is currently open.
+    void Graph.expand(graph, nodeId, 'action');
+  }, [graph, isEventNode, nodeId]);
+
   // Promote the event from a companion to the main view (mirrors MessageArticle).
   const handleOpen = useCallback(() => {
     if (!db) {
@@ -94,7 +114,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   }, [invokePromise, calendar, event, db]);
 
   return (
-    <Event.Root event={event} attendableId={attendableId}>
+    <Event.Root event={event} attendableId={attendableId} nodeId={nodeId}>
       <ObjectArticle
         role={role}
         toolbar={

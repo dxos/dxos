@@ -121,9 +121,22 @@ export default Capability.makeModule(() =>
             AppSurface.object(AppSurface.Section, Event.Event),
             AppSurface.companion(AppSurface.Section, Calendar.Calendar),
           ),
+          // Primary mode (navigated directly — no companion; calendar looked up from parent node).
+          AppSurface.object(AppSurface.Article, Event.Event),
+          AppSurface.object(AppSurface.Section, Event.Event),
         ),
         component: ({ data, role }) => {
-          if (!data?.subject || !data?.companionTo) {
+          const { graph } = useAppGraph();
+          // In companion mode attendableId is the calendar node itself; in primary mode
+          // (navigated directly) attendableId is the event node and its parent is the calendar.
+          const atNode = useNode(graph, data.attendableId);
+          const parentNode = useNode(graph, getParentId(data.attendableId));
+          const calendar = Calendar.instanceOf(atNode?.data)
+            ? atNode.data
+            : Calendar.instanceOf(parentNode?.data)
+              ? parentNode.data
+              : undefined;
+          if (!calendar) {
             return null;
           }
           return (
@@ -131,7 +144,7 @@ export default Capability.makeModule(() =>
               role={role}
               subject={data.subject}
               attendableId={data.attendableId}
-              companionTo={data.companionTo}
+              companionTo={calendar}
             />
           );
         },

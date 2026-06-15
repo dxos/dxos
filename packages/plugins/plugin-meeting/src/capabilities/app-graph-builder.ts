@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -203,12 +203,19 @@ export default Capability.makeModule(
           // an `AsyncFiberException`. Reading the atom also makes the action reactive to new meetings.
           const meetings = get(db.query(Query.select(Filter.type(Meeting.Meeting))).atom);
           const meeting = Meeting.findMeetingForEvent(meetings, event);
+
+          // graph action data Effects run outside the Effect runtime that provides Operation.Service,
+          // so Operation.invoke (which reads that service from context) is unavailable. Capture the
+          // OperationInvoker capability here and call invoker.invoke() directly in each action — its
+          // implementation provides all necessary services without requiring them from the caller's context.
+          const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+
           if (meeting) {
             return [
               {
                 id: 'action.openMeetingForEvent',
                 data: Effect.fnUntraced(function* () {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(meeting)] });
+                  yield* invoker.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(meeting)] });
                 }),
                 properties: {
                   label: ['open-meeting-for-event.label', { ns: meta.id }],
@@ -223,7 +230,7 @@ export default Capability.makeModule(
             {
               id: 'action.createMeetingForEvent',
               data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
+                yield* invoker.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
               }),
               properties: {
                 label: ['create-meeting-for-event.label', { ns: meta.id }],
