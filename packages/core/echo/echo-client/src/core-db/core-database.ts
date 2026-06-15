@@ -35,7 +35,7 @@ import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
+import { chunkArray, deepMapValues } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
