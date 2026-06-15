@@ -16,6 +16,8 @@ import { Event as EventType } from '@dxos/types';
 import { Event, type EventHeaderProps, ObjectArticle, useTargetIntegration } from '#components';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
+import { getCalendarEventPath } from '../../paths';
+
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);
 
@@ -69,8 +71,11 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   // Promote the event from a companion to the main view (mirrors MessageArticle).
   const handleOpen = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(event)] });
-  }, [invokePromise, event]);
+    if (!db) {
+      return;
+    }
+    void invokePromise(LayoutOperation.Open, { subject: [getCalendarEventPath(db.spaceId, calendar.id, event.id)] });
+  }, [invokePromise, db, calendar, event.id]);
 
   // Push this draft event to Google Calendar.
   // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
