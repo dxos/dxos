@@ -267,4 +267,13 @@ export class CallManager extends Resource {
       media: this._mediaManager._getState(),
     });
   }
+
+  /**
+   * Seeds runtime call/media state directly, bypassing the swarm and media managers.
+   * The participant list and pulled tracks normally originate from live network peers, which have no
+   * source in stories and tests; this seam lets a harness present a deterministic call without a swarm.
+   */
+  _setState(state: GlobalState): void {
+    this._registry.set(this._stateAtom, state);
+  }
 }
