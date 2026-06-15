@@ -6,11 +6,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Entity, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-
-import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;

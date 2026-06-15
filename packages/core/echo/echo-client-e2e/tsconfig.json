@@ -1,0 +1,36 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../mesh/teleport"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-client"
+    },
+    {
+      "path": "../echo-host"
+    }
+  ]
+}
