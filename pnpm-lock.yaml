@@ -5706,6 +5706,51 @@ importers:
         specifier: workspace:*
         version: link:../../../common/test-utils
 
+  packages/core/echo/echo-client-e2e:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../echo-client
+      '@dxos/echo-host':
+        specifier: workspace:*
+        version: link:../echo-host
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../../mesh/teleport
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':
@@ -6483,6 +6528,24 @@ importers:
       varint:
         specifier: 'catalog:'
         version: 6.0.0
+
+  packages/core/mesh/teleport-e2e:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../rpc
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../teleport
 
   packages/core/mesh/teleport-extension-automerge-replicator:
     dependencies:
@@ -8661,6 +8724,9 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -16603,18 +16669,78 @@ importers:
         specifier: 'catalog:'
         version: 4.4.0
     devDependencies:
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../common/test-utils
       '@types/lodash.isequalwith':
         specifier: 'catalog:'
         version: 4.4.7
-      fast-check:
-        specifier: 'catalog:'
-        version: 3.23.2
       typedoc:
         specifier: 'catalog:'
         version: 0.28.1(typescript@6.0.3)
+
+  packages/sdk/client-e2e:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../client-services
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../core/halo/credentials
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
+      '@dxos/echo-host':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-host
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../common/random-access-storage
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      fast-deep-equal:
+        specifier: 'catalog:'
+        version: 3.1.3
 
   packages/sdk/client-protocol:
     dependencies:

@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   Focus,
@@ -15,7 +15,10 @@ import {
 } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
+import { meta } from '#meta';
+
 import { EventDetails } from '../Event';
+import { Tile } from '../Tile';
 
 export type EventStackAction =
   | { type: 'current'; eventId: string }
@@ -108,8 +111,6 @@ EventStack.displayName = 'EventStack';
 // EventTile
 //
 
-const TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator';
-
 type EventTileData = {
   event: Event.Event;
   starred?: boolean;
@@ -120,6 +121,7 @@ type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' |
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
   const { event, starred, onAction } = data;
+  const { t } = useTranslation(meta.id);
   const { setCurrentId, setSelected } = useMosaicContainer('EventTile');
 
   // Click / Enter commit both current and selection. Arrow keys only move focus.
@@ -131,21 +133,23 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
   const handleToggleStar = useCallback(() => onAction?.({ type: 'star', eventId: event.id }), [onAction, event.id]);
 
   return (
-    <Mosaic.Tile asChild classNames={TILE_CLASSNAMES} id={event.id} data={data} location={location}>
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Body>
-            <EventDetails
-              event={event}
-              title='text'
-              maxAttendees={8}
-              starred={starred}
-              onToggleStar={onAction ? handleToggleStar : undefined}
-            />
-          </Card.Body>
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+    <Tile.Root
+      ref={forwardedRef}
+      id={event.id}
+      data={data}
+      location={location}
+      current={current}
+      onCurrentChange={handleCurrentChange}
+    >
+      <Tile.Header
+        starred={starred}
+        onToggleStar={onAction ? handleToggleStar : undefined}
+        title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
+      />
+      <Card.Body>
+        <EventDetails event={event} title={false} maxAttendees={8} />
+      </Card.Body>
+    </Tile.Root>
   );
 });
 
