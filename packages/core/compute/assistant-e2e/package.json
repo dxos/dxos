@@ -12,17 +12,6 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/default/index.mjs"
-    }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -41,8 +30,5 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {},
-  "publishConfig": {
-    "access": "public"
-  },
   "beast": {}
 }

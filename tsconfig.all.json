@@ -205,6 +205,9 @@
       "path": "packages/core/echo/echo-client/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-client-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-generator/tsconfig.json"
     },
     {

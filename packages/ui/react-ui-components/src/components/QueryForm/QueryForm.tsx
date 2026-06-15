@@ -39,15 +39,9 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
     ({ type, tag }: { type: URI.URI | null; tag: string | null }) => {
       const typeFilter = type ? Filter.type(type) : null;
       const tagFilter = tag ? Filter.tag(tag) : null;
-      const query =
-        typeFilter && tagFilter
-          ? Query.select(typeFilter).select(tagFilter)
-          : typeFilter
-            ? Query.select(typeFilter)
-            : tagFilter
-              ? Query.select(tagFilter)
-              : Query.select(Filter.nothing());
-      onChange?.(query);
+      const combined =
+        typeFilter && tagFilter ? Filter.and(typeFilter, tagFilter) : (typeFilter ?? tagFilter ?? Filter.nothing());
+      onChange?.(Query.select(combined));
     },
     [onChange],
   );

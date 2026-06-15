@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-
-import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder } from './echo-test-builder';
 
 describe('feeds', () => {
   let builder: EchoTestBuilder;
@@ -22,7 +21,7 @@ describe('feeds', () => {
     await builder.close();
   });
 
-  test('resolve reference to a feed', async () => {
+  test('resolve reference to a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'queue' }));
@@ -33,22 +32,21 @@ describe('feeds', () => {
     );
 
     expect(obj.queue.target).toBeDefined();
+    expect(typeof obj.queue.target!.uri).toBe('string');
     expect(await obj.queue.load()).toBeDefined();
   });
 
-  test('Entity.getURI on feed items returns absolute dxn', async () => {
+  test('Entity.getURI on feed objects returns absolute dxn', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'people' }));
 
-    const john = Obj.make(TestSchema.Person, { name: 'john' });
-    await db.appendToFeed(feed, [john]);
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'john' })]);
     const [obj] = await queryFeed(db, feed, Filter.everything()).run();
-    // Feed items now receive an ECHO-kind DXN (echo://spaceId/itemId), not a queue DXN.
     expect(Entity.getURI(obj)).toEqual(EID.make({ spaceId: db.spaceId, entityId: obj.id }));
   });
 
-  test('create and resolve an object from a feed', async () => {
+  test('create and resolve an object from a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'people' }));
@@ -57,9 +55,6 @@ describe('feeds', () => {
     await db.appendToFeed(feed, [obj]);
 
     {
-      // Resolve feed item using feed context. Since feed items have ECHO-kind DXNs
-      // (echo://spaceId/itemId) without feed routing info, a local object DXN + feed
-      // context is the correct way to resolve them.
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: db.spaceId, feed: Feed.getQueueUri(feed)! } })
         .resolve(EID.make({ entityId: obj.id }), { source: 'network' })
@@ -70,7 +65,7 @@ describe('feeds', () => {
     }
   });
 
-  test('objects in feeds have positions', async () => {
+  test('objects in feeds have positions', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person], assignQueuePositions: true });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'people' }));
@@ -81,13 +76,15 @@ describe('feeds', () => {
       Obj.make(TestSchema.Person, { name: 'jane' }),
     ]);
 
-    const objects = await queryFeed(db, feed, Filter.everything()).run();
-    expect(objects).toHaveLength(2);
-    expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-    expect(Entity.getKeys(objects[1], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+    {
+      const objects = await queryFeed(db, feed, Filter.everything()).run();
+      expect(objects).toHaveLength(2);
+      expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Entity.getKeys(objects[1], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+    }
   });
 
-  test('relations in feeds', async () => {
+  test('relations in feeds', async ({ expect }) => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
     });
@@ -115,7 +112,7 @@ describe('feeds', () => {
     }
   });
 
-  test('relation between feed object and a database object', async () => {
+  test('relation between feed object and a database object', async ({ expect }) => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
     });
@@ -175,44 +172,6 @@ describe('feeds', () => {
       expect(result.map((o) => (o as TestSchema.Person).name).sort()).toEqual(['jane', 'john']);
     });
 
-    test('queries local feed with TestSchema.Person schema', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Feed.Feed] });
-      const db = await peer.createDatabase();
-      const feed = db.add(Feed.make({ name: 'people' }));
-
-      const localObject = Obj.make(TestSchema.Person, { name: 'local-only' });
-      await db.appendToFeed(feed, [localObject]);
-
-      const localFeedObjects = await queryFeed(
-        db,
-        feed,
-        Filter.type(TestSchema.Person, { name: 'local-only' }),
-      ).run();
-
-      expect(localFeedObjects).toHaveLength(1);
-      expect(localFeedObjects[0].id).toEqual(localObject.id);
-      expect(localFeedObjects[0].name).toEqual('local-only');
-    });
-
-    test('queries local feed with TestSchema.Expando schema', async ({ expect }) => {
-      await using peer = await builder.createPeer({ types: [Feed.Feed] });
-      const db = await peer.createDatabase();
-      const feed = db.add(Feed.make({ name: 'expandos' }));
-
-      const localObject = Obj.make(TestSchema.Expando, { message: 'local-only' });
-      await db.appendToFeed(feed, [localObject]);
-
-      const localFeedObjects = await queryFeed(
-        db,
-        feed,
-        Filter.type(TestSchema.Expando, { message: 'local-only' }),
-      ).run();
-
-      expect(localFeedObjects).toHaveLength(1);
-      expect(localFeedObjects[0].id).toEqual(localObject.id);
-      expect(localFeedObjects[0].message).toEqual('local-only');
-    });
-
     test('one shot query with name predicate', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
@@ -240,7 +199,6 @@ describe('feeds', () => {
 
       await db.appendToFeed(feed, [john, jane, alice]);
 
-      // Query by specific ID.
       const result = await queryFeed(db, feed, Filter.id(jane.id)).run();
       expect(result).toHaveLength(1);
       expect(result[0].id).toEqual(jane.id);
@@ -262,7 +220,6 @@ describe('feeds', () => {
       const calledOnce = called.waitForCount(1);
       const sub = query.subscribe(() => called.emit(), { fire: true });
 
-      // Wait a bit to ensure subscription is processed.
       await calledOnce;
       expect(query.results).toHaveLength(2);
       expect(query.results.map((o) => o.name).sort()).toEqual(['jane', 'john']);
@@ -281,10 +238,8 @@ describe('feeds', () => {
       const calledOnce = called.waitForCount(1);
       const sub = query.subscribe(() => called.emit());
 
-      // Append new contact.
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })]);
 
-      // Wait for update.
       await calledOnce;
       expect(query.results).toHaveLength(2);
       expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);

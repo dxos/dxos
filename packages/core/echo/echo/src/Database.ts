@@ -264,7 +264,7 @@ export const resolve: {
             space: db.spaceId,
           },
         })
-        .resolve(dxn),
+        .resolveLegacy(dxn),
     );
 
     if (!object) {

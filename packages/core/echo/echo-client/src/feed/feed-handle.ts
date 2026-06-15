@@ -126,7 +126,7 @@ export class FeedHandle {
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
-  private _querying = false;
+  private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
   // serialized query against this feed.
@@ -302,20 +302,20 @@ export class FeedHandle {
     return this._objects;
   }
 
+  getCachedObjectById(id: EntityId): Entity.Unknown | undefined {
+    return this._objectCache.get(id);
+  }
+
   /**
    * Resolves feed items by id. Used by reference resolution.
    */
   async getObjectsById(ids: EntityId[]): Promise<(Entity.Unknown | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
-      if (!this._querying) {
-        try {
-          this._querying = true;
-          await this._loadObjects();
-        } finally {
-          this._querying = false;
-        }
-      }
+      this._loadObjectsPromise ??= this._loadObjects().finally(() => {
+        this._loadObjectsPromise = undefined;
+      });
+      await this._loadObjectsPromise;
     }
 
     return ids.map((id) => this._objectCache.get(id));
