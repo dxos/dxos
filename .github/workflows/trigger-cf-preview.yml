@@ -10,12 +10,47 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Wait for testbench CF Pages build
+      - name: Set NODE_VERSION=24.11.1 on all 4 failing CF Pages projects
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          DEPLOY_ID="b78a1d8a"
+          for project in testbench todomvc tasks devtools; do
+            echo "=== Setting NODE_VERSION on $project ==="
+            response=$(curl -s -X PATCH \
+              "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/$project" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "deployment_configs": {
+                  "preview": {"env_vars": {"NODE_VERSION": {"value": "24.11.1"}}},
+                  "production": {"env_vars": {"NODE_VERSION": {"value": "24.11.1"}}}
+                }
+              }')
+            echo "$response" | jq '{project: .result.name, success: .success, errors: .errors}'
+          done
+
+      - name: Trigger new testbench CF Pages build
+        id: trigger
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          response=$(curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench/deployments" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"branch": "claude/clever-haslett-bb86ef"}')
+          echo "$response" | jq '{success: .success, url: .result.url, id: .result.id}'
+          DEPLOY_ID=$(echo "$response" | jq -r '.result.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+
+      - name: Poll testbench CF Pages build
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          DEPLOY_ID: ${{ steps.trigger.outputs.deploy_id }}
+        run: |
           echo "Polling deployment $DEPLOY_ID..."
           for i in $(seq 1 40); do
             response=$(curl -s \
@@ -30,14 +65,14 @@ jobs:
               exit 0
             fi
             if [ "$status" = "failure" ]; then
-              echo "=== Fetching ALL build logs ==="
+              echo "=== Build logs (last 60 lines) ==="
               curl -s \
                 "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench/deployments/${DEPLOY_ID}/history/logs" \
                 -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-                | jq -r '.result.data[].line' 2>/dev/null | head -100 || echo "No structured logs"
+                | jq -r '.result.data[].line' 2>/dev/null | grep -E "node|Node|pnpm|rolldown|binding|Error|error|skip|Skip" | head -40
               exit 1
             fi
             sleep 15
           done
-          echo "Timed out waiting for build"
+          echo "Timed out"
           exit 1
