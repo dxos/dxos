@@ -192,7 +192,8 @@ const finalizeRedirect = Effect.fnUntraced(function* (
         .invoke(LayoutOperation.AddToast, {
           id: 'oauth-recovery-no-email',
           title: 'Email address required',
-          description: 'Could not read your email from your Bluesky account. Please add an email to your Bluesky profile and try again.',
+          description:
+            'Could not read your email from your Bluesky account. Please add an email to your Bluesky profile and try again.',
           icon: 'ph--warning-circle--regular',
           duration: 15_000,
         })
