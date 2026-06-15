@@ -256,8 +256,7 @@ export const MeetingAction: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('debug', undefined, { timeout: 10_000 });
-    // A meeting exists, so the toolbar shows "Open meeting" (not "Create meeting").
+    // A meeting exists, so the contributed toolbar action reads "Open meeting" (not "Create meeting").
     await expect(await canvas.findByRole('button', { name: 'Open meeting' }, { timeout: 10_000 })).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'Create meeting' })).toBeNull();
   },
@@ -272,7 +271,7 @@ export const CreateMeetingAction: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('debug', undefined, { timeout: 10_000 });
+    // No meeting yet → the contributed toolbar action reads "Create meeting".
     await expect(
       await canvas.findByRole('button', { name: 'Create meeting' }, { timeout: 10_000 }),
     ).toBeInTheDocument();

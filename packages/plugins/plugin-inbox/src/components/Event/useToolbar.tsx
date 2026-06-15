@@ -55,12 +55,12 @@ export const useEventToolbarActions = ({
         .subgraph(
           viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
         )
+        // Actions other plugins contribute onto the event node (e.g. plugin-meeting's create/open meeting),
+        // surfaced as top-level toolbar buttons (`disposition: 'toolbar'`).
+        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }))
         .separator()
-        .menu('more', (group) => [
-          // Actions other plugins contribute onto the event node (e.g. plugin-meeting's create/open meeting).
-          graphActions(graph, get, nodeId, { filter: isToolbarAction }),
-          // TODO(burdon): Clean-up common actions?
-          onSave &&
+        .menu('more', (group) => {
+          if (onSave) {
             group.action(
               'save',
               {
@@ -69,14 +69,12 @@ export const useEventToolbarActions = ({
                 disabled: saveDisabled,
               },
               onSave,
-            ),
-          onDelete &&
-            deleteAction(group, {
-              ns: meta.id,
-              labelKey: 'event-toolbar-delete.menu',
-              onDelete,
-            }),
-        ])
+            );
+          }
+          if (onDelete) {
+            deleteAction(group, { ns: meta.id, labelKey: 'event-toolbar-delete.menu', onDelete });
+          }
+        })
         .build(),
     [graph, nodeId, viewMode, setViewMode, onOpen, onSave, saveDisabled, onDelete, editing],
   );

@@ -8,11 +8,8 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Call, CallsCapabilities } from '@dxos/plugin-calls/types';
-import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Text } from '@dxos/schema';
-import { Transcript } from '@dxos/types';
 
 import { meta } from '#meta';
 import { type Meeting, MeetingOperation } from '#types';
@@ -44,11 +41,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
     (provider) => provider.kind === Call.CLOUDFLARE_TRANSPORT_KIND,
   );
 
-  // Resolve refs reactively so tabs populate once targets load (a bare `.target` read can be stale).
-  const [notes] = useObject<Text.Text>(meeting.notes);
-  const [transcript] = useObject<Transcript.Transcript>(meeting.transcript);
-  const [summary] = useObject<Text.Text>(meeting.summary);
-  const [call] = useObject<Call.Call>(meeting.call);
+  // Read the reactive ref targets directly: these are handed to child surfaces (e.g. MarkdownArticle)
+  // which call `useObject` themselves, so they must receive the live object, not a `useObject` snapshot.
+  const notes = meeting.notes?.target;
+  const transcript = meeting.transcript?.target;
+  const summary = meeting.summary?.target;
+  const call = meeting.call?.target;
 
   const hasSummary = !!summary && summary.content.length > 0;
 
