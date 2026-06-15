@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Obj, Registry, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Registry, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
@@ -111,8 +111,6 @@ describe('Registry', () => {
 
     // Exact DXN lookup via getByURI.
     expect(registry.getByURI(`dxn:${typename}:${version}`)).toBe(schema);
-    // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
-    expect(registry.getByURI(`dxn:type:${typename}:${version}`)).toBe(schema);
     // Short-form (without dxn: prefix) is not a valid DXN and does not resolve.
     expect(registry.getByURI(`${typename}:${version}`)).toBeUndefined();
     // Missing DXN.
@@ -158,6 +156,42 @@ describe('Registry', () => {
     // Both regular objects and type entities appear in list().
     expect(registry.list()).toHaveLength(2);
     expect(registry.list().filter(Type.isType)).toHaveLength(1);
+  });
+
+  test('query by type returns matching entities', ({ expect }) => {
+    const registry = makeRegistry();
+    const a = makeObj({ key: 'org.example.type.a', version: '1.0.0', value: 1 });
+    const b = Obj.make(TestSchema.Expando, { value: 2 });
+    registry.add([a, b, Type.Type]);
+
+    // Filter by Expando type — matches a and b but not the Type entity.
+    const expandoResults = registry.query(Filter.type(TestSchema.Expando)).results;
+    expect(expandoResults).toHaveLength(2);
+    expect(expandoResults.map((o) => (o as any).value).sort()).toEqual([1, 2]);
+
+    // Filter by Type.Type — matches only the type entity.
+    const typeResults = registry.query(Filter.type(Type.Type)).results;
+    expect(typeResults).toHaveLength(1);
+  });
+
+  test('query with metaKey filter returns matching entities', ({ expect }) => {
+    const registry = makeRegistry();
+    const a = makeObj({ key: 'org.example.fn.translate', version: '1.0.0', value: 10 });
+    const b = makeObj({ key: 'org.example.fn.summarize', version: '2.0.0', value: 20 });
+    const c = makeObj({ value: 30 });
+    registry.add([a, b, c]);
+
+    const q = registry.query(Query.select(Filter.key('org.example.fn.translate')));
+    expect(q.results).toHaveLength(1);
+    expect((q.results[0] as any).value).toBe(10);
+  });
+
+  test('query with limit respects count', ({ expect }) => {
+    const registry = makeRegistry();
+    registry.add([makeObj({ value: 1 }), makeObj({ value: 2 }), makeObj({ value: 3 })]);
+
+    const results = registry.query(Query.select(Filter.type(TestSchema.Expando)).limit(2)).results;
+    expect(results).toHaveLength(2);
   });
 
   test('changed fires on add/remove/clear', ({ expect }) => {

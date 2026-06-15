@@ -239,7 +239,9 @@ export const makeFromDatabase = async ({
     jsonSchema,
     view: await makeWithReferences({
       ...props,
-      query: Query.select(Filter.typename(typename)),
+      // Objects created from DB type entities are stamped with the entity's echo:/@:<id>
+      // URI, not the typename DXN; Filter.type matches that URI whereas Filter.typename misses it.
+      query: Query.select(Filter.type(type)),
       jsonSchema,
       type,
       registry: db.graph.registry,

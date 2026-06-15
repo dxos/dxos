@@ -38,17 +38,10 @@ describe('EID.isEID', () => {
     expect(EID.isEID(`echo://${SPACE}`)).toBe(true);
   });
 
-  test('accepts legacy dxn:echo: format', ({ expect }) => {
-    expect(EID.isEID(`dxn:echo:@:${OBJECT}`)).toBe(true);
-    expect(EID.isEID(`dxn:echo:${SPACE}:${OBJECT}`)).toBe(true);
-  });
-
-  test('accepts legacy dxn:queue: format', ({ expect }) => {
-    expect(EID.isEID(`dxn:queue:data:${SPACE}:${OBJECT}`)).toBe(true);
-  });
-
   test('rejects non-echo strings', ({ expect }) => {
     expect(EID.isEID('dxn:org.dxos.type.calendar')).toBe(false);
+    expect(EID.isEID(`dxn:echo:@:${OBJECT}`)).toBe(false);
+    expect(EID.isEID(`dxn:queue:data:${SPACE}:${OBJECT}`)).toBe(false);
     expect(EID.isEID('https://example.com')).toBe(false);
     expect(EID.isEID('')).toBe(false);
     expect(EID.isEID(42)).toBe(false);
@@ -56,29 +49,15 @@ describe('EID.isEID', () => {
 });
 
 describe('EID.parse', () => {
-  test('passes through new format unchanged', ({ expect }) => {
+  test('passes through canonical format unchanged', ({ expect }) => {
     const id = `echo://${SPACE}/${OBJECT}`;
     expect(EID.parse(id)).toBe(id);
   });
 
-  test('normalizes legacy dxn:echo:@:<id> to echo:/<id>', ({ expect }) => {
-    expect(EID.parse(`dxn:echo:@:${OBJECT}`)).toBe(`echo:/${OBJECT}`);
-  });
-
-  test('normalizes legacy dxn:echo:<space>:<obj> to echo://<space>/<obj>', ({ expect }) => {
-    expect(EID.parse(`dxn:echo:${SPACE}:${OBJECT}`)).toBe(`echo://${SPACE}/${OBJECT}`);
-  });
-
-  test('normalizes legacy dxn:queue:<sub>:<space>:<queue> to echo://<space>/<queue>', ({ expect }) => {
-    expect(EID.parse(`dxn:queue:data:${SPACE}:${OBJECT}`)).toBe(`echo://${SPACE}/${OBJECT}`);
-  });
-
-  test('normalizes legacy dxn:queue:<sub>:<space>:<queue>:<item> to echo://<space>/<item>', ({ expect }) => {
-    expect(EID.parse(`dxn:queue:data:${SPACE}:${OBJECT}:${OBJECT2}`)).toBe(`echo://${SPACE}/${OBJECT2}`);
-  });
-
   test('throws on invalid input', ({ expect }) => {
     expect(() => EID.parse('dxn:org.dxos.type.calendar')).toThrow();
+    expect(() => EID.parse(`dxn:echo:@:${OBJECT}`)).toThrow();
+    expect(() => EID.parse(`dxn:queue:data:${SPACE}:${OBJECT}`)).toThrow();
     expect(() => EID.parse('not-a-uri')).toThrow();
     expect(() => EID.parse('echo:')).toThrow();
     expect(() => EID.parse('echo://')).toThrow();
@@ -132,10 +111,6 @@ describe('EID.isLocal', () => {
     expect(EID.isLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(false);
     expect(EID.isLocal(EID.make({ spaceId: SPACE }))).toBe(false);
   });
-
-  test('normalizes legacy local format before checking', ({ expect }) => {
-    expect(EID.isLocal(EID.parse(`dxn:echo:@:${OBJECT}`))).toBe(true);
-  });
 });
 
 describe('EID.equals', () => {
@@ -144,15 +119,29 @@ describe('EID.equals', () => {
     expect(EID.equals(id, id)).toBe(true);
   });
 
-  test('returns true for equivalent legacy and new format', ({ expect }) => {
-    const legacy = EID.parse(`dxn:echo:@:${OBJECT}`);
-    const modern = EID.make({ entityId: OBJECT });
-    expect(EID.equals(legacy, modern)).toBe(true);
-  });
-
   test('returns false for different refs', ({ expect }) => {
     const a = EID.make({ spaceId: SPACE, entityId: OBJECT });
     const b = EID.make({ spaceId: SPACE, entityId: OBJECT2 });
     expect(EID.equals(a, b)).toBe(false);
+  });
+});
+
+describe('EID.toLocal', () => {
+  test('drops the space from a qualified ref', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(EID.make({ entityId: OBJECT }));
+  });
+
+  test('leaves a local ref unchanged', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ entityId: OBJECT }))).toBe(EID.make({ entityId: OBJECT }));
+  });
+
+  test('collapses qualified and bare refs to the same value', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE, entityId: OBJECT }))).toBe(
+      EID.toLocal(EID.make({ entityId: OBJECT })),
+    );
+  });
+
+  test('returns space-only refs unchanged', ({ expect }) => {
+    expect(EID.toLocal(EID.make({ spaceId: SPACE }))).toBe(EID.make({ spaceId: SPACE }));
   });
 });

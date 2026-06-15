@@ -6,8 +6,8 @@ import { asyncTimeout } from '@dxos/async';
 import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
+import { type EntityManager } from '../core-db';
 import { getObjectCore } from '../echo-handler';
-import { type DatabaseImpl } from './database';
 
 /**
  * @param obj
@@ -42,7 +42,7 @@ export const loadObjectReferences = async <
   const tasks = objectArray.map((obj) => {
     const core = getObjectCore(obj as any);
     const value = valueAccessor(obj);
-    const db = core.entityManager as DatabaseImpl | undefined;
+    const db = core.entityManager as EntityManager | undefined;
     if (db == null) {
       return value;
     }

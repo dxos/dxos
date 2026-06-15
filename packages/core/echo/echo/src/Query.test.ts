@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { EID, EntityId, SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Dataset from './Dataset';
@@ -806,8 +806,8 @@ describe('query api', () => {
   });
 
   describe('Filter', () => {
-    test('Filter.or(Filter.typename(...))', () => {
-      const filter = Filter.or(Filter.typename('com.example.type.person'));
+    test('Filter.or(Filter.type(...))', () => {
+      const filter = Filter.or(Filter.type(DXN.make('com.example.type.person')));
       // TODO(dmaretskyi): Give vitest type-tests a try.
       const _isAssignable: Obj.Unknown = null as any as Filter.Type<typeof filter>;
     });

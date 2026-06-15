@@ -567,7 +567,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const objects = await db.query(Query.select(Filter.typeURI(schemaDxn))).run();
+        const objects = await db.query(Query.select(Filter.type(schemaDxn))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Type.getSchema(Obj.getType(objects[0])!))).to.include({
           typename: 'com.example.type.test',
@@ -614,7 +614,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [obj] = await db.query(Query.select(Filter.typeURI(typeURI))).run();
+      const [obj] = await db.query(Query.select(Filter.type(typeURI))).run();
       expect(Obj.getType(obj)).toBeDefined();
       expect(Type.getTypename(Obj.getType(obj)!)).toEqual(Type.getTypename(TestSchema.Person));
     }

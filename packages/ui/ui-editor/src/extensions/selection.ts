@@ -4,9 +4,9 @@
 
 import { type Extension, Transaction, type TransactionSpec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
+import * as Schema from 'effect/Schema';
 
 import { debounce } from '@dxos/async';
-import { invariant } from '@dxos/invariant';
 import { isTruthy } from '@dxos/util';
 
 import { singleValueFacet } from '../util';
@@ -26,6 +26,16 @@ export type EditorSelectionState = {
   selection?: EditorSelection;
 };
 
+export const EditorSelectionSchema = Schema.Struct({
+  anchor: Schema.Number,
+  head: Schema.optional(Schema.Number),
+}).pipe(Schema.mutable);
+
+export const EditorSelectionStateSchema = Schema.Struct({
+  scrollTo: Schema.optional(Schema.Number),
+  selection: Schema.optional(EditorSelectionSchema),
+}).pipe(Schema.mutable);
+
 export type EditorStateStore = {
   setState: (id: string, state: EditorSelectionState) => void;
   getState: (id: string) => EditorSelectionState | undefined;
@@ -41,19 +51,6 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
     annotations: Transaction.userEvent.of(stateRestoreAnnotation),
   };
 };
-
-export const createEditorStateStore = (keyPrefix: string): EditorStateStore => ({
-  getState: (id) => {
-    invariant(id);
-    const state = localStorage.getItem(`${keyPrefix}/${id}`);
-    return state ? JSON.parse(state) : undefined;
-  },
-
-  setState: (id, state) => {
-    invariant(id);
-    localStorage.setItem(`${keyPrefix}/${id}`, JSON.stringify(state));
-  },
-});
 
 /**
  * Track scrolling and selection state to be restored when switching to document.
@@ -89,7 +86,9 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
           key: 'Ctrl-r', // TODO(burdon): Setting to jump back to selection.
           run: (view) => {
             const state = getState(view.state.facet(documentId));
-            if (state) {
+            // Only restore when something was actually stored; a store may return an empty state
+            // (no scroll/selection) for an unseen document, which would otherwise dispatch a no-op.
+            if (state && (state.scrollTo != null || state.selection)) {
               view.dispatch(createEditorStateTransaction(state));
             }
             return true;

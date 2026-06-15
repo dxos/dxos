@@ -738,7 +738,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const monitor = yield* Process.ProcessMonitorService;
       const manager = yield* ProcessManager.Service;
 
-      const conversation = 'dxn:queue:test-conversation' as DXN.DXN;
+      const conversation = 'echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000' as any;
 
       const fiber = yield* invoker.invokeFiber(
         ParentOp,

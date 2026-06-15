@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
@@ -19,6 +20,44 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
     return prop.type;
   }
   return defined.length === 1 ? defined[0] : SchemaAST.Union.make(defined, prop.type.annotations);
+};
+
+/**
+ * Resolve the properties to render for a field set's *root* schema, given the current form values.
+ *
+ * A top-level discriminated union is rendered flat: the fields of the member selected by the current
+ * discriminator value, with the discriminator field keeping the union-wide set of literals so it stays
+ * switchable. (`SchemaAST.getPropertySignatures` on a union returns only the common discriminator, so a
+ * union root would otherwise render just that one field.) Non-union roots are unchanged. Nested unions are
+ * unaffected — those are expanded per-field by `FormField`, which passes a single-member type literal here.
+ */
+export const getRootFormProperties = (
+  ast: SchemaAST.AST,
+  values: AnyProperties | undefined,
+): SchemaEx.SchemaProperty[] => {
+  if (!SchemaEx.isDiscriminatedUnion(ast)) {
+    return getFormProperties(ast);
+  }
+
+  const activeType = SchemaEx.getDiscriminatedType(ast, values ?? {});
+  if (!activeType) {
+    return getFormProperties(ast);
+  }
+  const activeProps = getFormProperties(activeType);
+
+  const discriminators = new Set((SchemaEx.getDiscriminatingProps(ast) ?? []).map((name) => name.toString()));
+  if (discriminators.size === 0) {
+    return activeProps;
+  }
+  // The matched member types its discriminator as a single literal; swap in the union-wide literal so the
+  // field renders as a full select rather than a fixed value.
+  const fullType = SchemaEx.getDiscriminatedType(ast, {});
+  const fullDiscriminatorProps = fullType ? getFormProperties(fullType) : activeProps;
+  return activeProps.map((prop) =>
+    discriminators.has(prop.name.toString())
+      ? (fullDiscriminatorProps.find((candidate) => candidate.name === prop.name) ?? prop)
+      : prop,
+  );
 };
 
 /**

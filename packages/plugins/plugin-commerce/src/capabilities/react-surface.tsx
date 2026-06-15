@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'searchObjectProperties',
+        id: 'objectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
         component: ({ data }) => <SearchProperties search={data.subject} />,

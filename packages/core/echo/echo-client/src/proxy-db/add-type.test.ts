@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -60,6 +60,28 @@ describe('Database.addType', () => {
     const objects = await db.query(Filter.type(type)).run();
     expect(objects).toHaveLength(1);
     expect(objects[0].id).to.eq(object.id);
+  });
+
+  // Objects from a persisted type are stamped with the type entity's echo:/<id> URI, not the
+  // typename DXN. The type's URI (Type.getURI) is the space-less echo:/<id>, which matches the
+  // object regardless of space; a space-qualified EID matches only within the owning space.
+  test('Filter.type matches objects of a persisted type by URI', async () => {
+    const { db } = await builder.createDatabase();
+    const type = await db.addType(TestType);
+    const object = db.add(Obj.make(type, { name: 'Alice' }));
+    await db.flush();
+
+    // Space-less echo URI matches regardless of space.
+    const byUri = await db.query(Filter.type(Type.getURI(type))).run();
+    expect(byUri.map((o) => o.id)).toEqual([object.id]);
+
+    // Space-qualified EID matches within the owning space.
+    const byQualified = await db.query(Filter.type(EID.make({ spaceId: db.spaceId, entityId: type.id }))).run();
+    expect(byQualified.map((o) => o.id)).toEqual([object.id]);
+
+    // The static typename DXN does NOT match (db-type objects carry the echo id, not the typename).
+    const byTypename = await db.query(Filter.type(TestType)).run();
+    expect(byTypename).toHaveLength(0);
   });
 });
 

@@ -22,6 +22,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "packages/common/av/tsconfig.json"
+    },
+    {
       "path": "packages/common/codec-protobuf/tsconfig.json"
     },
     {
@@ -725,9 +728,6 @@
     },
     {
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject } from '@dxos/react-client/echo';
-import { useSelected } from '@dxos/react-ui-attention';
+import { useSelection } from '@dxos/react-ui-attention';
 
 import { VideoPlayer } from '#components';
 import { type Video } from '#types';
@@ -23,7 +23,7 @@ export type VideoSectionProps = {
 export const VideoSection = ({ attendableId, subject }: VideoSectionProps) => {
   const [video] = useObject(subject);
   // The transcript sets the selection point (a seconds offset) to seek the player.
-  const selected = useSelected(attendableId, 'single');
+  const selected = useSelection(attendableId, 'single');
   const startTime = selected && /^\d+$/.test(selected) ? Number(selected) : undefined;
   return <VideoPlayer url={video.url} startTime={startTime} />;
 };

@@ -123,6 +123,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           objects
             .map((object: Obj.Unknown) =>
               createObjectNode({
+                get,
                 db: space.db,
                 object,
                 navigable: ephemeralState.navigableCollections,
@@ -159,6 +160,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               (object: Obj.Unknown) =>
                 db &&
                 createObjectNode({
+                  get,
                   object,
                   db,
                   navigable: ephemeralState.navigableCollections,

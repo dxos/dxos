@@ -12,21 +12,20 @@ import { type Mutable } from '@dxos/echo/Obj';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ProjectionModel, ViewModel, getTypenameFromQuery } from '@dxos/schema';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type ProjectionModel, ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
-  // TODO(burdon): Get label from annotation.
-  { value: Type.getTypename(Organization.Organization), label: 'Organization' },
-  { value: Type.getTypename(Person.Person), label: 'Person' },
-  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
-  { value: Type.getTypename(Employer.Employer), label: 'Employer' },
+  { value: Type.getURI(Organization.Organization), label: 'Organization' },
+  { value: Type.getURI(Person.Person), label: 'Person' },
+  { value: Type.getURI(Pipeline.Pipeline), label: 'Project' },
+  { value: Type.getURI(Employer.Employer), label: 'Employer' },
 ];
 
 // Type definition for debug objects exposed to tests.
@@ -81,18 +80,14 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
       if (props.mode === 'tag') {
         const queue = target;
-        const query = queue
-          ? Query.fromAst(newQuery).from([
-              Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
-            ])
-          : Query.fromAst(newQuery);
+        const query = queue ? Query.fromAst(newQuery).from([Scope.feed(queue)]) : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;
         });
 
-        const typename = getTypenameFromQuery(query.ast);
+        const typeUri = getTypeURIFromQuery(query.ast);
         const allTypes = space.db.graph.registry.list().filter(Type.isType);
-        const newSchema = allTypes.find((t) => Type.getTypename(t) === typename);
+        const newSchema = allTypes.find((t) => Type.getURI(t) === typeUri);
         if (!newSchema) {
           return;
         }
@@ -130,14 +125,14 @@ const DefaultStory = (props: DefaultStoryProps) => {
     }
   }, [type, view]);
 
-  // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
+  // NOTE(ZaymonFC): Avoids infinite parsing issue with storybook args.
   const json = useMemo(
     () => JSON.parse(JSON.stringify({ schema: type, view, projection: projectionRef.current })),
     [JSON.stringify(type), JSON.stringify(view)],
   );
 
   if (!type || !view) {
-    return <div />;
+    return <Loading />;
   }
 
   return (

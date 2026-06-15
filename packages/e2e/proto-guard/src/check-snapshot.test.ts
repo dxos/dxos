@@ -11,12 +11,11 @@ import { SpacesDumper } from './space-json-dump';
 import { withSnapshot } from './util';
 
 describe('Load client from storage snapshot', () => {
-  // Snapshot regenerated on the SQLite storage migration (2026-06-03).
-  // The previous `2026-05-29` baseline used LevelDB/IndexedDB storage which
-  // is incompatible with the new SQLite-backed storage layer. This becomes the
-  // new backwards-compat baseline going forward.
-  test('2026-06-03', { timeout: 30_000 }, async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('2026-06-03') ?? failUndefined();
+  // Snapshot regenerated on the canonical-URI migration (2026-06-12), which dropped all legacy
+  // DXN forms (`dxn:echo:@:`, `dxn:type:`, …). Snapshots predating it are incompatible and were
+  // removed; this is the new baseline going forward.
+  test('2026-06-12', { timeout: 30_000 }, async () => {
+    const snapshot = SnapshotsRegistry.getSnapshot('2026-06-12') ?? failUndefined();
     await withSnapshot(snapshot, async (client, expectedData) => {
       expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
     });

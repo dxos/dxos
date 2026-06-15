@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { linkedSegment, type SelectionManager } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -26,12 +26,12 @@ import { getPlanningWindowDays } from '../operations/extractor/config';
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed
  * `'range'` selection if present, otherwise today through today + the configured planning window.
  */
-const resolvePlanningWindow = (selectionManager: SelectionManager, nodeId: string): { from: Date; to: Date } => {
+const resolvePlanningWindow = (viewState: ViewStateManager, nodeId: string): { from: Date; to: Date } => {
   // Read without asserting the mode (the dedicated range context may be empty or, defensively, hold
   // another mode), falling back to the default window otherwise.
-  const selection = selectionManager.getSelection(getCalendarRangeSelectionId(nodeId));
+  const selection = viewState.get(selectionAspect, getCalendarRangeSelectionId(nodeId));
   const range =
-    selection?.mode === 'range' && selection.from && selection.to
+    selection.mode === 'range' && selection.from && selection.to
       ? { from: selection.from, to: selection.to }
       : undefined;
   const now = new Date();
@@ -42,12 +42,11 @@ const resolvePlanningWindow = (selectionManager: SelectionManager, nodeId: strin
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const state = get(selectionManager.state);
-        const selection = state.selections[nodeId];
-        return selection?.mode === 'single' ? selection.id : undefined;
+        const selection = get(viewState.atom(selectionAspect, nodeId));
+        return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
 
@@ -114,7 +113,7 @@ export default Capability.makeModule(
                 if (!feed || !db) {
                   return;
                 }
-                const { from, to } = resolvePlanningWindow(selectionManager, nodeId);
+                const { from, to } = resolvePlanningWindow(viewState, nodeId);
                 // Narrow materialization at query time so the cost scales with the window, not the whole
                 // feed. `startDate` is stored in Google's raw form (timed events carry UTC offsets, all-day
                 // events are date-only), so a precise lexicographic bound is unsafe; widen by a day on each

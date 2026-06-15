@@ -3,6 +3,7 @@
 //
 
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import type { Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
@@ -127,6 +128,7 @@ export const getCollectionGraphNodePartials = ({
 
 /** Builds an app-graph node for an ECHO object. Uses the local object ID as the graph node ID. */
 export const createObjectNode = ({
+  get,
   db,
   object,
   disposition,
@@ -134,6 +136,8 @@ export const createObjectNode = ({
   navigable = false,
   parentCollection,
 }: {
+  /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
+  get: Atom.Context;
   db: Database.Database;
   object: Obj.Unknown;
   disposition?: string;
@@ -146,10 +150,10 @@ export const createObjectNode = ({
     return null;
   }
 
-  // Obj.getType uses the stored type DXN to look up the schema. For database-registered
-  // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
-  // TypeSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
-  // Fall back to a typename query against the registry which matches the TypeSchema.typename field.
+  // Obj.getType uses the stored type URI to look up the schema. For database-registered
+  // (dynamic) schemas the stored TypeSchema jsonSchema.$id is the echo:/<objectId> EID, so an
+  // id-based lookup can miss. Fall back to a typename query against the registry which matches
+  // the TypeSchema.typename field.
   const type =
     Obj.getType(object) ??
     db.graph.registry
@@ -178,7 +182,7 @@ export const createObjectNode = ({
     : graphProps;
 
   const label =
-    Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
+    get(Obj.labelAtom(object)) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));

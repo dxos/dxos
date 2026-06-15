@@ -153,14 +153,49 @@ const ColumnCenter = slottable<HTMLDivElement>(({ children, asChild, ...props },
 ColumnCenter.displayName = COLUMN_CENTER_NAME;
 
 //
+// Block
+//
+
+const COLUMN_BLOCK_NAME = 'Column.Block';
+
+type ColumnBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?: boolean }>;
+
+/**
+ * A gutter slot inside a Column.Row. Sized to `--dx-rail-item` and centers its child so a passive
+ * `<Icon>` and an interactive `IconButton` align to the pixel. `end` opts into the trailing gutter
+ * (column 3); default is the leading gutter (column 1). Placement is via `data-slot`, so it is
+ * robust to conditional rendering and source order.
+ */
+const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
+  ({ children, asChild, end, compact, square, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    return (
+      <Comp
+        {...rest}
+        data-slot={end ? 'end' : 'start'}
+        className={tx('column.block', { end, compact, square }, className)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
+
+ColumnBlock.displayName = COLUMN_BLOCK_NAME;
+
+//
 // Column
 //
 
 export const Column = {
   Root: ColumnRoot,
   Row: ColumnRow,
+  Block: ColumnBlock,
   Bleed: ColumnBleed,
   Center: ColumnCenter,
 };
 
-export type { ColumnRootProps, ColumnRowProps, ColumnBleedProps, ColumnCenterProps };
+export type { ColumnRootProps, ColumnRowProps, ColumnBlockProps, ColumnBleedProps, ColumnCenterProps };

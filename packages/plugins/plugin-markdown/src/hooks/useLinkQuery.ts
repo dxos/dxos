@@ -23,7 +23,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         ...(db ? db.graph.registry.list().filter(Type.isType) : [])
           .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
           .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-          .map((schema) => Filter.typename(Type.getTypename(schema))),
+          .map((schema) => Filter.type(Type.getURI(schema))),
       ),
     [db],
   );

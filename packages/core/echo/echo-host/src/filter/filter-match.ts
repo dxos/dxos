@@ -4,11 +4,12 @@
 
 import * as semver from 'semver';
 
+import { Entity } from '@dxos/echo';
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-export type MatchedObject = {
+export type MatchedDoc = {
   id: EntityId;
   spaceId: SpaceId;
   doc: EntityStructure;
@@ -38,7 +39,7 @@ const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
  * Matches an object against a filter AST.
  * @param obj object structure as stored in automerge.
  */
-export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
+export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc): boolean => {
   switch (filter.type) {
     case 'object': {
       // Check typename if specified.
@@ -108,15 +109,15 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'not': {
-      return !filterMatchObject(filter.filter, obj);
+      return !filterMatchDoc(filter.filter, obj);
     }
 
     case 'and': {
-      return filter.filters.every((f) => filterMatchObject(f, obj));
+      return filter.filters.every((f) => filterMatchDoc(f, obj));
     }
 
     case 'or': {
-      return filter.filters.some((f) => filterMatchObject(f, obj));
+      return filter.filters.some((f) => filterMatchDoc(f, obj));
     }
 
     default:
@@ -151,7 +152,7 @@ const matchMetaKey = (
   return semver.satisfies(objVersion, versionRange, { includePrerelease: true });
 };
 
-// TODO(burdon): Reconcile with filterMatchObject.
+// TODO(burdon): Reconcile with filterMatchDoc (automerge doc path).
 export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
   switch (filter.type) {
     case 'object': {
@@ -357,48 +358,138 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
 };
 
 /**
- * Compares typename DXNs.
- * @returns true if they match
+ * Matches a filter against an {@link Entity.Unknown} proxy without full JSON serialization.
  *
- * Compares typename string.
- * Missing version (on either actual or expected) matches any version.
- * non `type` DXNs are compared exactly.
- *
- * Examples: (expected) (actual)
- *
- * dxn:type:com.example.type.task       !== dxn:type:com.example.type.contact
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task
- * dxn:type:com.example.type.task:0.1.0 !== dxn:type:com.example.type.task:0.2.0
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
- * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
- *
+ * Checks typename, id, and meta via direct symbol-property access (O(1)) before falling
+ * back to {@link Entity.toJSON} only when props-based filtering requires it. Avoids the
+ * expensive deepMapValues traversal incurred by filterMatchObjectJSON for the common case of
+ * type-based registry queries.
  */
-/**
- * Compare two DXN strings, allowing version-agnostic type DXN comparison:
- * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
- * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
- */
-const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  // Normalize via DXN.tryMake to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
-  const expectedDxn = DXN.tryMake(expectedStr);
-  const actualDxn = DXN.tryMake(actualStr);
-  if (expectedDxn !== undefined) {
-    if (actualDxn === undefined) {
+export const filterMatchEntity = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean => {
+  switch (filter.type) {
+    case 'object': {
+      if (filter.typename !== null) {
+        const typeURI = Entity.getTypeURI(entity);
+        if (!typeURI || !compareTypenameStrings(filter.typename, typeURI)) {
+          return false;
+        }
+      }
+
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity.id)) {
+        return false;
+      }
+
+      if (filter.props) {
+        // Serialize to JSON only when props filtering is needed; serialization of complex
+        // static-type entities (e.g. those with class-instance schema fields) may throw.
+        let json: ObjectJSON | null = null;
+        try {
+          json = Entity.toJSON(entity);
+        } catch {}
+        if (json === null) {
+          return false;
+        }
+        for (const [key, valueFilter] of Object.entries(filter.props)) {
+          if (key.startsWith('@')) {
+            continue;
+          }
+          if (!filterMatchValue(valueFilter, (json as any)[key])) {
+            return false;
+          }
+        }
+      }
+
+      const meta = Entity.getMeta(entity);
+
+      if (filter.foreignKeys && filter.foreignKeys.length > 0) {
+        const hasKey = filter.foreignKeys.some((fk) => meta.keys.some((k) => k.source === fk.source && k.id === fk.id));
+        if (!hasKey) {
+          return false;
+        }
+      }
+
+      if (filter.metaKey !== undefined) {
+        if (!matchMetaKey(filter.metaKey, filter.metaVersion, meta.key, meta.version)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    case 'tag': {
+      // Live meta tags are Ref<Tag> instances; encode to EncodedReference for matchesTag.
+      const rawTags = Entity.getMeta(entity).tags;
+      const tags = rawTags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));
+      return matchesTag(tags, filter.tag);
+    }
+
+    case 'text-search': {
       return false;
     }
-    if (DXN.getName(actualDxn) !== DXN.getName(expectedDxn)) {
+
+    case 'timestamp': {
+      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
+    }
+
+    case 'child-of': {
+      throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+    }
+
+    case 'not': {
+      return !filterMatchEntity(filter.filter, entity);
+    }
+
+    case 'and': {
+      return filter.filters.every((f) => filterMatchEntity(f, entity));
+    }
+
+    case 'or': {
+      return filter.filters.some((f) => filterMatchEntity(f, entity));
+    }
+
+    default:
+      return false;
+  }
+};
+
+/**
+ * Compares a filter's type discriminator (`expectedStr`) against the value stored on an object's
+ * `system.type` (`actualStr`).
+ *
+ * - `echo:` EIDs match by entity id; a bare (space-less) id matches the object in any space, while
+ *   a space-qualified id matches only that space.
+ * - `dxn:` DXNs match version-agnostically (a missing version on either side matches any version).
+ * - Any other string is compared verbatim.
+ */
+const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  const expectedEid = EID.tryParse(expectedStr);
+  if (expectedEid) {
+    const actualEid = EID.tryParse(actualStr);
+    if (!actualEid) {
+      return false;
+    }
+    if (EID.getEntityId(expectedEid) !== EID.getEntityId(actualEid)) {
+      return false;
+    }
+    const expectedSpaceId = EID.getSpaceId(expectedEid);
+    const actualSpaceId = EID.getSpaceId(actualEid);
+    return expectedSpaceId === undefined || actualSpaceId === undefined || expectedSpaceId === actualSpaceId;
+  }
+
+  const expectedDxn = DXN.tryMake(expectedStr);
+  if (expectedDxn) {
+    const actualDxn = DXN.tryMake(actualStr);
+    if (!actualDxn) {
+      return false;
+    }
+    if (DXN.getName(expectedDxn) !== DXN.getName(actualDxn)) {
       return false;
     }
     const expectedVersion = DXN.getVersion(expectedDxn);
     const actualVersion = DXN.getVersion(actualDxn);
-    if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
-      return false;
-    }
-  } else {
-    // EID or other URI type — exact match.
-    if (actualStr !== expectedStr) {
-      return false;
-    }
+    return expectedVersion === undefined || actualVersion === undefined || expectedVersion === actualVersion;
   }
-  return true;
+
+  return expectedStr === actualStr;
 };

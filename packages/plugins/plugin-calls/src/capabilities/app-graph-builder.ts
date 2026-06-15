@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { NodeMatcher, GraphBuilder } from '@dxos/plugin-graph';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';

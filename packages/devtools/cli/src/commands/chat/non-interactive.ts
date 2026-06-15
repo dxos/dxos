@@ -146,7 +146,7 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
         if (!kind) {
           return undefined;
         }
-        const uri = live ? Obj.getURI(live) : `uri:echo:@:${id}`;
+        const uri = live ? Obj.getURI(live) : `echo:/${id}`;
         return { kind, uri, created };
       })
       .filter((x): x is { kind: string; uri: string; created: boolean } => x !== undefined)

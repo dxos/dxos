@@ -276,12 +276,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     );
 
   return (
-    <Tabs.Root
-      orientation='horizontal'
-      value={showResolvedThreads ? 'all' : 'unresolved'}
-      onValueChange={handleChangeViewState}
-    >
-      <Panel.Root>
+    <Panel.Root asChild>
+      <Tabs.Root
+        orientation='horizontal'
+        value={showResolvedThreads ? 'all' : 'unresolved'}
+        onValueChange={handleChangeViewState}
+      >
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
@@ -302,7 +302,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>
-      </Panel.Root>
-    </Tabs.Root>
+      </Tabs.Root>
+    </Panel.Root>
   );
 };

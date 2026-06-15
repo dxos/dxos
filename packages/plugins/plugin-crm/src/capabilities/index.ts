@@ -5,8 +5,14 @@
 import { Capability } from '@dxos/app-framework';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import type { OperationHandlerSet } from '@dxos/compute';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+// The contributed capability type references `Template` from @dxos/plugin-automation, so the lazy
+// wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
+export const AutomationTemplates: Capability.LazyCapability<
+  void,
+  Capability.Capability<typeof AutomationCapabilities.Template>[]
+> = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
 
 // The contributed capability type references Blueprint types from @dxos/compute, so the lazy
 // wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
@@ -19,5 +25,3 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   'OperationHandler',
   () => import('./operation-handler'),
 );
-
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

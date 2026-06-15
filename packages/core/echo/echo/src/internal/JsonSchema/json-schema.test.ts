@@ -461,9 +461,9 @@ describe('json-to-effect', () => {
     });
   }
 
-  test('legacy schema with dxn:type $id gets decoded', () => {
+  test('legacy schema with echo.type annotation gets decoded', () => {
     const jsonSchema: JsonSchemaType = {
-      $id: 'dxn:type:com.example.type.project',
+      $id: 'dxn:com.example.type.project',
       $schema: 'http://json-schema.org/draft-07/schema#',
       additionalProperties: false,
       echo: {

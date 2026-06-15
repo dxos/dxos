@@ -15,7 +15,7 @@ random.seed(1234);
 
 const DefaultStory = ({ orientation }: TabsRootProps) => {
   return (
-    <Tabs.Root orientation={orientation} defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
+    <Tabs.Root asChild orientation={orientation} defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
       <Tabs.Viewport
         classNames={mx(
           'w-full overflow-hidden grid',

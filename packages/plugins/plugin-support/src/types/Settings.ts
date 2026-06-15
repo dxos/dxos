@@ -13,6 +13,12 @@ export const Settings = Schema.Struct({
       description: 'Show the "Create GitHub Issue" button in the feedback panel.',
     }),
   ),
+  showDiscordCompanion: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'Show Discord community panel',
+      description: 'Show the Discord community tab in the sidebar.',
+    }),
+  ),
 });
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

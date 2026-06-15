@@ -339,7 +339,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbar-surface text-description! [&>div]:flex [&>div]:items-stretch',
+        className: 'bg-axis-surface! text-axis-text! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -382,7 +382,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-toolbar-surface',
+          className: 'bg-axis-surface!',
           readonly: true,
           value: '',
         },
@@ -396,7 +396,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           header: true,
           checked: this.model.selection.allRowsSelected,
         }),
-        className: '!bg-toolbar-surface',
+        className: 'bg-axis-surface!',
         readonly: true,
         value: '',
       },
@@ -411,7 +411,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-toolbar-surface',
+        className: 'bg-axis-surface!',
         readonly: true,
         value: '',
       },

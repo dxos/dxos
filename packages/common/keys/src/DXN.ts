@@ -9,10 +9,9 @@ import * as Schema from 'effect/Schema';
 import type * as URI from './URI';
 
 /**
- * Full DXN regex per spec — new format only: `dxn:<nsid>[:<version>]`.
+ * Full DXN regex per spec: `dxn:<nsid>[:<version>]`.
  * Middle segments may contain hyphens; the final segment must be camelCase
  * (alphanumeric, leading letter — no hyphens or underscores).
- * Does NOT match legacy `dxn:<kind>:<...>` formats (e.g. `dxn:type:...`).
  */
 const DXN_SPEC_REGEXP =
   /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z][a-zA-Z0-9]{0,62})(:\d+\.\d+\.\d+)?$/;
@@ -49,7 +48,6 @@ export const make = (nsid: string, version?: string): DXN =>
 
 /**
  * Parses a full DXN string. Returns undefined on failure.
- * Normalizes legacy `dxn:type:<nsid>` to the canonical `dxn:<nsid>` form.
  */
 export const tryMake = (dxn: string): DXN | undefined => {
   try {
@@ -62,14 +60,6 @@ export const tryMake = (dxn: string): DXN | undefined => {
 // Internal — full-grammar validator. Callers outside this module should use
 // `make(nsid, version?)` or `tryMake(dxn)`.
 const parse = (dxn: string): DXN => {
-  // Backward compat: strip legacy `type:` kind segment.
-  const legacyTypeMatch = /^dxn:type:(.+)$/.exec(dxn);
-  if (legacyTypeMatch) {
-    const normalized = `dxn:${legacyTypeMatch[1]}` as DXN;
-    if (DXN_SPEC_REGEXP.test(normalized)) {
-      return normalized;
-    }
-  }
   if (typeof dxn === 'string' && DXN_SPEC_REGEXP.test(dxn)) {
     return dxn as DXN;
   }

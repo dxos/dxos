@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { type MagazineView, useVisibleMagazinePosts } from '#atoms';
@@ -34,7 +34,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   const showItem = useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
   const viewAtom = useMemo(() => Atom.make<MagazineView>('default'), []);
   const busyAtom = useMemo(() => Atom.make(false), []);
   const view = useAtomValue(viewAtom);

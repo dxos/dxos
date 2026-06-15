@@ -196,7 +196,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 .sort((sortA, sortB) => orderMap.get(sortA.id)! - orderMap.get(sortB.id)!),
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
-              .filter((space, idx) => (settings?.showHidden ? true : spaceStates[idx] !== SpaceState.SPACE_INACTIVE))
+              .filter((space, idx) => spaceStates[idx] !== SpaceState.SPACE_INACTIVE)
               .filter((space) => space.tags.length === 0 || isPersonalSpace(space) || isExemplarSpace(space))
               .map((space) =>
                 constructSpaceNode({

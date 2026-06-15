@@ -26,7 +26,7 @@ import {
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, EID, PublicKey, URI } from '@dxos/keys';
+import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -38,7 +38,7 @@ import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 random.seed(1);
 
 // Tag ids are the URIs of Tag objects; meta stores them as refs.
-const tags = ['dxn:echo:@:TAGRED', 'dxn:echo:@:TAGGREEN', 'dxn:echo:@:TAGBLUE'];
+const tags = ['echo:/TAGRED', 'echo:/TAGGREEN', 'echo:/TAGBLUE'];
 const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
@@ -782,13 +782,13 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person')))).run();
+      const both = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
-      const v1 = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person', '0.1.0')))).run();
+      const v1 = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person', '0.1.0')))).run();
       expect(v1).toEqual([contactV1]);
 
-      const v2 = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')))).run();
+      const v2 = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person', '0.2.0')))).run();
       expect(v2).toEqual([contactV2]);
     });
 
@@ -1433,10 +1433,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person')), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.1.0')), [contactV1]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
-        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person', '0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.type(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);
@@ -1492,8 +1492,8 @@ describe('Query', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const important = 'dxn:echo:@:TAGIMPORTANT';
-      const investor = 'dxn:echo:@:TAGINVESTOR';
+      const important = 'echo:/TAGIMPORTANT';
+      const investor = 'echo:/TAGINVESTOR';
       const importantRef = Ref.fromURI(URI.make(important));
       const investorRef = Ref.fromURI(URI.make(investor));
 
@@ -1515,24 +1515,23 @@ describe('Query', () => {
       expect(objects).toEqual([b, c]);
     });
 
-    test('legacy string tags are upgraded to refs and normalized to EIDs on read', async ({ expect }) => {
+    test('bare string tags are upgraded to refs on read', async ({ expect }) => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { name: 'legacy' }));
       await db.flush();
 
-      // Simulate data written before the tags-as-refs migration: a legacy DXN string in `meta.tags`.
-      const legacyDxn = 'dxn:echo:@:01J00000000000000000000000';
-      const canonicalEid = EID.parse(legacyDxn); // → `echo:/01J0...`
-      getObjectCore(obj).setDecoded(['meta', 'tags'], [legacyDxn]);
+      // Simulate data written before the tags-as-refs migration: a bare tag id string in `meta.tags`.
+      const tagEid = EID.make({ entityId: EntityId.make('01J00000000000000000000000') });
+      getObjectCore(obj).setDecoded(['meta', 'tags'], [tagEid]);
 
-      // Read back: the string is materialized as a `Ref` with the DXN normalized to a canonical EID.
+      // Read back: the string is materialized as a `Ref` carrying the tag EID.
       const tags = Obj.getMeta(obj).tags;
       expect(tags).toHaveLength(1);
       expect(Ref.isRef(tags[0])).toBe(true);
-      expect(tags[0].uri).toBe(canonicalEid);
+      expect(tags[0].uri).toBe(tagEid);
 
-      // And it remains queryable by the canonical tag URI.
-      const objects = await db.query(Query.select(Filter.tag(canonicalEid))).run();
+      // And it remains queryable by the tag URI.
+      const objects = await db.query(Query.select(Filter.tag(tagEid))).run();
       expect(objects).toEqual([obj]);
     });
 
@@ -1691,6 +1690,27 @@ describe('Query', () => {
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando, 'a'))
         .run();
       expect(direct.map((o) => o.name).sort()).toEqual(['direct']);
+    });
+
+    test('sqlIndex: referencedBy matches both space-qualified and bare refs to the same entity', async () => {
+      const { db: sqlDb } = await builder.createDatabase({ types: [TestSchema.Person] });
+
+      const person = sqlDb.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+
+      // Bare ref, as produced in code by `Ref.make`.
+      sqlDb.add(Obj.make(TestSchema.Expando, { name: 'bare', a: Ref.make(person) }));
+      // Space-qualified ref, as produced by the RefField object picker (it builds the ref from the entity's
+      // fully-qualified URI). Reverse-ref lookups must still find it: a space-less anchor refers to the same
+      // space implicitly, so qualified and bare refs to the same entity match.
+      const qualified = Ref.fromURI(URI.make(EID.make({ spaceId: sqlDb.spaceId, entityId: person.id })));
+      sqlDb.add(Obj.make(TestSchema.Expando, { name: 'qualified', a: qualified }));
+
+      await sqlDb.flush();
+
+      const referrers = await sqlDb
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Expando))
+        .run();
+      expect(referrers.map((o) => o.name).sort()).toEqual(['bare', 'qualified']);
     });
 
     test('traverse inbound array references', async () => {
@@ -2633,11 +2653,11 @@ describe('Query', () => {
       expect(updates.at(-1)).toEqual([]);
     });
 
-    // Regression for DX-966. The Composer navtree lists objects per type via
-    // `Filter.typename(...)`, which produces a version-less typename scope, while stored
-    // objects carry a versioned `@type`. The reactive index query must still be invalidated
-    // on delete so the navtree drops the node. Mirrors the bulk-delete test above but with a
-    // version-less typename filter instead of `Filter.type(StaticSchema)`.
+    // Regression for DX-966. The Composer navtree lists objects per type via a version-less
+    // typename DXN (`Filter.type(DXN.make(typename))`), while stored objects carry a versioned
+    // `@type`. The reactive index query must still be invalidated on delete so the navtree drops
+    // the node. Mirrors the bulk-delete test above but with a version-less typename filter
+    // instead of `Filter.type(StaticSchema)`.
     test('deleting an item removes it from a version-less typename query (reactive)', async ({
       expect,
       onTestFinished,
@@ -2651,7 +2671,7 @@ describe('Query', () => {
       await db.flush({ indexes: true, updates: true });
 
       const updates: string[][] = [];
-      const unsub = db.query(Query.select(Filter.typename('com.example.type.person'))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(DXN.make('com.example.type.person')))).subscribe(
         (query) => {
           updates.push([...query.results.map((obj) => obj.name!)].sort());
         },

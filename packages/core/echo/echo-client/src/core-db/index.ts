@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './entity-manager';
 export * from './object-core';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.

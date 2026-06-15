@@ -9,6 +9,7 @@ import { Filter, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { createAnnotationHelper } from '@dxos/echo/internal';
+import { type URI } from '@dxos/keys';
 
 export const TypeInputOptions = Schema.Struct({
   location: Schema.Array(Schema.Literal('database', 'runtime')),
@@ -31,6 +32,9 @@ export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOption
 export const allTypesQuery = Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
 
 export type TypeOption = {
+  /** Full type URI (DXN or EID), suitable for use with Filter.type. */
+  typeUri: URI.URI;
+  /** Bare typename string, used as i18n namespace key. */
   typename: string;
   /** Human-readable label derived from the entity's LabelAnnotation fields (e.g. `name` on persisted schemas). */
   label?: string;
@@ -70,13 +74,14 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
       continue;
     }
 
-    const typename = Type.getTypename(type);
-    if (seen.has(typename)) {
+    const typeUri = Type.getURI(type);
+    if (seen.has(typeUri)) {
       continue;
     }
-    seen.add(typename);
+    seen.add(typeUri);
 
-    result.push({ typename, label: Type.getLabel(type) });
+    const typename = Type.getTypename(type);
+    result.push({ typeUri, typename, label: Type.getLabel(type) });
   }
 
   return result.sort((a, b) => a.typename.localeCompare(b.typename));

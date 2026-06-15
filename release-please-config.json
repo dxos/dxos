@@ -60,6 +60,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/av/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/codec-protobuf/package.json",
           "jsonpath": "$.version"
         },
@@ -1236,11 +1241,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-tabs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-text-tooltip/package.json",
           "jsonpath": "$.version"
         },
         {

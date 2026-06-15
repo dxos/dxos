@@ -15,6 +15,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { Deep, Delay, Enabled, Input, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
@@ -51,7 +52,7 @@ export const subscription = Command.make(
           }).pipe(Prompt.run),
         onSome: (value) => Effect.succeed(value),
       });
-      const subscriptionQuery = Query.select(Filter.type(typename));
+      const subscriptionQuery = Query.select(Filter.type(DXN.make(typename)));
 
       const deepOption = yield* Option.match(options.deep, {
         onNone: () =>

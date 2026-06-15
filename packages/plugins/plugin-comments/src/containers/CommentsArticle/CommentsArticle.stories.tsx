@@ -156,7 +156,7 @@ const StoryGraphPlugin = Plugin.define(
             }
             const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
             return docs
-              .map((object) => createObjectNode({ db: space.db, object, droppable: false }))
+              .map((object) => createObjectNode({ get, db: space.db, object, droppable: false }))
               .filter(isNonNullable);
           }),
       });

@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { type Map } from '#types';
 
@@ -24,8 +24,8 @@ type MapViewEditorProps = { object: Map.Map };
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const db = Obj.getDatabase(object);
   const view = object?.view?.target;
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useType(db, typename);
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const currentSchema = useType(db, typeUri);
   const [allSchemata, setAllSchemata] = useState<Type.AnyEntity[]>([]);
 
   useEffect(() => {
@@ -77,8 +77,12 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: typename, coordinateColumn: view?.projection.pivotFieldId }),
-    [view],
+    () => ({
+      // The coordinate-source select lists schemas by typename, so match the current type by typename.
+      coordinateSource: currentSchema ? Type.getTypename(currentSchema) : undefined,
+      coordinateColumn: view?.projection.pivotFieldId,
+    }),
+    [currentSchema, view],
   );
 
   const fieldMap = useMemo<FormFieldMap>(
