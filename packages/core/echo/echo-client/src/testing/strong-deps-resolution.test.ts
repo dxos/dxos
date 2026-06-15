@@ -105,7 +105,11 @@ describe('strong dependency resolution', () => {
       }
     });
 
-    test('multi-peer (from network)', async () => {
+    // Expected to fail: the test builder only replicates Automerge documents (via addReplicator);
+    // feed/queue data has no cross-peer transport. EchoHost is constructed without syncQueue/getSyncState,
+    // so peer 2's FeedStore never receives the queue endpoints and the relation's strong-dep closure
+    // can never be satisfied from the network. Unskip once feed replication is wired into the builder.
+    test.fails('multi-peer (from network)', async () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using network = await new TestReplicationNetwork().open();
       await using peer1 = await builder.createPeer({ types: TYPES });
@@ -218,7 +222,11 @@ describe('strong dependency resolution', () => {
       }
     });
 
-    test('multi-peer (from network)', async () => {
+    // Expected to fail: the test builder only replicates Automerge documents (via addReplicator);
+    // feed/queue data has no cross-peer transport. EchoHost is constructed without syncQueue/getSyncState,
+    // so peer 2's FeedStore never receives the feed target and the relation's strong-dep closure can
+    // never be satisfied from the network. Unskip once feed replication is wired into the builder.
+    test.fails('multi-peer (from network)', async () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using network = await new TestReplicationNetwork().open();
       await using peer1 = await builder.createPeer({ types: TYPES });
