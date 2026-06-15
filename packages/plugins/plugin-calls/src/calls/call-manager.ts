@@ -262,11 +262,18 @@ export class CallManager extends Resource {
    * Only this method is allowed to change state.
    */
   private _updateState(): void {
+    // Seeded state is authoritative; live swarm/media events must not clobber it.
+    if (this.#seeded) {
+      return;
+    }
     this._registry.set(this._stateAtom, {
       call: this._swarmSynchronizer._getState(),
       media: this._mediaManager._getState(),
     });
   }
+
+  /** Set once a harness seeds state; freezes `_updateState` so deterministic story state survives. */
+  #seeded = false;
 
   /**
    * Seeds runtime call/media state directly, bypassing the swarm and media managers.
@@ -274,6 +281,7 @@ export class CallManager extends Resource {
    * source in stories and tests; this seam lets a harness present a deterministic call without a swarm.
    */
   _setState(state: GlobalState): void {
+    this.#seeded = true;
     this._registry.set(this._stateAtom, state);
   }
 }

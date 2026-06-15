@@ -53,7 +53,3 @@ export const RaisedHand: Story = {
 export const Pinned: Story = {
   args: { item, name: item.name, pinned: true },
 };
-
-export const Self: Story = {
-  args: { item, name: item.name, self: true },
-};
