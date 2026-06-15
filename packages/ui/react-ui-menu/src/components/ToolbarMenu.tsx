@@ -7,41 +7,21 @@ import React, { useCallback } from 'react';
 import { Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type MenuActionProperties } from '@dxos/ui-types';
+import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import {
-  type MenuAction,
-  type MenuItem,
-  type MenuItemGroup,
-  type MenuMultipleSelectActionGroup,
-  type MenuSingleSelectActionGroup,
-  isMenuGroup,
-  isSeparator,
-} from '../types';
+import { type MenuAction, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel, actionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
 import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
 
-export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
-  variant: 'dropdownMenu';
-  icon: string;
-  applyActive?: boolean;
-  /** Whether to show the trailing caret. Defaults to `true`; set `false` when the icon already signals a menu. */
-  caretDown?: boolean;
-};
+export type ToolbarMenuDropdownMenuActionGroup = DropdownMenuItemGroupProperties;
 
-export type ToolbarMenuToggleGroupActionGroup = Omit<MenuActionProperties, 'variant'> & {
-  variant: 'toggleGroup';
-};
+export type ToolbarMenuToggleGroupActionGroup = ToggleGroupMenuItemGroupProperties;
 
-export type ToolbarMenuActionGroupProperties = (
-  | ToolbarMenuDropdownMenuActionGroup
-  | ToolbarMenuToggleGroupActionGroup
-) &
-  (MenuSingleSelectActionGroup | MenuMultipleSelectActionGroup);
+export type ToolbarMenuActionGroupProperties = DropdownMenuItemGroupProperties | ToggleGroupMenuItemGroupProperties;
 
 export type ToolbarMenuProps = ToolbarRootProps;
 
@@ -50,8 +30,18 @@ export type ToolbarMenuActionGroupProps = {
   items?: MenuItem[];
 };
 
+export type ToolbarMenuDropdownGroupProps = {
+  group: MenuItemGroup<DropdownMenuItemGroupProperties>;
+  items?: MenuItem[];
+};
+
+export type ToolbarMenuToggleGroupProps = {
+  group: MenuItemGroup<ToggleGroupMenuItemGroupProperties>;
+  items?: MenuItem[];
+};
+
 export type ToolbarMenuActionProps = {
-  group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
+  group: MenuItemGroup<ToggleGroupMenuItemGroupProperties>;
   action: MenuAction;
 };
 
@@ -104,21 +94,27 @@ const DropdownMenuToolbarItem = ({
   __menuScope,
   group,
   items: propsItems,
-}: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
+}: MenuScopedProps<ToolbarMenuDropdownGroupProps>) => {
   const { t } = useTranslation(translationKey);
   const { iconSize } = useMenuScoped('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
-  // This handler only renders `variant: 'dropdownMenu'` groups, so the dropdown properties are known.
-  const properties = group.properties as ToolbarMenuDropdownMenuActionGroup;
-  const { iconOnly, disabled, testId, applyActive, caretDown = true } = properties;
+  const {
+    iconOnly,
+    disabled,
+    testId,
+    applyActive,
+    caretDown = true,
+    icon: groupIcon,
+    iconClassNames: groupIconClassNames,
+  } = group.properties;
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
     (applyActive &&
       // TODO(thure): Handle other menu item types.
       activeItem?.properties.icon) ||
-    properties.icon;
+    groupIcon;
   // Follow the same `applyActive` rule for `iconClassNames` so a per-item accent (e.g. tag colour) tracks the displayed icon.
-  const iconClassNames = (applyActive && activeItem?.properties.iconClassNames) || properties.iconClassNames;
+  const iconClassNames = (applyActive && activeItem?.properties.iconClassNames) || groupIconClassNames;
   const labelAction = applyActive && activeItem ? activeItem : group;
 
   return (
@@ -193,7 +189,7 @@ const ToggleGroupToolbarItem = ({
   __menuScope,
   group,
   items: itemsProp,
-}: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
+}: MenuScopedProps<ToolbarMenuToggleGroupProps>) => {
   const items = useMenuItems(group, itemsProp, 'ToggleGroupToolbarItem', __menuScope);
   const { selectCardinality } = group.properties;
 
@@ -248,17 +244,17 @@ const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem
       return (
         <DropdownMenuToolbarItem
           __menuScope={__menuScope}
-          group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>}
-        />
-      );
-    } else {
-      return (
-        <ToggleGroupToolbarItem
-          __menuScope={__menuScope}
-          group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>}
+          group={item as MenuItemGroup<DropdownMenuItemGroupProperties>}
         />
       );
     }
+
+    return (
+      <ToggleGroupToolbarItem
+        __menuScope={__menuScope}
+        group={item as MenuItemGroup<ToggleGroupMenuItemGroupProperties>}
+      />
+    );
   }
 
   return <ActionToolbarItem __menuScope={__menuScope} action={item as MenuAction} />;

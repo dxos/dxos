@@ -6,12 +6,13 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { Card, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
+import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode } from '../ViewMode';
 import { EventBodyEditor } from './EventBodyEditor';
@@ -75,13 +76,13 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
     const menuActions = useEventToolbarActions({
       graph,
       nodeId: Obj.getURI(event).toString(),
+      editing,
+      saveDisabled,
       viewMode,
       setViewMode,
       onOpen,
       onSave,
-      saveDisabled,
       onDelete,
-      editing,
     });
 
     return (
@@ -132,25 +133,19 @@ const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onT
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <Card.Root
-      border={false}
-      fullWidth
-      // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
-      classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-1')}
-    >
-      <Card.Body>
-        <EventDetails
-          event={event}
-          title='heading'
-          editable={editable}
-          db={db}
-          onContactCreate={onContactCreate}
-          onOpenObject={onOpenObject}
-          starred={starred}
-          onToggleStar={onToggleStar}
-        />
-      </Card.Body>
-    </Card.Root>
+    // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
+    <Header.Root classNames={editable && 'gap-y-1'}>
+      <EventDetails
+        event={event}
+        title='heading'
+        db={db}
+        editable={editable}
+        starred={starred}
+        onContactCreate={onContactCreate}
+        onOpenObject={onOpenObject}
+        onToggleStar={onToggleStar}
+      />
+    </Header.Root>
   );
 };
 
@@ -169,7 +164,6 @@ type EventBodyProps = ThemedClassName<{
 
 const EventBody = ({ classNames, editable }: EventBodyProps) => {
   const { event, viewMode } = useEventContext(EVENT_BODY_NAME);
-
   if (editable) {
     return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
   }

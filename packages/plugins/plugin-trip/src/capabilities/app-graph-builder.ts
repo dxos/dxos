@@ -113,6 +113,7 @@ export default Capability.makeModule(
                 if (!feed || !db) {
                   return;
                 }
+
                 const { from, to } = resolvePlanningWindow(viewState, nodeId);
                 // Narrow materialization at query time so the cost scales with the window, not the whole
                 // feed. `startDate` is stored in Google's raw form (timed events carry UTC offsets, all-day
@@ -133,6 +134,7 @@ export default Capability.makeModule(
                   const start = event.startDate ? new Date(event.startDate) : undefined;
                   return start != null && !Number.isNaN(start.getTime()) && start >= from && start <= to;
                 });
+
                 yield* Operation.invoke(
                   TripOperation.CreateTripFromEvents,
                   { calendar, events: inWindow },

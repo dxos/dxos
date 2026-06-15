@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
       key: meta.id,
       schema: Settings.Settings,
       defaultValue: () => ({
-        threads: false,
+        conversations: false,
         loadRemoteImages: false,
       }),
     });

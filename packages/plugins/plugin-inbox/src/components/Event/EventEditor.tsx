@@ -14,7 +14,7 @@ import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Header } from '../Header';
+import { Row } from '../Row';
 
 export type EventEditorProps = {
   event: EventType.Event;
@@ -230,9 +230,10 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       )}
 
       {data.attendees.map((attendee, index) => (
-        <Header.PersonRow
+        <Row.Person
           key={attendee.email ?? index}
           actor={attendee}
+          role='attendee'
           db={db}
           onContactCreate={onContactCreate}
           onRemove={() => handleAttendeeRemove(index)}

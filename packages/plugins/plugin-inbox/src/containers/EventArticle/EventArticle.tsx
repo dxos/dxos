@@ -10,11 +10,10 @@ import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
 import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
-import { Event, type EventHeaderProps, useTargetIntegration } from '#components';
+import { Event, type EventHeaderProps, ObjectArticle, useTargetIntegration } from '#components';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
@@ -91,19 +90,19 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   return (
     <Event.Root event={event} attendableId={attendableId}>
-      <Panel.Root role={role} className='dx-document'>
-        <Panel.Toolbar asChild>
+      <ObjectArticle
+        role={role}
+        toolbar={
           <Event.Toolbar
-            alwaysActive
             graph={graph}
             editing={draft}
+            saveDisabled={!integration}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
-            saveDisabled={!integration}
             onDelete={calendar ? handleDelete : undefined}
           />
-        </Panel.Toolbar>
-        <Panel.Content className='grid grid-rows-[auto_1fr]'>
+        }
+        header={
           <Event.Header
             db={db}
             editable={draft}
@@ -112,11 +111,12 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
             starred={starred}
             onToggleStar={eventCalendar ? handleToggleStar : undefined}
           />
-          <Event.Viewport>
-            <Event.Body editable={draft} />
-          </Event.Viewport>
-        </Panel.Content>
-      </Panel.Root>
+        }
+      >
+        <Event.Viewport>
+          <Event.Body editable={draft} />
+        </Event.Viewport>
+      </ObjectArticle>
     </Event.Root>
   );
 };
