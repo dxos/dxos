@@ -4,8 +4,7 @@ See what’s changed
 
 Graham Suttie's Notion
 
-New updates in Graham Suttie's Notion
----
+## New updates in Graham Suttie's Notion
 
 Review changes to 1 page in your workspace.
 
