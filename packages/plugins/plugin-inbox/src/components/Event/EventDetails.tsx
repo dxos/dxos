@@ -76,7 +76,6 @@ export const EventDetails = ({
     return <EventEditor event={event} db={db} onContactCreate={onContactCreate} />;
   }
 
-  // TODO(burdon): Refactor common elements with MessageStackTile.
   return (
     <>
       {title === 'heading' && (
