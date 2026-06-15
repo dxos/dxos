@@ -7,7 +7,7 @@ Plugin: `packages/plugins/plugin-inbox`
 
 `plugin-inbox` renders two parallel object families:
 
-- **Mailbox + Message** → surfaces `MailboxArticle` (MessageStack + MessageTile + ThreadTile) and `MessageArticle`.
+- **Mailbox + Message** → surfaces `MailboxArticle` (MessageStack + MessageTile + ConversationTile) and `MessageArticle`.
 - **Calendar + Event** → surfaces `CalendarArticle` (EventStack + EventTile) and `EventArticle`.
 
 `CalendarArticle` mirrors `MailboxArticle`; `EventArticle` mirrors `MessageArticle`. Prior work already
@@ -15,14 +15,19 @@ shares the star (`Header.StarButton` → `SystemIconButton.Star`), the read-only
 `viewModeGroup` toolbar dropdown, and the `EventDetails` row fragment. This change factors out the
 remaining duplicated structure so the two families share one set of presentation primitives:
 
-1. A common **Tile root** for `EventTile`/`MessageTile`/`ThreadTile` carrying `SystemIconButton.Star`.
+1. A common **Tile root** for `EventTile`/`MessageTile`/`ConversationTile` carrying `SystemIconButton.Star`.
 2. A common **article layout** + **header chrome** shared by `EventArticle`/`MessageArticle`.
 3. Common **toolbar operation groups** (shared menu builder fns) beyond `viewModeGroup`.
 4. Removal of the bespoke **`InboxSettings`** surface in favour of the generic settings form surface.
 
-Non-goals: changing ECHO schema, sync/extraction behaviour, or the operations themselves. This is a
-presentation-layer refactor; observable behaviour is preserved (the only intentional change is that the
-event star is owned by the tile shell rather than `EventDetails`).
+Additionally, "thread" is renamed to **Conversation** in the inbox UI/grouping layer (see §6) — "thread"
+is overloaded by `plugin-thread` and the `Thread.Thread` comment schema.
+
+Non-goals: changing ECHO object schemas (`Message`/`Event`/etc.), the `Message.threadId` field, Gmail
+wire mapping, sync/extraction behaviour, or the operations themselves. This is a presentation-layer
+refactor; observable behaviour is preserved (the only intentional changes: the event star is owned by the
+tile shell rather than `EventDetails`, and the inbox-owned `Settings.threads` flag is renamed to
+`Settings.conversations`).
 
 ## Current state (post-merge of #11830)
 
@@ -77,8 +82,8 @@ graph TD
 
   TileRoot --> MessageTile
   TileHeader --> MessageTile
-  TileRoot --> ThreadTile
-  TileHeader --> ThreadTile
+  TileRoot --> ConversationTile
+  TileHeader --> ConversationTile
 
   Markdown --> EventBody[Event.Body]
   Markdown --> MessageBody[Message.Body]
@@ -91,7 +96,7 @@ graph TD
     EventTile --> EventStack
     EventStack --> CalendarArticle
     MessageTile --> MessageStack
-    ThreadTile --> MessageStack
+    ConversationTile --> MessageStack
     MessageStack --> MailboxArticle
     EventHeader --> EventArticle
     EventBody --> EventArticle
@@ -109,7 +114,7 @@ graph TD
 | Concern        | Common                                              | Event-specific                          | Message-specific                                   |
 | -------------- | --------------------------------------------------- | --------------------------------------- | -------------------------------------------------- |
 | Star           | `SystemIconButton.Star` via `Header.StarButton`     | TagIndex on Calendar                    | TagIndex on Mailbox                                |
-| Tile shell     | `Tile.Root` + `Tile.Header` (star·title·menu)       | body = `EventDetails`                   | body = avatar/from/snippet/tags or thread rows     |
+| Tile shell     | `Tile.Root` + `Tile.Header` (star·title·menu)       | body = `EventDetails`                   | body = avatar/from/snippet/tags or conversation rows     |
 | Header chrome  | `Header.Root` (borderless Card + Card.Body)         | rows = `EventDetails(title='heading')`  | subject/sender/objects/tags rows                   |
 | Body           | `MarkdownViewer`                                     | description; editable draft via editor  | block selection (enriched/markdown/plain)          |
 | Toolbar        | `viewModeGroup`, `openGroup`, `deleteGroup`         | save, more-dropdown wrapping delete     | reply/replyAll/forward, load-images, extract       |
@@ -137,7 +142,7 @@ Consumers:
 
 - `EventTile` → `Tile.Root` › `Tile.Header(star, title=event title)` + `Card.Body` › `EventDetails(title=false, maxAttendees=8)`.
 - `MessageTile` → `Tile.Root` › `Tile.Header(star, title=subject·date, menu)` + `Card.Body` › avatar/from/snippet/`Header.TagsRow`.
-- `ThreadTile` → `Tile.Root` › `Tile.Header(star, title=subject)` + `Card.Body` › per-message rows.
+- `ConversationTile` → `Tile.Root` › `Tile.Header(star, title=subject)` + `Card.Body` › per-message rows.
 
 Behavioural change: the **event star moves from `EventDetails` into `Tile.Header`** so both tile types
 own the star in the shell. `EventDetails` keeps rendering the star only on the article-header path
@@ -210,6 +215,31 @@ are reused (no translation churn); the builder fns accept the label tuples as pa
 - Note the name collision: the `InboxSettings` *store* capability (`capabilities/`) is distinct from the
   deleted `InboxSettings` *component*.
 
+### 6. Thread → Conversation rename (UI only)
+
+"Thread" is overloaded in the framework (`plugin-thread`, the `Thread.Thread` comment schema). A
+**Conversation** is a group of related `Message` objects. Rename the plugin-inbox grouping/UI symbols
+only; the `Message.threadId` ECHO field (`@dxos/types`) and Gmail's wire `threadId` (`apis/google/**`,
+gmail mapper/send) stay — `threadId` remains the key the grouping reads (`message.threadId ?? message.id`).
+
+Renames (all within `plugin-inbox`):
+
+- `MessageStack.tsx`: `ConversationTile` (component + `ConversationTileData`/`ConversationTileProps`,
+  `displayName`, `useMosaicContainer('ConversationTile')`); `threadGroups` → `conversationGroups`; local
+  `current-thread` action → `current-conversation`; `MessageStackAction` member
+  `{ type: 'current-thread'; threadId }` → `{ type: 'current-conversation'; conversationId }`;
+  `handleThreadClick` → `handleConversationClick`; `MessageStackProps.threads` → `conversations`. (Local
+  loop vars over the Gmail key may read `message.threadId` but are named `conversationId`/`conversationMessages`.)
+- `MailboxArticle.tsx`: `case 'current-thread'` → `case 'current-conversation'`;
+  `threads={settings.threads}` → `conversations={settings.conversations}`.
+- `types/Settings.ts`: field `threads` → `conversations` (plugin-inbox-owned schema; optional boolean;
+  title "Group by conversation"). `capabilities/settings.ts` default `threads: false` → `conversations: false`.
+- `MessageStack.stories.tsx`: `WithThreads` story → `WithConversations` (`conversations: true`).
+- `meta.ts`: reword the "thread view"/"thread history" copy to "conversation".
+
+Out of scope (unchanged): `apis/google/**`, `operations/google/gmail/**`, `testing/builder.ts` Gmail
+mapping (`threadId`), and the `@dxos/types` `Message.threadId` field.
+
 ## Storybooks
 
 New:
@@ -237,13 +267,17 @@ ECHO factories live in `useMemo([], …)`/`render`, never module-level `args`.
 - `src/components/Header/index.ts` — unchanged (namespace export).
 - `src/components/Event/EventDetails.tsx` — drop star on the tile (`title={false}`) path; keep on heading path.
 - `src/components/EventStack/EventStack.tsx` — `EventTile` uses `Tile.*`.
-- `src/components/MessageStack/MessageStack.tsx` — `MessageTile`/`ThreadTile` use `Tile.*`; delete `MessageStackTile`.
+- `src/components/MessageStack/MessageStack.tsx` — `MessageTile`/`ConversationTile` use `Tile.*`; delete `MessageStackTile`; Thread→Conversation rename.
+- `src/types/Settings.ts`, `src/capabilities/settings.ts` — `threads` field → `conversations`.
+- `src/meta.ts` — reword thread copy to conversation.
 - `src/components/Event/Event.tsx` — `Event.Header` uses `Header.Root`.
 - `src/components/Message/Message.tsx` — `Message.Header` uses `Header.Root`.
 - `src/components/Event/useToolbar.tsx`, `src/components/Message/useToolbar.tsx` — compose shared `openGroup`/`deleteGroup`.
 - `src/components/index.ts` — export `Tile`, `ObjectArticle`, `Toolbar`; drop `InboxSettings`.
 - `src/components/InboxSettings/` — delete.
 - `src/containers/EventArticle/EventArticle.tsx`, `src/containers/MessageArticle/MessageArticle.tsx` — render via `ObjectArticle`.
+- `src/containers/MailboxArticle/MailboxArticle.tsx` — `current-thread`→`current-conversation`, `threads`→`conversations` prop.
+- `src/components/MessageStack/MessageStack.stories.tsx` — `WithThreads`→`WithConversations`.
 - `src/capabilities/react-surface.tsx` — remove `pluginSettings` surface + `InboxSettings` import.
 - `src/translations.ts` — drop `settings.title`.
 
