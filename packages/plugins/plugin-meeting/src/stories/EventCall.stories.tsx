@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, screen, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
@@ -256,9 +256,15 @@ export const MeetingAction: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // A meeting exists, so the contributed toolbar action reads "Open meeting" (not "Create meeting").
-    await expect(await canvas.findByRole('button', { name: 'Open meeting' }, { timeout: 10_000 })).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: 'Create meeting' })).toBeNull();
+    // Contributed actions live in the event toolbar's "More" overflow. Two articles render, so open the
+    // event toolbar's overflow (first in DOM order) and assert the action as a menu item (rendered in a portal).
+    const [moreButton] = await canvas.findAllByRole('button', { name: 'More' }, { timeout: 10_000 });
+    await userEvent.click(moreButton);
+    // A meeting exists, so the action reads "Open meeting" (not "Create meeting").
+    await expect(
+      await screen.findByRole('menuitem', { name: 'Open meeting' }, { timeout: 10_000 }),
+    ).toBeInTheDocument();
+    await expect(screen.queryByRole('menuitem', { name: 'Create meeting' })).toBeNull();
   },
 };
 
@@ -271,10 +277,12 @@ export const CreateMeetingAction: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // No meeting yet → the contributed toolbar action reads "Create meeting".
+    // No meeting yet → the contributed action in the "More" overflow reads "Create meeting".
+    const [moreButton] = await canvas.findAllByRole('button', { name: 'More' }, { timeout: 10_000 });
+    await userEvent.click(moreButton);
     await expect(
-      await canvas.findByRole('button', { name: 'Create meeting' }, { timeout: 10_000 }),
+      await screen.findByRole('menuitem', { name: 'Create meeting' }, { timeout: 10_000 }),
     ).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: 'Open meeting' })).toBeNull();
+    await expect(screen.queryByRole('menuitem', { name: 'Open meeting' })).toBeNull();
   },
 };

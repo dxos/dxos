@@ -17,7 +17,7 @@ import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode } from '../ViewMode';
 import { EventBodyEditor } from './EventBodyEditor';
 import { EventDetails } from './EventDetails';
-import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
+import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useEventToolbarActions';
 
 //
 // Context
@@ -76,13 +76,13 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
     const menuActions = useEventToolbarActions({
       graph,
       nodeId: Obj.getURI(event).toString(),
+      editing,
+      saveDisabled,
       viewMode,
       setViewMode,
       onOpen,
       onSave,
-      saveDisabled,
       onDelete,
-      editing,
     });
 
     return (
@@ -138,11 +138,11 @@ const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onT
       <EventDetails
         event={event}
         title='heading'
-        editable={editable}
         db={db}
+        editable={editable}
+        starred={starred}
         onContactCreate={onContactCreate}
         onOpenObject={onOpenObject}
-        starred={starred}
         onToggleStar={onToggleStar}
       />
     </Header.Root>
@@ -164,7 +164,6 @@ type EventBodyProps = ThemedClassName<{
 
 const EventBody = ({ classNames, editable }: EventBodyProps) => {
   const { event, viewMode } = useEventContext(EVENT_BODY_NAME);
-
   if (editable) {
     return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
   }
