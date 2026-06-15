@@ -263,14 +263,15 @@ RowPerson.displayName = 'Row.Person';
 type TagItem = { id: string; label?: string; hue?: string };
 
 type RowTagsProps = {
-  tags: TagItem[];
+  /** Optional — callers may pass an undefined/empty list (e.g. a message with no tags). */
+  tags?: TagItem[];
   /** When provided, each chip is clickable and stops event propagation. */
   onTagClick?: (label: string) => void;
 };
 
 /** A Card.Row rendering a set of label+hue tag chips, optionally clickable. */
 const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
-  if (!tags.length) {
+  if (!tags?.length) {
     return null;
   }
 
