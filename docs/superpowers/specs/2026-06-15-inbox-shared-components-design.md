@@ -31,15 +31,19 @@ tile shell rather than `EventDetails`, and the inbox-owned `Settings.threads` fl
 
 ## Current state (post-merge of #11830)
 
-Shared today (keep as-is):
+Shared today (keep, but reorganized — see below):
 
-- `components/Header/Header.tsx` — `Header.{DateRow,ObjectRow,PersonRow,TagsRow,StarButton}`.
+- `components/Header/Header.tsx` — `Header.{DateRow,ObjectRow,PersonRow,TagsRow,StarButton}`. These are
+  Card-row primitives, not header-specific; they are extracted into a `Row.*` namespace (§0).
 - `components/MarkdownViewer/` — read-only CodeMirror viewer, used by `Event.Body` + `Message.Body`.
 - `components/ViewMode/viewMode.ts` — `viewModeGroup`, `ViewMode`, `VIEW_MODE_ICONS`.
 - `components/Event/EventDetails.tsx` — event row fragment used by `EventTile`, `EventCard`, `Event.Header`.
 
 Still duplicated (targets):
 
+- **Card-row primitives** — `Header.*` rows are the de-facto shared row vocabulary, but `MessageTile`
+  hand-rolls its own `DxAvatar`+text "from" row instead of `PersonRow`, so message and event people render
+  differently; and `Message.Header` only renders `sender` (the `// TODO: List other To/CC/BCC` is open).
 - **Tile shell** — `EventTile` (in `EventStack.tsx`) inlines `Mosaic.Tile → Focus.Item → Card.Root`;
   `MessageStack.tsx` has a separate `MessageStackTile` shell. No common root.
 - **Article scaffold** — `EventArticle` and `MessageArticle` both render
@@ -55,8 +59,8 @@ Still duplicated (targets):
 ```mermaid
 graph TD
   subgraph shared[components/ — presentation-only, no app-framework]
-    StarButton[Header.StarButton → SystemIconButton.Star]
-    Rows[Header.DateRow/ObjectRow/PersonRow/TagsRow]
+    RowStar[Row.Star → SystemIconButton.Star]
+    Rows[Row.Person/Date/Tags/Ref]
     HeaderRoot[Header.Root — borderless Card chrome]
     Markdown[MarkdownViewer]
     ViewMode[ViewMode.viewModeGroup]
@@ -67,9 +71,11 @@ graph TD
     ObjectArticle[ObjectArticle — Panel scaffold]
   end
 
-  StarButton --> TileHeader
-  StarButton --> EventDetails
+  RowStar --> TileHeader
+  RowStar --> EventDetails
   Rows --> EventDetails
+  Rows --> MessageTile
+  Rows --> ConversationTile
   Rows --> MessageHeader
   HeaderRoot --> EventHeader
   HeaderRoot --> MessageHeader
@@ -113,17 +119,49 @@ graph TD
 
 | Concern        | Common                                              | Event-specific                          | Message-specific                                   |
 | -------------- | --------------------------------------------------- | --------------------------------------- | -------------------------------------------------- |
-| Star           | `SystemIconButton.Star` via `Header.StarButton`     | TagIndex on Calendar                    | TagIndex on Mailbox                                |
-| Tile shell     | `Tile.Root` + `Tile.Header` (star·title·menu)       | body = `EventDetails`                   | body = avatar/from/snippet/tags or conversation rows     |
-| Header chrome  | `Header.Root` (borderless Card + Card.Body)         | rows = `EventDetails(title='heading')`  | subject/sender/objects/tags rows                   |
+| Star           | `Row.Star` → `SystemIconButton.Star`                | TagIndex on Calendar                    | TagIndex on Mailbox                                |
+| Tile shell     | `Tile.Root` + `Tile.Header` (star·title·menu)       | body = `EventDetails`                   | body = `Row.Person`/snippet/`Row.Tags`, or convo rows |
+| Header chrome  | `Header.Root` (borderless Card + Card.Body)         | rows = `EventDetails(title='heading')`  | subject/sender/refs/tags rows                      |
 | Body           | `MarkdownViewer`                                     | description; editable draft via editor  | block selection (enriched/markdown/plain)          |
 | Toolbar        | `viewModeGroup`, `openGroup`, `deleteGroup`         | save, more-dropdown wrapping delete     | reply/replyAll/forward, load-images, extract       |
 | Article layout | `ObjectArticle` (Panel scaffold)                    | viewport wraps body in ScrollArea       | body rendered directly in content grid             |
-| People         | `Header.PersonRow`                                  | attendees                               | sender (To/CC/BCC TODO)                            |
-| Relations      | `Header.ObjectRow`                                  | linked Meeting (handshake button)       | extracted objects (Trip/Person/…)                  |
-| Tags           | `Header.TagsRow`                                     | —                                       | Gmail labels + user tags                           |
+| People         | `Row.Person` (role: from/to/cc/bcc/attendee, avatar)| attendees (role=attendee)               | sender (role=from); to/cc/bcc pending schema       |
+| Dates          | `Row.Date` (calendar row) / `formatDateTime` util   | start–end range + duration              | `created` inline in `Tile.Header` title slot       |
+| Relations/refs | `Row.Ref` (card-preview anchor)                     | linked Meeting (handshake button)       | extracted objects (Trip/Person/…)                  |
+| Tags           | `Row.Tags`                                           | —                                       | Gmail labels + user tags                           |
 
 ## Component specs
+
+### 0. `components/Row/Row.tsx` (new) — shared Card-row primitives
+
+The single source for every Card-row "extension" rendered inside a `Card.Body`. Presentation-only
+(no app-framework). Extracted from today's `Header.*` rows; consumed by **all** tiles, cards, and headers
+so a Person/Date/Tags/Ref row is defined exactly once. Each renders a `Card.Row` with a leading
+`Card.Block` (icon/avatar/button) and content track.
+
+- `Row.Person` — generalizes `PersonRow`. Props `{ actor, role?: 'from'|'to'|'cc'|'bcc'|'attendee', avatar?, db?, onContactCreate?, onRemove? }`.
+  `role` drives the leading label/icon (and is rendered as a recipient-kind hint where relevant); `avatar`
+  swaps the contact-anchor icon for a `DxAvatar` (the variant `MessageTile`/`ConversationTile` need).
+  Keeps the existing contact-anchor (`DxAnchorActivate`), `useActorContact`, create-contact fallback, and
+  trailing remove button. **`MessageTile`/`ConversationTile` adopt this** (avatar variant) instead of
+  hand-rolled `DxAvatar` markup, so message and event people render identically.
+- `Row.Date` — today's `DateRow`: calendar-icon row with a single date or start–end range + duration.
+  The message tile/header keep their compact inline `created` date in the `Tile.Header` title slot (a
+  different affordance), but both share the `formatDateTime` util — `Row.Date` is the canonical row form.
+- `Row.Tags` — today's `TagsRow`: label+hue chips, optional `onTagClick` (Gmail labels + user tags).
+- `Row.Ref` — today's `ObjectRow`: an ECHO ref/relation with a card-preview anchor (`AnchorIconButton`
+  stays internal to `Row`). Used for message-extracted objects and the event's linked Meeting.
+- `Row.Star` — today's `StarButton`: the leading-gutter star toggle (`SystemIconButton.Star`), used by
+  `Tile.Header`, `EventDetails` heading, and anywhere a star sits in a `Card.Block`.
+
+`components/Header/Header.tsx` is reduced to `Header.Root` only (the borderless-Card chrome, §2); the row
+symbols move to `Row`. No compatibility re-exports — every importer (`Event.tsx`, `Message.tsx`,
+`EventDetails.tsx`, `MessageStack.tsx`, `EventStack.tsx`) switches to `Row.*` in this change.
+
+Note on To/CC/BCC: the `Message` schema (`@dxos/types`) has only `sender` today (no to/cc/bcc; `Actor.role`
+is the AI role, not a recipient kind). `Row.Person` supports those roles so the UI is ready, but only
+`from` (sender) and `attendee` are wired now; to/cc/bcc wiring is gated on a schema/`properties` change
+(out of scope here).
 
 ### 1. `components/Tile/Tile.tsx` (new)
 
@@ -135,14 +173,14 @@ Presentation-only namespace, no app-framework deps. Replaces the inlined `EventT
   `TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator'`
   (moved here from both stacks; single source).
 - `Tile.Header` — props `{ starred?, onToggleStar?, title: ReactNode, menu?: boolean }`. Renders
-  `Card.Header` with `Card.Block` › `Header.StarButton`, a `Card.Title` slot for `title`, and `Card.Menu`
-  when `menu` (default `false`). The star renders only when `onToggleStar` is set (matching `Header.StarButton`).
+  `Card.Header` with `Card.Block` › `Row.Star`, a `Card.Title` slot for `title`, and `Card.Menu`
+  when `menu` (default `false`). The star renders only when `onToggleStar` is set (matching `Row.Star`).
 
 Consumers:
 
 - `EventTile` → `Tile.Root` › `Tile.Header(star, title=event title)` + `Card.Body` › `EventDetails(title=false, maxAttendees=8)`.
-- `MessageTile` → `Tile.Root` › `Tile.Header(star, title=subject·date, menu)` + `Card.Body` › avatar/from/snippet/`Header.TagsRow`.
-- `ConversationTile` → `Tile.Root` › `Tile.Header(star, title=subject)` + `Card.Body` › per-message rows.
+- `MessageTile` → `Tile.Root` › `Tile.Header(star, title=subject·date, menu)` + `Card.Body` › `Row.Person(avatar)`/snippet/`Row.Tags`.
+- `ConversationTile` → `Tile.Root` › `Tile.Header(star, title=subject)` + `Card.Body` › per-message `Row.Person(avatar)` rows.
 
 Behavioural change: the **event star moves from `EventDetails` into `Tile.Header`** so both tile types
 own the star in the shell. `EventDetails` keeps rendering the star only on the article-header path
@@ -159,8 +197,10 @@ shared chrome:
 </Card.Root>
 ```
 
-`Event.Header` → `<Header.Root classNames={editable && 'gap-y-1'}><EventDetails title='heading' …/></Header.Root>`.
-`Message.Header` → `<Header.Root data-testid='message-header'>…subject/sender/object/tags rows…</Header.Root>`.
+`Event.Header` → `<Header.Root classNames={editable && 'gap-y-1'}><EventDetails title='heading' …/></Header.Root>`
+(`EventDetails` composes `Row.Date`/`Row.Person`/`Row.Ref`). `Message.Header` →
+`<Header.Root data-testid='message-header'>` with `Row.Person(role=from)` (sender), `Row.Ref` (extracted
+objects), and `Row.Tags` children — the same primitives the tiles use.
 
 `data-testid` and `classNames` must forward (the `MessageArticle` play test queries `message-header`,
 `extracted-tags`, `message-tag-*`).
@@ -244,14 +284,16 @@ mapping (`threadId`), and the `@dxos/types` `Message.threadId` field.
 
 New:
 
+- `components/Row/Row.stories.tsx` — each `Row.*` primitive standalone (Person with each role + avatar
+  variant, Date single/range, Tags, Ref, Star on/off).
 - `components/Tile/Tile.stories.tsx` — `Tile.Root` + `Tile.Header` standalone (star on/off, with/without menu).
 - `components/ObjectArticle/ObjectArticle.stories.tsx` — scaffold with stub toolbar/header/body slots.
-- `components/Header/Header.stories.tsx` — `Header.Root` chrome with representative rows (none today).
+- `components/Header/Header.stories.tsx` — `Header.Root` chrome composing representative `Row.*` (none today).
 
 Update (reflect new tile/header/layout wiring):
 
-- `EventStack.stories.tsx`, `MessageStack.stories.tsx` — tiles now via `Tile.*`.
-- `Event.stories.tsx`, `Message.stories.tsx` — `Header.Root`-based headers.
+- `EventStack.stories.tsx`, `MessageStack.stories.tsx` — tiles now via `Tile.*` + `Row.*`.
+- `Event.stories.tsx`, `Message.stories.tsx` — `Header.Root`-based headers composing `Row.*`.
 - `MailboxArticle.stories.tsx`, `CalendarArticle.stories.tsx`, `MessageArticle.stories.tsx`,
   `EventArticle.stories.tsx` (add if missing) — render through `ObjectArticle`.
 
@@ -260,20 +302,22 @@ ECHO factories live in `useMemo([], …)`/`render`, never module-level `args`.
 
 ## File-level change list
 
+- `src/components/Row/{Row.tsx,Row.stories.tsx,index.ts}` — new; row primitives moved out of `Header`
+  (`Row.Person` generalized with role/avatar; `Row.Date`/`Row.Tags`/`Row.Ref`/`Row.Star`).
 - `src/components/Tile/{Tile.tsx,Tile.stories.tsx,index.ts}` — new.
 - `src/components/ObjectArticle/{ObjectArticle.tsx,ObjectArticle.stories.tsx,index.ts}` — new.
 - `src/components/Toolbar/{toolbar.ts,index.ts}` — new.
-- `src/components/Header/Header.tsx` — add `Header.Root`; `Header.stories.tsx` new.
-- `src/components/Header/index.ts` — unchanged (namespace export).
-- `src/components/Event/EventDetails.tsx` — drop star on the tile (`title={false}`) path; keep on heading path.
-- `src/components/EventStack/EventStack.tsx` — `EventTile` uses `Tile.*`.
-- `src/components/MessageStack/MessageStack.tsx` — `MessageTile`/`ConversationTile` use `Tile.*`; delete `MessageStackTile`; Thread→Conversation rename.
+- `src/components/Header/Header.tsx` — reduce to `Header.Root` chrome only (rows moved to `Row`); `Header.stories.tsx` new.
+- `src/components/Header/index.ts` — export `Header.Root` only.
+- `src/components/Event/EventDetails.tsx` — compose `Row.*`; drop star on the tile (`title={false}`) path; keep on heading path.
+- `src/components/EventStack/EventStack.tsx` — `EventTile` uses `Tile.*` + `Row.*`.
+- `src/components/MessageStack/MessageStack.tsx` — `MessageTile`/`ConversationTile` use `Tile.*` + `Row.Person(avatar)` (replace hand-rolled `DxAvatar` rows); delete `MessageStackTile`; Thread→Conversation rename.
 - `src/types/Settings.ts`, `src/capabilities/settings.ts` — `threads` field → `conversations`.
 - `src/meta.ts` — reword thread copy to conversation.
 - `src/components/Event/Event.tsx` — `Event.Header` uses `Header.Root`.
-- `src/components/Message/Message.tsx` — `Message.Header` uses `Header.Root`.
+- `src/components/Message/Message.tsx` — `Message.Header` uses `Header.Root` + `Row.*` (sender/refs/tags).
 - `src/components/Event/useToolbar.tsx`, `src/components/Message/useToolbar.tsx` — compose shared `openGroup`/`deleteGroup`.
-- `src/components/index.ts` — export `Tile`, `ObjectArticle`, `Toolbar`; drop `InboxSettings`.
+- `src/components/index.ts` — export `Row`, `Tile`, `ObjectArticle`, `Toolbar`; drop `InboxSettings`.
 - `src/components/InboxSettings/` — delete.
 - `src/containers/EventArticle/EventArticle.tsx`, `src/containers/MessageArticle/MessageArticle.tsx` — render via `ObjectArticle`.
 - `src/containers/MailboxArticle/MailboxArticle.tsx` — `current-thread`→`current-conversation`, `threads`→`conversations` prop.
