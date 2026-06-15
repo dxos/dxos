@@ -383,13 +383,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(parentDXN, false);
+      return this._resolveStrongDepFromWorkingSet(database, parentDXN);
     } else {
       invariant(target[symbolInternals].linkCache);
       const parentEchoUri = EID.tryParse(parentDXN);
@@ -399,6 +393,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
+  /**
+   * Resolve a strong-dependency endpoint (relation source/target, parent) from the working set. The
+   * endpoint is a strong dep preloaded to `ready` before its holder surfaces, so the synchronous
+   * working-set probe succeeds — including for feed-queue and cross-space endpoints.
+   */
+  private _resolveStrongDepFromWorkingSet(database: EchoDatabase, uri: URI.URI): any {
+    const request = database.graph
+      .createRefResolver({ context: { space: database.spaceId } })
+      .resolve(uri, { source: 'working-set' });
+    const result = request.getResult();
+    request.abort();
+    return result;
+  }
+
   private _getRelationSource(target: ProxyTarget): any {
     const sourceRef = target[symbolInternals].core.getSource();
     invariant(sourceRef);
@@ -406,13 +414,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(sourceDXN, false);
+      return this._resolveStrongDepFromWorkingSet(database, sourceDXN);
     } else {
       invariant(target[symbolInternals].linkCache);
       const sourceEchoId = EID.tryParse(sourceDXN);
@@ -428,13 +430,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const targetDXN = EncodedReference.toURI(targetRef);
     const database = target[symbolInternals].database;
     if (database) {
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(targetDXN, false);
+      return this._resolveStrongDepFromWorkingSet(database, targetDXN);
     } else {
       invariant(target[symbolInternals].linkCache);
       const targetEchoId = EID.tryParse(targetDXN);

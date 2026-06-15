@@ -62,8 +62,8 @@ describe('strong dependency resolution', () => {
 
       const [obj] = await db.query(Filter.id(relation.id)).run();
       assert(Relation.isRelation(obj), 'relation with feed endpoints must surface');
-      expect(Relation.getSource(obj).name).toEqual('Bob');
-      expect(Relation.getTarget(obj).name).toEqual('Alice');
+      expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+      expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
     });
 
     test('after reload (from disk)', async () => {
@@ -101,8 +101,8 @@ describe('strong dependency resolution', () => {
 
         const [obj] = await db.query(Filter.id(relationId)).run();
         assert(Relation.isRelation(obj), 'reloaded relation with feed endpoints must surface');
-        expect(Relation.getSource(obj).name).toEqual('Bob');
-        expect(Relation.getTarget(obj).name).toEqual('Alice');
+        expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+        expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
       }
     });
 
@@ -136,8 +136,8 @@ describe('strong dependency resolution', () => {
 
       const obj = await waitForRelation(db2, relation.id);
       assert(Relation.isRelation(obj), 'relation with feed endpoints must surface on a remote peer');
-      expect(Relation.getSource(obj).name).toEqual('Bob');
-      expect(Relation.getTarget(obj).name).toEqual('Alice');
+      expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+      expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
     });
   });
 
@@ -234,8 +234,8 @@ describe('strong dependency resolution', () => {
         await using db = await peer.openLastDatabase();
         const [obj] = await db.query(Filter.id(relationId)).run();
         assert(Relation.isRelation(obj), 'same-db relation must surface');
-        expect(Relation.getSource(obj).name).toEqual('Bob');
-        expect(Relation.getTarget(obj).name).toEqual('Alice');
+        expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+        expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
       }
     });
 
@@ -265,8 +265,8 @@ describe('strong dependency resolution', () => {
 
       const obj = await waitForRelation(db2, relation.id);
       assert(Relation.isRelation(obj), 'same-db relation must surface on a remote peer');
-      expect(Relation.getSource(obj).name).toEqual('Bob');
-      expect(Relation.getTarget(obj).name).toEqual('Alice');
+      expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+      expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
     });
   });
 
@@ -294,8 +294,8 @@ describe('strong dependency resolution', () => {
 
       const [obj] = await dbA.query(Filter.id(relation.id)).run();
       assert(Relation.isRelation(obj), 'cross-space relation must surface');
-      expect(Relation.getSource(obj).name).toEqual('Bob');
-      expect(Relation.getTarget(obj).name).toEqual('Alice');
+      expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+      expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
     });
   });
 
