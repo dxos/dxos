@@ -10,23 +10,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Trigger CF Pages deployment for testbench-app
+      - name: List CF Pages projects
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          response=$(curl -s -X POST \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench-app/deployments" \
+          curl -s \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects?per_page=100" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"branch": "claude/clever-haslett-bb86ef"}')
-          echo "$response" | jq '.'
-          url=$(echo "$response" | jq -r '.result.url // empty')
-          if [ -n "$url" ]; then
-            echo "Preview URL: $url"
-          fi
-          success=$(echo "$response" | jq -r '.success')
-          if [ "$success" != "true" ]; then
-            echo "Failed to trigger deployment"
-            exit 1
-          fi
+            | jq '.result[].name'
