@@ -67,7 +67,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // kind / space; closure satisfaction lives in the per-call `RequestImpl`s.
   readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
-  #crossSpaceBackend: LoadBackend | undefined;
 
   constructor() {
     this._registry = makeRegistry();
@@ -185,7 +184,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
-        const root = this.#loadOpTable.acquire(uri, source);
+        const root = this.#loadOpTable.acquire(this.#qualifyToContext(uri, context), source);
         return new RequestImpl(this.#loadOpTable, root, source);
       },
 
@@ -250,11 +249,25 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Route a URI to its resolution backend: registry for `dxn:`, a single-space backend for a
-   * space-qualified `echo:` EID, and a cross-space backend for a space-less (local) `echo:` EID.
-   * Entity ids are globally unique, so a local EID is resolvable by searching every registered
-   * space — this is how a relation/parent endpoint stored space-less (created before its holder
-   * joined a db) resolves cross-space.
+   * Qualifies a space-less (relative) `echo:` URI with the resolving context's space. Same-space
+   * references are persisted relative; cross-space references are persisted absolute (stamped at
+   * write time). Routing is by fully-qualified URI, so a relative URI is resolved against the
+   * context that requested it. Non-`echo:` and already-qualified URIs pass through unchanged.
+   */
+  #qualifyToContext(uri: URI.URI, context: Hypergraph.RefResolutionContext): URI.URI {
+    const eid = EID.tryParse(uri);
+    if (eid == null || !EID.isLocal(eid) || context.space == null) {
+      return uri;
+    }
+    const entityId = EID.getEntityId(eid);
+    return entityId != null ? EID.make({ spaceId: context.space, entityId }) : uri;
+  }
+
+  /**
+   * Route a URI to its resolution backend: registry for `dxn:` and a single-space backend for a
+   * space-qualified `echo:` EID. A space-less EID is unroutable here — callers qualify relative URIs
+   * to a space (via {@link #qualifyToContext} for request roots, or the owning space for discovered
+   * strong-dependency edges) before routing.
    */
   #routeBackend(uri: URI.URI): LoadBackend | undefined {
     if (DXN.isDXN(uri)) {
@@ -264,7 +277,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!eid || EID.getEntityId(eid) == null) {
       return undefined;
     }
-    return this.#entityBackend(EID.getSpaceId(eid));
+    const spaceId = EID.getSpaceId(eid);
+    if (spaceId == null) {
+      return undefined;
+    }
+    return this.#entityBackend(spaceId);
   }
 
   // Registry backend — fully in-memory; effectively `working-set`.
@@ -281,44 +298,30 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   };
 
   /**
-   * Backend resolving an entity by id across one space (when `spaceId` is set) or every registered
-   * space (when it is undefined). Cached per routing key so its identity is stable for the table.
+   * Backend resolving an entity by id within a single space. Cached per space so its identity is
+   * stable for the table.
    */
-  #entityBackend(spaceId: SpaceId | undefined): LoadBackend {
-    if (spaceId == null) {
-      return (this.#crossSpaceBackend ??= {
-        probe: (uri) => this.#probeEntity(uri, undefined),
-        load: (uri, source, set) => this.#loadEntity(uri, source, set, undefined),
-      });
-    }
+  #entityBackend(spaceId: SpaceId): LoadBackend {
     return entry(this.#spaceBackends, spaceId).orInsert({
       probe: (uri) => this.#probeEntity(uri, spaceId),
       load: (uri, source, set) => this.#loadEntity(uri, source, set, spaceId),
     }).value;
   }
 
-  /** Candidate spaces for a resolution: just `spaceId` when qualified, otherwise every space. */
-  #candidateSpaceIds(spaceId: SpaceId | undefined): SpaceId[] {
-    if (spaceId != null) {
-      return [spaceId];
-    }
-    return [...new Set([...this._databases.keys(), ...this._queueFactories.keys()])];
-  }
-
   /**
-   * Synchronous working-set probe for an entity across candidate spaces: each local db, then its
-   * known feed queues. Resolves regardless of the deleted flag — deletion is filtered by the query
-   * pipeline, not by resolution (gating a deleted object's own satisfaction would hide it from
-   * deleted-only queries and break re-add).
+   * Synchronous working-set probe for an entity within its space: the local db, then its known feed
+   * queues. Resolves regardless of the deleted flag — deletion is filtered by the query pipeline,
+   * not by resolution (gating a deleted object's own satisfaction would hide it from deleted-only
+   * queries and break re-add).
    */
-  #probeEntity(uri: URI.URI, spaceId: SpaceId | undefined): LoadResult | undefined {
+  #probeEntity(uri: URI.URI, spaceId: SpaceId): LoadResult | undefined {
     const eid = EID.tryParse(uri);
     const entityId = eid ? EID.getEntityId(eid) : undefined;
     if (entityId == null) {
       return undefined;
     }
 
-    for (const candidateSpaceId of this.#candidateSpaceIds(spaceId)) {
+    for (const candidateSpaceId of [spaceId]) {
       const db = this._databases.get(candidateSpaceId);
       if (db) {
         const core = db.coreDatabase.getObjectCoreById(entityId, { load: false });
@@ -354,7 +357,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     uri: URI.URI,
     source: RefSource,
     set: (state: 'pending' | 'requesting' | 'ready' | 'unavailable', result: LoadResult | undefined) => void,
-    spaceId: SpaceId | undefined,
+    spaceId: SpaceId,
   ): () => void {
     const eid = EID.tryParse(uri);
     const entityId = eid ? EID.getEntityId(eid) : undefined;
@@ -380,7 +383,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       set('ready', { result, strongDeps });
     };
 
-    const candidateSpaceIds = this.#candidateSpaceIds(spaceId);
+    const candidateSpaceIds = [spaceId];
     let pendingDb = 0;
     let pendingQueue = 0;
     let queuePolling = false;

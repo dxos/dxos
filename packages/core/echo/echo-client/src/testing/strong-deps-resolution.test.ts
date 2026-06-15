@@ -142,6 +142,121 @@ describe('strong dependency resolution', () => {
   });
 
   //
+  // Relation source/target — source in database, target in feed (mixed).
+  // The relation and its source live in the automerge database; only the target lives in a queue.
+  // The target is referenced as the decoded queue object (carrying its absolute queue URI) so it is
+  // resolved from the feed rather than copied into the database.
+  //
+
+  describe('relation source/target — source in database, target in feed', () => {
+    test('in-memory', async () => {
+      await using peer = await builder.createPeer({ types: TYPES });
+      await using db = await peer.createDatabase();
+      const queue = peer.client.constructQueueFactory(db.spaceId).create<TestSchema.Person>();
+
+      const source = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const targetSeed = Obj.make(TestSchema.Person, { name: 'Alice' });
+      await queue.append([targetSeed]);
+      const [target] = await queue.getObjectsById([targetSeed.id]);
+      assert(target != null, 'feed target must be retrievable from the queue');
+
+      const relation = db.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: source,
+          [Relation.Target]: target,
+        }),
+      );
+      await db.flush();
+
+      const [obj] = await db.query(Filter.id(relation.id)).run();
+      assert(Relation.isRelation(obj), 'relation with a db source and feed target must surface');
+      expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+      expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
+
+      // The target stays in the feed — it is not copied into the database.
+      const persisted = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(persisted.map((person) => person.id)).toEqual([source.id]);
+    });
+
+    test('after reload (from disk)', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using peer = await builder.createPeer({ types: TYPES });
+
+      let relationId: string;
+      let queueUri: EID.EID;
+      let rootUrl: string;
+      {
+        await using db = await peer.createDatabase(spaceKey);
+        rootUrl = db.rootUrl!;
+        const queue = peer.client.constructQueueFactory(db.spaceId).create<TestSchema.Person>();
+        queueUri = queue.uri;
+
+        const source = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+        const targetSeed = Obj.make(TestSchema.Person, { name: 'Alice' });
+        await queue.append([targetSeed]);
+        const [target] = await queue.getObjectsById([targetSeed.id]);
+        assert(target != null, 'feed target must be retrievable from the queue');
+
+        const relation = db.add(
+          Relation.make(TestSchema.HasManager, {
+            [Relation.Source]: source,
+            [Relation.Target]: target,
+          }),
+        );
+        relationId = relation.id;
+        await db.flush();
+      }
+
+      await peer.reload();
+      {
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        peer.client.constructQueueFactory(db.spaceId).get(queueUri);
+
+        const [obj] = await db.query(Filter.id(relationId)).run();
+        assert(Relation.isRelation(obj), 'reloaded relation with a db source and feed target must surface');
+        expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+        expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
+      }
+    });
+
+    test('multi-peer (from network)', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using network = await new TestReplicationNetwork().open();
+      await using peer1 = await builder.createPeer({ types: TYPES });
+      await using peer2 = await builder.createPeer({ types: TYPES });
+      await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+      await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+
+      await using db1 = await peer1.createDatabase(spaceKey);
+      const queue1 = peer1.client.constructQueueFactory(db1.spaceId).create<TestSchema.Person>();
+      const source = db1.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const targetSeed = Obj.make(TestSchema.Person, { name: 'Alice' });
+      await queue1.append([targetSeed]);
+      const [target] = await queue1.getObjectsById([targetSeed.id]);
+      assert(target != null, 'feed target must be retrievable from the queue');
+      const relation = db1.add(
+        Relation.make(TestSchema.HasManager, {
+          [Relation.Source]: source,
+          [Relation.Target]: target,
+        }),
+      );
+      await db1.flush();
+      const heads = await db1.coreDatabase.getDocumentHeads();
+
+      await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+      await db2.coreDatabase.updateIndexes();
+      // The db source replicates with the document; the feed target must be fetched over the network.
+      peer2.client.constructQueueFactory(db2.spaceId).get(queue1.uri);
+
+      const obj = await waitForRelation(db2, relation.id);
+      assert(Relation.isRelation(obj), 'relation with a db source and feed target must surface on a remote peer');
+      expect((Relation.getSource(obj) as TestSchema.Person).name).toEqual('Bob');
+      expect((Relation.getTarget(obj) as TestSchema.Person).name).toEqual('Alice');
+    });
+  });
+
+  //
   // Relation source/target — feed → automerge.
   // Relation lives in a queue; an endpoint lives in the database.
   //

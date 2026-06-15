@@ -528,13 +528,16 @@ export class ObjectCore {
     const sourceRef = this.getSource();
     const targetRef = this.getTarget();
     const parentRef = this.getParent();
-    return getStrongDependencyUris({
-      kind: this.getKind(),
-      type: typeRef ? EncodedReference.toURI(typeRef) : undefined,
-      source: sourceRef ? EncodedReference.toURI(sourceRef) : undefined,
-      target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
-      parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
-    });
+    return getStrongDependencyUris(
+      {
+        kind: this.getKind(),
+        type: typeRef ? EncodedReference.toURI(typeRef) : undefined,
+        source: sourceRef ? EncodedReference.toURI(sourceRef) : undefined,
+        target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
+        parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
+      },
+      this.database?.spaceId,
+    );
   }
 }
 

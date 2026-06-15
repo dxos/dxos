@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EID, type URI } from '@dxos/keys';
+import { EID, type SpaceId, type URI } from '@dxos/keys';
 
 import { EntityKind } from '../common/types/entity';
 import { RelationSourceDXNId, RelationTargetDXNId } from '../common/types/model-symbols';
@@ -35,27 +35,44 @@ export interface StrongDepRefs {
  * available through the registry, so gating on it would needlessly delay surfacing. Only a
  * persisted (db-backed) schema, addressed by an `echo:` URI, must load before its instances.
  */
-export const getStrongDependencyUris = (refs: StrongDepRefs): URI.URI[] => {
+export const getStrongDependencyUris = (refs: StrongDepRefs, owningSpaceId?: SpaceId): URI.URI[] => {
   const res: URI.URI[] = [];
 
   if (refs.type != null && EID.tryParse(refs.type) != null) {
-    res.push(refs.type);
+    res.push(qualifyToSpace(refs.type, owningSpaceId));
   }
 
   if (refs.kind === EntityKind.Relation) {
     if (refs.source != null) {
-      res.push(refs.source);
+      res.push(qualifyToSpace(refs.source, owningSpaceId));
     }
     if (refs.target != null) {
-      res.push(refs.target);
+      res.push(qualifyToSpace(refs.target, owningSpaceId));
     }
   }
 
   if (refs.parent != null) {
-    res.push(refs.parent);
+    res.push(qualifyToSpace(refs.parent, owningSpaceId));
   }
 
   return res;
+};
+
+/**
+ * Qualifies a space-less (relative) `echo:` dependency URI with the space of the entity that owns it.
+ * Same-space references are persisted relative; resolution needs them absolute to route to a single
+ * space. Already-qualified URIs (cross-space) and non-`echo:` URIs (registry `dxn:`) pass through.
+ */
+const qualifyToSpace = (uri: URI.URI, owningSpaceId: SpaceId | undefined): URI.URI => {
+  if (owningSpaceId == null) {
+    return uri;
+  }
+  const eid = EID.tryParse(uri);
+  if (eid == null || !EID.isLocal(eid)) {
+    return uri;
+  }
+  const entityId = EID.getEntityId(eid);
+  return entityId != null ? EID.make({ spaceId: owningSpaceId, entityId }) : uri;
 };
 
 /**
@@ -71,12 +88,19 @@ export const getStrongDependencies = (entity: unknown): URI.URI[] => {
   const kind = props[RelationSourceDXNId] != null || props[RelationTargetDXNId] != null ? EntityKind.Relation : EntityKind.Object;
   const parent = props[ParentId];
 
-  return getStrongDependencyUris({
-    kind,
-    type: typeof props[TypeId] === 'string' ? (props[TypeId] as URI.URI) : undefined,
-    source: props[RelationSourceDXNId] as URI.URI | undefined,
-    target: props[RelationTargetDXNId] as URI.URI | undefined,
-    // A parent is held as the resolved entity; derive its absolute URI for the dependency edge.
-    parent: parent != null ? getObjectEchoUri(parent) : undefined,
-  });
+  // The entity's own space qualifies any relative dependency URIs it carries.
+  const selfUri = getObjectEchoUri(entity);
+  const owningSpaceId = selfUri != null ? EID.getSpaceId(selfUri) : undefined;
+
+  return getStrongDependencyUris(
+    {
+      kind,
+      type: typeof props[TypeId] === 'string' ? (props[TypeId] as URI.URI) : undefined,
+      source: props[RelationSourceDXNId] as URI.URI | undefined,
+      target: props[RelationTargetDXNId] as URI.URI | undefined,
+      // A parent is held as the resolved entity; derive its absolute URI for the dependency edge.
+      parent: parent != null ? getObjectEchoUri(parent) : undefined,
+    },
+    owningSpaceId,
+  );
 };

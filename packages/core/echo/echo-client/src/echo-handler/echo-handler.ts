@@ -991,6 +991,29 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
+  /**
+   * Re-stamps a relation's source/target references once it joins a database. `setRelationSourceAndTarget`
+   * runs at construction time, before the relation has a database, so it can only emit space-less refs.
+   * With the database known, each endpoint is bound here: a same-space endpoint stays relative, a
+   * cross-space endpoint becomes absolute, and an unpersisted endpoint is added to this database (then
+   * relative) — keeping the relation's strong-dependency endpoints resolvable from the persisted ref alone.
+   */
+  rebindRelationEndpoints(target: ProxyTarget): void {
+    const core = target[symbolInternals].core;
+    if (core.getKind() !== EntityKind.Relation) {
+      return;
+    }
+    // Read the raw endpoint proxies off the target (not via the resolving get-trap on the proxy).
+    const sourceRef = Reflect.get(target, RelationSourceId);
+    const targetRef = Reflect.get(target, RelationTargetId);
+    if (isProxy(sourceRef)) {
+      core.setSource(EncodedReference.fromURI(this.createRef(target, sourceRef)));
+    }
+    if (isProxy(targetRef)) {
+      core.setTarget(EncodedReference.fromURI(this.createRef(target, targetRef)));
+    }
+  }
+
   private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number): void {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
