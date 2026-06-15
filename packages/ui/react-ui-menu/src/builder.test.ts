@@ -74,7 +74,7 @@ describe('MenuBuilder', () => {
   test('merges pre-built subgraph', ({ expect }) => {
     const headings = MenuBuilder.make()
       .root({ label: 'headings' })
-      .group('headings', { label: 'Headings', variant: 'dropdownMenu' }, (group) => {
+      .group('headings', { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' }, (group) => {
         group
           .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
           .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
@@ -115,7 +115,7 @@ describe('MenuBuilder', () => {
       .root({ label: 'toolbar' })
       .subgraph((sub) => {
         sub
-          .group('headings', { label: 'Headings', variant: 'dropdownMenu' }, (group) => {
+          .group('headings', { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' }, (group) => {
             group
               .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
               .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
@@ -160,7 +160,7 @@ describe('MenuBuilder', () => {
   test('composable curried subgraph functions', ({ expect }) => {
     // Simulates the curried pattern: addX(args) returns (builder) => void.
     const addHeadingsSection = () => (builder: import('./builder').ActionGroupBuilder) => {
-      builder.group('headings', { label: 'Headings', variant: 'dropdownMenu' }, (group) => {
+      builder.group('headings', { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' }, (group) => {
         group
           .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
           .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
@@ -204,6 +204,37 @@ describe('MenuBuilder', () => {
     // root + bold = 2 nodes; headings skipped.
     expect(graph.nodes).toHaveLength(2);
     expect(graph.edges).toHaveLength(1);
+  });
+
+  test('menu creates overflow dropdown with built-in trigger', ({ expect }) => {
+    const graph = MenuBuilder.make()
+      .root({ label: 'toolbar' })
+      .menu('more', (group) => {
+        group.action('save', { label: 'Save', icon: 'ph--cloud-arrow-up--regular' }, () => {});
+      })
+      .build();
+
+    const moreGroup = graph.nodes.find((node) => node.id === 'more');
+    expect(moreGroup).toBeDefined();
+    expect(moreGroup!.properties).toEqual({
+      label: ['toolbar-overflow.menu', { ns: '@dxos/react-ui-menu' }],
+      icon: 'ph--dots-three-vertical--regular',
+      iconOnly: true,
+      variant: 'dropdownMenu',
+      caretDown: false,
+    });
+    expect(graph.edges).toContainEqual({ source: 'root', target: 'more', relation: 'child' });
+    expect(graph.edges).toContainEqual({ source: 'more', target: 'save', relation: 'child' });
+  });
+
+  test('menu accepts custom group id', ({ expect }) => {
+    const graph = MenuBuilder.make()
+      .root({ label: 'toolbar' })
+      .menu('overflow', () => {})
+      .build();
+
+    expect(graph.nodes.find((node) => node.id === 'overflow')).toBeDefined();
+    expect(graph.nodes.find((node) => node.id === 'more')).toBeUndefined();
   });
 
   test('nodes have correct types', ({ expect }) => {

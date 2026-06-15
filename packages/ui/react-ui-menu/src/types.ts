@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Node } from '@dxos/app-graph';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
-import { type MenuActionProperties } from '@dxos/ui-types';
+import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 
 export type MenuAction<P extends {} = {}> = Node.Action<P & MenuActionProperties>;
 
@@ -18,17 +18,20 @@ export type MenuSeparator = Node.Node<never, Pick<ToolbarSeparatorProps, 'varian
 
 export const isSeparator = (node: Node.Node): node is MenuSeparator => node.type === MenuSeparatorType;
 
-export type MenuSingleSelectActionGroup = { selectCardinality: 'single'; value: string };
-export type MenuMultipleSelectActionGroup = { selectCardinality: 'multiple'; value: string[] };
-
 export type MenuItemGroup<P extends Record<string, any> = Record<string, any>> = Node.ActionGroup<P>;
 
 export const isMenuGroup = (node: Node.Node): node is MenuItemGroup => node.type === Node.ActionGroupType;
 
-export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
+/** Graph-sourced menu nodes carry plugin-specific properties validated at runtime. */
+export type GraphMenuItem = Node.Action | Node.ActionGroup;
+
+export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup | GraphMenuItem;
+
+/** Group context for graph-backed dropdown menus (any graph node, not only action groups). */
+export type MenuGroupContext = MenuItemGroup | Node.Node;
 
 /** Atom-family-style accessor: returns an atom of items for a given group (or root when undefined). */
-export type MenuItemsAccessor = (group?: MenuItemGroup) => Atom.Atom<MenuItem[] | null>;
+export type MenuItemsAccessor = (group?: MenuGroupContext) => Atom.Atom<MenuItem[] | null>;
 
 export type ActionExecutor = (action: MenuAction, params: Node.InvokeProps) => void;
 
@@ -39,7 +42,7 @@ export type AddMenuItemsProps = {
   mode: MenuItemsMode;
   priority?: number;
   items: MenuItem[];
-  groupFilter?: (group?: MenuItemGroup) => boolean;
+  groupFilter?: (group?: MenuGroupContext) => boolean;
 };
 
 export type MenuItems = Omit<AddMenuItemsProps, 'priority'> & { priority: number };

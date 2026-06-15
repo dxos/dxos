@@ -14,6 +14,7 @@ import {
   type AddMenuItemsProps,
   type MenuAction,
   type MenuContextValue,
+  type MenuGroupContext,
   type MenuItem,
   type MenuItemGroup,
   type MenuItems,
@@ -130,7 +131,7 @@ const MenuProvider = ({
 
 const resolveItems = (
   baseItems: MenuItem[] | null,
-  group: MenuItemGroup | undefined,
+  group: MenuGroupContext | undefined,
   entries: ReadonlyMap<string, MenuItems>,
 ): MenuItem[] | null => {
   const applicable = [...entries.values()].filter((entry) => !entry.groupFilter || entry.groupFilter(group));
@@ -166,7 +167,7 @@ const resolveItems = (
 //
 
 const useMenuItems = (
-  group?: MenuItemGroup,
+  group?: MenuGroupContext,
   propsItems?: MenuItem[],
   consumerName: string = 'useMenuItemConsumer',
   __menuScope?: Scope,
@@ -233,7 +234,7 @@ const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...props 
 //
 
 type MenuContentProps = {
-  group?: MenuItemGroup;
+  group?: MenuGroupContext;
   items?: MenuItem[];
   caller?: string;
 };
