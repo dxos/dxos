@@ -27,9 +27,12 @@ export default Capability.makeModule(
       join: async (call) => {
         const callManager = capabilities.get(CallsCapabilities.Manager);
         const config = await call.transport.config.load();
-        if (Obj.instanceOf(Call.CloudflareTransportConfig, config)) {
-          callManager.setRoomId(config.roomId);
+        // Fail fast on a missing/invalid config rather than joining, which would otherwise reuse the
+        // manager's stale room id from a previous call.
+        if (!Obj.instanceOf(Call.CloudflareTransportConfig, config)) {
+          throw new Error('Cloudflare transport config is missing or invalid.');
         }
+        callManager.setRoomId(config.roomId);
         await callManager.join();
       },
       leave: async () => {
