@@ -18,4 +18,4 @@ jobs:
           curl -s \
             "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects?per_page=100" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            | jq '.result[].name'
+            | jq '.'
