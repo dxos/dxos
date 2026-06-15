@@ -7,13 +7,12 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Relation } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
+import { Ref } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { type EID, PublicKey } from '@dxos/keys';
 
 import { type EchoDatabase } from '../proxy-db';
-
 import { EchoTestBuilder } from './echo-test-builder';
 
 // Matrix of e2e tests for STRONG-DEPENDENCY resolution exercised through the public database API

@@ -465,7 +465,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     };
   }
 
-  async #searchQueues(spaceId: SpaceId, entityId: EntityId, queueFactory: QueueFactory): Promise<Entity.Unknown | undefined> {
+  async #searchQueues(
+    spaceId: SpaceId,
+    entityId: EntityId,
+    queueFactory: QueueFactory,
+  ): Promise<Entity.Unknown | undefined> {
     for (const queue of queueFactory.knownQueues()) {
       const cached = queue.getCachedObjectById(entityId);
       if (cached != null) {

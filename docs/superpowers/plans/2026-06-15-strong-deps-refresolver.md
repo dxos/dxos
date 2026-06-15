@@ -17,6 +17,7 @@
 ## File structure
 
 Created:
+
 - `packages/core/echo/echo/src/internal/Ref/strong-deps.ts` — store-agnostic strong-dep extractor (`getStrongDependencies(entity): URI.URI[]`).
 - `packages/core/echo/echo-client/src/core-db/load-op.ts` — `LoadOp` + `LoadOpTable` (coalesced per-URI body loading + refcount + backends).
 - `packages/core/echo/echo-client/src/core-db/ref-resolver-request.ts` — `RequestImpl` (closure-aware handle + walker).
@@ -24,6 +25,7 @@ Created:
 - `packages/core/echo/echo-client/src/proxy-db/relation-endpoints.test.ts` — feed/cross-space/registry-type endpoint suite.
 
 Modified:
+
 - `packages/core/echo/echo/src/internal/Ref/ref.ts` — `RefSource`, `RefResolverRequest`, new `RefResolver.resolve`; `RefImpl` single lazy request + `FinalizationRegistry`; `StaticRefResolver`.
 - `packages/core/echo/echo/src/Hypergraph.ts` — `RefResolverOptions` loses `middleware`.
 - `packages/core/echo/echo-client/src/hypergraph.ts` — `LoadOpTable` wiring, `createRefResolver` returns the new resolver, remove cross-space guard + `_resolveEvents` (subsumed).
@@ -39,6 +41,7 @@ Modified:
 ## Task 1: New resolver types + StaticRefResolver
 
 **Files:**
+
 - Modify: `packages/core/echo/echo/src/internal/Ref/ref.ts` (`RefResolver`, `StaticRefResolver`)
 - Test: `packages/core/echo/echo-client/src/core-db/ref-resolver.test.ts`
 
@@ -129,6 +132,7 @@ resolve(uri: URI.URI, _options: { source: RefSource }): RefResolverRequest {
 ## Task 2: Store-agnostic strong-dep extractor
 
 **Files:**
+
 - Create: `packages/core/echo/echo/src/internal/Ref/strong-deps.ts`
 - Modify: `packages/core/echo/echo-client/src/core-db/object-core.ts:520-564`
 - Test: `packages/core/echo/echo/src/internal/Ref/strong-deps.test.ts`
@@ -150,10 +154,7 @@ describe('getStrongDependencies', () => {
     const b = Obj.make(TestSchema.Expando, {});
     const rel = Relation.make(TestSchema.HasManager, { [Relation.Source]: a, [Relation.Target]: b });
     const deps = getStrongDependencies(rel);
-    expect(deps).toEqual(expect.arrayContaining([
-      EID.make({ entityId: a.id }),
-      EID.make({ entityId: b.id }),
-    ]));
+    expect(deps).toEqual(expect.arrayContaining([EID.make({ entityId: a.id }), EID.make({ entityId: b.id })]));
   });
 });
 ```
@@ -204,6 +205,7 @@ getStrongDependencies(): URI.URI[] {
 ## Task 3: LoadOp table (coalesced body loading)
 
 **Files:**
+
 - Create: `packages/core/echo/echo-client/src/core-db/load-op.ts`
 - Test: `packages/core/echo/echo-client/src/core-db/ref-resolver.test.ts`
 
@@ -233,8 +235,12 @@ export interface LoadBackend {
 export class LoadOpTable {
   readonly #ops = new Map<URI.URI, LoadOp>();
   constructor(private readonly routeBackend: (uri: URI.URI) => LoadBackend | undefined) {}
-  acquire(uri: URI.URI, source: RefSource): LoadOp { /* create-or-escalate, refcount++ */ }
-  release(op: LoadOp): void { /* refcount--, when 0 cancel + delete */ }
+  acquire(uri: URI.URI, source: RefSource): LoadOp {
+    /* create-or-escalate, refcount++ */
+  }
+  release(op: LoadOp): void {
+    /* refcount--, when 0 cancel + delete */
+  }
 }
 ```
 
@@ -263,6 +269,7 @@ test('two acquires of the same uri share one op', ({ expect }) => {
 ## Task 4: Closure-aware RequestImpl + walker
 
 **Files:**
+
 - Create: `packages/core/echo/echo-client/src/core-db/ref-resolver-request.ts`
 - Test: `packages/core/echo/echo-client/src/core-db/ref-resolver.test.ts`
 
@@ -307,6 +314,7 @@ test('cycle A<->B both bodies ready => ready, no deadlock', async ({ expect }) =
 ## Task 5: Wire HypergraphImpl backends + `resolve`
 
 **Files:**
+
 - Modify: `packages/core/echo/echo-client/src/hypergraph.ts`
 - Test: `packages/core/echo/echo-client/src/core-db/ref-resolver.test.ts`
 
@@ -327,6 +335,7 @@ Construct a `LoadOpTable` with three backends routed by URI kind/space: echo-db 
 ## Task 6: CoreDatabase satisfaction via resolver
 
 **Files:**
+
 - Modify: `packages/core/echo/echo-client/src/core-db/core-database.ts`
 - Modify: `packages/core/echo/echo-client/src/core-db/strong-deps-stall.test.ts`
 
@@ -349,6 +358,7 @@ Inject the resolver; replace `_strongDepsIndex`/`_unavailableObjects`/`_onObject
 ## Task 7: Relation read path + isDeleted
 
 **Files:**
+
 - Modify: `packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:402-445,487-514`
 
 `_getRelationSource`/`_getRelationTarget` use `resolve(uri, { source: 'working-set' }).getResult()`. `isDeleted` parent walk uses the working-set probe.
@@ -362,6 +372,7 @@ Inject the resolver; replace `_strongDepsIndex`/`_unavailableObjects`/`_onObject
 ## Task 8: RefImpl single lazy request
 
 **Files:**
+
 - Modify: `packages/core/echo/echo/src/internal/Ref/ref.ts` (`RefImpl`)
 
 One lazily-created `resolve(uri, { source: 'network' })`; `.target` = `getResult()`; `.load()`/`.tryLoad()` = `wait()`; `#resolved` driven by `stateChanged`; `FinalizationRegistry` aborts on GC.
@@ -394,6 +405,7 @@ get target(): T | undefined {
 ## Task 9: json-serializer migration
 
 **Files:**
+
 - Modify: `packages/core/echo/echo/src/internal/Obj/json-serializer.ts:97-164`
 
 Replace `resolveSchema`/`resolveType`/`resolve` with `resolve(uri, { source: 'network' }).wait()` (+ `Type.getSchema` where a schema is needed).
@@ -407,6 +419,7 @@ Replace `resolveSchema`/`resolveType`/`resolve` with `resolve(uri, { source: 'ne
 ## Task 10: Remove middleware; fold stored-schema canonicalization
 
 **Files:**
+
 - Modify: `packages/core/echo/echo/src/Hypergraph.ts:31-43,71-77`
 - Modify: `packages/core/echo/echo-client/src/hypergraph.ts` (echo-db backend)
 - Modify: `packages/core/echo/echo-client/src/echo-handler/echo-handler.ts:955-979`
@@ -424,6 +437,7 @@ Move `_handleStoredSchema` canonicalization (persisted `TypeSchema` → `_getOrR
 ## Task 11: Remove legacy resolver methods + port remaining callers
 
 **Files:**
+
 - Modify: `packages/core/echo/echo/src/internal/Ref/ref.ts` (drop deprecated methods)
 - Modify: `packages/sdk/client/src/devtools/devtools.ts:205`, `packages/core/echo/echo/src/Database.ts:248-253`
 
@@ -439,6 +453,7 @@ Delete `resolveSync`/old `resolve`/`resolveSchema`/`resolveType` from `RefResolv
 ## Task 12: Feature tests — feed / cross-space / registry-type endpoints
 
 **Files:**
+
 - Create: `packages/core/echo/echo-client/src/proxy-db/relation-endpoints.test.ts`
 
 - [ ] **Step 1:** Write three tests:
