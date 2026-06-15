@@ -1,32 +1,25 @@
 name: Trigger CF Pages Preview
 
 on:
-  workflow_dispatch:
-    inputs:
-      project:
-        description: 'CF Pages project name'
-        required: true
-        default: 'testbench-app'
-      branch:
-        description: 'Branch to build'
-        required: true
-        default: 'claude/clever-haslett-bb86ef'
+  push:
+    branches:
+      - claude/clever-haslett-bb86ef
 
 jobs:
   trigger:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Trigger CF Pages deployment
+      - name: Trigger CF Pages deployment for testbench-app
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           response=$(curl -s -X POST \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${{ inputs.project }}/deployments" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench-app/deployments" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"branch\": \"${{ inputs.branch }}\"}")
+            -d '{"branch": "claude/clever-haslett-bb86ef"}')
           echo "$response" | jq '.'
           url=$(echo "$response" | jq -r '.result.url // empty')
           if [ -n "$url" ]; then
