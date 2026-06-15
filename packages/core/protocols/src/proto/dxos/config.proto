@@ -508,7 +508,7 @@ message Runtime {
     optional Hub hub = 17;
 
     /// EDGE service configurations keyed by `EdgeService.name`
-    /// (e.g. "ai", "image", "calls", "discord", "transcription").
+    /// (e.g. "calls", "transcription", "image", "discord", "cors-proxy").
     /// Supersedes per-service URL constants; see packages/sdk/config/AUDIT.md.
     repeated EdgeService edge_services = 18;
   }

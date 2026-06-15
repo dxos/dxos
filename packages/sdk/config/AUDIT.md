@@ -24,7 +24,7 @@ Goals:
 
 ## 1. How config flows today
 
-```
+```text
 config.proto  ──build-protobuf──▶  @dxos/protocols (ConfigProto type)
      │
      ├── dx.yml            static per-app values            (production URLs)
