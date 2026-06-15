@@ -230,9 +230,10 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       )}
 
       {data.attendees.map((attendee, index) => (
-        <Header.PersonRow
+        <Row.Person
           key={attendee.email ?? index}
           actor={attendee}
+          role='attendee'
           db={db}
           onContactCreate={onContactCreate}
           onRemove={() => handleAttendeeRemove(index)}
