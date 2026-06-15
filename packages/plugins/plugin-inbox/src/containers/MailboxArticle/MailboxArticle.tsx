@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -44,7 +44,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   const [mailbox] = useObject(subject);
   const id = attendableId ?? Obj.getURI(mailbox);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
