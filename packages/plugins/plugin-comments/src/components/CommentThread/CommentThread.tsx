@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactElement, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -42,27 +42,12 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
   }
 };
 
-type CommentThreadImplProps = CommentThreadProps & { thread: ThreadType.Thread };
-
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
- *
- * Returns null while the anchor's source thread is transiently unavailable
- * (e.g. when a batched delete fires proxy signals before React processes
- * the updated query results).
  */
-export const CommentThread = (props: CommentThreadProps): ReactElement | null => {
-  const thread = useRelationSource(props.anchor) as ThreadType.Thread | undefined;
-  if (!thread) {
-    return null;
-  }
-  return <CommentThreadImpl {...props} thread={thread} />;
-};
-
-const CommentThreadImpl = ({
+export const CommentThread = ({
   anchor,
-  thread,
   components,
   current,
   onAttend,
@@ -71,13 +56,14 @@ const CommentThreadImpl = ({
   onMessageDelete,
   onThreadDelete,
   onAcceptProposal,
-}: CommentThreadImplProps) => {
+}: CommentThreadProps) => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const threadUri = Obj.getURI(thread);
+  const thread = useRelationSource(anchor) as ThreadType.Thread | undefined;
+  const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, threadUri);
 
@@ -92,7 +78,7 @@ const CommentThreadImpl = ({
     },
     [members],
   );
-  const textboxMetadata = useMemo(() => getMessageMetadata(threadUri, identity ?? undefined), [threadUri, identity]);
+  const textboxMetadata = useMemo(() => getMessageMetadata(threadUri ?? '', identity ?? undefined), [threadUri, identity]);
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
     [messages],
@@ -121,6 +107,10 @@ const CommentThreadImpl = ({
     },
     [anchor, onComment],
   );
+
+  if (!thread || !threadUri) {
+    return null;
+  }
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
