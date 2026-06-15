@@ -86,11 +86,11 @@ shared code, no exports.
 
 ### Test split
 
-| Test kind | Location | May import |
-| --- | --- | --- |
-| Fast unit / white-box | `@dxos/<pkg>/src/**/*.test.ts` | public API, `./testing`, relative internals (`../foo`) |
-| Public-API | `@dxos/<pkg>-e2e/src/**/*.test.ts` | `@dxos/<pkg>`, `@dxos/<pkg>/testing` only |
-| Integration / heavy-dep | `@dxos/<pkg>-e2e/src/**/*.test.ts` | the above + extra `-e2e`-only deps |
+| Test kind               | Location                           | May import                                             |
+| ----------------------- | ---------------------------------- | ------------------------------------------------------ |
+| Fast unit / white-box   | `@dxos/<pkg>/src/**/*.test.ts`     | public API, `./testing`, relative internals (`../foo`) |
+| Public-API              | `@dxos/<pkg>-e2e/src/**/*.test.ts` | `@dxos/<pkg>`, `@dxos/<pkg>/testing` only              |
+| Integration / heavy-dep | `@dxos/<pkg>-e2e/src/**/*.test.ts` | the above + extra `-e2e`-only deps                     |
 
 Heuristic: a test belongs in `-e2e` if it is expressible purely against
 `@dxos/<pkg>` + `@dxos/<pkg>/testing`. A test that fundamentally needs relative
@@ -121,7 +121,7 @@ build time. No bespoke script or lint rule is needed.
 `@dxos/assistant-e2e` (`packages/core/compute/assistant-e2e`) currently violates
 the convention: `layer: library`, `pack` tag, public `publishConfig`, a `compile`
 entrypoint, and `exports` — i.e. it is a publishable library that other packages
-*could* depend on. Bring it into conformance:
+_could_ depend on. Bring it into conformance:
 
 - `package.json`: keep `"private": true`; remove `publishConfig`, remove `exports`
   (and the `src/index.ts` library entrypoint if unused by tests), keep deps.
