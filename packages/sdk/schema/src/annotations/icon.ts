@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, type Schema } from 'effect';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
-import { createAnnotationHelper } from '@dxos/echo-schema';
+import { createAnnotationHelper } from '@dxos/echo/internal';
 
 export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnnotationId');
 

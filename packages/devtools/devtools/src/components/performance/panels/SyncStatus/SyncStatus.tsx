@@ -4,30 +4,40 @@
 
 import React from 'react';
 
-import { type PeerSyncState, type SpaceSyncStateMap, type SpaceId } from '@dxos/react-client/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { type SpaceId } from '@dxos/keys';
+import { type FeedSyncStateMap, type PeerSyncState, type SpaceSyncStateMap } from '@dxos/react-client/echo';
+import { IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { SpaceRowContainer } from './Space';
 
 export type SyncStatusProps = ThemedClassName<{
   state: SpaceSyncStateMap;
   summary: PeerSyncState;
+  feedState?: FeedSyncStateMap;
   debug?: boolean;
 }>;
 
-// TODO(wittjosiah): This currently does not show `differentDocuments` at all.
-export const SyncStatus = ({ classNames, state, summary, debug }: SyncStatusProps) => {
+export const SyncStatus = ({ classNames, state, feedState }: SyncStatusProps) => {
   const entries = Object.entries(state);
 
-  // TODO(burdon): Normalize to max document count?
+  const handleCopyRaw = () => {
+    void navigator.clipboard.writeText(JSON.stringify({ automerge: state, feed: feedState }, null, 2));
+  };
+
   return (
     <div className={mx('flex flex-col w-full gap-2 text-xs', classNames)}>
-      {debug && <SyntaxHighlighter language='json'>{JSON.stringify(summary, null, 2)}</SyntaxHighlighter>}
-      <div className='flex flex-col mbe-2'>
+      <div className='flex items-center gap-2'>
+        <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
+      </div>
+      <div className='flex flex-col divide-y divide-separator'>
         {entries.map(([spaceId, state]) => (
-          <SpaceRowContainer key={spaceId} spaceId={spaceId as SpaceId} state={state} />
+          <SpaceRowContainer
+            key={spaceId}
+            spaceId={spaceId as SpaceId}
+            state={state}
+            feedState={feedState?.[spaceId as SpaceId]}
+          />
         ))}
       </div>
     </div>

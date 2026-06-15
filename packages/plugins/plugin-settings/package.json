@@ -1,0 +1,72 @@
+{
+  "name": "@dxos/plugin-settings",
+  "version": "0.9.0",
+  "description": "DXOS Settings plugin for managing application settings.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": "./src/capabilities/index.ts",
+    "#meta": "./src/meta.ts",
+    "#operations": "./src/operations/index.ts",
+    "#plugin": "./src/SettingsPlugin.ts",
+    "#translations": "./src/translations.ts",
+    "#types": "./src/types/index.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/plugin-graph": "workspace:*",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

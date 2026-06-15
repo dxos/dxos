@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';

@@ -10,9 +10,9 @@ import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
+  type SignalResponse,
   type SubscribeToNetworkTopicsResponse,
   type SubscribeToSignalStatusResponse,
-  type SignalResponse,
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 

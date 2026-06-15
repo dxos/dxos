@@ -2,51 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { Capabilities, contributes, type PluginContext, createIntent, LayoutAction } from '@dxos/app-framework';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
+import { COMMANDS_DIALOG, meta } from '#meta';
 
-export default (context: PluginContext) =>
-  contributes(
-    Capabilities.AppGraphBuilder,
-    createExtension({
-      id: NAVTREE_PLUGIN,
-      actions: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => [
-              {
-                id: COMMANDS_DIALOG,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  await dispatch(
-                    createIntent(LayoutAction.UpdateDialog, {
-                      part: 'dialog',
-                      subject: COMMANDS_DIALOG,
-                      options: {
-                        blockAlign: 'start',
-                      },
-                    }),
-                  );
-                },
-                properties: {
-                  label: ['open commands label', { ns: NAVTREE_PLUGIN }],
-                  icon: 'ph--magnifying-glass--regular',
-                  keyBinding: {
-                    macos: 'meta+k',
-                    windows: 'ctrl+k',
-                  },
-                },
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* GraphBuilder.createExtension({
+      id: 'root',
+      match: NodeMatcher.whenRoot,
+      actions: () =>
+        Effect.succeed([
+          Node.makeAction({
+            id: COMMANDS_DIALOG,
+            data: () =>
+              Operation.invoke(LayoutOperation.UpdateDialog, {
+                subject: COMMANDS_DIALOG,
+                blockAlign: 'start',
+              }),
+            properties: {
+              label: ['open-commands.label', { ns: meta.id }],
+              icon: 'ph--magnifying-glass--regular',
+              keyBinding: {
+                macos: 'meta+k',
+                windows: 'ctrl+k',
               },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-  );
+            },
+          }),
+        ]),
+    });
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

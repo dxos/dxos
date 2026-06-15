@@ -9,7 +9,7 @@ package:
       tags:
         - showcase
       build:
-        command: pnpm -w nx bundle composer-app
+        command: moon run composer-app:bundle
 
 runtime:
   client:

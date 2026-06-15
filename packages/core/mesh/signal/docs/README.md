@@ -51,11 +51,11 @@ dxos/async --> dxos/context
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
-| [`@dxos/context`](../../../../common/context/docs/README.md) |  |
-| [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
-| [`@dxos/keys`](../../../../common/keys/docs/README.md) |  |
-| [`@dxos/log`](../../../../common/log/docs/README.md) |  |
-| [`@dxos/util`](../../../../common/util/docs/README.md) |  |
+| Module                                                       | Direct  |
+| ------------------------------------------------------------ | ------- |
+| [`@dxos/async`](../../../../common/async/docs/README.md)     | &check; |
+| [`@dxos/context`](../../../../common/context/docs/README.md) |         |
+| [`@dxos/debug`](../../../../common/debug/docs/README.md)     |         |
+| [`@dxos/keys`](../../../../common/keys/docs/README.md)       |         |
+| [`@dxos/log`](../../../../common/log/docs/README.md)         |         |
+| [`@dxos/util`](../../../../common/util/docs/README.md)       |         |

@@ -2,11 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { FormatEnum } from '@dxos/echo-schema';
+import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import {
@@ -17,9 +16,8 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -86,10 +84,10 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'type', format: FormatEnum.String },
-      { name: 'issuer', format: FormatEnum.String },
-      { name: 'feedKey', format: FormatEnum.JSON, size: 180 },
-      { name: 'seq', format: FormatEnum.Number, size: 80 },
+      { name: 'type', format: Format.TypeFormat.String },
+      { name: 'issuer', format: Format.TypeFormat.String },
+      { name: 'feedKey', format: Format.TypeFormat.JSON, size: 180 },
+      { name: 'seq', format: Format.TypeFormat.Number, size: 80 },
     ],
     [],
   );
@@ -114,13 +112,11 @@ export const FeedsPanel = (props: { space?: Space }) => {
             onChange={handleSelect}
           />
 
-          <Toolbar.Button onClick={handleRefresh}>
-            <ArrowClockwise className={getSize(5)} />
-          </Toolbar.Button>
+          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
         </Toolbar.Root>
       }
     >
-      <div className='bs-full'>
+      <div className='h-full'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
         <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
       </div>

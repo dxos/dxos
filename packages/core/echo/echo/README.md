@@ -18,7 +18,7 @@ pnpm i @dxos/echo
 
 Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
 
-License: [MIT](./LICENSE) Copyright 2022 © DXOS
+License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2022 © DXOS
 
 ## API
 
@@ -29,17 +29,16 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 |                               | Object                     | Relation (extends Obj)     | Ref            |
 | ----------------------------- | -------------------------- | -------------------------- | -------------- |
 | **SCHEMA API**                |
-| Define schema                 | `Type.Obj()`               | `Type.Relation()`          | `Type.Ref()`   |
-| Any schema type               | `Type.Obj.Any`             | `Type.Relation.Any`        | `Type.Ref.Any` |
-| Get DXN (of schema)           | `Type.getDXN(schema)`      | `Type.getDXN(schema)`      |                |
+| Define schema                 | `Type.Obj()`               | `Type.Relation()`          | `Ref.Ref()`    |
+| Any schema type               | `Type.AnyObj`              | `Type.Relation.Any`        | `Type.Ref.Any` |
+| Get DXN (of schema)           | `Type.getURI(schema)`      | `Type.getURI(schema)`      |                |
 | Get typename (of schema)      | `Type.getTypename(schema)` | `Type.getTypename(schema)` |                |
 | Get type metadata (of schema) | `Type.getMeta(schema)`     | `Type.getMeta(schema)`     |                |
 | Is mutable schema             | `Type.isMutable(schema)`   | `Type.isMutable(schema)`   |                |
-| Expando                       | `Type.Expando`             |
 
 |
 | **DATA API** |
-| Any instance type | `Obj.Any` | `Relation.Any` | `Ref.Any` |
+| Unknown instance type | `Obj.Unknown` | `Relation.Unknown` | `Ref.Unknown` |
 | Create object | `Obj.make(Schema, { ... })` | `Relation.make(Schema, { ... })` | `Ref.make(obj)` |
 | Check kind | `Obj.isObject(obj)` | `Relation.isRelation(obj)` | `Ref.isRef(ref)` |
 | Get relation source | | `Relation.getSource(relation)` | |
@@ -52,21 +51,21 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 | Is deleted | `Obj.isDeleted(obj)` |
 
 ```ts
-Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
+Type.getURI(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 Type.getMeta(schema) == { typename: }
-Type.getTypename(schema) === 'example.com/type/Person'
+Type.getTypename(schema) === 'type.example.type.person'
 Type.getVersion(schema) === '0.1.0'
 
 Obj.getDXN(obj) === DXN.parse('dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX')
 
 // We need this for objects that have typename defined, but their schema can't be resolved (Obj.getSchema(obj) === undefined)
-Obj.getTypeDXN(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
+Obj.getTypeURI(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 
 /**
  * @deprecated
  **/
-// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeDXN(obj)?.asTypeDXN()?.type`
-Obj.getTypename(obj) === 'example.com/type/Person'
+// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeURI(obj)?.asTypeDXN()?.type`
+Obj.getTypename(obj) === 'com.example.type.person'
 ```
 
 ISSUE: Create vs live: Is it fundamentally the same thing?
@@ -122,7 +121,7 @@ Defines attributes and encoding placed on objects.
 |                     | Optional                | Runtime prop                           | Runtime type           | JSON prop                   | JSON type  | Description                    |
 | ------------------- | ----------------------- | -------------------------------------- | ---------------------- | --------------------------- | ---------- | ------------------------------ |
 | Id                  | No                      | `id`                                   | `ObjectID` ULID string | `id`                        | string     | Unique object ID               |
-| Self DXN            | Yes                     | `Symbol(@dxos/echo/Self)`              | `DXN`                  | `@self`                     | string     | DXN to the object itself       |
+| Self DXN            | Yes                     | `Symbol(@dxos/echo/DXN)`               | `DXN`                  | `@dxn`                      | string     | DXN to the object itself       |
 | Type                | No                      | `Symbol(@dxos/echo/Type)`              | `DXN`                  | `@type`                     | string     | DXN to the object type         |
 | Schema              | Yes                     | `Symbol(@dxos/echo/Schema)`            | Effect-Schema          | -                           |            | Reference to the object schema |
 | Tombstone marker    | Yes                     | `Symbol(@dxos/echo/Deleted)`           | `boolean`              | `@deleted`                  | boolean    | Deletion marker                |

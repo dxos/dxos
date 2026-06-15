@@ -2,14 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { synchronized } from '@dxos/async';
+import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { Feed, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { MediaStreamRecorder } from './media-stream-recorder';
 import { Transcriber } from './transcriber';
@@ -30,13 +33,14 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
-export type TranscriptMessageEnricher = (message: DataType.Message) => Promise<DataType.Message>;
+export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
 
 export type TranscriptionManagerOptions = {
   edgeClient: EdgeHttpClient;
+  registry: Registry.Registry;
 
   /**
-   * Enrich the message before it is written to the transcription queue.
+   * Enrich the message before it is written to the transcription feed.
    */
   messageEnricher?: TranscriptMessageEnricher;
 };
@@ -47,26 +51,33 @@ export type TranscriptionManagerOptions = {
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private readonly _messageEnricher?: TranscriptMessageEnricher;
+  private readonly _registry: Registry.Registry;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<DataType.Message> = undefined;
-  private _enabled = signal(false);
+  private _feed?: Feed.Feed = undefined;
+  private _feedServiceLayer?: Layer.Layer<Feed.FeedService> = undefined;
+  private _enabledAtom = Atom.make(false);
 
   constructor(options: TranscriptionManagerOptions) {
     super();
     this._edgeClient = options.edgeClient;
     this._messageEnricher = options.messageEnricher;
+    this._registry = options.registry;
   }
 
-  /** @reactive */
-  get enabled() {
-    return this._enabled.value;
+  get enabled(): Atom.Atom<boolean> {
+    return this._enabledAtom;
   }
 
-  setQueue(queue: Queue<DataType.Message>): this {
-    this._queue = queue;
+  getEnabled(): boolean {
+    return this._registry.get(this._enabledAtom);
+  }
+
+  setFeed(space: Space, feed: Feed.Feed): this {
+    this._feed = feed;
+    this._feedServiceLayer = createFeedServiceLayer(space.queues);
     return this;
   }
 
@@ -78,7 +89,7 @@ export class TranscriptionManager extends Resource {
   }
 
   setRecording(recording?: boolean): this {
-    if (!this.isOpen || !this._enabled.value) {
+    if (!this.isOpen || !this.getEnabled()) {
       return this;
     }
 
@@ -90,19 +101,17 @@ export class TranscriptionManager extends Resource {
     return this;
   }
 
-  /**
-   * Enable or disable transcription.
-   * @param enabled - Whether to enable transcription.
-   */
-  @synchronized
-  async setEnabled(enabled?: boolean): Promise<void> {
-    if (this._enabled.value === enabled) {
+  async setEnabled(enabled: boolean): Promise<void> {
+    if (this.getEnabled() === enabled) {
       return;
     }
 
-    this._enabled.value = enabled ?? false;
-    // TODO(burdon): Why is toggle called here?
-    this.isOpen && (await this._toggleTranscriber());
+    this._registry.set(this._enabledAtom, enabled ?? false);
+    if (enabled) {
+      await this._maybeRestartTranscriber();
+    } else {
+      await this._stopTranscriber();
+    }
   }
 
   @synchronized
@@ -112,48 +121,23 @@ export class TranscriptionManager extends Resource {
     }
 
     this._audioStreamTrack = track;
-    this.isOpen && (await this._toggleTranscriber());
+    await this._maybeRestartTranscriber();
   }
 
   protected override async _open(): Promise<void> {
-    await this._toggleTranscriber();
+    await this._maybeRestartTranscriber();
   }
 
   protected override async _close(): Promise<void> {
-    void this._transcriber?.close();
+    await this._stopTranscriber();
   }
 
-  // TODO(burdon): Change this to setEnables (explicit), not toggle.
-  private async _toggleTranscriber(): Promise<void> {
-    await this._maybeReinitTranscriber();
-
-    // Open or close transcriber if transcription is enabled or disabled.
-    if (this._enabled.value) {
-      await this._transcriber?.open();
-      // TODO(burdon): Started and stopped blocks appear twice.
-      const block = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
-        sender: { role: 'assistant' },
-      });
-      await this._queue?.append([block]);
-    } else {
-      await this._transcriber?.close();
-      const block = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
-        sender: { role: 'assistant' },
-      });
-      await this._queue?.append([block]);
-    }
-  }
-
-  private async _maybeReinitTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this._enabled.value) {
+  private async _maybeRestartTranscriber(): Promise<void> {
+    if (!this._audioStreamTrack || !this.getEnabled() || !this.isOpen) {
       return;
     }
 
-    // Reinitialize transcriber if queue or media stream track has changed.
+    // Reinitialize transcriber if feed or media stream track has changed.
     let needReinit = false;
     if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
       this._mediaRecorder = new MediaStreamRecorder({
@@ -172,15 +156,21 @@ export class TranscriptionManager extends Resource {
         recorder: this._mediaRecorder,
         onSegments: (segments) => this._onSegments(segments),
       });
+
+      await this._transcriber?.open();
     }
   }
 
-  private async _onSegments(segments: DataType.MessageBlock.Transcription[]): Promise<void> {
-    if (!this.isOpen || !this._queue) {
+  private async _stopTranscriber(): Promise<void> {
+    await this._transcriber?.close();
+  }
+
+  private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
+    if (!this.isOpen || !this._feed || !this._feedServiceLayer) {
       return;
     }
 
-    let block = Obj.make(DataType.Message, {
+    let block = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       blocks: segments,
       sender: { identityDid: this._identityDid },
@@ -190,6 +180,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await this._queue.append([block]);
+    await Feed.append(this._feed, [block]).pipe(Effect.provide(this._feedServiceLayer), EffectEx.runAndForwardErrors);
   }
 }

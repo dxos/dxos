@@ -7,29 +7,27 @@ import { type ClientServices, type ClientServicesProvider, clientServiceBundle }
 import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
-import { type LogFilter, parseFilter, log, type CallMetadata } from '@dxos/log';
+import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
+import { RPC_TIMEOUT } from '../common';
+import { STORAGE_LOCK_KEY } from '../lock-key';
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
-import { RPC_TIMEOUT } from '../common';
-import { LOCK_KEY } from '../lock-key';
 
 /**
  * Creates services provider connected via worker.
  */
-export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesParams, 'config'>) =>
+export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesProps, 'config'>) =>
   new WorkerClientServices({ config, ...options });
 
-export type WorkerClientServicesParams = {
+export type WorkerClientServicesProps = {
   config: Config;
   createWorker: () => SharedWorker;
   logFilter?: string;
-  observabilityGroup?: string;
-  signalTelemetryEnabled?: boolean;
 };
 
 /**
@@ -50,21 +48,11 @@ export class WorkerClientServices implements ClientServicesProvider {
   private _runtime!: SharedWorkerConnection;
   private _services!: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
-  private readonly _observabilityGroup?: string;
-  private readonly _signalTelemetryEnabled: boolean;
 
-  constructor({
-    config,
-    createWorker,
-    logFilter = 'error,warn',
-    observabilityGroup,
-    signalTelemetryEnabled,
-  }: WorkerClientServicesParams) {
+  constructor({ config, createWorker, logFilter = 'error,warn' }: WorkerClientServicesProps) {
     this._config = config;
     this._createWorker = createWorker;
     this._logFilter = parseFilter(logFilter);
-    this._observabilityGroup = observabilityGroup;
-    this._signalTelemetryEnabled = signalTelemetryEnabled ?? false;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -88,7 +76,10 @@ export class WorkerClientServices implements ClientServicesProvider {
     log('opening...');
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
-    worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
+    worker.port.postMessage({
+      dxlog: localStorage.getItem('dxlog'),
+      config: this._config.values,
+    });
     worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
@@ -101,15 +92,11 @@ export class WorkerClientServices implements ClientServicesProvider {
       config: this._config,
       systemPort: createWorkerPort({ port: systemPort }),
     });
-    await this._runtime.open({
-      origin: location.origin,
-      observabilityGroup: this._observabilityGroup,
-      signalTelemetryEnabled: this._signalTelemetryEnabled,
-    });
+    await this._runtime.open({ origin: location.origin });
 
     this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
     await this._services.open();
-    void navigator.locks.request(LOCK_KEY, () => {
+    void navigator.locks.request(STORAGE_LOCK_KEY, () => {
       log('terminated');
       if (this._isOpen) {
         this.closed.emit(new Error('Shared worker terminated.'));

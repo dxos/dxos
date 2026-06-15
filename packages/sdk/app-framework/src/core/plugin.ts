@@ -2,12 +2,84 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type MaybePromise } from '@dxos/util';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Pipeable from 'effect/Pipeable';
 
-import { type AnyCapability, type PluginContext } from './capabilities';
-import { type ActivationEvent, type ActivationEvents } from './events';
+import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
-interface PluginModuleInterface {
+import type * as ActivationEvent from './activation-event';
+import * as Capability from './capability';
+import type * as PluginManager from './plugin-manager';
+
+//
+// Plugin Service Layer
+//
+
+/**
+ * Effect Context.Tag for accessing PluginManager via the Effect layer system.
+ * This allows lifecycle operations to access the plugin manager without having it passed as an argument.
+ */
+export class Service extends Context.Tag('@dxos/app-framework/PluginManager')<Service, PluginManager.PluginManager>() {}
+
+//
+// Lifecycle Functions
+//
+
+/**
+ * Activates plugins based on the activation event.
+ * Accesses the PluginManager via the Effect layer system.
+ * @param event The activation event.
+ * @returns Whether the activation was successful.
+ */
+export const activate = (event: ActivationEvent.ActivationEvent): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.activate(event));
+
+/**
+ * Re-activates the modules that were activated by the event.
+ * Accesses the PluginManager via the Effect layer system.
+ * @param event The activation event.
+ * @returns Whether the reset was successful.
+ */
+export const reset = (event: ActivationEvent.ActivationEvent): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.reset(event));
+
+/**
+ * Shuts down the plugin manager, deactivating all active modules and clearing lifecycle state.
+ * Accesses the PluginManager via the Effect layer system.
+ */
+export const shutdown = (): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.shutdown());
+
+/**
+ * Computes a module ID from plugin ID and export name.
+ */
+const computeModuleId = (pluginId: string, moduleName: string): string => {
+  return `${pluginId}.module.${moduleName}`;
+};
+
+/**
+ * Identifier denoting a PluginModule.
+ */
+export const PluginModuleTypeId: unique symbol = Symbol.for('@dxos/app-framework/PluginModule');
+export type PluginModuleTypeId = typeof PluginModuleTypeId;
+
+/**
+ * Type guard to check if a value is a PluginModule.
+ */
+export const isPluginModule = (value: unknown): value is PluginModule => {
+  return typeof value === 'object' && value !== null && PluginModuleTypeId in value;
+};
+
+/**
+ * A unit of containment of modular functionality that can be provided to an application.
+ * Activation of a module is async allowing for code to split and loaded lazily.
+ */
+export interface PluginModule {
+  readonly [PluginModuleTypeId]: PluginModuleTypeId;
   /**
    * Unique id of the module.
    */
@@ -16,65 +88,83 @@ interface PluginModuleInterface {
   /**
    * Events for which the module will be activated.
    */
-  activatesOn: ActivationEvents;
+  activatesOn: ActivationEvent.Events;
 
   /**
-   * Events which the plugin depends on being activated.
-   * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
-   * Events are automatically activated before activation of the plugin.
+   * Events that this module fires *before* its own activation runs.
+   *
+   * When this module is asked to activate (via {@link activatesOn}), the
+   * plugin manager first activates every event listed here, ensuring any
+   * other modules that contribute to those events have completed before
+   * this module's {@link activate} body executes. These events are fired
+   * by the framework on this module's behalf — the module does not need
+   * to wait for some other code to fire them.
+   *
+   * The module is marked as needing reset if a module activated by one
+   * of these events is later removed.
+   *
+   * Read as: "this module fires these events before [its] activation".
    */
-  activatesBefore?: ActivationEvent[];
+  firesBeforeActivation?: ActivationEvent.ActivationEvent[];
 
   /**
-   * Events which this plugin triggers upon activation.
+   * Events that this module fires *after* its own activation completes.
+   *
+   * Once this module's {@link activate} body has finished executing, the
+   * plugin manager activates every event listed here, causing any modules
+   * listening on those events to run. These events are fired by the
+   * framework on this module's behalf as part of this module's lifecycle.
+   *
+   * Read as: "this module fires these events after [its] activation".
    */
-  activatesAfter?: ActivationEvent[];
+  firesAfterActivation?: ActivationEvent.ActivationEvent[];
 
   /**
    * Called when the module is activated.
-   * @param context The plugin context.
+   * CapabilityManager is accessed via the Effect layer system (Capability.Service).
+   * PluginManager is accessed via Plugin.Service.
+   * @param props Optional props passed to the module.
    * @returns The capabilities of the module.
    */
-  activate: (
-    context: PluginContext,
-  ) => MaybePromise<AnyCapability | AnyCapability[]> | Promise<() => Promise<AnyCapability | AnyCapability[]>>;
+  activate: (props?: any) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | never>;
 }
 
-/**
- * A unit of containment of modular functionality that can be provided to an application.
- * Activation of a module is async allowing for code to split and loaded lazily.
- */
-// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
-export class PluginModule implements PluginModuleInterface {
-  readonly id: PluginModuleInterface['id'];
-  readonly activatesOn: PluginModuleInterface['activatesOn'];
-  readonly activatesBefore?: PluginModuleInterface['activatesBefore'];
-  readonly activatesAfter?: PluginModuleInterface['activatesAfter'];
-  readonly activate: PluginModuleInterface['activate'];
+export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };
 
-  constructor(options: PluginModuleInterface) {
+class PluginModuleImpl implements PluginModule {
+  readonly [PluginModuleTypeId]: PluginModuleTypeId = PluginModuleTypeId;
+  readonly id: PluginModule['id'];
+  readonly activatesOn: PluginModule['activatesOn'];
+  readonly firesBeforeActivation?: PluginModule['firesBeforeActivation'];
+  readonly firesAfterActivation?: PluginModule['firesAfterActivation'];
+  readonly activate: PluginModule['activate'];
+
+  constructor(options: Omit<PluginModule, typeof PluginModuleTypeId>) {
     this.id = options.id;
     this.activatesOn = options.activatesOn;
-    this.activatesBefore = options.activatesBefore;
-    this.activatesAfter = options.activatesAfter;
+    this.firesBeforeActivation = options.firesBeforeActivation;
+    this.firesAfterActivation = options.firesAfterActivation;
     this.activate = options.activate;
   }
 }
 
-/**
- * Helper to define a module.
- */
-export const defineModule = (options: PluginModuleInterface) => new PluginModule(options);
-
-export type PluginMeta = {
+export type Meta = {
   /**
-   * Globally unique ID.
-   *
-   * Expected to be in the form of a valid URL.
-   *
-   * @example dxos.org/plugin/example
+   * Bare NSID (the name portion of {@link key}, e.g. `org.dxos.plugin.example`).
+   * Stable across versions; used for module-id namespacing, i18n namespaces,
+   * enable/disable, and registry lookups. Derived from `key` by {@link makeMeta} —
+   * do not set directly.
    */
   id: string;
+
+  /**
+   * Canonical identity DXN, including version when published
+   * (e.g. `dxn:org.dxos.plugin.example:0.8.3`). The validated source of truth
+   * from which {@link id} and {@link version} are derived.
+   *
+   * @example DXN.make('org.dxos.plugin.example', '0.8.3')
+   */
+  key: DXN.DXN;
 
   /**
    * Human-readable name.
@@ -82,9 +172,22 @@ export type PluginMeta = {
   name: string;
 
   /**
+   * Semver version string of the plugin, typically the publishing package's
+   * `package.json` version. Derived from the version segment of {@link key} by
+   * {@link makeMeta} — do not set directly.
+   */
+  version?: string;
+
+  /**
    * Short description of plugin functionality.
    */
   description?: string;
+
+  /**
+   * Name of the author or organization that created the plugin.
+   */
+  // TODO(burdon): DID or domain name?
+  author?: string;
 
   /**
    * URL of home page.
@@ -95,6 +198,14 @@ export type PluginMeta = {
    * URL of source code.
    */
   source?: string;
+
+  /**
+   * Relative path (inside the published package) to the plugin's bundled MDL
+   * specification file — e.g. `'PLUGIN.mdl'` or `'docs/PLUGIN.mdl'`. The file
+   * is shipped via the package's `files` entry and resolved by registry
+   * surfaces to render an in-app viewer and/or external link.
+   */
+  spec?: string;
 
   /**
    * URL of screenshot.
@@ -110,23 +221,324 @@ export type PluginMeta = {
    * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
    */
   icon?: string;
+
+  /**
+   * Icon hue (ChromaticPalette).
+   */
+  iconHue?: string;
+
+  /**
+   * IDs of plugins this plugin functionally depends on.
+   *
+   * Treated as a convenience by the default `PluginManager` flow:
+   * - Enabling this plugin auto-enables the transitive closure of `dependsOn`
+   *   (installing missing entries from the plugin registry when possible).
+   * - Disabling a depended-upon plugin surfaces dependents to the caller; the
+   *   `PluginManager.disable` API supports an opt-in cascade.
+   *
+   * Not an invariant: low-level `PluginManager` APIs accept opt-outs
+   * (`resolveDependencies: false`, `ignoreDependents: true`) so a caller may
+   * substitute an alternative implementation that satisfies the dependent's
+   * capability needs in its own way.
+   */
+  dependsOn?: string[];
+};
+
+/**
+ * Options for {@link makeMeta}: a {@link Meta} minus the fields derived from `key`.
+ * Identity and version are specified solely through the `key` DXN — `id` and
+ * `version` cannot be passed directly.
+ */
+export type MakeMetaOptions = Omit<Meta, 'id' | 'version'>;
+
+/**
+ * Constructs a plugin {@link Meta} from a single canonical DXN. The `key` DXN is
+ * the one source of truth; `id` (bare NSID) and `version` (semver) are derived
+ * from it so each datum has exactly one home and cannot drift out of sync.
+ *
+ * @example
+ * export const meta = Plugin.makeMeta({
+ *   key: DXN.make('org.dxos.plugin.example', '0.8.3'),
+ *   name: 'Example',
+ * });
+ */
+export const makeMeta = (options: MakeMetaOptions): Meta => ({
+  ...options,
+  id: DXN.getName(options.key),
+  version: DXN.getVersion(options.key),
+});
+
+/**
+ * Identifier denoting a Plugin.
+ */
+export const PluginTypeId: unique symbol = Symbol.for('@dxos/app-framework/Plugin');
+export type PluginTypeId = typeof PluginTypeId;
+
+/**
+ * Type guard to check if a value is a Plugin.
+ */
+export const isPlugin = (value: unknown): value is Plugin => {
+  return typeof value === 'object' && value !== null && PluginTypeId in value;
 };
 
 /**
  * A collection of modules that are be enabled/disabled as a unit.
  * Plugins provide things such as components, state, actions, etc. to the application.
  */
-// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
-export class Plugin {
-  constructor(
-    readonly meta: PluginMeta,
-    readonly modules: PluginModule[],
-  ) {}
+// TODO(burdon): Convert to ECHO schema.
+export interface Plugin {
+  readonly [PluginTypeId]: PluginTypeId;
+  readonly meta: Readonly<Meta>;
+  readonly modules: ReadonlyArray<PluginModule>;
 }
 
 /**
- * Helper to define a plugin.
+ * Internal implementation of Plugin.
+ * @internal
  */
-export const definePlugin = (meta: PluginMeta, modules: PluginModule[]) => {
-  return new Plugin(meta, modules);
+class PluginImpl implements Plugin {
+  readonly [PluginTypeId]: PluginTypeId = PluginTypeId;
+
+  constructor(
+    private readonly _meta: Meta,
+    private readonly _modules: PluginModule[],
+  ) {}
+
+  get meta(): Readonly<Meta> {
+    return this._meta;
+  }
+
+  get modules(): ReadonlyArray<PluginModule> {
+    return this._modules;
+  }
+}
+
+/**
+ * Builder interface for creating plugins incrementally.
+ */
+export interface PluginBuilder<T = void> extends Pipeable.Pipeable {
+  readonly meta: Meta;
+  readonly modules: ReadonlyArray<PluginModuleOptions | ((options: T) => PluginModuleOptions)>;
+  addModule(moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions)): PluginBuilder<T>;
+}
+
+/**
+ * Builder implementation for creating plugins incrementally.
+ */
+class PluginBuilderImpl<T = void> implements PluginBuilder<T> {
+  readonly meta: Meta;
+  private readonly _modules: Array<PluginModuleOptions | ((options: T) => PluginModuleOptions)> = [];
+
+  constructor(meta: Meta) {
+    this.meta = meta;
+  }
+
+  get modules(): ReadonlyArray<PluginModuleOptions | ((options: T) => PluginModuleOptions)> {
+    return this._modules;
+  }
+
+  addModule(moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions)): PluginBuilder<T> {
+    this._modules.push(moduleOptions);
+    return this;
+  }
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
+  }
+}
+
+/**
+ * Creates a new PluginBuilder to start building a plugin.
+ */
+export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuilderImpl<T>(meta);
+
+/**
+ * Adds a module to a plugin builder.
+ * Supports both pipeline and direct call styles.
+ * Modules can be either PluginModuleOptions or functions that receive options.
+ */
+export function addModule<T>(
+  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+export function addModule<T>(
+  builder: PluginBuilder<T>,
+  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+): PluginBuilder<T>;
+export function addModule<T>(
+  moduleOptionsOrBuilder: PluginModuleOptions | ((options: T) => PluginModuleOptions) | PluginBuilder<T>,
+  moduleOptions?: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+): ((builder: PluginBuilder<T>) => PluginBuilder<T>) | PluginBuilder<T> {
+  // If second arg is provided, it's the direct call style: addModule(builder, moduleOptions)
+  if (moduleOptions !== undefined) {
+    return (moduleOptionsOrBuilder as PluginBuilder<T>).addModule(moduleOptions);
+  }
+  // Otherwise it's pipeline style: addModule(moduleOptions) returns a function
+  const moduleOpts = moduleOptionsOrBuilder as PluginModuleOptions | ((options: T) => PluginModuleOptions);
+  return (builder: PluginBuilder<T>) => builder.addModule(moduleOpts);
+}
+
+export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
+
+/**
+ * Resolves a module from either PluginModuleOptions or a function that returns PluginModuleOptions.
+ */
+const resolveModule = (
+  meta: Meta,
+  module: PluginModuleOptions | ((options: any) => PluginModuleOptions),
+  options?: any,
+): PluginModuleImpl => {
+  const moduleOptions = typeof module === 'function' ? module(options) : module;
+  const pluginName = meta.id;
+  const id = Option.fromNullable(moduleOptions.id).pipe(
+    Option.match({
+      onNone: () => {
+        const exportName = Capability.getModuleTag(moduleOptions.activate);
+        invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
+        return computeModuleId(pluginName, exportName);
+      },
+      onSome: (id) => computeModuleId(pluginName, id),
+    }),
+  );
+  return new PluginModuleImpl({ ...moduleOptions, id });
 };
+
+/**
+ * Creates a Plugin from a builder.
+ * Supports both pipeline and direct call styles.
+ * Always returns a factory function (options: T) => Plugin.
+ * When T is void, the function takes no arguments: () => Plugin.
+ */
+export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
+export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
+  const meta = builder.meta;
+  // `dependsOn` entries and `id` are both bare NSIDs, so compare directly.
+  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
+
+  const factory = (options: T) => {
+    const modules = builder.modules.map((module) => resolveModule(meta, module, options));
+    return new PluginImpl(meta, modules);
+  };
+
+  return Object.assign(factory, { meta });
+}
+
+//
+// Lazy plugin loading
+//
+
+/**
+ * Symbol used to tag lazy plugin stubs with their loader closure.
+ * Hidden from enumeration so plugin manager iteration / serialization paths
+ * don't trip over it.
+ */
+const LazyTag: unique symbol = Symbol.for('@dxos/app-framework/Plugin/Lazy');
+
+/**
+ * Async loader for a lazy plugin's real implementation.
+ * The default export of the loaded module must be a `PluginFactory<T>` —
+ * i.e. the same shape `Plugin.make` produces.
+ */
+export type LazyLoader<T = void> = () => Promise<{ default: PluginFactory<T> }>;
+
+/** Internal: payload carried on a lazy stub. */
+type LazyPayload = { loader: LazyLoader<any>; options: unknown };
+
+/**
+ * Defines a lazy plugin whose body is loaded on first enable.
+ *
+ * The returned factory produces a stub `Plugin` that exposes `meta`
+ * synchronously (so callers can read `Plugin.meta.id` for free) but defers
+ * loading the real plugin's modules until the manager calls
+ * `Plugin.resolveLazy`. This lets the plugin's main entry point ship as a
+ * tiny meta-only chunk — the heavy capabilities, schema, React surfaces,
+ * etc. live behind the dynamic `import()` and become a separate Rollup
+ * chunk that is only fetched when the plugin is enabled.
+ *
+ * @example
+ * ```ts
+ * // plugin-markdown/src/index.ts
+ * import { Plugin } from '@dxos/app-framework';
+ * import { meta } from './meta';
+ *
+ * export const MarkdownPlugin = Plugin.lazy(meta, () => import('./MarkdownPlugin'));
+ *
+ * // plugin-markdown/src/MarkdownPlugin.tsx
+ * export const MarkdownPlugin = Plugin.define(meta).pipe(...heavy modules..., Plugin.make);
+ * export default MarkdownPlugin;
+ * ```
+ */
+export const lazy = <T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T> => {
+  const factory = (options: T): Plugin => {
+    const stub = new PluginImpl(meta, []);
+    Object.defineProperty(stub, LazyTag, {
+      value: { loader, options } satisfies LazyPayload,
+      enumerable: false,
+    });
+    return stub;
+  };
+  return Object.assign(factory, { meta });
+};
+
+/**
+ * Type guard for lazy plugin stubs produced by {@link lazy}.
+ */
+export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
+
+/**
+ * Tagged error for failures during lazy plugin resolution. `context.id` is
+ * the lazy plugin's `meta.id`; `context.reason` discriminates the failure
+ * mode (`'load-failed' | 'missing-default' | 'invalid-plugin' |
+ * 'meta-mismatch'`) so callers can route on it.
+ */
+export class LazyPluginError extends BaseError.extend('LazyPluginError', 'Failed to resolve lazy plugin') {}
+
+/**
+ * Tagged error for plugin-level dependency resolution failures.
+ *
+ * `context.id` is the plugin id the manager was acting on. `context.reason`
+ * discriminates the failure mode:
+ *  - `'missing'` — declared dep is neither registered nor in the catalog.
+ *    `context.missing` lists offending ids.
+ *  - `'install-failed'` — dep was found in the catalog but `add()` failed.
+ *    `cause` carries the original error.
+ *  - `'cycle'` — closure walk detected a cycle. `context.path` is the cycle path.
+ *  - `'core-dependent'` — cascade-disable would have to disable a core plugin.
+ *    `context.coreDependent` is the blocking id.
+ */
+export class PluginDependencyError extends BaseError.extend(
+  'PluginDependencyError',
+  'Plugin dependency resolution failed',
+) {}
+
+/**
+ * Resolves a lazy plugin stub to its real plugin.
+ * Returns the plugin unchanged if it is not lazy. Failures surface as
+ * {@link LazyPluginError} with `context.reason` indicating the failure mode
+ * and (for loader failures) `cause` set to the original error.
+ */
+export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginError> =>
+  Effect.gen(function* () {
+    if (!isLazy(plugin)) {
+      return plugin;
+    }
+    const id = plugin.meta.id;
+    const { loader, options } = (plugin as unknown as { [LazyTag]: LazyPayload })[LazyTag];
+    const mod = yield* Effect.tryPromise({
+      try: loader,
+      catch: (error) => new LazyPluginError({ context: { id, reason: 'load-failed' }, cause: error }),
+    });
+    if (!mod || typeof mod.default !== 'function') {
+      return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'missing-default' } }));
+    }
+    const result = mod.default(options);
+    if (!isPlugin(result)) {
+      return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'invalid-plugin' } }));
+    }
+    if (result.meta.id !== id) {
+      return yield* Effect.fail(
+        new LazyPluginError({ context: { id, reason: 'meta-mismatch', returnedId: result.meta.id } }),
+      );
+    }
+    return result;
+  });

@@ -8,10 +8,10 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Frame } from './Frame';
 import { useEditorContext } from '../../hooks';
 import { PathComponent } from '../../shapes';
-import { isPath, isPolygon, type Shape } from '../../types';
+import { type CanvasBoard, isPath, isPolygon } from '../../types';
+import { Frame } from './Frame';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
@@ -19,7 +19,7 @@ export const MARKER_PREFIX = 'dx-marker';
 export const DATA_SHAPE_ID = 'data-shape-id';
 export const DATA_SHAPE_TYPE = 'data-shape-type';
 
-export const shapeAttrs = (shape: Shape) => {
+export const shapeAttrs = (shape: CanvasBoard.Shape) => {
   return {
     [DATA_SHAPE_ID]: shape.id,
     [DATA_SHAPE_TYPE]: shape.type,
@@ -46,7 +46,7 @@ export const getShapeBounds = (root: HTMLElement, id: string): DOMRect | undefin
 /**
  * Runtime representations of shape.
  */
-export type ShapeComponentProps<S extends Shape = Shape> = PropsWithChildren<
+export type ShapeComponentProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = PropsWithChildren<
   ThemedClassName<{
     shape: S;
     debug?: boolean;

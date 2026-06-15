@@ -10,13 +10,14 @@ import {
   AdmittedFeed,
   type Credential,
   type DeviceProfileDocument,
+  MembershipPolicy,
   type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 
-import { createCredential, type CredentialSigner } from './credential-factory';
+import { type CredentialSigner, createCredential } from './credential-factory';
 
 // TODO(burdon): Normalize generate and functions below.
 //  Use throughout stack and in tests.
@@ -38,6 +39,7 @@ export class CredentialGenerator {
     spaceKey: PublicKey,
     controlKey: PublicKey,
     creatorProfile?: ProfileDocument,
+    membershipPolicy: MembershipPolicy = MembershipPolicy.INVITE,
   ): Promise<Credential[]> {
     return [
       await createCredential({
@@ -47,6 +49,7 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceGenesis',
           spaceKey,
+          membershipPolicy,
         },
       }),
 
@@ -221,6 +224,7 @@ export const createAdmissionCredentials = async (
   membershipChainHeads: PublicKey[] = [],
   profile?: ProfileDocument,
   invitationCredentialId?: PublicKey,
+  tags?: string[],
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -233,6 +237,7 @@ export const createAdmissionCredentials = async (
         profile,
         genesisFeedKey,
         invitationCredentialId,
+        tags: tags ?? [],
       },
     }),
   ]);

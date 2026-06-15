@@ -2,52 +2,66 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Collection, Obj } from '@dxos/echo';
+import { Markdown } from '@dxos/plugin-markdown';
 
-import {
-  MarkdownSlide,
-  PresenterSettings,
-  DocumentPresenterContainer,
-  CollectionPresenterContainer,
-} from '../components';
-import { PRESENTER_PLUGIN } from '../meta';
-import { type PresenterSettingsProps } from '../types';
+import { PresenterSettings } from '#components';
+import { CollectionPresenterArticle, DocumentPresenterContainer, MarkdownSlide } from '#containers';
+import { meta } from '#meta';
+import { type Settings } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${PRESENTER_PLUGIN}/document`,
-      role: 'article',
-      position: 'hoist',
-      filter: (data): data is { subject: DocumentType; variant: 'presenter' } =>
-        Obj.instanceOf(DocumentType, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
-    }),
-    createSurface({
-      id: `${PRESENTER_PLUGIN}/collection`,
-      role: 'article',
-      position: 'hoist',
-      filter: (data): data is { subject: DataType.Collection; variant: 'presenter' } =>
-        Obj.instanceOf(DataType.Collection, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
-    }),
-    createSurface({
-      id: `${PRESENTER_PLUGIN}/slide`,
-      role: 'slide',
-      filter: (data): data is { subject: DocumentType } => Obj.instanceOf(DocumentType, data.subject),
-      component: ({ data }) => <MarkdownSlide document={data.subject} />,
-    }),
-    createSurface({
-      id: `${PRESENTER_PLUGIN}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === PRESENTER_PLUGIN,
-      component: ({ data: { subject } }) => <PresenterSettings settings={subject.value} />,
-    }),
-  ]);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'document',
+        position: 'first',
+        filter: AppSurface.predicate(
+          AppSurface.Article,
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Markdown.Document }> =>
+            !!data.subject &&
+            typeof data.subject === 'object' &&
+            'type' in data.subject &&
+            'object' in data.subject &&
+            data.subject.type === meta.id &&
+            Obj.instanceOf(Markdown.Document, data.subject.object),
+        ),
+        component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
+      }),
+      Surface.create({
+        id: 'collection',
+        position: 'first',
+        filter: AppSurface.predicate(
+          AppSurface.Article,
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Collection.Collection }> =>
+            !!data.subject &&
+            typeof data.subject === 'object' &&
+            'type' in data.subject &&
+            'object' in data.subject &&
+            data.subject.type === meta.id &&
+            Obj.instanceOf(Collection.Collection, data.subject.object),
+        ),
+        component: ({ role, data }) => <CollectionPresenterArticle role={role} subject={data.subject.object} />,
+      }),
+      Surface.create({
+        id: 'slide',
+        filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
+        component: ({ data }) => <MarkdownSlide document={data.subject} />,
+      }),
+      Surface.create({
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
+    ]),
+  ),
+);

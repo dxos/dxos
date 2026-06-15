@@ -2,41 +2,57 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { type EditorView } from '@codemirror/view';
-import React, { useRef } from 'react';
-
-import { DropdownMenu } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
+import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
 import { EditorStory } from './components';
-import { RefDropdownMenu } from '../components';
-import { outliner, listItemToString, treeFacet, deleteItem, hashtag } from '../extensions';
-import { str } from '../testing';
 
-type StoryProps = {
-  text: string;
+type DefaultStoryProps = {
+  text?: string;
 };
 
-const DefaultStory = ({ text }: StoryProps) => {
-  const viewRef = useRef<EditorView>(null);
+const DefaultStory = ({ text }: DefaultStoryProps) => {
+  const [controller, setController] = useState<EditorController | null>(null);
 
-  const handleDelete = () => {
-    if (viewRef.current) {
-      deleteItem(viewRef.current);
-    }
-  };
+  const extensions = useMemo(() => [outliner(), hashtag()], []);
+  const commandGroups: EditorMenuGroup[] = useMemo(
+    () => [
+      {
+        id: 'outliner-actions',
+        items: [
+          {
+            id: 'delete-row',
+            label: 'Delete',
+            onSelect: ({ view }) => {
+              deleteItem(view);
+            },
+          },
+        ],
+      },
+    ],
+    [],
+  );
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
-    <RefDropdownMenu.Provider>
+    <EditorMenuProvider
+      getView={getView}
+      groups={commandGroups}
+      onSelect={({ view, item }) => {
+        if (item.onSelect) {
+          return item.onSelect({ view, head: view.state.selection.main.head });
+        }
+      }}
+    >
       <EditorStory
-        ref={viewRef}
+        ref={setController}
         text={text}
-        extensions={[outliner(), hashtag()]}
-        placeholder=''
-        slots={{}}
+        extensions={extensions}
         debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);
@@ -45,35 +61,30 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={handleDelete}>Delete</DropdownMenu.Item>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </RefDropdownMenu.Provider>
+    </EditorMenuProvider>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
-  decorators: [withAttention, withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withAttention()],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Empty = {
+type Story = StoryObj<typeof meta>;
+
+export const Empty: Story = {
   args: {},
 };
 
-export const Basic = {
+export const Basic: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '- [ ] B',
@@ -86,9 +97,9 @@ export const Basic = {
   },
 };
 
-export const Nested = {
+export const Nested: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '  - [ ] B',
@@ -101,9 +112,9 @@ export const Nested = {
   },
 };
 
-export const Continuation = {
+export const Continuation: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '- [ ] B',

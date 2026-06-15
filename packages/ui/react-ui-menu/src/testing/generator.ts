@@ -2,27 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { useEffect } from 'react';
+import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect } from 'react';
 
-import {
-  type Action,
-  Graph,
-  type NodeArg,
-  ACTION_TYPE,
-  ACTION_GROUP_TYPE,
-  actionGroupSymbol,
-  ROOT_ID,
-} from '@dxos/app-graph';
-import { live } from '@dxos/live-object';
-import { faker } from '@dxos/random';
-import { type DeepWriteable } from '@dxos/util';
+import { Graph, Node } from '@dxos/app-graph';
+import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuAction, type MenuItemGroup, type MenuItem } from '../types';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
-export type CreateActionsParams = Partial<{
-  type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
+export type CreateActionsProps = Partial<{
+  type?: typeof Node.ActionType | typeof Node.ActionGroupType;
   callback: () => void;
   count: number;
 }>;
@@ -46,71 +36,91 @@ const icons = {
   ],
 };
 
-export const createActions = (params?: CreateActionsParams) => {
-  // eslint-disable-next-line no-console
-  const { callback = () => console.log('invoke'), count = 12, type = ACTION_TYPE } = params ?? {};
-  return faker.helpers.multiple(
-    () =>
-      live({
-        id: faker.string.uuid(),
-        type,
-        data: type === ACTION_GROUP_TYPE ? actionGroupSymbol : callback,
-        properties: {
-          label: faker.lorem.words(2),
-          icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
-          disabled: faker.helpers.arrayElement([true, false]),
-          ...(type === ACTION_GROUP_TYPE && { variant: 'dropdownMenu' }),
-        },
-      }),
+export const createActions = (params?: CreateActionsProps) => {
+  const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
+  return random.helpers.multiple(
+    () => ({
+      id: random.string.uuid(),
+      type,
+      data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
+      properties: {
+        label: random.lorem.words(2),
+        icon: random.helpers.arrayElement(icons[random.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
+        disabled: random.helpers.arrayElement([true, false]),
+        ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
+      },
+    }),
     { count },
   );
 };
 
-export const createNestedActions = Rx.make(() => {
+const buildNestedActions = (): ActionGraphProps => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
-  const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
+  const actionGroups = createActions({ type: Node.ActionGroupType });
   actionGroups.forEach((group) => {
     const actions = createActions();
     result.nodes.push(group, ...actions);
     result.edges.push(
-      { source: 'root', target: group.id },
-      ...actions.map((action) => ({ source: group.id, target: action.id })),
+      { source: 'root', target: group.id, relation: 'child' },
+      ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
     );
   });
   return result;
-});
+};
 
-export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
-  const graph = new Graph();
-  const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
+export const createNestedActions = Atom.make(buildNestedActions()).pipe(Atom.keepAlive);
+
+export const createNestedActionsResolver = (props?: {
+  groupParams?: CreateActionsProps;
+  params?: CreateActionsProps;
+  registry?: Registry.Registry;
+}) => {
+  const { groupParams, params, registry } = props ?? {};
+  const graph = Graph.make({ ...(registry && { registry }) });
+  const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    graph.addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
-    graph.addEdges([
-      { source: 'root', target: group.id },
-      ...actions.map((action) => ({ source: group.id, target: action.id })),
-    ]);
-    void graph.expand(group.id);
-  });
-  const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (graph.getActions(groupNode?.id ?? ROOT_ID) || null) as MenuItem[] | null;
-  return { resolveGroupItems };
-};
-
-export const mutateActionsOnInterval = (actions: Action[]) => {
-  let cursor = 0;
-  return setInterval(() => {
-    const action = actions[cursor] as DeepWriteable<Action>;
-    action.properties.icon = faker.helpers.arrayElement(
-      action.properties.icon.endsWith('regular') ? icons.fill : icons.regular,
+    graph.pipe(
+      Graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]),
+      Graph.addEdges([
+        { source: 'root', target: group.id, relation: 'child' },
+        ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
+      ]),
+      Graph.expand(group.id, 'child'),
     );
-    action.properties.disabled = !action.properties.disabled;
-    cursor = (cursor + actions.length + 1) % actions.length;
-  }, 1_000);
+  });
+  const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
+    graph.connections(group?.id ?? Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+  return { items };
 };
 
-export const useMutateActions = (actions: MenuAction[]) =>
+/**
+ * Hook to mutate actions in an atom on an interval for testing reactivity.
+ */
+export const useMutateActions = (actionsAtom: Atom.Writable<ActionGraphProps>) => {
+  const registry = useContext(RegistryContext);
+
   useEffect(() => {
-    const interval = mutateActionsOnInterval(actions);
+    let cursor = 0;
+    const interval = setInterval(() => {
+      const current = registry.get(actionsAtom);
+      const nodes = current.nodes.map((node, index) => {
+        if (index !== cursor) {
+          return node;
+        }
+        return {
+          ...node,
+          properties: {
+            ...node.properties,
+            icon: random.helpers.arrayElement(node.properties?.icon?.endsWith('regular') ? icons.fill : icons.regular),
+            disabled: !node.properties?.disabled,
+          },
+        };
+      });
+      registry.set(actionsAtom, { ...current, nodes });
+      cursor = (cursor + 1) % current.nodes.length;
+    }, 1_000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [actionsAtom, registry]);
+};

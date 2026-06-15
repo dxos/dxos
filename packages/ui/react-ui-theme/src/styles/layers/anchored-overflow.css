@@ -1,9 +1,0 @@
-@layer utilities {
-  .overflow-anchored * {
-    overflow-anchor: none;
-  }
-
-  .overflow-anchor {
-    overflow-anchor: auto;
-  }
-}

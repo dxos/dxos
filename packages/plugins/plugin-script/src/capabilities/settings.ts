@@ -2,20 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import * as Effect from 'effect/Effect';
 
-import { meta } from '../meta';
-import { ScriptSettingsSchema } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { createKvsStore } from '@dxos/effect';
 
-export default () => {
-  const settings = live(ScriptSettingsSchema, {
-    editorInputMode: 'vscode',
-  });
+import { meta } from '#meta';
+import { ScriptCapabilities, Settings } from '#types';
 
-  return contributes(Capabilities.Settings, {
-    prefix: meta.id,
-    schema: ScriptSettingsSchema,
-    value: settings,
-  });
-};
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: Settings.Settings,
+      defaultValue: () => ({
+        editorInputMode: 'vscode' as const,
+      }),
+    });
+
+    return [
+      Capability.contributes(ScriptCapabilities.Settings, settingsAtom),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.id,
+        schema: Settings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

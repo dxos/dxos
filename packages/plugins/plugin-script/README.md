@@ -21,19 +21,21 @@ runtime:
 Test credentials:
 
 ```js
-await dxos.client.halo.writeCredentials([{
-  issuer: dxos.client.halo.identity.get().identityKey,
-  subject: {
-    id: dxos.client.halo.identity.get().identityKey,
-    assertion: {
-      '@type': 'dxos.halo.credentials.ServiceAccess',
-      serverName: 'hub.dxos.network',
-      serverKey: dxos.client.halo.identity.get().identityKey,
-      identityKey: dxos.client.halo.identity.get().identityKey,
-      capabilities: ['composer:beta']
-    }
-  }
-}])
+await dxos.client.halo.writeCredentials([
+  {
+    issuer: dxos.client.halo.identity.get().identityKey,
+    subject: {
+      id: dxos.client.halo.identity.get().identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.ServiceAccess',
+        'serverName': 'hub.dxos.network',
+        'serverKey': dxos.client.halo.identity.get().identityKey,
+        'identityKey': dxos.client.halo.identity.get().identityKey,
+        'capabilities': ['composer:beta'],
+      },
+    },
+  },
+]);
 ```
 
 Start composer:

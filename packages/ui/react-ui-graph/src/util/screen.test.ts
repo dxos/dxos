@@ -5,7 +5,7 @@
 import { expect, test } from 'vitest';
 
 import { Screen } from './screen';
-import { type Rect, type Point } from './types';
+import { type Point, type Rect } from './types';
 
 test('createBounds', () => {
   const tests: { p1: Point; p2: Point; bounds: Rect }[] = [

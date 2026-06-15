@@ -3,10 +3,11 @@
 //
 
 import path from 'node:path';
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { LogLevel } from './config';
-import { log } from './log';
+import { shouldLog } from './context';
+import { type Log, createLog } from './log';
 
 class LogError extends Error {
   constructor(
@@ -24,14 +25,53 @@ class LogError extends Error {
   }
 }
 
-log.config({
-  filter: LogLevel.DEBUG,
-});
+describe('log', () => {
+  let log!: Log;
 
-/* eslint-disable @stayradiated/prefer-arrow-functions/prefer-arrow-functions */
+  beforeEach(() => {
+    log = createLog();
+    log.config({
+      filter: LogLevel.DEBUG,
+    });
+  });
 
-describe('log', function () {
-  test('throws an error', function () {
+  test('filters', ({ expect }) => {
+    const tests = [
+      { expected: 0, filter: 'ERROR' },
+      { expected: 2, filter: 'INFO' },
+      { expected: 1, filter: 'foo:INFO' },
+      { expected: 4, filter: 'DEBUG' },
+      { expected: 2, filter: 'DEBUG,-foo:*' },
+      { expected: 1, filter: 'INFO,-foo:*' },
+      { expected: 3, filter: 'DEBUG,-foo:INFO' },
+      { expected: 3, filter: 'foo:DEBUG,bar:INFO' },
+    ];
+
+    for (const test of tests) {
+      let count = 0;
+      const log = createLog();
+      const remove = log.addProcessor((config, entry) => {
+        if (shouldLog(entry, config.filters)) {
+          count++;
+        }
+      });
+      log.config({
+        filter: test.filter,
+      });
+
+      console.group(`Filter: "${test.filter}"`);
+      log.debug('line 1', {}, { F: 'foo.ts', L: 1, S: undefined });
+      log.info('line 2', {}, { F: 'foo.ts', L: 2, S: undefined });
+      log.debug('line 3', {}, { F: 'bar.ts', L: 3, S: undefined });
+      log.info('line 4', {}, { F: 'bar.ts', L: 4, S: undefined });
+      console.groupEnd();
+
+      expect(count, `Filter: "${test.filter}"`).toBe(test.expected);
+      remove();
+    }
+  });
+
+  test('throws an error', () => {
     try {
       throw new LogError('Test failed', { value: 1 });
     } catch (err: any) {
@@ -39,7 +79,7 @@ describe('log', function () {
     }
   });
 
-  test('throws an error showing stacktrace', function () {
+  test('throws an error showing stacktrace', () => {
     try {
       throw new LogError('Test failed', { value: 2 });
     } catch (err: any) {
@@ -47,7 +87,7 @@ describe('log', function () {
     }
   });
 
-  test('catches an error', function () {
+  test('catches an error', () => {
     try {
       throw new LogError('ERROR ON LINE 21', { value: 3 });
     } catch (err: any) {
@@ -55,17 +95,7 @@ describe('log', function () {
     }
   });
 
-  test('config', function () {
-    log.config({
-      filter: LogLevel.INFO,
-    });
-
-    log.debug('Debug level log message');
-    log.info('Info level log message');
-    log.warn('Warn level log message');
-  });
-
-  test('config file', function () {
+  test('config file', () => {
     log.config({
       file: path.join('packages/common/log/test-config.yml'),
     });
@@ -75,7 +105,7 @@ describe('log', function () {
     log.warn('Warn level log message');
   });
 
-  test('levels', function () {
+  test('levels', () => {
     log('Default level log message');
     log.debug('Debug level log message');
     log.info('Info level log message');
@@ -83,10 +113,15 @@ describe('log', function () {
     log.error('Error level log message');
   });
 
-  test('context', function () {
+  test('context', () => {
     log.info('Message with context', {
       title: 'test',
       context: 123,
     });
+  });
+
+  test('error', () => {
+    const myError = new Error('Test error', { cause: new Error('Cause') });
+    log.catch(myError);
   });
 });

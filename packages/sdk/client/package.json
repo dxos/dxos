@@ -1,90 +1,107 @@
 {
   "name": "@dxos/client",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "repository": "github:dxos/dxos",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#opfs-worker": {
+      "source": "./src/worker/opfs-worker.ts",
+      "types": "./dist/types/src/worker/opfs-worker.d.ts",
+      "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
+    },
+    "#coordinator-worker": {
+      "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs",
+      "node": "./dist/lib/node-esm/services/dedicated/coordinator-worker-entrypoint.mjs"
+    }
+  },
   "exports": {
     "./devtools": {
+      "source": "./src/devtools/index.ts",
       "types": "./dist/types/src/devtools/index.d.ts",
       "browser": "./dist/lib/browser/devtools/index.mjs",
       "node": "./dist/lib/node-esm/devtools/index.mjs"
     },
     "./echo": {
+      "source": "./src/echo/index.ts",
       "types": "./dist/types/src/echo/index.d.ts",
       "browser": "./dist/lib/browser/echo/index.mjs",
       "node": "./dist/lib/node-esm/echo/index.mjs"
     },
     "./halo": {
+      "source": "./src/halo/index.ts",
       "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
       "node": "./dist/lib/node-esm/halo/index.mjs"
     },
     "./edge": {
+      "source": "./src/edge/index.ts",
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./invitations": {
+      "source": "./src/invitations/index.ts",
       "types": "./dist/types/src/invitations/index.d.ts",
       "browser": "./dist/lib/browser/invitations/index.mjs",
       "node": "./dist/lib/node-esm/invitations/index.mjs"
     },
     "./mesh": {
+      "source": "./src/mesh/index.ts",
       "types": "./dist/types/src/mesh/index.d.ts",
       "browser": "./dist/lib/browser/mesh/index.mjs",
       "node": "./dist/lib/node-esm/mesh/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./worker": {
+      "source": "./src/worker/index.ts",
       "types": "./dist/types/src/worker/index.d.ts",
       "browser": "./dist/lib/browser/worker/index.mjs",
       "node": "./dist/lib/node-esm/worker/index.mjs"
+    },
+    "./opfs-worker": {
+      "source": "./src/worker/opfs-worker.ts",
+      "types": "./dist/types/src/worker/opfs-worker.d.ts",
+      "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
+    },
+    "./dedicated-worker": {
+      "source": "./src/services/dedicated/dedicated-worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/dedicated-worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/dedicated-worker-entrypoint.mjs"
+    },
+    "./coordinator-worker": {
+      "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
+    },
+    "./coordinator-worker-onconnect": {
+      "source": "./src/services/dedicated/coordinator-worker.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "devtools": [
-        "dist/types/src/devtools/index.d.ts"
-      ],
-      "echo": [
-        "dist/types/src/echo/index.d.ts"
-      ],
-      "halo": [
-        "dist/types/src/halo/index.d.ts"
-      ],
-      "edge": [
-        "dist/types/src/edge/index.d.ts"
-      ],
-      "invitations": [
-        "dist/types/src/invitations/index.d.ts"
-      ],
-      "mesh": [
-        "dist/types/src/mesh/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "worker": [
-        "dist/types/src/worker/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -93,8 +110,8 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@automerge/automerge": "3.0.0-beta.4",
-    "@automerge/automerge-repo": "2.0.1",
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -102,19 +119,16 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/indexing": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
@@ -123,29 +137,27 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "base-x": "~3.0.9",
-    "effect": "3.14.21",
-    "jwt-decode": "^4.0.0",
-    "lodash.isequal": "^4.5.0",
-    "lodash.isequalwith": "^4.4.0",
-    "ua-parser-js": "^1.0.39"
+    "@effect/experimental": "catalog:",
+    "@effect/sql": "catalog:",
+    "effect": "catalog:",
+    "fast-deep-equal": "catalog:",
+    "jwt-decode": "catalog:",
+    "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "3.0.0-beta.4",
+    "@automerge/automerge": "catalog:",
     "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "^4.5.0",
-    "@types/lodash.isequalwith": "^4.4.0",
-    "@types/ua-parser-js": "^0.7.39",
-    "fast-check": "^3.19.0",
-    "source-map-support": "^0.5.12",
-    "typedoc": "0.28.1"
+    "@types/lodash.isequalwith": "catalog:",
+    "fast-check": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "engines": {
     "node": ">=12.0.0"

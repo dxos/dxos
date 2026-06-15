@@ -15,8 +15,8 @@ import { createApp } from '@dxos/app-framework';
 const App = createApp({
   plugins: [
     // ... list of plugins
-  ]
-})
+  ],
+});
 
 createRoot(document.getElementById('root')).render(<App />);
 ```

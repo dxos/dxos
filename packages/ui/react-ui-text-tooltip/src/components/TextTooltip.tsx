@@ -5,9 +5,9 @@
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type ComponentPropsWithoutRef,
-  forwardRef,
   type PropsWithChildren,
   type SyntheticEvent,
+  forwardRef,
   useCallback,
   useRef,
 } from 'react';

@@ -2,21 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { NAVTREE_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from '#meta';
+
+export const translations = [
   {
     'en-US': {
-      [NAVTREE_PLUGIN]: {
-        'app menu label': 'App menu',
-        'open settings label': 'Settings',
-        'open commands label': 'Search commands',
-        'commands dialog title': 'Commands',
-        'command list input placeholder': 'Search for commands…',
-        'node actions menu invoker label': 'More options',
-        'tree item actions label': 'More actions',
-        'empty branch message': ' ',
+      [meta.id]: {
+        'app-menu.label': 'App menu',
+        'open-commands.label': 'Search commands',
+        'commands-dialog.title': 'Commands',
+        'command-list-input.placeholder': 'Search for commands…',
+        'node-actions-menu-invoker.label': 'More options',
+        'tree-item-actions.label': 'More actions',
+        'button-back.button': 'Back to Space',
       },
     },
   },
-];
+] as const satisfies Resource[];

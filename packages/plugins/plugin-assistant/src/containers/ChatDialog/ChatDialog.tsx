@@ -1,0 +1,67 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { useCallback, useState } from 'react';
+
+import { useAtomCapability } from '@dxos/app-framework/ui';
+import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
+import { Obj } from '@dxos/echo';
+import { useRegistry } from '@dxos/react-client/echo';
+import { useTranslation } from '@dxos/react-ui';
+import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
+
+import { Chat, type ChatRootProps } from '#components';
+import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { meta } from '#meta';
+import { type Assistant, AssistantCapabilities } from '#types';
+
+export type ChatDialogProps = {
+  chat?: ChatTypes.Chat;
+};
+
+export const ChatDialog = ({ chat }: ChatDialogProps) => {
+  const { t } = useTranslation(meta.id);
+
+  const db = chat && Obj.getDatabase(chat);
+  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const runtime = useChatServices({ id: db?.spaceId });
+  const [online, setOnline] = useOnline();
+  const { preset, ...chatProps } = usePresets(online);
+  const registry = useRegistry();
+  const processor = useChatProcessor({ chat, preset, runtime, registry, settings });
+
+  // TODO(burdon): Refocus when open.
+  const [open, setOpen] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>((event) => {
+    switch (event.type) {
+      case 'submit':
+      case 'thread-open':
+        setOpen(true);
+        setExpanded(true);
+        break;
+      case 'thread-close':
+        setOpen(false);
+        break;
+    }
+  }, []);
+
+  if (!chat || !processor) {
+    return null;
+  }
+
+  return (
+    <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
+      <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
+        <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
+        <NaturalChatDialog.Content>
+          <Chat.Thread viewType={(chat.view as Assistant.ChatView | undefined) ?? settings.chatView} />
+        </NaturalChatDialog.Content>
+        <NaturalChatDialog.Footer classNames='p-1.5'>
+          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
+        </NaturalChatDialog.Footer>
+      </NaturalChatDialog.Root>
+    </Chat.Root>
+  );
+};

@@ -2,34 +2,35 @@
 // Copyright 2020 DXOS.org
 //
 
-import '@dxos-theme';
+import '../../styles/graph.css';
 
-import { type StoryObj } from '@storybook/react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
-import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
+import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {
   GraphForceProjector,
-  type GraphLayoutNode,
-  type GraphLayoutEdge,
-  GraphRenderer,
   type GraphForceProjectorOptions,
-  createMarkers,
+  type GraphLayoutEdge,
+  type GraphLayoutNode,
+  GraphRenderer,
   createGraphDrag,
+  createMarkers,
   linkerRenderer,
 } from '../graph';
-import { useSvgContext, useZoom, useGrid } from '../hooks';
-import { convertTreeToGraph, createTree, TestGraphModel, type TestNode } from '../testing';
+import { useGrid, useSvgContext, useZoom } from '../hooks';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
 
-import '../../styles/graph.css';
-
-type StoryProps = PropsWithChildren<{
-  model: TestGraphModel;
+type ComponentProps = PropsWithChildren<{
+  graph: () => Graph.Graph<TestNode, Graph.Edge.Any>;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
   interval?: number;
@@ -37,28 +38,20 @@ type StoryProps = PropsWithChildren<{
   grid?: boolean;
 }>;
 
-const DefaultStory = ({ children, ...props }: StoryProps) => {
-  return (
-    <>
-      <SVG.Root>
-        <StoryComponent {...props} />
-      </SVG.Root>
-      {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
-    </>
-  );
-};
-
-const StoryComponent = ({
-  model,
+const Component = ({
+  graph: graphFactory,
   projectorOptions,
   count = 0,
   interval = 200,
   link = false,
   grid: showGrid = false,
-}: StoryProps) => {
+}: ComponentProps) => {
+  const registry = useContext(RegistryContext);
+  const model = useMemo(() => new TestGraphModel(registry, graphFactory()), [registry, graphFactory]);
+
   const context = useSvgContext();
-  const graphRef = useRef<SVGGElement>();
-  const markersRef = useRef<SVGGElement>();
+  const graphRef = useRef<SVGGElement>(null);
+  const markersRef = useRef<SVGGElement>(null);
   const grid = useGrid({ visible: showGrid });
   const zoom = useZoom();
 
@@ -94,7 +87,7 @@ const StoryComponent = ({
         labels: {
           text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
         },
-        onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
+        onNodeClick: (node: GraphLayoutNode<TestNode>) => {
           renderer.fireBullet(node);
         },
         onLinkClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
@@ -116,9 +109,14 @@ const StoryComponent = ({
   }, [markersRef]);
 
   useEffect(() => {
+    // Prime the projector with the initial graph — `model.subscribe` only fires on changes by default,
+    // so without this the simulation starts empty and the renderer never sees any nodes.
+    // The subscribe callback receives `(model, graph)` from GraphModel; use the model reference
+    // we already have to fetch the current snapshot.
+    projector.updateData(model.graph);
     void projector.start();
     return combine(
-      model.subscribe((graph) => projector.updateData(graph)),
+      model.subscribe(() => projector.updateData(model.graph)),
       projector.updated.on(({ layout }) => renderer.render(layout)),
       () => projector.stop(),
     );
@@ -151,19 +149,33 @@ const StoryComponent = ({
   );
 };
 
-const meta: Meta = {
+const DefaultStory = ({ children, ...props }: ComponentProps) => {
+  return (
+    <>
+      <SVG.Root>
+        <Component {...props} />
+      </SVG.Root>
+      {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
+    </>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 3 }))),
+    graph: () => convertTreeToGraph(createTree({ depth: 3 })),
     grid: true,
     count: 300,
     interval: 20,
@@ -188,7 +200,7 @@ export const Default: Story = {
 
 export const Bullets: Story = {
   args: {
-    model: new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 }))),
+    graph: () => convertTreeToGraph(createTree({ depth: 4 })),
     children: <span>⌘-DRAG to edge or create node; ⌘-CLICK to delete edge.</span>,
     link: true,
     grid: false,

@@ -21,6 +21,6 @@ declare module 'nanomessage' {
   }
 
   export const errors = {
-    NMSG_ERR_TIMEOUT
+    NMSG_ERR_TIMEOUT,
   };
 }

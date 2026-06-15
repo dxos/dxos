@@ -93,7 +93,7 @@ export class IDbStorage extends AbstractStorage {
 
     return new Promise((resolve, reject) => {
       transaction.onerror = () => {
-        reject(request.error);
+        reject(request.error!);
       };
 
       request.onsuccess = (event) => {

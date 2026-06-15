@@ -33,10 +33,10 @@
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../react-ui"
     },
     {
-      "path": "../react-ui"
+      "path": "../react-ui-mosaic"
     },
     {
       "path": "../react-ui-stack"
@@ -45,7 +45,7 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

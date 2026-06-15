@@ -2,44 +2,65 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { createKvsStore } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
-import { LocalStorageStore } from '@dxos/local-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { SpaceCapabilities } from './capabilities';
-import { SPACE_PLUGIN } from '../meta';
-import { type PluginState } from '../types';
+import { meta } from '#meta';
+import { SpaceCapabilities } from '#types';
 
-export default (context: PluginContext) => {
-  const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
-    awaiting: undefined,
-    spaceNames: {},
-    viewersByObject: {},
-    // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
-    viewersByIdentity: new ComplexMap(PublicKey.hash),
-    sdkMigrationRunning: {},
-    navigableCollections: false,
-    enabledEdgeReplication: false,
-  });
-
-  state
-    .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
-    .prop({ key: 'enabledEdgeReplication', type: LocalStorageStore.bool() });
-
-  const manager = context.getCapability(Capabilities.PluginManager);
-  const unsubscribe = effect(() => {
-    // TODO(wittjosiah): Find a way to make this capability-based.
-    const enabled = manager.enabled.includes('dxos.org/plugin/stack');
-    if (enabled !== state.values.navigableCollections) {
-      state.values.navigableCollections = enabled;
-    }
-  });
-
-  return contributes(SpaceCapabilities.State, state.values, () => {
-    unsubscribe();
-    state.close();
-  });
+/** Default persisted state. */
+const defaultSpaceState: SpaceCapabilities.SpaceState = {
+  spaceNames: {},
+  enabledEdgeReplication: false,
 };
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+
+    // Persisted state using KVS store.
+    const stateAtom = createKvsStore({
+      key: `${meta.id}.state`,
+      schema: SpaceCapabilities.StateSchema,
+      defaultValue: () => ({ ...defaultSpaceState }),
+    });
+
+    // Ephemeral state (not persisted, but kept alive to prevent GC resets).
+    const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
+      awaiting: undefined,
+      sdkMigrationRunning: {},
+      navigableCollections: false,
+      viewersByObject: {},
+      viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
+    }).pipe(Atom.keepAlive);
+
+    const manager = yield* Capability.get(Capabilities.PluginManager);
+    // Update navigableCollections based on plugin state.
+    const updateNavigableCollections = () => {
+      const enabled =
+        manager.getEnabled().includes('org.dxos.plugin.stack') ||
+        manager.getEnabled().includes('org.dxos.plugin.simpleLayout');
+      const current = registry.get(ephemeralAtom);
+      if (enabled !== current.navigableCollections) {
+        registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections: enabled }));
+      }
+    };
+    // Check initial state and subscribe to changes.
+    updateNavigableCollections();
+    const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
+
+    return [
+      Capability.contributes(SpaceCapabilities.State, stateAtom),
+      Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
+        Effect.sync(() => {
+          unsubscribe();
+        }),
+      ),
+    ];
+  }),
+);

@@ -4,13 +4,13 @@
 
 import { type Browser, type ConsoleMessage, type Page } from '@playwright/test';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
 import { type FILTER } from '../constants';
 
-export const INITIAL_URL = 'http://localhost:4200/';
+export const INITIAL_URL = 'http://localhost:9006/';
 
 export class AppManager {
   page!: Page;
@@ -39,10 +39,6 @@ export class AppManager {
 
   newTodo() {
     return this.page.getByTestId('new-todo');
-  }
-
-  hasText(text: string) {
-    return this.page.locator(`:has-text("${text}")`);
   }
 
   todo(title: string) {

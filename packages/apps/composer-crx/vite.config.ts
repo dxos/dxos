@@ -2,36 +2,47 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
-import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
-import WasmPlugin from 'vite-plugin-wasm';
-import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
+import { crx } from '@crxjs/vite-plugin';
+import react from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import sourcemaps from 'rollup-plugin-sourcemaps';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import topLevelAwait from 'vite-plugin-top-level-await';
+import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
+// import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 // @ts-ignore
 import packageJson from './package.json';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
-const rootDir = resolve(__dirname, '../../..');
-const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+const { prepareCanonicalDist } = await import(pathToFileURL(path.join(dirname, 'scripts/canonical-dist.mjs')).href);
+
+const rootDir = searchForWorkspaceRoot(process.cwd());
+const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const outDir = prepareCanonicalDist(dirname);
 
 /**
  * https://vitejs.dev/config
  */
 export default defineConfig({
+  root: dirname,
   build: {
+    outDir,
+    emptyOutDir: true,
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages
       input: {
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
-        panel: resolve(__dirname, 'panel.html'),
+        panel: path.resolve(dirname, 'panel.html'),
       },
       output: {
         sourcemap: true,
@@ -41,42 +52,48 @@ export default defineConfig({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
+      // Stub out codec-protobuf to disable eval, which contradicts the MV3 CSP.
+      // '@dxos/codec-protobuf': path.resolve(dirname, 'src/codec-protobuf.stub.ts'),
     },
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin(), SourceMapsPlugin()],
+    plugins: () => [sourcemaps(), topLevelAwait(), wasm()],
   },
   plugins: [
-    SourceMapsPlugin(),
-    ConfigPlugin(),
-    ThemePlugin({
-      root: __dirname,
-      content: [
-        join(__dirname, './index.html'),
-        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),    
-      ],
+    ShutdownPlugin(),
+    sourcemaps(),
+
+    // DXOS plugins.
+    ConfigPlugin({
+      root: dirname,
     }),
+    ThemePlugin({}),
     IconsPlugin({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
       spriteFile: 'icons.svg',
       contentPaths: [
-        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
-        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+        path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
+      // Page-action descriptor icons are contributed by Composer plugins at
+      // runtime; those sources are never imported by the extension bundle, so
+      // they are scanned eagerly by convention (capabilities/page-action*.ts).
+      scanPaths: [path.join(rootDir, '/packages/plugins/*/src/capabilities/page-action*.ts')],
     }),
 
-    WasmPlugin(),
+    // TODO(burdon): Document.
+    wasm(),
 
     // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    react({
+      jsxRuntime: 'classic',
+    }),
 
     // https://crxjs.dev/vite-plugin
-    // TODO(burdon): HMR works if installing from ./dist (via `p serve`) but styles don't work.
-    ChromeExtensionPlugin({
+    crx({
       manifest: {
         manifest_version: 3,
         version: packageJson.version,
@@ -85,14 +102,21 @@ export default defineConfig({
         short_name: 'Composer',
         description: 'Composer browser extension.',
         icons: {
-          '48': 'assets/img/icon-dxos-48.png',
-          '128': 'assets/img/icon-dxos-128.png',
+          '48': 'assets/img/icon-48.png',
+          '128': 'assets/img/icon-128.png',
         },
+        // NOTE: Rename file to break cache.
         action: {
-          default_icon: 'assets/img/icon-dxos-48.png',
+          default_icon: 'assets/img/icon-48.png',
           default_title: 'Composer',
           default_popup: 'popup.html',
         },
+        permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications'],
+        // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
+        // Broad host access is required so the popup and background can fetch cross-origin
+        // (chat-agent, image-service) without CORS — extensions bypass CORS for hosts they
+        // hold permissions for — and so the content script can be injected on any page.
+        host_permissions: ['http://*/*', 'https://*/*'],
         content_security_policy: {
           extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
         },
@@ -110,6 +134,14 @@ export default defineConfig({
             js: ['src/content.ts'],
           },
         ],
+        // Expose the icon sprite to pages so the picker's SVG `<use href=...>`
+        // references resolve when it's injected into arbitrary sites.
+        web_accessible_resources: [
+          {
+            resources: ['icons.svg'],
+            matches: ['http://*/*', 'https://*/*'],
+          },
+        ],
       },
     }),
 
@@ -119,20 +151,23 @@ export default defineConfig({
       buildEnd() {
         const deps: { source: string; target: string }[] = [];
         for (const id of this.getModuleIds()) {
-          const m = this.getModuleInfo(id);
-          if (m != null && !m.isExternal) {
-            for (const target of m.importedIds) {
-              deps.push({ source: m.id, target });
+          const module = this.getModuleInfo(id);
+          if (module != null && !module.isExternal) {
+            for (const target of module.importedIds) {
+              deps.push({ source: module.id, target });
             }
           }
         }
 
-        const outDir = join(__dirname, 'out');
+        const outDir = path.join(dirname, 'out');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],
+
+  // TODO(wittjosiah): Tests failing.
+  // ...createTestConfig({ dirname, node: true, storybook: true }),
 });

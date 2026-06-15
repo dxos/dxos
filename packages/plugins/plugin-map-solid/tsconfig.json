@@ -1,0 +1,45 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js"
+  },
+  "exclude": [],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/operation"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-solid"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/solid-ui-geo"
+    },
+    {
+      "path": "../plugin-map"
+    }
+  ]
+}

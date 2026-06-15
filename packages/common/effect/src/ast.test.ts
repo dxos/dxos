@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -12,14 +13,15 @@ import {
   findNode,
   findProperty,
   getAnnotation,
-  getDiscriminatingProps,
   getDiscriminatedType,
-  getSimpleType,
+  getDiscriminatingProps,
+  getProperties,
+  isArrayType,
+  isDiscriminatedUnion,
   isOption,
-  isSimpleType,
   visit,
-} from './ast';
-import { type JsonPath, type JsonProp } from './jsonPath';
+} from './internal/ast';
+import { type JsonPath, type JsonProp } from './internal/json-path';
 
 const ZipCode = Schema.String.pipe(
   Schema.pattern(/^\d{5}$/, {
@@ -63,10 +65,9 @@ describe('AST', () => {
 
     const prop = findProperty(TestSchema, 'name' as JsonProp);
     invariant(prop);
-    const node = findNode(prop, isSimpleType);
+    const node = findNode(prop, (node) => node._tag === 'StringKeyword');
     invariant(node);
-    const type = getSimpleType(node);
-    expect(type).to.eq('string');
+    expect(node._tag).to.eq('StringKeyword');
   });
 
   test('findProperty', ({ expect }) => {
@@ -88,6 +89,30 @@ describe('AST', () => {
       const prop = findProperty(Contact, 'address.city' as JsonPath);
       expect(prop).not.to.exist;
     }
+  });
+
+  test('getProperties preserves annotation on property type after refinements', ({ expect }) => {
+    // When a property is e.g. Format.Text.pipe(nonEmptyString(), maxLength(), Schema.annotations({ title, description })),
+    // the form uses getProperties(schema.ast) and then Format.FormatAnnotation.getFromAst(property.type).
+    // Custom title and description from the outer Schema.annotations() must not be lost.
+    const WithRefinements = Schema.Struct({
+      message: Schema.String.annotations({ title: 'Feedback' }).pipe(
+        Schema.minLength(1),
+        Schema.maxLength(4096),
+        Schema.annotations({
+          title: 'Feedback label',
+          description: 'Feedback placeholder',
+        }),
+      ),
+    });
+    const properties = getProperties(WithRefinements.ast);
+    const messageProp = properties.find((p) => p.name === 'message');
+    invariant(messageProp);
+    const title = findAnnotation(messageProp.type, SchemaAST.TitleAnnotationId);
+    const description = findAnnotation(messageProp.type, SchemaAST.DescriptionAnnotationId);
+    // Outer Schema.annotations() wins so form labels/placeholders are preserved.
+    expect(title).to.eq('Feedback label');
+    expect(description).to.eq('Feedback placeholder');
   });
 
   test('findAnnotation', ({ expect }) => {
@@ -135,7 +160,11 @@ describe('AST', () => {
     });
 
     const props: string[] = [];
-    visit(TestSchema.ast, (_, path) => props.push(path.join('.')));
+    visit(
+      TestSchema.ast,
+      (_, path) => props.push(path.join('.')),
+      (node, path, depth) => depth < 3,
+    );
   });
 
   test('discriminated unions', ({ expect }) => {
@@ -150,7 +179,7 @@ describe('AST', () => {
       expect(isOption(TestUnionSchema.ast)).to.be.false;
       expect(getDiscriminatingProps(TestUnionSchema.ast)).to.deep.eq(['kind']);
 
-      const node = findNode(TestUnionSchema.ast, isSimpleType);
+      const node = findNode(TestUnionSchema.ast, isDiscriminatedUnion);
       expect(node).to.eq(TestUnionSchema.ast);
     }
 
@@ -177,5 +206,21 @@ describe('AST', () => {
         }).ast.toJSON(),
       );
     }
+  });
+
+  test('Schema.pluck', ({ expect }) => {
+    const TestSchema = Schema.Struct({
+      name: Schema.String,
+    });
+
+    expect(TestSchema.pipe(Schema.pluck('name'), Schema.typeSchema).ast).toEqual(SchemaAST.stringKeyword);
+    expect(() => TestSchema.pipe(Schema.pluck('missing' as any), Schema.typeSchema)).to.throw();
+  });
+
+  test('isArray', ({ expect }) => {
+    expect(isArrayType(Schema.String.ast)).to.be.false;
+    expect(isArrayType(Schema.Array(Schema.String).ast)).to.be.true;
+    expect(isArrayType(findProperty(Schema.Struct({ a: Schema.Array(Schema.String) }), 'a' as JsonPath)!)).to.be.true;
+    expect(isArrayType(Schema.Union(Schema.String, Schema.Array(Schema.String)).ast)).to.be.false;
   });
 });

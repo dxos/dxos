@@ -2,108 +2,156 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
-
-import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { type Capabilities } from '@dxos/app-framework';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account, ClientAction } from '@dxos/plugin-client/types';
-import { HelpAction } from '@dxos/plugin-help/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { ClientOperation } from '@dxos/plugin-client';
+import { Account } from '@dxos/plugin-client';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { HelpOperation } from '@dxos/plugin-support';
 import { type Client } from '@dxos/react-client';
-import { DeviceType, type Credential, type Identity } from '@dxos/react-client/halo';
+import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
+import { osTranslations } from '@dxos/ui-theme';
 
+import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
-import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
-import { WELCOME_PLUGIN } from './meta';
-import { queryAllCredentials, removeQueryParamByValue } from '../../util';
+import { meta } from './meta';
 
-export type OnboardingManagerParams = {
-  dispatch: PromiseIntentDispatcher;
+export type OnboardingManagerProps = {
+  invokePromise: Capabilities.OperationInvoker['invokePromise'];
   client: Client;
   firstRun?: Trigger;
   hubUrl?: string;
   token?: string;
-  tokenType?: 'login' | 'verify';
   recoverIdentity?: boolean;
   deviceInvitationCode?: string;
   spaceInvitationCode?: string;
+  /**
+   * Account invitation code redeemed during signup. Drives the new account-gated
+   * flow: identity is created locally only after the code validates, then the
+   * code + identity + email are bound to a Hub Account.
+   */
+  accountInvitationCode?: string;
+  /** Email associated with the new account; required when accountInvitationCode is set. */
+  email?: string;
 };
 
 export class OnboardingManager {
   private readonly _ctx = new Context();
   private readonly _subscriptions = new SubscriptionList();
-  private readonly _dispatch: PromiseIntentDispatcher;
+  private readonly _invokePromise: Capabilities.OperationInvoker['invokePromise'];
   private readonly _client: Client;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
-  private readonly _tokenType?: 'login' | 'verify';
   private readonly _recoverIdentity?: boolean;
   private readonly _deviceInvitationCode?: string;
   private readonly _spaceInvitationCode?: string;
+  private readonly _accountInvitationCode?: string;
+  private readonly _email?: string;
 
   private _identity: Identity | null = null;
-  private _credential: Credential | null = null;
+  /**
+   * Set by {@link destroy}. `initialize` checks this at every `await` boundary
+   * so it bails out instead of mutating state after the manager has been torn
+   * down. Necessary because `WelcomeCapabilities.Onboarding` contributes the
+   * manager synchronously and runs `initialize()` as a fire-and-forget
+   * background side-effect — `destroy()` can fire while async work is still
+   * in flight.
+   */
+  private _destroyed = false;
 
   constructor({
-    dispatch,
+    invokePromise,
     client,
     hubUrl,
     token,
-    tokenType,
     recoverIdentity,
     deviceInvitationCode,
     spaceInvitationCode,
-  }: OnboardingManagerParams) {
+    accountInvitationCode,
+    email,
+  }: OnboardingManagerProps) {
     this._ctx.onDispose(() => this._subscriptions.clear());
 
-    this._dispatch = dispatch;
+    this._invokePromise = invokePromise;
     this._client = client;
     this._hubUrl = hubUrl;
-    this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
+    this._skipAuth = !this._hubUrl;
     this._token = token;
-    this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
     this._deviceInvitationCode = deviceInvitationCode;
     this._spaceInvitationCode = spaceInvitationCode;
+    this._accountInvitationCode = accountInvitationCode;
+    this._email = email;
+
+    this._identity = this._client.halo.identity.get();
 
     this._subscriptions.add(
       this._client.halo.identity.subscribe((identity) => {
+        if (this._destroyed) {
+          return;
+        }
+        const wasNull = this._identity === null;
         this._identity = identity;
 
-        // If joining an existing identity, optimistically assume that credential will be found and close welcome.
-        if (this._deviceInvitationCode !== undefined || this._recoverIdentity) {
+        // The gate is identity-presence: the moment a local identity exists, dismiss
+        // the welcome dialog. Account binding / activation can complete asynchronously.
+        if (identity && wasNull) {
           void this._closeWelcome();
         }
-      }).unsubscribe,
-    );
-
-    this._subscriptions.add(
-      this._client.halo.credentials.subscribe((credentials) => {
-        this._setCredential(credentials);
       }).unsubscribe,
     );
   }
 
   async initialize(): Promise<void> {
-    await this._fetchBetaCredential();
-    if (this._credential && this._hubUrl) {
-      // Don't block app loading on network request.
-      void this._upgradeCredential();
+    // Helper used between every async step so a `destroy()` issued mid-flight
+    // (e.g. plugin reset, HMR) short-circuits before any state mutation. We
+    // can't actually cancel the in-flight RPC, but bailing here prevents
+    // post-destroy writes to `this._identity` and stops the cascade of
+    // dependent steps.
+    const aborted = () => this._destroyed;
+
+    // Gate: a local identity grants access. Account binding / authed-services access
+    // is checked separately on the profile page (where users without an account see
+    // a "no edge access" warning + request-access form).
+    if (this._identity) {
+      // For users who already have a local identity but a fresh `?email=...`
+      // URL param: hand it to the redeem endpoint, which is idempotent (the
+      // server may auto-bind, return a login token, or reject -- we swallow
+      // failures since the resulting state is what we wanted).
+      if (this._email && this._hubUrl) {
+        await this._bindExistingIdentityIfPossible();
+        if (aborted()) {
+          return;
+        }
+      }
       // Automatically start join space flow if already authed.
-      this._spaceInvitationCode && (await this._openJoinSpace());
+      if (this._spaceInvitationCode) {
+        await this._openJoinSpace();
+        if (aborted()) {
+          return;
+        }
+      }
       // Ensure that recovery credential is present.
       await this._setupRecovery();
+      if (aborted()) {
+        return;
+      }
       // Ensure that agent is present.
       await this._createAgent();
       return;
     } else if (!this._skipAuth) {
-      // Show welcome screen if no credential found and not skipping auth.
+      // No identity yet: show welcome screen.
       await this._showWelcome();
+      if (aborted()) {
+        return;
+      }
     }
 
     if (this._deviceInvitationCode !== undefined) {
@@ -112,19 +160,39 @@ export class OnboardingManager {
     } else if (this._recoverIdentity) {
       // If recovery flag is present, open recover identity flow.
       await this._openRecoverIdentity();
-    } else if (!this._identity && ((this._token && this._tokenType === 'verify') || this._skipAuth)) {
-      // If there's no existing identity and a verification token (or if skipping auth), setup a new identity.
-      await this._createIdentity();
+    } else if (!this._identity && this._email && this._accountInvitationCode) {
+      // URL-driven signup: `?accountInvitationCode=...&email=...`. The user
+      // landed here from the invitation email; redeem the code with the
+      // emailed address.
+      await this._redeemAccountInvitation();
       await this._setupRecovery();
       await this._startHelp();
       await this._createAgent();
-      await this._activateAccount();
-    } else if (!this._identity && this._token && this._tokenType === 'login') {
-      // If there's no existing identity and a login token, recover the identity.
+    } else if (!this._identity && this._skipAuth) {
+      // Auth disabled (e.g. integration tests): just bring up a fresh identity.
+      await this._createIdentity();
+      if (aborted()) {
+        return;
+      }
+      await this._setupRecovery();
+      if (aborted()) {
+        return;
+      }
+      await this._startHelp();
+      if (aborted()) {
+        return;
+      }
+      await this._createAgent();
+    } else if (!this._identity && this._token) {
+      // Login flow: redeem the recovery token from `/account/login` to restore
+      // the existing identity. Awaiting `_login()` lets HALO finish replicating
+      // any pre-existing IdentityRecovery credentials before `_setupRecovery`
+      // checks them, so we don't prompt a user who already has a passkey.
       await this._login();
-    } else if (this._identity && this._token) {
-      // If there's an existing identity and a verification token, activate the account.
-      await this._activateAccount();
+      await this._setupRecovery();
+    }
+    if (aborted()) {
+      return;
     }
 
     if (this._skipAuth && this._spaceInvitationCode) {
@@ -134,6 +202,7 @@ export class OnboardingManager {
   }
 
   async destroy(): Promise<void> {
+    this._destroyed = true;
     await this._ctx.dispose();
   }
 
@@ -150,110 +219,135 @@ export class OnboardingManager {
       return;
     }
 
-    await this._dispatch(
-      createIntent(LayoutAction.AddToast, {
-        part: 'toast',
-        subject: {
-          id: 'passkey-setup-toast',
-          title: ['passkey setup toast title', { ns: WELCOME_PLUGIN }],
-          description: ['passkey setup toast description', { ns: WELCOME_PLUGIN }],
-          duration: Infinity,
-          icon: 'ph--key--regular',
-          closeLabel: ['close label', { ns: 'os' }],
-          actionLabel: ['passkey setup toast action label', { ns: WELCOME_PLUGIN }],
-          actionAlt: ['passkey setup toast action alt', { ns: WELCOME_PLUGIN }],
-          onAction: () => {
-            const intent = pipe(
-              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
-              chain(LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
-            );
-            void this._dispatch(intent);
-          },
-        },
-      }),
-    );
-  }
-
-  private async _fetchBetaCredential(): Promise<void> {
-    const credentials = await queryAllCredentials(this._client);
-    this._setCredential(credentials);
-  }
-
-  private _setCredential(credentials: Credential[]): void {
-    const credential = credentials
-      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
-      .find(matchServiceCredential(['composer:beta']));
-    if (credential) {
-      this._credential = credential;
-      // Ensure that if the credential is ever found that onboarding is closed to the app is accessible.
-      void this._closeWelcome();
-    }
-  }
-
-  private async _upgradeCredential(): Promise<void> {
-    try {
-      invariant(this._hubUrl);
-      // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
-      invariant(this._credential?.id, 'beta credential missing id');
-      const presentation = await this._client.halo.presentCredentials({ ids: [this._credential.id] });
-      const { capabilities } = await getProfile({ hubUrl: this._hubUrl, presentation });
-      const newCapabilities = capabilities.filter(
-        (capability) => !this._credential!.subject.assertion.capabilities.includes(capability),
-      );
-      if (newCapabilities.length > 0) {
-        log('upgrading beta credential', { newCapabilities });
-        const newCredential = await upgradeCredential({ hubUrl: this._hubUrl, presentation });
-        await this._client.halo.writeCredentials([newCredential]);
-      }
-    } catch (err) {
-      // If failed to upgrade, log the error and continue. Most likely offline.
-      log.catch(err);
-    }
-  }
-
-  private async _activateAccount(): Promise<void> {
-    try {
-      invariant(this._hubUrl);
-      invariant(this._identity);
-      const credential = await activateAccount({ hubUrl: this._hubUrl, identity: this._identity, token: this._token });
-      await this._client.halo.writeCredentials([credential]);
-      log.info('beta credential saved', { credential });
-      this._token && removeQueryParamByValue(this._token);
-      this._tokenType && removeQueryParamByValue(this._tokenType);
-    } catch {
-      // No-op. This is expected for referred users who have an identity but no token yet.
-    }
+    await this._invokePromise(LayoutOperation.AddToast, {
+      id: 'passkey-setup-toast',
+      title: ['passkey-setup-toast.title', { ns: meta.id }],
+      description: ['passkey-setup-toast.description', { ns: meta.id }],
+      duration: Infinity,
+      icon: 'ph--key--regular',
+      closeLabel: ['close.label', { ns: osTranslations }],
+      actionLabel: ['passkey-setup-toast-action.label', { ns: meta.id }],
+      actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.id }],
+      onAction: async () => {
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
+        await this._invokePromise(LayoutOperation.Open, {
+          subject: [`${getSpacePath(Account.id)}/${Account.Security}`],
+        });
+      },
+    });
   }
 
   private async _login(): Promise<void> {
     invariant(this._token);
-    await this._dispatch(createIntent(ClientAction.RedeemToken, { token: this._token }));
+    await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
     this._token && removeQueryParamByValue(this._token);
-    this._tokenType && removeQueryParamByValue(this._tokenType);
+    removeQueryParamByValue('login');
+  }
+
+  /**
+   * Redeem an invitation code via `/account/invitation-code/redeem`. Create a
+   * fresh local identity and bind it. Account restoration is intentionally not
+   * supported on this path -- magic-link login (`/account/login`) handles
+   * recovery for real emails, and test emails are always fresh (no restore).
+   */
+  private async _redeemAccountInvitation(): Promise<void> {
+    invariant(this._email);
+    invariant(this._hubUrl, 'hubUrl required for redemption');
+
+    await this._createIdentity();
+    invariant(this._identity, 'identity should exist after create');
+
+    const result = await this._postRedeem({
+      email: this._email,
+      identityDid: await createDidFromIdentityKey(this._identity.identityKey),
+      identityKey: this._identity.identityKey.toHex(),
+      code: this._accountInvitationCode,
+    });
+    if ('accountId' in result) {
+      log.info('account redeemed', { accountId: result.accountId });
+    }
+
+    this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
+    removeQueryParamByValue(this._email);
+  }
+
+  /**
+   * Hand an already-existing local identity + a freshly-arrived email to the
+   * redeem endpoint. Idempotent: if the server can't bind for whatever reason
+   * we swallow the error since the resulting state is what we wanted.
+   */
+  private async _bindExistingIdentityIfPossible(): Promise<void> {
+    invariant(this._email);
+    invariant(this._identity);
+    invariant(this._hubUrl);
+
+    try {
+      const result = await this._postRedeem({
+        email: this._email,
+        identityDid: await createDidFromIdentityKey(this._identity.identityKey),
+        identityKey: this._identity.identityKey.toHex(),
+        code: this._accountInvitationCode,
+      });
+      if ('accountId' in result) {
+        log.info('account bound to existing identity', { accountId: result.accountId });
+      }
+    } catch (err: any) {
+      log.info('skipped binding existing identity', { error: err?.data?.type ?? err?.message });
+    }
+    removeQueryParamByValue(this._email);
+  }
+
+  private async _postRedeem(body: {
+    email: string;
+    code?: string;
+    identityDid?: string;
+    identityKey?: string;
+  }): Promise<{ accountId: string; emailVerificationSent: boolean } | { needsIdentity: true }> {
+    invariant(this._hubUrl);
+    const url = new URL('/account/invitation-code/redeem', this._hubUrl);
+    log.info('redeeming account invitation', { url: url.href, hasCode: !!body.code, hasIdentity: !!body.identityDid });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    let envelope: { success: boolean; message?: string; data?: any };
+    try {
+      envelope = (await response.json()) as { success: boolean; message?: string; data?: any };
+    } catch (parseErr) {
+      log.error('redeem response was not JSON', { status: response.status, statusText: response.statusText });
+      throw new Error(`Account redemption failed: HTTP ${response.status} (non-JSON response)`);
+    }
+    if (!envelope.success) {
+      log.error('account redemption failed', {
+        status: response.status,
+        message: envelope.message,
+        data: envelope.data,
+      });
+      const error: any = new Error(`Account redemption failed: ${envelope.message ?? 'unknown error'}`);
+      error.data = envelope.data;
+      throw error;
+    }
+    log.info('account redemption ok', { data: envelope.data });
+    return envelope.data;
   }
 
   private async _showWelcome(): Promise<void> {
     // NOTE: Active parts cannot contain '/' characters currently.
-    await this._dispatch(
-      createIntent(LayoutAction.UpdateDialog, {
-        part: 'dialog',
-        subject: WELCOME_SCREEN,
-        options: { type: 'alert', overlayClasses: OVERLAY_CLASSES, overlayStyle: OVERLAY_STYLE },
-      }),
-    );
+    await this._invokePromise(LayoutOperation.UpdateDialog, {
+      subject: WELCOME_SCREEN,
+      type: 'alert',
+      overlayClasses: OVERLAY_CLASSES,
+      overlayStyle: OVERLAY_STYLE,
+    });
   }
 
   private async _closeWelcome(): Promise<void> {
-    await this._dispatch(
-      createIntent(LayoutAction.UpdateDialog, {
-        part: 'dialog',
-        options: { state: false },
-      }),
-    );
+    await this._invokePromise(LayoutOperation.UpdateDialog, { state: false });
   }
 
   private async _createIdentity(): Promise<void> {
-    await this._dispatch(createIntent(ClientAction.CreateIdentity));
+    await this._invokePromise(ClientOperation.CreateIdentity, {});
   }
 
   private async _createAgent(): Promise<void> {
@@ -265,19 +359,19 @@ export class OnboardingManager {
       return;
     }
 
-    await this._dispatch(createIntent(ClientAction.CreateAgent));
+    await this._invokePromise(ClientOperation.CreateAgent);
   }
 
   private async _openJoinIdentity(): Promise<void> {
     invariant(this._deviceInvitationCode !== undefined);
 
-    await this._dispatch(createIntent(ClientAction.JoinIdentity, { invitationCode: this._deviceInvitationCode }));
+    await this._invokePromise(ClientOperation.JoinIdentity, { invitationCode: this._deviceInvitationCode });
 
     removeQueryParamByValue(this._deviceInvitationCode);
   }
 
   private async _openRecoverIdentity(): Promise<void> {
-    await this._dispatch(createIntent(ClientAction.RecoverIdentity));
+    await this._invokePromise(ClientOperation.RecoverIdentity);
 
     removeQueryParamByValue('true');
   }
@@ -285,7 +379,7 @@ export class OnboardingManager {
   private async _openJoinSpace(): Promise<void> {
     invariant(this._spaceInvitationCode);
 
-    await this._dispatch(createIntent(SpaceAction.Join, { invitationCode: this._spaceInvitationCode }));
+    await this._invokePromise(SpaceOperation.Join, { invitationCode: this._spaceInvitationCode });
 
     removeQueryParamByValue(this._spaceInvitationCode);
   }
@@ -295,6 +389,6 @@ export class OnboardingManager {
       return;
     }
 
-    await this._dispatch(createIntent(HelpAction.Start));
+    await this._invokePromise(HelpOperation.Start);
   }
 }

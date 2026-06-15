@@ -4,7 +4,10 @@
 
 import { useCallback } from 'react';
 
-import { type GlobeController, type ControlProps } from '../components';
+import { type ControlProps } from '../components';
+import { type GlobeController } from './context';
+
+const ZOOM_FACTOR = 0.1;
 
 export const useGlobeZoomHandler = (controller: GlobeController | null | undefined): ControlProps['onAction'] => {
   return useCallback<ControlProps['onAction']>(
@@ -15,11 +18,15 @@ export const useGlobeZoomHandler = (controller: GlobeController | null | undefin
 
       switch (event) {
         case 'zoom-in': {
-          controller.setScale((scale) => scale * 1.1);
+          controller.setZoom((zoom) => {
+            return zoom * (1 + ZOOM_FACTOR);
+          });
           break;
         }
         case 'zoom-out': {
-          controller.setScale((scale) => scale * 0.9);
+          controller.setZoom((zoom) => {
+            return zoom * (1 - ZOOM_FACTOR);
+          });
           break;
         }
       }

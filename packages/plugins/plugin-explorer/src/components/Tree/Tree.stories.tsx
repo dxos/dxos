@@ -2,68 +2,56 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
-import { type Meta } from '@storybook/react';
-import React, { type FC, useEffect, useState } from 'react';
+import { random } from '@dxos/random';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
+import { createTree } from '../../testing';
 import { Tree, type TreeComponentProps } from './Tree';
-import { TreeType, Tree as TreeModel } from './types';
+import { treeTypeToTreeNode } from './types';
 
-// TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
-// TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
+random.seed(1);
 
-faker.seed(1);
+type StoryArgs = Pick<TreeComponentProps, 'variant'>;
 
-const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {
-  const client = useClient();
-  const space = client.spaces.default;
-  const [object, setObject] = useState<TreeType>();
-  useEffect(() => {
-    setTimeout(() => {
-      const tree = space.db.add(TreeModel.create());
-      setObject(tree);
-    });
-  }, []);
-
-  if (!object) {
-    return null;
+const DefaultStory = ({ variant }: StoryArgs) => {
+  const data = useMemo(() => treeTypeToTreeNode(createTree([3, [2, 4], [1, 3]]).tree), []);
+  if (!data) {
+    return <Loading />;
   }
 
-  return <Tree space={space} selected={object?.id} variant={type} />;
+  return <Tree data={data} variant={variant} />;
 };
 
-export const Tidy = {
-  args: {
-    type: 'tidy',
-  },
-};
-
-export const Radial = {
-  args: {
-    type: 'radial',
-  },
-};
-
-export const Edge = {
-  args: {
-    type: 'edge',
-  },
-};
-
-const meta: Meta = {
-  title: 'plugins/plugin-explorer/Tree',
-  component: Tree,
-  render: () => <ClientRepeater component={Story} types={[TreeType]} createSpace />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+const meta: Meta<StoryArgs> = {
+  title: 'plugins/plugin-explorer/components/Tree',
+  render: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
 export default meta;
+
+type Story = StoryObj<StoryArgs>;
+
+export const Tidy: Story = {
+  args: {
+    variant: 'tidy',
+  },
+};
+
+export const Radial: Story = {
+  args: {
+    variant: 'radial',
+  },
+};
+
+export const Edge: Story = {
+  args: {
+    variant: 'edge',
+  },
+};

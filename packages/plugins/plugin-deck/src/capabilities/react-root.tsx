@@ -2,37 +2,51 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
-import { DeckCapabilities } from './capabilities';
-import { DeckLayout } from '../components';
-import { DECK_PLUGIN } from '../meta';
+import { DeckLayout } from '#containers';
+import { useDeckState } from '#hooks';
+import { meta } from '#meta';
 
-export default () =>
-  contributes(Capabilities.ReactRoot, {
-    id: DECK_PLUGIN,
-    root: () => {
-      const layout = useCapability(DeckCapabilities.MutableDeckState);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactRoot, {
+      id: meta.id,
+      root: () => {
+        const { state, updateEphemeral } = useDeckState();
 
-      const handleDismissToast = useCallback(
-        (id: string) => {
-          const index = layout.toasts.findIndex((toast) => toast.id === id);
-          if (index !== -1) {
-            // Allow time for the toast to animate out.
+        const handleDismissToast = useCallback(
+          (id: string) => {
+            if (!state.toasts.some((toast) => toast.id === id)) {
+              return;
+            }
+            // Allow time for the toast exit animation (animate-toast-hide, 100ms) before unmounting.
             // TODO(burdon): Factor out and unregister timeout.
             setTimeout(() => {
-              if (layout.toasts[index].id === layout.currentUndoId) {
-                layout.currentUndoId = undefined;
-              }
-              layout.toasts.splice(index, 1);
-            }, 1_000);
-          }
-        },
-        [layout.toasts],
-      );
+              // Re-resolve the toast by id inside the update: the toast list may have changed during
+              // the delay, so a captured index would point at the wrong (or a missing) entry.
+              updateEphemeral((s) => {
+                const toastToRemove = s.toasts.find((toast) => toast.id === id);
+                if (!toastToRemove) {
+                  return s;
+                }
+                const newCurrentUndoId = toastToRemove.id === s.currentUndoId ? undefined : s.currentUndoId;
+                return {
+                  ...s,
+                  currentUndoId: newCurrentUndoId,
+                  toasts: s.toasts.filter((toast) => toast.id !== id),
+                };
+              });
+            }, 150);
+          },
+          [state.toasts, updateEphemeral],
+        );
 
-      return <DeckLayout onDismissToast={handleDismissToast} />;
-    },
-  });
+        return <DeckLayout onDismissToast={handleDismissToast} />;
+      },
+    }),
+  ),
+);

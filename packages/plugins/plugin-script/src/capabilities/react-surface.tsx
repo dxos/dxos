@@ -2,88 +2,129 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import * as Effect from 'effect/Effect';
+import React, { type ComponentProps } from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Script } from '@dxos/compute';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Obj } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
-import { SettingsStore } from '@dxos/local-storage';
+import { Feed } from '@dxos/echo';
+import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { Panel } from '@dxos/react-ui';
 
-import { ScriptCapabilities } from './capabilities';
-import {
-  ScriptContainer,
-  ScriptPluginSettings,
-  ScriptObjectSettings,
-  ScriptProperties,
-  DeploymentDialog,
-  DEPLOYMENT_DIALOG,
-  TestContainer,
-} from '../components';
-import { meta } from '../meta';
-import { type ScriptSettingsProps } from '../types';
+import { ScriptPluginSettings } from '#components';
+import { DeploymentDialog, NotebookArticle, ScriptArticle, ScriptProperties, TestContainer } from '#containers';
+import { useCompiler } from '#hooks';
+import { meta } from '#meta';
+import { Notebook, ScriptCapabilities, type Settings } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${meta.id}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-      component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${meta.id}/article`,
-      role: 'article',
-      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
-      component: ({ data, role }) => {
-        const compiler = useCapability(ScriptCapabilities.Compiler);
-        // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(meta.id)?.value;
-        return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
-      },
-    }),
-    createSurface({
-      id: `${meta.id}/companion/base-settings`,
-      role: 'base-object-settings',
-      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
-      component: ({ data }) => <ScriptProperties object={data.subject} />,
-    }),
-    createSurface({
-      id: `${meta.id}/companion/settings`,
-      role: 'object-settings',
-      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
-      component: ({ data }) => <ScriptObjectSettings object={data.subject} />,
-    }),
-    createSurface({
-      id: `${meta.id}/companion/execute`,
-      role: 'article',
-      filter: (data): data is { companionTo: ScriptType } =>
-        Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'execute',
-      component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
-    }),
-    createSurface({
-      id: `${meta.id}/companion/logs`,
-      role: 'article',
-      filter: (data): data is { companionTo: ScriptType } =>
-        Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'logs',
-      component: ({ data, role }) => {
-        const space = getSpace(data.companionTo);
-        return (
-          <StackItem.Content role={role}>
-            <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
-          </StackItem.Content>
-        );
-      },
-    }),
-    createSurface({
-      id: DEPLOYMENT_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: { accessToken: DataType.AccessToken; scriptTemplates: any } } =>
-        data.component === DEPLOYMENT_DIALOG,
-      component: ({ data }) => <DeploymentDialog {...data.props} />,
-    }),
-  ]);
+import { DEPLOYMENT_DIALOG } from '../constants';
+import { getAccessCredential } from '../util';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          const client = useClient();
+          // TODO(burdon): Check token.
+          const handleAuthenticate = async () => {
+            const { identityKey } = client.halo.identity.get()!;
+            await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+          };
+          return (
+            <ScriptPluginSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              onAuthenticate={handleAuthenticate}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'script.article',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Script.Script),
+          AppSurface.object(AppSurface.Section, Script.Script),
+        ),
+        component: ({ data, role }) => {
+          const compiler = useCompiler();
+          const settings = useAtomCapability(ScriptCapabilities.Settings);
+          return (
+            <ScriptArticle
+              role={role}
+              subject={data.subject}
+              attendableId={data.attendableId}
+              settings={settings}
+              env={compiler?.environment}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'notebook.article',
+        filter: AppSurface.object(AppSurface.Article, Notebook.Notebook),
+        component: ({ data, role }) => {
+          const compiler = useCompiler();
+          return (
+            <NotebookArticle
+              role={role}
+              subject={data.subject}
+              attendableId={data.attendableId}
+              env={compiler?.environment}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'properties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Script.Script),
+        component: ({ data, role }) => <ScriptProperties role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: 'companion.execute',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'execute'),
+          AppSurface.companion(AppSurface.Article, Script.Script),
+        ),
+        component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
+      }),
+      Surface.create({
+        id: 'companion.logs',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'logs'),
+          AppSurface.companion(AppSurface.Article, Script.Script),
+        ),
+        component: ({ data, role }) => {
+          const space = getSpace(data.companionTo);
+          const feed = space?.properties.invocationTraceFeed?.target;
+          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          return (
+            <Panel.Root role={role}>
+              <Panel.Content>
+                <InvocationTraceContainer
+                  db={space?.db}
+                  feedDXN={feedDXN}
+                  target={data.companionTo}
+                  detailAxis='block'
+                />
+              </Panel.Content>
+            </Panel.Root>
+          );
+        },
+      }),
+      Surface.create({
+        id: DEPLOYMENT_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof DeploymentDialog>>(AppSurface.Dialog, DEPLOYMENT_DIALOG),
+        component: ({ data }) => <DeploymentDialog {...data.props} />,
+      }),
+    ]),
+  ),
+);

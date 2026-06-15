@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { useSoundEffect } from '@dxos/react-ui-audio';
 
+import { type TranscriberProps } from '../transcriber';
 import { useAudioTrack } from './useAudioTrack';
 import { useTranscriber } from './useTranscriber';
-import { type TranscriberParams } from '../transcriber';
 
 export type UseVoiceInputProps = {
   active?: boolean;
@@ -25,7 +25,7 @@ export const useVoiceInput = ({ active, onUpdate }: UseVoiceInputProps) => {
   const soundStart = useSoundEffect('StartRecording');
   const soundStop = useSoundEffect('StopRecording');
 
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(async (segments) => {
     const text = segments.map((str) => str.text.trim().replace(/[^\w\s]/g, '')).join(' ');
     onUpdate(text);
   }, []);

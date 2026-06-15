@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export type BaseErrorOptions = {
+/**
+ * Options for creating a BaseError.
+ */
+export type BaseErrorOptions = ErrorOptions & {
   /**
-   * The cause of the error.
-   * An instance of Error.
+   * Override base message.
    */
-  cause?: unknown;
+  message?: string;
 
   /**
    * Structured details about the error.
@@ -15,41 +17,69 @@ export type BaseErrorOptions = {
   context?: Record<string, unknown>;
 };
 
-export class BaseError extends Error {
-  static extend(code: string) {
-    return class extends BaseError {
-      static code = code;
+/**
+ * Base class for all DXOS errors.
+ */
+export class BaseError<Name extends string = string> extends Error {
+  /**
+   * Primary way of defining new error classes.
+   * Extended class may specialize constructor for required context params.
+   * @param name - Error name.
+   * @param message - Default error message.
+   */
+  static extend<Name extends string = string>(name: Name, message?: string) {
+    return class ExtendedError extends BaseError<Name> {
+      static override name: Name = name;
 
       static is(error: unknown): error is BaseError {
-        return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
+        return typeof error === 'object' && error !== null && 'name' in error && error.name === name;
       }
 
-      constructor(message: string, options?: BaseErrorOptions) {
-        super(code, message, options);
+      static wrap(
+        options?: Omit<BaseErrorOptions, 'cause'> & { ifTypeDiffers?: boolean },
+      ): (error: unknown) => ExtendedError {
+        const wrapFn = (error: unknown) => {
+          if (options?.ifTypeDiffers === true && this.is(error)) {
+            return error as ExtendedError;
+          }
+          const newError: ExtendedError = new this({ message, ...options, cause: error });
+          Error.captureStackTrace(newError, wrapFn); // Position stack-trace to start from the caller of `wrap`.
+          return newError;
+        };
+        return wrapFn;
+      }
+
+      constructor(options?: BaseErrorOptions) {
+        super(name, { message: options?.message ?? message, ...options });
       }
     };
   }
 
-  #code: string;
-  #context: Record<string, unknown>;
+  // NOTE: Errors go through odd transformations and the private fields seem to break.
+  override name: Name;
+  context: Record<string, unknown>;
 
-  constructor(code: string, message: string, options?: BaseErrorOptions) {
-    super(message, options);
+  constructor(name: Name, options?: BaseErrorOptions) {
+    let message = options?.message;
+    if (message && options?.context && Object.keys(options.context).length > 0) {
+      message += `: ${JSON.stringify(options?.context)}`;
+    }
 
-    this.#code = code;
-    this.#context = options?.context ?? {};
+    super(message, { cause: options?.cause });
+
+    this.name = name;
+    this.context = options?.context ?? {};
+
     Object.setPrototypeOf(this, new.target.prototype);
   }
 
-  override get name() {
-    return this.#code;
+  /** Fallback message. */
+  override get message() {
+    return this.constructor.name;
   }
 
-  get code() {
-    return this.#code;
-  }
-
-  get context() {
-    return this.#context;
+  // For effect error matching.
+  get _tag(): Name {
+    return this.name;
   }
 }

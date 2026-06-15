@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@hazae41/symbol-dispose-polyfill';
+
 import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
@@ -25,6 +27,7 @@ const CLOSE_RESOURCE_ON_UNHANDLED_ERROR = false;
  */
 export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
+
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
 
@@ -40,6 +43,17 @@ export abstract class Resource implements Lifecycle {
    * Provided in the open method.
    */
   #parentCtx: Context = this.#createParentContext();
+
+  /**
+   * ```ts
+   * await using resource = new Resource();
+   * await resource.open();
+   * ```
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/using
+   */
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.close();
+  }
 
   get #name() {
     return Object.getPrototypeOf(this).constructor.name;
@@ -60,12 +74,12 @@ export abstract class Resource implements Lifecycle {
   /**
    * To be overridden by subclasses.
    */
-  protected async _open(ctx: Context): Promise<void> {}
+  protected async _open(_ctx: Context): Promise<void> {}
 
   /**
    * To be overridden by subclasses.
    */
-  protected async _close(ctx: Context): Promise<void> {}
+  protected async _close(_ctx: Context): Promise<void> {}
 
   /**
    * Error handler for errors that are caught by the context.
@@ -80,6 +94,20 @@ export abstract class Resource implements Lifecycle {
       }
     }
     throw err;
+  }
+
+  /**
+   * Calls the provided function, opening and closing the resource.
+   * NOTE: Consider using `using` instead.
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/using
+   */
+  async use<T>(fn: (resource: this) => Promise<T>): Promise<T> {
+    try {
+      await this.open();
+      return await fn(this);
+    } finally {
+      await this.close();
+    }
   }
 
   /**
@@ -100,7 +128,6 @@ export abstract class Resource implements Lifecycle {
 
     await this.#closePromise;
     await (this.#openPromise ??= this.#open(ctx));
-
     return this;
   }
 
@@ -114,7 +141,6 @@ export abstract class Resource implements Lifecycle {
     }
     await this.#openPromise;
     await (this.#closePromise ??= this.#close(ctx));
-
     return this;
   }
 
@@ -135,13 +161,10 @@ export abstract class Resource implements Lifecycle {
     await this.#openPromise;
   }
 
-  async [Symbol.asyncDispose](): Promise<void> {
-    await this.close();
-  }
-
   async #open(ctx?: Context): Promise<void> {
     this.#closePromise = null;
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
+    this.#internalCtx = this.#createContext(this.#parentCtx);
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
   }
@@ -154,9 +177,10 @@ export abstract class Resource implements Lifecycle {
     this.#lifecycleState = LifecycleState.CLOSED;
   }
 
-  #createContext(): Context {
+  #createContext(attributeParent?: Context): Context {
     return new Context({
       name: this.#name,
+      parent: attributeParent,
       onError: (error) =>
         queueMicrotask(async () => {
           try {

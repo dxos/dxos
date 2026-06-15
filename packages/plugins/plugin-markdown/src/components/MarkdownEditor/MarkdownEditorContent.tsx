@@ -1,0 +1,171 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type EditorView } from '@codemirror/view';
+import { type Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
+
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  type EditorMenuGroup,
+  type EditorToolbarState,
+  type UseTextEditorProps,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
+import {
+  type EditorSelectionState,
+  type EditorStateStore,
+  type ThemeExtensionsOptions,
+  mobileSlots,
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  dropFile,
+  documentSlots,
+  formattingListener,
+  processEditorPayload,
+  editorClassNames,
+  scrollbarAutohide,
+} from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
+import { mx } from '@dxos/ui-theme';
+import { isTruthy } from '@dxos/util';
+
+import { meta } from '#meta';
+import { MarkdownCapabilities } from '#types';
+
+import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
+
+export type MarkdownEditorContentProps = ThemedClassName<{
+  id: string;
+  attendableId?: string;
+  role?: string;
+  compact?: boolean;
+  viewMode?: EditorViewMode;
+  slashCommandGroups?: EditorMenuGroup[];
+  editorStateStore?: EditorStateStore;
+  toolbarState?: Atom.Writable<EditorToolbarState>;
+  onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
+}> &
+  Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
+  Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
+
+// TODO(burdon): Move controller to Root.
+export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
+  (
+    {
+      classNames,
+      id,
+      attendableId,
+      role,
+      compact,
+      viewMode,
+      initialValue,
+      editorStateStore,
+      toolbarState,
+      extensions,
+      slots,
+      onFileUpload,
+    },
+    forwardedRef,
+  ) => {
+    const { t } = useTranslation(meta.id);
+    const { themeMode } = useThemeContext();
+    const registry = useContext(RegistryContext);
+
+    // Callback to update toolbar state atom.
+    const updateToolbarState = useCallback(
+      (formatting: EditorToolbarState) => {
+        if (toolbarState) {
+          registry.set(toolbarState, { ...registry.get(toolbarState), ...formatting });
+        }
+      },
+      [registry, toolbarState],
+    );
+
+    // Restore last selection and scroll point.
+    const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
+
+    const {
+      parentRef,
+      view: editorView,
+      focusAttributes,
+    } = useTextEditor(
+      () => ({
+        ...(role !== 'section' && {
+          id,
+          scrollTo,
+          selection,
+          selectionEnd: true,
+        }),
+        initialValue,
+        extensions: [
+          createBasicExtensions({
+            readOnly: viewMode === 'readonly',
+            placeholder: t('editor.placeholder'),
+            scrollPastEnd: !compact,
+            search: true,
+          }),
+          createThemeExtensions({
+            themeMode,
+            slots: slots ?? (compact ? mobileSlots : documentSlots),
+            syntaxHighlighting: true,
+          }),
+          createMarkdownExtensions(),
+          scrollbarAutohide(),
+          toolbarState && formattingListener(updateToolbarState),
+          role !== 'section' &&
+            onFileUpload &&
+            dropFile({
+              // TODO(wittjosiah): Factor out to file uploader plugin.
+              onDrop: async (view, { files }) => {
+                const file = files[0];
+                const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+                if (info) {
+                  processEditorPayload(view, { type: 'image', data: info.url });
+                }
+              },
+            }),
+          extensions,
+        ].filter(isTruthy),
+      }),
+      [id, viewMode, themeMode, extensions, compact],
+    );
+
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
+
+    const [editorViewRegistry] = useCapabilities(MarkdownCapabilities.EditorViews);
+    useEffect(() => {
+      if (editorView && editorViewRegistry) {
+        editorViewRegistry.register(attendableId ?? id, editorView, id);
+        return () => editorViewRegistry.unregister(attendableId ?? id);
+      }
+    }, [editorView, editorViewRegistry, attendableId, id]);
+
+    useTest(editorView);
+
+    return (
+      <div
+        {...focusAttributes}
+        className={mx(editorClassNames(role), classNames)}
+        data-testid='composer.markdownRoot'
+        data-popover-collision-boundary={true}
+        ref={parentRef}
+      />
+    );
+  },
+);
+
+// Expose editor view for playwright tests.
+// TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
+const useTest = (view: EditorView | null) => {
+  useEffect(() => {
+    const composer = (window as any).composer;
+    if (composer) {
+      composer.editorView = view;
+    }
+  }, [view]);
+};

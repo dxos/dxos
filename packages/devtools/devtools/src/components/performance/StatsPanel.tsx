@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { useSyncState, getSyncSummary } from '@dxos/react-client/echo';
-import { Icon, Toggle } from '@dxos/react-ui';
+import { getSyncSummary, useFeedSyncState, useSyncState } from '@dxos/react-client/echo';
+import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
-import { Panel, type PanelProps } from './Panel';
+import { type Stats, removeEmpty } from '../../hooks';
+import { Panel } from './Panel';
 import {
   DatabasePanel,
   EdgePanel,
+  LoggingPanel,
   MemoryPanel,
   NetworkPanel,
   PerformancePanel,
@@ -18,21 +20,23 @@ import {
   RawQueriesPanel,
   ReplicatorMessagesPanel,
   ReplicatorPanel,
-  SpansPanel,
+  SurfaceProfilerPanel,
+  type SurfaceProfilerStats,
   SyncStatusPanel,
   TimeSeries,
 } from './panels';
-import { removeEmpty, type Stats } from '../../hooks';
 
-const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
+const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 
 const PANEL_KEYS = [
   'ts',
   'performance',
-  'spans',
+  'surfaceProfiler',
+  'edge',
   'queries',
   'rawQueries',
   'database',
+  'logging',
   'memory',
   'replicator',
   'replicatorMessages',
@@ -41,13 +45,21 @@ const PANEL_KEYS = [
 type PanelKey = (typeof PANEL_KEYS)[number];
 type PanelMap = Record<PanelKey, boolean | undefined>;
 
-export type QueryPanelProps = {
+export type StatsPanelProps = PropsWithChildren<{
   stats?: Stats;
+  surfaceProfilerStats?: SurfaceProfilerStats[];
   onRefresh?: () => void;
-};
+  onClearSurfaceProfiler?: () => void;
+}>;
 
 // TODO(burdon): Reconcile with TraceView in diagnostics.
-export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<QueryPanelProps>) => {
+export const StatsPanel = ({
+  stats,
+  surfaceProfilerStats,
+  onRefresh,
+  onClearSurfaceProfiler,
+  children,
+}: StatsPanelProps) => {
   const [live, setLive] = useState(false);
   const handleToggleLive = () => setLive((live) => !live);
 
@@ -69,14 +81,18 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
     return acc;
   }, new Map<string, number>());
 
-  const spans = [...(stats?.diagnostics?.spans ?? [])];
-  spans.reverse();
-
   const queries = [...(stats?.queries ?? [])];
   queries.reverse();
 
   const syncState = useSyncState();
   const syncSummary = getSyncSummary(syncState);
+  const feedSyncState = useFeedSyncState();
+
+  const props = (id: PanelKey) => ({
+    id,
+    open: panelState[id],
+    onToggle: handleToggle,
+  });
 
   // Store in local storage.
   const [panelState, setPanelState] = useState<Record<PanelKey, boolean | undefined>>(() =>
@@ -86,65 +102,71 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
     }, {} as PanelMap),
   );
 
-  const handleToggle: PanelProps['onToggle'] = (id, open) => {
-    setPanelState({ ...panelState, [id]: open });
-    localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
-  };
+  const handleToggle = useCallback(
+    (id: string, open: boolean) => {
+      setPanelState({ ...panelState, [id]: open });
+      localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
+    },
+    [panelState],
+  );
 
-  // TODO(burdon): Add Surface debug.
   return (
-    <div className='flex flex-col w-full h-full max-bs-[calc(var(--radix-popover-content-available-height)-2*var(--dx-modalLine))] overflow-y-auto divide-y divide-separator rounded-md'>
-      <Panel
-        id='main'
-        icon='ph--chart-bar--regular'
-        title='Stats'
-        info={
-          <Toggle
-            pressed={live}
-            classNames='p-0 bg-transparent'
-            density='fine'
-            value='ghost'
-            onClick={handleToggleLive}
-          >
-            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
-          </Toggle>
-        }
-      />
-      <MemoryPanel id='memory' memory={stats?.memory} />
-      <NetworkPanel id='network' network={stats?.network} />
-      <EdgePanel id='edge' edge={stats?.edge} />
-      <PerformancePanel
-        id='performance'
-        open={panelState.performance}
-        onToggle={handleToggle}
-        entries={stats?.performanceEntries}
-      />
-      <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
-      <ReplicatorPanel
-        id='replicator'
-        open={panelState.replicator}
-        onToggle={handleToggle}
-        database={stats?.database}
-      />
-      <ReplicatorMessagesPanel
-        id='replicatorMessages'
-        open={panelState.replicatorMessages}
-        onToggle={handleToggle}
-        database={stats?.database}
-      />
-      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
-      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
-      <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
-      <SyncStatusPanel
-        id='sync'
-        open={panelState.sync}
-        onToggle={handleToggle}
-        state={syncState}
-        summary={syncSummary}
-        debug
-      />
-      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
-      {children}
-    </div>
+    <ScrollArea.Root thin>
+      <ScrollArea.Viewport classNames='divide-y divide-separator'>
+        <Panel
+          id='main'
+          icon='ph--chart-bar--regular'
+          title='Stats'
+          info={
+            <Toggle pressed={live} classNames='p-0 bg-transparent' value='ghost' onClick={handleToggleLive}>
+              <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
+            </Toggle>
+          }
+        />
+        <LoggingPanel {...props('logging')} />
+        <MemoryPanel id='memory' memory={stats?.memory} />
+        <NetworkPanel id='network' network={stats?.network} />
+        <EdgePanel id='edge' open={panelState.edge} edge={stats?.edge} onToggle={handleToggle} />
+        <PerformancePanel
+          id='performance'
+          open={panelState.performance}
+          onToggle={handleToggle}
+          entries={stats?.performanceEntries}
+        />
+        <SurfaceProfilerPanel
+          id='surfaceProfiler'
+          open={panelState.surfaceProfiler}
+          stats={surfaceProfilerStats}
+          onToggle={handleToggle}
+          onClear={onClearSurfaceProfiler}
+        />
+        <DatabasePanel id='database' open={panelState.database} onToggle={handleToggle} database={stats?.database} />
+        <ReplicatorPanel
+          id='replicator'
+          open={panelState.replicator}
+          onToggle={handleToggle}
+          database={stats?.database}
+        />
+        <ReplicatorMessagesPanel
+          id='replicatorMessages'
+          open={panelState.replicatorMessages}
+          onToggle={handleToggle}
+          database={stats?.database}
+        />
+        <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
+        <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
+        <SyncStatusPanel
+          id='sync'
+          open={panelState.sync}
+          onToggle={handleToggle}
+          state={syncState}
+          summary={syncSummary}
+          feedState={feedSyncState}
+          debug
+        />
+        <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
+        {children}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };

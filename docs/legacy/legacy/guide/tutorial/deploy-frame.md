@@ -70,8 +70,8 @@ TODO FrameDisplay
 - Learn about extending your frame's functionality with custom icons, settings and actions.
   - TODO link to frame guide
 - Explore the KUBE Console, find your frame and explore other frames.
-   - TODO link Console guide.
+  - TODO link Console guide.
 - Open the Braneframe app from Console and try to load your frame there.
-   - TODO link to Braneframe.
+  - TODO link to Braneframe.
 - Build your own frame host app that can use your frame.
-   - TODO link to frame host guide.
+  - TODO link to frame host guide.

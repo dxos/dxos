@@ -2,24 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol, type ActionLike } from '@dxos/app-graph';
+import * as Effect from 'effect/Effect';
+
+import { Node } from '@dxos/app-graph';
+import { EffectEx } from '@dxos/effect';
+import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
-import {
-  type MenuAction,
-  type MenuActionProperties,
-  type MenuItemGroup,
-  type MenuItemGroupProperties,
-  type MenuSeparator,
-} from './types';
+import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
 
-export const getShortcut = (action: ActionLike) => {
+/**
+ * Execute a menu action's Effect with its captured context.
+ * This provides the `_actionContext` layer if available.
+ */
+export const executeMenuAction = async (action: MenuAction, params: Node.InvokeProps = {}): Promise<void> => {
+  let effect = action.data(params);
+
+  // Provide captured action context if available.
+  if (action._actionContext) {
+    effect = effect.pipe(Effect.provide(action._actionContext));
+  }
+
+  await EffectEx.runAndForwardErrors(effect);
+};
+
+export const getShortcut = (action: Node.ActionLike) => {
   return typeof action.properties?.keyBinding === 'string'
     ? action.properties.keyBinding
     : action.properties?.keyBinding?.[getHostPlatform()];
 };
 
-export const fallbackIcon = 'ph--placeholder--regular';
+export const fallbackIcon = 'ph--circle-dashed--regular';
 
 export const createMenuAction = <P extends {} = {}>(
   id: string,
@@ -28,9 +41,9 @@ export const createMenuAction = <P extends {} = {}>(
 ) =>
   ({
     id,
-    type: ACTION_TYPE,
+    type: Node.ActionType,
     properties,
-    data: invoke,
+    data: () => Effect.sync(invoke),
   }) satisfies MenuAction;
 
 export const createMenuItemGroup = <
@@ -41,9 +54,9 @@ export const createMenuItemGroup = <
 ) =>
   ({
     id,
-    type: ACTION_GROUP_TYPE,
+    type: Node.ActionGroupType,
     properties,
-    data: actionGroupSymbol,
+    data: Node.actionGroupSymbol,
   }) satisfies MenuItemGroup;
 
 export const createGapSeparator = (id: string = 'gap', source: string = 'root') => ({
@@ -55,7 +68,13 @@ export const createGapSeparator = (id: string = 'gap', source: string = 'root') 
       data: undefined as never,
     } satisfies MenuSeparator,
   ],
-  edges: [{ source, target: id }],
+  edges: [
+    {
+      source,
+      target: id,
+      relation: 'child' as const,
+    },
+  ],
 });
 
 export const createLineSeparator = (id: string = 'line', source: string = 'root') => ({
@@ -67,5 +86,5 @@ export const createLineSeparator = (id: string = 'line', source: string = 'root'
       data: undefined as never,
     } satisfies MenuSeparator,
   ],
-  edges: [{ source, target: id }],
+  edges: [{ source, target: id, relation: 'child' as const }],
 });

@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { resolve, join } from 'path';
+import { join, resolve } from 'path';
 import pb from 'protobufjs';
 
 import { preconfigureProtobufjs } from './configure';

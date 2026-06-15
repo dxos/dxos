@@ -1,95 +1,66 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
-      "browser": "./dist/esm/src/index.js",
-      "import": "./dist/esm/src/index.js",
-      "require": "./dist/cjs/src/index.js",
-      "node": "./dist/cjs/src/index.js"
+      "browser": "./dist/src/index.js",
+      "import": "./dist/src/index.js"
     },
     "./feed-replication": {
-      "browser": "./dist/esm/src/feed-replication.js",
-      "import": "./dist/esm/src/feed-replication.js",
-      "require": "./dist/cjs/src/feed-replication.js",
-      "node": "./dist/cjs/src/feed-replication.js"
+      "browser": "./dist/src/feed-replication.js",
+      "import": "./dist/src/feed-replication.js"
     },
     "./proto": {
-      "browser": "./dist/esm/src/proto/index.js",
-      "import": "./dist/esm/src/proto/index.js",
-      "require": "./dist/cjs/src/proto/index.js",
-      "node": "./dist/cjs/src/proto/index.js"
+      "browser": "./dist/src/proto/index.js",
+      "import": "./dist/src/proto/index.js"
     },
+    "./proto/dxos/*.proto": "./src/proto/dxos/*.proto",
     "./proto/*": {
-      "browser": "./dist/esm/src/proto/gen/*.js",
-      "import": "./dist/esm/src/proto/gen/*.js",
-      "require": "./dist/cjs/src/proto/gen/*.js",
-      "node": "./dist/cjs/src/proto/gen/*.js"
+      "browser": "./dist/src/proto/gen/*.js",
+      "import": "./dist/src/proto/gen/*.js"
     },
     "./buf": {
-      "browser": "./dist/esm/src/buf/index.js",
-      "import": "./dist/esm/src/buf/index.js",
-      "require": "./dist/cjs/src/buf/index.js",
-      "node": "./dist/cjs/src/buf/index.js"
+      "browser": "./dist/src/buf/index.js",
+      "import": "./dist/src/buf/index.js"
     },
     "./buf/*": {
-      "browser": "./dist/esm/src/buf/proto/gen/*.js",
-      "import": "./dist/esm/src/buf/proto/gen/*.js",
-      "require": "./dist/cjs/src/buf/proto/gen/*.js",
-      "node": "./dist/cjs/src/buf/proto/gen/*.js"
+      "browser": "./dist/src/buf/proto/gen/*.js",
+      "import": "./dist/src/buf/proto/gen/*.js"
     }
   },
-  "types": "dist/esm/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "proto/*": [
-        "dist/esm/src/proto/gen/*"
-      ],
-      "buf/*": [
-        "dist/esm/src/buf/proto/gen/*"
-      ],
-      "feed-replication": [
-        "dist/esm/src/feed-replication.d.ts"
-      ],
-      "buf": [
-        "dist/esm/src/buf/index.d.ts"
-      ],
-      "proto": [
-        "dist/esm/src/proto/index.d.ts"
-      ]
-    }
-  },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "compile:buf": "buf generate",
-    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json"
-  },
   "dependencies": {
-    "@bufbuild/protobuf": "^2.1.0",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/timeframe": "workspace:*"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.43.0",
-    "@bufbuild/protoc-gen-es": "^2.1.0",
-    "effect": "3.14.21"
+    "@bufbuild/buf": "catalog:",
+    "@bufbuild/protoc-gen-es": "catalog:",
+    "@dxos/protobuf-compiler": "workspace:*",
+    "effect": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -2,82 +2,85 @@
 // Copyright 2024 DXOS.org
 //
 
+import {
+  type Edge,
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import {
-  attachClosestEdge,
-  extractClosestEdge,
-  type Edge,
-} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
-  forwardRef,
-  useLayoutEffect,
-  useState,
   type ComponentPropsWithRef,
-  useCallback,
   type ReactNode,
+  forwardRef,
+  useCallback,
+  useLayoutEffect,
   useMemo,
+  useState,
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName, ListItem } from '@dxos/react-ui';
+import { ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
+import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';
+import { type StackItemData, type StackItemSize } from '../types';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
   StackItemHeading,
   StackItemHeadingLabel,
-  type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
+  type StackItemHeadingProps,
   StackItemHeadingStickyContent,
 } from './StackItemHeading';
 import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
   StackItemSigil,
-  type StackItemSigilProps,
   type StackItemSigilAction,
-  type StackItemSigilButtonProps,
   StackItemSigilButton,
+  type StackItemSigilButtonProps,
+  type StackItemSigilProps,
 } from './StackItemSigil';
-import { useStack, StackItemContext, idle, type ItemDragState, useStackItem } from '../StackContext';
-import { type StackItemSize, type StackItemData } from '../defs';
 
-// NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
-export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
+export const DEFAULT_HORIZONTAL_SIZE = 50 satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
 
+//
+// StackItemRoot
+//
+
 type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+  role?: 'article' | 'section';
   item: Omit<StackItemData, 'type'>;
   order?: number;
   prevSiblingId?: string;
   nextSiblingId?: string;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
-  role?: 'article' | 'section';
   disableRearrange?: boolean;
-  focusIndicatorVariant?: 'over-all' | 'group';
+  focusIndicatorVariant?: 'over-all' | 'group' | 'over-all-always' | 'group-always';
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   (
     {
-      item,
-      children,
       classNames,
-      size: propsSize,
-      onSizeChange,
+      children,
+      style,
       role,
+      item,
       order,
       prevSiblingId,
       nextSiblingId,
-      style,
+      size: sizeProp,
+      onSizeChange,
       disableRearrange,
       focusIndicatorVariant = 'over-all',
       ...props
@@ -85,17 +88,16 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     forwardedRef,
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
+    const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
     const [sourceId, setSourceId] = useState<string | null>(null);
     const [dragState, setDragState] = useState<ItemDragState>(idle);
-    const { orientation, rail, onRearrange } = useStack();
+    const { orientation, rail, onRearrange, size: stackSize, stackId } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
-      useState(propsSize);
+      useState(sizeProp);
 
     const Root = role ?? 'div';
-
-    const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
 
     const setSize = useCallback(
       (nextSize: StackItemSize, commit?: boolean) => {
@@ -109,6 +111,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
 
     const type = orientation === 'horizontal' ? 'column' : 'card';
 
+    // TODO(burdon): Factor out?
     useLayoutEffect(() => {
       if (!itemElement || !onRearrange || disableRearrange) {
         return;
@@ -182,18 +185,18 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
 
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
-    // Determine if the drop would result in any changes
+    // Determine if the drop would result in any changes.
     const shouldShowDropIndicator = () => {
       if (!closestEdge || !sourceId) {
         return false;
       }
 
-      // Don't show indicator when dragged item is over itself
+      // Don't show indicator when dragged item is over itself.
       if (sourceId === item.id) {
         return false;
       }
 
-      // Don't show indicator when dragged item is over the trailing edge of its previous sibling
+      // Don't show indicator when dragged item is over the trailing edge of its previous sibling.
       const isTrailingEdgeOfPrevSibling =
         prevSiblingId !== undefined &&
         sourceId === prevSiblingId &&
@@ -231,18 +234,25 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             'group/stack-item grid relative',
             focusIndicatorVariant === 'over-all'
               ? 'dx-focus-ring-inset-over-all'
-              : orientation === 'horizontal'
-                ? 'dx-focus-ring-group-x'
-                : 'dx-focus-ring-group-y',
+              : focusIndicatorVariant === 'over-all-always'
+                ? 'dx-focus-ring-inset-over-all-always'
+                : orientation === 'horizontal'
+                  ? focusIndicatorVariant === 'group-always'
+                    ? 'dx-focus-ring-group-x-always'
+                    : 'dx-focus-ring-group-x'
+                  : focusIndicatorVariant === 'group-always'
+                    ? 'dx-focus-ring-group-y-always'
+                    : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            role === 'section' && orientation !== 'horizontal' && 'border-be border-subduedSeparator',
+            role === 'section' && orientation !== 'horizontal' && 'border-b border-subdued-separator',
             classNames,
           )}
-          data-dx-stack-item
+          data-dx-stack-item={stackId}
+          data-dx-item-id={item.id}
           {...resizeAttributes}
           style={{
-            ...sizeStyle(size, orientation),
+            ...(stackSize !== 'split' && sizeStyle(size, orientation)),
             ...(Number.isFinite(order) && {
               [orientation === 'horizontal' ? 'gridColumn' : 'gridRow']: `${order}`,
             }),
@@ -260,37 +270,45 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   },
 );
 
+//
+// StackItemDragPreview
+//
+
 type StackItemDragPreviewProps = {
   children: ({ item }: { item: any }) => ReactNode;
 };
 
-export const StackItemDragPreview = ({ children }: StackItemDragPreviewProps) => {
+const StackItemDragPreview = ({ children }: StackItemDragPreviewProps) => {
   const { state } = useStackItem();
   return state?.type === 'preview' ? createPortal(children({ item: state.item }), state.container) : null;
 };
 
+//
+// StackItem
+//
+
 export const StackItem = {
   Root: StackItemRoot,
   Content: StackItemContent,
+  DragHandle: StackItemDragHandle,
+  DragPreview: StackItemDragPreview,
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
   HeadingStickyContent: StackItemHeadingStickyContent,
   ResizeHandle: StackItemResizeHandle,
-  DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
-  DragPreview: StackItemDragPreview,
 };
 
 export type {
   StackItemRootProps,
   StackItemContentProps,
+  StackItemDragHandleProps,
+  StackItemDragPreviewProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
   StackItemResizeHandleProps,
-  StackItemDragHandleProps,
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,
-  StackItemDragPreviewProps,
 };

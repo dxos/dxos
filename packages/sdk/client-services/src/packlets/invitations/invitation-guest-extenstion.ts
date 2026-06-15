@@ -3,7 +3,7 @@
 //
 
 import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
@@ -97,10 +97,12 @@ export class InvitationGuestExtension
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
-        throw new InvalidInvitationExtensionRoleError(undefined, {
-          expected: InvitationOptions.Role.HOST,
-          remoteOptions: this._remoteOptions,
-          remotePeerId: context.remotePeerId,
+        throw new InvalidInvitationExtensionRoleError({
+          context: {
+            expected: InvitationOptions.Role.HOST,
+            remoteOptions: this._remoteOptions,
+            remotePeerId: context.remotePeerId,
+          },
         });
       }
 

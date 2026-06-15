@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useCallback, useContext, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
 export type ClipboardContextValue = {
   textValue: string;

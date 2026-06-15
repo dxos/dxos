@@ -1,0 +1,39 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test-storybook:
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=storybook
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - storybook-addon-logger:compile
+      - vite-plugin-icons:compile
+      - vite-plugin-import-source:compile
+      - vite-plugin-log:compile
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+      - /tools/storybook-react/.storybook/main.ts
+      - /tools/storybook-react/.storybook/vitest.setup.ts
+      - /vitest.base.config.ts
+      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - .storybook/*
+      - vitest.config.ts
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/storybook/**
+      - /test-results/$project/storybook/**
+    options:
+      # Storybook test sessions occasionally die mid-run with "Browser
+      # connection was closed", which fails entire suites at the file-collection
+      # phase (vitest's project-level `retry` only retries individual tests).
+      # A whole-task retry reruns vitest from scratch with a fresh chromium.
+      # 2 retries (3 total attempts) — the chromium issue has been observed to
+      # persist across an immediate single retry in CI.
+      retryCount: 2
+      timeout: 600
+
+inheritedBy:
+  tags: ts-test-storybook

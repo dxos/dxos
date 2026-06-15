@@ -1,34 +1,44 @@
 {
   "name": "@dxos/docs",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
     "astro": "astro",
     "bundle": "astro build",
     "dev": "astro dev",
-    "prebuild": "./scripts/collect-typedoc.sh",
     "preview": "astro preview",
-    "start": "astro dev"
+    "start": "astro dev",
+    "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.32.5",
-    "astro": "^5.5.3",
-    "sharp": "^0.32.5",
-    "starlight-links-validator": "^0.14.3"
+    "@astrojs/rss": "catalog:",
+    "@astrojs/starlight": "catalog:",
+    "@bryanguffey/astro-standard-site": "catalog:",
+    "@dxos/keys": "workspace:*",
+    "astro": "catalog:",
+    "sharp": "catalog:",
+    "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
+    "@atproto/api": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.9.0"
+    "@dxos/schema": "workspace:*",
+    "@types/turndown": "catalog:",
+    "turndown": "catalog:",
+    "vite": "^7.3.2"
   }
 }

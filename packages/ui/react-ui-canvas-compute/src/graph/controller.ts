@@ -2,32 +2,43 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, Effect, Either, Exit, Scope } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as Scope from 'effect/Scope';
 
-import { type ImageContentBlock } from '@dxos/ai';
+import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
+import { type Credential, type Operation, Trace } from '@dxos/compute';
 import {
+  ComputeBeginEvent,
+  ComputeCustomEvent,
+  ComputeEndEvent,
+  ComputeInputEvent,
+  ComputeNodeContext,
+  ComputeOutputEvent,
   type ComputeEdge,
-  type ComputeEvent,
   type ComputeGraphModel,
-  type ComputeMeta,
   type ComputeNode,
-  type EventLogger,
+  type ComputeNodeMeta,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
   GraphExecutor,
-  isNotExecuted,
   ValueBag,
+  isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { ServiceContainer } from '@dxos/functions';
+import type { Database, Feed, Registry } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
+import { type ContentBlock } from '@dxos/types';
 
-import { resolveComputeNode } from './node-defs';
 import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
+import { resolveComputeNode } from './node-defs';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -43,7 +54,7 @@ export interface GptExecutor {
   invoke: FunctionCallback<GptInput, GptOutput>;
 
   // TODO(dmaretskyi): A hack to get image artifacts working. Rework into querying images from the ai-service store.
-  imageCache: Map<string, ImageContentBlock>;
+  imageCache: Map<string, ContentBlock.Image>;
 }
 
 export type RuntimeValue =
@@ -69,16 +80,45 @@ type ComputeOutputEvent = {
 };
 
 /**
+ * Event emitted by the compute graph during execution.
+ */
+export type ComputeEvent =
+  | { type: 'begin-compute'; nodeId: string; inputs: ReadonlyArray<string> }
+  | { type: 'end-compute'; nodeId: string; outputs: ReadonlyArray<string> }
+  | { type: 'compute-input'; nodeId: string; property: string; value: any }
+  | { type: 'compute-output'; nodeId: string; property: string; value: any }
+  | { type: 'custom'; nodeId: string; event: any };
+
+// TODO(dmaretskyi): Re-use function servies definition.
+export type ComputeServices =
+  | AiService.AiService
+  | Database.Service
+  | Feed.FeedService
+  | Credential.CredentialsService
+  | Operation.Service
+  | Registry.Service;
+
+/**
  * Nodes that will automatically trigger the execution of the graph on startup.
  */
 const AUTO_TRIGGER_NODES = ['chat', 'switch', 'constant'];
 
+/**
+ * Minimal runtime interface required by the {@link ComputeGraphController}.
+ *
+ * Satisfied by both `effect/ManagedRuntime.ManagedRuntime` and ad-hoc adapters
+ * built on top of the app-framework `ProcessManagerRuntime`.
+ */
+export interface ComputeGraphRuntime {
+  runPromiseExit<A, E>(effect: Effect.Effect<A, E, ComputeServices>): Promise<Exit.Exit<A, E>>;
+}
+
 export const createComputeGraphController = (
   graph: CanvasGraphModel<ComputeShape>,
-  serviceContainer: ServiceContainer,
+  computeRuntime: ComputeGraphRuntime,
 ) => {
   const computeGraph = createComputeGraph(graph);
-  const controller = new ComputeGraphController(serviceContainer, computeGraph);
+  const controller = new ComputeGraphController(computeRuntime, computeGraph);
   return { controller, graph };
 };
 
@@ -113,7 +153,7 @@ export class ComputeGraphController extends Resource {
   public readonly events = new Event<ComputeEvent>();
 
   constructor(
-    private readonly _serviceContainer: ServiceContainer,
+    private readonly _computeRuntime: ComputeGraphRuntime,
     /** Persistent compute graph. */
     private readonly _graph: ComputeGraphModel,
   ) {
@@ -154,7 +194,14 @@ export class ComputeGraphController extends Resource {
   /**
    * Inputs and outputs for all nodes.
    */
-  get state() {
+  get state(): Record<
+    string,
+    {
+      node: ComputeNode;
+      input: Record<string, RuntimeValue>;
+      output: Record<string, RuntimeValue>;
+    }
+  > {
     const ids = [...new Set([...Object.keys(this._runtimeStateInputs), ...Object.keys(this._runtimeStateOutputs)])];
     return Object.fromEntries(
       ids.map((id) => [
@@ -201,7 +248,7 @@ export class ComputeGraphController extends Resource {
     });
   }
 
-  async getMeta(node: ComputeNode): Promise<ComputeMeta> {
+  async getMeta(node: ComputeNode): Promise<ComputeNodeMeta> {
     const { meta } = await resolveComputeNode(node);
     return meta;
   }
@@ -221,37 +268,42 @@ export class ComputeGraphController extends Resource {
       executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
-    const serviceLayer = this._serviceContainer.createLayer();
-    await Effect.runPromise(
-      Effect.gen(this, function* () {
-        const scope = yield* Scope.make();
+    EffectEx.unwrapExit(
+      await this._computeRuntime.runPromiseExit(
+        Effect.gen(this, function* () {
+          const scope = yield* Scope.make();
 
-        // TODO(dmaretskyi): Code duplication.
-        const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(nodeId)));
-        const computingOutputs = executable.exec != null;
-        // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-        const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
-          Effect.withSpan('runGraph'),
-          Scope.extend(scope),
-
-          Effect.flatMap(computeValueBag),
-          Effect.provide(serviceLayer),
-          Effect.withSpan('test'),
-          Effect.tap((values) => {
-            for (const [key, value] of Object.entries(values)) {
-              if (computingOutputs) {
-                this._onOutputComputed(nodeId, key, value);
-              } else {
-                this._onInputComputed(nodeId, key, value);
+          // TODO(dmaretskyi): Code duplication.
+          const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(nodeId)));
+          const computingOutputs = executable.exec != null;
+          // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
+          const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
+            Effect.withSpan('runGraph'),
+            Scope.extend(scope),
+            Effect.provide(
+              Layer.mergeAll(
+                Layer.succeed(Trace.TraceService, this._createTraceWriter()),
+                ComputeNodeContext.layerNoop,
+              ),
+            ),
+            Effect.flatMap(computeValueBag),
+            Effect.withSpan('test'),
+            Effect.tap((values) => {
+              for (const [key, value] of Object.entries(values)) {
+                if (computingOutputs) {
+                  this._onOutputComputed(nodeId, key, value);
+                } else {
+                  this._onInputComputed(nodeId, key, value);
+                }
               }
-            }
-          }),
-        );
+            }),
+          );
 
-        yield* effect;
+          yield* effect;
 
-        yield* Scope.close(scope, Exit.void);
-      }),
+          yield* Scope.close(scope, Exit.void);
+        }),
+      ),
     );
 
     this.update.emit();
@@ -279,55 +331,65 @@ export class ComputeGraphController extends Resource {
         : this._graph.nodes.filter((node) => node.type != null && AUTO_TRIGGER_NODES.includes(node.type));
     const allAffectedNodes = [...new Set(triggerNodes.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
-    await Effect.runPromise(
-      Effect.gen(this, function* () {
-        const scope = yield* Scope.make();
+    EffectEx.unwrapExit(
+      await this._computeRuntime.runPromiseExit(
+        Effect.gen(this, function* () {
+          const scope = yield* Scope.make();
 
-        // TODO(burdon): Return map?
-        const tasks: Effect.Effect<unknown, any, never>[] = [];
-        for (const node of allAffectedNodes) {
-          // TODO(dmaretskyi): Code duplication.
-          const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(node)));
-          const computingOutputs = executable.exec != null;
+          // TODO(burdon): Return map?
+          const tasks: Effect.Effect<unknown, any, ComputeServices>[] = [];
+          for (const node of allAffectedNodes) {
+            // TODO(dmaretskyi): Code duplication.
+            const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(node)));
+            const computingOutputs = executable.exec != null;
 
-          // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-          const effect = (computingOutputs ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
-            Effect.withSpan('runGraph'),
-            Scope.extend(scope),
-            Effect.flatMap(computeValueBag),
-            Effect.provide(this._serviceContainer.createLayer()),
-            Effect.withSpan('test'),
-            Effect.tap((values) => {
-              for (const [key, value] of Object.entries(values)) {
-                if (computingOutputs) {
-                  this._onOutputComputed(node, key, value);
-                } else {
-                  this._onInputComputed(node, key, value);
+            // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
+            const effect = (computingOutputs ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
+              Effect.withSpan('runGraph'),
+              Scope.extend(scope),
+              Effect.flatMap(computeValueBag),
+              Effect.provide(
+                Layer.mergeAll(
+                  Layer.succeed(Trace.TraceService, this._createTraceWriter()),
+                  ComputeNodeContext.layerNoop,
+                ),
+              ),
+
+              Effect.withSpan('test'),
+              Effect.tap((values) => {
+                for (const [key, value] of Object.entries(values)) {
+                  if (computingOutputs) {
+                    this._onOutputComputed(node, key, value);
+                  } else {
+                    this._onInputComputed(node, key, value);
+                  }
                 }
-              }
-            }),
-          );
+              }),
+            );
 
-          tasks.push(effect);
-        }
+            tasks.push(effect);
+          }
 
-        //
-        yield* Effect.all(tasks);
+          //
+          yield* Effect.all(tasks);
 
-        //
-        yield* Scope.close(scope, Exit.void);
-      }),
+          //
+          yield* Scope.close(scope, Exit.void);
+        }),
+      ),
     );
 
     this.update.emit();
   }
 
-  private _createLogger(): Context.Tag.Service<EventLogger> {
+  private _createTraceWriter(): Trace.TraceWriter {
     return {
-      log: (event) => {
-        this._handleEvent(event);
+      write: (eventType, payload) => {
+        const event = traceEventToComputeEvent(eventType.key, payload);
+        if (event) {
+          this._handleEvent(event);
+        }
       },
-      nodeId: undefined, // Not in a context of a specific node.
     };
   }
 
@@ -360,6 +422,23 @@ export class ComputeGraphController extends Resource {
     this.output.emit({ nodeId, property, value });
   }
 }
+
+const traceEventToComputeEvent = (key: string, payload: unknown): ComputeEvent | undefined => {
+  switch (key) {
+    case ComputeBeginEvent.key:
+      return { type: 'begin-compute', ...(payload as { nodeId: string; inputs: ReadonlyArray<string> }) };
+    case ComputeEndEvent.key:
+      return { type: 'end-compute', ...(payload as { nodeId: string; outputs: ReadonlyArray<string> }) };
+    case ComputeInputEvent.key:
+      return { type: 'compute-input', ...(payload as { nodeId: string; property: string; value: any }) };
+    case ComputeOutputEvent.key:
+      return { type: 'compute-output', ...(payload as { nodeId: string; property: string; value: any }) };
+    case ComputeCustomEvent.key:
+      return { type: 'custom', ...(payload as { nodeId: string; event: any }) };
+    default:
+      return undefined;
+  }
+};
 
 /**
  * Waits for all effects in the bag to complete and returns the `RuntimeValue` for each property.

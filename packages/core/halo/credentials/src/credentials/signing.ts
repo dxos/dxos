@@ -27,6 +27,32 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   }
   delete copy.id; // ID is not part of the signature payload.
 
+  // Normalize proto3-default values in the assertion to avoid serialization asymmetry.
+  // Proto3 omits fields equal to their default on the wire (empty arrays, 0, "", false),
+  // and our codec doesn't restore defaults on decode — so after a round-trip the field
+  // is absent. The signing payload must pre-strip these defaults (plus `null`/`undefined`,
+  // which the canonical stringify replacer also drops) so signer and verifier produce the
+  // same canonical bytes regardless of whether the field was explicitly set to its default.
+  // Clone subject + assertion so we don't mutate the caller's credential.
+  const originalAssertion = copy.subject?.assertion;
+  if (originalAssertion) {
+    const normalizedAssertion: Record<string, any> = { ...originalAssertion };
+    for (const key of Object.keys(normalizedAssertion)) {
+      const val = normalizedAssertion[key];
+      if (
+        val === undefined ||
+        val === null ||
+        val === 0 ||
+        val === '' ||
+        val === false ||
+        (Array.isArray(val) && val.length === 0)
+      ) {
+        delete normalizedAssertion[key];
+      }
+    }
+    copy.subject = { ...copy.subject, assertion: normalizedAssertion as typeof originalAssertion };
+  }
+
   return Buffer.from(canonicalStringify(copy));
 };
 

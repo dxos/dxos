@@ -7,5 +7,5 @@ System-wide protocol buffer definitions.
 Generate by running script:
 
 ```bash
-pnpm -w nx prebuild protocols
+moon run protocols:prebuild
 ```

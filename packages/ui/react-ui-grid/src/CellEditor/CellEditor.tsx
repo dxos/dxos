@@ -8,13 +8,14 @@ import { EditorView, keymap } from '@codemirror/view';
 import React, { type KeyboardEvent } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import {
-  type UseTextEditorProps,
+  type ThemeExtensionsOptions,
   createBasicExtensions,
   createThemeExtensions,
-  preventNewline,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+  filterChars,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { type GridEditBox } from '../Grid';
 
@@ -114,12 +115,14 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
 
 export type CellEditorProps = {
   value?: string;
-  extension?: Extension;
+  extensions?: Extension;
   box?: GridEditBox;
   gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
+  onBlur?: EditorBlurHandler;
+} & Pick<UseTextEditorProps, 'autoFocus'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }: CellEditorProps) => {
+export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, onBlur }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -127,39 +130,61 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
       initialValue: value,
       selection: { anchor: value?.length ?? 0 },
       extensions: [
-        extension ?? [],
-        preventNewline,
-        EditorView.focusChangeEffect.of((state, focusing) => {
-          if (!focusing) {
-            onBlur?.(state.doc.toString());
-          }
-          return null;
+        extensions ?? [],
+        filterChars(/[\n\r]+/),
+        // Observe the underlying blur DOM event rather than `EditorView.focusChangeEffect`. The
+        // focus-change facet fires asynchronously (CodeMirror schedules it on a 10ms setTimeout),
+        // which means in React strict mode the destroy → blur of the first EditorView runs the
+        // callback after the second view has mounted — committing stale data and closing the
+        // editor on the user's first keystroke. Deferring via `queueMicrotask` runs the check
+        // *after* `view.destroy()` finishes its synchronous body (which calls `dom.remove()`),
+        // so `view.dom.isConnected === false` reliably distinguishes a programmatic teardown
+        // from a real user blur. Pass `undefined` on teardown so downstream handlers can consume
+        // any pending suppress-next-blur flag without committing stale data.
+        EditorView.domEventObservers({
+          blur: (_event, view) => {
+            const doc = view.state.doc.toString();
+            queueMicrotask(() => {
+              onBlur?.(view.dom.isConnected ? doc : undefined);
+            });
+          },
         }),
-        createBasicExtensions({ lineWrapping: false }),
+        createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({
           themeMode,
           slots: {
             editor: {
-              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
+              className: mx(
+                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-w-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-h-size)',
+                slots?.editor?.className,
+              ),
+            },
+            scroller: {
+              className: mx(
+                'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pe-0! !pl-(--dx-grid-cell-editor-padding-inline)',
+                slots?.scroller?.className,
+              ),
             },
             content: {
-              className:
-                '!border !border-transparent !pli-[var(--dx-grid-cell-padding-inline)] !plb-[var(--dx-grid-cell-padding-block)]',
+              className: mx('break-normal!', slots?.content?.className),
             },
           },
         }),
       ],
     };
-  }, [extension, autoFocus, value, onBlur]);
+  }, [extensions, autoFocus, value, onBlur, themeMode, slots]);
 
   return (
     <div
       data-testid='grid.cell-editor'
       ref={parentRef}
-      className='absolute z-[1]'
+      className='absolute z-[1] dx-grid__cell-editor'
       style={{
-        ...box,
-        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
+        insetInlineStart: box?.insetInlineStart ?? '0px',
+        insetBlockStart: box?.insetBlockStart ?? '0px',
+        minInlineSize: box?.inlineSize ?? '180px',
+        minBlockSize: box?.blockSize ?? '30px',
+        ...{ '--dx-grid-cell-width': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}
     />

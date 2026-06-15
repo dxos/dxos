@@ -1,0 +1,35 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Operation } from '@dxos/compute';
+import { Database, Obj } from '@dxos/echo';
+
+import { generateModel } from '../models';
+import { Voxel, VoxelOperation } from '../types';
+
+const handler: Operation.WithHandler<typeof VoxelOperation.GenerateShape> = VoxelOperation.GenerateShape.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ world, shape, origin, hue }) {
+      const loaded = (yield* Database.load(world)) as Voxel.World;
+      const voxels = generateModel(shape, origin, hue);
+      let added = 0;
+      Obj.update(loaded, (loaded) => {
+        if (!loaded.voxels) {
+          loaded.voxels = {};
+        }
+        const voxelMap = loaded.voxels as Obj.Mutable<typeof loaded.voxels>;
+        for (const voxel of voxels) {
+          const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
+          voxelMap[key] = { hue: voxel.hue };
+          added++;
+        }
+      });
+      return { added };
+    }),
+  ),
+);
+
+export default handler;

@@ -1,0 +1,72 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Text } from '@dxos/schema';
+import { type MakeOptional } from '@dxos/util';
+
+import * as Actor from './Actor';
+import * as Geo from './Geo';
+import * as Thread from './Thread';
+import * as Transcript from './Transcript';
+
+/**
+ * https://schema.org/Event
+ */
+export const Event = Schema.Struct({
+  id: Obj.ID,
+  title: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  owner: Actor.Actor,
+  attendees: Schema.Array(Actor.Actor),
+  startDate: Schema.String, // TODO(burdon): Date.
+  endDate: Schema.String,
+
+  /**
+   * Whether the event spans whole days (no time-of-day). Maps to Google Calendar `start.date`/`end.date`
+   * rather than `start.dateTime`/`end.dateTime`.
+   */
+  allDay: Schema.optional(Schema.Boolean),
+
+  /**
+   * Physical location of the event (https://schema.org/Event `location`).
+   */
+  location: Schema.optional(Geo.PostalAddress),
+
+  /**
+   * Transcript of the meeting.
+   */
+  transcript: Ref.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Markdown notes for the meeting.
+   */
+  notes: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Generated summary of the meeting.
+   */
+  summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Message thread for the meeting.
+   */
+  thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
+}).pipe(
+  LabelAnnotation.set(['title']),
+  DescriptionAnnotation.set('description'),
+  Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
+  Type.makeObject(DXN.make('org.dxos.type.event', '0.1.0')),
+);
+
+export type Event = Type.InstanceType<typeof Event>;
+
+export type MakeProps = MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>;
+
+export const make = ({ attendees = [], ...props }: MakeProps): Event => Obj.make(Event, { attendees, ...props });

@@ -1,6 +1,0 @@
-usage: |
-  Generate by running script:
-  ```sh
-  pnpm -w nx prebuild protocols
-  ```
-  

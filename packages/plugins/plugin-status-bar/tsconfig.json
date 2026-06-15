@@ -21,34 +21,40 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

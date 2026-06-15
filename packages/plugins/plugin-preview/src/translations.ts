@@ -2,14 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PREVIEW_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from '#meta';
+
+export const translations = [
   {
     'en-US': {
-      [PREVIEW_PLUGIN]: {
-        'unable to create preview message': 'No preview',
+      [meta.id]: {
+        'unable-to-create-preview.message': 'No preview',
+        'todo.label': 'To do',
+        'in-progress.label': 'In progress',
+        'done.label': 'Done',
+        'open-object.label': 'Open',
+        'add-object-to-space.label': 'Add to space',
+        'more-options.label': 'More options',
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
-import { AlreadyJoinedError, type ApiError } from '@dxos/protocols';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -15,14 +16,14 @@ import {
   type IntroductionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
+import { type Identity, type JoinIdentityProps } from '../identity';
 import { type InvitationProtocol } from './invitation-protocol';
-import { type Identity, type JoinIdentityParams } from '../identity';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(
-    private readonly _keyring: Keyring,
+    private readonly _keyring: KeyringApi,
     private readonly _getIdentity: () => Identity,
-    private readonly _acceptIdentity: (identity: JoinIdentityParams) => Promise<Identity>,
+    private readonly _acceptIdentity: (identity: JoinIdentityProps) => Promise<Identity>,
   ) {}
 
   toJSON(): object {
@@ -31,7 +32,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkCanInviteNewMembers(): ApiError | undefined {
+  checkCanInviteNewMembers(): Error | undefined {
     return undefined;
   }
 
@@ -70,7 +71,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     try {
       const identity = this._getIdentity();
       if (identity) {
-        return new AlreadyJoinedError('Currently only one identity per client is supported.');
+        return new AlreadyJoinedError({ message: 'Currently only one identity per client is supported.' });
       }
     } catch {
       // No identity.
@@ -96,7 +97,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
+  async accept(_ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
     invariant(response.device);
     const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
 
@@ -104,6 +105,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
 
     // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
+    // ctx is unused here because _acceptIdentity uses ServiceContext's lifecycle ctx internally.
 
     await this._acceptIdentity({
       identityKey,

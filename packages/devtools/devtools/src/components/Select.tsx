@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select as UiSelect, type SelectRootProps, Toolbar } from '@dxos/react-ui';
+import { type SelectRootProps, Toolbar, Select as UiSelect } from '@dxos/react-ui';
 
 export type SelectProps = SelectRootProps & {
   items?: { value: string; label: string }[];

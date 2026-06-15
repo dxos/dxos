@@ -1,294 +1,290 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { forwardRef, useMemo, useEffect, useCallback, useImperativeHandle, useRef } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { type Atom } from '@effect-atom/atom-react';
+import { createContext } from '@radix-ui/react-context';
+import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { type FileInfo } from '@dxos/app-framework';
-import { invariant } from '@dxos/invariant';
-import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { URI } from '@dxos/keys';
+import { useClient } from '@dxos/react-client';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
-  CommandMenu,
-  type CommandMenuGroup,
-  type DNDOptions,
-  type EditorInputMode,
-  type EditorSelectionState,
-  type EditorStateStore,
-  EditorToolbar,
-  type EditorToolbarActionGraphProps,
-  type EditorViewMode,
-  RefPopover,
-  type UseTextEditorProps,
-  addLink,
-  createElement,
-  coreSlashCommands,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  dropFile,
-  editorGutter,
-  editorSlots,
-  filterItems,
-  linkSlashCommands,
-  processEditorPayload,
-  stackItemContentEditorClassNames,
-  useEditorToolbarState,
-  useFormattingState,
-  useTextEditor,
-  useCommandMenu,
-  type UseCommandMenuOptions,
+  type EditorRootProps,
+  type EditorToolbarState,
+  createEditorController,
+  useEditorContext,
 } from '@dxos/react-ui-editor';
-import { StackItem } from '@dxos/react-ui-stack';
-import { isNotFalsy, isNonNullable } from '@dxos/util';
+import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { isNonNullable } from '@dxos/util';
 
-import { useSelectCurrentThread } from '../../hooks';
-import { MARKDOWN_PLUGIN } from '../../meta';
-import { type MarkdownPluginState } from '../../types';
+import {
+  type DocumentType,
+  type ExtensionsOptions,
+  type UseEditorMenuOptionsProps,
+  useEditorMenuOptions,
+  useExtensions,
+} from '#hooks';
 
-export type MarkdownEditorProps = {
+import {
+  MarkdownEditorContent as NaturalMarkdownEditorContent,
+  type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
+} from './MarkdownEditorContent';
+import {
+  MarkdownEditorToolbar as NaturalMarkdownToolbar,
+  type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
+} from './MarkdownEditorToolbar';
+
+//
+// Context
+//
+
+type MarkdownEditorContextValue = {
   id: string;
-  role?: string;
-  inputMode?: EditorInputMode;
-  scrollPastEnd?: boolean;
-  slashCommandGroups?: CommandMenuGroup[];
-  toolbar?: boolean;
-  customActions?: EditorToolbarActionGraphProps['customActions'];
-  // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
-  viewMode?: EditorViewMode;
-  editorStateStore?: EditorStateStore;
-  onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onLinkQuery?: (query?: string) => Promise<CommandMenuGroup[]>;
-  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
-  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
+  attendableId?: string;
+  previewBlocks: PreviewBlock[];
+} & Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
+  Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>;
+
+const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
+  createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
 
 /**
- * Base markdown editor component.
- * This component provides all the features of the markdown editor that do no depend on ECHO.
- * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
+ * Props to spread onto `Editor.Root` from `MarkdownEditorProvider`'s render callback.
  */
-export const MarkdownEditor = ({
-  extensions: _extensions,
+export type MarkdownEditorEditorRootProps = Omit<EditorRootProps, 'children'>;
+
+//
+// MarkdownEditorProvider
+//
+
+export type MarkdownEditorProviderProps = {
+  object?: DocumentType;
+  extensions?: Extension[];
+  children: (editorRootProps: MarkdownEditorEditorRootProps) => ReactNode;
+} & Pick<
+  MarkdownEditorContextValue,
+  'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
+> &
+  Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
+  Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>;
+
+export const MarkdownEditorProvider = ({
+  children,
+  id,
+  attendableId,
+  object,
+  settings,
+  compact,
+  viewMode,
+  selectionManager,
+  editorStateStore,
+  extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
-  ...props
-}: MarkdownEditorProps) => {
-  const { t } = useTranslation();
-  const viewRef = useRef<EditorView>();
-
-  const getMenu = useCallback(
-    (trigger: string, query?: string) => {
-      switch (trigger) {
-        case '@':
-          return onLinkQuery?.(query) ?? [];
-        case '/':
-        default:
-          return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-            query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
-          );
-      }
-    },
-    [onLinkQuery, slashCommandGroups],
+  onSelectObject,
+  onAction,
+  onFileUpload,
+  onViewModeChange,
+}: MarkdownEditorProviderProps) => {
+  // Preview blocks.
+  const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
+  const previewOptions = useMemo<PreviewOptions>(
+    () => ({
+      db: Obj.isObject(object) ? Obj.getDatabase(object) : undefined,
+      addBlockContainer: (block) => {
+        setPreviewBlocks((prev) => [...prev, block]);
+      },
+      removeBlockContainer: ({ link }) => {
+        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
+      },
+    }),
+    [object],
   );
 
-  const options = useMemo<UseCommandMenuOptions>(() => {
-    const trigger = onLinkQuery ? ['/', '@'] : ['/'];
-    return {
-      viewRef,
-      trigger,
-      placeholder: {
-        delay: 3_000,
-        content: () => {
-          return createElement('div', undefined, [
-            createElement('span', { text: 'Press' }),
-            ...trigger.map((text) =>
-              createElement('span', {
-                className: 'border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]',
-                text,
-              }),
-            ),
-            createElement('span', { text: 'for commands.' }),
-          ]);
-        },
-      },
-      getMenu,
-    };
-  }, [getMenu]);
+  // Context menu options (Editor.Root calls useEditorMenu with these props).
+  const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
 
-  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
+  // Core markdown extensions (popover/menu extension is added by Editor.Root).
+  const coreExtensions = useExtensions({
+    id,
+    object,
+    compact,
+    viewMode,
+    selectionManager,
+    editorStateStore,
+    previewOptions,
+    settings,
+    onSelectObject,
+  });
 
-  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
+  const extensions = useMemo(
+    () => [coreExtensions, extensionsProp].filter(isNonNullable).flat(),
+    [coreExtensions, extensionsProp],
+  );
+
+  const editorRootProps = useMemo<MarkdownEditorEditorRootProps>(
+    () => ({
+      extensions,
+      viewMode,
+      getMenu: menuOptions.getMenu,
+      trigger: menuOptions.trigger,
+      placeholder: menuOptions.placeholder,
+      ...(menuOptions.filter !== undefined ? { filter: menuOptions.filter } : {}),
+      ...(menuOptions.triggerKey !== undefined ? { triggerKey: menuOptions.triggerKey } : {}),
+    }),
+    [extensions, viewMode, menuOptions],
+  );
+
+  const markdownContextValue = useMemo<MarkdownEditorContextValue>(
+    () => ({
+      id,
+      attendableId,
+      compact,
+      viewMode,
+      previewBlocks,
+      onAction,
+      onFileUpload,
+      onViewModeChange,
+    }),
+    [id, attendableId, compact, viewMode, previewBlocks, onAction, onFileUpload, onViewModeChange],
+  );
 
   return (
-    <RefPopover modal={false} {...refPopoverProps}>
-      <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    </RefPopover>
+    <MarkdownEditorContextProvider {...markdownContextValue}>{children(editorRootProps)}</MarkdownEditorContextProvider>
   );
 };
 
-const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProps>(
-  (
-    {
+MarkdownEditorProvider.displayName = 'MarkdownEditor.Provider';
+
+//
+// MarkdownEditor.Content
+//
+
+const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
+
+type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
+
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
+  ({ compact: compactProp, ...props }, _forwardedRef) => {
+    const {
       id,
-      role = 'article',
-      initialValue,
-      customActions,
-      editorStateStore,
-      extensions,
-      extensionProviders,
-      scrollPastEnd,
-      toolbar,
+      attendableId,
+      compact = compactProp,
       viewMode,
       onFileUpload,
-      onViewModeChange,
-    },
-    forwardedRef,
-  ) => {
-    const { t } = useTranslation(MARKDOWN_PLUGIN);
-    const { themeMode } = useThemeContext();
-    const toolbarState = useEditorToolbarState({ viewMode });
-    const formattingObserver = useFormattingState(toolbarState);
+    } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+    const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
-    // Restore last selection and scroll point.
-    const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
-
-    // Extensions from other plugins.
-    // TODO(burdon): Reconcile with DocumentEditor.useExtensions.
-    const providerExtensions = useMemo(
-      () => extensionProviders?.flatMap((provider) => provider({})).filter(isNonNullable),
-      [extensionProviders],
-    );
-
-    // TODO(wittjosiah): Factor out to file uploader plugin.
-    // Drag files.
-    const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-      const file = files[0];
-      const info = file && onFileUpload ? await onFileUpload(file) : undefined;
-      if (info) {
-        processEditorPayload(view, { type: 'image', data: info.url });
-      }
-    };
-
-    const {
-      parentRef,
-      view: editorView,
-      focusAttributes,
-    } = useTextEditor(
-      () => ({
-        initialValue,
-        extensions: [
-          formattingObserver,
-          createBasicExtensions({
-            readOnly: viewMode === 'readonly',
-            placeholder: t('editor placeholder'),
-            scrollPastEnd: role === 'section' ? false : scrollPastEnd,
-          }),
-          createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
-          editorGutter,
-          role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
-          providerExtensions,
-          extensions,
-        ].filter(isNotFalsy),
-        ...(role !== 'section' && {
-          id,
-          scrollTo,
-          selection,
-          // TODO(wittjosiah): Autofocus based on layout is racy.
-          // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
-          moveToEndOfLine: true,
-        }),
-      }),
-      [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
-    );
-
-    useImperativeHandle(forwardedRef, () => editorView, [editorView]);
-    useTest(editorView);
-    useSelectCurrentThread(editorView, id);
-
-    // https://react-dropzone.js.org/#src
-    const { acceptedFiles, getInputProps, open } = useDropzone({
-      multiple: false,
-      noDrag: true,
-      accept: {
-        'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+    const handleRef = useCallback(
+      (view: EditorView | null) => {
+        setController(createEditorController(view));
       },
-    });
-
-    useEffect(() => {
-      if (editorView && onFileUpload && acceptedFiles.length) {
-        requestAnimationFrame(async () => {
-          // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
-          const f = acceptedFiles[0];
-          const file = new File([f], f.name, {
-            type: f.type,
-            lastModified: f.lastModified,
-          });
-
-          const info = await onFileUpload(file);
-          if (info) {
-            addLink({ url: info.url, image: true })(editorView);
-          }
-        });
-      }
-    }, [acceptedFiles, editorView, onFileUpload]);
-
-    const getView = useCallback(() => {
-      invariant(editorView);
-      return editorView;
-    }, [editorView]);
-
-    const handleViewModeChange = useCallback(
-      (mode: EditorViewMode) => onViewModeChange?.(id, mode),
-      [id, onViewModeChange],
+      [setController],
     );
-
-    const handleImageUpload = useCallback(() => {
-      if (onFileUpload) {
-        open();
-      }
-    }, [onFileUpload]);
 
     return (
-      <StackItem.Content toolbar={!!toolbar}>
-        {toolbar && (
-          <>
-            <EditorToolbar
-              attendableId={id}
-              role={role}
-              state={toolbarState}
-              customActions={customActions}
-              getView={getView}
-              image={handleImageUpload}
-              viewMode={handleViewModeChange}
-            />
-            <input {...getInputProps()} />
-          </>
-        )}
-        <div
-          role='none'
-          ref={parentRef}
-          data-testid='composer.markdownRoot'
-          data-toolbar={toolbar ? 'enabled' : 'disabled'}
-          className={stackItemContentEditorClassNames(role)}
-          data-popover-collision-boundary={true}
-          {...focusAttributes}
-        />
-      </StackItem.Content>
+      <NaturalMarkdownEditorContent
+        {...composableProps(props)}
+        id={id}
+        attendableId={attendableId}
+        compact={compact}
+        viewMode={viewMode}
+        toolbarState={state as Atom.Writable<EditorToolbarState>}
+        extensions={extensions}
+        onFileUpload={onFileUpload}
+        ref={handleRef}
+      />
     );
   },
 );
 
-// Expose editor view for playwright tests.
-// TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view?: EditorView) => {
-  useEffect(() => {
-    const composer = (window as any).composer;
-    if (composer) {
-      composer.editorView = view;
-    }
-  }, [view]);
+MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
+
+//
+// MarkdownEditor.Toolbar
+//
+
+const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
+
+type MarkdownEditorToolbarProps = ThemedClassName<
+  Omit<NaturalMarkdownToolbarProps, 'getView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
+>;
+
+const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
+  const { id, attendableId, onAction, onFileUpload, onViewModeChange } =
+    useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
+
+  const { controller } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
+
+  // Stable getter identity (changes only when the controller does) so the FileUpload effect, whose
+  // deps include `getView`, does not re-run every render and re-upload the same file.
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
+
+  return (
+    <NaturalMarkdownToolbar
+      {...props}
+      id={attendableId ?? id}
+      getView={getView}
+      onAction={onAction}
+      onFileUpload={onFileUpload}
+      onViewModeChange={onViewModeChange}
+    />
+  );
 };
+
+MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
+
+//
+// MarkdownEditor.Blocks (embedded objects)
+//
+
+const MARKDOWN_EDITOR_BLOCKS_NAME = 'MarkdownEditor.Blocks';
+
+type MarkdownEditorBlocksProps = {};
+
+const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
+  const { previewBlocks } = useMarkdownEditorContext(MARKDOWN_EDITOR_BLOCKS_NAME);
+
+  return (
+    <>
+      {previewBlocks.map(({ link, el }) => (
+        <PreviewBlock key={link.dxn} link={link} el={el} />
+      ))}
+    </>
+  );
+};
+
+MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
+
+const PreviewBlock = ({ el, link }: PreviewBlock) => {
+  const client = useClient();
+  const dxn = URI.make(link.dxn);
+  const subject = client.graph.makeRef(dxn).target;
+  const data = useMemo(() => ({ subject }), [subject]);
+
+  return createPortal(<Surface.Surface type={AppSurface.Card} data={data} limit={1} />, el);
+};
+
+//
+// MarkdownEditor
+//
+
+/** @private */
+export const MarkdownEditor = {
+  Content: MarkdownEditorContent,
+  Toolbar: MarkdownEditorToolbar,
+  Blocks: MarkdownEditorBlocks,
+};
+
+export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+
+/** @deprecated Use `MarkdownEditorProviderProps`. */
+export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

@@ -1,146 +1,71 @@
-# DX CLI
+# @dxos/cli
 
-DXOS command line interface.
+## Run locally (from source)
 
-<!-- toc -->
-* [DX CLI](#dx-cli)
-* [Installation](#installation)
-* [Running an Agent](#running-an-agent)
-* [Development](#development)
-* [Usage](usage/)
-<!-- tocstop -->
-
-# Installation
-```terminal
-npm install -g @dxos/cli@main
-```
-
-# Agent
-See main docs at [Agents](https://docs.dxos.org/guide/cli/agent.html)
-
-## Running an agent as a system service
-### Start an agent as a system daemon via CLI command
-
-Agent could be started as a system daemon via cli command:
-
-```terminal
-dx agent start --system
-```
-
-This command will run an agent as `launchd` service (macOS users) or as a `systemd` service (Linux users).
-
-Other useful commands:
-
-```terminal
-dx agent list --system
-dx agent restart --system
-dx agent stop --system
-```
-
-Alternatively, manual setup could be used (see below).
-
-### Install agent as a `launchd` service (macOS users) - manual setup
-1. Install DXOS CLI with steps in [Installation](#Installation) section.
-2. Replace `??NODE_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `dirname $(which node)`
-3. Replace `??DX_PATH??` in "./init-templates/org.dxos.agent.plist" with output of command `which dx`
-4. Copy `./init-templates/org.dxos.agent.plist` -> `~/Library/LaunchAgents/org.dxos.agent.plist`
-5. Run `launchctl load -w ~/Library/LaunchAgents/org.dxos.agent.plist`
-
-### Stop agent started by `launchd`
-1. Run `launchctl unload -w ~/Library/LaunchAgents/org.dxos.agent.plist`
-2. Remove `~/Library/LaunchAgents/org.dxos.agent.plist`
-
-## Install agent as a `systemd` service (Linux users) - manual setup
-1. Install DXOS CLI with steps in [Installation](#Installation) section.
-1. Copy `./init-templates/dxos-agent.service` and `./init-templates/pre-dxos-agent.service` -> `~/.config/systemd/user/`
-1. Run `systemctl --user daemon-reload` to make the systemd daemon aware of the service
-1. Run `systemctl --user enable dxos-agent` to enable the service to start automatically
-1. Optionally, run `sudo loginctl enable-linger {USERNAME}` to enable the service to start without user login (replace `{USERNAME}` with the name of the user that will run the service)
-1. Run `systemctl --user start dxos-agent` to start the service
-
-## Start agent with CLI
-Agent is automatically started by each command that requires Client (to avoid this behavior use `--no-agent` flag). You can use `--profile` flag (default value is `default`) to run agent in an isolated profile, and `--foreground` to run agent in attached process.
-```terminal
-dx agent start
-```
-see: [dx agent start](#dx-agent-start)
-
-## Adding Agent to your Composer Identity 
-1. Go to [Composer](https://composer.dev.dxos.org). And create a device invitation.
-![Composer add device](./public/composer-sidebar.png)
-![Composer invitation](./public/composer-add-device.png)
-
-2. Run halo join command in your terminal.
-![CLI halo join flow](./public/cli-halo-join.png)
-
-3. Proceed with invitation
-
-## Troubleshooting
-1. Make sure you are running the latest version of the shared worker in the browser. Go to the shared workers tab chrome://inspect/#workers, kill `dxos-vault` worker, then reload the Composer tab.
-2. Restart your agent with [```dx agent restart```](#dx-agent-restart). Also useful command[ ```dx agent stop --all```](#dx-agent-stop)
-#### Danger Zone
-3. Reset Storage. Warning: Agent will lose its storage, and config file will be deleted [```dx reset --force```](#dx-reset)
----
-
-
-# Development
-
-### Multiple Profile configuration
-Both the CLI and agents can be configured to use a given profile using either the `--profile` flag or `DX_PROFILE` environment variable.
-The CLI will automatically connect to the agent using the given profile.
-
-### Local development
-The CLI can be invoked out of the Git monorepo using the `bin/dev` command.
-
-Source the following script to set an alias for `dx` that can be called from any directory:
+The `./bin/dx` wrapper runs the CLI directly from TypeScript source via bun, with no build step required. Source-mode resolution is enabled by `--conditions=source` in the wrapper plus a small dev preload (`scripts/dev-preload.ts`) that scopes the `@opentui/solid` babel transform to the CLI's own sources.
 
 ```bash
 cd packages/devtools/cli
-. ../../devtools/cli/scripts/dev.sh
+./bin/dx --help
 ```
 
-Example:
+Set `DX_DEBUG=debug` (or `verbose`, `info`, `warn`, `error`) for log output:
 
 ```bash
-DX_PROFILE=test dx agent start  --ws=4567
+DX_DEBUG=debug ./bin/dx chat
 ```
 
-NOTE: The `agent` will need to be recompiled after any changes.
+## Compile standalone binary
 
-### Building
-To build the CLI:
+To produce a single-file binary for distribution:
 
 ```bash
-nx run cli:build --watch=true
+moon run cli:compile
 ```
 
-### Devtools
-The agent can be configured to expose a Websocket port using the `--ws` flag that can be connected to using DXOS Devtools:
+The compiled binaries land under `dist/cli-<platform>-<arch>/dx`.
 
-To connect devtools, set the `target` query parameter to the agent's websocket URL, e.g.,
+## Admin Commands
 
-`https://devtools.dxos.org?target=ws://localhost:4567`
-
-### Debugging
-
-To enable logging, set `LOG_FILTER`:
+Edge admin commands for managing spaces and identities. Requires an admin key and Edge URL,
+provided via `--admin-key` / `--edge-url` flags or `DX_HUB_API_KEY` / `DX_EDGE_BASE_URL` env vars.
 
 ```bash
-LOG_FILTER=info,agent:debug dx agent start -f
+dx admin --admin-key <key> --edge-url <url> <subcommand>
 ```
 
-If the agent is run in background mode, log files will be created in `/tmp/dx/run/profile/<profile name>/logs`
+### `admin space`
 
-To enable the node debugger, set `NODE_OPTIONS` then open in VSCode (CMD-SHIFT-P "Attach to Node process").
+| Command  | Description                        | Arguments / Options                                                                           |
+| -------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `list`   | List spaces by recent activity.    | `--limit <n>` (default 50), `--cursor <token>`, `--order asc\|desc` (default desc)            |
+| `inspect`| Inspect a space.                   | `<spaceId>` (positional)                                                                      |
+| `delete` | Delete a space (irreversible).     | `<spaceId>` (positional), `--force` required                                                  |
+| `export` | Export space snapshots.            | `<spaceId>` (positional), `--download`, `--output <path>` / `-o <path>`                       |
 
-```bash
-NODE_OPTIONS="--inspect-brk"
-```
+### `admin identity`
 
-## Reporting errors
+| Command  | Description                        | Arguments x/ Options                                                                           |
+| -------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `list`   | List identities.                   | `--limit <n>`, `--cursor <token>`                                                             |
+| `inspect`| Inspect an identity.               | `<identityKey>` (positional)                                                                  |
+| `delete` | Delete an identity (irreversible). | `<identityKey>` (positional), `--force` required                                              |
 
-Run the following command to create a gist of the debug stats.
+All commands support `--json` for machine-readable output.
 
-```bash
-dx debug stats --json --no-agent | gh gist create
-```
+## CLI Design Guide
+
+- Each command be in its own folder.
+- Keep the command definitions file simple and compact with minimal logic and a single export:
+  - IDEA(burdon): Single default export for command folder?
+  - Inline command options.
+  - Inline command handler with preconditions checks then dispatch to testable logic to other files.
+- Try to avoid product names (e.g., "composer" in args or commands).
+- ISSUE(burdon): camelCase vs hyphenated options?
+
+## Resources
+
+- [Effect CLI](https://github.com/Effect-TS/effect/blob/main/packages/cli/README.md)
+- [Effect CLI Docs](https://effect-ts.github.io/effect/docs/cli)
+- [Example](https://github.com/Effect-TS/examples/tree/main/templates/cli)
+- [OpenTUI](https://github.com/sst/opentui/tree/main/packages/solid)

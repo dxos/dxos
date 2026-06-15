@@ -2,59 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
-import { IntentResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
-import { ViewType, ExplorerAction } from './types';
+import { CreateObject, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { Graph } from '#types';
 
-export const ExplorerPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: ViewType.typename,
-          metadata: {
-            icon: 'ph--graph--regular',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: ViewType,
-            getIntent: () => createIntent(ExplorerAction.Create),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ViewType]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const ExplorerPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addSchemaModule({ schema: [Graph.Graph] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default ExplorerPlugin;

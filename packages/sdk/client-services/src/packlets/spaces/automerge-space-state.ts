@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Resource, type Context } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type CredentialProcessor, type SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 

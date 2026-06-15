@@ -21,10 +21,16 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/display-name"
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/invariant"
@@ -36,6 +42,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/markdown"
+    },
+    {
       "path": "../../common/random"
     },
     {
@@ -45,31 +54,49 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -78,7 +105,13 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -87,52 +120,61 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-calendar"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-grid"
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/react-ui-stack"
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-tag-picker"
+      "path": "../../ui/ui-editor"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-automation"
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
+      "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-observability"
+    },
+    {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-storybook-layout"
-    },
-    {
-      "path": "../plugin-table"
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

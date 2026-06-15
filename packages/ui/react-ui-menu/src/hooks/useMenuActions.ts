@@ -2,68 +2,59 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, type Rx, useRxValue } from '@effect-rx/rx-react';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
-import { type Edge, type Edges, Graph, type NodeArg, type Node, ROOT_ID } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/app-graph';
 
-import { type MenuItem, type MenuItemGroup } from '../types';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
-const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
-  return Object.fromEntries(
-    Object.entries(
-      edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
-        if (!acc[source]) {
-          acc[source] = { inbound: [], outbound: [] };
-        }
-        if (!acc[target]) {
-          acc[target] = { inbound: [], outbound: [] };
-        }
-
-        const sourceEdges = acc[source];
-        if (!sourceEdges.outbound.includes(target)) {
-          sourceEdges.outbound.push(target);
-        }
-
-        const targetEdges = acc[target];
-        if (!targetEdges.inbound.includes(source)) {
-          targetEdges.inbound.push(source);
-        }
-
-        return acc;
-      }, {}),
-    ),
-  );
+export type ActionGraphNodes = Node.NodeArg<any>[];
+export type ActionGraphEdges = Graph.Edge[];
+export type ActionGraphProps = {
+  nodes: ActionGraphNodes;
+  edges: ActionGraphEdges;
 };
 
-export type ActionGraphNodes = NodeArg<any>[];
-export type ActionGraphEdges = Edge[];
-export type ActionGraphProps = { nodes: ActionGraphNodes; edges: ActionGraphEdges };
+export type MenuActions = {
+  items: MenuItemsAccessor;
+};
 
-export const useMenuActions = (props: Rx.Rx<ActionGraphProps>) => {
+export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions => {
   const registry = useContext(RegistryContext);
-  const menuGraphProps = useRxValue(props);
+  const menuGraphProps = useAtomValue(props);
 
-  const [graph] = useState(
-    new Graph({
-      registry,
-      nodes: menuGraphProps.nodes as Node[],
-      edges: edgesArrayToRecord(menuGraphProps.edges),
-    }),
-  );
+  // Create a new graph whenever props change to preserve correct order.
+  // (Graph.addEdges appends rather than replaces, which breaks ordering on updates.)
+  // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
+  // which would trigger atom state updates in other components (setState-in-render React warning).
+  const graph = useMemo(() => {
+    const newGraph = Graph.make({ registry });
+    newGraph.pipe(Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]), Graph.addEdges(menuGraphProps.edges));
+    return newGraph;
+  }, [registry, menuGraphProps]);
 
-  useEffect(() => {
-    graph.addNodes(menuGraphProps.nodes);
-    graph.addEdges(menuGraphProps.edges);
-  }, [menuGraphProps]);
-
-  const useGroupItems = useCallback(
-    (sourceNode?: MenuItemGroup) => {
-      const items = useRxValue(graph.connections(sourceNode?.id || ROOT_ID)) as MenuItem[];
-      return items;
+  const items: MenuItemsAccessor = useCallback(
+    (group?: MenuItemGroup) => {
+      // TODO(wittjosiah): Migrate to using action relation instead of child.
+      return graph.connections(group?.id || Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
     },
     [graph],
   );
 
-  return { useGroupItems };
+  return { items };
+};
+
+/**
+ * Convenience wrapper around `useMenuActions` that creates the backing atom inline.
+ * Pass a builder thunk and a dependency list — the hook memoizes `Atom.make(build)` and threads
+ * it through `useMenuActions`. Saves the `useMemo(() => Atom.make(...), deps)` boilerplate when
+ * the action graph is composed from local state (e.g. a toolbar driven by component state).
+ *
+ * Read reactive state via `get` inside the builder; `deps` should hold only stable references.
+ */
+export const useMenuBuilder = (build: (get: Atom.Context) => ActionGraphProps, deps: DependencyList): MenuActions => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const atom = useMemo(() => Atom.make(build), deps);
+  return useMenuActions(atom);
 };

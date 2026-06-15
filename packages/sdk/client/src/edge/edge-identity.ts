@@ -5,6 +5,7 @@
 import { type EdgeIdentity } from '@dxos/edge-client';
 
 import { type Client } from '../client';
+import { RPC_TIMEOUT } from '../common';
 
 export const createEdgeIdentity = (client: Client): EdgeIdentity => {
   const identity = client.halo.identity.get();
@@ -18,10 +19,13 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
     presentCredentials: async ({ challenge }) => {
       const identityService = client.services.services.IdentityService!;
       const authCredential = await identityService.createAuthCredential();
-      return identityService.signPresentation({
-        presentation: { credentials: [authCredential] },
-        nonce: challenge,
-      });
+      return identityService.signPresentation(
+        {
+          presentation: { credentials: [authCredential] },
+          nonce: challenge,
+        },
+        { timeout: RPC_TIMEOUT },
+      );
     },
   };
 };

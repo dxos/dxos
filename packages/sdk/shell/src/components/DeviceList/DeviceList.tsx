@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
-import { Button, List, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
+import { getSize, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations';
 import { DeviceListItem } from './DeviceListItem';
 import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
 
@@ -22,10 +22,10 @@ export const DeviceList = ({
   onClickJoinExisting,
   onAgentDestroy,
 }: DeviceListProps & Partial<Pick<AgentFormProps, 'onAgentDestroy'>>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   return (
-    <div role='none' className='p-1'>
-      <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('devices heading')}</h2>
+    <div className='p-1'>
+      <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices.heading')}</h2>
       {devices.length > 0 && (
         <List>
           {devices.map((device: Device) => {
@@ -42,15 +42,15 @@ export const DeviceList = ({
       )}
       <Button
         variant='ghost'
-        classNames='justify-start gap-2 pis-0 pie-3 is-full'
+        classNames='justify-start gap-2 ps-0 pe-3 w-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >
-        <div role='img' className={mx(getSize(8), 'm-1 rounded-sm bg-inputSurface grid place-items-center')}>
-          <Plus weight='light' className={getSize(6)} />
+        <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
+          <Icon icon='ph--plus--light' size={6} />
         </div>
-        <span className='grow font-medium text-start'>{t('choose add device label')}</span>
-        <CaretRight weight='bold' className={getSize(4)} />
+        <span className='grow font-medium text-start'>{t('choose-add-device.label')}</span>
+        <Icon icon='ph--caret-right--bold' size={4} />
       </Button>
     </div>
   );

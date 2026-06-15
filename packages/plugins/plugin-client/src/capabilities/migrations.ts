@@ -2,24 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
 
-import { ClientCapabilities } from './capabilities';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
-export default (context: PluginContext) => {
-  const registry = context.getCapability(Capabilities.RxRegistry);
-  const client = context.getCapability(ClientCapabilities.Client);
+import { ClientCapabilities } from '#types';
 
-  // NOTE: Migrations are currently unidirectional and idempotent.
-  const cancel = registry.subscribe(
-    context.capabilities(ClientCapabilities.Migration),
-    (_migrations) => {
-      const migrations = Array.from(new Set(_migrations.flat()));
-      const spaces = client.spaces.get();
-      void Promise.all(spaces.map((space) => space.db.runMigrations(migrations)));
-    },
-    { immediate: true },
-  );
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const migrationsAtom = yield* Capability.atom(ClientCapabilities.Migration);
 
-  return contributes(Capabilities.Null, null, () => cancel());
-};
+    // NOTE: Migrations are currently unidirectional and idempotent.
+    const cancel = registry.subscribe(
+      migrationsAtom,
+      (_migrations: any[]) => {
+        const migrations = Array.from(new Set(_migrations.flat()));
+        const spaces = client.spaces.get();
+        void Promise.all(spaces.map((space: any) => space.internal.db.runMigrations(migrations)));
+      },
+      { immediate: true },
+    );
+
+    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cancel()));
+  }),
+);

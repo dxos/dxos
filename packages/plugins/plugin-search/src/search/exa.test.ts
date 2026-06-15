@@ -4,32 +4,18 @@
 
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { search } from './exa';
-
-const REMOTE_AI = true;
-
-const AiService = REMOTE_AI
-  ? new EdgeAiServiceClient({
-      endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-    })
-  : new OllamaAiServiceClient({
-      overrides: {
-        model: 'llama3.1:8b',
-      },
-    });
 
 describe.skip('Search', () => {
   describe('Query-based', () => {
     test.skip('contacts', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
-        schema: [Testing.Contact],
-        AiService,
+        types: [TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -39,8 +25,7 @@ describe.skip('Search', () => {
     test.skip('contacts projects and orgs', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
-        schema: [Testing.Contact, Testing.Project, Testing.Organization],
-        AiService,
+        types: [TestSchema.Person, TestSchema.Project, TestSchema.Organization],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -50,8 +35,7 @@ describe.skip('Search', () => {
     test('a19z org, projects they invest in and team', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        types: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -61,8 +45,7 @@ describe.skip('Search', () => {
     test('companies building CRDTs', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'companies building CRDTs',
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        types: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -74,8 +57,7 @@ describe.skip('Search', () => {
     test('composer context-based search', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        types: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -85,8 +67,7 @@ describe.skip('Search', () => {
     test.only('edge architecture', { timeout: 60_000 }, async () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
-        schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        types: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 
@@ -95,9 +76,7 @@ describe.skip('Search', () => {
   });
 });
 
-// TODO(dmaretskyi): Import as txt.
 const COMPOSER_DXOS_DOC = `
-
 ![img](https://dxos.network/dxos-logotype-blue.png)
 # Welcome to Composer by DXOS
 
@@ -105,7 +84,7 @@ const COMPOSER_DXOS_DOC = `
 
 Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications.
 
-With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace.
+With our SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace.
 
 ## Disclaimer
 
@@ -231,6 +210,4 @@ const EDGE_ARCHITECTURE_DOC = `
 - given the fq id of the deployment object, anyone in the space should be able to invoke the function even if they don't have access to the object itself
 
 ### Service Side
-
-
 `;

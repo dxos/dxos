@@ -2,25 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThree, ShareFat, Power, FirstAidKit } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { Device, DeviceType, DeviceKind } from '@dxos/react-client/halo';
+import { Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import {
-  ListItem,
   Avatar,
-  useId,
-  type ThemedClassName,
-  Tag,
-  useTranslation,
-  DropdownMenu,
   Button,
+  DropdownMenu,
+  Icon,
+  ListItem,
+  Tag,
+  type ThemedClassName,
+  useId,
+  useTranslation,
 } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
+import { translationKey } from '../../translations';
 import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
 
 export const DeviceListItem = forwardRef<
@@ -32,8 +32,8 @@ export const DeviceListItem = forwardRef<
   (
     {
       device,
-      onClickAdd,
-      onClickEdit,
+      onClickAdd, // TODO(burdon): Not used.
+      onClickEdit, // TODO(burdon): Not used.
       onClickReset,
       onClickRecover,
       onClickJoinExisting,
@@ -44,17 +44,17 @@ export const DeviceListItem = forwardRef<
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation('os');
+    const { t } = useTranslation(translationKey);
     const fallbackValue = keyToFallback(device.deviceKey);
     const labelId = useId('identityListItem__label');
     const displayName = device.profile
-      ? t('device name placeholder', { os: device.profile.os, platform: device.profile.platform })
+      ? t('device-name.placeholder', { os: device.profile.os, platform: device.profile.platform })
       : generateName(device.deviceKey.toHex());
     const isCurrent = device.kind === DeviceKind.CURRENT;
     return (
       <ListItem.Root
         {...props}
-        classNames={['flex gap-2 items-center mlb-2', classNames]}
+        classNames={['flex gap-2 items-center my-2', classNames]}
         data-testid={`device-list-item${isCurrent ? '-current' : ''}`}
         labelId={labelId}
         ref={forwardedRef}
@@ -81,7 +81,7 @@ export const DeviceListItem = forwardRef<
                         : device.profile.type === DeviceType.NATIVE
                           ? 'ph--desktop--regular'
                           : [DeviceType.AGENT, DeviceType.AGENT_MANAGED].includes(device.profile.type)
-                            ? 'ph--robot--regular'
+                            ? 'ph--drone--regular'
                             : device.profile.type === DeviceType.MOBILE
                               ? 'ph--device-mobile--regular'
                               : 'ph--devices--regular',
@@ -89,24 +89,24 @@ export const DeviceListItem = forwardRef<
               : { fallback: fallbackValue.emoji })}
           />
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
-          {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
+          {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
           {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
           {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <Button
                   variant='ghost'
-                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
                   onClick={onAgentDestroy}
                 >
-                  <span className='sr-only'>{t('destroy agent label')}</span>
+                  <span className='sr-only'>{t('destroy-agent.label')}</span>
                   <Power className={getSize(5)} />
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content side='bottom' classNames='z-50'>
-                  {t('destroy agent label')}
+                <Tooltip.Content side='bottom'>
+                  {t('destroy-agent.label')}
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
@@ -116,38 +116,38 @@ export const DeviceListItem = forwardRef<
               <DropdownMenu.Trigger asChild>
                 <Button
                   variant='ghost'
-                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
-                  <span className='sr-only'>{t('more options label')}</span>
-                  <DotsThree className={getSize(5)} />
+                  <span className='sr-only'>{t('more-options.label')}</span>
+                  <Icon icon='ph--dots-three--regular' />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
                 <DropdownMenu.Viewport>
                   {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
                   {/*  <PencilSimpleLine className={getSize(5)} /> */}
-                  {/*  {t('edit device label')} */}
+                  {/*  {t('edit-device.label')} */}
                   {/* </DropdownMenu.Item> */}
                   {onClickJoinExisting && (
                     <DropdownMenu.Item
                       data-testid='device-list-item-current.join-existing'
                       onClick={onClickJoinExisting}
                     >
-                      <ShareFat className={getSize(5)} />
-                      {t('choose join new identity label')}
+                      <Icon icon='ph--share-fat--regular' />
+                      {t('choose-join-new-identity.label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickRecover && (
                     <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                      <FirstAidKit className={getSize(5)} />
-                      {t('choose recover identity label')}
+                      <Icon icon='ph--first-aid-kit--regular' />
+                      {t('choose-recover-identity.label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickReset && (
                     <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                      <Power className={getSize(5)} />
-                      {t('reset device label')}
+                      <Icon icon='ph--power--regular' />
+                      {t('reset-device.label')}
                     </DropdownMenu.Item>
                   )}
                 </DropdownMenu.Viewport>

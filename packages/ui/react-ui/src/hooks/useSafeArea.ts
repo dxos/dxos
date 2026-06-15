@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { useResize } from '@dxos/react-hooks';
+import { useViewportResize } from '@dxos/react-hooks';
 
 export type SafeAreaPadding = Record<'top' | 'right' | 'bottom' | 'left', number>;
 
@@ -20,6 +20,7 @@ export const useSafeArea = (): SafeAreaPadding => {
       left: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-left')),
     });
   }, []);
-  useResize(handleResize);
+
+  useViewportResize(handleResize);
   return padding;
 };

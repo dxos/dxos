@@ -78,6 +78,13 @@ service DevtoolsHost {
   rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
   rpc SubscribeToSignal(google.protobuf.Empty) returns (stream SignalResponse);
   rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
+
+  //
+  // SQLite
+  //
+
+  rpc ExportSqliteDatabase(google.protobuf.Empty) returns (ExportSqliteDatabaseResponse);
+  rpc RunSqliteQuery(RunSqliteQueryRequest) returns (RunSqliteQueryResponse);
 }
 
 message Event {
@@ -337,4 +344,24 @@ message SubscribeToSwarmInfoRequest {}
 
 message SubscribeToSwarmInfoResponse {
   repeated dxos.devtools.swarm.SwarmInfo data = 1;
+}
+
+//
+// SQLite
+//
+
+message ExportSqliteDatabaseResponse {
+  bytes data = 1;
+}
+
+message RunSqliteQueryRequest {
+  string query = 1;
+  // JSON-encoded array of query parameters.
+  optional string params = 2;
+}
+
+message RunSqliteQueryResponse {
+  // JSON-encoded array of row objects.
+  string rows = 1;
+  optional string error = 2;
 }

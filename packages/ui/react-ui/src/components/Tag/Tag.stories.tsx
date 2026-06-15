@@ -1,27 +1,23 @@
 //
 // Copyright 2022 DXOS.org
 //
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { hues } from '@dxos/react-ui-theme';
-import '@dxos-theme';
-import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
+import { hues } from '@dxos/ui-theme';
+import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
+import { withLayout, withTheme } from '../../testing';
 import { Tag } from './Tag';
-import { withTheme } from '../../testing';
 
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 
-export default {
-  title: 'ui/react-ui-core/Tag',
+const meta = {
+  title: 'ui/react-ui-core/components/Tag',
   component: Tag,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-} as const;
-
-export const Default = {
   render: () => (
-    <div role='grid' className='grid grid-cols-5 gap-2 max-is-screen-md'>
+    <div>
       {palettes.map((palette) => (
         <Tag key={palette} palette={palette}>
           {palette}
@@ -29,4 +25,11 @@ export const Default = {
       ))}
     </div>
   ),
-};
+  decorators: [withTheme(), withLayout({ layout: 'default' })],
+} satisfies Meta<typeof Tag>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

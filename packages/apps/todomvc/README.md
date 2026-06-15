@@ -3,5 +3,5 @@
 ## Development
 
 ```bash
-pnpm -w nx run todomvc:serve
+moon run todomvc:bundle
 ```

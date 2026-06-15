@@ -2,161 +2,96 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
+import React, { useCallback } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { type StoryObj, type Meta } from '@storybook/react';
-import { Schema } from 'effect';
-import React, { useCallback, useMemo, useRef } from 'react';
-
-import { Obj, Type } from '@dxos/echo';
-import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
+import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { random } from '@dxos/random';
+import { PublicKey } from '@dxos/react-client';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
-import { Testing, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
-import { Table, type TableController } from './Table';
-import { useTableModel } from '../../hooks';
-import { TablePresentation } from '../../model';
-import translations from '../../translations';
-import { TableType } from '../../types';
-import { initializeTable } from '../../util';
-import { TableToolbar } from '../TableToolbar';
+import { translations } from '#translations';
 
-faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+import { useTestTableModel } from '../../testing';
+import { Table } from '../../types';
+import { Table as TableComponent } from './Table';
 
-/**
- * Custom hook to create and manage a test table model for storybook demonstrations.
- * Provides table data, schema, and handlers for table operations.
- */
-const useTestTableModel = () => {
-  const client = useClient();
-  const { space } = useClientProvider();
+const Example = Schema.Struct({
+  // TODO(wittjosiah): Should be title. Currently name to work with default label.
+  name: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+  urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
+  status: Schema.optional(
+    Schema.Literal('todo', 'in-progress', 'done')
+      .pipe(Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect))
+      .annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'todo', title: 'Todo', color: 'indigo' },
+              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'done', title: 'Done', color: 'amber' },
+            ],
+          },
+        },
+      }),
+  ),
+  description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  parent: Schema.optional(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))).annotations({
+    title: 'Parent',
+  }),
+}).pipe(
+  Annotation.LabelAnnotation.set(['name']),
+  // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
+);
+interface Example extends Type.InstanceType<typeof Example> {}
 
-  const filter = useMemo(() => Filter.type(TableType), []);
-  const tables = useQuery(space, filter);
-  const table = useMemo(() => tables.at(0), [tables]);
-  const schema = useSchema(client, space, table?.view?.target?.query.typename);
-
-  const projection = useMemo(() => {
-    if (schema && table?.view?.target) {
-      return new ViewProjection(toJsonSchema(schema), table.view.target);
-    }
-  }, [schema, table?.view?.target]);
-
-  const features = useMemo(
-    () => ({
-      selection: { enabled: true, mode: 'multiple' as const },
-      dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
-    }),
-    [schema],
-  );
-
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
-  const tableRef = useRef<TableController>(null);
-  const handleCellUpdate = useCallback((cell: any) => {
-    tableRef.current?.update?.(cell);
-  }, []);
-
-  const handleRowOrderChange = useCallback(() => {
-    tableRef.current?.update?.();
-  }, []);
-
-  const handleInsertRow = useCallback(() => {
-    if (space && schema) {
-      space.db.add(live(schema, {}));
-    }
-  }, [space, schema]);
-
-  const handleDeleteRows = useCallback(
-    (_: number, objects: any[]) => {
-      for (const object of objects) {
-        space?.db.remove(object);
-      }
-    },
-    [space],
-  );
-
-  const handleDeleteColumn = useCallback(
-    (fieldId: string) => {
-      if (projection) {
-        projection.deleteFieldProjection(fieldId);
-      }
-    },
-    [projection],
-  );
-
-  const model = useTableModel({
-    table,
-    projection,
-    features,
-    rows: filteredObjects,
-    onInsertRow: handleInsertRow,
-    onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: handleCellUpdate,
-    onRowOrderChange: handleRowOrderChange,
-  });
-
-  const handleSaveView = useCallback(() => {
-    model?.saveView();
-  }, [model]);
-
-  const presentation = useMemo(() => {
-    if (model) {
-      return new TablePresentation(model);
-    }
-  }, [model]);
-
-  return {
-    schema,
-    table,
-    tableRef,
-    model,
-    presentation,
-    space,
-    client,
-    handleInsertRow,
-    handleSaveView,
-    handleDeleteRows,
-    handleDeleteColumn,
-  };
-};
-
-const StoryViewEditor = () => {
-  const { table, space, schema, handleDeleteColumn } = useTestTableModel();
-
-  const handleTypenameChanged = useCallback(
-    (typename: string) => {
+const StoryViewEditor = ({
+  view,
+  schema,
+  db,
+  handleDeleteColumn,
+}: {
+  view?: View.View;
+  schema?: Type.AnyEntity;
+  db?: Database.Database;
+  handleDeleteColumn: (fieldId: string) => void;
+}) => {
+  const handleQueryChanged = useCallback(
+    (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(Type.isMutable(schema));
-      schema.updateTypename(typename);
-      invariant(table?.view?.target);
-      table.view.target.query.typename = typename;
+      invariant(Type.getDatabase(schema) != null);
+      invariant(view);
+      Obj.update(view, (view) => {
+        view.query.ast = newQuery as Mutable<typeof newQuery>;
+      });
     },
-    [schema, table?.view?.target],
+    [schema, view],
   );
 
-  if (!table || !schema || !table.view?.target) {
+  if (!view || !schema) {
     return null;
   }
 
   return (
     <ViewEditor
-      registry={space?.db.schemaRegistry}
-      schema={schema}
-      view={table.view.target!}
-      onTypenameChanged={handleTypenameChanged}
+      registry={db?.graph.registry}
+      type={schema}
+      view={view}
+      onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}
     />
   );
@@ -167,102 +102,147 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, client, handleInsertRow, handleSaveView } = useTestTableModel();
+  const { db, schema, table, tableRef, model, presentation, handleInsertRow, handleSaveView, handleDeleteColumn } =
+    useTestTableModel();
 
-  if (!schema || !table) {
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        handleInsertRow();
+      }
+    },
+    [model, handleInsertRow],
+  );
+
+  if (!schema || !table?.view.target) {
     return <div />;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
-        <Table.Root>
-          <Table.Main
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            schema={schema}
-            client={client}
-            ignoreAttention
-          />
-        </Table.Root>
-      </div>
-      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
-        <StoryViewEditor />
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
-        </SyntaxHighlighter>
-      </div>
+      <TableComponent.Root ref={tableRef}>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <TableComponent.Toolbar
+              classNames='border-b border-subdued-separator'
+              onAdd={handleInsertRow}
+              onSave={handleSaveView}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <TableComponent.Content
+              schema={schema}
+              model={model}
+              presentation={presentation}
+              onRowClick={handleRowClick}
+              ignoreAttention
+            />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
+      <ScrollArea.Root orientation='vertical' classNames='border-l border-separator'>
+        <ScrollArea.Viewport>
+          <StoryViewEditor view={table.view.target} schema={schema} db={db} handleDeleteColumn={handleDeleteColumn} />
+          <JsonHighlighter data={{ view: table.view.target, schema }} classNames='text-xs' />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 };
 
-type StoryProps = { rows?: number };
+type DefaultStoryProps = { rows?: number };
 
 //
 // Story definitions.
 //
 
-// TODO(burdon): Need super simple story.
+// TODO(burdon): Need simpler story.
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations, controls: { disable: true } },
   decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withRegistry,
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        const schema = await initializeTable({ client, space, table, initialRow: false });
+      onCreateSpace: async ({ space }) => {
+        const type = await space.db.addType(Example);
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(type),
+        });
+        const table = Table.make({ view, jsonSchema });
+        Obj.update(view, (view) => {
+          view.projection.fields = [
+            view.projection.fields.find((field) => field.path === 'name')!,
+            ...view.projection.fields.filter((field) => field.path !== 'name'),
+          ];
+        });
+
+        space.db.add(table);
+
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(schema, {
-              name: faker.person.fullName(),
+            Obj.make(type, {
+              name: random.lorem.sentence(),
+              status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              description: random.lorem.paragraph(),
             }),
           );
         });
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
-};
+  parameters: {
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
+    translations: [...translations, ...formTranslations],
+  },
+} satisfies Meta<typeof TableComponent>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
 
 export const StaticSchema: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
+      types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        await initializeTable({ client, space, table, typename: Testing.Organization.typename });
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(TestSchema.Person),
+        });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
 
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([
-          // { type: Testing.Contact, count: 10 },
-          // { type: Testing.Organization, count: 1 },
-          { type: ContactWithArrayOfEmails, count: 10 },
+          { type: TestSchema.Person, count: 10 },
+          // { type: TestSchema.Organization, count: 1 },
         ]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...formTranslations],
+  },
 };
 
 const ContactWithArrayOfEmails = Schema.Struct({
-  name: Schema.String.pipe(GeneratorAnnotation.set('person.fullName')),
+  name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('person.fullName')),
   emails: Schema.optional(
     Schema.Array(
       Schema.Struct({
@@ -271,50 +251,104 @@ const ContactWithArrayOfEmails = Schema.Struct({
       }),
     ),
   ),
-}).pipe(
-  EchoObject({
-    typename: 'dxos.org/type/ContactWithArrayOfEmails',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [View.View, Table.Table, TestSchema.Person, TestSchema.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(ContactWithArrayOfEmails),
+        });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
 
-        const factory = createObjectFactory(space.db, faker as any);
+        const factory = createObjectFactory(space.db, random as any);
         await factory([
-          // { type: Testing.Contact, count: 10 },
-          // { type: Testing.Organization, count: 1 },
+          // { type: TestSchema.Person, count: 10 },
+          // { type: TestSchema.Organization, count: 1 },
           { type: ContactWithArrayOfEmails, count: 10 },
         ]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
-export const Tags: Meta<StoryProps> = {
-  title: 'ui/react-ui-table/Table',
+export const RequiredSchema: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [View.View, Table.Table, TestSchema.Person],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ space }) => {
+        // TestSchema.Person has a required `name: Schema.String` field.
+        // No pre-populated rows so the add-row flow is the first interaction.
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(TestSchema.Person),
+        });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
+      },
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...formTranslations],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 30 s covers ECHO client + space + table creation (the only inherently slow step).
+    const addRowButton = await canvas.findByTestId('table.toolbar.add-row', undefined, { timeout: 30_000 });
+
+    // Person.name is required, so db.add throws → useAddRow returns 'draft' →
+    // a draft row appears in frozenRowsEnd and focus is set to its first cell.
+    await userEvent.click(addRowButton);
+
+    const draftCell = await canvas.findByTestId('frozenRowsEnd.0.0');
+    await userEvent.click(draftCell);
+
+    // Open the editor with Enter rather than typing to open — the latter routes the first
+    // character into dx-grid's `initialContent` and races the editor mount. The empty value
+    // fails validation; the editor must stay open so the value below can be entered.
+    await userEvent.keyboard('{Enter}');
+    await canvas.findByTestId('grid.cell-editor');
+
+    // The editor is focused (autoFocus); type the required value and commit.
+    await userEvent.keyboard('Alice');
+    await userEvent.keyboard('{Enter}');
+
+    // The draft row is committed and appears in the grid with the typed value.
+    await waitFor(async () => {
+      const cell = canvas.getByTestId('grid.0.0');
+      const text = cell.querySelector('.dx-grid__cell__content')?.textContent;
+      await expect(text).toBe('Alice');
+    });
+  },
+};
+
+export const Tags: Meta<DefaultStoryProps> = {
+  title: 'ui/react-ui-table/Table',
+  render: DefaultStory,
+  decorators: [
+    withClientProvider({
+      types: [View.View, Table.Table],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'example.com/SingleSelect';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },
@@ -325,36 +359,39 @@ export const Tags: Meta<StoryProps> = {
 
         const selectOptionIds = selectOptions.map((o) => o.id);
 
-        const schema = getSchemaFromPropertyDefinitions(typename, [
+        const type = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: Format.TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: Format.TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
+        const storedType = await space.db.addType(type);
 
         // Initialize table.
-        const table = space.db.add(Obj.make(TableType, {}));
-        await initializeTable({ client, space, table, initialRow: false, typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
 
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(storedSchema, {
-              single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
-              multiple: faker.helpers.randomSubset(selectOptionIds),
+            Obj.make(Type.assertObject(storedType), {
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
             }),
           );
         });
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };

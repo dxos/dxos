@@ -5,11 +5,13 @@ import { $, cd, chalk, fs, question } from 'zx';
 /**
  * Auto-fix common issues before a CI run.
  * 1. If there are any uncommitted changes, abort with error.
- * 2. Merge the latest origin/main.
- * 3. Run pnpm install and commit the changes if any.
- * 4. Run pnpm -w nx run-many --target=lint --fix. If it errors -- abort, otherwise commit changes if any.
- * 5. Push
- * 6. Run pnpm -w nx run-many --target=build,test
+ * 2. Run circular dependency check.
+ * 3. Merge the latest origin/main.
+ * 4. Run pnpm install and commit the changes if any.
+ * 5. Run pnpm run format and commit changes if any.
+ * 6. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
+ * 7. Push
+ * 8. Run moon run :build :test
  */
 
 // Set error handling to capture specific failures
@@ -66,8 +68,18 @@ async function main() {
   }
   console.log(chalk.green('No uncommitted changes found. Proceeding...'));
 
-  // Step 2: Merge the latest origin/main
-  console.log(chalk.blue('Step 2: Merging latest origin/main...'));
+  // Step 2: Run cycle check
+  console.log(chalk.blue('Step 2: Running circular dependency check...'));
+  try {
+    await $`pnpm run check-cycles`;
+    console.log(chalk.green('No circular dependencies found.'));
+  } catch (error) {
+    console.error(chalk.red('Circular dependency check failed:'), error.message);
+    process.exit(1);
+  }
+
+  // Step 3: Merge the latest origin/main
+  console.log(chalk.blue('Step 3: Merging latest origin/main...'));
   try {
     // Fetch the latest changes from origin
     await $`git fetch origin`;
@@ -127,12 +139,12 @@ async function main() {
       console.log(chalk.yellow('Current branch is main. Skipping merge step.'));
     }
   } catch (error) {
-    console.error(chalk.red('Error fetching or identifying branch:'), error);
+    console.error(chalk.red('Error fetching or identifying branch:'), error.message);
     process.exit(1);
   }
 
-  // Step 3: Run pnpm install and commit changes if any
-  console.log(chalk.blue('Step 3: Running pnpm install...'));
+  // Step 4: Run pnpm install and commit changes if any
+  console.log(chalk.blue('Step 4: Running pnpm install...'));
   try {
     await $`pnpm install`;
 
@@ -142,14 +154,29 @@ async function main() {
       console.log(chalk.green('No changes after pnpm install.'));
     }
   } catch (error) {
-    console.error(chalk.red('Error during pnpm install:'), error);
+    console.error(chalk.red('Error during pnpm install:'), error.message);
     process.exit(1);
   }
 
-  // Step 4: Run lint with fixes and commit changes if any
-  console.log(chalk.blue('Step 4: Running linting with auto-fix...'));
+  // Step 5: Run oxfmt formatting and commit changes if any
+  console.log(chalk.blue('Step 5: Running oxfmt formatting...'));
   try {
-    await $`pnpm -w nx run-many --target=lint --fix`;
+    await $`pnpm run format`;
+
+    if (await hasUncommittedChanges()) {
+      await commitChanges('style: format with oxfmt');
+    } else {
+      console.log(chalk.green('No formatting changes needed.'));
+    }
+  } catch (error) {
+    console.error(chalk.red('Formatting failed:'), error.message);
+    process.exit(1);
+  }
+
+  // Step 6: Run lint with fixes and commit changes if any
+  console.log(chalk.blue('Step 6: Running linting with auto-fix...'));
+  try {
+    await $`moon exec --on-failure continue --quiet :lint -- --fix`;
 
     if (await hasUncommittedChanges()) {
       await commitChanges('style: fix linting issues');
@@ -157,27 +184,33 @@ async function main() {
       console.log(chalk.green('No linting issues to fix.'));
     }
   } catch (error) {
-    console.error(chalk.red('Linting failed with errors that could not be auto-fixed:'), error);
+    console.error(chalk.red('Linting failed with errors that could not be auto-fixed:'), error.message);
     process.exit(1);
   }
 
-  // Step 5: Push changes to remote
-  console.log(chalk.blue('Step 5: Pushing changes to remote...'));
+  // Step 7: Push changes to remote
+  console.log(chalk.blue('Step 7: Pushing changes to remote...'));
   try {
     await $`git push`;
     console.log(chalk.green('Successfully pushed changes.'));
   } catch (error) {
-    console.error(chalk.red('Failed to push changes:'), error);
+    console.error(chalk.red('Failed to push changes:'), error.message);
     process.exit(1);
   }
 
-  // Step 6: Run build and test
-  console.log(chalk.blue('Step 6: Running build and tests...'));
+  // Step 8: Run build and test
+  console.log(chalk.blue('Step 8: Running build and tests...'));
   try {
-    await $`pnpm -w nx run-many --target=build,test`;
+    await $`moon exec --on-failure continue --quiet :build`;
+    await $({
+      env: {
+        ...process.env,
+        CI: 1,
+      },
+    })`moon exec --on-failure continue --quiet :test :test-browser -- --no-file-parallelism`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
-    console.error(chalk.red('Build or tests failed:'), error);
+    console.error(chalk.red('Build or tests failed:'), error.message);
     process.exit(1);
   }
 

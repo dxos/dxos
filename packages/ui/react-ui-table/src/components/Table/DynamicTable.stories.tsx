@@ -2,41 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { FormatEnum, type JsonSchemaType } from '@dxos/echo-schema';
-import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
+import { random } from '@dxos/random';
+import { useQuery, useType } from '@dxos/react-client/echo';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { TestSchema } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
-import { DynamicTable } from './DynamicTable';
+import { translations } from '#translations';
+
 import { type TableFeatures } from '../../model';
-import translations from '../../translations';
+import { DynamicTable } from './DynamicTable';
 
-faker.seed(0);
+random.seed(0);
 
 const useTestPropertiesAndObjects = () => {
   const properties = useMemo<SchemaPropertyDefinition[]>(
     () => [
-      { name: 'name', format: FormatEnum.String },
-      { name: 'age', format: FormatEnum.Number },
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'age', format: Format.TypeFormat.Number },
     ],
     [],
   );
 
   const [rows] = useState<any[]>(
     Array.from({ length: 10 }, () => ({
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      age: faker.number.int({ min: 18, max: 80 }),
+      id: random.string.uuid(),
+      name: random.person.fullName(),
+      age: random.number.int({ min: 18, max: 80 }),
     })),
   );
 
@@ -56,14 +56,19 @@ const DynamicTableStory = () => {
 // Story definitions.
 //
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  parameters: { translations },
-  decorators: [withLayout({ fullscreen: true }), withTheme],
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DynamicTable>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: StoryObj = {
   render: DynamicTableStory,
@@ -97,7 +102,7 @@ export const WithClickToSelect: StoryObj = {
 
 export const WithJsonSchema: StoryObj = {
   render: () => {
-    const schema = useMemo<JsonSchemaType>(
+    const schema = useMemo<Types.DeepMutable<JsonSchema.JsonSchema>>(
       () => ({
         type: 'object',
         properties: {
@@ -113,10 +118,10 @@ export const WithJsonSchema: StoryObj = {
 
     const [rows] = useState<any[]>(
       Array.from({ length: 15 }, () => ({
-        name: faker.person.fullName(),
-        age: faker.number.int({ min: 18, max: 80 }),
-        email: faker.internet.email(),
-        active: faker.datatype.boolean(),
+        name: random.person.fullName(),
+        age: random.number.int({ min: 18, max: 80 }),
+        email: random.internet.email(),
+        active: random.datatype.boolean(),
       })),
     );
 
@@ -126,27 +131,26 @@ export const WithJsonSchema: StoryObj = {
 
 export const WithEchoSchema: StoryObj = {
   render: () => {
-    const client = useClient();
-    const { space } = useClientProvider();
-    const schema = useSchema(client, space, Testing.Contact.typename);
-    const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
-    if (!schema) {
+    const { space } = useClientStory();
+    const type = useType(space?.db, Type.getURI(TestSchema.Person));
+    const objects = useQuery(space?.db, type ? Filter.type(type) : Filter.nothing());
+    if (!type) {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable schema={schema} rows={objects} />;
+    return <DynamicTable type={type} rows={objects} />;
   },
   decorators: [
     withClientProvider({
-      types: [Testing.Contact],
+      types: [TestSchema.Person],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
+      onCreateSpace: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            Obj.make(Testing.Contact, {
-              name: faker.person.fullName(),
-              email: faker.internet.email(),
+            Obj.make(TestSchema.Person, {
+              name: random.person.fullName(),
+              email: random.internet.email(),
             }),
           );
         });

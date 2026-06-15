@@ -1,0 +1,70 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { type MakeOptional } from '@dxos/util';
+
+import * as Actor from './Actor';
+import * as ContentBlock from './ContentBlock';
+
+/**
+ * Message object.
+ */
+// TODO(wittjosiah): Add read status:
+//  - Read receipts need to be per space member.
+//  - Read receipts don't need to be added to schema until they being implemented.
+export const Message = Schema.Struct({
+  id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
+  parentMessage: Schema.optional(Obj.ID),
+  /** Optional grouping identifier for related messages. */
+  threadId: Schema.optional(Schema.String),
+  /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */
+  created: Schema.String.pipe(
+    Schema.annotations({ description: 'ISO date string when the message was sent.' }),
+    GeneratorAnnotation.set('date.iso8601'),
+  ),
+  sender: Actor.Actor.pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
+  blocks: Schema.Array(ContentBlock.Any).annotations({
+    description: 'Contents of the message.',
+    default: [],
+  }),
+  // TODO(dmaretskyi): Add tool call ID here.
+  properties: Schema.optional(
+    Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+      description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
+    }),
+  ),
+}).pipe(
+  LabelAnnotation.set(['properties.subject']),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+  Type.makeObject(DXN.make('org.dxos.type.message', '0.1.0')),
+);
+
+export type Message = Type.InstanceType<typeof Message>;
+export const make = ({
+  created,
+  sender,
+  blocks = [],
+  properties,
+  ...rest
+}: MakeOptional<Omit<Obj.MakeProps<typeof Message>, 'sender'>, 'created' | 'blocks'> & {
+  sender: Actor.Actor | Actor.Role;
+}) => {
+  return Obj.make(Message, {
+    created: created ?? new Date().toISOString(),
+    sender: typeof sender === 'string' ? { role: sender } : sender,
+    blocks,
+    properties,
+    ...rest,
+  });
+};
+
+export const extractText = (message: Message): string => {
+  return message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
+};

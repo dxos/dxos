@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -45,34 +48,28 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../plugins/plugin-search"
-    },
-    {
-      "path": "../../plugins/plugin-space"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../lit-grid"
+    },
+    {
+      "path": "../lit-ui"
     },
     {
       "path": "../react-ui"
     },
     {
       "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-components"
     },
     {
       "path": "../react-ui-editor"
@@ -84,10 +81,13 @@
       "path": "../react-ui-grid"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../react-ui-menu"
     },
     {
-      "path": "../react-ui-searchlist"
+      "path": "../react-ui-search"
     },
     {
       "path": "../react-ui-stack"
@@ -96,13 +96,10 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-tag-picker"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

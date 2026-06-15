@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { type FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
 import { TestItemBuilder } from './testing';
@@ -14,7 +14,7 @@ import { type FeedBlock } from './types';
 
 // Random selector.
 const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
-  faker.number.int({ min: 0, max: blocks.length - 1 });
+  random.number.int({ min: 0, max: blocks.length - 1 });
 
 // TODO(burdon): Create randomized setTimeout to test race conditions.
 
@@ -79,7 +79,7 @@ describe('FeedSetIterator', () => {
 
       // Write block.
       setTimeout(async () => {
-        const feed = faker.helpers.arrayElement(feeds);
+        const feed = random.helpers.arrayElement(feeds);
         await builder.generator.writeBlocks(feed.createFeedWriter(), {
           count: numBlocks,
         });
@@ -119,14 +119,14 @@ describe('FeedSetIterator', () => {
         expect(iterator.size).to.eq(numFeeds);
 
         for (const _ of Array.from(Array(numBlocks))) {
-          const writer = faker.helpers.arrayElement(writers);
+          const writer = random.helpers.arrayElement(writers);
           const receipts = await builder.generator.writeBlocks(writer, {
             count: 1,
           });
           log('wrote', receipts);
         }
       },
-      faker.number.int({ min: 0, max: 100 }),
+      random.number.int({ min: 0, max: 100 }),
     );
 
     // Open and start iterator.
@@ -147,7 +147,7 @@ describe('FeedSetIterator', () => {
           }
         }
       },
-      faker.number.int({ min: 0, max: 100 }),
+      random.number.int({ min: 0, max: 100 }),
     );
 
     // Wait until all written and read.

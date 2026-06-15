@@ -2,12 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { type FileCapabilities } from '@dxos/plugin-file/types';
 
-export const Blockstore = lazy(() => import('./blockstore'));
-export const FileUploader = lazy(() => import('./file-uploader'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const Markdown = lazy(() => import('./markdown'));
-export const ReactSurface = lazy(() => import('./react-surface'));
+export const Backend: Capability.LazyCapability<
+  void,
+  Capability.Capability<Capability.InterfaceDef<FileCapabilities.Backend>>
+> = Capability.lazy('Backend', () => import('./backend'));
 
-export * from './capabilities';
+export const Blockstore = Capability.lazy('Blockstore', () => import('./blockstore'));
+
+export const UrlResolver: Capability.LazyCapability<
+  void,
+  Capability.Capability<Capability.InterfaceDef<FileCapabilities.UrlResolver>>
+> = Capability.lazy('UrlResolver', () => import('./url-resolver'));

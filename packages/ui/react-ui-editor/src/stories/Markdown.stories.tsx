@@ -2,64 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { markdown } from '@codemirror/lang-markdown';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { decorateMarkdown, image, join, linkTooltip, table } from '@dxos/ui-editor';
 
 import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
-import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
-import { str } from '../testing';
 
-const meta: Meta<typeof EditorStory> = {
+const meta = {
   title: 'ui/react-ui-editor/Markdown',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 //
 // Default
 //
 
-export const Default = {
+export const Default: Story = {
   render: () => <EditorStory text={text} extensions={defaultExtensions} />,
 };
 
-export const Blockquote = {
+export const Blockquote: Story = {
   render: () => (
     <EditorStory
-      text={str('> Blockquote', 'continuation', content.footer)}
+      text={join('> Blockquote', 'continuation', content.footer)}
       extensions={decorateMarkdown()}
       debug='raw'
     />
   ),
 };
 
-export const Headings = {
+export const Headings: Story = {
   render: () => <EditorStory text={headings} extensions={decorateMarkdown({ numberedHeadings: { from: 2, to: 4 } })} />,
 };
 
-export const Links = {
-  render: () => <EditorStory text={str(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />,
+export const Links: Story = {
+  render: () => (
+    <EditorStory text={join(content.links, content.footer)} extensions={[linkTooltip(renderLinkTooltip)]} />
+  ),
 };
 
-export const Image = {
-  render: () => <EditorStory text={str(content.image, content.footer)} extensions={[image()]} />,
+export const Image: Story = {
+  render: () => <EditorStory text={join(content.image, content.footer)} extensions={[image()]} />,
 };
 
-export const Code = {
-  render: () => <EditorStory text={str(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
+export const Code: Story = {
+  render: () => <EditorStory text={join(content.codeblocks, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
-export const Lists = {
+export const Lists: Story = {
   render: () => (
     <EditorStory
-      text={str(content.tasks, '', content.bullets, '', content.numbered, content.footer)}
+      text={join(content.tasks, '', content.bullets, '', content.numbered, content.footer)}
       extensions={[decorateMarkdown()]}
     />
   ),
@@ -69,48 +73,48 @@ export const Lists = {
 // Bullet List
 //
 
-export const BulletList = {
-  render: () => <EditorStory text={str(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
+export const BulletList: Story = {
+  render: () => <EditorStory text={join(content.bullets, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 //
 // Ordered List
 //
 
-export const OrderedList = {
-  render: () => <EditorStory text={str(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
+export const OrderedList: Story = {
+  render: () => <EditorStory text={join(content.numbered, content.footer)} extensions={[decorateMarkdown()]} />,
 };
 
 //
 // Task List
 //
 
-export const TaskList = {
+export const TaskList: Story = {
   render: () => (
-    <EditorStory text={str(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
+    <EditorStory text={join(content.tasks, content.footer)} extensions={[decorateMarkdown()]} debug='raw+tree' />
   ),
 };
 
-export const TaskListEmpty = {
-  render: () => <EditorStory text={str('- [ ] ')} extensions={[decorateMarkdown()]} debug='raw+tree' />,
+export const TaskListEmpty: Story = {
+  render: () => <EditorStory text={join('- [ ] ')} extensions={[decorateMarkdown()]} debug='raw+tree' />,
 };
 
 //
 // Table
 //
 
-export const Table = {
-  render: () => <EditorStory text={str(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
+export const Table: Story = {
+  render: () => <EditorStory text={join(content.table, content.footer)} extensions={[decorateMarkdown(), table()]} />,
 };
 
 //
 // Commented out
 //
 
-export const CommentedOut = {
+export const CommentedOut: Story = {
   render: () => (
     <EditorStory
-      text={str('# Commented out', '', content.comment, content.footer)}
+      text={join('# Commented out', '', content.comment, content.footer)}
       extensions={[
         decorateMarkdown(),
         markdown(),

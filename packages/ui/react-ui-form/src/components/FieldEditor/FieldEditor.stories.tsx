@@ -2,39 +2,64 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useEffect, useMemo } from 'react';
 
-import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useMemo, useEffect } from 'react';
-
-import { createEchoSchema } from '@dxos/live-object/testing';
+import { Filter, Query, Type } from '@dxos/echo';
+import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
-import { ViewProjection } from '@dxos/schema';
-import { TestSchema, testView } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
+import { Example } from '@dxos/schema/testing';
 
+import { translations } from '#translations';
+
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout } from '../testing';
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
-import translations from '../../translations';
-import { TestLayout, TestPanel, FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
-// Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {
   props: FieldEditorProps;
-  projection: ViewProjection;
+  projection: ProjectionModel;
 };
 
-type StoryProps = FieldEditorProps;
+const useTestProjection = () => {
+  return useMemo(() => {
+    const schema = createEchoSchema(Type.getSchema(Example));
+    const view = ViewModel.make({
+      name: 'Test',
+      query: Query.select(Filter.type(Example)),
+      jsonSchema: schema.jsonSchema,
+    });
+    const projection = new ProjectionModel({
+      view,
+      baseSchema: schema.jsonSchema,
+      change: createEchoChangeCallback(view, schema),
+    });
+    projection.normalizeView();
+    return { view, projection };
+  }, []);
+};
 
-const DefaultStory = (props: FieldEditorProps) => {
-  const projection = useMemo(() => new ViewProjection(createEchoSchema(TestSchema).jsonSchema, testView), []);
+const DefaultStory = () => {
+  const { view, projection } = useTestProjection();
+
   const handleComplete: FieldEditorProps['onSave'] = () => {
-    log.info('onClose', { props });
+    log.info('onClose');
+  };
+
+  const props: FieldEditorProps = {
+    projection,
+    field: view.projection.fields[0],
+    onSave: handleComplete,
   };
 
   // Expose objects on window for test access.
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] = { props, projection } satisfies FieldEditorDebugObjects;
+      (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] = {
+        props,
+        projection,
+      } satisfies FieldEditorDebugObjects;
     }
   }, [props, projection]);
 
@@ -46,31 +71,27 @@ const DefaultStory = (props: FieldEditorProps) => {
 
   return (
     <TestLayout json={json}>
-      <TestPanel>
-        <FieldEditor {...props} projection={projection} onSave={handleComplete} />
-      </TestPanel>
+      <FieldEditor {...props} />
     </TestLayout>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-form/FieldEditor',
-  component: FieldEditor,
+  component: FieldEditor as any,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
+    layout: 'fullscreen',
     translations,
+    controls: {
+      disabled: true,
+    },
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    view: testView,
-    field: testView.fields[0],
-  },
-  parameters: { controls: { disabled: true } },
-};
+export const Default: Story = {};

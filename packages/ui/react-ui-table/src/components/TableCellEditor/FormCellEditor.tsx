@@ -2,80 +2,161 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import type * as Schema from 'effect/Schema';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getSnapshot } from '@dxos/echo-schema';
+import { Entity, Ref, Type } from '@dxos/echo';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Popover } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { type Label, Popover } from '@dxos/react-ui';
+import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
-import { getDeep, setDeep } from '@dxos/util';
+import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
-import { type TableModel } from '../../model';
+import { translationKey } from '#translations';
+
+import { type ModalController, type TableModel, type TableRow } from '../../model';
 import { narrowSchema } from '../../util';
 
-type FormCellEditorProps = {
-  fieldProjection: FieldProjection;
-  model?: TableModel;
-  schema?: Schema.Schema.AnyNoContext;
-  __gridScope: any;
-};
+const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
 
-export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: FormCellEditorProps) => {
-  const { editing, setEditing } = useGridContext('ArrayEditor', __gridScope);
-  const cellRef = useRef<HTMLButtonElement | null>(null);
+export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
+
+export type FormCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
+  __gridScope: any;
+  schema?: T;
+  model?: TableModel;
+  fieldProjection: FieldProjection;
+  modals?: ModalController; // TODO(burdon): Not used. Remove?
+  onSave?: () => void;
+  onCreate?: OnCreateHandler;
+} & Omit<FormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
+
+export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
+  __gridScope,
+  schema,
+  model,
+  fieldProjection,
+  onSave,
+  onCreate,
+  ...formProps
+}: FormCellEditorProps<T>) => {
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const { id: _gridId, editing: contextEditing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+  const [editing, setLocalEditing] = useState(false);
 
   useEffect(() => {
-    if (editing && editing.cellElement) {
-      cellRef.current = editing.cellElement as HTMLButtonElement;
+    if (contextEditing && contextEditing.cellElement) {
+      anchorRef.current = (contextEditing.cellElement as HTMLElement).querySelector(
+        '.dx-grid__cell__content',
+      ) as HTMLButtonElement;
+      setLocalEditing(true);
+    } else {
+      anchorRef.current = null;
+      setLocalEditing(false);
     }
-  }, [editing?.cellElement]);
+  }, [contextEditing]);
 
-  const narrowedSchema = useMemo(() => {
+  const narrowedSchema = useMemo<Schema.Schema.AnyNoContext | undefined>(() => {
     if (!schema) {
       return undefined;
     }
-    return narrowSchema(schema, [fieldProjection.field.path]);
+
+    return narrowSchema(Type.getSchema(schema), [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
-  const originalRow = useMemo(() => {
-    if (model && editing) {
-      const cell = parseCellIndex(editing.index);
-      const row = model.getRowAt(cell.row);
-      invariant(row);
-
-      return row;
+  const originalRow = useMemo<TableRow | undefined>(() => {
+    if (model && contextEditing) {
+      // Check if this is a draft cell and get the appropriate row data
+      const cell = parseCellIndex(contextEditing.index);
+      if (model.isDraftCell(cell)) {
+        const draftRow = model.getDraftRows()[cell.row];
+        invariant(draftRow);
+        return draftRow.data;
+      } else {
+        const row = model.getRowAt(cell.row);
+        invariant(row);
+        return row;
+      }
     }
 
     return undefined;
-  }, [model, editing]);
+  }, [model, contextEditing]);
 
-  const formValues = useMemo(() => {
-    if (originalRow) {
-      // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
-      return getSnapshot(originalRow);
+  // NOTE: Important to get a mutable deep clone to eject from the echo object.
+  // TODO(wittjosiah): Consider using something like Obj.clone for this use case.
+  const initialFormValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
+  const [formValues, setFormValues] = useState<any>(initialFormValues);
+
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps<any>['onValuesChanged']>>((values) => {
+    setFormValues(values);
+  }, []);
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (nextOpen === false) {
+      setEditing(null);
+      onSave?.();
     }
-  }, [originalRow]);
+    setLocalEditing(nextOpen);
+  }, []);
 
-  const handleSave = useCallback(
-    (values: any) => {
+  const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>(
+    (values) => {
+      if (!originalRow) {
+        return;
+      }
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
-      setDeep(originalRow, [path], value);
+      // Use model's changeRow for consistent mutation handling.
+      if (model) {
+        model.changeRow(originalRow, (mutableRow) => {
+          setDeep(mutableRow, [path], value);
+        });
+      } else {
+        setDeep(originalRow, [path], value);
+      }
+      contextEditing?.cellElement?.focus();
       setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
     },
-    [fieldProjection.field.path, originalRow],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, model],
   );
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      if (nextOpen === false) {
-        setEditing(null);
+  const handleCreate = useCallback<NonNullable<FormRootProps<any>['onCreate']>>(
+    (schema, values) => {
+      const objectWithId = onCreate?.(schema, values);
+      if (objectWithId && originalRow) {
+        const ref = Ref.make(objectWithId);
+        const path = fieldProjection.field.path;
+        // Use model's changeRow for consistent mutation handling.
+        if (model) {
+          model.changeRow(originalRow, (mutableRow) => {
+            setDeep(mutableRow, [path], ref);
+          });
+        } else {
+          setDeep(originalRow, [path], ref);
+        }
       }
+      contextEditing?.cellElement?.focus();
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
     },
-    [setEditing],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, onCreate, model],
+  );
+
+  const getOptions = useCallback<NonNullable<RefFieldProps['getOptions']>>(
+    (results) =>
+      results
+        .map((obj) => {
+          return {
+            id: Entity.getURI(obj),
+            label: SchemaEx.getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
+          };
+        })
+        .filter(isTruthy),
+    [fieldProjection],
   );
 
   if (!editing) {
@@ -83,14 +164,37 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
   }
 
   return (
-    <Popover.Root open={editing !== null} onOpenChange={handleOpenChange}>
-      <Popover.VirtualTrigger virtualRef={cellRef} />
-      <Popover.Content tabIndex={-1} classNames='popover-card-width'>
-        <Popover.Arrow />
-        <Popover.Viewport>
-          <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
-        </Popover.Viewport>
-      </Popover.Content>
+    <Popover.Root open={editing} onOpenChange={handleOpenChange}>
+      <Popover.VirtualTrigger virtualRef={anchorRef} />
+      <Popover.Portal>
+        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
+          <Popover.Arrow />
+          <Popover.Viewport>
+            <Form.Root
+              {...formProps}
+              autoFocus
+              schema={narrowedSchema}
+              values={formValues}
+              onValuesChanged={handleValuesChanged}
+              projection={model?.projection}
+              createInitialValuePath={fieldProjection.field.referencePath}
+              createOptionIcon='ph--plus--regular'
+              createOptionLabel={createOptionLabel}
+              db={model?.db}
+              getOptions={getOptions}
+              onCreate={handleCreate}
+              onSave={handleSave}
+            >
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.FieldSet />
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
+          </Popover.Viewport>
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };

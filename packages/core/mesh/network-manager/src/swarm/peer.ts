@@ -11,15 +11,15 @@ import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, SystemError } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Connection, ConnectionState } from './connection';
-import { type ConnectionLimiter } from './connection-limiter';
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
 import { type TransportFactory } from '../transport';
 import { type WireProtocolProvider } from '../wire-protocol';
+import { Connection, ConnectionState } from './connection';
+import { type ConnectionLimiter } from './connection-limiter';
 
 export class ConnectionDisplacedError extends SystemError {
   constructor() {
-    super('Connection displaced by remote initiator.');
+    super({ message: 'Connection displaced by remote initiator.' });
   }
 }
 
@@ -105,7 +105,7 @@ export class Peer {
   /**
    * Respond to remote offer.
    */
-  async onOffer(message: OfferMessage): Promise<Answer> {
+  async onOffer(_ctx: Context, message: OfferMessage): Promise<Answer> {
     const remote = message.author;
 
     if (
@@ -161,13 +161,14 @@ export class Peer {
         return { accept: true };
       }
     }
+
     return { accept: false };
   }
 
   /**
    * Initiate a connection to the remote peer.
    */
-  async initiateConnection(): Promise<void> {
+  async initiateConnection(ctx: Context): Promise<void> {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
@@ -181,7 +182,7 @@ export class Peer {
       await this._connectionLimiter.connecting(sessionId);
       connection.initiate();
 
-      answer = await this._signalMessaging.offer({
+      answer = await this._signalMessaging.offer(ctx, {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId,
@@ -376,13 +377,13 @@ export class Peer {
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
 
-  async onSignal(message: SignalMessage): Promise<void> {
+  async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
     if (!this.connection) {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
 
-    await this.connection.signal(message);
+    await this.connection.signal(ctx, message);
   }
 
   @synchronized

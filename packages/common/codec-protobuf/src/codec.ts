@@ -7,7 +7,7 @@ import type protobufjs from 'protobufjs';
 
 import { type Any, type EncodingOptions, type WithTypeUrl } from './common';
 import { type BidirectionalMapingDescriptors } from './mapping';
-import { createMessageMapper, type Mapper } from './precompiled-mapping/create-message-mapper';
+import { type Mapper, createMessageMapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
 
 export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {

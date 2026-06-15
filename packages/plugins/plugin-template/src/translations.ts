@@ -3,23 +3,28 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { TEMPLATE_PLUGIN } from './meta';
-import { TemplateType } from './types';
+import { meta } from '#meta';
+import { Template } from '#types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(TemplateType)]: {
-        'typename label': 'Template',
-        'typename label_zero': 'Templates',
-        'typename label_one': 'Template',
-        'typename label_other': 'Templates',
-        'object name placeholder': 'New template',
+      [Type.getTypename(Template.Data)]: {
+        'typename.label': 'Template',
+        'typename.label_zero': 'Templates',
+        'typename.label_one': 'Template',
+        'typename.label_other': 'Templates',
+        'object-name.placeholder': 'New template',
+        'add-object.label': 'Add template',
+        'rename-object.label': 'Rename template',
+        'delete-object.label': 'Delete template',
+        'object-deleted.label': 'Template deleted',
       },
-      [TEMPLATE_PLUGIN]: {
-        'plugin name': 'Template',
+      [meta.id]: {
+        'plugin.name': 'Template',
       },
     },
   },
-];
+] as const satisfies Resource[];

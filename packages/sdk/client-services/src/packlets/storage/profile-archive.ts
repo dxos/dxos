@@ -7,7 +7,7 @@ import { cbor } from '@automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { ProfileArchiveEntryType, type ProfileArchive } from '@dxos/protocols';
+import { type ProfileArchive, ProfileArchiveEntryType } from '@dxos/protocols';
 import type { Storage } from '@dxos/random-access-storage';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -90,6 +90,9 @@ export const importProfileData = async (
         batch.put(entry.key, entry.value, { keyEncoding: 'binary', valueEncoding: 'binary' });
         break;
       }
+      case ProfileArchiveEntryType.SQLITE_DATABASE:
+        log.warn('Skipping SQLITE_DATABASE entry (import via OPFS recovery API)', { key: entry.key });
+        break;
       default:
         throw new Error(`Invalid entry type: ${entry.type}`);
     }

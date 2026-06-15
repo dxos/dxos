@@ -2,18 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState, type FC, useEffect, useRef } from 'react';
+import React, { type FC, useRef, useState } from 'react';
 
-import { Client, type PublicKey } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { type TypedObject } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { faker } from '@dxos/random';
+import { type Type } from '@dxos/echo';
+import { type SpaceId } from '@dxos/keys';
+import { random } from '@dxos/random';
+import { useAsyncEffect } from '@dxos/react-hooks';
 
-import { type WithClientProviderProps } from './withClientProvider';
 import { ClientProvider } from '../client';
+import { type WithClientProviderProps } from './withClientProvider';
 
-export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
+export type ClientRepeatedComponentProps = { id: number; count: number; spaceId?: SpaceId };
 
 export type ClientRepeaterControlsProps = { clients: Client[] };
 
@@ -24,9 +25,9 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
   clients?: Client[];
-  types?: TypedObject[];
+  types?: Type.AnyObj[];
   args?: Omit<P, 'id' | 'count'>;
-} & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onSpaceCreated'>;
+} & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onCreateSpace'>;
 
 /**
  * Utility component for Storybook stories which sets up clients for n peers.
@@ -46,41 +47,32 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     types,
     createIdentity,
     createSpace,
-    onSpaceCreated,
+    onCreateSpace,
   } = props;
-  useEffect(() => {
-    registerSignalsRuntime();
-  }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
-  const [spaceKey, setSpaceKey] = useState<PublicKey>();
+  const [spaceId, setSpaceId] = useState<SpaceId>();
 
   const testBuilder = useRef(new TestBuilder());
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      const clients = [...Array(count)].map(
-        (_) => new Client({ services: testBuilder.current.createLocalClientServices(), types }),
-      );
+  useAsyncEffect(async () => {
+    const clients = [...Array(count)].map(
+      (_) => new Client({ services: testBuilder.current.createLocalClientServices(), types }),
+    );
 
-      await Promise.all(clients.map((client) => client.initialize()));
-      if (createIdentity || createSpace) {
-        await Promise.all(clients.map((client) => client.halo.createIdentity()));
-      }
+    await Promise.all(clients.map((client) => client.initialize()));
+    if (createIdentity || createSpace) {
+      await Promise.all(clients.map((client) => client.halo.createIdentity()));
+    }
 
-      if (createSpace) {
-        const client = clients[0];
-        const space = await client.spaces.create({ name: faker.commerce.productName() });
-        setSpaceKey(space.key);
-        await onSpaceCreated?.({ client, space }, {});
-        await Promise.all(
-          clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })),
-        );
-      }
+    if (createSpace) {
+      const client = clients[0];
+      const space = await client.spaces.create({ name: random.commerce.productName() });
+      setSpaceId(space.id);
+      await onCreateSpace?.({ client, space }, {});
+      await Promise.all(clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })));
+    }
 
-      setClients(clients);
-    });
-
-    return () => clearTimeout(timeout);
+    setClients(clients);
   }, []);
 
   if (clients.length === 0) {
@@ -92,7 +84,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
       {Controls && <Controls clients={clients} />}
       {clients.map((client, index) => (
         <ClientProvider key={index} client={client}>
-          <Component id={index} count={clients.length} spaceKey={spaceKey} {...{ ...props.args }} />
+          <Component id={index} count={clients.length} spaceId={spaceId} {...{ ...props.args }} />
         </ClientProvider>
       ))}
     </>

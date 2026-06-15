@@ -2,29 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-export type PanelHeadingProps = PropsWithChildren<{
+export type HeadingProps = PropsWithChildren<{
   titleId: string;
   title: string;
-  titleSrOnly?: boolean;
   corner?: ReactNode;
+  ssrOnly?: boolean;
 }>;
 
-export const Heading = forwardRef<HTMLDivElement, PanelHeadingProps>(
-  ({ titleId, title, titleSrOnly, children, corner }, forwardedRef) => {
+/**
+ * @deprecated use Card.
+ */
+export const Heading = forwardRef<HTMLDivElement, HeadingProps>(
+  ({ children, titleId, title, corner, ssrOnly }, forwardedRef) => {
     return (
-      <div role='none' className='pbe-2 relative' ref={forwardedRef}>
+      <div className='pb-2 relative' ref={forwardedRef}>
         {corner}
         <h1
-          {...(!titleSrOnly && { id: titleId })}
-          className={mx(descriptionText, 'text-center mlb-2', titleSrOnly && 'invisible')}
+          {...(!ssrOnly && { id: titleId })}
+          className={mx('text-description', 'text-center my-2', ssrOnly && 'invisible')}
         >
           {title}
         </h1>
-        {titleSrOnly && <span id={titleId}>{title}</span>}
+        {ssrOnly && <span id={titleId}>{title}</span>}
         {children}
       </div>
     );

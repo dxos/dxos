@@ -1,0 +1,50 @@
+{
+  "name": "@dxos/introspect",
+  "version": "0.9.0",
+  "description": "DXOS monorepo introspection: indexes packages, symbols, plugins, and idioms.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/node/index.mjs"
+    },
+    "./idioms": {
+      "source": "./src/idioms/index.ts",
+      "types": "./dist/types/src/idioms/index.d.ts",
+      "default": "./dist/lib/node-esm/idioms/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/introspect-tools": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "glob": "catalog:",
+    "ts-morph": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

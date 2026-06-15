@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Text, Box, Transform, measureElement, Spacer } from 'ink';
+import { Box, Spacer, Text, Transform, measureElement } from 'ink';
 import React, { useRef } from 'react';
 
 import type { VersionId } from '../lockfile';

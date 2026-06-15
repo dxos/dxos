@@ -1,0 +1,20 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/WnfsPlugin.tsx'
+      - '--entryPoint=src/WnfsPlugin.node.ts'
+      - '--entryPoint=src/WnfsPlugin.workerd.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/helpers/index.ts'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'

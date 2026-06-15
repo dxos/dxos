@@ -9,8 +9,8 @@ import { invariant } from '@dxos/invariant';
 import {
   Device,
   DeviceKind,
-  EdgeStatus,
   type DevicesService,
+  EdgeStatus,
   type QueryDevicesResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -44,7 +44,7 @@ export class DevicesServiceImpl implements DevicesService {
                 presence = Device.PresenceState.ONLINE;
               } else if (profile.os?.toUpperCase() === 'EDGE') {
                 presence =
-                  this._edgeConnection?.status === EdgeStatus.CONNECTED
+                  this._edgeConnection?.status.state === EdgeStatus.ConnectionState.CONNECTED
                     ? Device.PresenceState.ONLINE
                     : Device.PresenceState.OFFLINE;
               } else {

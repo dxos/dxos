@@ -10,8 +10,10 @@
     "vite.config.ts"
   ],
   "include": [
-    "src",
-    "stories"
+    "../ui-editor/src/util/util.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
   ],
   "references": [
     {
@@ -25,6 +27,9 @@
     },
     {
       "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -45,22 +50,22 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"
@@ -75,7 +80,7 @@
       "path": "../lit-ui"
     },
     {
-      "path": "../primitives/react-hooks"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"
@@ -87,13 +92,22 @@
       "path": "../react-ui-menu"
     },
     {
-      "path": "../react-ui-stack"
+      "path": "../react-ui-mosaic"
     },
     {
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

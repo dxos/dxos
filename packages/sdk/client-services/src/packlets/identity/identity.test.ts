@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createDidFromIdentityKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
 import {
-  createIdFromSpaceKey,
-  MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
+  MetadataStore,
   Space,
   SpaceProtocol,
+  createIdFromSpaceKey,
   valueEncoding,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
@@ -26,7 +26,7 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { Identity } from './identity';
@@ -109,16 +109,16 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let status = EdgeStatus.NOT_CONNECTED;
+    let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
         statusChanged: new Event(),
         get status() {
-          return status;
+          return { state: status };
         },
         onReconnected: (listener) => {
-          if (status === EdgeStatus.CONNECTED) {
+          if (status === EdgeStatus.ConnectionState.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
@@ -130,7 +130,7 @@ describe('identity/identity', () => {
         onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
-        send: async (_) => {
+        send: async (..._) => {
           replicationStarted = true;
         },
       } as EdgeConnection,
@@ -138,7 +138,7 @@ describe('identity/identity', () => {
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    status = EdgeStatus.CONNECTED;
+    status = EdgeStatus.ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });
@@ -218,7 +218,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
-    await identity.joinNetwork();
+    await identity.joinNetwork(Context.default());
     onTestFinished(() => identity.close(new Context()));
     return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
   };

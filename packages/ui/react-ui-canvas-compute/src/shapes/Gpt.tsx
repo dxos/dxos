@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import { type GenerationStreamEvent } from '@dxos/ai';
 import { GptInput, GptOutput } from '@dxos/conductor';
+import { ScrollArea } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { FunctionBody, createFunctionAnchors, getHeight } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 export const GptShape = Schema.extend(
   ComputeShape,
@@ -43,8 +43,10 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
           setText('');
           break;
         }
+
         case 'custom': {
-          const token: GenerationStreamEvent = ev.event;
+          // TODO(burdon): Any?
+          const token = ev.event;
           switch (token.type) {
             case 'content_block_delta':
               switch (token.delta.type) {
@@ -72,7 +74,11 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   return (
     <FunctionBody
       shape={shape}
-      content={<div className='px-2 py-1 overflow-y-scroll'>{text}</div>}
+      content={
+        <ScrollArea.Root orientation='vertical' thin>
+          <ScrollArea.Viewport>{text}</ScrollArea.Viewport>
+        </ScrollArea.Root>
+      }
       status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}

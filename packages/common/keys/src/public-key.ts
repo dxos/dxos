@@ -4,17 +4,17 @@
 
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
-import { type inspect, type InspectOptionsStylized } from 'node:util';
+import { type InspectOptionsStylized, type inspect } from 'node:util';
 
 import {
-  devtoolsFormatter,
   type DevtoolsFormatter,
-  equalsSymbol,
   type Equatable,
+  devtoolsFormatter,
+  equalsSymbol,
   inspectCustom,
   truncateKey,
 } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 
 import { randomBytes } from './random-bytes';
 
@@ -149,7 +149,7 @@ export class PublicKey implements Equatable {
    * @deprecated All keys should be represented as instances of PublicKey.
    */
   static bufferize(str: string): Buffer {
-    invariant(typeof str === 'string', 'Invalid type');
+    assertArgument(typeof str === 'string', 'str', 'Invalid type');
     const buffer = Buffer.from(str, 'hex');
     // invariant(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
     //   `Invalid key length: ${buffer.length}`);
@@ -216,7 +216,7 @@ export class PublicKey implements Equatable {
     return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
-  truncate(length = undefined): string {
+  truncate(length?: number): string {
     return truncateKey(this, length);
   }
 

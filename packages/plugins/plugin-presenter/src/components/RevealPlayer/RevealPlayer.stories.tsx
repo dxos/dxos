@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta } from '@storybook/react-vite';
 
-import { type Meta } from '@storybook/react';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { RevealPlayer } from './RevealPlayer';
+import { translations } from '#translations';
+
 import CONTENT from '../../../testing/deck.md?raw';
-import translations from '../../translations';
+import { RevealPlayer } from './RevealPlayer';
 
 // https://revealjs.com/markdown
 // https://developer.mozilla.org/en-US/docs/Web/CSS/background-position
@@ -18,14 +19,15 @@ import translations from '../../translations';
 // https://fontsource.org/fonts
 // https://fonts.google.com
 
-const meta: Meta<typeof RevealPlayer> = {
-  title: 'plugins/plugin-presenter/RevealPlayer',
+const meta = {
+  title: 'plugins/plugin-presenter/components/RevealPlayer',
   component: RevealPlayer,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof RevealPlayer>;
 
 export default meta;
 

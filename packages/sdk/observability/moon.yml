@@ -1,0 +1,22 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+    deps:
+      - prebuild
+  prebuild:
+    command: node ./scripts/inject_api_keys.mjs
+    inputs:
+      - scripts/inject_api_keys.mjs
+      - $DX_IPDATA_API_KEY
+      - $DX_OTEL_ENDPOINT
+      - $DX_OTEL_HEADERS
+      - $NODE_ENV
+    outputs:
+      - src/cli-observability-secrets.json

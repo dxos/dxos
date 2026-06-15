@@ -2,23 +2,30 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sourceMaps from 'rollup-plugin-sourcemaps';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
+import { UserConfig } from 'vitest/config';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import { UserConfig } from 'vitest/config';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
+
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig(
   (env) =>
     ({
+      root: __dirname,
       server: {
         host: true,
         cors: true,
@@ -31,8 +38,8 @@ export default defineConfig(
         https:
           process.env.HTTPS === 'true'
             ? {
-                key: './key.pem',
-                cert: './cert.pem',
+                key: '../../../key.pem',
+                cert: '../../../cert.pem',
               }
             : undefined,
         fs: {
@@ -44,95 +51,104 @@ export default defineConfig(
           ],
         },
       },
+      resolve: {
+        alias: {
+          ['node-fetch']: 'isomorphic-fetch',
+          ['node:util']: '@dxos/node-std/util',
+          ['node:path']: '@dxos/node-std/path',
+          ['util']: '@dxos/node-std/util',
+          ['path']: '@dxos/node-std/path',
+          ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+        },
+      },
       esbuild: {
         keepNames: true,
       },
       build: {
+        outDir: 'out/testbench-app',
         sourcemap: true,
         minify: false,
         target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
         rollupOptions: {
           input: {
-            main: resolve(__dirname, './index.html'),
-            shell: resolve(__dirname, './shell.html'),
+            main: path.resolve(dirname, './index.html'),
+            shell: path.resolve(dirname, './shell.html'),
           },
           output: {
-            manualChunks: {
-              react: ['react', 'react-dom', 'react-router-dom'],
-              dxos: ['@dxos/react-client'],
-              ui: ['@dxos/react-ui', '@dxos/react-ui-theme'],
-              editor: ['@dxos/react-ui-editor'],
+            // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+            // record form that worked in Rollup is rejected at runtime.
+            manualChunks: (id: string) => {
+              if (
+                id.includes('/node_modules/react/') ||
+                id.includes('/node_modules/react-dom/') ||
+                id.includes('/node_modules/react-router-dom/')
+              ) {
+                return 'react';
+              }
+              if (id.includes('/node_modules/@dxos/react-client/')) {
+                return 'dxos';
+              }
+              if (id.includes('/node_modules/@dxos/react-ui/') || id.includes('/node_modules/@dxos/ui-theme/')) {
+                return 'ui';
+              }
+              if (id.includes('/node_modules/@dxos/react-ui-editor/')) {
+                return 'editor';
+              }
             },
           },
         },
       },
       worker: {
         format: 'es',
-        plugins: () => [WasmPlugin(), sourceMaps()],
+        plugins: () => [
+          WasmPlugin(),
+          sourceMaps(),
+          env.command === 'serve' &&
+            PluginImportSource({
+              exclude: [
+                '@dxos/random-access-storage',
+                '@dxos/lock-file',
+                '@dxos/network-manager',
+                '@dxos/teleport',
+                '@dxos/config',
+                '@dxos/client-services',
+                '@dxos/observability',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '@dxos/lit-*',
+              ],
+            }),
+        ],
       },
       plugins: [
+        ShutdownPlugin(),
         sourceMaps(),
+
+        // Building from dist when creating a prod bundle.
         env.command === 'serve' &&
-          tsconfigPaths({
-            projects: ['../../../tsconfig.paths.json'],
-          }),
-        ConfigPlugin({
-          env: ['DX_VAULT', 'BASELIME_API_KEY'],
-        }),
-        ThemePlugin({
-          root: __dirname,
-          content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
-        }),
-        WasmPlugin(),
-        ReactPlugin({
-          tsDecorators: true,
-          plugins: [
-            [
-              '@dxos/swc-log-plugin',
-              {
-                to_transform: [
-                  {
-                    name: 'log',
-                    package: '@dxos/log',
-                    param_index: 2,
-                    include_args: false,
-                    include_call_site: true,
-                    include_scope: true,
-                  },
-                  {
-                    name: 'invariant',
-                    package: '@dxos/invariant',
-                    param_index: 2,
-                    include_args: true,
-                    include_call_site: false,
-                    include_scope: true,
-                  },
-                  {
-                    name: 'Context',
-                    package: '@dxos/context',
-                    param_index: 1,
-                    include_args: false,
-                    include_call_site: false,
-                    include_scope: false,
-                  },
-                ],
-              },
+          PluginImportSource({
+            exclude: [
+              '@dxos/random-access-storage',
+              '@dxos/lock-file',
+              '@dxos/network-manager',
+              '@dxos/teleport',
+              '@dxos/config',
+              '@dxos/client-services',
+              '@dxos/observability',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '@dxos/lit-*',
             ],
-            // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            ['@preact-signals/safe-react/swc', { mode: 'all' }],
-          ],
+          }),
+
+        // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
+        DxosLogPlugin(),
+
+        ConfigPlugin({
+          root: dirname,
+          env: ['DX_VAULT'],
         }),
-        // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-        // https://www.npmjs.com/package/@sentry/vite-plugin
-        // sentryVitePlugin({
-        //   org: 'dxos',
-        //   project: 'testbench-app',
-        //   sourcemaps: {
-        //     assets: './packages/apps/testbench-app/out/testbench-app/**',
-        //   },
-        //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-        //   disable: process.env.DX_ENVIRONMENT !== 'production',
-        // }),
+        ThemePlugin({}),
+        WasmPlugin(),
+        ReactPlugin(),
         // https://www.bundle-buddy.com/rollup
         {
           name: 'bundle-buddy',
@@ -146,13 +162,14 @@ export default defineConfig(
                 }
               }
             }
-            const outDir = join(__dirname, 'out');
+            const outDir = path.join(dirname, 'out');
             if (!existsSync(outDir)) {
               mkdirSync(outDir);
             }
-            writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+            writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
           },
         },
       ],
+      ...createTestConfig({ dirname, node: true, storybook: true }),
     }) as UserConfig,
 );

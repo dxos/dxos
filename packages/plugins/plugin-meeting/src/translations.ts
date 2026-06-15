@@ -3,41 +3,47 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { MEETING_PLUGIN } from './meta';
-import { MeetingType } from './types';
+import { meta } from '#meta';
+import { Meeting } from '#types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(MeetingType)]: {
-        'typename label': 'Meetings',
-        'typename label_zero': 'Meetings',
-        'typename label_one': 'Meeting',
-        'typename label_other': 'Meetings',
-        'object name placeholder': 'New meeting',
+      [Type.getTypename(Meeting.Meeting)]: {
+        'typename.label': 'Meeting',
+        'typename.label_zero': 'Meetings',
+        'typename.label_one': 'Meeting',
+        'typename.label_other': 'Meetings',
+        'object-name.placeholder': 'New meeting',
+        'add-object.label': 'Add meeting',
+        'rename-object.label': 'Rename meeting',
+        'delete-object.label': 'Delete meeting',
+        'object-deleted.label': 'Meeting deleted',
       },
-      [MEETING_PLUGIN]: {
-        'plugin name': 'Meeting',
-        'meetings label': 'All Meetings',
-        'meeting label': 'Meeting',
+      [meta.id]: {
+        'plugin.name': 'Meeting',
+        'meetings.label': 'All Meetings',
+        'meeting.label': 'Meeting',
 
-        'start transcription label': 'Start transcription',
-        'stop transcription label': 'Stop transcription',
+        'start-transcription.label': 'Start transcription',
+        'stop-transcription.label': 'Stop transcription',
 
-        'meeting list label': 'Meetings',
-        'create meeting label': 'Start New Meeting',
-        'select meeting label': 'Set Active',
+        'meeting-list.label': 'Meetings',
+        'create-meeting.label': 'Start New Meeting',
+        'select-meeting.label': 'Set Active',
+        'share-call-link.label': 'Share call link',
 
-        'meeting companion label': 'Meeting Notes',
-        'notes label': 'Notes',
-        'summary label': 'Summary',
-        'regenerate summary label': 'Regenerate Summary',
-        'generate summary label': 'Generate Summary',
+        'meeting-companion.label': 'Meeting Notes',
+        'notes.label': 'Notes',
+        'stats.label': 'Stats',
+        'summary.label': 'Summary',
+        'regenerate-summary.label': 'Regenerate Summary',
+        'generate-summary.label': 'Generate Summary',
 
-        'meeting thread label': 'Meeting Chat',
-        'transcript companion label': 'Meeting Transcript',
+        'transcript-companion.label': 'Meeting Transcript',
       },
     },
   },
-];
+] as const satisfies Resource[];

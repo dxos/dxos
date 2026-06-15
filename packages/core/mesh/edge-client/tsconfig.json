@@ -15,7 +15,10 @@
       "path": "../../../common/crypto"
     },
     {
-      "path": "../../../common/debug"
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
     },
     {
       "path": "../../../common/invariant"

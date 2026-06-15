@@ -3,7 +3,7 @@
 //
 
 import { type SerializedStore } from '@tldraw/store';
-import { createTLStore, defaultShapeUtils, loadSnapshot, type TLRecord } from '@tldraw/tldraw';
+import { type TLRecord, createTLStore, defaultShapeUtils, loadSnapshot } from '@tldraw/tldraw';
 
 import { log } from '@dxos/log';
 

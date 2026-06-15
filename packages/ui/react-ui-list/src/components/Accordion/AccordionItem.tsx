@@ -7,10 +7,10 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { useAccordionContext } from './AccordionRoot';
 import { type ListItemRecord } from '../List';
+import { useAccordionContext } from './AccordionRoot';
 
 const ACCORDION_ITEM_NAME = 'AccordionItem';
 
@@ -18,7 +18,9 @@ type AccordionItemContext<T extends ListItemRecord> = {
   item: T;
 };
 
-export const [AccordionItemProvider, useAccordionItemContext] =
+// TODO(wittjosiah): This seems to be conflicting with something in the bundle.
+//  Perhaps @radix-ui/react-accordion?
+export const [AccordionItemProvider, useDxAccordionItemContext] =
   createContext<AccordionItemContext<any>>(ACCORDION_ITEM_NAME);
 
 export type AccordionItemProps<T extends ListItemRecord> = ThemedClassName<PropsWithChildren<{ item: T }>>;
@@ -40,7 +42,7 @@ export type AccordionItemHeaderProps = ThemedClassName<AccordionPrimitive.Accord
 export const AccordionItemHeader = ({ classNames, children, ...props }: AccordionItemHeaderProps) => {
   return (
     <AccordionPrimitive.Header {...props} className={mx(classNames)}>
-      <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset is-full text-start'>
+      <AccordionPrimitive.Trigger className='group flex items-center p-2 dx-focus-ring-inset w-full text-start'>
         {children}
         <Icon
           icon='ph--caret-right--regular'
@@ -56,10 +58,8 @@ export type AccordionItemBodyProps = ThemedClassName<PropsWithChildren>;
 
 export const AccordionItemBody = ({ children, classNames }: AccordionItemBodyProps) => {
   return (
-    <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown'>
-      <div role='none' className={mx('p-2', classNames)}>
-        {children}
-      </div>
+    <AccordionPrimitive.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+      <div className={mx('p-2', classNames)}>{children}</div>
     </AccordionPrimitive.Content>
   );
 };

@@ -38,11 +38,7 @@ export default definePlugin<IntentResolverProvides>({
 Intents can be dispatched by any plugin using the `dispatch` function provided by the intent plugin.
 
 ```tsx
-import {
-  definePlugin,
-  SurfaceProvides,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { definePlugin, SurfaceProvides, useIntentDispatcher } from '@dxos/app-framework';
 
 export default definePlugin<SurfaceProvides>({
   provides: {
@@ -83,7 +79,7 @@ dispatch([
 
 ## See also
 
-* [Intent plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/IntentPlugin/plugin.tsx)
+- [Intent plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/IntentPlugin/plugin.tsx)
 
 ::: note Under Development
 

@@ -2,21 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TRANSCRIPTION_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from '#meta';
+
+export const translations = [
   {
     'en-US': {
-      [TRANSCRIPTION_PLUGIN]: {
-        'plugin name': 'Transcription',
-        'transcript companion label': 'Transcript',
+      [meta.id]: {
+        'plugin.name': 'Transcription',
+        'transcript-companion.label': 'Transcript',
 
-        'delete button': 'Delete',
-        'bookmark button': 'Bookmark',
-        'scroll to end label': 'Scroll to latest',
+        'delete.button': 'Delete',
+        'bookmark.button': 'Bookmark',
+        'scroll-to-end.label': 'Scroll to latest',
 
-        'settings entity extraction label': 'Entity extraction',
+        'start-recording.label': 'Start recording',
+        'stop-recording.label': 'Stop recording',
+
+        'settings.entity-extraction.label': 'Entity extraction',
       },
     },
   },
-];
+] as const satisfies Resource[];

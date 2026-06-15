@@ -8,7 +8,7 @@ import "google/protobuf/any.proto";
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/timestamp.proto";
 
-// TODO(burdon): Remove this.
+// TODO(burdon): Remove.
 import "@dxos/protobuf-test";
 
 import "example/testing/any.proto";

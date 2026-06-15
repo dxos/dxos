@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -14,9 +14,16 @@ import { DeckManager } from './plugins';
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
+// TODO(wittjosiah): Beware that sometimes the playwright chromium seems to appear as Windows.
+//   At least via `navigator.userAgent.platform`.
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
-export const INITIAL_URL = 'http://localhost:4200';
+
+export const INITIAL_URL = 'http://localhost:4173';
+
+// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// localhost (see WelcomePlugin `generateExemplarSpace`), which is where e2e tests run.
+export const INITIAL_SPACE_COUNT = 1;
 
 export class AppManager {
   page!: Page;
@@ -83,10 +90,12 @@ export class AppManager {
       .catch(() => false);
   }
 
+  get currentWorkspace(): Locator {
+    return this.page.getByTestId('navtree.workspace.visible');
+  }
+
   async openUserAccount(): Promise<void> {
-    const platform = os.platform();
-    const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
-    await this.page.keyboard.press(shortcut);
+    await this.page.getByTestId('clientPlugin.account').click();
   }
 
   async openUserDevices(): Promise<void> {
@@ -118,8 +127,24 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    const shortcut = isMac ? 'Meta+.' : 'Alt+.';
-    await this.page.keyboard.press(shortcut);
+    // Members is nested under the Settings section in the navtree. Scope
+    // the generic treeItem.toggle / treeItem.heading testids to the
+    // settings/members rows by their row testids, and expand settings
+    // first if its members heading isn't visible yet.
+    const membersHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.members')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await membersHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await membersHeading.click();
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -165,12 +190,59 @@ export class AppManager {
     await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  async waitForSpaceReady(timeout = 30_000): Promise<void> {
-    await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
+  async waitForSpaceReady(timeout = 10_000): Promise<void> {
+    await this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout });
+    await this.page.waitForFunction(
+      () => {
+        const workspaceId = window.location.pathname.split('/').filter(Boolean)[0];
+        if (!workspaceId) {
+          return false;
+        }
+
+        const selectedSpace = document.querySelector('[data-testid="spacePlugin.space"][aria-selected="true"]');
+        return selectedSpace?.getAttribute('data-object-id') === `root/${workspaceId}`;
+      },
+      { timeout },
+    );
+    // TODO(wittjosiah): This improves reliability significantly. Find a better thing to wait for.
+    await this.page.waitForTimeout(500);
   }
 
   getSpacePresenceMembers(): Locator {
     return this.page.getByTestId('spacePlugin.presence.member');
+  }
+
+  /**
+   * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
+   * expanding the Settings section first if necessary.
+   */
+  async openSpaceSettings(): Promise<void> {
+    const generalHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.general')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await generalHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await generalHeading.click();
+  }
+
+  /**
+   * Deletes the space at the given index (default: the first non-personal space) via its
+   * settings danger zone, including the confirmation step.
+   */
+  async deleteSpace(nth = 1): Promise<void> {
+    // Select the space so its Settings section is available in the navtree.
+    await this.getSpaceItems().nth(nth).click();
+    await this.openSpaceSettings();
+    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+    await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
   }
 
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean): Promise<void> {
@@ -186,16 +258,32 @@ export class AppManager {
     }
   }
 
-  toggleCollectionCollapsed(nth = 0): Promise<void> {
-    return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
+  toggleCollectionCollapsed(nth = 0, delay = 100): Promise<void> {
+    return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
   }
 
-  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }): Promise<void> {
-    const object = this.page.getByTestId('spacePlugin.createObject');
-    await object.nth(nth).click();
+  async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
+    const section = this.currentWorkspace.getByTestId(testId);
+    await section.waitFor({ state: 'attached', timeout });
+    await section.getByRole('button').first().click({ delay });
+  }
 
-    await this.page.getByTestId('create-object-form.schema-input').fill(type);
-    await this.page.keyboard.press('Enter');
+  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+    if (nth !== undefined) {
+      const object = this.getObjectLinks().nth(nth);
+      await object.hover();
+      await object
+        .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+        .first()
+        .click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.getByTestId('spacePlugin.createObject').last().focus();
+      await this.page.keyboard.press('Enter');
+    } else {
+      await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
+    }
+
+    await this.page.getByRole('listbox').getByText(type).first().click();
 
     const objectForm = this.page.getByTestId('create-object-form');
     if (!(await objectForm.isVisible())) {
@@ -208,17 +296,13 @@ export class AppManager {
     await objectForm.getByTestId('save-button').click();
   }
 
-  async navigateToObject(nth = 0): Promise<void> {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click();
+  async navigateToObject(nth = 0, delay = 100): Promise<void> {
+    await this.getObjectLinks().nth(nth).click({ delay });
   }
 
   async renameObject(newName: string, nth = 0): Promise<void> {
-    await this.page
-      .getByTestId('spacePlugin.object')
-      .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
-      .first()
-      .click();
+    await this.getObjectLinks().nth(nth).hover();
+    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
@@ -229,12 +313,7 @@ export class AppManager {
   }
 
   async deleteObject(nth = 0): Promise<void> {
-    await this.page
-      .getByTestId('spacePlugin.object')
-      .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
-      .first()
-      .click();
+    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
@@ -242,11 +321,11 @@ export class AppManager {
   }
 
   getObject(nth = 0): Locator {
-    return this.page.getByTestId('spacePlugin.object').nth(nth);
+    return this.getObjectLinks().nth(nth);
   }
 
   getObjectByName(name: string): Locator {
-    return this.page.getByTestId('spacePlugin.object').filter({ has: this.page.locator(`span:has-text("${name}")`) });
+    return this.getObjectLinks().filter({ has: this.page.locator(`span:has-text("${name}")`) });
   }
 
   getSpaceItems(): Locator {
@@ -254,7 +333,7 @@ export class AppManager {
   }
 
   getObjectLinks(): Locator {
-    return this.page.getByTestId('spacePlugin.object');
+    return this.currentWorkspace.getByTestId('spacePlugin.object');
   }
 
   async dragTo(active: Locator, over: Locator, offset: { x: number; y: number } = { x: 0, y: 0 }): Promise<void> {
@@ -279,11 +358,20 @@ export class AppManager {
   }
 
   async openPluginRegistry(): Promise<void> {
-    await this.page.getByTestId('treeView.pluginRegistry').click();
+    // Direct-navigate to the registry workspace rather than clicking the
+    // pinned tree node. The click path requires the layout/settings
+    // operation handlers to be fully registered before the click fires; in
+    // firefox that initialisation occasionally lags behind first paint, so
+    // the click is silently swallowed and the test then times out waiting
+    // for the registry tree to render. URL-driven navigation has no such
+    // dependency on operation-handler registration.
+    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry`);
+    await this.page.getByTestId('pluginRegistry.recommended').waitFor({ state: 'visible' });
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+    await this.page.goto(`${INITIAL_URL.replace(/\/$/, '')}/!dxos:plugin-registry/plugin-registry%3E${category}`);
+    await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
   }
 
   getPluginToggle(plugin: string): Locator {
@@ -291,7 +379,19 @@ export class AppManager {
   }
 
   async enablePlugin(plugin: string): Promise<void> {
-    await this.getPluginToggle(plugin).click();
+    const toggle = this.getPluginToggle(plugin);
+    // Wait for the toggle to be present and stable before clicking — the
+    // plugin list re-renders after the workspace switch and the React
+    // onClick handler may not be bound on the first render that produces
+    // the checkbox element.
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    // Wait for the click to actually flip the toggle's checked state before
+    // reloading — the click handler persists the enable into storage and
+    // navigating mid-write leaves the new page's plugin manager in an
+    // inconsistent state where the lazy plugin chunk fetch can be cancelled.
+    await expect(toggle).toBeChecked();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.userAccount').waitFor();
   }

@@ -1,0 +1,45 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { Capability } from '@dxos/app-framework';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
+
+import { SpaceCapabilities } from '#types';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
+      await removeQueryCollections(space);
+    }),
+  ),
+);
+
+/**
+ * Remove all existing query collections from the root collection.
+ */
+const removeQueryCollections = async (space: Space) => {
+  const rootCollectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+  const rootCollection: Collection.Collection | undefined = await rootCollectionRef?.load();
+  if (!rootCollection) {
+    return;
+  }
+
+  const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
+  const queryCollections = objects.filter((object) => Obj.getTypename(object) === 'org.dxos.type.queryCollection');
+  if (queryCollections.length === 0) {
+    return;
+  }
+
+  Obj.update(rootCollection, (rootCollection) => {
+    rootCollection.objects = objects
+      .filter((object) => Obj.getTypename(object) !== 'org.dxos.type.queryCollection')
+      .map((object) => Ref.make(object));
+  });
+  queryCollections.forEach((object) => space.db.remove(object));
+};

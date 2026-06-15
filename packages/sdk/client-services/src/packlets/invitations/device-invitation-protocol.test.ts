@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncChain } from '@dxos/async';
+import { chain } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -32,7 +32,7 @@ describe('services/device', () => {
   });
 
   test('creates and accepts invitation', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
@@ -42,7 +42,7 @@ describe('services/device', () => {
   });
 
   test('invitation when already joined', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
 
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);

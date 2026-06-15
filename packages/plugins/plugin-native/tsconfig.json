@@ -18,19 +18,37 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../plugin-help"
+      "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../plugin-navtree"
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

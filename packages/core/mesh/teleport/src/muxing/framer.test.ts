@@ -4,7 +4,7 @@
 
 import { pipeline } from 'node:stream';
 import randomBytes from 'randombytes';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 

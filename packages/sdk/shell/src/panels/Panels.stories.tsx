@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../translations';
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
-import { osTranslations } from '../translations';
 
 const getComponentNames = (module: any): string[] =>
   module?.__namedExportsOrder ??
@@ -52,9 +51,15 @@ export const Default = (props: any) => {
 
 Default.parameters = { layout: 'fullscreen' };
 
-export default {
+const meta = {
   title: 'sdk/shell/All',
-  decorators: [withTheme],
   component: StoryRow,
-  parameters: { chromatic: { disableSnapshot: false }, translations: [osTranslations] },
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof StoryRow>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;

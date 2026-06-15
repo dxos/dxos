@@ -72,6 +72,7 @@ message Platform {
     BROWSER = 0;
     SHARED_WORKER = 1;
     NODE = 2;
+    DEDICATED_WORKER = 3;
   }
 
   PLATFORM_TYPE type = 1;
@@ -145,6 +146,8 @@ message RecoverIdentityRequest {
     string recovery_code = 1;
     ExternalSignature external = 2;
     string token = 3;
+    /// One-time proof minted by edge kms-service after a successful OAuth recovery flow.
+    string recovery_proof = 4;
   }
 }
 
@@ -331,6 +334,8 @@ message Space {
   optional PipelineState pipeline = 3;
   optional dxos.error.Error error = 4;
   optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 6;
+  repeated string tags = 7;
+  dxos.halo.credentials.MembershipPolicy membership_policy = 8;
 
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
@@ -340,6 +345,11 @@ message Space {
 }
 
 // TODO(burdon): Create type for epoch?
+
+message CreateSpaceRequest {
+  repeated string tags = 1;
+  dxos.halo.credentials.MembershipPolicy membership_policy = 2;
+}
 
 message UpdateSpaceRequest {
   dxos.keys.PublicKey space_key = 1;
@@ -435,12 +445,22 @@ message JoinBySpaceKeyRequest {
 }
 
 message SpaceArchive {
+  enum Format {
+    // Tar-based binary archive (default).
+    BINARY = 0;
+    // JSON encoding of {@link dxos.echo.db.SerializedSpace}.
+    JSON = 1;
+  }
+
   string filename = 1;
   bytes contents = 2;
+  optional Format format = 3;
 }
 
 message ExportSpaceRequest {
   string space_id = 1;
+  // Archive format to produce. Defaults to BINARY.
+  optional SpaceArchive.Format format = 2;
 }
 
 message ExportSpaceResponse {
@@ -449,6 +469,8 @@ message ExportSpaceResponse {
 
 message ImportSpaceRequest {
   SpaceArchive archive = 1;
+  /// Immutable tags to set on the imported space at creation time.
+  repeated string tags = 2;
 }
 
 message ImportSpaceResponse {
@@ -457,7 +479,7 @@ message ImportSpaceResponse {
 }
 
 service SpacesService {
-  rpc CreateSpace(google.protobuf.Empty) returns (Space);
+  rpc CreateSpace(CreateSpaceRequest) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
@@ -596,9 +618,26 @@ service EdgeAgentService {
   rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
-enum EdgeStatus {
-  NOT_CONNECTED = 0;
-  CONNECTED = 1;
+message EdgeStatus {
+  enum ConnectionState {
+    NOT_CONNECTED = 0;
+    CONNECTED = 1;
+  }
+
+  ConnectionState state = 1;
+  /** Latency in ms */
+  int32 rtt = 2;
+
+  /** How long the connection has been up */
+  int32 uptime = 3;
+
+  /** Upload rate in bytes per second */
+  int32 rate_bytes_up = 4;
+  /** Download rate in bytes per second */
+  int32 rate_bytes_down = 5;
+
+  int32 messages_sent = 6;
+  int32 messages_received = 7;
 }
 
 message QueryEdgeStatusResponse {

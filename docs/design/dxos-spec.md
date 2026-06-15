@@ -156,19 +156,19 @@ Using the HALO app, users can:
 // Copyright 2020 DXOS.org
 //
 
-import expect from "expect";
-import { it as test } from "mocha";
+import expect from 'expect';
+import { it as test } from 'mocha';
 
-import { validateKeyPair } from "@dxos/crypto";
-import { PublicKey } from "@dxos/protocols";
+import { validateKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
-import { Client, InvitationOffer, Item, Role } from "./api";
+import { Client, InvitationOffer, Item, Role } from './api';
 
 // import { Client } from "@dxos/client"
 
 // eslint-disable-next-line jest/no-disabled-tests
-describe.skip("Experimental API", () => {
-  test("All aspects", async () => {
+describe.skip('Experimental API', () => {
+  test('All aspects', async () => {
     const client1 = new Client({}); // options possible
 
     const client = useClient({
@@ -201,7 +201,7 @@ describe.skip("Experimental API", () => {
       {
         const client2 = new Client();
         expect(client2.halo.identity).not.toBeDefined();
-        const profile = await client2.halo.recoverIdentity({ seedphrase: "words..." });
+        const profile = await client2.halo.recoverIdentity({ seedphrase: 'words...' });
         // expect(
         //   PublicKey.equals(profile.publicKey, client2.halo.profile.publicKey)
         // ).toBeTruthy();
@@ -220,7 +220,7 @@ describe.skip("Experimental API", () => {
 
       const identities = await client.halo.getIdentities(); // client devs dont do this
       // TODO(zhenyasa): Do we split vault getIdentities away from client?
-      import { Vault } from "@dxos/vault";
+      import { Vault } from '@dxos/vault';
       const vault = new Vault();
       const identities = await vault.getIdentities();
 
@@ -250,14 +250,12 @@ describe.skip("Experimental API", () => {
       // Create and authenticate new device.
       {
         // get the whole set
-        const subscription = client1.halo
-          .getDevices()
-          .observe((devices, subscription) => {
-            if (devices.length > 1) {
-              console.log("New device joined");
-              subscription.stop();
-            }
-          });
+        const subscription = client1.halo.getDevices().observe((devices, subscription) => {
+          if (devices.length > 1) {
+            console.log('New device joined');
+            subscription.stop();
+          }
+        });
         subscription.stop();
 
         // New device initiates the request to join.
@@ -274,9 +272,7 @@ describe.skip("Experimental API", () => {
 
         setImmediate(async () => {
           const { publicKey } = await challenge.verify();
-          expect(
-            PublicKey.equals(publicKey, client2.halo.device.publicKey)
-          ).toBeTruthy();
+          expect(PublicKey.equals(publicKey, client2.halo.device.publicKey)).toBeTruthy();
         });
 
         // Authenticate.
@@ -297,7 +293,7 @@ describe.skip("Experimental API", () => {
             hello: `Hello ${contact.username}!`,
           });
           expect(receipt.recipient).toBe(contact.publicKey);
-        })
+        }),
       );
     }
 
@@ -335,7 +331,7 @@ describe.skip("Experimental API", () => {
     //
     {
       const space = await client1.spaces.createSpace();
-      const contacts = client1.halo.getContacts({ name: "alice" });
+      const contacts = client1.halo.getContacts({ name: 'alice' });
       const invitation = space.createInvitation(contacts[0].publicKey, {
         role: Role.ADMIN,
       });
@@ -347,7 +343,7 @@ describe.skip("Experimental API", () => {
       expect(members).toHaveLength(2);
     }
 
-    import { send, listen } from "@dxos/messenger";
+    import { send, listen } from '@dxos/messenger';
 
     client = new Client();
     const { stop } = listen((message) => {
@@ -378,30 +374,27 @@ describe.skip("Experimental API", () => {
       const space = await client1.spaces.getSpace(spaces[0].publicKey);
 
       // Create subscription.
-      const result = await space.query({ type: "org.dxos.contact" });
+      const result = await space.query({ type: 'org.dxos.contact' });
       const count = result.length;
-      
-      const subscription = space.query().observe((allResults) => {
 
-      });
+      const subscription = space.query().observe((allResults) => {});
 
-      const subscription = space.query({ type: "org.dxos.contact" }).observe({
+      const subscription = space.query({ type: 'org.dxos.contact' }).observe({
         async added(items: Item[], subscription) {
           if (items.length >= count) {
             subscription.cancel(); // we might need this to be awaitable too?
           }
         },
         async removed(items: Item[]) {},
-        async changed(oldItem: Item, newItem: Item) {}
+        async changed(oldItem: Item, newItem: Item) {},
       });
 
-
       // Create item.
-      const item = await space.createItem({ type: "org.dxos.contact" });
+      const item = await space.createItem({ type: 'org.dxos.contact' });
       expect(item.publicKey).toBeDefined();
 
       // Query items across all spaces.
-      const items = await client1.spaces.query({ type: "org.dxos.contact" });
+      const items = await client1.spaces.query({ type: 'org.dxos.contact' });
       expect(items.length).toBeGreaterThan(0);
     }
 
@@ -409,10 +402,10 @@ describe.skip("Experimental API", () => {
     // Query DXNS metagraph (e.g., KUBEs, applications, type system).
     //
     {
-      import { Client, Record } from "@dxos/dxns";
+      import { Client, Record } from '@dxos/dxns';
 
       type AppRecord = { name: string };
-      const AppRecordType = "org.dxos.app";
+      const AppRecordType = 'org.dxos.app';
 
       const dxns = new Client();
 
@@ -430,10 +423,10 @@ describe.skip("Experimental API", () => {
       // Create record.
       const app = await dxns.createRecord<AppRecord>({
         type: AppRecordType,
-        data: { name: "Tetris" },
+        data: { name: 'Tetris' },
       });
       expect(app.type).toStrictEqual(AppRecordType);
-      expect(app.data.name).toStrictEqual("Tetris");
+      expect(app.data.name).toStrictEqual('Tetris');
     }
   });
 });

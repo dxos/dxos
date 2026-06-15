@@ -3,15 +3,21 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useCanvasContext } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import {
+  Grid,
+  Canvas as NaturalCanvas,
+  type Rect,
+  testId,
+  useCanvasContext,
+  useDrag,
+  useWheel,
+} from '@dxos/react-ui-canvas';
+import { mx } from '@dxos/ui-theme';
 
-import { Frame } from './Frame';
-import { getShapeBounds } from './Shape';
-import { Shapes } from './Shapes';
 import {
   type DragDropPayload,
   useActionHandler,
@@ -24,24 +30,27 @@ import {
 import { rectContains } from '../../layout';
 import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
+import { Frame } from './Frame';
+import { getShapeBounds } from './Shape';
+import { Shapes } from './Shapes';
 
 /**
  * Main canvas component.
  */
 export const Canvas = ({ children }: PropsWithChildren) => {
   return (
-    <NativeCanvas {...testId<TestId>('dx-canvas')}>
+    <NaturalCanvas {...testId<TestId>('dx-canvas')}>
       <CanvasContent>{children}</CanvasContent>
-    </NativeCanvas>
+    </NaturalCanvas>
   );
 };
 
 export const CanvasContent = ({ children }: PropsWithChildren) => {
-  const { dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { dragMonitor, overlayRef, options, selection, showGrid } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useCanvasContext();
   const shapesRef = useRef<HTMLDivElement>(null);
 
-  const dragging = dragMonitor.state((state) => state.type === 'tool').value;
+  const dragging = useAtomValue(dragMonitor.state);
 
   // Drop target.
   useEffect(() => {
@@ -64,6 +73,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
 
   // Pan and zoom.
   useWheel();
+  useDrag();
 
   // Dragging and linking.
   useDragMonitor();
@@ -72,11 +82,11 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   const layout = useLayout();
 
   // Selection.
-  const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
+  const selectionRect = useSelectionEvents(root, ({ bounds, subtract }) => {
     // NOTE: bounds will be undefined if clicking on an object.
-    if (bounds === null) {
+    if (!bounds) {
       selection.clear();
-    } else if (bounds) {
+    } else {
       selection.setSelected(
         layout.shapes
           .filter((shape) => {
@@ -84,7 +94,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
             return rect && rectContains(bounds, rect);
           })
           .map((shape) => shape.id),
-        shift,
+        subtract,
       );
     }
   });
@@ -92,10 +102,12 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   return (
     <>
       {/* Grid. */}
-      {showGrid && <Grid size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
+      {showGrid && (
+        <Grid size={options.gridSize} showAxes={false} scale={scale} offset={offset} classNames={styles.gridLine} />
+      )}
 
       {/* Layout. */}
-      {<Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />}
+      {<Shapes {...testId<TestId>('dx-layout', true)} layout={layout} ref={shapesRef} />}
 
       {/* External content. */}
       {children}
@@ -117,8 +129,8 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
         {/* Misc overlay. */}
         <svg
           ref={overlayRef}
-          className='absolute overflow-visible pointer-events-none'
           style={projectionStyles}
+          className='absolute overflow-visible pointer-events-none'
           width={1}
           height={1}
         >

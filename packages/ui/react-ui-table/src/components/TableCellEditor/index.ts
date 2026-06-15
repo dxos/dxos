@@ -3,3 +3,4 @@
 //
 
 export * from './TableCellEditor';
+export { type OnCreateHandler } from './FormCellEditor';

@@ -4,40 +4,38 @@
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
-import { type Context } from '@dxos/context';
+import { type Context as DxosContext } from '@dxos/context';
 import {
-  DeviceStateMachine,
   type CredentialSigner,
-  createCredentialSignerWithKey,
-  createCredentialSignerWithChain,
+  DeviceStateMachine,
   ProfileStateMachine,
+  createCredentialSignerWithChain,
+  createCredentialSignerWithKey,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
-import { type Space } from '@dxos/echo-pipeline';
+import { type Space } from '@dxos/echo-host';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { writeMessages, type FeedWrapper } from '@dxos/feed-store';
+import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
+import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
+  type Credential,
   type DeviceProfileDocument,
   type ProfileDocument,
-  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Presence } from '@dxos/teleport-extension-gossip';
-import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from './authenticator';
-import { DefaultSpaceStateMachine } from './default-space-state-machine';
 import { EdgeFeedReplicator } from '../spaces';
+import { TrustedKeySetAuthVerifier } from './authenticator';
 
-export type IdentityParams = {
+export type IdentityProps = {
   did: IdentityDid;
   identityKey: PublicKey;
   deviceKey: PublicKey;
@@ -59,7 +57,6 @@ export class Identity {
   private readonly _presence?: Presence;
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
-  private readonly _defaultSpaceStateMachine: DefaultSpaceStateMachine;
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
@@ -70,7 +67,7 @@ export class Identity {
 
   public readonly stateUpdate = new Event();
 
-  constructor(params: IdentityParams) {
+  constructor(params: IdentityProps) {
     this.space = params.space;
     this._signer = params.signer;
     this._presence = params.presence;
@@ -87,10 +84,6 @@ export class Identity {
       onUpdate: () => this.stateUpdate.emit(),
     });
     this._profileStateMachine = new ProfileStateMachine({
-      identityKey: this.identityKey,
-      onUpdate: () => this.stateUpdate.emit(),
-    });
-    this._defaultSpaceStateMachine = new DefaultSpaceStateMachine({
       identityKey: this.identityKey,
       onUpdate: () => this.stateUpdate.emit(),
     });
@@ -111,32 +104,26 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
-  get defaultSpaceId(): SpaceId | undefined {
-    return this._defaultSpaceStateMachine.spaceId;
-  }
-
-  @trace.span()
-  async open(ctx: Context): Promise<void> {
+  @trace.span({ op: 'lifecycle' })
+  async open(ctx: DxosContext): Promise<void> {
     await this._presence?.open();
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
-    await this.space.spaceState.addCredentialProcessor(this._defaultSpaceStateMachine);
     if (this._edgeFeedReplicator) {
       this.space.protocol.feedAdded.append(this._onFeedAdded);
     }
     await this.space.open(ctx);
   }
 
-  public async joinNetwork(): Promise<void> {
-    await this.space.startProtocol();
+  public async joinNetwork(ctx: DxosContext): Promise<void> {
+    await this.space.startProtocol(ctx);
     await this._edgeFeedReplicator?.open();
   }
 
-  @trace.span()
-  async close(ctx: Context): Promise<void> {
+  @trace.span({ op: 'lifecycle' })
+  async close(ctx: DxosContext): Promise<void> {
     await this._presence?.close();
     await this.authVerifier.close();
-    await this.space.spaceState.removeCredentialProcessor(this._defaultSpaceStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);
 
@@ -146,7 +133,7 @@ export class Identity {
 
     await this._edgeFeedReplicator?.close();
 
-    await this.space.close();
+    await this.space.close(ctx);
   }
 
   async ready(): Promise<void> {
@@ -208,15 +195,6 @@ export class Identity {
    */
   getDeviceCredentialSigner(): CredentialSigner {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
-  }
-
-  async updateDefaultSpace(spaceId: SpaceId): Promise<void> {
-    const credential = await this.getDeviceCredentialSigner().createCredential({
-      subject: this.identityKey,
-      assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
-    });
-    const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
-    await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
   async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {

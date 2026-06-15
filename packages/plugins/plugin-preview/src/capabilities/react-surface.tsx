@@ -2,129 +2,151 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import * as Effect from 'effect/Effect';
+import React from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  Surface,
-  contributes,
-  createIntent,
-  createSurface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
-import { Obj, Filter } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo-schema';
-import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { Card } from '@dxos/react-ui-stack';
-import { TableType } from '@dxos/react-ui-table';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj, Type } from '@dxos/echo';
+import { Card } from '@dxos/react-ui';
+import { Expando, type ProjectionModel } from '@dxos/schema';
+import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { PREVIEW_PLUGIN } from '../meta';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    //
-    // Specific schema types.
-    //
-    createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
-      filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
-      component: ({ data, role }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const handleOrgClick = useCallback(
-          async (org: DataType.Organization) => {
-            const space = getSpace(org);
-            const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
-            const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
-              return table.view?.target?.query?.typename === DataType.Organization.typename;
-            });
-            await dispatch(
-              createIntent(LayoutAction.UpdatePopover, {
-                part: 'popover',
-                options: {
-                  state: false,
-                  anchorId: '',
-                },
-              }),
-            );
-            if (currentSpaceOrgTable) {
-              return dispatch(
-                createIntent(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [fullyQualifiedId(currentSpaceOrgTable)],
-                  options: { workspace: space?.id },
-                }),
-              );
-            }
-          },
-          [dispatch],
-        );
-        return (
-          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
-            {role === 'popover' && <Surface role='related' data={data} />}
-          </ContactCard>
-        );
-      },
-    }),
-    createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
-      filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
-      component: ({ data, role }) => (
-        <OrganizationCard role={role} subject={data.subject}>
-          {role === 'popover' && <Surface role='related' data={data} />}
-        </OrganizationCard>
-      ),
-    }),
-    createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--project`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
-      filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
-      component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
-    }),
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      //
+      // Specific schema types.
+      // TODO(burdon): Create helpers and factor out.
+      //
 
-    //
-    // Fallback for any object.
-    //
-    createSurface({
-      id: `${PREVIEW_PLUGIN}/fallback-popover`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
-      position: 'fallback',
-      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-      component: ({ data, role }) => {
-        const schema = getSchema(data.subject);
-        const { t } = useTranslation(PREVIEW_PLUGIN);
-        if (!schema) {
-          // TODO(burdon): Use Alert.
-          return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
-        }
+      Surface.create<{ subject: Person.Person }>({
+        id: 'schemaPopoverContact',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.Card, Person.Person),
+        component: ({ data, role }) => {
+          return (
+            <>
+              <PersonCard role={role} subject={data.subject} />
+              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
+            </>
+          );
+        },
+      }),
+      Surface.create({
+        id: 'schemaPopoverOrganization',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.Card, Organization.Organization),
+        component: ({ data, role }) => {
+          return (
+            <>
+              <OrganizationCard role={role} subject={data.subject} />
+              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
+            </>
+          );
+        },
+      }),
+      Surface.create({
+        id: 'schemaPopoverProject',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
+        component: ({ data, role }) => {
+          return <ProjectCard role={role} subject={data.subject} />;
+        },
+      }),
+      Surface.create({
+        id: 'schemaPopoverTask',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.Card, Task.Task),
+        component: ({ data, role }) => {
+          return <TaskCard role={role} subject={data.subject} />;
+        },
+      }),
+      Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
+        id: 'schemaPopoverExpando',
+        filter: AppSurface.object(AppSurface.Card, Expando.Expando),
+        component: ({ data, role }) => {
+          return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
+        },
+      }),
 
-        const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
-          const changedPaths = Object.keys(changed).filter((path) => changed[path]);
-          for (const path of changedPaths) {
-            const value = values[path];
-            setValue(data.subject, path as JsonPath, value);
+      Surface.create({
+        id: 'schemaPopoverDynamicType',
+        role: 'card--content',
+        filter: (data): data is { subject: Obj.Unknown } => {
+          if (!Obj.isObject(data.subject)) {
+            return false;
           }
-        }, []);
+          const type = Obj.getType(data.subject);
+          if (type) {
+            return Type.getDatabase(type) != null;
+          }
+          // Obj.getType fails for database-registered schemas (DXN mismatch); fall back to typename query.
+          try {
+            const db = Obj.getDatabase(data.subject);
+            const typename = Obj.getTypename(data.subject);
+            return (
+              !!db &&
+              !!typename &&
+              db.graph.registry
+                .list()
+                .filter(Type.isType)
+                .some((t) => Type.getTypename(t) === typename)
+            );
+          } catch {
+            return false;
+          }
+        },
+        component: ({ data, role }) => {
+          // Dynamic/mutable schemas render an editable, full-layout form;
+          // FormCard handles both static and runtime schema resolution internally.
+          return <FormCard role={role} subject={data.subject} readonly={false} layout='full' />;
+        },
+      }),
 
-        return (
-          <Card.Container role={role}>
-            <Form
-              schema={schema}
-              values={data.subject}
-              readonly={role === 'popover'}
-              onSave={handleSave}
-              autoSave
-              {...(role === 'card--kanban' && { outerSpacing: 'blockStart-0' })}
-            />
-          </Card.Container>
-        );
-      },
-    }),
-  ]);
+      //
+      // Fallback for any object.
+      //
+
+      Surface.create({
+        id: 'fallbackPopover',
+        role: 'card--content',
+        position: 'last',
+        filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
+        component: ({ data, role }) => {
+          return <FormCard role={role} subject={data.subject} projection={data.projection} />;
+        },
+      }),
+
+      Surface.create({
+        id: 'fallbackJson',
+        role: 'card--content',
+        position: 'last',
+        filter: (data): data is Record<string, unknown> => true,
+        component: ({ data }) => {
+          return <JsonCard data={data} />;
+        },
+      }),
+
+      Surface.create({
+        id: 'section',
+        position: 'last',
+        filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
+        component: ({ data }) => {
+          return (
+            <div className='flex w-full justify-center'>
+              <div className='py-2 dx-card-min-width dx-card-max-width'>
+                <Card.Root>
+                  <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
+                </Card.Root>
+              </div>
+            </div>
+          );
+        },
+      }),
+    ]),
+  ),
+);

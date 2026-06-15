@@ -3,4 +3,5 @@
 //
 
 export * from './meta';
-export * from './OutlinerPlugin';
+export * from './operations';
+export * from './types';

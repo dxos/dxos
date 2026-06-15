@@ -1,36 +1,50 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#query-lite": "./dist/query-lite/index.js"
+  },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    }
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./api.d.ts": "./dist/query-lite/index.d.ts"
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
+    "@dxos/context": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@orama/orama": "^3.1.7"
+    "@dxos/vendor-quickjs": "workspace:*",
+    "@lezer/common": "catalog:",
+    "@lezer/lr": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "@lezer/generator": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

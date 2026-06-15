@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestExtension, TestExtensionWithStreams } from '@dxos/teleport';
-import type { TestStreamStats, TeleportExtension } from '@dxos/teleport';
+import type { TeleportExtension, TestStreamStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
 import { createTeleportProtocolFactory } from '../wire-protocol';

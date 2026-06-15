@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/react-client';
-import { Invitation, CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
 
 export const inviteWithState = (state: Invitation.State) =>
   new CancellableInvitationObservable({

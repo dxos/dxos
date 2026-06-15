@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { useConfig, useClient } from '@dxos/react-client';
+import { useClient, useConfig } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
 /**

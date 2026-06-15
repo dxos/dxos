@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -21,7 +22,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/invariant"
@@ -30,10 +37,13 @@
       "path": "../../common/keyboard"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
@@ -42,28 +52,31 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -75,7 +88,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-tabs"
@@ -84,10 +106,16 @@
       "path": "../../ui/react-ui-text-tooltip"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
@@ -96,7 +124,7 @@
       "path": "../plugin-observability"
     },
     {
-      "path": "../plugin-theme"
+      "path": "../plugin-testing"
     }
   ]
 }

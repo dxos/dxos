@@ -2,91 +2,111 @@
 // Copyright 2023 DXOS.org
 //
 
-import { forceLink, forceManyBody } from 'd3';
-import NativeForceGraph from 'force-graph';
-import React, { type FC, useEffect, useRef, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
-import { type SpaceGraphModel } from '@dxos/schema';
+import { Obj } from '@dxos/echo';
+import { SelectionModel } from '@dxos/graph';
+import { composable, composableProps } from '@dxos/react-ui';
+import {
+  type GraphController,
+  GraphForceProjector,
+  type GraphLayoutNode,
+  type GraphProps,
+  SVG,
+  type SVGContext,
+} from '@dxos/react-ui-graph';
+import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
+import { getHashStyles } from '@dxos/ui-theme';
+import '@dxos/react-ui-graph/styles/graph.css';
 
-import { GraphAdapter } from './adapter';
+const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] }>({ nodes: [], edges: [] });
 
 export type ForceGraphProps = {
   model?: SpaceGraphModel;
-  match?: RegExp;
-};
+  grid?: boolean;
+  selection?: SelectionModel;
+  onInspect?: GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect'];
+} & Pick<GraphProps, 'drag'>;
 
-export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
-  const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
-  const rootRef = useRef<HTMLDivElement>(null);
-  const forceGraph = useRef<NativeForceGraph>();
+export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
+  ({ model, selection: selectionProp, grid, drag, onInspect, ...props }, forwardedRef) => {
+    // TODO(wittjosiah): This should go into Graph.tsx but for some reason doesn't work.
+    useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
 
-  const filteredRef = useRef<SearchResult[]>();
-  filteredRef.current = filterObjectsSync(model?.objects ?? [], match);
+    const graph = useRef<GraphController>(null);
+    const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+    useEffect(() => {
+      const unsubscribe = selection.subscribe(() => graph.current?.repaint());
+      return unsubscribe;
+    }, [selection]);
 
-  const [data, setData] = useState<GraphAdapter>();
-  useEffect(() => {
-    return model?.subscribe((model) => {
-      setData(new GraphAdapter(model.graph));
-    });
-  }, [model]);
+    const svgRef = useRef<SVGContext>(null);
+    const [projector, setProjector] = useState<GraphForceProjector>();
+    useEffect(() => {
+      if (svgRef.current) {
+        setProjector(
+          new GraphForceProjector(svgRef.current, {
+            attributes: {
+              // TODO(burdon): Check type (currently assumes Employee property).
+              // Edge shouldn't contribute to force if it's not active.
+              linkForce: (edge) => edge.data?.object?.active !== false,
+            },
+            forces: {
+              point: {
+                strength: 0.01,
+              },
+            },
+          }),
+        );
+      }
+      // SVG.Graph owns projector start/stop; nothing to clean up here.
+    }, []);
 
-  useEffect(() => {
-    if (rootRef.current) {
-      // https://github.com/vasturiano/force-graph
-      // https://github.com/vasturiano/3d-force-graph
-      forceGraph.current = new NativeForceGraph(rootRef.current)
-        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#node-styling
-        .nodeRelSize(6)
-        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : node.data.label ?? node.id))
-        .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
+    const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(
+      (node) => {
+        if (selection.contains(node.id)) {
+          selection.remove(node.id);
+        } else {
+          selection.add(node.id);
+        }
+      },
+      [selection],
+    );
 
-        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#link-styling
-        .linkAutoColorBy((link: any) => link.type);
-    }
-
-    return () => {
-      forceGraph.current?.pauseAnimation().graphData({ nodes: [], links: [] });
-      forceGraph.current = undefined;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!data || !width || !height || !forceGraph.current) {
-      return;
-    }
-
-    // https://github.com/vasturiano/force-graph?tab=readme-ov-file#container-layout
-    forceGraph.current
-      .pauseAnimation()
-      .width(width)
-      .height(height)
-      .onEngineStop(() => {
-        handleZoomToFit();
-      })
-      .onNodeClick((node: any) => {
-        forceGraph.current?.emitParticle(node);
-      })
-
-      // https://github.com/vasturiano/force-graph?tab=readme-ov-file#force-engine-d3-force-configuration
-      // .d3Force('center', forceCenter().strength(0.9))
-      .d3Force('link', forceLink().distance(160).strength(0.5))
-      .d3Force('charge', forceManyBody().strength(-30))
-
-      .graphData(data)
-      .warmupTicks(100)
-      .cooldownTime(1_000)
-      .resumeAnimation();
-  }, [data, width, height, forceGraph.current]);
-
-  const handleZoomToFit = () => {
-    forceGraph.current?.zoomToFit(400, 40);
-  };
-
-  return (
-    <div ref={ref} className='relative grow' onClick={handleZoomToFit}>
-      <div ref={rootRef} className='absolute inset-0' />
-    </div>
-  );
-};
+    return (
+      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+        <SVG.Root ref={svgRef}>
+          <SVG.Markers />
+          {grid && <SVG.Grid axis />}
+          <SVG.Zoom extent={[1 / 2, 2]}>
+            <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+              ref={graph}
+              drag={drag}
+              model={model}
+              projector={projector}
+              labels={{
+                text: (node) => node.data?.data.label ?? node.id,
+              }}
+              attributes={{
+                node: (node: GraphLayoutNode<SpaceGraphNode>) => {
+                  const obj = node.data?.data.object;
+                  return {
+                    data: {
+                      color: getHashStyles(obj && Obj.getTypename(obj))?.hue,
+                    },
+                    classes: {
+                      'dx-selected': selection.contains(node.id),
+                    },
+                  };
+                },
+              }}
+              onSelect={handleSelect}
+              onInspect={onInspect}
+            />
+          </SVG.Zoom>
+        </SVG.Root>
+      </div>
+    );
+  },
+);

@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { ParamKeyAnnotation, UrlParser } from './url';
+import { ParamKeyAnnotation, UrlParser } from './internal/url';
 
 const Invitation = Schema.Struct({
   accessToken: Schema.String,

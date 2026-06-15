@@ -2,40 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Chart } from './Chart';
 import CitiesData from '../../../data/cities.js';
+import { Chart } from './Chart';
 
-// TODO(burdon): Generate data with geo lat/lng.
-// TODO(burdon): How to provide geo service via agent?
+const items = CitiesData.features.map((feature: any) => ({
+  x: feature.geometry.coordinates[0],
+  y: feature.geometry.coordinates[1],
+}));
 
-const Story = () => {
-  if (!CitiesData) {
-    return null;
-  }
+const DefaultStory = () => (
+  <Chart items={items} accessor={(obj) => ({ x: obj.x, y: obj.y })} options={{ stroke: 'blue' }} />
+);
 
-  const items = CitiesData.features.map((feature: any) => ({
-    x: feature.geometry.coordinates[0],
-    y: feature.geometry.coordinates[1],
-  }));
-
-  return <Chart items={items} accessor={(obj) => ({ x: obj.x, y: obj.y })} options={{ stroke: 'blue' }} />;
-};
-
-// TODO(burdon): Change to decorator.
-export const Default = () => <ClientRepeater component={Story} />;
-
-const meta: Meta<typeof Chart> = {
-  title: 'plugins/plugin-explorer/Chart',
+const meta = {
+  title: 'plugins/plugin-explorer/components/Chart',
   component: Chart,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+  render: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof Chart>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

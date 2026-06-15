@@ -1,0 +1,23 @@
+/**
+ * Border
+ */
+
+@theme {
+  /* Custom spacing/sizing values - for ring, ring-offset, border-width, etc. */
+  --ring-offset-width-focus-offset: var(--dx-focus-offset);
+  --ring-width-focus-line: var(--dx-focus-line);
+  --ring-width-hair-line: var(--dx-hair-line);
+  --ring-width-thick-line: var(--dx-thick-line);
+  --ring-width-no-line: var(--dx-no-line);
+  --border-width-landmark-line: var(--dx-landmark-line);
+
+  /* Border radius scale */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
+  /* Box shadow */
+  --shadow-slider: 0 0 0 5px rgba(0, 0, 0, 0.3);
+}

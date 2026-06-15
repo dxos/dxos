@@ -10,13 +10,13 @@ import * as ts from 'typescript';
 import {
   createIndexSourceFile,
   createNamespaceSourceFile,
-  getFileNameForNamespace,
   generatePackageExports,
+  getFileNameForNamespace,
 } from './generator';
 import { Logger } from './logger';
 import { type ModuleSpecifier } from './module-specifier';
 import { splitSchemaIntoNamespaces } from './namespaces';
-import { parseSubstitutionsFile, type SubstitutionsMap } from './parser';
+import { type SubstitutionsMap, parseSubstitutionsFile } from './parser';
 
 // TODO(dmaretskyi): Move all parsing into `generateSchema` and remove this function.
 export const parseAndGenerateSchema = async (

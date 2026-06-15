@@ -1,0 +1,10 @@
+name = "composer-dxos-org"
+main = "dist/worker.js"
+compatibility_date = "2024-04-05"
+
+# Route configuration - requires zone setup
+# routes = [{ pattern = "composer.dxos.org/*", zone_name = "dxos.org" }]
+
+[vars]
+APPLE_TEAM_ID = "9428WC5MR8"
+# ANDROID_SHA256_FINGERPRINTS = ""  # JSON array string, set via secret - uncomment when enabling Android support

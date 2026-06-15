@@ -5,9 +5,11 @@
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { createAdmissionCredentials } from '@dxos/credentials';
-import { AuthStatus } from '@dxos/echo-pipeline';
+import { AuthStatus } from '@dxos/echo-host';
 import { writeMessages } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
@@ -22,7 +24,7 @@ describe('DataSpaceManager', () => {
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-    const space = await peer.dataSpaceManager.createSpace();
+    const space = await peer.dataSpaceManager.createSpace(new Context());
 
     // Process all written mutations.
     await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
@@ -45,7 +47,7 @@ describe('DataSpaceManager', () => {
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
     await connectReplicators([peer1, peer2]);
 
-    const space1 = await peer1.dataSpaceManager.createSpace();
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
@@ -60,7 +62,7 @@ describe('DataSpaceManager', () => {
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
-    const space2 = await peer2.dataSpaceManager.acceptSpace({
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
@@ -115,7 +117,7 @@ describe('DataSpaceManager', () => {
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
     await connectReplicators([peer1, peer2]);
 
-    const space1 = await peer1.dataSpaceManager.createSpace();
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
@@ -130,7 +132,7 @@ describe('DataSpaceManager', () => {
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
-    const space2 = await peer2.dataSpaceManager.acceptSpace({
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
@@ -149,6 +151,71 @@ describe('DataSpaceManager', () => {
     await receivedMessage();
   });
 
+  test('create space with tags', async () => {
+    const builder = new TestBuilder();
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { tags: ['personal', 'test'] });
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    expect(space.inner.spaceState.tags).toEqual(['personal', 'test']);
+    expect(space.inner.spaceState.genesisCredential).to.exist;
+  });
+
+  test('create space without tags has empty tags', async () => {
+    const builder = new TestBuilder();
+    const peer = builder.createPeer();
+    await peer.createIdentity();
+    await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+    const space = await peer.dataSpaceManager.createSpace(new Context());
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+    expect(space.inner.spaceState.tags).toEqual([]);
+  });
+
+  test('tags propagate through peer admission', async () => {
+    const builder = new TestBuilder();
+    const peer1 = builder.createPeer();
+    await peer1.createIdentity();
+    const peer2 = builder.createPeer();
+    await peer2.createIdentity();
+
+    await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+    await connectReplicators([peer1, peer2]);
+
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context(), { tags: ['personal'] });
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    // Admit peer2 to space1.
+    await writeMessages(
+      space1.inner.controlPipeline.writer,
+      await createAdmissionCredentials(
+        peer1.identity.credentialSigner,
+        peer2.identity.identityKey,
+        space1.key,
+        space1.inner.genesisFeedKey,
+        undefined, // role (default ADMIN)
+        undefined, // membershipChainHeads
+        undefined, // profile
+        undefined, // invitationCredentialId
+        space1.inner.spaceState.tags, // tags
+      ),
+    );
+
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
+      spaceKey: space1.key,
+      genesisFeedKey: space1.inner.genesisFeedKey,
+      tags: space1.inner.spaceState.tags,
+    });
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+
+    // Peer2's space should have the same tags.
+    expect(space2.inner.spaceState.tags).toEqual(['personal']);
+  });
+
   describe('activation', () => {
     test('can activate and deactivate a space', async () => {
       const builder = new TestBuilder();
@@ -157,14 +224,14 @@ describe('DataSpaceManager', () => {
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-      const space = await peer.dataSpaceManager.createSpace();
+      const space = await peer.dataSpaceManager.createSpace(new Context());
       await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
       expect(space.state).to.equal(SpaceState.SPACE_READY);
 
-      await space.deactivate();
+      await space.deactivate(new Context());
       expect(space.state).to.equal(SpaceState.SPACE_INACTIVE);
 
-      await space.activate();
+      await space.activate(new Context());
       await asyncTimeout(
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
@@ -178,12 +245,12 @@ describe('DataSpaceManager', () => {
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-      await peer.dataSpaceManager.createSpace();
+      await peer.dataSpaceManager.createSpace(new Context());
       await reloadDataSpaces(peer);
 
       const space = getFirstSpace(peer);
       expect(space.state).to.equal(SpaceState.SPACE_CLOSED);
-      await space.activate();
+      await space.activate(new Context());
       await asyncTimeout(
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
@@ -197,10 +264,10 @@ describe('DataSpaceManager', () => {
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-      await peer.dataSpaceManager.createSpace();
+      await peer.dataSpaceManager.createSpace(new Context());
       await reloadDataSpaces(peer);
 
-      await getFirstSpace(peer).deactivate();
+      await getFirstSpace(peer).deactivate(new Context());
 
       await reloadDataSpaces(peer);
 
@@ -208,8 +275,96 @@ describe('DataSpaceManager', () => {
     });
   });
 
+  describe('deletion', () => {
+    test('markSpaceDeleted unloads the space and records a tombstone', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), spaceKey);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+      expect(space.state).to.equal(SpaceState.SPACE_DELETED);
+    });
+
+    test('markSpaceDeleted is idempotent', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), space.key);
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), space.key);
+
+      expect(peer.dataSpaceManager.isSpaceDeleted(space.key)).to.be.true;
+    });
+
+    test('deleted space is not reloaded after restart', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), spaceKey);
+      await reloadDataSpaces(peer);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+    });
+
+    test('handleRemoteSpaceDeleted tombstones a loaded space', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      await peer.dataSpaceManager.handleRemoteSpaceDeleted(new Context(), spaceKey);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+    });
+
+    test('acceptSpace refuses a tombstoned space (out-of-order guard)', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      // Tombstone arrives before the SpaceMember credential would trigger acceptSpace.
+      const spaceKey = PublicKey.random();
+      await peer.dataSpaceManager.handleRemoteSpaceDeleted(new Context(), spaceKey);
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+
+      await expect(
+        peer.dataSpaceManager.acceptSpace(new Context(), { spaceKey, genesisFeedKey: PublicKey.random() }),
+      ).rejects.toThrow();
+    });
+  });
+
   const connectReplicators = (peers: TestPeer[]) => {
-    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
+    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(Context.default(), peer.meshEchoReplicator)));
   };
 
   const reloadDataSpaces = async (peer: TestPeer) => {

@@ -6,16 +6,16 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
-import { isNotFalsy } from '@dxos/util';
+import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomInPlace, zoomTo } from '@dxos/react-ui-canvas';
+import { isTruthy } from '@dxos/util';
 
-import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
 import { type TestId } from '../components';
-import { doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
+import { doLayout, fireBullet, getCenter, getRect, rectUnion } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { type Connection, isPolygon } from '../types';
+import { type CanvasBoard, isPolygon } from '../types';
+import { useEditorContext } from './useEditorContext';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
@@ -152,15 +152,15 @@ export const useActionHandler = () => {
 
         // TODO(burdon): Factor out graph mutators.
         case 'cut': {
-          const { ids = selection.selected.value } = action;
+          const { ids = selection.getSelectedIds() } = action;
           clipboard.clear().addGraphs([graph.removeNodes(ids), graph.removeEdges(ids)]);
           selection.clear();
           return true;
         }
         case 'copy': {
-          const { ids = selection.selected.value } = action;
-          const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
-          const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
+          const { ids = selection.getSelectedIds() } = action;
+          const nodes = ids.map((id: string) => graph.getNode(id)).filter(isTruthy);
+          const edges = ids.map((id: string) => graph.getEdge(id)).filter(isTruthy);
           clipboard.clear().builder.addNodes(nodes).addEdges(edges);
           return true;
         }
@@ -192,14 +192,14 @@ export const useActionHandler = () => {
         case 'link': {
           const { connection } = action;
           const id = createId();
-          const edge: Connection = { id, ...connection };
+          const edge: CanvasBoard.Connection = { id, ...connection };
           graph.addEdge(edge);
           graphMonitor?.onLink({ graph, edge });
           selection.setSelected([id]);
           return true;
         }
         case 'delete': {
-          const { ids = selection.selected.value, all } = action;
+          const { ids = selection.getSelectedIds(), all } = action;
           if (all) {
             graph.clear();
             void actionHandler?.({ type: 'center' });
@@ -217,7 +217,7 @@ export const useActionHandler = () => {
             `g[${DATA_TEST_ID}="${'dx-overlay-bullets' satisfies TestId}"]`,
           );
           if (g) {
-            const { edges = selection.selected.value.map((source) => ({ source })) } = action;
+            const { edges = selection.getSelectedIds().map((source: string) => ({ source })) } = action;
             for (const edge of edges) {
               fireBullet(root, g, graph, edge);
             }

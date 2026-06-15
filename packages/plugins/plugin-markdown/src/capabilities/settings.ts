@@ -2,24 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import * as Effect from 'effect/Effect';
 
-import { meta } from '../meta';
-import { type MarkdownSettingsProps, MarkdownSettingsSchema } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { createKvsStore } from '@dxos/effect';
 
-export default () => {
-  const settings = live<MarkdownSettingsProps>({
-    defaultViewMode: 'preview',
-    toolbar: true,
-    numberedHeadings: true,
-    folding: true,
-    experimental: false,
-  });
+import { meta } from '#meta';
+import { Markdown, MarkdownCapabilities } from '#types';
 
-  return contributes(Capabilities.Settings, {
-    prefix: meta.id,
-    schema: MarkdownSettingsSchema,
-    value: settings,
-  });
-};
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: Markdown.Settings,
+      defaultValue: () => ({
+        defaultViewMode: 'preview' as const,
+        toolbar: true,
+        numberedHeadings: true,
+        folding: true,
+        experimental: false,
+      }),
+    });
+
+    return [
+      Capability.contributes(MarkdownCapabilities.Settings, settingsAtom),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.id,
+        schema: Markdown.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

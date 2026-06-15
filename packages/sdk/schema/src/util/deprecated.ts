@@ -1,0 +1,161 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+
+import { QueryAST } from '@dxos/echo';
+import { Format, TypeEnum } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
+import { type URI } from '@dxos/keys';
+
+/**
+ * Get the base type; e.g., traverse through refinements.
+ *
+ * @deprecated
+ */
+const getSimpleType = (node: SchemaAST.AST): string | undefined => {
+  if (
+    SchemaAST.isDeclaration(node) ||
+    SchemaAST.isObjectKeyword(node) ||
+    SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    SchemaEx.isTupleType(node) ||
+    SchemaEx.isDiscriminatedUnion(node)
+  ) {
+    return 'object';
+  }
+
+  if (SchemaAST.isStringKeyword(node)) {
+    return 'string';
+  }
+  if (SchemaAST.isNumberKeyword(node)) {
+    return 'number';
+  }
+  if (SchemaAST.isBooleanKeyword(node)) {
+    return 'boolean';
+  }
+
+  if (SchemaAST.isEnums(node)) {
+    return 'enum';
+  }
+
+  if (SchemaAST.isLiteral(node)) {
+    return 'literal';
+  }
+};
+
+/**
+ * @deprecated
+ */
+const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
+
+/**
+ * @deprecated
+ */
+export type SchemaFieldDescription = {
+  property: string;
+  type: TypeEnum;
+  format?: Format.TypeFormat;
+};
+
+/**
+ * @deprecated
+ */
+export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
+  const fields = [] as SchemaFieldDescription[];
+  SchemaEx.visit(
+    schema.ast,
+    (node, path) => {
+      const { type, format } = toFieldValueType(node);
+      fields.push({ property: path.join('.'), type, format });
+    },
+    isSimpleType,
+  );
+
+  return fields;
+};
+
+/**
+ * @deprecated
+ */
+const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; type: TypeEnum } => {
+  if (SchemaAST.isTypeLiteral(type)) {
+    return { type: TypeEnum.Ref, format: Format.TypeFormat.Ref };
+  } else if (SchemaAST.isNumberKeyword(type)) {
+    return { type: TypeEnum.Number };
+  } else if (SchemaAST.isBooleanKeyword(type)) {
+    return { type: TypeEnum.Boolean };
+  } else if (SchemaAST.isStringKeyword(type)) {
+    return { type: TypeEnum.String };
+  }
+
+  if (SchemaAST.isRefinement(type)) {
+    return toFieldValueType(type.from);
+  }
+
+  // TODO(zan): How should we be thinking about transformations?
+  //  See https://effect.website/docs/guides/schema/projections
+  //  - Which of these are we storing in the database?
+  //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
+  if (SchemaAST.isTransformation(type)) {
+    const identifier = SchemaAST.getIdentifierAnnotation(type);
+    if (identifier._tag === 'Some') {
+      if (identifier.value === 'DateFromString') {
+        return { type: TypeEnum.String, format: Format.TypeFormat.Date };
+      }
+    }
+  }
+
+  // TODO(burdon): Better fallback?
+  return { type: TypeEnum.String, format: Format.TypeFormat.JSON };
+};
+
+// TODO(wittjosiah): This needs to be cleaned up.
+//   Ideally this should be something like `Query.getType`.
+//   It should return the type the query is indexing, regardless of where in the AST it is.
+// TODO(burdon): What does this actually mean? Queries may be complex (in the future) and have multiple types.
+/**
+ * Returns the type URI a query selects on — the `echo:` EID (stored schema) or `dxn:` typename DXN
+ * stored on the filter — or undefined. Compare against an entity via `Type.getURI`.
+ */
+export const getTypeURIFromQuery = (query: QueryAST.Query | undefined): URI.URI | undefined => {
+  let typeUri: URI.URI | undefined;
+  query &&
+    QueryAST.visit(query, (node) => {
+      if (node?.type !== 'select') {
+        return;
+      }
+
+      if (node.filter.type !== 'object') {
+        return;
+      }
+
+      if (!node.filter.typename) {
+        return;
+      }
+
+      typeUri = node.filter.typename;
+    });
+
+  return typeUri;
+};
+
+/**
+ * Extract the tag DXN from a query AST.
+ * Searches through select and filter nodes for a tag filter.
+ */
+export const getTagFromQuery = (query: QueryAST.Query | undefined): string | undefined => {
+  let tag: string | undefined;
+  query &&
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'select' && node.filter.type === 'tag') {
+        tag = node.filter.tag;
+      }
+      if (node.type === 'filter' && node.filter.type === 'tag') {
+        tag = node.filter.tag;
+      }
+    });
+  return tag;
+};

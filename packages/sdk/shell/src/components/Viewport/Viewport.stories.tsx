@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { AlertDialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { useViewportContext, Viewport, type ViewportScopedProps } from './Viewport';
 import { Action } from '../Panel';
+import { Viewport, type ViewportScopedProps, useViewportContext } from './Viewport';
 
 type StorybookViewportProps = {};
 
@@ -40,11 +39,13 @@ const Views = ({ __viewportScope }: ViewportScopedProps<{}>) => {
   );
 };
 
-const StorybookViewport = (props: StorybookViewportProps) => {
+const StorybookViewport = (_: StorybookViewportProps) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Overlay>
         <AlertDialog.Content classNames='p-0'>
+          <AlertDialog.Title srOnly>Viewport</AlertDialog.Title>
+          <AlertDialog.Description srOnly>Storybook viewport navigation demo.</AlertDialog.Description>
           <Viewport.Root defaultActiveView='one'>
             <Views />
           </Viewport.Root>
@@ -54,13 +55,16 @@ const StorybookViewport = (props: StorybookViewportProps) => {
   );
 };
 
-export default {
+const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof StorybookViewport>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

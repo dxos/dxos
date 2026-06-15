@@ -26,13 +26,15 @@ Technologies to consider:
 - Codemirror v6 for editor integrations.
 
 Monorepo tools:
-- NX for monorepo management.
+- moon for monorepo management.
 - pnpm for package management.
 - vitest
 - vite
 
 Testing:
 - Place test files near the module they test with "module_name.test.ts" format.
-- Use vitest with `describe` and `test` apis (don't use `it`).
+- Use vitest with `describe` and `test` apis (don't use `it`). `it.effect` is an exception to this rule.
 - Don't write tests at top-level, instead make sure they are wrapped in a `describe` block.
-- Prefer importing `expect` from test context: `test('foo', ({ expect }) => ...)`
+- Prefer importing `expect` from test context: `test('foo', ({ expect }) => ...)` 
+- **File layout:** suite config first (`beforeEach` / `afterEach`, shared fixtures), then tests. Put helper functions at the **bottom of the test file**, after the closing `describe` — never between imports and the suite.
+- **Test body layout:** setup at the top of each test (`peer`, `db`, `queues`, `testLayer`, etc.), then the scenario and assertions.

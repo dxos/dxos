@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type Rect, type Point } from './types';
+import { type Point, type Rect } from './types';
 
 export type Modifiers = {
   center?: boolean;

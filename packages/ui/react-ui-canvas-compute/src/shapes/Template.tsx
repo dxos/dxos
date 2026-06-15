@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useRef } from 'react';
 
-import { ComputeValueType, getTemplateInputSchema, TemplateOutput, VoidInput } from '@dxos/conductor';
-import { toJsonSchema } from '@dxos/echo-schema';
+import { ComputeValueType, TemplateOutput, VoidInput, getTemplateInputSchema } from '@dxos/conductor';
+import { toJsonSchema } from '@dxos/echo/JsonSchema';
 import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
@@ -16,9 +16,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { Box, createFunctionAnchors, TypeSelect } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { Box, TypeSelect, createFunctionAnchors } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 //
 // Data

@@ -1,0 +1,75 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { type PropsWithChildren } from 'react';
+
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { meta } from '#meta';
+
+import { type ChatEvent } from '../Chat/events';
+
+export type ChatActionsProps = ThemedClassName<
+  PropsWithChildren<{
+    microphone?: boolean;
+    recording?: boolean;
+    processing?: boolean;
+    debug?: boolean;
+    onEvent?: (event: ChatEvent) => void;
+  }>
+>;
+
+export const ChatActions = ({
+  classNames,
+  children,
+  microphone,
+  recording,
+  processing,
+  debug,
+  onEvent,
+}: ChatActionsProps) => {
+  const { t } = useTranslation(meta.id);
+
+  return (
+    <div className={mx('flex items-center', classNames)}>
+      {children}
+
+      {microphone && (
+        <IconButton
+          disabled={!processing}
+          classNames={mx(recording && 'bg-primary-500')}
+          variant='ghost'
+          icon='ph--microphone--regular'
+          iconOnly
+          noTooltip
+          label={t('microphone.button')}
+          onMouseDown={() => onEvent?.({ type: 'record-start' })}
+          onMouseUp={() => onEvent?.({ type: 'record-stop' })}
+          onTouchStart={() => onEvent?.({ type: 'record-start' })}
+          onTouchEnd={() => onEvent?.({ type: 'record-stop' })}
+        />
+      )}
+
+      {debug && (
+        <IconButton
+          variant='ghost'
+          icon='ph--wrench--regular'
+          iconOnly
+          label={t('debug.button')}
+          onClick={() => onEvent?.({ type: 'toggle-debug' })}
+        />
+      )}
+
+      <IconButton
+        // disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('cancel-processing.button')}
+        onClick={() => onEvent?.({ type: 'cancel' })}
+      />
+    </div>
+  );
+};

@@ -362,7 +362,8 @@ a.button {
 
 // quickstart tiles
 .quick-start-tiles {
-  &,* {
+  &,
+  * {
     // outline: 1px dashed rgba(255,150,40,0.3);
   }
   display: flex;

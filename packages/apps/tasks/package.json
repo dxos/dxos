@@ -1,36 +1,38 @@
 {
   "name": "tasks",
   "version": "0.1.0",
-  "description": "tasks - a DXOS application",
   "private": true,
+  "description": "tasks - a DXOS application",
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
-    "deploy": "dx app publish",
     "preview": "vite preview",
     "serve": "vite"
   },
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "react-router-dom": "^6.4.0"
+    "@dxos/vite-plugin-shutdown": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/cli": "workspace:*",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "autoprefixer": "^10.4.12",
-    "postcss": "^8.4.41",
-    "tailwindcss": "~3.4.1",
-    "vite": "5.4.7",
-    "vite-plugin-top-level-await": "^1.4.1",
-    "vite-plugin-wasm": "^3.3.0",
-    "workbox-window": "^7.0.0"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "postcss": "catalog:",
+    "tailwindcss": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-top-level-await": "catalog:",
+    "vite-plugin-wasm": "catalog:",
+    "workbox-window": "catalog:"
   }
 }

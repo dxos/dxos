@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Graph as NativeGraph, type PlainObject } from '@antv/graphlib';
+import { Graph as NaturalGraph, type PlainObject } from '@antv/graphlib';
 import {
   CircularLayout,
   type CircularLayoutOptions,
@@ -20,8 +20,8 @@ import { type Graph, type GraphModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
-import { type Intersection } from './util';
 import { CanvasGraphModel, type Polygon } from '../types';
+import { type Intersection } from './util';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.
@@ -42,7 +42,7 @@ export const defaultLayoutOptions: LayoutOptions = {
 };
 
 export const doLayout = async (
-  data: GraphModel,
+  data: GraphModel.GraphModel,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
 ): Promise<CanvasGraphModel> => {
   const graph = CanvasGraphModel.create();
@@ -130,16 +130,16 @@ const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
 };
 
 // TODO(burdon): Preserve existing position with Shape adapter.
-const toLayoutGraph = ({ nodes, edges }: Graph): NativeGraph<PlainObject, PlainObject> => {
-  return new NativeGraph<PlainObject, PlainObject>({
-    nodes: nodes.map((node) => ({
+const toLayoutGraph = ({ nodes, edges }: Graph.Any): NaturalGraph<PlainObject, PlainObject> => {
+  return new NaturalGraph<PlainObject, PlainObject>({
+    nodes: nodes.map((node: Graph.Node.Any) => ({
       id: node.id,
       data: {
         x: getDeep(node.data, ['center', 'x']) ?? 0,
         y: getDeep(node.data, ['center', 'y']) ?? 0,
       },
     })),
-    edges: edges.map((edge) => ({
+    edges: edges.map((edge: Graph.Edge.Any) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,

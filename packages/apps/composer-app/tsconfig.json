@@ -9,7 +9,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist",
+    "outDir": "dist/types",
     "types": [
       "node",
       "sharedworker"
@@ -18,12 +18,12 @@
   "exclude": [
     "demos/*",
     "src/functions/*",
-    "src/playwright/playwright.config.cts",
+    "src/playwright/playwright.config.ts",
     "vite.config.ts"
   ],
   "include": [
     "demos",
-    "script-frame",
+    "scripts",
     "src"
   ],
   "references": [
@@ -31,19 +31,79 @@
       "path": "../../../tools/vite-plugin-icons"
     },
     {
+      "path": "../../../tools/vite-plugin-import-source"
+    },
+    {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../common/context"
+    },
+    {
+      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/effect-atom-solid"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/feed-store"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/hypercore"
+    },
+    {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keyboard"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/kv-store"
     },
     {
       "path": "../../common/log"
     },
     {
+      "path": "../../common/log-store-idb"
+    },
+    {
+      "path": "../../common/merkle-search-tree"
+    },
+    {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/random-access-storage"
+    },
+    {
+      "path": "../../common/sql-sqlite"
     },
     {
       "path": "../../common/storybook-utils"
@@ -52,22 +112,106 @@
       "path": "../../common/test-utils"
     },
     {
+      "path": "../../common/timeframe"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
     },
     {
+      "path": "../../common/web-context"
+    },
+    {
+      "path": "../../common/web-context-react"
+    },
+    {
+      "path": "../../common/web-context-solid"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/assistant-toolkit"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-host"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
+      "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/echo/echo-solid"
+    },
+    {
+      "path": "../../core/echo/feed"
+    },
+    {
+      "path": "../../core/echo/index-core"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/keyring"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/mesh/messaging"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/mesh/teleport"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-automerge-replicator"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-gossip"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-replicator"
+    },
+    {
+      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/protocols"
@@ -85,13 +229,40 @@
       "path": "../../plugins/plugin-automation"
     },
     {
+      "path": "../../plugins/plugin-bluesky"
+    },
+    {
+      "path": "../../plugins/plugin-board"
+    },
+    {
+      "path": "../../plugins/plugin-bookmarks"
+    },
+    {
+      "path": "../../plugins/plugin-calls"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-code"
+    },
+    {
+      "path": "../../plugins/plugin-comments"
+    },
+    {
+      "path": "../../plugins/plugin-commerce"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
+    },
+    {
+      "path": "../../plugins/plugin-crx"
     },
     {
       "path": "../../plugins/plugin-debug"
@@ -100,31 +271,64 @@
       "path": "../../plugins/plugin-deck"
     },
     {
-      "path": "../../plugins/plugin-excalidraw"
+      "path": "../../plugins/plugin-discord"
+    },
+    {
+      "path": "../../plugins/plugin-doctor"
+    },
+    {
+      "path": "../../plugins/plugin-duffel"
     },
     {
       "path": "../../plugins/plugin-explorer"
     },
     {
-      "path": "../../plugins/plugin-files"
+      "path": "../../plugins/plugin-feed"
+    },
+    {
+      "path": "../../plugins/plugin-file"
+    },
+    {
+      "path": "../../plugins/plugin-gallery"
+    },
+    {
+      "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-generator"
+    },
+    {
+      "path": "../../plugins/plugin-github"
     },
     {
       "path": "../../plugins/plugin-graph"
     },
     {
-      "path": "../../plugins/plugin-help"
+      "path": "../../plugins/plugin-inbox"
     },
     {
-      "path": "../../plugins/plugin-inbox"
+      "path": "../../plugins/plugin-integration"
+    },
+    {
+      "path": "../../plugins/plugin-iroh-beacon"
     },
     {
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-linear"
+    },
+    {
       "path": "../../plugins/plugin-map"
     },
     {
+      "path": "../../plugins/plugin-map-solid"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-masonry"
     },
     {
       "path": "../../plugins/plugin-meeting"
@@ -136,13 +340,22 @@
       "path": "../../plugins/plugin-native"
     },
     {
+      "path": "../../plugins/plugin-native-filesystem"
+    },
+    {
       "path": "../../plugins/plugin-navtree"
     },
     {
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-osrm"
+    },
+    {
       "path": "../../plugins/plugin-outliner"
+    },
+    {
+      "path": "../../plugins/plugin-pipeline"
     },
     {
       "path": "../../plugins/plugin-presenter"
@@ -157,19 +370,43 @@
       "path": "../../plugins/plugin-registry"
     },
     {
+      "path": "../../plugins/plugin-sample"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
       "path": "../../plugins/plugin-search"
     },
     {
+      "path": "../../plugins/plugin-sequencer"
+    },
+    {
+      "path": "../../plugins/plugin-settings"
+    },
+    {
       "path": "../../plugins/plugin-sheet"
+    },
+    {
+      "path": "../../plugins/plugin-sidekick"
+    },
+    {
+      "path": "../../plugins/plugin-simple-layout"
     },
     {
       "path": "../../plugins/plugin-sketch"
     },
     {
+      "path": "../../plugins/plugin-slack"
+    },
+    {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-spacetime"
+    },
+    {
+      "path": "../../plugins/plugin-spotlight"
     },
     {
       "path": "../../plugins/plugin-stack"
@@ -178,34 +415,52 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
-      "path": "../../plugins/plugin-table"
+      "path": "../../plugins/plugin-support"
     },
     {
-      "path": "../../plugins/plugin-template"
+      "path": "../../plugins/plugin-table"
     },
     {
       "path": "../../plugins/plugin-theme"
     },
     {
-      "path": "../../plugins/plugin-theme-editor"
-    },
-    {
       "path": "../../plugins/plugin-thread"
     },
     {
-      "path": "../../plugins/plugin-token-manager"
+      "path": "../../plugins/plugin-tictactoe"
     },
     {
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../plugins/plugin-trello"
+    },
+    {
+      "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../plugins/plugin-video"
+    },
+    {
+      "path": "../../plugins/plugin-voxel"
+    },
+    {
       "path": "../../plugins/plugin-wnfs"
+    },
+    {
+      "path": "../../plugins/plugin-zen"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-solid"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"
@@ -229,28 +484,130 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-edge-client"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/lit-grid"
+    },
+    {
+      "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-editor"
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-board"
+    },
+    {
+      "path": "../../ui/react-ui-calendar"
+    },
+    {
+      "path": "../../ui/react-ui-canvas"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
+      "path": "../../ui/react-ui-experimental"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-gameboard"
+    },
+    {
+      "path": "../../ui/react-ui-geo"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-grid"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-pickers"
     },
     {
       "path": "../../ui/react-ui-stack"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/react-ui-text-tooltip"
+    },
+    {
+      "path": "../../ui/react-ui-thread"
+    },
+    {
+      "path": "../../ui/solid-ui"
+    },
+    {
+      "path": "../../ui/solid-ui-geo"
+    },
+    {
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     }
   ]
 }

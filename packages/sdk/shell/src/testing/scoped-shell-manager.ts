@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Locator, Page, FrameLocator } from '@playwright/test';
+import type { FrameLocator, Locator, Page } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 
+/** @deprecated */
 export class ScopedShellManager {
   page!: Page;
 
@@ -57,7 +58,12 @@ export class ScopedShellManager {
   async authenticateInvitation(type: 'device' | 'space', authCode: string, scope?: Scope): Promise<void> {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
-    await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`).fill(authCode);
+    const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
+    // Wait for the input to be both visible and enabled before filling. The input is conditionally
+    // mounted based on the invitation state machine (connectingSpaceInvitation →
+    // inputtingSpaceVerificationCode), so a fixed sleep races the transition.
+    await input.waitFor({ state: 'visible' });
+    await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
 

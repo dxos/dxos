@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 
-import { NotarizationPlugin, type NotarizationPluginParams } from './notarization-plugin';
+import { NotarizationPlugin, type NotarizationPluginProps } from './notarization-plugin';
 
 class TestAgent extends TestPeer {
   private readonly _ctx = new Context();
@@ -21,7 +21,7 @@ class TestAgent extends TestPeer {
   feed = new MockFeedWriter<Credential>();
   notarizationPlugin: NotarizationPlugin;
 
-  constructor(params: NotarizationPluginParams) {
+  constructor(params: NotarizationPluginProps) {
     super();
     this.notarizationPlugin = new NotarizationPlugin(params);
     this.feed.written.on(this._ctx, async ([credential]) => {

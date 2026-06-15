@@ -2,31 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   documentId,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+} from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
-import { compute, computeGraphFacet } from './compute';
-import { GridSheet, SheetProvider, useComputeGraph } from '../components';
+import { Sheet, useComputeGraph } from '#components';
+import { useTestSheet, withComputeGraphDecorator } from '#testing';
+import { Sheet as SheetType } from '#types';
+
 import { useSheetModel } from '../model';
-import { useTestSheet, withComputeGraphDecorator } from '../testing';
-import { SheetType } from '../types';
+import { compute, computeGraphFacet } from './compute';
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -41,17 +42,17 @@ type EditorProps = {
 
 const SHEET_NAME = 'Test Sheet';
 
-const EditorStory = ({ text }: EditorProps) => {
+const DefaultStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
-  const space = useSpace();
+  const [space] = useSpaces();
   const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         documentId.of(id.toHex()),
         computeGraph && computeGraphFacet.of(computeGraph),
@@ -66,13 +67,18 @@ const EditorStory = ({ text }: EditorProps) => {
 };
 
 const Grid = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { name: SHEET_NAME });
   const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (model) {
-      model.setValues({ A1: { value: 100 }, A2: { value: 200 }, A3: { value: 300 }, A5: { value: '=SUM(A1:A3)' } });
+      model.setValues({
+        A1: { value: 100 },
+        A2: { value: 200 },
+        A3: { value: 300 },
+        A5: { value: '=SUM(A1:A3)' },
+      });
     }
   }, [model]);
 
@@ -82,9 +88,9 @@ const Grid = () => {
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <SheetProvider graph={graph} sheet={sheet}>
-        <GridSheet />
-      </SheetProvider>
+      <Sheet.Root graph={graph} sheet={sheet} attendableId='test'>
+        <Sheet.Content />
+      </Sheet.Root>
     </div>
   );
 };
@@ -92,15 +98,36 @@ const Grid = () => {
 const GraphStory = (props: EditorProps) => {
   return (
     <div className='grid grid-rows-2'>
-      <EditorStory {...props} />
+      <DefaultStory {...props} />
       <Grid />
     </div>
   );
 };
 
+const meta = {
+  title: 'plugins/plugin-sheet/extensions/compute',
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({
+      types: [SheetType.Sheet],
+      createIdentity: true,
+      createSpace: true,
+    }),
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: [ProcessManagerPlugin()] }),
+    withComputeGraphDecorator(),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta;
+
+export default meta;
+
 // TODO(burdon): Inline formulae.
-export const Default = {
-  render: EditorStory,
+export const Default: StoryObj<typeof DefaultStory> = {
+  render: DefaultStory,
   args: {
     text: str(
       //
@@ -123,7 +150,7 @@ export const Default = {
   },
 };
 
-export const Graph = {
+export const Graph: StoryObj<typeof GraphStory> = {
   render: GraphStory,
   args: {
     text: str(
@@ -140,16 +167,3 @@ export const Graph = {
     ),
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-};
-
-export default meta;

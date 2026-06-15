@@ -2,7 +2,8 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
-      "@dxos/typings"
+      "@dxos/typings",
+      "node"
     ]
   },
   "include": [
@@ -10,10 +11,16 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/debug"
     },
     {
       "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
     },
     {
       "path": "../../../common/invariant"
@@ -32,15 +39,6 @@
     },
     {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
-    },
-    {
-      "path": "../echo-signals"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

@@ -4,16 +4,17 @@
 
 import React, {
   type Context,
-  createContext,
   type Dispatch,
   type FC,
   type ReactNode,
   type SetStateAction,
+  createContext,
   useContext,
   useState,
 } from 'react';
 
 import { type Space } from '@dxos/client/echo';
+import { raise } from '@dxos/debug';
 import { type PublicKey } from '@dxos/react-client';
 
 export type DevtoolsContextType = {
@@ -35,11 +36,11 @@ export const DevtoolsContextProvider: FC<{ children: ReactNode }> = ({ children 
 };
 
 export const useDevtoolsState = (): DevtoolsContextType => {
-  const [state] = useContext(DevtoolsContext)!;
+  const [state] = useContext(DevtoolsContext) ?? raise(new Error('Missing DevtoolsContext'));
   return state;
 };
 
 export const useDevtoolsDispatch = (): Dispatch<SetStateAction<DevtoolsContextType>> => {
-  const [, dispatch] = useContext(DevtoolsContext)!;
+  const [, dispatch] = useContext(DevtoolsContext) ?? raise(new Error('Missing DevtoolsContext'));
   return dispatch;
 };

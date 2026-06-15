@@ -2,9 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
-
-export const EventsContainer = lazy(() => import('./Calendar'));
-export const MailboxContainer = lazy(() => import('./Mailbox'));
-export { MailboxObjectSettings } from './Mailbox';
-export const MessageContainer = lazy(() => import('./Message'));
+export * from './EditMessage';
+export * from './Event';
+export * from './EventStack';
+export * from './Header';
+export * from './InboxSettings';
+export * from './Initialize';
+export * from './MarkdownViewer';
+export * from './MessageStack';
+export * from './Message';
+export * from './RelatedContacts';
+export * from './RelatedEvents';
+export * from './RelatedMessages';
+export * from './ViewMode';

@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-import { InvocationTracePanel } from './InvocationTracePanel';
-
-export default InvocationTracePanel;
+export { InvocationTracePanel as default } from './InvocationTracePanel';

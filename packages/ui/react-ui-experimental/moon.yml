@@ -1,0 +1,20 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+    deps:
+      - glsl
+  glsl:
+    command: pnpm run --silent glsl
+    inputs:
+      - src/shaders/glsl/*.*
+    outputs:
+      - src/shaders/glsl/gen

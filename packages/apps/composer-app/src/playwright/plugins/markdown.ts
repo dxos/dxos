@@ -6,13 +6,19 @@ import { type Locator, type Page } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the markdown plugin.
 export const Markdown = {
-  select: (page: Locator, text: string) =>
-    page.evaluate((_element, text) => {
+  select: async (locator: Locator, text: string) => {
+    // TODO(wittjosiah): If selection happens too fast, the comment button is not enabled.
+    //   This likely has to do with refactoring selection to use global selection state,
+    //   and comment action being driven via the app graph.
+    await locator.page().waitForTimeout(1_000);
+
+    await locator.evaluate((_element, text) => {
       const composer = (window as any).composer;
       const doc = composer.editorView.state.doc.text.join('\n');
       const pos = doc.indexOf(text);
       composer.editorView.dispatch({ selection: { anchor: pos, head: pos + text.length } });
-    }, text),
+    }, text);
+  },
 
   getDocumentTitleInput: (page: Page) => page.getByTestId('composer.documentTitle'),
 

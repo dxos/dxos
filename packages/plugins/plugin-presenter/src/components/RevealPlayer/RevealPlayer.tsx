@@ -2,24 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-// eslint-disable-next-line no-restricted-imports
 import 'reveal.js/dist/reveal.css';
-// eslint-disable-next-line no-restricted-imports
 import 'reveal.js/dist/theme/black.css';
-
 // https://github.com/highlightjs/highlight.js/tree/main/src/styles
 // import 'highlight.js/styles/github-dark.css';
 import 'highlight.js/styles/tokyo-night-dark.css';
 
 import hljs from 'highlight.js';
 import typescript from 'highlight.js/lib/languages/typescript';
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const styles = `
 <style type="text/css">
@@ -62,25 +59,26 @@ const styles = `
 </style>
 `;
 
-export type RevealProps = ThemedClassName<{
+export type RevealProps = {
   content: string;
   slide?: number;
   fullscreen?: boolean;
   onExit?: () => void;
-}>;
+};
 
-export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, onExit }: RevealProps) => {
-  const deckDivRef = useRef<HTMLDivElement>(null);
-  const deckRef = useRef<Reveal.Api | null>(null);
-  useEffect(() => {
-    if (deckRef.current) {
-      return;
-    }
+export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
+  ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
+    const deckDivRef = useRef<HTMLDivElement>(null);
+    const deckRef = useRef<Reveal.Api | null>(null);
 
-    // Required for syntax highlighting.
-    hljs.registerLanguage('typescript', typescript);
+    useAsyncEffect(async () => {
+      if (deckRef.current) {
+        return;
+      }
 
-    const t = setTimeout(async () => {
+      // Required for syntax highlighting.
+      hljs.registerLanguage('typescript', typescript);
+
       // https://revealjs.com/react
       // https://revealjs.com/config
       // https://github.com/hakimel/reveal.js
@@ -91,6 +89,9 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
         transition: 'none',
         slideNumber: false,
         embedded: true,
+
+        // Disable autoplay to prevent errors in headless environments (e.g., CI).
+        autoPlayMedia: false,
 
         // TODO(burdon): Speaker view requires server to serve popout window.
         // https://revealjs.com/speaker-view
@@ -130,42 +131,47 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });
+
+      return () => {
+        try {
+          if (deckRef.current) {
+            deckRef.current.destroy();
+            deckRef.current = null;
+          }
+        } catch {
+          // Ignore.
+        }
+      };
     });
 
-    return () => {
-      try {
-        clearTimeout(t);
-        if (deckRef.current) {
-          deckRef.current.destroy();
-          deckRef.current = null;
-        }
-      } catch (err) {
-        // Ignore.
-      }
-    };
-  });
-
-  return (
-    <div className={mx('absolute flex h-full w-full items-center justify-center', fullscreen && 'inset-0', classNames)}>
-      <div className='relative aspect-video w-full'>
-        <div ref={deckDivRef} className='reveal'>
-          {/* TODO(burdon): Must be in head. */}
-          <style>
-            <link rel='preconnect' href='https://fonts.googleapis.com' />
-            <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
-            <link
-              rel='stylesheet'
-              href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
-            />
-          </style>
-          <div className='slides'>
-            <div className='!text-center' />
-            <section {...{ 'data-markdown': [] }}>
-              <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
-            </section>
+    // TOOD(burdon): Trap cursor keys (otherwise tabster grabs focus.)
+    return (
+      <div
+        {...composableProps(props, {
+          classNames: ['dx-container grid place-items-center bg-black', fullscreen && 'absolute inset-0'],
+        })}
+        ref={forwardedRef}
+      >
+        <div className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
+          <div ref={deckDivRef} className='absolute inset-0 reveal'>
+            {/* NOTE: Must be in head. */}
+            <style>
+              <link rel='preconnect' href='https://fonts.googleapis.com' />
+              <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
+              <link
+                rel='stylesheet'
+                href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
+              />
+            </style>
+            <div className='slides'>
+              <div className='text-center!' />
+              <section {...{ 'data-markdown': [] }}>
+                <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
+              </section>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);

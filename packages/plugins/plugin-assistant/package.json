@@ -1,141 +1,232 @@
 {
   "name": "@dxos/plugin-assistant",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Assistant plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#execution-graph": {
+      "source": "./src/execution-graph/index.ts",
+      "types": "./dist/types/src/execution-graph/index.d.ts",
+      "default": "./dist/lib/neutral/execution-graph/index.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/neutral/hooks/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "workerd": "./src/AssistantPlugin.workerd.ts",
+        "node": "./src/AssistantPlugin.node.ts",
+        "default": "./src/AssistantPlugin.ts"
+      },
+      "types": "./dist/types/src/AssistantPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/AssistantPlugin.workerd.mjs",
+      "node": "./dist/lib/neutral/AssistantPlugin.node.mjs",
+      "default": "./dist/lib/neutral/AssistantPlugin.mjs"
+    },
+    "#testing": "./src/testing/index.ts",
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
+  },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/neutral/hooks/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
     },
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "assets",
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.1",
-    "@codemirror/language": "^6.10.3",
-    "@codemirror/search": "^6.5.6",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
-    "@dxos/config": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/graph": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
-    "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-integration": "workspace:*",
+    "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-script": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/plugin-stack": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
-    "@dxos/plugin-wnfs": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-canvas-compute": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
+    "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
-    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@lezer/highlight": "^1.2.1",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
-    "@xiechao/codemirror-lang-handlebars": "1.0.4",
-    "exa-js": "^1.5.12",
-    "json5": "^2.2.3",
-    "jsonpointer": "^5.0.1",
-    "lodash.defaultsdeep": "^4.6.1",
-    "unified": "^11.0.0"
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
+    "@effect/ai-openai": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/artifact-testing": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/devtools": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
-    "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.14.21",
-    "openapi-types": "^12.1.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect/platform": "catalog:",
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "openapi-types": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

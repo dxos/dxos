@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './SpaceSettingsContainer';
+export { SpaceSettings as default } from './SpaceSettings';

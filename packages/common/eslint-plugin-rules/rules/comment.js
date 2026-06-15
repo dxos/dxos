@@ -10,7 +10,8 @@
 // Requires
 // ------------------------------------------------------------------------------
 
-const HEADER_PATTERN = require('./header').pattern;
+import header from './header.js';
+const HEADER_PATTERN = header.pattern;
 
 // ------------------------------------------------------------------------------
 // Helpers
@@ -88,7 +89,7 @@ const createRegExpForIgnorePatterns = (normalizedOptions) => {
 // Rule Definition
 // ------------------------------------------------------------------------------
 
-module.exports = {
+export default {
   meta: {
     type: 'layout',
 

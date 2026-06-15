@@ -5,16 +5,16 @@
 import { type Duplex } from 'node:stream';
 
 import { type PublicKey } from '@dxos/keys';
-import { Teleport, type TeleportParams } from '@dxos/teleport';
+import { Teleport, type TeleportProps } from '@dxos/teleport';
 
-export type WireProtocolParams = {
+export type WireProtocolProps = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
   topic: PublicKey;
 };
 
-export type WireProtocolProvider = (params: WireProtocolParams) => WireProtocol;
+export type WireProtocolProvider = (params: WireProtocolProps) => WireProtocol;
 
 /**
  * Application-specific network protocol that is used when a connection to a peer is established.
@@ -31,15 +31,15 @@ export interface WireProtocol {
 /**
  * Create a wire-protocol provider backed by a teleport instance.
  * @param onConnection Called after teleport is initialized for the session. Protocol extensions could be attached here.
- * @param defaultParams Optionally provide default Teleport params that might be overridden by factory callers.
+ * @param defaultProps Optionally provide default Teleport params that might be overridden by factory callers.
  * @returns
  */
 export const createTeleportProtocolFactory = (
   onConnection: (teleport: Teleport) => Promise<void>,
-  defaultParams?: Partial<TeleportParams>,
+  defaultProps?: Partial<TeleportProps>,
 ): WireProtocolProvider => {
   return (params) => {
-    const teleport = new Teleport({ ...defaultParams, ...params });
+    const teleport = new Teleport({ ...defaultProps, ...params });
     return {
       stream: teleport.stream,
       open: async (sessionId?: PublicKey) => {

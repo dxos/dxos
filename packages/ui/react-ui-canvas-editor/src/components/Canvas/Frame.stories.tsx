@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import type { Meta, StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Canvas } from '@dxos/react-ui-canvas';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
-import { Shapes, type ShapesProps } from './Shapes';
 import { createRectangle } from '../../shapes';
 import { Editor } from '../Editor';
+import { Shapes, type ShapesProps } from './Shapes';
 
 const DefaultStory = ({ layout }: ShapesProps) => {
   return (
@@ -24,15 +23,19 @@ const DefaultStory = ({ layout }: ShapesProps) => {
   );
 };
 
-const meta: Meta<ShapesProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/Frame',
+  component: Canvas,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+  decorators: [withRegistry, withTheme(), withLayout()],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<ShapesProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

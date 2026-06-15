@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { PageNumber, Pager, type PagerProps, StartButton } from './Pager';
 
@@ -22,14 +22,17 @@ const DefaultStory = ({ count = 20 }: PagerProps) => {
   );
 };
 
-export const Default = {};
-
-const meta: Meta<PagerProps> = {
-  title: 'plugins/plugin-presenter/Pager',
+const meta = {
+  title: 'plugins/plugin-presenter/components/Pager',
   render: DefaultStory,
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

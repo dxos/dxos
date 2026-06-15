@@ -11,19 +11,19 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
-  SpaceMember,
   type Device,
   type Identity,
   type LogEntry,
   type Metrics,
   type NetworkStatus,
   type Platform,
+  SpaceMember,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { DXOS_VERSION } from '../../version';
@@ -62,7 +62,6 @@ export type Diagnostics = {
 
 export type TraceDiagnostic = {
   resources: Record<string, Resource>;
-  spans: Span[];
   logs: LogEntry[];
 };
 

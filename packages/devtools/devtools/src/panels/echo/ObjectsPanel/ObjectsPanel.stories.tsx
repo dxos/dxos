@@ -1,0 +1,184 @@
+//
+// Copyright 2025 DXOS.org
+//
+import '@dxos-theme';
+
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
+import React, { useState } from 'react';
+
+import { Trigger } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { random } from '@dxos/random';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { TestSchema } from '@dxos/schema/testing';
+
+import { ObjectViewer, ObjectsTree } from '../../../components';
+import { DevtoolsContextProvider } from '../../../hooks';
+import { ObjectsPanel } from './ObjectsPanel';
+
+random.seed(1);
+
+const withDevtoolsContext: Decorator = (Story) => (
+  <DevtoolsContextProvider>
+    <Story />
+  </DevtoolsContextProvider>
+);
+
+const WorksAt = Schema.Struct({
+  role: Schema.optional(Schema.String),
+}).pipe(
+  Type.makeRelation({
+    dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
+    source: TestSchema.Person,
+    target: TestSchema.Organization,
+  }),
+);
+
+const ObjectsPanelStory = () => {
+  const { space } = useClientStory();
+  return <ObjectsPanel space={space} />;
+};
+
+const roles = ['Engineer', 'Designer', 'Manager', 'Director', 'Analyst'];
+
+const meta = {
+  title: 'devtools/devtools/ObjectsPanel',
+  render: ObjectsPanelStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withDevtoolsContext,
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [
+        TestSchema.Organization,
+        TestSchema.Person,
+        TestSchema.Project,
+        Operation.PersistentOperation,
+        Trigger.Trigger,
+        WorksAt,
+      ],
+      onCreateSpace: async ({ space }) => {
+        const organizations = Array.from({ length: 5 }, () =>
+          space.db.add(
+            Obj.make(TestSchema.Organization, {
+              name: random.company.name(),
+              website: random.internet.url(),
+            }),
+          ),
+        );
+
+        const persons = Array.from({ length: 10 }, () =>
+          space.db.add(
+            Obj.make(TestSchema.Person, {
+              name: random.person.fullName(),
+              email: random.internet.email(),
+            }),
+          ),
+        );
+
+        const projects = Array.from({ length: 3 }, () =>
+          space.db.add(
+            Obj.make(TestSchema.Project, {
+              name: random.commerce.productName(),
+            }),
+          ),
+        );
+        space.db.remove(projects[0]);
+
+        const functions = Array.from({ length: 3 }, (_, index) =>
+          space.db.add(
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { version: '0.1.0' },
+              name: `function-${index}`,
+              description: random.lorem.sentence(),
+            }),
+          ),
+        );
+
+        // Triggers parented to their corresponding function.
+        functions.forEach((fn) => {
+          space.db.add(
+            Obj.make(Trigger.Trigger, {
+              [Obj.Parent]: fn,
+              enabled: random.datatype.boolean(),
+              spec: Trigger.specTimer('0 0 * * *'),
+            }),
+          );
+        });
+
+        // Additional child objects parented to projects.
+        projects.forEach((project) => {
+          Array.from({ length: 2 }, () =>
+            space.db.add(
+              Obj.make(TestSchema.Person, {
+                [Obj.Parent]: project,
+                name: random.person.fullName(),
+                email: random.internet.email(),
+              }),
+            ),
+          );
+        });
+
+        // Relations: persons employed at organizations.
+        persons.forEach((person) => {
+          const org = random.helpers.arrayElement(organizations);
+          space.db.add(
+            Relation.make(WorksAt, {
+              [Relation.Source]: person,
+              [Relation.Target]: org,
+              role: random.helpers.arrayElement(roles),
+            }),
+          );
+        });
+
+        await space.db.flush();
+      },
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const WithTree: Story = {
+  render: () => {
+    const { space } = useClientStory();
+    if (!space) {
+      return <div>No space</div>;
+    }
+    return (
+      <div className='text-base-fg'>
+        <ObjectsTree db={space.db} />
+      </div>
+    );
+  },
+};
+
+export const WithDetails: Story = {
+  render: () => {
+    const { space } = useClientStory();
+    if (!space) {
+      return <div>No space</div>;
+    }
+    const [selectedObject, setSelectedObject] = useState<Entity.Snapshot | null>(null);
+    return (
+      <div className='flex grid grid-rows_[1fr_1fr]'>
+        <ObjectsTree db={space.db} onSelect={setSelectedObject} />
+        <div className='border-separator! border-s border-t'>
+          {selectedObject && <ObjectViewer object={selectedObject} id={selectedObject.id} />}
+        </div>
+      </div>
+    );
+  },
+};

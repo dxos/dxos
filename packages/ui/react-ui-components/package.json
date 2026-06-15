@@ -1,52 +1,97 @@
 {
   "name": "@dxos/react-ui-components",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Geneal purpose components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-query": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
-    "react-markdown": "^8.0.5"
+    "@effect/ai": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "@lezer/xml": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "date-fns": "catalog:",
+    "effect": "catalog:",
+    "json5": "catalog:",
+    "motion": "catalog:",
+    "react-resize-detector": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/react-ui-experimental": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

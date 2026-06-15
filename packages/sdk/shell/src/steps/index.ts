@@ -3,5 +3,5 @@
 //
 
 export * from './InvitationManager';
-export * from './StepProps';
+export type * from './StepProps';
 export * from './ConfirmReset';

@@ -2,114 +2,110 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Message, useTranslation } from '@dxos/react-ui';
+import { Dialog, Message, useTranslation } from '@dxos/react-ui';
 
+import { Action, TextInput } from '../components';
+import { translationKey } from '../translations';
 import { type StepProps } from './StepProps';
-import { Action, Actions, StepHeading, Input } from '../components';
+
+export type ConfirmResetMode = 'join-new-identity' | 'recover' | 'reset-storage';
+
+/**
+ * Optional overrides for the messaging shown in the confirmation step. Each prop falls back to
+ * the shell translation that drives the device-reset flow; callers performing other irreversible
+ * actions (e.g. wiping a single space) can swap copy without forking the component.
+ */
+type ConfirmResetCopy = Partial<{
+  title: ReactNode;
+  message: ReactNode;
+  confirmLabel: ReactNode;
+  pendingLabel: ReactNode;
+  cancelLabel: ReactNode;
+  confirmationValue: string;
+  errorMessage: string;
+}>;
 
 type ConfirmResetOptions = Partial<{
+  mode: ConfirmResetMode;
   onCancel: () => void;
   onConfirm: () => Promise<void>;
-  mode: 'join new identity' | 'recover' | 'reset storage';
-}>;
+}> &
+  ConfirmResetCopy;
 
 export type ConfirmResetProps = StepProps & ConfirmResetOptions;
 
-export type ConfirmResetImplProps = ConfirmResetOptions & {
-  disabled?: boolean;
-  pending?: boolean;
-  validationMessage?: string;
-};
-
-export const ConfirmReset = ({ active, onCancel, onConfirm, mode }: ConfirmResetProps) => {
-  const { t } = useTranslation('os');
+export const ConfirmReset = ({
+  active,
+  mode,
+  onCancel,
+  onConfirm,
+  title,
+  message,
+  confirmLabel,
+  pendingLabel,
+  cancelLabel,
+  confirmationValue: confirmationValueProp,
+  errorMessage,
+}: ConfirmResetProps) => {
+  const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const [pending, setPending] = useState(false);
-  const processReset = async () => {
-    setPending(true);
-    return onConfirm?.().then(
-      () => setPending(false),
-      (error) => {
-        log.catch(error);
-        setValidationMessage(t('failed to reset identity message'));
-        setPending(false);
-      },
-    );
-  };
-  return (
-    <ConfirmResetImpl
-      disabled={!active}
-      pending={pending}
-      validationMessage={validationMessage}
-      onConfirm={processReset}
-      onCancel={onCancel}
-      mode={mode}
-    />
-  );
-};
-
-export const ConfirmResetImpl = ({
-  disabled,
-  pending,
-  validationMessage,
-  onConfirm,
-  onCancel,
-  mode,
-}: ConfirmResetImplProps) => {
-  const { t } = useTranslation('os');
-  const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
-  const testIdAffix =
-    mode === 'join new identity' ? 'join-new-identity' : mode === 'recover' ? 'recover' : 'reset-storage';
+  const disabled = !active;
+  const testIdAffix = mode ?? 'reset-storage';
+
+  const confirmationValue = confirmationValueProp ?? t('confirmation.value');
+  const resolvedTitle = title ?? t('sign-out-chooser.title');
+  const resolvedMessage = message ?? t('sign-out-chooser.message');
+  const resolvedConfirmLabel = confirmLabel ?? t('reset-device.label');
+  const resolvedPendingLabel = pendingLabel ?? t('reset-in-progress.label');
+  const resolvedCancelLabel = cancelLabel ?? t('cancel.label');
+
+  const handleConfirm = useCallback(async () => {
+    setPending(true);
+    try {
+      await onConfirm?.();
+      setPending(false);
+    } catch (err) {
+      log.catch(err);
+      setValidationMessage(errorMessage ?? t('failed-to-reset-identity.message'));
+      setPending(false);
+    }
+  }, [onConfirm, t, errorMessage]);
+
   return (
     <>
-      <div role='none' className='grow flex flex-col gap-2 justify-center'>
-        <Message.Root valence='error'>
-          <Message.Title>{t('sign out chooser title')}</Message.Title>
-          <Message.Content>{t('sign out chooser message')}</Message.Content>
-        </Message.Root>
-        <Input
-          {...{ validationMessage }}
-          label={
-            <StepHeading className='text-start mlb-2'>
-              {t(
-                mode === 'join new identity'
-                  ? 'join new identity input label'
-                  : mode === 'recover'
-                    ? 'recover reset input label'
-                    : 'reset storage input label',
-                {
-                  confirmationValue,
-                },
-              )}
-            </StepHeading>
-          }
-          disabled={disabled}
-          data-testid={`${testIdAffix}.reset-identity-input`}
-          placeholder={t('confirmation placeholder', { confirmationValue })}
-          onChange={({ target: { value } }) => setInputValue(value)}
-        />
-      </div>
-      <Actions>
+      <Message.Root valence='error' classNames='mb-2'>
+        <Message.Title>{resolvedTitle}</Message.Title>
+        <Message.Content>{resolvedMessage}</Message.Content>
+      </Message.Root>
+      <TextInput
+        {...{ validationMessage }}
+        disabled={disabled}
+        data-testid={`${testIdAffix}.reset-identity-input`}
+        placeholder={t('confirmation.placeholder', { confirmationValue })}
+        onChange={({ target: { value } }) => setInputValue(value)}
+      />
+      <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
-            {t('cancel label')}
+            {resolvedCancelLabel}
           </Action>
         )}
         {onConfirm && (
           <Action
             variant='destructive'
             disabled={disabled || pending || inputValue !== confirmationValue}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             data-testid={`${testIdAffix}.reset-identity-confirm`}
           >
-            {pending ? t('reset in progress label') : t('reset device label')}
+            {pending ? resolvedPendingLabel : resolvedConfirmLabel}
           </Action>
         )}
-      </Actions>
+      </Dialog.ActionBar>
     </>
   );
 };

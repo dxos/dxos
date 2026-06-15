@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 declare module 'growing-file' {
   import type stream from 'node:stream';
 

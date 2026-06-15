@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import type { Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 
 /**
  * Replace graceful-fs with an empty module when bundling for browser.
@@ -10,7 +10,7 @@ import type { Plugin } from 'esbuild';
 export const FixGracefulFsPlugin = (): Plugin => ({
   name: 'fix-graceful-fs-plugin',
   setup: ({ onResolve, onLoad }) => {
-    onResolve({ filter: /^graceful-fs$/ }, (arg) => {
+    onResolve({ filter: /^graceful-fs$/ }, () => {
       return {
         path: 'graceful-fs',
         namespace: 'fix-graceful-fs-plugin',

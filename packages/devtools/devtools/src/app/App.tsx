@@ -5,11 +5,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
-import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { ErrorBoundary, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 
 import { Devtools } from './Devtools';
-import { ErrorBoundary } from '../components';
 
 // TODO(burdon): Factor out. See copy paste in testbench-app.
 const useThemeWatcher = () => {
@@ -34,7 +33,7 @@ export const App = (props: ClientProviderProps) => {
 
   return (
     <ThemeProvider {...{ tx: defaultTx, themeMode }} noCache>
-      <ErrorBoundary>
+      <ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>
           <Devtools />
         </ClientProvider>

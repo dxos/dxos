@@ -3,6 +3,9 @@ on:
 
 name: release-candidate
 
+permissions:
+  contents: write # Required to create RC branch and force-push to staging.
+
 jobs:
   release-candidate:
     runs-on: ubuntu-latest
@@ -28,15 +31,15 @@ jobs:
 
       - uses: peterjgrainger/action-create-branch@v2.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
         with:
           branch: ${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Checkout all branches
-          token: ${{ secrets.CREATE_PR_TOKEN }}
+          token: ${{ secrets.GH_DXOS_BOT_PAT }}
 
       - name: Push to Staging
         run: |

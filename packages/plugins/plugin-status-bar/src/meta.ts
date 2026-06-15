@@ -2,13 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
-export const STATUS_BAR_PLUGIN = 'dxos.org/plugin/status-bar';
-
-export const meta: PluginMeta = {
-  id: STATUS_BAR_PLUGIN,
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.statusBar'),
   name: 'Status Bar',
-  description: 'Display a bar with status and actions.',
+  author: 'DXOS',
+  description: trim`
+    Persistent bottom bar displaying workspace status information and quick actions.
+    Access connection state, notifications, and common commands without leaving your current context.
+  `,
   icon: 'ph--info--regular',
-};
+  tags: ['system'],
+});

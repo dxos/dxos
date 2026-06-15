@@ -14,10 +14,10 @@ import { type BlobChunk, type BlobSyncService, type WantList } from '@dxos/proto
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { BitField } from '@dxos/util';
 
-import { type BlobStore } from './blob-store';
+import { type BlobStoreApi } from './blob-store';
 
-export type BlobSyncExtensionParams = {
-  blobStore: BlobStore;
+export type BlobSyncExtensionProps = {
+  blobStore: BlobStoreApi;
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
   onAbort: () => Promise<void>;
@@ -88,7 +88,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   public remoteWantList: WantList = { blobs: [] };
 
   constructor(
-    private readonly _params: BlobSyncExtensionParams, // to not conflict with the base class
+    private readonly _params: BlobSyncExtensionProps, // to not conflict with the base class
   ) {
     super({
       exposed: {

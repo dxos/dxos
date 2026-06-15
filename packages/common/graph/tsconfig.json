@@ -19,16 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../async"
@@ -38,9 +29,6 @@
     },
     {
       "path": "../invariant"
-    },
-    {
-      "path": "../log"
     },
     {
       "path": "../random"

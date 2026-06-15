@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
+import { AuthStatus, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-host';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { IdentityManager } from './identity-manager';
@@ -64,7 +64,7 @@ describe('identity/identity-manager', () => {
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
     const identity = await identityManager.createIdentity();
     expect(identity).to.exist;
@@ -77,7 +77,7 @@ describe('identity/identity-manager', () => {
     await peer1.metadataStore.load();
     await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
-    await peer1.identityManager.close();
+    await peer1.identityManager.close(Context.default());
     await peer1.feedStore.close();
     await peer1.metadataStore.close();
 
@@ -95,7 +95,7 @@ describe('identity/identity-manager', () => {
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;
@@ -112,7 +112,7 @@ describe('identity/identity-manager', () => {
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
     });
-    await identity1.joinNetwork();
+    await identity1.joinNetwork(Context.default());
 
     const peer2 = await setupPeer({ signalContext });
 
@@ -148,7 +148,7 @@ describe('identity/identity-manager', () => {
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
     });
-    await identity2.joinNetwork();
+    await identity2.joinNetwork(Context.default());
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
     await peer2.identityManager.acceptIdentity(identity2, identityRecord);

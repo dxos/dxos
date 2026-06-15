@@ -2,21 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Breadcrumb } from './Breadcrumb';
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
+import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb';
 
-const DefaultStory = () => {
+const DefaultStory = (props: BreadcrumbRootProps) => {
   return (
-    <Breadcrumb.Root aria-label='Breadcrumb'>
+    <Breadcrumb.Root {...props}>
       <Breadcrumb.List>
         <Breadcrumb.ListItem>
           <Breadcrumb.Link asChild>
-            <Button variant='ghost' density='fine' classNames='pli-0 text-baseText font-normal'>
+            <Button variant='ghost' classNames='px-0 text-base-fg font-normal'>
               Grocery
             </Button>
           </Breadcrumb.Link>
@@ -38,14 +37,19 @@ const DefaultStory = () => {
   );
 };
 
-export default {
-  title: 'ui/react-ui-core/Breadcrumb',
-  component: Breadcrumb,
+const meta = {
+  title: 'ui/react-ui-core/components/Breadcrumb',
+  component: Breadcrumb.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
-  args: {},
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    'aria-label': 'Breadcrumb',
+  },
 };

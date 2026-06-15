@@ -2,39 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+} from '@dxos/ui-editor';
 
-import { mermaid } from './mermaid';
+import { mermaid } from './mermaid-extension';
 
 const str = (...lines: string[]) => lines.join('\n');
 
-type StoryProps = {
+type DefaultStoryProps = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue: text,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
         mermaid(),
         decorateMarkdown(),
       ],
@@ -45,7 +42,17 @@ const DefaultStory = ({ text }: StoryProps) => {
   return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
 };
 
-export const Default = {
+const meta = {
+  title: 'plugins/plugin-mermaid/extensions/mermaid',
+  render: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     text: str(
       '# Mermaid',
@@ -68,7 +75,7 @@ export const Default = {
   },
 };
 
-export const Error = {
+export const Error: Story = {
   args: {
     text: str(
       '# Mermaid',
@@ -85,11 +92,3 @@ export const Error = {
     ),
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-mermaid/extensions',
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-};
-
-export default meta;

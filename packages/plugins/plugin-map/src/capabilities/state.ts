@@ -2,23 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { type LatLngLiteral } from '@dxos/react-ui-geo';
+import * as Effect from 'effect/Effect';
 
-import { MapCapabilities } from './capabilities';
-import { type MapControlType } from '../components';
-import { MAP_PLUGIN } from '../meta';
+import { Capability } from '@dxos/app-framework';
+import { createKvsStore } from '@dxos/effect';
 
-export default () => {
-  const state = new LocalStorageStore<MapCapabilities.State>(MAP_PLUGIN, {
-    type: 'map',
-  });
+import { meta } from '#meta';
+import { MapCapabilities } from '#types';
 
-  state
-    .prop({ key: 'type', type: LocalStorageStore.enum<MapControlType>() })
-    .prop({ key: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
-    .prop({ key: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const stateAtom = createKvsStore({
+      key: meta.id,
+      schema: MapCapabilities.StateSchema,
+      defaultValue: () => ({
+        type: 'map' as const,
+      }),
+    });
 
-  return contributes(MapCapabilities.State, state.values);
-};
+    return Capability.contributes(MapCapabilities.State, stateAtom);
+  }),
+);

@@ -2,57 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createGapSeparator, MenuProvider, rxFromSignal, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+import { type Script } from '@dxos/compute';
+import { ElevationProvider, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
-  type ScriptToolbarState,
+  type ScriptToolbarStateStore,
   createDeploy,
   createFormat,
   createTemplateSelect,
   useDeployDeps,
-} from '../../hooks';
-import { SCRIPT_PLUGIN } from '../../meta';
+} from '#hooks';
+import { meta } from '#meta';
 
-const createToolbar = ({ state, script, ...options }: CreateDeployOptions) =>
-  Rx.make((get) =>
-    get(
-      rxFromSignal(() => {
-        const templateSelect = createTemplateSelect(script);
-        const format = createFormat(script);
-        const gap = createGapSeparator();
-        const deploy = createDeploy({ state, script, ...options });
-        return {
-          nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
-          edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
-        };
-      }),
-    ),
-  );
-
-export type ScriptToolbarProps = ThemedClassName<{
-  role?: string;
-  script: ScriptType;
-  state: ScriptToolbarState;
-}>;
-
-export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
-  const options = useDeployDeps({ script });
-  const toolbarCreator = useMemo(() => createToolbar({ state, script, t, ...options }), [state, script, options, t]);
-  const menu = useMenuActions(toolbarCreator);
-
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menu} attendableId={fullyQualifiedId(script)}>
-        <ToolbarMenu classNames={classNames} />
-      </MenuProvider>
-    </ElevationProvider>
-  );
+export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  script: Script.Script;
+  state: ScriptToolbarStateStore;
 };
+
+export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
+  ({ script, attendableId, role, state, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+    const options = useDeployDeps({ script });
+    const menuCreator = useMemo(
+      () => createToolbarActions({ state, script, t, ...options }),
+      [state, script, options, t],
+    );
+    const menuActions = useMenuActions(menuCreator);
+
+    return (
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+        </Menu.Root>
+      </ElevationProvider>
+    );
+  },
+);
+
+const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Atom.Atom<ActionGraphProps> =>
+  Atom.make((get) => {
+    // Subscribe to state changes.
+    get(state.atom);
+    const templateSelect = createTemplateSelect(script);
+    const format = createFormat(script);
+    const gap = createGapSeparator();
+    const deploy = createDeploy({ state, script, ...options });
+    return {
+      nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes],
+      edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges],
+    };
+  });

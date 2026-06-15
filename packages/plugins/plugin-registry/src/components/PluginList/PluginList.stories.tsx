@@ -1,0 +1,90 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
+import { random } from '@dxos/random';
+import { ScrollArea } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { getHashHue } from '@dxos/ui-theme';
+
+import { translations } from '#translations';
+import { RegistryTagType } from '#types';
+
+import { PluginList } from './PluginList';
+
+random.seed(1);
+
+const icons = [
+  'ph--bug--regular',
+  'ph--compass--regular',
+  'ph--kanban--regular',
+  'ph--table--regular',
+  'ph--gear--regular',
+  'ph--github-logo--regular',
+];
+
+const DefaultStory = () => {
+  const [plugins] = useState<Plugin.Plugin[]>(
+    random.helpers.multiple(
+      () =>
+        PluginNS.define(
+          PluginNS.makeMeta({
+            key: DXN.make('org.dxos.plugin.test'),
+            name: `${random.commerce.productName()}`,
+            description: random.lorem.sentences(Math.ceil(Math.random() * 3)),
+            tags: random.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
+            icon: random.helpers.arrayElement(icons),
+            iconHue: getHashHue(random.string.uuid()),
+            homePage: random.datatype.boolean({ probability: 0.5 }) ? random.internet.url() : undefined,
+            source: random.internet.url(),
+          }),
+        ).pipe(PluginNS.make)(),
+      { count: 32 },
+    ),
+  );
+  const [enabled, setEnabled] = useState<string[]>([]);
+
+  const handleChange = (id: string, enabled: boolean) => {
+    setEnabled((plugins) => (enabled ? [...plugins, id] : plugins.filter((plugin) => plugin === id)));
+  };
+
+  return (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-registry/components/PluginList',
+  component: PluginList,
+  render: DefaultStory,
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof PluginList>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'bg-deck-surface' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export const FullScreen: Story = {
+  decorators: [withTheme(), withLayout({ scroll: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};

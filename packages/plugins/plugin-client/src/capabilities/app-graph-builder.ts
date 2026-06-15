@@ -2,112 +2,114 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { createExtension, rxFromObservable, ROOT_ID } from '@dxos/plugin-graph';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
-import { ClientCapabilities } from './capabilities';
-import { CLIENT_PLUGIN } from '../meta';
-import { Account, ClientAction } from '../types';
+import { meta } from '#meta';
+import { ClientOperation } from '#operations';
+import { Account, ClientCapabilities } from '#types';
 
-export default (context: PluginContext) =>
-  contributes(
-    Capabilities.AppGraphBuilder,
-    createExtension({
-      id: CLIENT_PLUGIN,
-      actions: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              return [
-                {
-                  id: `${CLIENT_PLUGIN}/open-user-account`,
-                  data: async () => {
-                    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                    await dispatch(createIntent(ClientAction.ShareIdentity));
-                  },
-                  properties: {
-                    label: ['open user account label', { ns: CLIENT_PLUGIN }],
-                    icon: 'ph--user--regular',
-                    disposition: 'menu',
-                    keyBinding: {
-                      macos: 'meta+shift+.',
-                      // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                      windows: 'alt+shift+.',
-                      linux: 'alt+shift+>',
-                    },
-                  },
-                },
-              ];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              const client = context.getCapability(ClientCapabilities.Client);
-              const identity = get(rxFromObservable(client.halo.identity));
-              const status = get(rxFromObservable(client.mesh.networkStatus));
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* GraphBuilder.createExtension({
+      id: 'root',
+      match: NodeMatcher.whenRoot,
+      actions: () =>
+        Effect.succeed([
+          {
+            id: 'openUserAccount',
+            data: () => Operation.invoke(ClientOperation.ShareIdentity),
+            properties: {
+              label: ['open-user-account.label', { ns: meta.id }],
+              icon: 'ph--user--regular',
+              disposition: 'menu',
+              keyBinding: {
+                macos: 'meta+shift+.',
+                // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                windows: 'alt+shift+.',
+                linux: 'alt+shift+>',
+              },
+            },
+          },
+        ]),
+      connector: Effect.fnUntraced(function* (node, get) {
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        const identity = get(CreateAtom.fromObservable(client.halo.identity));
+        const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
-              return [
-                {
-                  id: Account.id,
-                  type: CLIENT_PLUGIN,
-                  properties: {
-                    label: ['account label', { ns: CLIENT_PLUGIN }],
-                    icon: 'ph--user--regular',
-                    disposition: 'user-account',
-                    // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-                    userId: identity?.identityKey.toHex(),
-                    hue: identity?.profile?.data?.hue,
-                    emoji: identity?.profile?.data?.emoji,
-                    status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
-                  },
-                  nodes: [
-                    {
-                      id: Account.Profile,
-                      data: Account.Profile,
-                      type: CLIENT_PLUGIN,
-                      properties: {
-                        label: ['profile label', { ns: CLIENT_PLUGIN }],
-                        icon: 'ph--user--regular',
-                      },
-                    },
-                    {
-                      id: Account.Devices,
-                      data: Account.Devices,
-                      type: CLIENT_PLUGIN,
-                      properties: {
-                        label: ['devices label', { ns: CLIENT_PLUGIN }],
-                        icon: 'ph--devices--regular',
-                        testId: 'clientPlugin.devices',
-                      },
-                    },
-                    {
-                      id: Account.Security,
-                      data: Account.Security,
-                      type: CLIENT_PLUGIN,
-                      properties: {
-                        label: ['security label', { ns: CLIENT_PLUGIN }],
-                        icon: 'ph--key--regular',
-                      },
-                    },
-                  ],
+        return [
+          Node.make({
+            id: Account.id,
+            type: meta.id,
+            properties: {
+              label: ['account.label', { ns: meta.id }],
+              icon: 'ph--user--regular',
+              disposition: 'user-account',
+              testId: 'clientPlugin.account',
+              // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
+              userId: identity?.identityKey.toHex(),
+              hue: identity?.profile?.data?.hue,
+              emoji: identity?.profile?.data?.emoji,
+              status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
+            },
+            nodes: [
+              Node.make({
+                id: Account.Profile,
+                data: Account.Profile,
+                type: meta.id,
+                properties: {
+                  label: ['profile.label', { ns: meta.id }],
+                  icon: 'ph--user--regular',
                 },
-              ];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-  );
+              }),
+              Node.make({
+                id: Account.Account,
+                data: Account.Account,
+                type: meta.id,
+                properties: {
+                  label: ['account-panel.label', { ns: meta.id }],
+                  icon: 'ph--identification-card--regular',
+                },
+              }),
+              Node.make({
+                id: Account.Devices,
+                data: Account.Devices,
+                type: meta.id,
+                properties: {
+                  label: ['devices.label', { ns: meta.id }],
+                  icon: 'ph--devices--regular',
+                  testId: 'clientPlugin.devices',
+                },
+              }),
+              Node.make({
+                id: Account.Security,
+                data: Account.Security,
+                type: meta.id,
+                properties: {
+                  label: ['security.label', { ns: meta.id }],
+                  icon: 'ph--key--regular',
+                },
+              }),
+              Node.make({
+                id: Account.Invitations,
+                data: Account.Invitations,
+                type: meta.id,
+                properties: {
+                  label: ['invitations-panel.label', { ns: meta.id }],
+                  icon: 'ph--ticket--regular',
+                },
+              }),
+            ],
+          }),
+        ];
+      }),
+    });
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

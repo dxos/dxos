@@ -2,64 +2,85 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, Fragment, type FC } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
-import { parseToolName, type Tool } from '@dxos/ai';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { FunctionType } from '@dxos/functions';
+import { type Blueprint } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
+import { type Database, Filter, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { useQuery } from '@dxos/react-client/echo';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { createToolsFromService } from '../../tools';
-import { ServiceType } from '../../types';
+import { ServiceType } from '#types';
 
-export type ToolboxProps = ThemedClassName<{
-  artifacts?: ArtifactDefinition[];
-  services?: { service: ServiceType; tools: Tool[] }[];
-  functions?: FunctionType[];
-  striped?: boolean;
-}>;
+import { type AiChatProcessor } from '../../processor';
 
-export const Toolbox = ({ classNames, artifacts, functions, services, striped }: ToolboxProps) => {
-  return (
-    <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
-      {artifacts && artifacts.length > 0 && (
-        <Section
-          title='Artifacts'
-          items={artifacts.map(({ name, description, tools }) => ({
-            name,
-            description,
-            subitems: tools.map(({ name, description }) => ({ name: `∙ ${parseToolName(name)}`, description })),
-          }))}
-        />
-      )}
-
-      {services && services.length > 0 && (
-        <Section
-          title='Services'
-          items={services.map(({ service: { serviceId, name, description }, tools }) => ({
-            name: name ?? serviceId,
-            description,
-            subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
-          }))}
-        />
-      )}
-
-      {functions && functions.length > 0 && (
-        <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
-      )}
-    </div>
-  );
+export type ToolboxProps = {
+  services?: { service: ServiceType }[];
+  functions?: Operation.PersistentOperation[];
+  // TODO(burdon): Combine into single array.
+  blueprints?: readonly Blueprint.Blueprint[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
 };
 
-const Section: FC<{
+export const Toolbox = composable<HTMLDivElement, ToolboxProps>(
+  ({ functions, services, blueprints, activeBlueprints, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root {...composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
+          {blueprints && blueprints.length > 0 && (
+            <Section
+              title='Blueprints'
+              items={blueprints.map(({ name, description, tools }) => ({
+                name,
+                description,
+                subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+              }))}
+            />
+          )}
+
+          {activeBlueprints && activeBlueprints.length > 0 && (
+            <Section
+              title='Blueprints'
+              items={activeBlueprints.map(({ target }) => ({
+                name: target?.name ?? '',
+                description: target?.description ?? '',
+                subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+              }))}
+            />
+          )}
+
+          {services && services.length > 0 && (
+            <Section
+              title='Services'
+              items={services.map(({ service: { serviceId, name, description } }) => ({
+                name: name ?? serviceId,
+                description,
+                // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+              }))}
+            />
+          )}
+
+          {functions && functions.length > 0 && (
+            <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+Toolbox.displayName = 'Toolbox';
+
+type SectionProps = {
   title: string;
   items: { name: string; description?: string; subitems?: { name: string; description?: string }[] }[];
   striped?: boolean;
-}> = ({ title, items, striped }) => {
+};
+
+const Section = ({ title, items, striped }: SectionProps) => {
   const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
   const gridClassNames = 'grid grid-cols-[8rem_1fr]';
   const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
@@ -89,28 +110,39 @@ const Section: FC<{
   );
 };
 
-export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
-  // Plugin artifacts.
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+export type ToolboxPanelProps = ThemedClassName<{
+  db?: Database.Database;
+  processor?: AiChatProcessor;
+}>;
 
+export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) => {
   // Registered services.
-  const services = useQuery(space, Filter.type(ServiceType));
-  const [serviceTools, setServiceTools] = useState<{ service: ServiceType; tools: Tool[] }[]>([]);
+  const services = useQuery(db, Filter.type(ServiceType));
+  const [serviceTools, setServiceTools] = useState<{ service: ServiceType }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
     queueMicrotask(async () => {
-      const tools = await Promise.all(
-        services.map(async (service) => ({ service, tools: await createToolsFromService(service) })),
-      );
-
-      setServiceTools(tools);
+      // TODO(burdon): Fix.
+      // const tools = await Promise.all(
+      //   services.map(async (service) => ({ service, tools: await createToolsFromService(service) })),
+      // );
+      // setServiceTools(tools);
     });
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(space, Filter.type(FunctionType));
+  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return (
-    <Toolbox classNames={classNames} artifacts={artifactDefinitions} services={serviceTools} functions={functions} />
+    <Toolbox
+      classNames={classNames}
+      blueprints={processor?.context.getBlueprints()}
+      services={serviceTools}
+      functions={functions}
+    />
   );
+};
+
+const safeToolId = (name: string) => {
+  return name.split('_').pop();
 };

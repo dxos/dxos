@@ -28,10 +28,10 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - ComputeNode state changes are Effect signals
 - Canvas React components automatically update based on these signals
 
-
 ## Development
 
 ### Phase 1: Basic editor
+
 - [x] Canvas with pan and zoom (`@dxos/react-canvaas`).
 - [x] General graph data structure (`@dxos/graph`).
 - [x] Radix-style Editor component, with Canvas, Grid and Toolbar.
@@ -47,7 +47,8 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - [ ] Undo/redo (history).
 - [ ] Snap to edges or center? (currently center).
 
-### Phase 2: 
+### Phase 2:
+
 - [x] FunctionShape components with properties and anchor points. Add/delete and Play buttons.
 - [x] Shape registry.
   - [x] Custom frames.
@@ -77,9 +78,11 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - [x] GPT (with prompt and base prompt inputs).
 
 ### Phase 4:
-- [ ] Group/collapse nodes; hierarchical graph editor. 
+
+- [ ] Group/collapse nodes; hierarchical graph editor.
 
 ### Technical Debt
+
 - [x] `AttentionContainer` (and key management).
 - [ ] Factor out common Toolbar pattern (with state observers).
 - [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
@@ -87,4 +90,5 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - [ ] TypedObject and schema id property.
 
 ### Design Issues
+
 - [ ] Represent all compute node properties as inputs? (e.g., trigger).

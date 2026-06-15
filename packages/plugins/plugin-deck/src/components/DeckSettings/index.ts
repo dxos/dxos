@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-export * from './DeckSettings';
+export { DeckSettings as default } from './DeckSettings';

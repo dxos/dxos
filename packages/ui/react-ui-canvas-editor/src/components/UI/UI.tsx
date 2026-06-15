@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
-import { Tools, Toolbar } from '../Toolbar';
 import { type TestId } from '../defs';
 import { eventsAuto, eventsNone } from '../styles';
+import { Toolbar, Tools } from '../Toolbar';
 
 export type UIProps = ThemedClassName<{
   showTools?: boolean;
@@ -24,7 +25,7 @@ export type UIProps = ThemedClassName<{
  */
 export const UI = ({ showTools, showToolbar }: UIProps) => {
   const { debug, registry, dragMonitor, graph, showGrid, snapToGrid, selection, actionHandler } = useEditorContext();
-  const dragging = dragMonitor.state().value;
+  const dragging = useAtomValue(dragMonitor.state);
   const info = {
     debug,
     graph: {
@@ -32,7 +33,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       edges: graph.edges.length,
     },
     dragging,
-    selected: selection.selected.value,
+    selected: selection.getSelectedIds(),
     showGrid,
     snapToGrid,
   };
@@ -51,19 +52,15 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       <div>
         <div className='absolute bottom-2 left-2'>
           {debug && (
-            <SyntaxHighlighter
-              language='javascript'
-              classNames={mx(
-                'w-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs p-2 opacity-70',
-              )}
-            >
-              {JSON.stringify(info, null, 2)}
-            </SyntaxHighlighter>
+            <JsonHighlighter
+              classNames={mx('w-[300px] bg-base-surface border border-separator rounded-xs text-xs opacity-70')}
+              data={info}
+            />
           )}
         </div>
         {showToolbar && (
           <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
-            <div className='p-1 bg-baseSurface rounded-md border border-separator'>
+            <div className='p-1 bg-base-surface border border-separator rounded-xs '>
               <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
             </div>
           </div>

@@ -1,0 +1,127 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
+import React, { Fragment, useEffect, useMemo, useRef } from 'react';
+
+import { AiService } from '@dxos/ai';
+import { Capabilities } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
+import { ComputeGraphModel } from '@dxos/conductor';
+import { Database, Feed, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
+import { Flex, type FlexProps } from '@dxos/react-ui';
+import {
+  ComputeContext,
+  ComputeGraphController,
+  type ComputeShape,
+  ComputeShapeLayout,
+  computeShapes,
+  useComputeGraphController,
+  useGraphMonitor,
+} from '@dxos/react-ui-canvas-compute';
+import {
+  type CanvasBoard,
+  CanvasGraphModel,
+  Editor,
+  type EditorController,
+  KeyboardContainer,
+  ShapeRegistry,
+} from '@dxos/react-ui-canvas-editor';
+
+export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.CanvasBoard>;
+
+export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
+  const [canvas] = useObject(subject);
+  const id = Obj.getURI(canvas);
+  const graph = useMemo(
+    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
+    [subject, canvas.layout],
+  );
+  const controller = useGraphController(subject);
+  const graphMonitor = useGraphMonitor(controller?.graph);
+  const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
+  const editorRef = useRef<EditorController>(null);
+  useComputeGraphController({ controller, graph, editorRef });
+
+  // Layout.
+  const layout = useMemo(
+    () => (controller && registry ? new ComputeShapeLayout(controller, registry) : undefined),
+    [controller, registry],
+  );
+
+  if (!controller) {
+    return;
+  }
+
+  const Root = role === 'section' ? Container : Fragment;
+
+  return (
+    <ComputeContext.Provider value={{ controller }}>
+      <Root>
+        <KeyboardContainer id={id}>
+          <Editor.Root
+            id={id}
+            ref={editorRef}
+            graph={graph}
+            graphMonitor={graphMonitor as any}
+            registry={registry}
+            layout={layout}
+          >
+            <Editor.Canvas />
+            <Editor.UI showTools />
+          </Editor.Root>
+        </KeyboardContainer>
+      </Root>
+    </ComputeContext.Provider>
+  );
+};
+
+const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
+
+const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
+  const db = Obj.getDatabase(canvas);
+  const processManagerRuntime = useCapability(Capabilities.ProcessManagerRuntime);
+  const [computeGraph] = useObject(canvas.computeGraph);
+  const controller = useMemo(() => {
+    if (!canvas.computeGraph?.target || !db) {
+      return null;
+    }
+    const spaceId = db.spaceId;
+    const model = new ComputeGraphModel(canvas.computeGraph?.target);
+    const spaceLayer = ServiceResolver.provide(
+      { space: spaceId },
+      AiService.AiService,
+      Database.Service,
+      Feed.FeedService,
+      Credential.CredentialsService,
+      Operation.Service,
+      OperationRegistry.Service,
+    );
+    const computeGraphRuntime = {
+      runPromiseExit: <A, E>(effect: Effect.Effect<A, E, any>): Promise<Exit.Exit<A, E>> =>
+        processManagerRuntime.runPromiseExit(effect.pipe(Effect.provide(spaceLayer)) as any) as Promise<
+          Exit.Exit<A, E>
+        >,
+    };
+    const controller = new ComputeGraphController(computeGraphRuntime, model);
+    return controller;
+  }, [computeGraph, db, processManagerRuntime]);
+
+  useEffect(() => {
+    if (!controller) {
+      return;
+    }
+
+    void controller.open();
+    return () => {
+      void controller.close();
+    };
+  }, [controller]);
+
+  return controller;
+};

@@ -2,103 +2,108 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { Registry } from '@effect-atom/atom-react';
+import * as Schema from 'effect/Schema';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
-import { createEchoSchema } from '@dxos/live-object/testing';
-import { createView, ViewProjection } from '@dxos/schema';
+import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
+import { createEchoSchema } from '@dxos/echo/testing';
+import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
+import { Table } from '../types';
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
-import { TableType } from '../types';
 
 describe('TablePresentation', () => {
-  describe('row reactivity', () => {
+  describe('getCells', () => {
+    let registry: Registry.Registry;
     let data: any[];
-    let updateCount: number;
     let model: any;
     let presentation: TablePresentation;
 
     beforeEach(async () => {
-      updateCount = 0;
-      ({ data } = live({
-        data: [
-          { col1: 'A', col2: 1, col3: true },
-          { col1: 'B', col2: 2, col3: false },
-        ],
-      }));
+      registry = Registry.make();
+      data = [
+        { id: '1', title: 'A', count: 1 },
+        { id: '2', title: 'B', count: 2 },
+      ];
 
-      model = createTableModel({
-        onCellUpdate: () => updateCount++,
-      });
-      model.setRows(data);
+      model = createTableModel(registry, {});
       await model.open();
-      presentation = new TablePresentation(model);
+      model.setRows(data);
+      presentation = new TablePresentation(registry, model);
     });
 
-    it('should update with row-level reactivity', () => {
-      // Set up visible range to include our test data.
-      presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
+    it('should return cells for the visible range', () => {
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
-      // Trigger a row update.
-      data[0].col1 = 'New Value';
-      expect(updateCount).toBe(1);
+      // Verify that cells are returned for the range. The exact column indices depend on the projection.
+      const cellKeys = Object.keys(cells);
+      expect(cellKeys.length).toBeGreaterThan(0);
+
+      // Check that values from the data are present in the cells.
+      const values = Object.values(cells).map((c) => c.value);
+      expect(values).toContain('A');
+      expect(values).toContain('B');
+    });
+
+    it('should reflect row data changes', () => {
+      // Update the row data and refresh.
+      data[0].title = 'New Value';
+      model.setRows(data);
 
       // Verify the new value through getCells.
-      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }, 'grid');
-      expect(cells['0,0']?.value).toBe('New Value');
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 2 } }, 'grid');
+      const values = Object.values(cells).map((c) => c.value);
+      expect(values).toContain('New Value');
     });
 
-    it('should update reactively when adding a new row', () => {
-      // Set up visible range to include our test data.
-      presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
-
-      data.push({ col1: 'C', col2: 3, col3: true });
-      expect(updateCount).toBe(1);
+    it('should reflect new rows', () => {
+      // Add a new row.
+      data.push({ id: '3', title: 'C', count: 3 });
+      model.setRows(data);
 
       const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
       // Verify the new row's data.
       expect(cells['0,2']?.value).toBe('C');
       expect(cells['1,2']?.value).toBe('3');
-      expect(cells['2,2']?.value).toBe('true');
     });
 
-    it('should handle combined operations reactively', () => {
-      // Set up visible range.
-      presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
-
-      // Multiple operations.
-      data[0].col1 = 'Updated A';
-      data.push({ col1: 'C', col2: 3, col3: true });
+    it('should handle row modifications', () => {
+      // Modify the data.
+      data[0].title = 'Updated A';
+      data.push({ id: '3', title: 'C', count: 3 });
       data.splice(1, 1);
-
-      // We expect one update per operation affecting visible rows.
-      expect(updateCount).toBe(3);
+      model.setRows(data);
 
       const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
       // Verify final state.
       expect(cells['0,0']?.value).toBe('Updated A');
       expect(cells['0,1']?.value).toBe('C');
-      expect(cells['1,1']?.value).toBe('3');
-      expect(cells['2,1']?.value).toBe('true');
     });
   });
 });
 
-class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+const Test = Schema.Struct({
   title: Schema.String,
-  completed: Schema.Boolean,
-}) {}
+  count: Schema.Number,
+}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
-const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
-  const schema = createEchoSchema(Test);
-  const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema.jsonSchema, view);
-  const table = Obj.make(TableType, { view: Ref.make(view) });
-  return new TableModel({ id: table.id, view, projection, ...props });
+const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+  const schema = createEchoSchema(Type.getSchema(Test));
+  const view = ViewModel.make({
+    query: Query.select(Filter.type(schema)),
+    jsonSchema: schema.jsonSchema,
+  });
+  const object = Table.make({ view });
+  const projection = new ProjectionModel({
+    registry,
+    view,
+    baseSchema: schema.jsonSchema,
+    change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(Type.getSchema(schema))),
+  });
+  projection.normalizeView();
+  return new TableModel({ registry, object, projection, ...props });
 };

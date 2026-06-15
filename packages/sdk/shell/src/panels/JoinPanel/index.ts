@@ -3,4 +3,6 @@
 //
 
 export * from './JoinPanel';
-export * from './JoinPanelProps';
+export * from './JoinHeading';
+
+export type * from './JoinPanelProps';

@@ -1,0 +1,47 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  bundle:
+    command: pnpm exec vite build
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - vite.config.ts
+      - '*.html'
+      - '@group(production)'
+      - $CONFIG_DYNAMIC
+      - $DX_EDGE_BASE_URL
+      - $DX_ENVIRONMENT
+      - $DX_HOST
+      - $DX_HUB_URL
+      - $DX_IPDATA_API_KEY
+      - $DX_LABS
+      - $DX_MINIFY
+      - $DX_OTEL_ENDPOINT
+      - $DX_OTEL_HEADERS
+      - $DX_PWA
+      - $DX_POSTHOG_API_KEY
+      - $DX_POSTHOG_API_HOST
+      - $DX_POSTHOG_FEEDBACK_SURVEY_ID
+      - $DX_POSTHOG_PROJECT_ID
+      - $DX_SHARED_WORKER
+      - $LOG_FILTER
+      - $LOG_PREFIX
+      - $NODE_ENV
+      - $NODE_OPTIONS
+      - $REMOTE_SOURCE
+    outputs:
+      - out
+  serve:
+    command: pnpm exec vite dev
+    deps:
+      - ^:compile
+    preset: server
+  preview:
+    command: pnpm exec vite preview
+    deps:
+      - bundle
+    preset: server
+
+inheritedBy:
+  tags: vite

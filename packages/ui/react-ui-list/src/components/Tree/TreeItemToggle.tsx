@@ -4,30 +4,40 @@
 
 import React, { forwardRef, memo } from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { IconButton, type IconButtonProps } from '@dxos/react-ui';
 
-export type TreeItemToggleProps = {
+export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;
   isBranch?: boolean;
-  onToggle?: () => void;
   hidden?: boolean;
 };
 
 export const TreeItemToggle = memo(
-  forwardRef<HTMLButtonElement, TreeItemToggleProps>(({ open, isBranch, hidden, onToggle }, forwardedRef) => {
-    return (
-      <Button
-        ref={forwardedRef}
-        data-testid='treeItem.toggle'
-        aria-expanded={open}
-        variant='ghost'
-        density='fine'
-        classNames={mx('is-6 pli-0 dx-focus-ring-inset', hidden ? 'hidden' : !isBranch && 'invisible')}
-        onClick={onToggle}
-      >
-        <Icon icon='ph--caret-right--bold' size={3} classNames={mx('transition duration-200', open && 'rotate-90')} />
-      </Button>
-    );
-  }),
+  forwardRef<HTMLButtonElement, TreeItemToggleProps>(
+    ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {
+      return (
+        <IconButton
+          ref={forwardedRef}
+          data-testid='treeItem.toggle'
+          aria-expanded={open}
+          variant='ghost'
+          density='md'
+          classNames={[
+            'h-full w-6 px-0',
+            '[&_svg]:transition-transform [&_svg]:duration-200',
+            open ? '[&_svg]:rotate-90' : '[&_svg]:rotate-0',
+            hidden ? 'hidden' : !isBranch && 'invisible',
+            classNames,
+          ]}
+          size={3}
+          icon='ph--caret-right--bold'
+          iconOnly
+          noTooltip
+          label={open ? 'Click to close' : 'Click to open'}
+          tabIndex={-1}
+          {...props}
+        />
+      );
+    },
+  ),
 );

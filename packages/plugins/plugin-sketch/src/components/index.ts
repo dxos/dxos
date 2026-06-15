@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
-export * from './SketchSettings';
+export * from './Sketch';
 
-export const SketchContainer = lazy(() => import('./SketchContainer'));
+export const SketchSettings: ComponentType<any> = lazy(() => import('./SketchSettings'));

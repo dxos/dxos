@@ -1,82 +1,156 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./ActivationEvent": {
+      "source": "./src/core/activation-event.ts",
+      "browser": "./dist/lib/browser/activation-event/index.mjs",
+      "node": "./dist/lib/node-esm/activation-event/index.mjs",
+      "types": "./dist/types/src/activation-event/index.d.ts"
+    },
+    "./ActivationEvents": {
+      "source": "./src/common/activation-events.ts",
+      "browser": "./dist/lib/browser/common/activation-events.mjs",
+      "node": "./dist/lib/node-esm/common/activation-events.mjs",
+      "types": "./dist/types/src/common/activation-events.d.ts"
+    },
+    "./Capabilities": {
+      "source": "./src/common/capabilities.ts",
+      "browser": "./dist/lib/browser/common/capabilities.mjs",
+      "node": "./dist/lib/node-esm/common/capabilities.mjs",
+      "types": "./dist/types/src/common/capabilities.d.ts"
+    },
+    "./Capability": {
+      "source": "./src/core/capability.ts",
+      "browser": "./dist/lib/browser/capability/index.mjs",
+      "node": "./dist/lib/node-esm/capability/index.mjs",
+      "types": "./dist/types/src/capability/index.d.ts"
+    },
+    "./Plugin": {
+      "source": "./src/core/plugin.ts",
+      "browser": "./dist/lib/browser/plugin/index.mjs",
+      "node": "./dist/lib/node-esm/plugin/index.mjs",
+      "types": "./dist/types/src/plugin/index.d.ts"
+    },
+    "./PluginManager": {
+      "source": "./src/core/plugin-manager.ts",
+      "browser": "./dist/lib/browser/plugin-manager/index.mjs",
+      "node": "./dist/lib/node-esm/plugin-manager/index.mjs",
+      "types": "./dist/types/src/plugin-manager/index.d.ts"
+    },
+    "./UrlLoader": {
+      "source": "./src/core/url-loader.ts",
+      "browser": "./dist/lib/browser/url-loader/index.mjs",
+      "node": "./dist/lib/node-esm/url-loader/index.mjs",
+      "types": "./dist/types/src/url-loader/index.d.ts"
+    },
+    "./vite-plugin": {
+      "import": "./dist/plugin/node-esm/index.mjs",
+      "types": "./dist/types/src/vite-plugin/index.d.ts"
+    },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs",
+      "types": "./dist/types/src/cli/index.d.ts"
     },
     "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
+      "source": "./src/testing/index.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "types": "./dist/types/src/testing/index.d.ts"
     },
-    "./worker": {
-      "types": "./dist/types/src/worker.d.ts",
-      "browser": "./dist/lib/browser/worker.mjs",
-      "node": "./dist/lib/node-esm/worker.mjs"
+    "./testing-react": {
+      "source": "./src/testing/react.tsx",
+      "browser": "./dist/lib/browser/testing/react.mjs",
+      "node": "./dist/lib/node-esm/testing/react.mjs",
+      "types": "./dist/types/src/testing/react.d.ts"
+    },
+    "./ui": {
+      "source": "./src/ui/index.ts",
+      "browser": "./dist/lib/browser/ui/index.mjs",
+      "node": "./dist/lib/node-esm/ui/index.mjs",
+      "types": "./dist/types/src/ui/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "./testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "./worker": [
-        "dist/types/src/worker.d.ts"
-      ]
-    }
-  },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/app-graph": "workspace:*",
-    "@dxos/artifact": "workspace:*",
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
     "@dxos/async": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/schema": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0"
+    "@dxos/web-context": "workspace:*",
+    "@dxos/web-context-react": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect/cli": "catalog:",
+    "@effect/platform": "catalog:",
+    "babel-preset-solid": "catalog:",
+    "cjs-module-lexer": "catalog:",
+    "esbuild": "catalog:",
+    "idb-keyval": "catalog:",
+    "solid-js": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-signals": "workspace:*",
+    "@dxos/brand": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "@phosphor-icons/react": "^2.1.5",
-    "@types/react": "~18.2.0",
-    "effect": "3.14.21",
-    "react": "~18.2.0",
-    "typedoc": "0.28.1"
+    "@dxos/test-utils": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typedoc": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "peerDependencies": {
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "effect": "^3.13.3",
-    "react": "~18.2.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@testing-library/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

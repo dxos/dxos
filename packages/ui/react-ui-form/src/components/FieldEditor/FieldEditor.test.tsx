@@ -3,27 +3,22 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { screen, cleanup, fireEvent, act } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
 
+import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 import * as stories from './FieldEditor.stories';
 import { type FieldEditorDebugObjects } from './FieldEditor.stories';
-import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 
-const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
-  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
-  expect(debugObjects).toBeDefined();
-  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
-  expect(debugObjects.projection).toBeInstanceOf(ViewProjection);
-  return debugObjects;
-};
-
 describe('FieldEditor', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
   });
 
@@ -33,7 +28,7 @@ describe('FieldEditor', () => {
     expect(screen.getByText('Type format')).toBeInTheDocument();
     expect(screen.getByText('String')).toBeInTheDocument();
 
-    // Verify the initial field shows as String type
+    // Verify the initial field shows as String type.
     expect(screen.getByText('String')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('combobox'));
@@ -49,9 +44,17 @@ describe('FieldEditor', () => {
     // Access the live objects directly from window using symbol.
     const debugObjects = getFieldEditorDebugObjects();
 
-    const name = debugObjects.projection.schema.properties!.name;
+    const name = debugObjects.projection.baseSchema.properties!.name;
     expect(name.type).toBe('number');
     expect(name.format).toBe('number');
     expect(name.description).toBe('Full name.');
   });
 });
+
+const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
+  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
+  expect(debugObjects).toBeDefined();
+  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
+  return debugObjects;
+};

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -11,21 +12,36 @@ export type TreeItemDataProps = {
   id: string;
   label: Label;
   parentOf?: string[];
-  icon?: string;
-  disabled?: boolean;
+  /** When `false`, the item cannot be dragged (overrides tree-level `draggable`). */
+  draggable?: boolean;
+  /** When `false`, the item does not participate as a drop target. */
+  droppable?: boolean;
   className?: string;
   headingClassName?: string;
+  icon?: string;
+  iconHue?: string;
+  disabled?: boolean;
   testId?: string;
+  /** Optional item count rendered as a neutral badge directly after the label. */
+  count?: number;
+  /** Optional count of new/modified items; when greater than zero it shows as a rose badge in place of `count`. */
+  modifiedCount?: number;
 };
 
-export type TreeContextType<T = any, O = any> = {
-  useItems: (parent?: T, options?: O) => T[];
-  getProps: (item: T, parent: string[]) => TreeItemDataProps;
-  isOpen: (path: string[], item: T) => boolean;
-  isCurrent: (path: string[], item: T) => boolean;
-};
+export interface TreeModel<T extends { id: string } = any> {
+  /** Atom family: resolve item by ID (content). */
+  item: (id: string) => Atom.Atom<T | undefined>;
+  /** Atom family: open state keyed by path. */
+  itemOpen: (path: string[]) => Atom.Atom<boolean>;
+  /** Atom family: current (selected) state keyed by path. */
+  itemCurrent: (path: string[]) => Atom.Atom<boolean>;
+  /** Atom family: display props for an item at a given path (path includes item's own ID at end). */
+  itemProps: (path: string[]) => Atom.Atom<TreeItemDataProps>;
+  /** Atom family: outbound child IDs for a parent ID (topology). Undefined = root. */
+  childIds: (parentId?: string) => Atom.Atom<string[]>;
+}
 
-const TreeContext = createContext<null | TreeContextType>(null);
+const TreeContext = createContext<TreeModel | null>(null);
 
 export const TreeProvider = TreeContext.Provider;
 

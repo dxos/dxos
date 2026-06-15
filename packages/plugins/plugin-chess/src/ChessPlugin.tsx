@@ -2,59 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
 
-import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
-import { ChessAction, ChessType } from './types';
+import { BlueprintDefinition, GameVariant, OperationHandler } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { Chess } from '#types';
 
-export const ChessPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: ChessType.typename,
-          metadata: {
-            icon: 'ph--shield-chevron--regular',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: ChessType,
-            getIntent: () => createIntent(ChessAction.Create),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const ChessPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'game-variant',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: GameVariant,
+  }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  AppPlugin.addSchemaModule({ schema: [Chess.State] }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.make,
+);
+
+export default ChessPlugin;

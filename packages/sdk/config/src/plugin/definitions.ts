@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import pkgUp from 'pkg-up';
+import { parse } from 'yaml';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
-import { type ConfigPluginOpts } from './types';
 import { mapFromKeyValues } from '../config';
+import { type ConfigPluginOpts } from './types';
 
 const CWD = process.cwd();
 
@@ -28,17 +29,16 @@ export const definitions = ({
     __CONFIG_DEFAULTS__: configPath?.length ? configPath : resolve(CWD, 'dx.yml'),
     __CONFIG_ENVS__: envPath?.length ? envPath : resolve(CWD, 'dx-env.yml'),
   } as { [key: string]: string };
-
   if (mode !== 'production') {
     KEYS_TO_FILE.__CONFIG_LOCAL__ = devPath ?? resolve(CWD, 'dx-local.yml');
   }
 
   return Object.entries(KEYS_TO_FILE).reduce(
     (prev, [key, value]) => {
+      invariant(key);
       let content = {};
-
       try {
-        content = yaml.load(readFileSync(value, 'utf-8')) as any;
+        content = parse(readFileSync(value, 'utf-8')) as any;
 
         // Map environment variables to config values.
         if (key === '__CONFIG_ENVS__') {
@@ -85,10 +85,10 @@ export const definitions = ({
       };
     },
     {
-      __DXOS_CONFIG__: { dynamic: mode === 'production', publicUrl },
       __CONFIG_DEFAULTS__: {},
       __CONFIG_ENVS__: {},
       __CONFIG_LOCAL__: {},
+      __DXOS_CONFIG__: { dynamic: mode === 'production', publicUrl },
     },
   );
 };

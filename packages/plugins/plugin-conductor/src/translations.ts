@@ -3,24 +3,29 @@
 //
 
 import { Type } from '@dxos/echo';
-import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
+import { type Resource } from '@dxos/react-ui';
+import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { CONDUCTOR_PLUGIN } from './meta';
+import { meta } from '#meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(CanvasBoardType)]: {
-        'typename label': 'Circuit',
-        'typename label_zero': 'Circuits',
-        'typename label_one': 'Circuit',
-        'typename label_other': 'Circuits',
-        'object name placeholder': 'New circuit',
+      [Type.getTypename(CanvasBoard.CanvasBoard)]: {
+        'typename.label': 'Circuit',
+        'typename.label_zero': 'Circuits',
+        'typename.label_one': 'Circuit',
+        'typename.label_other': 'Circuits',
+        'object-name.placeholder': 'New circuit',
+        'add-object.label': 'Add circuit',
+        'rename-object.label': 'Rename circuit',
+        'delete-object.label': 'Delete circuit',
+        'object-deleted.label': 'Circuit deleted',
       },
-      [CONDUCTOR_PLUGIN]: {
-        'plugin name': 'Conductor',
-        'content placeholder': 'Enter text...',
+      [meta.id]: {
+        'plugin.name': 'Conductor',
+        'content.placeholder': 'Enter text...',
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -2,22 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TaskListExample } from '../examples';
 import { NetworkToggle } from '../template/src/components';
 
-export default {
+const meta = {
   title: 'sdk/examples/DXOS',
-  decorators: [withTheme],
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof ClientRepeater>;
 
-export const TaskList = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const TaskList: Story = {
   render: () => <ClientRepeater count={2} component={TaskListExample} controls={NetworkToggle} createSpace />,
 };
 
@@ -26,7 +29,7 @@ export const TaskList = {
 // const editor = await setupPeersInSpace({
 //   count: 2,
 //   schema: types,
-//   onSpaceCreated: ({ space }) => {
+//   onCreateSpace: ({ space }) => {
 //     space.db.add(new Document());
 //   },
 // });
@@ -59,7 +62,7 @@ export const TaskList = {
 //       <div className='demo-buttons space-b-2'>
 //         <div className='flex'>
 //           <Input.Root>
-//             <Input.Switch classNames='me-2' onCheckedChange={handleToggleNetwork} />
+//             <Input.Switch classNames='mr-2' onCheckedChange={handleToggleNetwork} />
 //             <Input.Label>
 //               Disable{' '}
 //               <a
@@ -76,7 +79,7 @@ export const TaskList = {
 //         </div>
 //         <div className='flex'>
 //           <Input.Root>
-//             <Input.Switch classNames='me-2' onCheckedChange={handleToggleBatching} />
+//             <Input.Switch classNames='mr-2' onCheckedChange={handleToggleBatching} />
 //             <Input.Label>Enable mutation batching</Input.Label>
 //           </Input.Root>
 //         </div>
@@ -86,7 +89,7 @@ export const TaskList = {
 //   );
 // };
 
-// export const Editor = {
+// export const Editor: Story = {
 //   render: () => (
 //     <ClientRepeater
 //       clients={editor.clients}
@@ -95,5 +98,5 @@ export const TaskList = {
 //       args={{ spaceKey: editor.spaceKey }}
 //     />
 //   ),
-//   decorators: [withTheme, DemoToggles(editor)],
+//   decorators: [DemoToggles(editor)],
 // };

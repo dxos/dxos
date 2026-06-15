@@ -1,0 +1,18 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/RegistryPlugin.tsx'
+      - '--entryPoint=src/RegistryPlugin.node.ts'
+      - '--entryPoint=src/RegistryPlugin.workerd.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--platform=neutral'

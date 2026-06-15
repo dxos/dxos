@@ -7,7 +7,7 @@ import { useMainContext } from '@dxos/react-ui';
 export const useMainSize = () => {
   const { navigationSidebarState, complementarySidebarState } = useMainContext('DeckPluginPlank');
   return {
-    'data-sidebar-inline-start-state': navigationSidebarState,
-    'data-sidebar-inline-end-state': complementarySidebarState,
+    'data-sidebar-left-state': navigationSidebarState,
+    'data-sidebar-right-state': complementarySidebarState,
   };
 };

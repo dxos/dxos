@@ -2,63 +2,46 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Script } from '@dxos/compute';
+import { GraphBuilder } from '@dxos/plugin-graph';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
 
-export default (context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: `${meta.id}/execute`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ScriptType, node.data) ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: [node.id, 'execute'].join(ATTENDABLE_PATH_SEPARATOR),
-                type: PLANK_COMPANION_TYPE,
-                data: 'execute',
-                properties: {
-                  label: ['script test label', { ns: meta.id }],
-                  icon: 'ph--terminal--regular',
-                  disposition: 'hidden',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-    createExtension({
-      id: `${meta.id}/logs`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ScriptType, node.data) ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
-                type: PLANK_COMPANION_TYPE,
-                data: 'logs',
-                properties: {
-                  label: ['script logs label', { ns: meta.id }],
-                  icon: 'ph--clock-countdown--regular',
-                  disposition: 'hidden',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-  ]);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
+      GraphBuilder.createTypeExtension({
+        id: 'execute',
+        type: Script.Script,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'execute',
+              label: ['script-test.label', { ns: meta.id }],
+              icon: 'ph--terminal--regular',
+              data: 'execute',
+            }),
+          ]),
+      }),
+      GraphBuilder.createTypeExtension({
+        id: 'logs',
+        type: Script.Script,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'logs',
+              label: ['script-logs.label', { ns: meta.id }],
+              icon: 'ph--clock-countdown--regular',
+              data: 'logs',
+            }),
+          ]),
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

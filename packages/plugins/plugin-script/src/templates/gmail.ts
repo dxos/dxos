@@ -3,20 +3,32 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { EchoObject, Filter, EntityId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
+  FetchHttpClient,
   HttpClient,
   HttpClientRequest,
-  FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
+} from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import * as Chunk from 'https://esm.sh/effect@3.17.0/Chunk?bundle=false';
+// @ts-ignore
+import * as Effect from 'https://esm.sh/effect@3.17.0/Effect?bundle=false';
+// @ts-ignore
+import * as Function from 'https://esm.sh/effect@3.17.0/Function?bundle=false';
+// @ts-ignore
+import * as Ref from 'https://esm.sh/effect@3.17.0/Ref?bundle=false';
+// @ts-ignore
+import * as Schedule from 'https://esm.sh/effect@3.17.0/Schedule?bundle=false';
+// @ts-ignore
+import * as Stream from 'https://esm.sh/effect@3.17.0/Stream?bundle=false';
 
 export default defineFunction({
+  key: 'org.dxos.script.gmail',
+  name: 'Gmail',
   inputSchema: S.Struct({
     mailboxId: S.String,
     userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
@@ -35,13 +47,13 @@ export default defineFunction({
   handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
-        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
+        try: () => space.db.query(Filter.typename('org.dxos.type.accessToken', { source: 'gmail.com' })).first(),
         catch: (e: any) => e,
       });
 
       // NOTE: Google API bundles size is v. large and caused runtime issues.
       const makeRequest = (url: string) =>
-        pipe(
+        Function.pipe(
           url,
           HttpClientRequest.get,
           HttpClientRequest.setHeaders({ Authorization: `Bearer ${token}`, Accept: 'application/json' }),
@@ -62,7 +74,7 @@ export default defineFunction({
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(mailbox.queue.dxn),
+        try: () => space.queues.queryQueue(mailbox.queue.uri),
         catch: (e: any) => e,
       });
       const newMessages = yield* Ref.make([]);
@@ -80,7 +92,7 @@ export default defineFunction({
           const messageDetails = yield* getMessage(userId, message.id);
           const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
           const from = messageDetails.payload.headers.find((h: any) => h.name === 'From');
-          const sender = from && parseEmailString(from.value);
+          const sender = from && parseFromHeader(from.value);
           // TODO(wittjosiah): Improve parsing of email contents.
           const content =
             messageDetails.payload.body?.data ??
@@ -93,12 +105,12 @@ export default defineFunction({
           }
           const subject = messageDetails.payload.headers.find((h: any) => h.name === 'Subject')?.value;
           const object = create(MessageType, {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             created,
             sender,
             blocks: [
               {
-                type: 'text',
+                _tag: 'text',
                 text: Buffer.from(content, 'base64').toString('utf-8'),
               },
             ],
@@ -114,13 +126,13 @@ export default defineFunction({
 
       const queueMessages = yield* Ref.get(newMessages);
       if (queueMessages.length > 0) {
-        yield* pipe(
+        yield* Function.pipe(
           queueMessages,
           Stream.fromIterable,
           Stream.grouped(10),
           Stream.flatMap((batch: any) =>
             Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(mailbox.queue.dxn, Chunk.toReadonlyArray(batch)),
+              try: () => space.queues.insertIntoQueue(mailbox.queue.uri, Chunk.toReadonlyArray(batch)),
               catch: (e: any) => e,
             }),
           ),
@@ -145,26 +157,25 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
-const parseEmailString = (emailString: string): { name?: string; email: string } | undefined => {
-  const match = emailString.match(/^([^<]+?)\s*<([^>]+@[^>]+)>$/);
+const parseFromHeader = (value: string): { name?: string; email: string } | undefined => {
+  const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
+  const removeOuterQuotes = (str: string) => str.replace(/^['"]|['"]$/g, '');
+  const match = value.match(EMAIL_REGEX);
   if (match) {
     const [, name, email] = match;
     return {
-      name: name.trim(),
+      name: removeOuterQuotes(name.trim()),
       email: email.trim(),
     };
   }
-
-  return undefined;
 };
 
 //
 // Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/S.
+// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
-const ActorRoles = ['user', 'assistant'] as const;
-const ActorRole = S.Literal(...ActorRoles);
+const ActorRole = S.Literal('user', 'assistant');
 type ActorRole = S.Schema.Type<typeof ActorRole>;
 
 const ActorSchema = S.Struct({
@@ -174,67 +185,26 @@ const ActorSchema = S.Struct({
   role: S.optional(ActorRole),
 });
 
-const AbstractContentBlock = S.Struct({
+const Base = S.Struct({
   pending: S.optional(S.Boolean),
 });
-type AbstractContentBlock = S.Schema.Type<typeof AbstractContentBlock>;
-const TextContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('text'),
-    disposition: S.optional(S.String),
-    text: S.String,
-  }),
-).pipe(S.mutable);
-type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
-const JsonContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('json'),
-    disposition: S.optional(S.String),
-    data: S.String,
-  }),
-).pipe(S.mutable);
-type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
-const Base64ImageSource = S.Struct({
-  type: S.Literal('base64'),
-  mediaType: S.String,
-  data: S.String,
+type Base = S.Schema.Type<typeof Base>;
+const Text = S.TaggedStruct('text', {
+  mimeType: S.optional(S.String),
+  text: S.String,
+  ...Base.fields,
 }).pipe(S.mutable);
-const HttpImageSource = S.Struct({
-  type: S.Literal('http'),
-  url: S.String,
-}).pipe(S.mutable);
-const ImageSource = S.Union(Base64ImageSource, HttpImageSource);
-type ImageSource = S.Schema.Type<typeof ImageSource>;
-const ImageContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('image'),
-    id: S.optional(S.String),
-    source: S.optional(ImageSource),
-  }),
-).pipe(S.mutable);
-type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
-const ReferenceContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('reference'),
-    reference: S.Any,
-  }),
-).pipe(S.mutable);
-type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
-const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
+interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
-  id: ObjectId,
+  id: EntityId,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),
   sender: ActorSchema.annotations({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(MessageContentBlock).annotations({
+  blocks: S.Array(Text).annotations({
     description: 'Contents of the message.',
   }),
   properties: S.optional(
@@ -246,8 +216,8 @@ const MessageType = S.Struct({
   ),
 }).pipe(
   EchoObject({
-    typename: 'dxos.org/type/Message',
-    version: '0.2.0',
+    typename: 'org.dxos.type.message',
+    version: '0.1.0',
   }),
 );
 type MessageType = S.Schema.Type<typeof MessageType>;

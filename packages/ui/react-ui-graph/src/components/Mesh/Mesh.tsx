@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { geoPath, select, type GeoStream } from 'd3';
+import { type GeoStream, geoPath, select } from 'd3';
 import { useEffect } from 'react';
 import { feature, mesh } from 'topojson-client';
 import { type GeometryCollection, type GeometryObject, type Objects, type Topology } from 'topojson-specification';
@@ -20,43 +20,51 @@ export const Mesh = ({ radius = 16, value = 0.5 }: MeshProps) => {
   const { svg, size } = useSvgContext();
 
   useEffect(() => {
-    if (size) {
-      // TODO(burdon): Resize doesn't trigger.
-      const topology = hexTopology(size, radius, value);
-      const projection = hexProjection(radius);
-      const path = geoPath().projection(projection);
-
-      select(svg)
-        .append('g')
-        .attr('class', 'hexagon')
-        .selectAll('path')
-        .data(topology.objects.hexagons.geometries)
-        .enter()
-        .append('path')
-        .attr('d', (d) => path(feature(topology, d)))
-        .attr('class', (d) => ((d.properties as Custom)?.fill ? 'fill' : null));
-      // .on('mousedown', mousedown)
-      // .on('mousemove', mousemove)
-      // .on('mouseup', mouseup);
-
-      select(svg).append('path').datum(mesh(topology, topology.objects.hexagons)).attr('class', 'mesh').attr('d', path);
-
-      const redraw = (border: any) => {
-        border.attr(
-          'd',
-          path(
-            mesh(
-              topology,
-              topology.objects.hexagons,
-              (a, b) => (a.properties as Custom).fill !== (b.properties as Custom).fill,
-            ),
-          ),
-        );
-      };
-
-      select(svg).append('path').attr('class', 'border').call(redraw);
+    if (!size) {
+      return;
     }
-  }, [svg, size, value]);
+
+    const topology = hexTopology(size, radius, value);
+    const projection = hexProjection(radius);
+    const path = geoPath().projection(projection);
+
+    // Replace the previous render: idempotent join on a single keyed root group, then
+    // recreate the inner layers. Without this the effect re-runs (e.g. animating `value`
+    // or on resize) appended new groups on top of the old ones instead of replacing them.
+    const root = select(svg)
+      .selectAll<SVGGElement, null>('g.dx-mesh-root')
+      .data([null])
+      .join('g')
+      .classed('dx-mesh-root', true);
+    root.selectAll('*').remove();
+
+    root
+      .append('g')
+      .attr('class', 'hexagon')
+      .selectAll('path')
+      .data(topology.objects.hexagons.geometries)
+      .enter()
+      .append('path')
+      .attr('d', (d) => path(feature(topology, d)))
+      .attr('class', (d) => ((d.properties as Custom)?.fill ? 'fill' : null));
+
+    root.append('path').datum(mesh(topology, topology.objects.hexagons)).attr('class', 'mesh').attr('d', path);
+
+    const redraw = (border: any) => {
+      border.attr(
+        'd',
+        path(
+          mesh(
+            topology,
+            topology.objects.hexagons,
+            (a, b) => (a.properties as Custom).fill !== (b.properties as Custom).fill,
+          ),
+        ),
+      );
+    };
+
+    root.append('path').attr('class', 'border').call(redraw);
+  }, [svg, size, value, radius]);
 
   return null;
 };

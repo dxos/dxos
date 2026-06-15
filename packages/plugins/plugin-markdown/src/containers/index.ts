@@ -1,0 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type ComponentType, lazy } from 'react';
+
+export type { MarkdownArticleProps } from './MarkdownArticle';
+
+export const MarkdownCard: ComponentType<any> = lazy(() => import('./MarkdownCard'));
+export const EditableMarkdownCard: ComponentType<any> = lazy(() => import('./EditableMarkdownCard'));
+export const MarkdownArticle: ComponentType<any> = lazy(() => import('./MarkdownArticle'));

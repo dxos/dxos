@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it, expect } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { byPosition, type Position } from './position';
+import { type Position, byPosition } from './position';
 
 type TestItem = {
   id: number;
@@ -12,14 +12,14 @@ type TestItem = {
 };
 
 describe('byPosition', () => {
-  it('should keep items with same position in their original order', () => {
+  test('should keep items with same position in their original order', ({ expect }) => {
     const items: TestItem[] = [
-      { id: 1, position: 'static' },
-      { id: 2, position: 'static' },
-      { id: 3, position: 'hoist' },
-      { id: 4, position: 'hoist' },
-      { id: 5, position: 'fallback' },
-      { id: 6, position: 'fallback' },
+      { id: 1 },
+      { id: 2 },
+      { id: 3, position: 'first' },
+      { id: 4, position: 'first' },
+      { id: 5, position: 'last' },
+      { id: 6, position: 'last' },
     ];
 
     const sorted = [...items].sort(byPosition);
@@ -30,69 +30,63 @@ describe('byPosition', () => {
     expect(sorted.findIndex((item) => item.id === 5)).toBeLessThan(sorted.findIndex((item) => item.id === 6));
   });
 
-  it('should place "hoist" items before "static" items', () => {
-    const items: TestItem[] = [
-      { id: 1, position: 'static' },
-      { id: 2, position: 'hoist' },
-    ];
+  test('should place "first" items before items in natural order', ({ expect }) => {
+    const items: TestItem[] = [{ id: 1 }, { id: 2, position: 'first' }];
 
     const sorted = [...items].sort(byPosition);
-    expect(sorted[0].position).toBe('hoist');
-    expect(sorted[1].position).toBe('static');
-  });
-
-  it('should place "fallback" items after "static" items', () => {
-    const items: TestItem[] = [
-      { id: 1, position: 'fallback' },
-      { id: 2, position: 'static' },
-    ];
-
-    const sorted = [...items].sort(byPosition);
-    expect(sorted[0].position).toBe('static');
-    expect(sorted[1].position).toBe('fallback');
-  });
-
-  it('should treat items without position as "static"', () => {
-    const items: TestItem[] = [{ id: 1 }, { id: 2, position: 'hoist' }, { id: 3, position: 'fallback' }];
-
-    const sorted = [...items].sort(byPosition);
-    expect(sorted[0].position).toBe('hoist');
+    expect(sorted[0].position).toBe('first');
     expect(sorted[1].position).toBeUndefined();
-    expect(sorted[2].position).toBe('fallback');
   });
 
-  it('should correctly sort mixed positions', () => {
+  test('should place "last" items after items in natural order', ({ expect }) => {
+    const items: TestItem[] = [{ id: 1, position: 'last' }, { id: 2 }];
+
+    const sorted = [...items].sort(byPosition);
+    expect(sorted[0].position).toBeUndefined();
+    expect(sorted[1].position).toBe('last');
+  });
+
+  test('should treat items without position as natural order', ({ expect }) => {
+    const items: TestItem[] = [{ id: 1 }, { id: 2, position: 'first' }, { id: 3, position: 'last' }];
+
+    const sorted = [...items].sort(byPosition);
+    expect(sorted[0].position).toBe('first');
+    expect(sorted[1].position).toBeUndefined();
+    expect(sorted[2].position).toBe('last');
+  });
+
+  test('should correctly sort mixed positions', ({ expect }) => {
     const items: TestItem[] = [
-      { id: 1, position: 'fallback' },
-      { id: 2, position: 'static' },
-      { id: 3, position: 'hoist' },
-      { id: 4 }, // implicit static
-      { id: 5, position: 'hoist' },
-      { id: 6, position: 'fallback' },
+      { id: 1, position: 'last' },
+      { id: 2 },
+      { id: 3, position: 'first' },
+      { id: 4 },
+      { id: 5, position: 'first' },
+      { id: 6, position: 'last' },
     ];
 
     const sorted = [...items].sort(byPosition);
 
-    // All hoisted items should come first
-    expect(sorted[0].position).toBe('hoist');
-    expect(sorted[1].position).toBe('hoist');
+    // All "first" items should come first
+    expect(sorted[0].position).toBe('first');
+    expect(sorted[1].position).toBe('first');
 
-    // Static items (including undefined) should be in the middle
-    expect(sorted[2].position).toBe('static');
+    // Natural-order items (undefined) should be in the middle
+    expect(sorted[2].position).toBeUndefined();
     expect(sorted[3].position).toBeUndefined();
 
-    // Fallback items should be last
-    expect(sorted[4].position).toBe('fallback');
-    expect(sorted[5].position).toBe('fallback');
+    // "last" items should be at the end
+    expect(sorted[4].position).toBe('last');
+    expect(sorted[5].position).toBe('last');
   });
 
-  it('should handle empty arrays', () => {
+  test('should handle empty arrays', ({ expect }) => {
     const items: TestItem[] = [];
     expect(() => [...items].sort(byPosition)).not.toThrow();
   });
 
-  it('should handle single item arrays', () => {
-    const items: TestItem[] = [{ id: 1, position: 'static' }];
+  test('should handle single item arrays', ({ expect }) => {
+    const items: TestItem[] = [{ id: 1 }];
     expect(() => [...items].sort(byPosition)).not.toThrow();
   });
 });

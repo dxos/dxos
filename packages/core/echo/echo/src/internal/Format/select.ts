@@ -1,0 +1,18 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+/**
+ * Schema for a single select option. Used to define choices in a {single|multi}-select field.
+ */
+export const SelectOption = Schema.Struct({
+  /** Stable identifier for the option. */
+  id: Schema.NonEmptyString,
+  title: Schema.String,
+  /** Color palette used for visual styling. */
+  color: Schema.String,
+});
+
+export type SelectOption = Schema.Schema.Type<typeof SelectOption>;

@@ -2,26 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useClipboard } from './ClipboardProvider';
-import { Button, type ButtonProps, IconButton } from '../Buttons';
-import { Icon } from '../Icon';
-import { useTranslation } from '../ThemeProvider';
+import { useTranslation } from '../../primitives';
+import { Button, type ButtonProps, IconButton } from '../Button';
+import { Icon, type IconProps } from '../Icon';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
+import { useClipboard } from './ClipboardProvider';
 
-export type CopyButtonProps = ButtonProps & {
-  value: string;
-  iconProps?: IconProps;
-};
+export type CopyButtonProps = ButtonProps &
+  Pick<IconProps, 'size'> & {
+    value: string;
+  };
 
-const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
+const inactiveLabelStyles = 'invisible h-px -mb-px overflow-hidden';
 
-export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButtonProps) => {
-  const { t } = useTranslation('os');
+export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
+  const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   return (
@@ -31,14 +30,13 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >
-      <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy label')}</span>
-        {/* TODO(wittjosiah): Why do these need as any? */}
-        <Icon icon='ph--copy--regular' size={5 as any} {...iconProps} />
+      <div className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
+        <span className='px-1'>{t('copy.label')}</span>
+        <Icon icon='ph--copy--regular' size={size} />
       </div>
-      <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
-        <span className='pli-1'>{t('copy success label')}</span>
-        <Icon icon='ph--check--regular' size={5 as any} {...iconProps} />
+      <div className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
+        <span className='px-1'>{t('copy-success.label')}</span>
+        <Icon icon='ph--check--regular' size={size} />
       </div>
     </Button>
   );
@@ -52,21 +50,21 @@ export const CopyButtonIconOnly = ({
   __scopeTooltip,
   value,
   classNames,
-  iconProps,
+  size,
   variant,
   ...props
 }: TooltipScopedProps<CopyButtonIconOnlyProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
-  const label = isCopied ? t('copy success label') : props.label ?? t('copy label');
+  const label = isCopied ? t('copy-success.label') : (props.label ?? t('copy.label'));
   const { onOpen } = useTooltipContext('CopyButton', __scopeTooltip);
   return (
     <IconButton
       iconOnly
       label={label!}
       icon='ph--copy--regular'
-      size={5}
+      size={size}
       variant={variant}
       classNames={['inline-flex flex-col justify-center', classNames]}
       onClick={() => setTextValue(value).then(onOpen)}

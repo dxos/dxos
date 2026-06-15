@@ -6,6 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
   type MouseEventHandler,
@@ -20,16 +21,16 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { AnchorComponent } from './Anchor';
-import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
 import { type Polygon } from '../../types';
-import { type TextBoxProps } from '../TextBox';
 import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
+import { type TextBoxProps } from '../TextBox';
+import { AnchorComponent } from './Anchor';
+import { type ShapeComponentProps, shapeAttrs } from './Shape';
 
 // Border around frame for preview snapshot.
 const previewBorder = 8;
@@ -57,9 +58,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { dragMonitor, layout, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useCanvasContext();
 
-  const dragging = dragMonitor.state(
-    (state) => (state.type === 'frame' || state.type === 'resize') && state.shape.id === shape.id,
-  ).value;
+  const state = useAtomValue(dragMonitor.state);
+  const dragging =
+    (state.type === 'frame' || state.type === 'resize') && state.shape.id === shape.id
+      ? state
+      : ({ type: 'inactive' } as const);
   const isDragging = dragging.type === 'frame';
   const isResizing = dragging.type === 'resize';
 
@@ -219,7 +222,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
       }
     }, [selected]);
 
-    const clickTimer = useRef<number>();
+    const clickTimer = useRef<number>(undefined);
     const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
       if (ev.detail === 1 && !editing) {
         clickTimer.current = window.setTimeout(() => {

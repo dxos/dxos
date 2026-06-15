@@ -21,6 +21,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -39,43 +42,46 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/lit-ui"
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-editor"
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-stack"
+      "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-table"
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

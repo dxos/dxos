@@ -1,0 +1,22 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test-browser
+  - ts-test-storybook
+  - vite
+  - pack
+  - storybook
+tasks:
+  bundle:
+    options:
+      mergeOutputs: replace
+    outputs:
+      - dist/bundle
+  compile:
+    args:
+      - '--entryPoint=src/react.ts'
+      - '--entryPoint=src/testing/index.ts'
+  test:
+    inputs:
+      - vite.config.ts

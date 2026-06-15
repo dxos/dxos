@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -15,12 +15,12 @@ import {
 } from '@dxos/messaging';
 import { ComplexSet } from '@dxos/util';
 
-import { ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
-import { Swarm } from './swarm';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { FullyConnectedTopology } from '../topology';
 import { createRtcTransportFactory } from '../transport';
+import { ConnectionState } from './connection';
+import { ConnectionLimiter } from './connection-limiter';
+import { Swarm } from './swarm';
 
 type TestPeer = {
   swarm: Swarm;
@@ -30,7 +30,8 @@ type TestPeer = {
   signalManager: SignalManager;
 };
 
-describe('Swarm', () => {
+// Segfault in node-datachannel.
+describe.skip('Swarm', () => {
   const context = new MemorySignalManagerContext();
 
   const setupSwarm = async ({
@@ -157,9 +158,9 @@ describe('Swarm', () => {
     const messages = new ComplexSet<{ author: PeerInfo; recipient: PeerInfo }>(
       ({ author, recipient }) => author.peerKey + recipient.peerKey,
     );
-    signalManager.sendMessage = async (message) => {
+    signalManager.sendMessage = async (ctx, message) => {
       messages.add({ author: message.author, recipient: message.recipient });
-      return sendOriginal(message);
+      return sendOriginal(ctx, message);
     };
     // Stop signaling to stop connection in initiation state.
     signalManager.freeze();

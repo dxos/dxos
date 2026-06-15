@@ -1,0 +1,152 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type * as Tool from '@effect/ai/Tool';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useTranslation } from '@dxos/react-ui';
+import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { type ContentBlock, type Message } from '@dxos/types';
+import { type XmlWidgetProps } from '@dxos/ui-editor';
+import { isNonNullable, safeParseJson } from '@dxos/util';
+
+import { meta } from '#meta';
+
+export const isToolMessage = (message: Message.Message) => {
+  return message.blocks.some((block: ContentBlock.Any) => block._tag === 'toolCall' || block._tag === 'toolResult');
+};
+
+export type ToolBlockProps = XmlWidgetProps<{
+  blocks: ContentBlock.Any[];
+}>;
+
+export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
+  const { t } = useTranslation(meta.id);
+
+  const items = useMemo<ToolPanelProps['items']>(() => {
+    let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
+    // TODO(burdon): Get from context?
+    const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
+    return blocks
+      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'stats')
+      .map((block) => {
+        switch (block._tag) {
+          case 'toolCall': {
+            if (block.pending && lastToolCall?.block.toolCallId === block.toolCallId) {
+              return null;
+            }
+
+            const tool = tools.find((tool) => tool.name === block.name);
+            lastToolCall = { tool, block };
+            return {
+              title: tool?.description ?? [t('tool-call.label'), block?.name].join(' '),
+              content: {
+                ...block,
+                input: safeParseJson(block.input),
+              },
+            };
+          }
+
+          case 'toolResult': {
+            // TODO(burdon): Parse error type.
+            if (block.error) {
+              return {
+                title: t('tool-error.label'),
+                content: block,
+              };
+            }
+
+            const title =
+              lastToolCall?.tool?.description ?? [t('tool-result.label'), lastToolCall?.block?.name].join(' ');
+            lastToolCall = undefined;
+            return {
+              title,
+              content: {
+                ...block,
+                result: typeof block.result === 'string' ? safeParseJson(block.result) : block.result,
+              },
+            };
+          }
+
+          case 'stats': {
+            if (!lastToolCall) {
+              return null;
+            }
+
+            return {
+              title: t('stats.label'),
+              content: block,
+            };
+          }
+        }
+      })
+      .filter(isNonNullable);
+  }, [blocks]);
+
+  const handleChangeOpen = useCallback(() => {
+    setTimeout(() => {
+      // Measure after animation.
+      view?.requestMeasure();
+    }, 1_000);
+  }, [view]);
+
+  // Ignore if empty.
+  if (!items.length) {
+    return null;
+  }
+
+  return <ToolPanel items={items} onChangeOpen={handleChangeOpen} />;
+};
+
+ToolBlock.displayName = 'ToolBlock';
+
+type ToolPanelProps = {
+  items: { title: string; content: any }[];
+} & Pick<TogglePanelRootProps, 'onChangeOpen'>;
+
+const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    onChangeOpen?.(open);
+    if (open) {
+      tabsRef.current?.focus();
+    }
+  }, [open, onChangeOpen]);
+
+  const handleSelect = useCallback((index: number) => {
+    setSelected(index);
+  }, []);
+
+  return (
+    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
+      <TogglePanel.Content classNames='w-full rounded-xs border border-subdued-separator'>
+        <TogglePanel.Header classNames='text-sm text-placeholder'>
+          <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
+        </TogglePanel.Header>
+        <TogglePanel.Body classNames='grid grid-cols-[32px_1fr]'>
+          <NumericTabs
+            ref={tabsRef}
+            classNames='p-1'
+            length={items.length}
+            selected={selected}
+            onSelect={handleSelect}
+          />
+          <JsonHighlighter
+            data={items[selected]?.content}
+            classNames='p-1 text-xs bg-transparent'
+            replacer={{
+              maxDepth: 3,
+              maxArrayLen: 10,
+              maxStringLen: 128,
+            }}
+          />
+        </TogglePanel.Body>
+      </TogglePanel.Content>
+    </TogglePanel.Root>
+  );
+};

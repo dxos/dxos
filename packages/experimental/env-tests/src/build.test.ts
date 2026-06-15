@@ -9,26 +9,37 @@ import { describe, test } from 'vitest';
 // Checks that packages can be used in different environments.
 
 describe('build tests', () => {
-  test('workerd', async () => {
+  test('prohibit packages that we know dont work in workerd', async () => {
     await runEnvTest({
       imports: [
         // Place import specifiers that must be running at EDGE here.
         // NOTE: They also need to be added to package.json of this package.
-        '@dxos/echo-db',
-        '@dxos/conductor',
-        '@dxos/echo-schema',
+        '@dxos/assistant-toolkit',
+        '@dxos/assistant',
+        '@dxos/echo-client',
+        '@dxos/echo',
         '@dxos/keys',
         '@dxos/log',
       ],
       conditions: ['workerd', 'worker', 'browser'],
-      external: ['*.wasm', 'node:async_hook'],
+      external: ['*.wasm', 'node:*'],
       forbid: [
         // Place patterns that must not appear in the bundle here, e.g. packages known to not be compatible with workerd.
         // NOTE: Patterns are matched against .pnpm store: ../../../node_modules/.pnpm/parjs@1.3.9/node_modules/parjs/dist/internal/parsers/string-len.js
         //       ...or local file paths: ../../ui/react-ui-table/dist/lib/browser/types/index.mjs
         /sodium-native/,
         /protobufjs/,
+        /@xenova\+transformers/,
       ],
+    });
+  });
+
+  test('prohibit vitest in dist builds', async () => {
+    await runEnvTest({
+      imports: ['@dxos/echo-client', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/functions'],
+      conditions: ['browser'],
+      external: ['*.wasm', 'node:async_hook'],
+      forbid: [/vitest/, /rollup/],
     });
   });
 });
@@ -61,7 +72,9 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
           build.onLoad({ filter: /^test:entry$/, namespace: 'test-plugin' }, async (args) => {
             return {
               loader: 'ts',
-              contents: config.imports.map((specifier) => `import ${JSON.stringify(specifier)};`).join('\n'),
+              contents: config.imports
+                .map((specifier, idx) => `export * as test${idx} from ${JSON.stringify(specifier)};`)
+                .join('\n'),
               resolveDir: import.meta.dirname,
             };
           });
@@ -71,9 +84,11 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
   });
 
   const problems: string[] = [];
-  for (const input of Object.keys(result.metafile.inputs)) {
-    if (config.forbid.some((pattern) => pattern.test(input))) {
-      problems.push(input);
+  for (const output of Object.values(result.metafile.outputs)) {
+    for (const [input, meta] of Object.entries(output.inputs)) {
+      if (meta.bytesInOutput > 0 && config.forbid.some((pattern) => pattern.test(input))) {
+        problems.push(input);
+      }
     }
   }
 

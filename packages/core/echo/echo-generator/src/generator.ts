@@ -2,19 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema } from 'effect';
-
-import { Filter, type Space } from '@dxos/client/echo';
-import { type AnyLiveObject } from '@dxos/echo-db';
-import { getTypeAnnotation, EchoSchema, getSchema } from '@dxos/echo-schema';
+import { type Space } from '@dxos/client/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { live, isLiveObject, type Live } from '@dxos/live-object';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 
 import { type TestSchemaType } from './data';
 import {
-  type MutationsProviderParams,
+  type MutationsProviderProps,
   type TestGeneratorMap,
   type TestMutationsMap,
   type TestObjectProvider,
@@ -28,37 +25,38 @@ import {
 export class TestObjectGenerator<T extends string = TestSchemaType> {
   // prettier-ignore
   constructor(
-    protected readonly _schemas: TestSchemaMap<T>,
-    private readonly _generators: TestGeneratorMap<T>,
-    private readonly _provider?: TestObjectProvider<T>,
-  ) {}
+		protected readonly _schemas: TestSchemaMap<T>,
+		private readonly _generators: TestGeneratorMap<T>,
+		private readonly _provider?: TestObjectProvider<T>,
+	) {}
 
-  get schemas(): (EchoSchema | Schema.Schema.AnyNoContext)[] {
+  get schemas(): Type.AnyObj[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): EchoSchema | Schema.Schema.AnyNoContext | undefined {
-    return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
+  getSchema(type: T): Type.AnyObj | undefined {
+    return this.schemas.find((schema) => Type.getTypename(schema) === type);
   }
 
-  protected setSchema(type: T, schema: EchoSchema | Schema.Schema.AnyNoContext): void {
+  protected setSchema(type: T, schema: Type.AnyEntity): void {
     this._schemas[type] = schema;
   }
 
-  async createObject({ types }: { types?: T[] } = {}): Promise<Live<any>> {
-    const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
+  async createObject({ types }: { types?: T[] } = {}): Promise<any> {
+    const type = random.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
-    if (isLiveObject(data)) {
+    if (isProxy(data)) {
       return data;
     }
 
     const schema = this.getSchema(type);
-    return schema ? live(schema, data) : live(data);
+    invariant(schema, `Schema is required for type: ${type}. Register a schema for this type.`);
+    return Obj.make(schema, data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
   async createObjects(map: Partial<Record<T, number>>) {
-    const results: Live<any>[] = [];
+    const results: any[] = [];
     for (const [type, count] of entries(map)) {
       results.push(...(await Promise.all(range(count ?? 0, () => this.createObject({ types: [type as T] })))));
     }
@@ -85,15 +83,15 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   ) {
     super(schemaMap, generators, async (type: T) => {
       const schema = this.getSchema(type);
-      const { objects } = await this._space.db.query(schema ? Filter.type(schema) : Filter.nothing()).run();
+      const objects = await this._space.db.query(schema ? Filter.type(schema) : Filter.nothing()).run();
       return objects;
     });
   }
 
   async addSchemas() {
-    const result: (EchoSchema | Schema.Schema.AnyNoContext)[] = [];
+    const result: Type.AnyEntity[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | Schema.Schema.AnyNoContext);
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as Type.AnyObj);
       this.setSchema(typename as T, echoSchema);
       result.push(echoSchema);
     }
@@ -101,40 +99,48 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return result;
   }
 
-  override async createObject({ types }: { types?: T[] } = {}): Promise<AnyLiveObject<any>> {
+  override async createObject({
+    types,
+  }: {
+    types?: T[];
+  } = {}): Promise<Obj.Any> {
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private async _maybeRegisterSchema(
-    typename: string,
-    schema: EchoSchema | Schema.Schema.AnyNoContext,
-  ): Promise<EchoSchema | Schema.Schema.AnyNoContext> {
-    if (schema instanceof EchoSchema) {
-      const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
+  private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyEntity> {
+    if (Type.isTypeKind(schema)) {
+      const types = this._space.internal.db.graph.registry.list().filter(Type.isType);
+      const version = Type.getVersion(schema);
+      const existingSchema = types.find(
+        (t) => Type.isTypeKind(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
+      );
       if (existingSchema != null) {
         return existingSchema;
       }
-      const [registeredSchema] = await this._space.db.schemaRegistry.register([schema]);
-      return registeredSchema;
+      return this._space.internal.db.addType(schema);
     } else {
-      const existingSchema = this._space.db.graph.schemaRegistry.getSchema(typename);
+      const allTypes = this._space.internal.db.graph.registry.list().filter(Type.isType);
+      const version = Type.getVersion(schema);
+      const existingSchema = [...allTypes].find(
+        (s) => Type.getTypename(s) === typename && Type.getVersion(s) === version,
+      );
       if (existingSchema != null) {
         return existingSchema;
       }
-      this._space.db.graph.schemaRegistry.addSchema([schema]);
+      this._space.internal.db.graph.registry.add([schema]);
       return schema;
     }
   }
 
-  async mutateObject(object: AnyLiveObject<any>, params: MutationsProviderParams): Promise<void> {
+  async mutateObject(object: Obj.Any, params: MutationsProviderProps): Promise<void> {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getTypeAnnotation(getSchema(object)!)!.typename as T;
+    const type = Type.getTypename(Obj.getType(object)!) as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);
   }
 
-  async mutateObjects(objects: AnyLiveObject<any>[], params: MutationsProviderParams): Promise<void> {
+  async mutateObjects(objects: Obj.Any[], params: MutationsProviderProps): Promise<void> {
     for (const object of objects) {
       await this.mutateObject(object, params);
     }

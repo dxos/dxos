@@ -7,7 +7,6 @@ import { describe, expect, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { type Any, Stream, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { SystemError } from '@dxos/protocols';
 import { type TYPES } from '@dxos/protocols/proto';
 
 import { RpcPeer } from './rpc';
@@ -266,7 +265,7 @@ describe('RpcPeer', () => {
         error = err;
       }
 
-      expect(error).toBeInstanceOf(SystemError);
+      expect(error).toBeInstanceOf(Error);
       expect(error.message).toEqual('My error');
       expect(error.stack?.includes('handlerFn')).toEqual(true);
       expect(error.stack?.includes('RpcMethodName')).toEqual(true);

@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  root: __dirname,
   // Top level await plugin is not working in Stackblitz.
   optimizeDeps: {
     esbuildOptions: {
@@ -19,13 +19,5 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
-  plugins: [
-    react(),
-    ThemePlugin({
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
-  ],
+  plugins: [react(), ThemePlugin({})],
 });

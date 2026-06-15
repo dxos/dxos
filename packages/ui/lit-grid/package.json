@@ -1,44 +1,48 @@
 {
   "name": "@dxos/lit-grid",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "A grid Web Component using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css",
+    "*.pcss"
+  ],
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
     "./dx-grid.pcss": "./src/dx-grid.pcss",
     "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
+      "types": "./dist/src/testing/index.d.ts",
       "browser": "./dist/src/testing/index.js",
       "node": "./dist/src/testing/index.js"
     }
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "src",
     "dist"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "lit": "^3.2.0"
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "lit": "catalog:"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

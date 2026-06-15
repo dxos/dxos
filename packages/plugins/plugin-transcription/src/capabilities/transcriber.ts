@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { TranscriptionCapabilities } from './capabilities';
+import { TranscriptionCapabilities } from '#types';
+
 import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
 
 // TODO(burdon): Move to config?
@@ -29,48 +32,59 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export default (context: PluginContext) => {
-  const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
-    audioStreamTrack,
-    onSegments,
-    transcriberConfig,
-    recorderConfig,
-  }) => {
-    // Initialize audio transcription.
-    return new Transcriber({
-      config: {
-        transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
-        prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-        ...transcriberConfig,
-      },
-      recorder: new MediaStreamRecorder({
-        mediaStreamTrack: audioStreamTrack,
-        config: {
-          interval: RECORD_INTERVAL,
-          ...recorderConfig,
-        },
-      }),
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+
+    const transcriberProvider: TranscriptionCapabilities.TranscriberProvider = ({
+      audioStreamTrack,
       onSegments,
-    });
-  };
+      transcriberConfig,
+      recorderConfig,
+      transcribe,
+    }) => {
+      // Initialize audio transcription.
+      return new Transcriber({
+        config: {
+          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
+          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+          ...transcriberConfig,
+        },
+        recorder: new MediaStreamRecorder({
+          mediaStreamTrack: audioStreamTrack,
+          config: {
+            interval: RECORD_INTERVAL,
+            ...recorderConfig,
+          },
+        }),
+        onSegments,
+        transcribe,
+      });
+    };
 
-  const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
-    const client = context.getCapability(ClientCapabilities.Client);
-    const transcriptionManager = new TranscriptionManager({
-      edgeClient: client.edge,
+    const transcriptionManagerProvider: TranscriptionCapabilities.TranscriptionManagerProvider = ({
       messageEnricher,
-    });
+    }) => {
+      const client = capabilities.get(ClientCapabilities.Client);
+      const transcriptionManager = new TranscriptionManager({
+        edgeClient: client.edge.http,
+        messageEnricher,
+        registry,
+      });
 
-    const identity = client.halo.identity.get();
-    if (identity) {
-      transcriptionManager.setIdentityDid(identity.did);
-    }
+      const identity = client.halo.identity.get();
+      if (identity) {
+        transcriptionManager.setIdentityDid(identity.did);
+      }
 
-    return transcriptionManager;
-  };
+      return transcriptionManager;
+    };
 
-  return [
-    contributes(TranscriptionCapabilities.Transcriber, getTranscriber),
-    contributes(TranscriptionCapabilities.TranscriptionManager, getTranscriptionManager),
-  ];
-};
+    return [
+      Capability.contributes(TranscriptionCapabilities.TranscriberProvider, transcriberProvider),
+      Capability.contributes(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider),
+    ];
+  }),
+);

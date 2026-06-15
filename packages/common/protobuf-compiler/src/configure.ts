@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
 export const preconfigureProtobufjs = () => {
   pb.common(
     'descriptor',
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('protobufjs/google/protobuf/descriptor.json').nested.google.nested.protobuf.nested,
   );
 };

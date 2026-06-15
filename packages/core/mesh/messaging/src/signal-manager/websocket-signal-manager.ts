@@ -3,27 +3,26 @@
 //
 
 import { Event, sleep, synchronized } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
+import { RateLimitExceededError, TimeoutError } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
-import { type SignalManager } from './signal-manager';
-import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 import { SignalClient } from '../signal-client';
 import {
-  type PeerInfo,
   type Message,
+  type PeerInfo,
   type SignalClientMethods,
   type SignalMethods,
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
+import { type SignalManager } from './signal-manager';
+import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 
 const MAX_SERVER_FAILURES = 5;
 const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
@@ -47,8 +46,6 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   readonly swarmEvent = new Event<SwarmEvent>();
 
   readonly onMessage = new Event<Message>();
-
-  private readonly _instanceId = PublicKey.random().toHex();
 
   constructor(
     private readonly _hosts: Runtime.Services.Signal[],
@@ -76,11 +73,8 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 
   protected override async _open(): Promise<void> {
     log('open signal manager', { hosts: this._hosts });
-    log.trace('dxos.mesh.websocket-signal-manager.open', trace.begin({ id: this._instanceId }));
 
     await safeAwaitAll(this._servers.values(), (server) => server.open());
-
-    log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
   }
 
   protected override async _close(): Promise<void> {
@@ -104,30 +98,30 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
   }
 
   @synchronized
-  async join({ topic, peer }: JoinRequest): Promise<void> {
+  async join(_ctx: Context, { topic, peer }: JoinRequest): Promise<void> {
     log('join', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._forEachServer((server) => server.join({ topic, peer }));
+    await this._forEachServer((server) => server.join(_ctx, { topic, peer }));
   }
 
   @synchronized
-  async leave({ topic, peer }: LeaveRequest): Promise<void> {
+  async leave(_ctx: Context, { topic, peer }: LeaveRequest): Promise<void> {
     log('leaving', { topic, peer });
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    await this._forEachServer((server) => server.leave({ topic, peer }));
+    await this._forEachServer((server) => server.leave(_ctx, { topic, peer }));
   }
 
-  async query({ topic }: QueryRequest): Promise<SwarmResponse> {
+  async query(_ctx: Context, { topic }: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
+  async sendMessage(_ctx: Context, { author, recipient, payload }: Message): Promise<void> {
     log('signal', { recipient });
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     void this._forEachServer(async (server, serverName, index) => {
       void server
-        .sendMessage({ author, recipient, payload })
+        .sendMessage(_ctx, { author, recipient, payload })
         .then(() => this._clearServerFailedFlag(serverName, index))
         .catch((err) => {
           if (err instanceof RateLimitExceededError) {

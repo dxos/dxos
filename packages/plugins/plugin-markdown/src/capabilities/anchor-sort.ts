@@ -2,29 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { createDocAccessor, getRangeFromCursor, getTarget } from '@dxos/react-client/echo';
+import * as Effect from 'effect/Effect';
 
-import { DocumentType } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Relation, Type } from '@dxos/echo';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-client';
+import { type AnchoredTo } from '@dxos/types';
 
-export default () =>
-  contributes(Capabilities.AnchorSort, {
-    key: Type.getTypename(DocumentType)!,
-    sort: (anchorA, anchorB) => {
-      const doc = getTarget(anchorA) as DocumentType;
-      const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
-      if (doc !== getTarget(anchorB) || !accessor) {
-        return 0;
-      }
+import { Markdown } from '#types';
 
-      const getStartPosition = (cursor: string | undefined) => {
-        const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
-        return range?.start ?? Number.MAX_SAFE_INTEGER;
-      };
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(AppCapabilities.AnchorSort, {
+      key: Type.getTypename(Markdown.Document),
+      sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
+        const doc = Relation.getTarget(anchorA) as Markdown.Document;
+        const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
+        if (doc !== Relation.getTarget(anchorB) || !accessor) {
+          return 0;
+        }
 
-      const posA = getStartPosition(anchorA.anchor);
-      const posB = getStartPosition(anchorB.anchor);
-      return posA - posB;
-    },
-  });
+        const getStartPosition = (cursor: string | undefined) => {
+          const range = cursor ? getRangeFromCursor(accessor, cursor) : undefined;
+          return range?.start ?? Number.MAX_SAFE_INTEGER;
+        };
+
+        const posA = getStartPosition(anchorA.anchor);
+        const posB = getStartPosition(anchorB.anchor);
+        return posA - posB;
+      },
+    }),
+  ),
+);

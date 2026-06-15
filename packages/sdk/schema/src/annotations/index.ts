@@ -2,5 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './api-key';
+export * from './factory';
+export * from './feed';
 export * from './icon';
-export * from './typename';
+export * from './parent-label';
+export * from './queue';
+export * from './view';
+export * from './subscription-target';

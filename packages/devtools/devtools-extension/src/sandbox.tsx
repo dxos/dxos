@@ -4,14 +4,13 @@
 
 import '@dxos-theme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DevtoolsApp } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { initializeAppObservability } from '@dxos/observability';
-import * as Sentry from '@dxos/observability/sentry';
-import { Defaults, Config, ClientServicesProxy } from '@dxos/react-client';
+import { ClientServicesProxy } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { type RpcPort } from '@dxos/rpc';
 
 // NOTE: Sandbox runs in an iframe which is sandboxed from the web extension.
@@ -22,17 +21,6 @@ import { type RpcPort } from '@dxos/rpc';
 log('Init Sandbox script.');
 
 const namespace = 'devtools-extension';
-const config = new Config(Defaults());
-const release = `${namespace}@${config.get('runtime.app.build.version')}`;
-const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
-const SENTRY_DESTINATION = config.get('runtime.app.env.DX_SENTRY_DESTINATION');
-
-Sentry.init({
-  enable: Boolean(SENTRY_DESTINATION),
-  destination: SENTRY_DESTINATION,
-  environment,
-  release,
-});
 
 const windowPort = (): RpcPort => ({
   send: async (message) =>
@@ -76,16 +64,12 @@ const waitForRpc = async () =>
 const App = () => {
   const [services, setServices] = useState<ClientServicesProxy>();
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      log('waiting for rpc...');
-      await waitForRpc();
-      const rpcPort = windowPort();
-      const servicesProvider = new ClientServicesProxy(rpcPort);
-      setServices(servicesProvider);
-    });
-
-    return () => clearTimeout(timeout);
+  useAsyncEffect(async () => {
+    log('waiting for rpc...');
+    await waitForRpc();
+    const rpcPort = windowPort();
+    const servicesProvider = new ClientServicesProxy(rpcPort);
+    setServices(servicesProvider);
   }, []);
 
   if (!services) {
@@ -95,9 +79,6 @@ const App = () => {
   return <DevtoolsApp services={services} />;
 };
 
-const init = async () => {
-  void initializeAppObservability({ namespace, config: new Config(Defaults()) });
-  createRoot(document.getElementById('root')!).render(<App />);
-};
+const init = () => createRoot(document.getElementById('root')!).render(<App />);
 
-void init();
+init();

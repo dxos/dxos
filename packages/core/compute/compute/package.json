@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/compute",
+  "version": "0.9.0",
+  "description": "Umbrella package for AI-aware DXOS compute primitives.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./StorageService": {
+      "source": "./src/StorageService.ts",
+      "types": "./dist/types/src/StorageService.d.ts",
+      "default": "./dist/lib/neutral/StorageService.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/vendor-kbn-handlebars": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect/platform": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

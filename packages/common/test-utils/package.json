@@ -1,38 +1,29 @@
 {
   "name": "@dxos/test-utils",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Test utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      }
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./playwright": {
       "types": "./dist/types/src/playwright.d.ts",
       "browser": "./dist/lib/browser/playwright.mjs",
-      "node": {
-        "require": "./dist/lib/node/playwright.cjs",
-        "default": "./dist/lib/node-esm/playwright.mjs"
-      }
+      "node": "./dist/lib/node-esm/playwright.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "playwright": [
-        "dist/types/src/playwright.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -40,12 +31,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@nx/devkit": "19.7.2",
-    "@playwright/test": "^1.46.0",
-    "pkg-up": "^3.1.0"
+    "@playwright/test": "catalog:",
+    "pkg-up": "catalog:"
   },
   "peerDependencies": {
-    "vitest": "^3.0.8"
+    "vitest": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -1,0 +1,147 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+// Code copied from @effect/sql-sqlite-wasm/OpfsWorker.ts and augmented with logging.
+
+/**
+ * @since 1.0.0
+ */
+/// <reference lib="webworker" />
+import * as SqlError from '@effect/sql/SqlError';
+import * as WaSqlite from '@effect/wa-sqlite';
+// oxlint-disable-next-line @dxos/rules/effect-subpath-imports
+import SQLiteESMFactory from '@effect/wa-sqlite/dist/wa-sqlite.mjs';
+import * as Effect from 'effect/Effect';
+
+import { log } from '@dxos/log';
+// @ts-ignore
+import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';
+
+/** @internal */
+type OpfsWorkerMessage =
+  | [id: number, sql: string, params: ReadonlyArray<unknown>]
+  | ['import', id: number, data: Uint8Array]
+  | ['export', id: number]
+  | ['update_hook']
+  | ['close'];
+
+/**
+ * @category models
+ * @since 1.0.0
+ */
+export interface OpfsWorkerConfig {
+  readonly port: EventTarget & Pick<MessagePort, 'postMessage' | 'close'>;
+  readonly dbName: string;
+}
+
+/**
+ * @category constructor
+ * @since 1.0.0
+ */
+export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.SqlError> =>
+  Effect.gen(function* () {
+    const factory = yield* Effect.promise(() => SQLiteESMFactory());
+    const sqlite3 = WaSqlite.Factory(factory);
+    const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create('opfs', factory));
+    sqlite3.vfs_register(vfs as any, false);
+    let shutdownRequested = false;
+    const db = yield* Effect.acquireRelease(
+      Effect.try({
+        try: () => sqlite3.open_v2(options.dbName, undefined, 'opfs'),
+        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
+      }),
+      (handle) =>
+        Effect.sync(() => {
+          sqlite3.close(handle);
+          if (shutdownRequested) {
+            options.port.postMessage(['closed', undefined, undefined]);
+          }
+        }),
+    );
+
+    return yield* Effect.async<void>((resume) => {
+      const onMessage = (event: any) => {
+        let messageId: number;
+        let lastSql: string | undefined;
+        let lastParams: ReadonlyArray<unknown> | undefined;
+        const message = event.data as OpfsWorkerMessage;
+        try {
+          switch (message[0]) {
+            case 'close': {
+              shutdownRequested = true;
+              return resume(Effect.void);
+            }
+            case 'import': {
+              const [, id, data] = message;
+              messageId = id;
+              log('opfs import', { bytes: data.byteLength });
+              sqlite3.deserialize(db, 'main', data, data.length, data.length, 1 | 2);
+              for (const stmt of sqlite3.statements(db, 'VACUUM')) {
+                let result = sqlite3.step(stmt);
+                while (result === WaSqlite.SQLITE_ROW) {
+                  result = sqlite3.step(stmt);
+                }
+                if (result !== WaSqlite.SQLITE_DONE) {
+                  throw new Error('VACUUM failed while persisting imported database');
+                }
+              }
+              options.port.postMessage([id, void 0, void 0]);
+              return;
+            }
+            case 'export': {
+              const [, id] = message;
+              messageId = id;
+              const data = sqlite3.serialize(db, 'main');
+              options.port.postMessage([id, undefined, data], [data.buffer]);
+              return;
+            }
+            case 'update_hook': {
+              messageId = -1;
+              sqlite3.update_hook(db, (_op, _db, table, rowid) => {
+                if (!table) {
+                  return;
+                }
+                options.port.postMessage(['update_hook', table, Number(rowid)]);
+              });
+              return;
+            }
+            default: {
+              const [id, sql, params] = message;
+              messageId = id;
+              lastSql = sql;
+              lastParams = params;
+              const results: Array<any> = [];
+              const begin = performance.now();
+              let columns: Array<string> | undefined;
+              for (const stmt of sqlite3.statements(db, sql)) {
+                sqlite3.bind_collection(stmt, params as any);
+                while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
+                  columns = columns ?? sqlite3.column_names(stmt);
+                  const row = sqlite3.row(stmt);
+                  results.push(row);
+                }
+              }
+              options.port.postMessage([id, undefined, [columns, results]]);
+              const end = performance.now();
+              log('sqlite query', { sql, params, results: results.length, time: end - begin });
+              return;
+            }
+          }
+        } catch (e: any) {
+          // Logged at debug level: SQL errors are returned to the caller via postMessage,
+          // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
+          log('sqlite error', { error: e, sql: lastSql, params: lastParams });
+          const message = 'message' in e ? e.message : String(e);
+          options.port.postMessage([messageId!, message, undefined]);
+        }
+      };
+      options.port.addEventListener('message', onMessage);
+      options.port.postMessage(['ready', undefined, undefined]);
+      return Effect.sync(() => {
+        options.port.removeEventListener('message', onMessage);
+      });
+    });
+  }).pipe(Effect.scoped);

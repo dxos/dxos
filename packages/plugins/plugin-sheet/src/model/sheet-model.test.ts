@@ -5,19 +5,20 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute';
-import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
-import { FunctionType } from '@dxos/functions';
+import { Operation } from '@dxos/compute';
+import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
+import { TestBuilder, testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { log } from '@dxos/log';
+
+import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '#types';
 
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
-import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;
   beforeEach(async () => {
-    testBuilder = new TestBuilder({ types: [FunctionType], plugins: testFunctionPlugins });
+    testBuilder = new TestBuilder({ types: [Operation.PersistentOperation], plugins: testFunctionPlugins });
     await testBuilder.open();
   });
   afterEach(async () => {
@@ -30,7 +31,7 @@ describe('SheetModel', () => {
     await graph.open();
 
     // TODO(burdon): Create via factory.
-    const sheet = createSheet({ rows: 5, columns: 5 });
+    const sheet = Sheet.make({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet);
     await model.open();
     testBuilder.ctx.onDispose(() => model.close());
@@ -57,6 +58,34 @@ describe('SheetModel', () => {
     const v2 = await trigger.wait();
     expect(v2).to.eq(100);
     expect(graph.context.info.invocations.TEST).to.eq(1);
+  });
+
+  test('drop row shifts values and updates sum', async () => {
+    const space = await testBuilder.client.spaces.create();
+    const graph = testBuilder.registry.createGraph(space);
+    await graph.open();
+
+    const sheet = Sheet.make({ rows: 10, columns: 5 });
+    const model = new SheetModel(graph, sheet);
+    await model.open();
+    onTestFinished(() => void model.close());
+
+    // Column A: rows 0..2 = 123, 789, 567; row 3 = SUM(A0:A2).
+    model.setValue({ col: 0, row: 0 }, 123);
+    model.setValue({ col: 0, row: 1 }, 789);
+    model.setValue({ col: 0, row: 2 }, 567);
+    model.setValue({ col: 0, row: 3 }, '=SUM(A1:A3)');
+
+    expect(model.getValue({ col: 0, row: 3 })).to.eq(123 + 789 + 567);
+
+    // Delete the middle row (789).
+    const rowId = sheet.rows[1];
+    model.dropRow(rowId);
+
+    // Values shift up: row 1 = 567, row 2 = SUM(123 + 567).
+    expect(model.getValue({ col: 0, row: 0 })).to.eq(123);
+    expect(model.getValue({ col: 0, row: 1 })).to.eq(567);
+    expect(model.getValue({ col: 0, row: 2 })).to.eq(123 + 567);
   });
 
   test('formula', async () => {

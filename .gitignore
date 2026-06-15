@@ -1,8 +1,26 @@
+.worktrees/
+.claude/worktrees/
+
+# Claude Code harness session lock — per-machine runtime state, not source.
+.claude/scheduled_tasks.lock
+
+.dev.vars
+
 # Logs
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+debug-storybook.log
 .log*
+debug-storybook.log
+# vite-plugin-log dev file sink (default filename is `app.log`).
+app.log
+# vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
+test.log
+
+# Vitest
+vitest-results.json
 
 # Runtime data
 *.pid
@@ -76,6 +94,7 @@ lib
 build
 out
 tmp
+temp
 .vite-inspect
 *.tsbuildinfo
 
@@ -92,7 +111,7 @@ storybook-static
 
 # Protobuf Compiler
 packages/core/protocols/proto
-**/gen
+**/proto/gen
 
 # CLI
 packages/devtools/cli/src/util/telemetryrc.json
@@ -141,8 +160,6 @@ build
 .husky/pre-auto-gc
 .husky/reference-transaction
 
-.nx
-
 # IntelliJ Plugin
 tools/intellij-plugin/.idea/
 tools/intellij-plugin/.gradle/
@@ -169,5 +186,18 @@ typedoc
 # aider assistant temp files
 .aider*
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+# playwright MCP temp files
+.playwright-mcp/
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+# moon
+.moon/cache
+.moon/docker
+node_modules
+
+# @dxos/introspect symbol cache (regenerated as needed).
+.dxos-introspect/
+
+.superpowers/

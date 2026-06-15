@@ -22,7 +22,13 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/graph"
@@ -52,31 +58,34 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../core/functions"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -109,13 +118,22 @@
       "path": "../../sdk/react-edge-client"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
@@ -127,7 +145,7 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

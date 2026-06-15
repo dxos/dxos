@@ -2,86 +2,73 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
-import { type StoryObj } from '@storybook/react';
-import React, { useCallback, useState } from 'react';
-
-import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
-import { attentionSurface, mx } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
-
-import { EditorToolbar, useEditorToolbarState } from '../components';
-import { editorWidth } from '../defaults';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import {
-  type EditorInputMode,
-  type EditorViewMode,
-  InputModeExtensions,
-  createMarkdownExtensions,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
   formattingKeymap,
-  useFormattingState,
-} from '../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../hooks';
-import translations from '../translations';
+} from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-type StoryProps = { placeholder?: string } & UseTextEditorProps;
+import { translations } from '#translations';
 
-const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
+import { Editor } from '../components';
+import { type UseTextEditorProps } from '../hooks';
+
+type DefaultStoryProps = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
+
+const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source' }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
-  const toolbarState = useEditorToolbarState({ viewMode: 'source' });
-  const viewMode = toolbarState.viewMode;
-  const trackFormatting = useFormattingState(toolbarState);
-  // TODO(wittjosiah): Provide way to change the input mode.
-  const [editorInputMode, _setEditorInputMode] = useState<EditorInputMode>('default');
-  const { parentRef, view } = useTextEditor(
-    () => ({
-      autoFocus,
-      initialValue,
-      moveToEndOfLine: true,
-      extensions: [
-        editorInputMode ? InputModeExtensions[editorInputMode] : [],
-        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly' }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        viewMode === 'source' ? [] : decorateMarkdown(),
-        formattingKeymap(),
-        trackFormatting,
-      ],
-    }),
-    [editorInputMode, viewMode, themeMode, placeholder],
+
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({
+        placeholder,
+        lineWrapping: true,
+        readOnly: viewMode === 'readonly',
+        search: true,
+      }),
+      createThemeExtensions({
+        themeMode,
+        syntaxHighlighting: true,
+        slots: documentSlots,
+      }),
+      createMarkdownExtensions(),
+      viewMode === 'source' ? [] : decorateMarkdown(),
+      formattingKeymap(),
+    ],
+    [viewMode, themeMode, placeholder],
   );
 
-  const getView = useCallback(() => {
-    invariant(view);
-    return view;
-  }, [view]);
-
-  const handleViewModeChange = useCallback((mode: EditorViewMode) => {
-    toolbarState.viewMode = mode;
-  }, []);
-
-  // TODO(marijn): This doesn't update the state on view changes.
-  //  Also not sure if view is even guaranteed to exist at this point.
   return (
-    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      {toolbarState && <EditorToolbar state={toolbarState} getView={getView} viewMode={handleViewModeChange} />}
-      <div role='none' className={mx('grow overflow-hidden', attentionSurface)}>
-        <div className={mx(editorWidth)} ref={parentRef} />
-      </div>
-    </div>
+    <Editor.Root extensions={extensions} viewMode={viewMode}>
+      <Editor.Content>
+        <Editor.Toolbar classNames='dx-document' />
+        <div className='dx-container dx-document bg-base-surface'>
+          <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
+        </div>
+      </Editor.Content>
+    </Editor.Root>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations, layout: 'fullscreen' },
-};
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen', classNames: 'bg-sidebar-surface' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -91,6 +78,6 @@ export const Default: Story = {
   args: {
     autoFocus: true,
     placeholder: 'Text...',
-    initialValue: '# Demo\n\nThis is a document.\n\n',
+    initialValue: '# Demo\n\nThis is a **document**.\n\n',
   },
 };

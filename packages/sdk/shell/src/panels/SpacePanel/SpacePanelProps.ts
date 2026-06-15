@@ -3,18 +3,18 @@
 //
 
 import { type FC, type cloneElement } from 'react';
-import { type SingleOrArray, type Event } from 'xstate';
+import { type Event, type SingleOrArray } from 'xstate';
 
 import { type Space } from '@dxos/react-client/echo';
 
-import { type SpaceManagerProps } from './steps';
 import { type InvitationManagerProps } from '../../steps';
+import { type SpaceManagerProps } from './SpaceManager';
 
 export type ErsatzSpace = Pick<Space, 'key'> & Partial<Pick<Space, 'share'>> & { properties: { name?: string } };
 
 export type SpacePanelImplProps = {
   titleId: string;
-  activeView: string;
+  activeView: 'space-manager' | 'space-invitation-manager' | 'never';
   send: (event: SingleOrArray<Event<any>>) => void;
   hideHeading?: boolean;
   target?: string;

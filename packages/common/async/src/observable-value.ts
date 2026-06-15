@@ -66,8 +66,10 @@ export interface CancellableObservableEvents {
 /**
  * @deprecated
  */
-export interface CancellableObservable<Events extends CancellableObservableEvents, Value = unknown>
-  extends ObservableValue<Events, Value> {
+export interface CancellableObservable<
+  Events extends CancellableObservableEvents,
+  Value = unknown,
+> extends ObservableValue<Events, Value> {
   cancel(): Promise<void>;
 }
 

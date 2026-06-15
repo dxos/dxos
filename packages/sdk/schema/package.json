@@ -1,32 +1,31 @@
 {
   "name": "@dxos/schema",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Common data types and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -34,36 +33,29 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
-    "@preact/signals-core": "^1.9.0",
-    "date-fns": "^3.3.1",
-    "effect": "3.14.21",
-    "jsonpath": "^1.1.1"
+    "@effect-atom/atom-react": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-signals": "workspace:*",
+    "@automerge/automerge": "catalog:",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/jsonpath": "^0.2.4",
-    "fast-check": "^3.19.0",
-    "vite": "5.4.7"
+    "fast-check": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

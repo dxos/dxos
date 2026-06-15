@@ -1,5 +1,7 @@
 # Discord Bot
 
+> **Superseded by [`@dxos/discord-worker`](../discord-worker/README.md)** — a Cloudflare Worker that handles Discord slash commands for the Composer Discord plugin (`plugin-discord`). This package is retained for reference only.
+
 ## Set-up
 
 - Open Discord developer portal: https://discord.com/developers/applications
@@ -14,4 +16,3 @@
     - Copy URL and paste in browser
     - Authorize bot (should be offline)
   - Ensure bot has permission to test channel (dev-null)
-

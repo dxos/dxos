@@ -1,0 +1,48 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { useCallback, useMemo } from 'react';
+
+import { Obj, Type } from '@dxos/echo';
+import { SchemaEx } from '@dxos/effect';
+import { Form, omitId } from '@dxos/react-ui-form';
+
+import { type Dream } from '#types';
+
+export type EditorProps = {
+  dream: Dream.Dream;
+};
+
+export const Editor = ({ dream }: EditorProps) => {
+  const type = Obj.getType(dream);
+  const schema = useMemo(() => type && omitId(Type.getSchema(type)), [type]);
+
+  const handleSave = useCallback(
+    (values: any, { changed }: { changed: Record<string, boolean> }) => {
+      const paths = Object.keys(changed).filter((path) => changed[path]);
+      Obj.update(dream, () => {
+        for (const path of paths) {
+          const value = values[path];
+          const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
+          Obj.setValue(dream, parts, value);
+        }
+      });
+    },
+    [dream],
+  );
+
+  if (!schema) {
+    return null;
+  }
+
+  return (
+    <Form.Root schema={schema} values={dream} autoSave onSave={handleSave}>
+      <Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
+  );
+};

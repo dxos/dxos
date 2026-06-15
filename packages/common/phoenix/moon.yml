@@ -1,0 +1,18 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--platform=node'
+      - '--injectGlobals'
+  # `bin/watchdog.mjs` imports from `../dist/lib/node-esm/index.mjs`, so the
+  # package's own dist must exist before tests run. The inherited `:test` task
+  # only depends on upstream compile (`^:compile`), not the package's own.
+  test:
+    deps:
+      - ~:compile

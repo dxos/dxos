@@ -2,19 +2,20 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
-import { type Any, Stream, type RequestOptions, type ProtoCodec } from '@dxos/codec-protobuf';
+import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import { type Any, type ProtoCodec, type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError, RpcClosedError, RpcNotOpenError } from '@dxos/protocols';
+import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
 
-const DEFAULT_TIMEOUT = 3_000;
+const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;
 
 const DEBUG_CALLS = true;
@@ -260,7 +261,7 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = getRpcMessageCodec().decode(msg, { preserveAny: true });
-    DEBUG_CALLS && log('received message', { type: Object.keys(decoded)[0] });
+    DEBUG_CALLS && log.trace('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
       if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
@@ -278,7 +279,7 @@ export class RpcPeer {
       if (req.stream) {
         log('stream request', { method: req.method });
         this._callStreamHandler(req, (response) => {
-          log('sending stream response', {
+          log.trace('sending stream response', {
             method: req.method,
             response: response.payload?.type_url,
             error: response.error,
@@ -290,10 +291,10 @@ export class RpcPeer {
           });
         });
       } else {
-        DEBUG_CALLS && log('requesting...', { method: req.method });
+        DEBUG_CALLS && log.trace('requesting...', { method: req.method });
         const response = await this._callHandler(req);
         DEBUG_CALLS &&
-          log('sending response', {
+          log.trace('sending response', {
             method: req.method,
             response: response.payload?.type_url,
             error: response.error,
@@ -309,7 +310,7 @@ export class RpcPeer {
       const responseId = decoded.response.id;
       invariant(typeof responseId === 'number');
       if (!this._outgoingRequests.has(responseId)) {
-        log('received response with invalid id', { responseId });
+        log.trace('received response with invalid id', { responseId });
         return; // Ignore requests with incorrect id.
       }
 
@@ -319,7 +320,7 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      DEBUG_CALLS && log('response', { type_url: decoded.response.payload?.type_url });
+      DEBUG_CALLS && log.trace('response', { type_url: decoded.response.payload?.type_url });
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('received open message', { state: this._state });
@@ -374,7 +375,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
-    DEBUG_CALLS && log('calling...', { method });
+    DEBUG_CALLS && log.trace('calling...', { method });
     throwIfNotOpen(this._state);
 
     let response: Response;
@@ -385,6 +386,13 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
+      let traceContext;
+      try {
+        traceContext = options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined;
+      } catch (err) {
+        log.warn('failed to encode trace context', { err });
+      }
+
       // Send request call.
       const sending = this._sendMessage({
         request: {
@@ -392,6 +400,7 @@ export class RpcPeer {
           method,
           payload: request,
           stream: false,
+          ...(traceContext ? { traceContext } : {}),
         },
       });
 
@@ -460,16 +469,30 @@ export class RpcPeer {
 
       this._outgoingRequests.set(id, new PendingRpcRequest(onResponse, closeStream, true));
 
-      this._sendMessage({
-        request: {
-          id,
-          method,
-          payload: request,
-          stream: true,
-        },
-      }).catch((err) => {
-        close(err);
-      });
+      let traceContext;
+      try {
+        traceContext = options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined;
+      } catch (err) {
+        log.warn('failed to encode trace context', { err });
+      }
+
+      try {
+        this._sendMessage({
+          request: {
+            id,
+            method,
+            payload: request,
+            stream: true,
+            ...(traceContext ? { traceContext } : {}),
+          },
+        }).catch((err) => {
+          this._outgoingRequests.delete(id);
+          close(err);
+        });
+      } catch (err) {
+        this._outgoingRequests.delete(id);
+        throw err;
+      }
 
       return () => {
         this._sendMessage({
@@ -483,8 +506,23 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: RpcMessage, timeout?: number): Promise<void> {
-    DEBUG_CALLS && log('sending message', { type: Object.keys(message)[0] });
+    DEBUG_CALLS && log.trace('sending message', { type: Object.keys(message)[0] });
     await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
+  }
+
+  private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
+    let traceCtx: Context | undefined;
+    if (req.traceContext) {
+      try {
+        traceCtx = ContextRpcCodec.decode(req.traceContext);
+      } catch (err) {
+        log.warn('failed to decode trace context', { traceContext: req.traceContext, err });
+      }
+    }
+    if (!traceCtx && !this._params.handlerRpcOptions) {
+      return undefined;
+    }
+    return { ...this._params.handlerRpcOptions, ...(traceCtx ? { ctx: traceCtx } : {}) };
   }
 
   private async _callHandler(req: Request): Promise<Response> {
@@ -493,7 +531,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(req.method, req.payload, this._params.handlerRpcOptions);
+      const response = await this._params.callHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       return {
         id: req.id,
         payload: response,
@@ -513,7 +551,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(req.method, req.payload, this._params.handlerRpcOptions);
+      const responseStream = this._params.streamHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       responseStream.onReady(() => {
         callback({
           id: req.id,

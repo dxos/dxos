@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { html, svg, LitElement } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
+import { LitElement, html, svg } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
@@ -13,7 +13,7 @@ import { type Size } from '../defs';
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 export type AvatarVariant = 'square' | 'circle';
-export type AvatarStatus = 'active' | 'inactive' | 'current' | 'error' | 'warning' | 'internal';
+export type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'error' | 'warning';
 export type AvatarAnimation = 'pulse' | 'none';
 
 const rx = '0.125rem';
@@ -36,6 +36,7 @@ export type DxAvatarProps = Partial<
   >
 >;
 
+// TODO(burdon): Needs popover.
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
   private maskId: string;
@@ -46,7 +47,7 @@ export class DxAvatar extends LitElement {
   }
 
   @property({ type: String })
-  fallback: string = 'never';
+  fallback: string = '🫥';
 
   @property({ type: String })
   imgSrc: string | undefined = undefined;
@@ -70,7 +71,7 @@ export class DxAvatar extends LitElement {
   hue: string | undefined = undefined;
 
   @property({ type: String })
-  hueVariant: 'fill' | 'surface' = 'fill';
+  hueVariant: 'fill' | 'surface' | 'transparent' = 'fill';
 
   @property({ type: String })
   size: Size = 10;
@@ -112,13 +113,16 @@ export class DxAvatar extends LitElement {
     const r = sizePx / 2 - ringGap - ringWidth;
     const isTextOnly = Boolean(this.fallback && /[0-9a-zA-Z]+/.test(this.fallback));
     const fontScale = (isTextOnly ? 3 : 3.6) * (1 / 1.612);
-    const bg = this.hue
-      ? this.hueVariant === 'surface'
-        ? `var(--dx-${this.hue}Surface)`
-        : `var(--dx-${this.hue}Fill)`
-      : 'var(--surface-bg)';
-    const fg =
-      this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
+    const bg =
+      this.hueVariant === 'transparent'
+        ? 'transparent'
+        : this.hue
+          ? this.hueVariant === 'surface'
+            ? `var(--color-${this.hue}-surface)`
+            : `var(--color-${this.hue === 'neutral' ? 'input-surface' : `${this.hue}-bg`})`
+          : 'var(--surface-bg)';
+    const fg = this.hue && this.hueVariant === 'surface' ? `var(--color-${this.hue}-fg)` : 'var(--color-accent-fg)';
+
     return html`<span
       role="none"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
@@ -138,62 +142,71 @@ export class DxAvatar extends LitElement {
             ${
               this.variant === 'circle'
                 ? svg`<circle fill="white" cx="50%" cy="50%" r=${r} />`
-                : svg`<rect
-                  fill="white"
-                  width=${2 * r}
-                  height=${2 * r}
-                  x=${ringGap + ringWidth}
-                  y=${ringGap + ringWidth}
-                  rx=${rx}
-                />`
+                : svg`
+                  <rect
+                    fill="white"
+                    width=${2 * r}
+                    height=${2 * r}
+                    x=${ringGap + ringWidth}
+                    y=${ringGap + ringWidth}
+                    rx=${rx}
+                  />`
             }
           </mask>
         </defs>
         ${
           this.variant === 'circle'
-            ? svg` <circle
-              cx="50%"
-              cy="50%"
-              r=${r}
-              fill=${bg}
-            />`
-            : svg` <rect
-              fill=${bg}
-              x=${ringGap + ringWidth}
-              y=${ringGap + ringWidth}
-              width=${2 * r}
-              height=${2 * r}
-              rx=${rx}
-            />`
+            ? svg`
+              <circle
+                cx="50%"
+                cy="50%"
+                r=${r}
+                fill=${bg}
+              />`
+            : svg`
+              <rect
+                fill=${bg}
+                x=${ringGap + ringWidth}
+                y=${ringGap + ringWidth}
+                width=${2 * r}
+                height=${2 * r}
+                rx=${rx}
+              />`
         }
         ${
           this.icon
-            ? svg`<use
+            ? svg`
+              <use
                 class="dx-avatar__icon"
                 href=${this.icon}
                 x=${sizePx / 5}
                 y=${sizePx / 5}
                 width=${(3 * sizePx) / 5}
                 height=${(3 * sizePx) / 5} />`
-            : svg`<text
+            : // NOTE: Firefox currently doesn't fully support alignment-baseline.
+              svg`
+              <text
                 x="50%"
                 y="50%"
                 class="dx-avatar__fallback-text"
                 fill=${fg}
                 text-anchor="middle"
                 alignment-baseline="central"
+                dominant-baseline="middle"
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${this.fallback}
+                ${/\p{Emoji_Presentation}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
               </text>`
         }
         ${
           this.imgSrc &&
-          svg`<image
+          svg`
+            <image
               width="100%"
               height="100%"
               preserveAspectRatio="xMidYMid slice"
+              class="dx-avatar__image"
               href=${this.imgSrc}
               mask=${`url(#${this.maskId})`}
               crossorigin=${this.imgCrossOrigin}
@@ -209,3 +222,17 @@ export class DxAvatar extends LitElement {
     return this;
   }
 }
+
+/**
+ * Returns the first two renderable characters from a string that are separated by non-word characters.
+ * Handles Unicode characters correctly.
+ */
+const getInitials = (label = ''): string[] => {
+  return label
+    .trim()
+    .split(/\s+/)
+    .map((str) => str.replace(/[^\p{L}\p{N}\s]/gu, ''))
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase());
+};

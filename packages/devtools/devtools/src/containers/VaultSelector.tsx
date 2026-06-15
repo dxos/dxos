@@ -16,8 +16,8 @@ const targets: Target[] = ['default', 'ws://localhost:5001', 'http://localhost:3
 const parseTarget = (value?: string): Target => targets.find((target) => target.value === value) ?? targets[0];
 
 export const getTarget = () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const target = searchParams.get('target');
+  const searchProps = new URLSearchParams(window.location.search);
+  const target = searchProps.get('target');
   return parseTarget(target ?? '');
 };
 

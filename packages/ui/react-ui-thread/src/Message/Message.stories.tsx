@@ -2,45 +2,57 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
-import React, { useState } from 'react';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { PublicKey } from '@dxos/keys';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { translations } from '#translations';
 
-import { MessageRoot } from './Message';
-import { threadLayout } from '../Thread';
-import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
-import translations from '../translations';
+import { createMessages, getStoryMetadata } from '../testing';
+import { Thread } from '../Thread';
+import { Message } from './Message';
 
-const DefaultStory = () => {
-  const [identityKey] = useState(PublicKey.random());
-  const [message] = useState<MessageEntity>({
-    id: 'm1',
-    timestamp: new Date().toISOString(),
-    authorId: identityKey.toHex(),
-    text: 'hello',
-  });
+type StoryProps = { editable: boolean };
 
+// Sample messages are authored by 'did:key:alice'; the local identity matches,
+// so `editable` toggles whether the author's own message shows the edit affordance.
+const DefaultStory = ({ editable }: StoryProps) => {
+  const [message] = useMemo(() => createMessages(1), []);
   return (
-    <ThreadStoryContainer>
-      <div className={threadLayout}>
-        <MessageRoot {...message} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
-          <MessageStoryText {...message} onDelete={() => console.log('delete')} />
-        </MessageRoot>
-      </div>
-    </ThreadStoryContainer>
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      identityDid='did:key:alice'
+      editable={editable}
+      onMessageDelete={() => {}}
+    >
+      <Message.Tile message={message} />
+    </Thread.Root>
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-thread/Message',
-  component: MessageRoot,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations },
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'border w-card-min-width' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Editable: Story = {
+  args: {
+    editable: true,
+  },
 };
 
-export const Default = {};
+export const NonEditable: Story = {
+  args: {
+    editable: false,
+  },
+};

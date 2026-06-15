@@ -1,0 +1,132 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Registry } from '@effect-atom/atom-react';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+import * as Runtime from 'effect/Runtime';
+
+import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
+import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
+import { Chat } from '@dxos/assistant-toolkit';
+import { type Space } from '@dxos/client/echo';
+import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
+import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
+import { FunctionImplementationResolver } from '@dxos/functions-runtime';
+import { log } from '@dxos/log';
+import { type Message } from '@dxos/types';
+import { isTruthy } from '@dxos/util';
+
+import { type AiChatServices, blueprintRegistry } from '../../util';
+
+export type ChatProcessorOptions = {
+  runtime: Runtime.Runtime<AiChatServices>;
+  toolkit: OpaqueToolkit.OpaqueToolkit;
+  functions: OperationHandlerSet.OperationHandlerSet;
+  metadata?: AiService.ServiceMetadata;
+  registry?: Registry.Registry;
+};
+
+// TODO(burdon): Factor out common guts from AiChatProcessor.
+export class ChatProcessor {
+  private readonly _runtime: Runtime.Runtime<AiChatServices>;
+  private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;
+  private readonly _functions: OperationHandlerSet.OperationHandlerSet;
+  private readonly _metadata?: AiService.ServiceMetadata;
+  private readonly _registry?: Registry.Registry;
+
+  constructor(options: ChatProcessorOptions) {
+    this._runtime = options.runtime;
+    this._toolkit = options.toolkit;
+    this._functions = options.functions;
+    this._metadata = options.metadata;
+    this._registry = options.registry;
+  }
+
+  get runtime() {
+    return this._runtime;
+  }
+
+  get toolkit() {
+    return this._toolkit;
+  }
+
+  get metadata() {
+    return this._metadata;
+  }
+
+  async execute(
+    request: Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>,
+    model: ModelName,
+  ) {
+    const fiber = request.pipe(
+      Effect.provide(
+        Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+          Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
+        ),
+      ),
+      Effect.asVoid,
+      Runtime.runFork(this.runtime),
+    );
+
+    const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
+    if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+      const cause = Cause.pretty(response.cause);
+      log.error('request failed', { cause });
+      throw new Error(cause);
+    }
+  }
+
+  async createSession(space: Space, blueprintIds: string[]) {
+    const spaceBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+
+    // Add blueprints to space.
+    const blueprints = blueprintIds
+      .map((key) => {
+        const existing = spaceBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
+        if (existing) {
+          // TODO(wittjosiah): Stop doing this.
+          //   Currently doing this to ensure blueprints are always up-to-date from the registry.
+          space.db.remove(existing);
+          // continue;
+        }
+
+        const candidate = blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key);
+        const blueprint = candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate) ? candidate : undefined;
+        if (!blueprint) {
+          log.warn('blueprint not found', { key });
+          return;
+        }
+
+        log.info('adding blueprint', { key });
+        return space.db.add(Obj.clone(blueprint));
+      })
+      .filter(isTruthy);
+
+    const feed = space.db.add(Feed.make());
+    const chat = Chat.make({ feed: Ref.make(feed) });
+    Obj.setParent(feed, chat);
+    space.db.add(chat);
+
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const runtime = await EffectEx.runAndForwardErrors(
+      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+    );
+    const session = new AiSession.Session({ feed, runtime, registry: this._registry });
+    await session.open();
+
+    // Bind blueprints.
+    await session.context.bind({
+      blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+    });
+
+    return session;
+  }
+}

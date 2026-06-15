@@ -2,8 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, scheduleMicroTask, TriggerState, PersistentLifecycle, Event } from '@dxos/async';
-import { Resource, type Lifecycle } from '@dxos/context';
+import {
+  Event,
+  PersistentLifecycle,
+  Trigger,
+  TriggerState,
+  scheduleMicroTask,
+  scheduleTaskInterval,
+} from '@dxos/async';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
+import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -17,8 +25,20 @@ import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
 
+// Refresh status every second: rtt, rate counters.
+const STATUS_REFRESH_INTERVAL = 1000;
+
 export type MessageListener = (message: Message) => void;
 export type ReconnectListener = () => void;
+
+export type MessengerConfig = {
+  socketEndpoint: string;
+  timeout?: number;
+  protocol?: Protocol;
+  disableAuth?: boolean;
+  /** Sent as `X-DXOS-Client-Tag` on the WebSocket upgrade (Node/`ws` only; ignored in browsers). */
+  clientTag?: string;
+};
 
 export interface EdgeConnection extends Required<Lifecycle> {
   statusChanged: Event<EdgeStatus>;
@@ -28,17 +48,10 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
+  send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   onReconnected(listener: ReconnectListener): () => void;
-  send(message: Message): Promise<void>;
 }
-
-export type MessengerConfig = {
-  socketEndpoint: string;
-  timeout?: number;
-  protocol?: Protocol;
-  disableAuth?: boolean;
-};
 
 /**
  * Messenger client for EDGE:
@@ -81,9 +94,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   get status(): EdgeStatus {
-    return Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
-      ? EdgeStatus.CONNECTED
-      : EdgeStatus.NOT_CONNECTED;
+    return {
+      state:
+        Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
+          ? EdgeStatus.ConnectionState.CONNECTED
+          : EdgeStatus.ConnectionState.NOT_CONNECTED,
+      uptime: this._currentConnection?.uptime ?? 0,
+      rtt: this._currentConnection?.rtt ?? 0,
+      rateBytesUp: this._currentConnection?.uploadRate ?? 0,
+      rateBytesDown: this._currentConnection?.downloadRate ?? 0,
+      messagesSent: this._currentConnection?.messagesSent ?? 0,
+      messagesReceived: this._currentConnection?.messagesReceived ?? 0,
+    };
   }
 
   get identityKey() {
@@ -94,7 +116,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._identity.peerKey;
   }
 
-  setIdentity(identity: EdgeIdentity): void {
+  setIdentity(identity: EdgeIdentity) {
     if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
@@ -103,12 +125,45 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
-  public onMessage(listener: MessageListener): () => void {
+  /**
+   * Send message.
+   * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
+   */
+  public async send(ctx: Context, message: Message) {
+    if (this._ready.state !== TriggerState.RESOLVED) {
+      log('waiting for websocket');
+      await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    }
+
+    if (!this._currentConnection) {
+      throw new EdgeConnectionClosedError();
+    }
+
+    if (
+      message.source &&
+      (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
+    ) {
+      throw new EdgeIdentityChangedError();
+    }
+
+    const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
+    if (traceCtx) {
+      message.traceContext = {
+        $typeName: 'dxos.edge.messenger.TraceContext',
+        traceparent: traceCtx.traceparent,
+        tracestate: traceCtx.tracestate,
+      };
+    }
+
+    this._currentConnection.send(message);
+  }
+
+  public onMessage(listener: MessageListener) {
     this._messageListeners.add(listener);
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: () => void): () => void {
+  public onReconnected(listener: ReconnectListener) {
     this._reconnectListeners.add(listener);
     if (this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
@@ -123,6 +178,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
         }
       });
     }
+
     return () => this._reconnectListeners.delete(listener);
   }
 
@@ -134,6 +190,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._persistentLifecycle.open().catch((err) => {
       log.warn('Error while opening connection', { err });
     });
+
+    // Notify about status changes (rtt, rate counters).
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        if (!this._currentConnection) {
+          return;
+        }
+        this.statusChanged.emit(this.status);
+      },
+      STATUS_REFRESH_INTERVAL,
+    );
   }
 
   /**
@@ -163,7 +231,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
     log('Opening websocket', { url: url.toString(), protocolHeader });
     const connection = new EdgeWsConnection(
       identity,
-      { url, protocolHeader },
+      {
+        url,
+        protocolHeader,
+        headers: this._config.clientTag ? { 'X-DXOS-Client-Tag': this._config.clientTag } : undefined,
+      },
       {
         onConnected: () => {
           if (this._isActive(connection)) {
@@ -197,9 +269,22 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._currentConnection = connection;
 
     await connection.open();
-    // Race with restartRequired so that restart is not blocked by _connect execution.
-    // Wait on ready to attempt a reconnect if it times out.
-    await Promise.race([this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }), restartRequired]);
+
+    // The connection is only a successful start once the socket becomes ready. A socket that
+    // closes or errors before becoming ready (or never connects within the timeout) is a failed
+    // start: throwing lets PersistentLifecycle apply its backoff. Returning here would mark the
+    // attempt as successful and reset the backoff, degenerating reconnects into a hot loop when
+    // the server accepts then immediately drops the socket.
+    const becameReady = await Promise.race([
+      this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }).then(
+        () => true,
+        () => false,
+      ),
+      restartRequired.wait().then(() => false),
+    ]);
+    if (!becameReady) {
+      throw new EdgeConnectionClosedError();
+    }
 
     return connection;
   }
@@ -237,30 +322,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
-  /**
-   * Send message.
-   * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
-   */
-  public async send(message: Message): Promise<void> {
-    if (this._ready.state !== TriggerState.RESOLVED) {
-      log('waiting for websocket to become ready');
-      await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
-    }
-
-    if (!this._currentConnection) {
-      throw new EdgeConnectionClosedError();
-    }
-
-    if (
-      message.source &&
-      (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
-    ) {
-      throw new EdgeIdentityChangedError();
-    }
-
-    this._currentConnection.send(message);
-  }
-
   private async _createAuthHeader(path: string): Promise<string | undefined> {
     const httpUrl = new URL(path, this._baseHttpUrl);
     httpUrl.protocol = getEdgeUrlWithProtocol(this._baseWsUrl.toString(), 'http');
@@ -277,7 +338,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
 }
 
 const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string => {
-  // = and / characters are not allowed in the WebSocket subprotocol header.
+  // '=' and '/' characters are not allowed in the WebSocket subprotocol header.
   const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
   return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
 };

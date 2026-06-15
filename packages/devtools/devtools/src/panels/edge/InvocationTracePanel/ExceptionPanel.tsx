@@ -4,28 +4,21 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
-import { useQueue } from '@dxos/react-client/echo';
-import { Callout, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { type TraceEvent } from '@dxos/functions-runtime';
+import { Message } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 type ExceptionPanelProps = {
-  span: InvocationSpan;
+  objects?: TraceEvent[];
 };
 
-export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
-  const traceQueueDxn = useMemo(() => {
-    return span.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
-  }, [span.invocationTraceQueue]);
-
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
-
+export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
   const errorLogs = useMemo(() => {
-    if (!eventQueue?.objects?.length) {
+    if (!objects?.length) {
       return [];
     }
 
-    return eventQueue.objects
+    return objects
       .flatMap((event) =>
         event.logs
           .filter((log) => log.level === 'error')
@@ -34,24 +27,15 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
             eventId: event.id,
           })),
       )
-      .sort((a, b) => a.timestampMs - b.timestampMs);
-  }, [eventQueue?.objects]);
-
-  if (traceQueueDxn && eventQueue?.isLoading) {
-    // TODO(burdon): Create alert variant?
-    return (
-      <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
-        <Icon icon='ph--spinner-gap--regular' size={5} classNames='animate-spin' />
-      </div>
-    );
-  }
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }, [objects]);
 
   if (errorLogs.length === 0) {
     return (
-      <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
-        <Callout.Root>
-          <Callout.Title>No exceptions.</Callout.Title>
-        </Callout.Root>
+      <div className={mx('flex w-full items-center justify-center m-4')}>
+        <Message.Root>
+          <Message.Title>No exceptions.</Message.Title>
+        </Message.Root>
       </div>
     );
   }
@@ -60,14 +44,17 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
     <div className={mx('p-1 overflow-auto')}>
       {errorLogs.map((log, index) => {
         const context = log.context as any;
-        const time = new Date(log.timestampMs).toLocaleString();
+        const time = new Date(log.timestamp).toLocaleString();
         const errorInfo = context?.err || {};
         const errorName = errorInfo._id || 'Error';
         const errorMessage = errorInfo.message || log.message;
         const stack = context?.stack;
 
         return (
-          <div key={`log-${index}`} className='mb-2 border border-red-200 dark:border-red-900 rounded overflow-hidden'>
+          <div
+            key={`log-${index}`}
+            className='mb-2 border border-red-200 dark:border-red-900 rounded-sm overflow-hidden'
+          >
             <div className='p-2'>
               <div className='flex justify-between items-start'>
                 <div className='font-medium'>{errorName}</div>

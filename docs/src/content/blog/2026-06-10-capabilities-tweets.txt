@@ -1,0 +1,36 @@
+Twitter/X drafts for "Capabilities: how Composer plugins extend each other".
+(.txt so the Astro blog collection — which globs *.md and validates frontmatter — ignores it.)
+
+---
+
+1.
+
+Most plugin systems are one-way: the app defines extension points, plugins fill them in.
+
+In Composer, every plugin can define extension points — typed contracts we call capabilities. Markdown extends comments; comments extends markdown. Neither imports the other.
+
+🧵 https://dxos.org/blog/capabilities-how-composer-plugins-extend-each-other
+
+---
+
+2.
+
+How do comments work in @dxos_org Composer?
+
+The comments plugin doesn't know which types are commentable. Markdown, sheets, tables, sketches, bookmarks & video each contribute a tiny CommentConfig capability — and the comments panel just shows up next to their content.
+
+https://dxos.org/blog/capabilities-how-composer-plugins-extend-each-other
+
+---
+
+3.
+
+A capability is just a typed key + lazy contributions:
+
+Capability.make<T>() → declare the contract
+Capability.contributes() → implement it from any plugin
+getAll() → consume every implementation
+
+Map markers, flight search, call transcription, comments — all the same seam.
+
+https://dxos.org/blog/capabilities-how-composer-plugins-extend-each-other

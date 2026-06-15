@@ -15,8 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  Invitation,
   type IdentityService,
+  Invitation,
   type InvitationsService,
   QueryInvitationsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';

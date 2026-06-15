@@ -1,6 +1,0 @@
-[Unit]
-Description=Prepare system for DXOS agent
-
-[Service]
-Type=oneshot
-ExecStart=-mkdir -p %h/.local/share/dx/logs

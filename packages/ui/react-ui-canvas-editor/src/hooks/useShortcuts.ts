@@ -60,7 +60,7 @@ export const useShortcuts = () => {
     'Backspace',
     (ev) => {
       ev.preventDefault();
-      void actionHandler?.({ type: 'delete', ids: [...selection.selected.value] });
+      void actionHandler?.({ type: 'delete', ids: selection.getSelectedIds() });
     },
     { scopes: [id] },
   );

@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/vite-plugin-shutdown",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Vite dev plugin: close the server and exit on SIGINT/SIGTERM so Ctrl-C reliably stops `vite dev` even when launched through pnpm/moon.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "catalog:"
+  }
+}

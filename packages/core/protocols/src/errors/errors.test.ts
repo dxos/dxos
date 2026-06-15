@@ -4,12 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ApiError } from './base-errors.js';
+import { ApiError } from './base-errors.ts';
 
 describe('Errors', () => {
   test('test', async () => {
     const runTest = async () => {
-      throw new ApiError('Test error');
+      throw new ApiError({ message: 'Test error' });
     };
 
     await expect(runTest()).rejects.toThrowError('Test error');

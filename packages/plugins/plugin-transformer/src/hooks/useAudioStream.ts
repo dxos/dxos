@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -28,7 +28,7 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
   // TODO(burdon): Convert to class.
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(undefined);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const isProcessingRef = useRef(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);

@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
-  description: 'DXN or null. Null means any type will match',
-});
+// Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
+// Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
+// matches any type.
+const TypenameSpecifier = Schema.Union(URI.Schema, Schema.Null);
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
@@ -25,7 +27,7 @@ const FilterObject_ = Schema.Struct({
 
   typename: TypenameSpecifier,
 
-  id: Schema.optional(Schema.Array(ObjectId)),
+  id: Schema.optional(Schema.Array(EntityId)),
 
   /**
    * Filter by property.
@@ -41,11 +43,25 @@ const FilterObject_ = Schema.Struct({
    */
   foreignKeys: Schema.optional(Schema.Array(ForeignKey)),
 
+  /**
+   * Match objects whose meta `key` equals this fully-qualified registry key (FQN format).
+   */
+  metaKey: Schema.optional(Schema.String),
+
+  /**
+   * Semver range matched against the object's meta `version`.
+   * Only consulted when {@link metaKey} is set. Objects with no `version` do not satisfy a version-constrained filter.
+   */
+  metaVersion: Schema.optional(Schema.String),
+
   // NOTE: Make sure to update `FilterStep.isNoop` if you change this.
 });
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
 export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
 
+/**
+ * Compare.
+ */
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),
   operator: Schema.Literal('eq', 'neq', 'gt', 'gte', 'lt', 'lte'),
@@ -54,6 +70,9 @@ const FilterCompare_ = Schema.Struct({
 export interface FilterCompare extends Schema.Schema.Type<typeof FilterCompare_> {}
 export const FilterCompare: Schema.Schema<FilterCompare> = FilterCompare_;
 
+/**
+ * In.
+ */
 const FilterIn_ = Schema.Struct({
   type: Schema.Literal('in'),
   values: Schema.Array(Schema.Any),
@@ -61,53 +80,137 @@ const FilterIn_ = Schema.Struct({
 export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
+/**
+ * Contains.
+ */
+const FilterContains_ = Schema.Struct({
+  type: Schema.Literal('contains'),
+  value: Schema.Any,
+});
+
+export interface FilterContains extends Schema.Schema.Type<typeof FilterContains_> {}
+
+/**
+ * Predicate for an array property to contain the provided value.
+ * Nested objects are matched using strict structural matching.
+ */
+export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
+
+/**
+ * Filters objects that have certain tag.
+ */
+const FilterTag_ = Schema.Struct({
+  type: Schema.Literal('tag'),
+  tag: Schema.String, // TODO(burdon): Make OR-collection?
+});
+
+export interface FilterTag extends Schema.Schema.Type<typeof FilterTag_> {}
+export const FilterTag: Schema.Schema<FilterTag> = FilterTag_;
+
+/**
+ * Range.
+ */
 const FilterRange_ = Schema.Struct({
   type: Schema.Literal('range'),
   from: Schema.Any,
   to: Schema.Any,
 });
+
 export interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
 export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
+/**
+ * Filter by system timestamp (createdAt / updatedAt).
+ * Timestamps are unix milliseconds stored in the object meta index.
+ */
+const FilterTimestamp_ = Schema.Struct({
+  type: Schema.Literal('timestamp'),
+  field: Schema.Literal('createdAt', 'updatedAt'),
+  operator: Schema.Literal('gt', 'gte', 'lt', 'lte'),
+  value: Schema.Number,
+});
+
+export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimestamp_> {}
+export const FilterTimestamp: Schema.Schema<FilterTimestamp> = FilterTimestamp_;
+
+/**
+ * Text search.
+ */
 const FilterTextSearch_ = Schema.Struct({
   type: Schema.Literal('text-search'),
   text: Schema.String,
   searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
 });
+
 export interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
 export const FilterTextSearch: Schema.Schema<FilterTextSearch> = FilterTextSearch_;
 
+/**
+ * Not.
+ */
 const FilterNot_ = Schema.Struct({
   type: Schema.Literal('not'),
   filter: Schema.suspend(() => Filter),
 });
+
 export interface FilterNot extends Schema.Schema.Type<typeof FilterNot_> {}
 export const FilterNot: Schema.Schema<FilterNot> = FilterNot_;
 
+/**
+ * And.
+ */
 const FilterAnd_ = Schema.Struct({
   type: Schema.Literal('and'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
 });
+
 export interface FilterAnd extends Schema.Schema.Type<typeof FilterAnd_> {}
 export const FilterAnd: Schema.Schema<FilterAnd> = FilterAnd_;
 
+/**
+ * Or.
+ */
 const FilterOr_ = Schema.Struct({
   type: Schema.Literal('or'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
 });
+
 export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
 export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
+/**
+ * Filter objects that are children of the specified parents.
+ * With transitive=true (default), matches grandchildren and beyond.
+ */
+const FilterChildOf_ = Schema.Struct({
+  type: Schema.Literal('child-of'),
+  /** Parent DXNs to match children of. */
+  parents: Schema.Array(EID.Schema),
+  /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
+  transitive: Schema.Boolean,
+});
+
+export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_> {}
+export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
+
+/**
+ * Union of filters.
+ */
 export const Filter = Schema.Union(
   FilterObject,
-  FilterTextSearch,
   FilterCompare,
   FilterIn,
+  FilterContains,
+  FilterTag,
   FilterRange,
+  FilterTimestamp,
+  FilterTextSearch,
+  FilterChildOf,
   FilterNot,
   FilterAnd,
   FilterOr,
-);
+).annotations({ identifier: 'org.dxos.schema.filter' });
+
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
 /**
@@ -117,6 +220,7 @@ const QuerySelectClause_ = Schema.Struct({
   type: Schema.Literal('select'),
   filter: Schema.suspend(() => Filter),
 });
+
 export interface QuerySelectClause extends Schema.Schema.Type<typeof QuerySelectClause_> {}
 export const QuerySelectClause: Schema.Schema<QuerySelectClause> = QuerySelectClause_;
 
@@ -128,6 +232,7 @@ const QueryFilterClause_ = Schema.Struct({
   selection: Schema.suspend(() => Query),
   filter: Schema.suspend(() => Filter),
 });
+
 export interface QueryFilterClause extends Schema.Schema.Type<typeof QueryFilterClause_> {}
 export const QueryFilterClause: Schema.Schema<QueryFilterClause> = QueryFilterClause_;
 
@@ -139,6 +244,7 @@ const QueryReferenceTraversalClause_ = Schema.Struct({
   anchor: Schema.suspend(() => Query),
   property: Schema.String, // TODO(dmaretskyi): Change to EscapedPropPath.
 });
+
 export interface QueryReferenceTraversalClause extends Schema.Schema.Type<typeof QueryReferenceTraversalClause_> {}
 export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversalClause> =
   QueryReferenceTraversalClause_;
@@ -149,9 +255,14 @@ export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversa
 const QueryIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend(() => Query),
-  property: Schema.String,
+  /**
+   * Property path where the reference is located.
+   * If null, matches references from any property.
+   */
+  property: Schema.NullOr(Schema.String),
   typename: TypenameSpecifier,
 });
+
 export interface QueryIncomingReferencesClause extends Schema.Schema.Type<typeof QueryIncomingReferencesClause_> {}
 export const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause> =
   QueryIncomingReferencesClause_;
@@ -170,6 +281,7 @@ const QueryRelationClause_ = Schema.Struct({
   direction: Schema.Literal('outgoing', 'incoming', 'both'),
   filter: Schema.optional(Schema.suspend(() => Filter)),
 });
+
 export interface QueryRelationClause extends Schema.Schema.Type<typeof QueryRelationClause_> {}
 export const QueryRelationClause: Schema.Schema<QueryRelationClause> = QueryRelationClause_;
 
@@ -181,8 +293,26 @@ const QueryRelationTraversalClause_ = Schema.Struct({
   anchor: Schema.suspend(() => Query),
   direction: Schema.Literal('source', 'target', 'both'),
 });
+
 export interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof QueryRelationTraversalClause_> {}
 export const QueryRelationTraversalClause: Schema.Schema<QueryRelationTraversalClause> = QueryRelationTraversalClause_;
+
+/**
+ * Traverse parent-child hierarchy.
+ */
+const QueryHierarchyTraversalClause_ = Schema.Struct({
+  type: Schema.Literal('hierarchy-traversal'),
+  anchor: Schema.suspend(() => Query),
+  /**
+   * to-parent: traverse from child to parent.
+   * to-children: traverse from parent to children.
+   */
+  direction: Schema.Literal('to-parent', 'to-children'),
+});
+
+export interface QueryHierarchyTraversalClause extends Schema.Schema.Type<typeof QueryHierarchyTraversalClause_> {}
+export const QueryHierarchyTraversalClause: Schema.Schema<QueryHierarchyTraversalClause> =
+  QueryHierarchyTraversalClause_;
 
 /**
  * Union of multiple queries.
@@ -191,6 +321,7 @@ const QueryUnionClause_ = Schema.Struct({
   type: Schema.Literal('union'),
   queries: Schema.Array(Schema.suspend(() => Query)),
 });
+
 export interface QueryUnionClause extends Schema.Schema.Type<typeof QueryUnionClause_> {}
 export const QueryUnionClause: Schema.Schema<QueryUnionClause> = QueryUnionClause_;
 
@@ -202,8 +333,52 @@ const QuerySetDifferenceClause_ = Schema.Struct({
   source: Schema.suspend(() => Query),
   exclude: Schema.suspend(() => Query),
 });
+
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
+
+export const OrderDirection = Schema.Literal('asc', 'desc');
+export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
+
+const Order_ = Schema.Union(
+  Schema.Struct({
+    // How database wants to order them (in practice - by id).
+    kind: Schema.Literal('natural'),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('property'),
+    property: Schema.String,
+    direction: OrderDirection,
+  }),
+  Schema.Struct({
+    // Order by relevance rank (for FTS/vector search results).
+    // Default direction is 'desc' (higher rank = better match first).
+    kind: Schema.Literal('rank'),
+    direction: OrderDirection,
+  }),
+  Schema.Struct({
+    // Order by system timestamp (createdAt / updatedAt) from the object meta index.
+    kind: Schema.Literal('timestamp'),
+    field: Schema.Literal('createdAt', 'updatedAt'),
+    direction: OrderDirection,
+  }),
+);
+
+export type Order = Schema.Schema.Type<typeof Order_>;
+export const Order: Schema.Schema<Order> = Order_;
+
+/**
+ * Order the query results.
+ * Left-to-right the orders dominate.
+ */
+const QueryOrderClause_ = Schema.Struct({
+  type: Schema.Literal('order'),
+  query: Schema.suspend(() => Query),
+  order: Schema.Array(Order),
+});
+
+export interface QueryOrderClause extends Schema.Schema.Type<typeof QueryOrderClause_> {}
+export const QueryOrderClause: Schema.Schema<QueryOrderClause> = QueryOrderClause_;
 
 /**
  * Add options to a query.
@@ -213,8 +388,36 @@ const QueryOptionsClause_ = Schema.Struct({
   query: Schema.suspend(() => Query),
   options: Schema.suspend(() => QueryOptions),
 });
+
 export interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
 export const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
+
+/**
+ * Limit the number of results.
+ */
+const QueryLimitClause_ = Schema.Struct({
+  type: Schema.Literal('limit'),
+  query: Schema.suspend(() => Query),
+  limit: Schema.Number,
+});
+
+export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
+export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
+
+export const QueryFromClause_ = Schema.Struct({
+  type: Schema.Literal('from'),
+  query: Schema.suspend(() => Query),
+  from: Schema.Union(
+    Schema.TaggedStruct('scope', {
+      scopes: Schema.Array(Schema.suspend(() => Scope)),
+    }),
+    Schema.TaggedStruct('query', {
+      query: Schema.suspend(() => Query),
+    }),
+  ),
+});
+export interface QueryFromClause extends Schema.Schema.Type<typeof QueryFromClause_> {}
+export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_;
 
 const Query_ = Schema.Union(
   QuerySelectClause,
@@ -223,46 +426,158 @@ const Query_ = Schema.Union(
   QueryIncomingReferencesClause,
   QueryRelationClause,
   QueryRelationTraversalClause,
+  QueryHierarchyTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
+  QueryOrderClause,
   QueryOptionsClause,
-);
+  QueryLimitClause,
+  QueryFromClause,
+).annotations({ identifier: 'org.dxos.schema.query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
 
 export const QueryOptions = Schema.Struct({
-  spaceIds: Schema.optional(Schema.Array(Schema.String)),
+  /**
+   * Nested select statements will use this option to filter deleted objects.
+   */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+
+  /**
+   * Diagnostics-only label for logs / tooling (not used by execution semantics).
+   */
+  debugLabel: Schema.optional(Schema.String),
 });
+
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
+/**
+ * Selects from a space (automerge documents).
+ * When `spaceId` is omitted, targets the owning space — i.e. the space of whichever
+ * database executes the query. This lets callers reference "this space" without
+ * having to look up its id.
+ * When `includeAllFeeds` is true, also selects from all feeds belonging to that space.
+ */
+export const SpaceScope = Schema.TaggedStruct('space', {
+  spaceId: Schema.optional(Schema.String),
+  includeAllFeeds: Schema.optional(Schema.Boolean),
+});
+export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
+
+/**
+ * Selects from a specific feed (by its underlying queue DXN).
+ */
+export const FeedScope = Schema.TaggedStruct('feed', {
+  feedUri: Schema.String,
+});
+export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
+
+/**
+ * Selects from a code-shipped object registry.
+ *
+ * - `'local'`  — the in-process registry attached to the hypergraph.
+ * - `'remote'` — a future remote registry service (not yet implemented).
+ *
+ * To include both, add two separate `RegistryScope` entries to the `scopes` array.
+ */
+export const RegistryScope = Schema.TaggedStruct('registry', {
+  location: Schema.Literal('local', 'remote'),
+});
+export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> {}
+
+/**
+ * Specifies the scope of the data to query from.
+ * A `from` clause may carry multiple scopes; results are unioned across them.
+ */
+export const Scope = Schema.Union(SpaceScope, FeedScope, RegistryScope);
+export type Scope = Schema.Schema.Type<typeof Scope>;
+
 export const visit = (query: Query, visitor: (node: Query) => void) => {
-  switch (query.type) {
-    case 'filter':
-      visit(query.selection, visitor);
-      break;
-    case 'reference-traversal':
-      visit(query.anchor, visitor);
-      break;
-    case 'incoming-references':
-      visit(query.anchor, visitor);
-      break;
-    case 'relation':
-      visit(query.anchor, visitor);
-      break;
-    case 'options':
-      visit(query.query, visitor);
-      break;
-    case 'relation-traversal':
-      visit(query.anchor, visitor);
-      break;
-    case 'union':
-      query.queries.forEach((q) => visit(q, visitor));
-      break;
-    case 'set-difference':
-      visit(query.source, visitor);
-      visit(query.exclude, visitor);
-      break;
-  }
+  visitor(query);
+
+  Match.value(query).pipe(
+    Match.when({ type: 'filter' }, ({ selection }) => visit(selection, visitor)),
+    Match.when({ type: 'reference-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'incoming-references' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
+    Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
+      visit(source, visitor);
+      visit(exclude, visitor);
+    }),
+    Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'from' }, (node) => {
+      visit(node.query, visitor);
+      if (node.from._tag === 'query') {
+        visit(node.from.query, visitor);
+      }
+    }),
+    Match.when({ type: 'select' }, () => {}),
+    Match.exhaustive,
+  );
+};
+
+/**
+ * Recursively transforms a query tree bottom-up.
+ * The mapper receives each node with its children already transformed.
+ */
+export const map = (query: Query, mapper: (node: Query) => Query): Query => {
+  const mapped: Query = Match.value(query).pipe(
+    Match.when({ type: 'filter' }, (node) => ({ ...node, selection: map(node.selection, mapper) })),
+    Match.when({ type: 'reference-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'incoming-references' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'relation' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'relation-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'hierarchy-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'options' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'order' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'limit' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'from' }, (node) => ({
+      ...node,
+      query: map(node.query, mapper),
+      ...(node.from._tag === 'query' ? { from: { _tag: 'query' as const, query: map(node.from.query, mapper) } } : {}),
+    })),
+    Match.when({ type: 'union' }, (node) => ({ ...node, queries: node.queries.map((q) => map(q, mapper)) })),
+    Match.when({ type: 'set-difference' }, (node) => ({
+      ...node,
+      source: map(node.source, mapper),
+      exclude: map(node.exclude, mapper),
+    })),
+    Match.when({ type: 'select' }, (node) => node),
+    Match.exhaustive,
+  );
+  return mapper(mapped);
+};
+
+export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
+  return Match.value(query).pipe(
+    Match.withReturnType<T[]>(),
+    Match.when({ type: 'filter' }, ({ selection }) => fold(selection, reducer)),
+    Match.when({ type: 'reference-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'incoming-references' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'relation' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'options' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'relation-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'union' }, ({ queries }) => queries.flatMap((q) => fold(q, reducer))),
+    Match.when({ type: 'set-difference' }, ({ source, exclude }) =>
+      fold(source, reducer).concat(fold(exclude, reducer)),
+    ),
+    Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'from' }, (node) => {
+      const results = fold(node.query, reducer);
+      if (node.from._tag === 'query') {
+        return results.concat(fold(node.from.query, reducer));
+      }
+      return results;
+    }),
+    Match.when({ type: 'select' }, () => []),
+    Match.exhaustive,
+  );
 };

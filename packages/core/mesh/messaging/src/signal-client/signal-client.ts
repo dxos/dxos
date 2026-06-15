@@ -3,25 +3,24 @@
 //
 
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
-import { type Context, cancelWithContext, Resource } from '@dxos/context';
+import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type QueryRequest, type JoinRequest, type LeaveRequest } from '@dxos/protocols/proto/dxos/edge/signal';
+import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { SignalClientMonitor } from './signal-client-monitor';
-import { SignalLocalState } from './signal-local-state';
-import { SignalRPCClient } from './signal-rpc-client';
 import {
-  type PeerInfo,
   type Message,
+  type PeerInfo,
   type SignalClientMethods,
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
+import { SignalClientMonitor } from './signal-client-monitor';
+import { SignalLocalState } from './signal-local-state';
+import { SignalRPCClient } from './signal-rpc-client';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;
@@ -55,8 +54,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
    * Number of milliseconds after which the connection will be attempted again in case of error.
    */
   private _reconnectAfter = DEFAULT_RECONNECT_TIMEOUT;
-
-  private readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * @internal
@@ -93,7 +90,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   protected override async _open(): Promise<void> {
-    log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
+    log('opening signal client');
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
       return;
@@ -136,7 +133,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     });
 
     this._createClient();
-    log.trace('dxos.mesh.signal-client.open', trace.end({ id: this._instanceId }));
+    log('opened signal client');
   }
 
   protected override async _catch(err: Error): Promise<void> {
@@ -172,24 +169,24 @@ export class SignalClient extends Resource implements SignalClientMethods {
     };
   }
 
-  async join(args: JoinRequest): Promise<void> {
+  async join(_ctx: Context, args: JoinRequest): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
     this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
-  async leave(args: LeaveRequest): Promise<void> {
+  async leave(_ctx: Context, args: LeaveRequest): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordLeave();
     this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
-  async query(params: QueryRequest): Promise<SwarmResponse> {
+  async query(_ctx: Context, params: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage(msg: Message): Promise<void> {
+  async sendMessage(_ctx: Context, msg: Message): Promise<void> {
     return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');

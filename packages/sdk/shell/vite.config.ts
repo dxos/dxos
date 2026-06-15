@@ -3,18 +3,24 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { esmExternalRequirePlugin } from 'rolldown/plugins';
 import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config
 export default defineConfig({
+  root: dirname,
   build: {
+    outDir: 'dist/bundle',
     sourcemap: true,
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: path.resolve(dirname, 'src/index.ts'),
       name: 'Shell',
       fileName: 'shell',
     },
@@ -26,31 +32,50 @@ export default defineConfig({
         '@dxos/client/mesh',
         '@dxos/client-protocol',
         '@dxos/client-services',
-        '@dxos/echo-schema',
-        '@dxos/echo-db',
+        '@dxos/echo/internal',
+        '@dxos/echo-client',
         '@dxos/protocols',
         '@dxos/react-client',
         '@dxos/react-client/echo',
         '@dxos/react-client/halo',
         '@dxos/react-client/mesh',
-        '@phosphor-icons/react',
-        // TODO(wittjosiah): React still being included.
         'react',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
         'react-dom',
+        'react-dom/client',
+        'scheduler',
+        'use-sync-external-store',
+        /^use-sync-external-store\//,
+      ],
+      plugins: [
+        // Convert literal `require("X")` calls (including those rolldown
+        // emits inside its `__commonJSMin`-wrapped transitive CJS deps —
+        // react-jsx-runtime/cjs, use-sync-external-store, react-dom/cjs)
+        // into ESM imports against the consumer's resolution of these deps.
+        // Each subpath must be listed independently (rolldown/rolldown#8349);
+        // entries must also appear in top-level `external` with
+        // `skipDuplicateCheck: true` to silence the duplicate warning, per
+        // the maintainer-provided working repro at vite8-external-20260216.
+        esmExternalRequirePlugin({
+          external: [
+            'react',
+            'react/jsx-runtime',
+            'react/jsx-dev-runtime',
+            'react-dom',
+            'react-dom/client',
+            'scheduler',
+            'use-sync-external-store',
+            /^use-sync-external-store\//,
+          ],
+          skipDuplicateCheck: true,
+        }),
       ],
     },
   },
   plugins: [
-    ThemePlugin({
-      root: __dirname,
-      content: [
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
-      ],
-    }),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ThemePlugin({}),
+    ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
@@ -65,11 +90,11 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'dist/bundle');
+        const outDir = path.join(dirname, 'dist/bundle');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],

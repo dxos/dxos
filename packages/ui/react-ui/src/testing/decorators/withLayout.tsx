@@ -1,0 +1,67 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Decorator } from '@storybook/react';
+import React, { type FC, type PropsWithChildren, memo } from 'react';
+
+import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+export type ContainerProps = ThemedClassName<PropsWithChildren>;
+
+export type ContainerType = 'default' | 'fullscreen' | 'centered' | 'column';
+
+export type WithLayoutProps =
+  | FC<ContainerProps>
+  | {
+      classNames?: ClassNameValue;
+      layout?: ContainerType;
+      scroll?: boolean;
+    };
+
+/**
+ * Adds layout container.
+ */
+export const withLayout =
+  (props: WithLayoutProps = {}): Decorator =>
+  (Story) => {
+    // Prevent re-rendering of the story.
+    const MemoizedStory = memo(Story);
+    if (typeof props === 'function') {
+      const Container = props;
+      return (
+        <Container>
+          <MemoizedStory />
+        </Container>
+      );
+    } else {
+      const { layout = 'default', classNames, scroll } = props;
+      const Container = layouts[layout] ?? layouts.fullscreen;
+      return (
+        <Container classNames={mx(scroll ? 'overflow-y-auto' : 'overflow-hidden', classNames)}>
+          <MemoizedStory />
+        </Container>
+      );
+    }
+  };
+
+const layouts: Record<ContainerType, FC<ContainerProps>> = {
+  default: ({ classNames, children }: ContainerProps) => <div className={mx('p-4', classNames)}>{children}</div>,
+
+  fullscreen: ({ classNames, children }: ContainerProps) => (
+    <div className={mx('fixed inset-0 flex overflow-hidden bg-black', classNames)}>{children}</div>
+  ),
+
+  centered: ({ classNames, children }: ContainerProps) => (
+    <div className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-black')}>
+      <div className={mx('flex flex-col bg-base-surface', classNames)}>{children}</div>
+    </div>
+  ),
+
+  column: ({ classNames, children }: ContainerProps) => (
+    <div className='fixed inset-0 flex overflow-hidden justify-center bg-black'>
+      <div className={mx('flex flex-col w-[40rem] bg-base-surface', classNames)}>{children}</div>
+    </div>
+  ),
+};

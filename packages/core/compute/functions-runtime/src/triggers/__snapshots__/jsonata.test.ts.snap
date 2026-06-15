@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`jsonata > evaluates expression with trigger event > input as expression 1`] = `
+{
+  "cursor": "01J00J9B45YHYSGZQTQMSKMGJ6",
+  "nested": {
+    "name": "John",
+    "value": "nested",
+  },
+  "ref": {
+    "/": "echo:/01KD35WMWTEEE1WQQPYEGD1X2B",
+  },
+  "value": "Hello, John!",
+}
+`;
+
+exports[`jsonata > evaluates expression with trigger event > input templating 1`] = `
+{
+  "cursor": "01J00J9B45YHYSGZQTQMSKMGJ6",
+  "nested": {
+    "name": "John",
+    "value": "nested",
+  },
+  "ref": {
+    "/": "echo:/01KD35WMWTEEE1WQQPYEGD1X2B",
+    "target": {
+      "@meta": {
+        "keys": [],
+      },
+      "@type": "dxn:com.example.type.expando:0.1.0",
+      "id": "01KD35WMWTEEE1WQQPYEGD1X2B",
+      "name": "DXOS",
+    },
+  },
+  "value": "Hello, John!",
+}
+`;

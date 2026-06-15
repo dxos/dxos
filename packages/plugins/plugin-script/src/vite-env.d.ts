@@ -18,3 +18,10 @@ declare module '*?raw' {
   const content: string;
   export default content;
 }
+
+declare module 'https://*';
+
+declare module '*.mdl?raw' {
+  const content: string;
+  export default content;
+}

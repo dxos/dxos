@@ -2,43 +2,59 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type MulticastObservable, type CleanupFn } from '@dxos/async';
+import * as Schema from 'effect/Schema';
+
+import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type QueueFactory, type CoreDatabase, type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
+import { type Database, type Obj } from '@dxos/echo';
+import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type Messenger } from '@dxos/protocols';
 import {
   type Contact,
   type CreateEpochRequest,
   type Invitation,
+  SpaceArchive,
   type Space as SpaceData,
-  type SpaceArchive,
   type SpaceMember,
   type SpaceState,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type CancellableInvitation } from './invitations';
+import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
   automergeRootUrl?: string;
 };
 
-export interface SpaceInternal {
-  get data(): SpaceData;
+export type ExportSpaceOptions = {
+  /**
+   * Archive format.
+   * @default SpaceArchive.Format.BINARY
+   */
+  format?: SpaceArchive.Format;
+};
 
-  // TODO(dmaretskyi): Return epoch info.
-  createEpoch(options?: CreateEpochOptions): Promise<void>;
+export interface SpaceInternal {
+  get db(): EchoDatabase;
+  get data(): SpaceData;
 
   getCredentials(): Promise<Credential[]>;
 
   getEpochs(): Promise<SpecificCredential<Epoch>[]>;
 
+  // TODO(dmaretskyi): Return epoch info.
+  createEpoch(options?: CreateEpochOptions): Promise<void>;
+
+  // TOOD(burdon): Start to factor out credentials.
   removeMember(memberKey: PublicKey): Promise<void>;
+
+  export(options?: ExportSpaceOptions): Promise<SpaceArchive>;
 
   /**
    * Migrate space data to the latest version.
@@ -47,15 +63,20 @@ export interface SpaceInternal {
 
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 
-  export(): Promise<SpaceArchive>;
+  /**
+   * Waits until the space is fully synced with EDGE.
+   * @throws If the EDGE sync is disabled.
+   */
+  syncToEdge(opts?: {
+    onProgress: (state: SpaceSyncState.PeerState | undefined) => void;
+    timeout?: number;
+  }): Promise<void>;
 }
 
-// TODO(burdon): Separate public API form implementation (move comments here).
-export interface Space {
-  /**
-   * Unique space identifier.
-   */
-  get id(): SpaceId;
+export const SPACE_TAG = Symbol('dxos.client.protocol.Space');
+
+export interface Space extends Messenger {
+  readonly [SPACE_TAG]: true;
 
   /**
    * @deprecated Use `id`.
@@ -63,28 +84,34 @@ export interface Space {
   get key(): PublicKey;
 
   /**
+   * Unique space identifier.
+   */
+  get id(): SpaceId;
+
+  /**
    * Echo database.
    */
-  get db(): EchoDatabase;
+  get db(): Database.Database;
 
   /**
    * Access to queues.
    */
   get queues(): QueueFactory;
 
-  /**
-   * Echo database CRUD API.
-   * @deprecated Use the database api with the `plain` format.
-   */
-  // TODO(burdon): Remove.
-  get crud(): CoreDatabase;
-
+  // TODO(burdon): Replace with state?
   get isOpen(): boolean;
 
   /**
-   * Properties object.
+   * Immutable tags assigned at space creation time.
+   * Available on closed spaces.
    */
-  get properties(): AnyLiveObject<any>;
+  get tags(): string[];
+
+  /**
+   * Immutable membership policy assigned at space creation time.
+   * Available on closed spaces.
+   */
+  get membershipPolicy(): MembershipPolicy;
 
   /**
    * Current state of the space.
@@ -92,6 +119,11 @@ export interface Space {
    * Presence is available in `SpaceState.SPACE_CONTROL_ONLY` state.
    */
   get state(): MulticastObservable<SpaceState>;
+
+  /**
+   * Properties object.
+   */
+  get properties(): Obj.OfShape<SpaceProperties>;
 
   /**
    * Current state of space pipeline.
@@ -105,14 +137,14 @@ export interface Space {
   /**
    * @deprecated
    */
-  // TODO(wittjosiah): Remove. This should not be exposed.
+  // TODO(wittjosiah): Audit and remove. This should not be exposed (or marked as internal).
   get internal(): SpaceInternal;
 
-  // TODO(wittjosiah): Rename activate/deactivate?
   /**
    * Activates the space enabling the use of the database and starts replication with peers.
    * The setting is persisted on the local device.
    */
+  // TODO(wittjosiah): Rename activate/deactivate?
   open(): Promise<void>;
 
   /**
@@ -123,6 +155,13 @@ export interface Space {
   close(): Promise<void>;
 
   /**
+   * Tombstones (soft-deletes) the space and replicates the deletion to the user's other devices.
+   * Every device stops replicating and unloads the space. Underlying data is not removed until
+   * garbage collection (future work). This is terminal: the space cannot be re-opened via {@link open}.
+   */
+  delete(): Promise<void>;
+
+  /**
    * Waits until the space is in the ready state, with database initialized.
    */
   waitUntilReady(): Promise<this>;
@@ -130,13 +169,17 @@ export interface Space {
   createSnapshot(): Promise<SpaceSnapshot>;
 
   // TODO(burdon): Create invitation?
+  // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
-
   admitContact(contact: Contact): Promise<void>;
-
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
-
-  // TODO(wittjosiah): Gather into messaging abstraction?
-  postMessage: (channel: string, message: any) => Promise<void>;
-  listen: (channel: string, callback: (message: GossipMessage) => void) => CleanupFn;
 }
+
+export const isSpace = (object: unknown): object is Space =>
+  typeof object === 'object' && object != null && (object as Space)[SPACE_TAG] === true;
+
+// TODO(burdon): Create lower-level definition (HasId, db, etc.) and move to @dxos/echo.
+export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
+  Schema.filter((space) => isSpace(space)),
+  Schema.annotations({ title: 'Space' }),
+);

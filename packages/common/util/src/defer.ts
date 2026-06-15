@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import './explicit-resource-management-polyfill';
+import '@hazae41/symbol-dispose-polyfill';
 
 /**
  * Run function on scope exit. Go style.

@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/vite-plugin-import-source",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Vite plugin that resolves npm package imports to their source files.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "minimatch": "catalog:",
+    "oxc-resolver": "catalog:"
+  },
+  "devDependencies": {
+    "@types/minimatch": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "catalog:"
+  }
+}

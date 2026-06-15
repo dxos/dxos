@@ -5,18 +5,18 @@
 import React from 'react';
 
 import { type Point } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
-  type ShapeComponentProps,
   DEFS_ID,
   MARKER_PREFIX,
+  type ShapeComponentProps,
   eventsAuto,
   eventsNone,
   shapeAttrs,
   styles,
 } from '../components';
-import { createPathThroughPoints2, createCurveThroughPoints } from '../layout';
+import { createCurveThroughPoints, createPathThroughPoints2 } from '../layout';
 import { type PathShape } from '../types';
 
 const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);

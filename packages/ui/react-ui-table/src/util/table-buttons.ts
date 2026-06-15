@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-export type TableButton = 'columnSettings' | 'rowMenu' | 'newColumn' | 'referencedCell' | 'sort';
+export type TableButton = 'columnSettings' | 'rowMenu' | 'newColumn' | 'referencedCell' | 'sort' | 'saveDraftRow';
 
 export const BUTTON_IDENTIFIERS: { [K in TableButton]: string } = {
   columnSettings: 'data-table-column-settings-button',
   newColumn: 'data-table-new-column-button',
   referencedCell: 'data-table-ref-cell-button',
   rowMenu: 'data-table-row-menu-button',
+  saveDraftRow: 'data-table-save-draft-row-button',
   sort: 'data-table-sort-button',
 } as const;
 
@@ -16,6 +17,7 @@ type ButtonData =
   | { type: 'columnSettings'; fieldId: string }
   | { type: 'newColumn'; disabled?: boolean }
   | { type: 'rowMenu'; rowIndex: number }
+  | { type: 'saveDraftRow'; rowIndex: number; disabled?: boolean }
   | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
 const createButton = ({
@@ -24,7 +26,7 @@ const createButton = ({
   disabled = false,
   icon,
   testId,
-  type = 'primary',
+  type: _type = 'primary',
 }: {
   attr: string;
   data: Record<string, string>;
@@ -37,8 +39,7 @@ const createButton = ({
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
 
-  const positionClass = type === 'primary' ? 'inline-end-2' : 'inline-end-9';
-  return `<button ${attr} data-testid="${testId}" class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 ${positionClass}" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button>`;
+  return `<button ${attr} data-testid="${testId}" class="dx-button w-6 aspect-square px-0.5 min-h-0" ${dataAttrs} ${disabled ? 'disabled' : ''} data-dx-grid-action="accessory"><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button>`;
 };
 
 const addColumnButton = {
@@ -65,6 +66,7 @@ const columnSettingsButton = {
       icon: columnSettingsButton.icon,
       data: {
         'data-field-id': fieldId,
+        'data-variant': 'ghost',
       },
       testId: 'table-column-settings-button',
     });
@@ -118,9 +120,31 @@ const sortButton = {
   }),
 } as const;
 
+const saveDraftRowButton = {
+  attr: BUTTON_IDENTIFIERS.saveDraftRow,
+  icon: 'ph--floppy-disk--regular',
+  render: ({ rowIndex, disabled }: Omit<Extract<ButtonData, { type: 'saveDraftRow' }>, 'type'>) => {
+    return createButton({
+      attr: BUTTON_IDENTIFIERS.saveDraftRow,
+      icon: saveDraftRowButton.icon,
+      disabled,
+      data: {
+        'data-row-index': rowIndex.toString(),
+        'data-variant': 'primary',
+      },
+      testId: 'table-save-draft-row-button',
+    });
+  },
+  getData: (el: HTMLElement): Extract<ButtonData, { type: 'saveDraftRow' }> => ({
+    type: 'saveDraftRow',
+    rowIndex: Number(el.getAttribute('data-row-index')!),
+  }),
+} as const;
+
 export const tableButtons = {
   addColumn: addColumnButton,
   columnSettings: columnSettingsButton,
   rowMenu: rowMenuButton,
+  saveDraftRow: saveDraftRowButton,
   sort: sortButton,
 } as const;

@@ -2,15 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta, type StoryObj } from '@storybook/react';
+import EmojiPicker from '@emoji-mart/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { EmojiPickerBlock, EmojiPickerToolbarButton, type EmojiPickerProps } from './EmojiPicker';
+import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker';
+
+const meta = {
+  title: 'ui/react-ui-pickers/EmojiPicker',
+  component: EmojiPicker,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+} satisfies Meta<typeof EmojiPicker>;
+
+export default meta;
 
 const ToolbarButtonStory = (props: EmojiPickerProps) => {
   const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');
@@ -26,7 +33,7 @@ const BlockStory = (props: EmojiPickerProps) => {
   const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');
 
   return (
-    <div className='flex gap-2'>
+    <div>
       <EmojiPickerBlock
         {...props}
         emoji={emoji}
@@ -50,13 +57,3 @@ export const Block: StoryObj<EmojiPickerProps> = {
     defaultEmoji: '😀',
   },
 };
-
-const meta: Meta = {
-  title: 'ui/react-ui-pickers/EmojiPicker',
-  decorators: [withTheme, withLayout()],
-  parameters: {
-    layout: 'centered',
-  },
-};
-
-export default meta;

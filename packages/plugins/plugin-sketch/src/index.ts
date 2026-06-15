@@ -3,4 +3,6 @@
 //
 
 export * from './meta';
-export * from './SketchPlugin';
+export * from './operations';
+export * from './paths';
+export * from './types';

@@ -19,16 +19,13 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/storybook-utils"
@@ -37,25 +34,22 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -76,10 +70,7 @@
       "path": "../../ui/react-ui-geo"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
@@ -91,10 +82,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack"
-    },
-    {
-      "path": "../plugin-table"
+      "path": "../plugin-testing"
     }
   ]
 }

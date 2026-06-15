@@ -21,9 +21,20 @@ export type GetOptions = {
 
 export const DEFAULT_CHUNK_SIZE = 4096;
 
+/**
+ * Shared public API for blob store implementations.
+ */
+export interface BlobStoreApi {
+  getMeta(id: Uint8Array): Promise<BlobMeta | undefined>;
+  get(id: Uint8Array, options?: GetOptions): Promise<Uint8Array>;
+  set(data: Uint8Array): Promise<BlobMeta>;
+  setChunk(chunk: BlobChunk): Promise<BlobMeta>;
+  list(): Promise<BlobMeta[]>;
+}
+
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 
-export class BlobStore {
+export class BlobStore implements BlobStoreApi {
   constructor(private readonly _directory: Directory) {}
 
   @synchronized
@@ -97,7 +108,7 @@ export class BlobStore {
 
   @synchronized
   async set(data: Uint8Array): Promise<BlobMeta> {
-    const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data));
+    const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data as Uint8Array<ArrayBuffer>));
     const bitfield = BitField.ones(data.length / DEFAULT_CHUNK_SIZE);
 
     const meta: BlobMeta = {

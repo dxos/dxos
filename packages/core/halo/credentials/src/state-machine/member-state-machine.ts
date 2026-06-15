@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential, SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';

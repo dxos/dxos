@@ -1,11 +1,16 @@
 name: Check
 
 on:
-  # TODO(wittjosiah): Flaky.
-  # push:
+  pull_request:
+  merge_group:
 
-  # schedule:
-  #   - cron: '0 4 * * 1-5'
+  push:
+    branches:
+      - main
+      - ci/*
+
+  schedule:
+    - cron: '0 4 * * 1-5'
 
   workflow_dispatch:
     inputs:
@@ -21,27 +26,338 @@ on:
         required: false
         default: false
 
-# Needed for nx-set-shas when run on the main branch
 permissions:
-  actions: read
   contents: read
+  packages: read
 
 env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+  TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# https://nx.dev/ci/intro/tutorials/github-actions
+# https://moonrepo.dev/docs/guides/ci
 jobs:
+  check:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Check for import cycles
+        run: pnpm run check-cycles
+
+      - name: Check publish config
+        run: pnpm run check-publish-config
+
+      - name: Check package.json paths
+        run: pnpm run pkg-lint
+
+      - name: Check formatting
+        run: pnpm run format-check
+
+      - name: Check Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: moon run :lint :build --affected remote
+
+      - name: Check All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: moon run :lint :build
+
+      - name: Check module structure (affected)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: moon run :check-module-structure --affected remote
+
+      - name: Check module structure (all)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: moon run :check-module-structure
+
+      - name: Check for peer dependency issues
+        run: pnpm install --resolution-only --no-frozen-lockfile
+
+      - name: Upload moon run report
+        uses: actions/upload-artifact@v7
+        if: >-
+          (success() || failure()) &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          name: moon-check-report
+          path: .moon/cache/runReport.json
+          retention-days: 1
+          if-no-files-found: ignore
+
   test:
     strategy:
       matrix:
-        node-version: ['18.20.1', '20.12.1', '21.7.2']
-    runs-on: ubuntu-latest
+        node-version: ['24.11.1']
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ github.token }}
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: ${{ matrix.node-version }}
+      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler'
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      VITEST_XML_REPORT: 'true'
+      # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
+      MOON_CONCURRENCY: 4
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      - name: Test Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon run :test :test-browser --affected remote -- --no-file-parallelism
+
+      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
+      - name: Test Affected (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon run :test :test-browser --affected remote -- --no-file-parallelism
+
+      - name: Test All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon exec --on-failure continue :test :test-browser -- --no-file-parallelism
+
+      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
+      - name: Test All (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon exec --on-failure continue :test :test-browser -- --no-file-parallelism
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-${{ matrix.node-version }}
+          path: test-results
+          retention-days: 7
+
+      - name: Upload moon run report
+        uses: actions/upload-artifact@v7
+        if: >-
+          (success() || failure()) &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          name: moon-test-report-${{ matrix.node-version }}
+          path: .moon/cache/runReport.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - uses: codecov/codecov-action@v5
+        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          handle_no_reports_found: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
+  # Storybook tests run on their own runner, in parallel with `test`, so the (large)
+  # set of :test-storybook tasks no longer serializes behind unit/browser tests in the
+  # `test` job. File parallelism stays disabled here too — overloaded runners flake — so
+  # the win is concurrency across machines, not within one.
+  storybook:
+    strategy:
+      matrix:
+        node-version: ['24.11.1']
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ github.token }}
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: ${{ matrix.node-version }}
+      # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler'
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      VITEST_XML_REPORT: 'true'
+      # NOTE: Storybook tests spawn a process for chromium. Limiting to 4 provides headroom for those processes.
+      MOON_CONCURRENCY: 4
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      - name: Test Storybook Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon run :test-storybook --affected remote -- --no-file-parallelism
+
+      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
+      - name: Test Storybook Affected (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon run :test-storybook --affected remote -- --no-file-parallelism
+
+      - name: Test Storybook All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon exec --on-failure continue :test-storybook -- --no-file-parallelism
+
+      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
+      - name: Test Storybook All (no analytics)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
+        run: moon exec --on-failure continue :test-storybook -- --no-file-parallelism
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-storybook-${{ matrix.node-version }}
+          path: test-results
+          retention-days: 7
+
+      - name: Upload moon run report
+        uses: actions/upload-artifact@v7
+        if: >-
+          (success() || failure()) &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          name: moon-storybook-report-${{ matrix.node-version }}
+          path: .moon/cache/runReport.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - uses: codecov/codecov-action@v5
+        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          handle_no_reports_found: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
+  e2e:
+    # e2e runs on pushes/schedules to release branches AND on release-please PRs.
+    # For push events github.ref is refs/heads/<branch>; for pull_request events
+    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source
+    # branch name, set only on pull_request events) to catch release-please PRs.
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/rc-') ||
+      startsWith(github.ref, 'refs/heads/hotfix-') ||
+      startsWith(github.ref, 'refs/heads/release-please-') ||
+      startsWith(github.head_ref, 'rc-') ||
+      startsWith(github.head_ref, 'hotfix-') ||
+      startsWith(github.head_ref, 'release-please-') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    env:
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -50,7 +366,7 @@ jobs:
           detached: true
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           lfs: true
@@ -61,100 +377,58 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          node-version: ${{ matrix.node-version }}
-          # TODO(wittjosiah): Nx Agents were flaky.
-          # stop-agents-after: test
 
-      # TODO(wittjosiah): Coverage is causing CI failures.
-      - name: Test Affected
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
+      - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t test
+        run: moon run :bundle --affected remote
 
-      - name: Test All
+      - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t test
+        run: moon run :bundle
 
-      - uses: codecov/codecov-action@v4
-        if: ${{ matrix.node-version == '20.12.1' }}
-        with:
-          directory: ./coverage
-          fail_ci_if_error: true
-          handle_no_reports_found: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
+      # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
+      # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
+      # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
-      - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
-        uses: ./.github/actions/test-report
-        with:
-          name: '${{ github.job }}-${{ matrix.node-version }}'
-          result: ${{ job.status }}
-
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: 20.12.1
-          # TODO(wittjosiah): Nx Agents were flaky.
-          # stop-agents-after: build
-
-      - name: Check Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t lint build
-
-      - name: Check All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t lint build
-
-  e2e:
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
-    env:
-      DX_ENVIRONMENT: ci
-      DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=8192
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: 20.12.1
-
-      - name: Install system dependencies
-        run: npx playwright@1.46.0 install-deps
-
-      - name: Bundle
-        run: pnpm exec nx affected -t bundle --parallel=2
+      - name: Clean stale test results
+        run: rm -rf test-results
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t e2e --browser=all --parallel=1
+        uses: trunk-io/analytics-uploader@v1
+        env:
+          PLAYWRIGHT_BROWSER: all
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
+        uses: trunk-io/analytics-uploader@v1
+        env:
+          PLAYWRIGHT_BROWSER: all
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: moon exec --on-failure continue :e2e --concurrency=1
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report
+          path: test-results/playwright
+          retention-days: 7
 
       - name: Send test report
         if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
@@ -163,39 +437,76 @@ jobs:
           name: ${{ github.job }}
           result: ${{ job.status }}
 
-  dead-links:
+  check-report:
+    needs: [check, test, storybook]
+    # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
+    # declared permissions, and non-PR runs have no PR to comment on.
+    if: >-
+      always() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Link Checker
-        uses: lycheeverse/lychee-action@v1
+      - name: Download check moon report
+        id: download-check-report
+        continue-on-error: true
+        uses: actions/download-artifact@v5
         with:
-          args: --offline ./docs/content/composer ./docs/content/guide
+          name: moon-check-report
+          path: .moon/cache
 
-  check-cycles:
-    runs-on: ubuntu-latest
+      - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-check-report.outcome == 'success'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download test moon report
+        id: download-test-report
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: moon-test-report-24.11.1
+          path: .moon/cache
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-test-report.outcome == 'success'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download storybook moon report
+        id: download-storybook-report
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: moon-storybook-report-24.11.1
+          path: .moon/cache
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: steps.download-storybook-report.outcome == 'success'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+  report:
+    needs: [test, storybook]
+    if: always() && github.event_name == 'schedule'
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Send test report
+        uses: ./.github/actions/test-report
         with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
+          name: test-24.11.1
+          result: ${{ needs.test.result }}
+      - name: Send storybook report
+        uses: ./.github/actions/test-report
         with:
-          node-version: 20.12.1
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        shell: bash
-
-      - name: Check for import cycles
-        run: pnpm run check-cycles
+          name: storybook-24.11.1
+          result: ${{ needs.storybook.result }}

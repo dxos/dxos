@@ -4,4 +4,4 @@
 
 export * from './DeviceList';
 export * from './DeviceListItem';
-export * from './DeviceListProps';
+export type * from './DeviceListProps';

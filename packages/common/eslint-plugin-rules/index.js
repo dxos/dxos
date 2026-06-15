@@ -2,10 +2,58 @@
 // Copyright 2022 DXOS.org
 //
 
-module.exports = {
+import fs from 'node:fs';
+
+import comment from './rules/comment.js';
+import consistentUpdateParam from './rules/consistent-update-param.js';
+import effectSubpathImports from './rules/effect-subpath-imports.js';
+import header from './rules/header.js';
+import importAsNamespace from './rules/import-as-namespace.js';
+import noBareDotImports from './rules/no-bare-dot-imports.js';
+import noEffectRunPromise from './rules/no-effect-run-promise.js';
+import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import translationKeyFormat from './rules/translation-key-format.js';
+
+const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+
+const plugin = {
+  meta: {
+    name: pkg.name,
+    version: pkg.version,
+    namespace: 'example',
+  },
   rules: {
-    comment: require('./rules/comment'),
-    header: require('./rules/header'),
-    'no-empty-promise-catch': require('./rules/no-empty-promise-catch'),
+    comment,
+    'consistent-update-param': consistentUpdateParam,
+    'effect-subpath-imports': effectSubpathImports,
+    header,
+    'import-as-namespace': importAsNamespace,
+    'no-bare-dot-imports': noBareDotImports,
+    'no-effect-run-promise': noEffectRunPromise,
+    'no-empty-promise-catch': noEmptyPromiseCatch,
+    'translation-key-format': translationKeyFormat,
+  },
+  configs: {
+    recommended: {
+      plugins: {
+        'dxos-plugin': null,
+      },
+      rules: {
+        'dxos-plugin/effect-subpath-imports': 'error',
+        'dxos-plugin/header': 'error',
+        'dxos-plugin/import-as-namespace': 'error',
+        'dxos-plugin/no-bare-dot-imports': 'error',
+        'dxos-plugin/no-effect-run-promise': 'error',
+        'dxos-plugin/no-empty-promise-catch': 'error',
+        // TODO(dmaretskyi): Turned off due to large number of errors and no auto-fix.
+        // 'dxos-plugin/comment': 'error',
+      },
+    },
   },
 };
+
+Object.assign(plugin.configs.recommended.plugins, {
+  'dxos-plugin': plugin,
+});
+
+export default plugin;

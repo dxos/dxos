@@ -2,154 +2,218 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { Capabilities, contributes, createIntent, SettingsAction, type PluginContext } from '@dxos/app-framework';
-import { createExtension } from '@dxos/plugin-graph';
+import { Capabilities, Capability, type Registry, Plugin } from '@dxos/app-framework';
+import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import { REGISTRY_ID, REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
+import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
-export default (context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: REGISTRY_PLUGIN,
-      actions: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === 'root' ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: REGISTRY_PLUGIN,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  await dispatch(createIntent(SettingsAction.OpenPluginRegistry));
-                },
-                properties: {
-                  label: ['open plugin registry label', { ns: REGISTRY_PLUGIN }],
-                  icon: 'ph--squares-four--regular',
-                  disposition: 'menu',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
+import { getCategoryPredicate, getRemotePluginIds } from '../categories';
+import { LOAD_PLUGIN_DIALOG } from '../containers';
+
+/**
+ * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
+ * can be attached as the graph node's `data`. The synthesized plugin has no
+ * modules and only exists so the article surface can render details for
+ * registry plugins that haven't been installed yet.
+ */
+const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
+  ({
+    [Plugin.PluginTypeId]: Plugin.PluginTypeId,
+    meta: Plugin.makeMeta({
+      key: DXN.make(entry.id),
+      name: entry.name,
+      description: entry.description,
+      homePage: entry.homePage,
+      source: entry.source,
+      screenshots: entry.screenshots,
+      tags: entry.tags,
+      icon: entry.icon,
+      iconHue: entry.iconHue,
     }),
-    createExtension({
-      id: REGISTRY_PLUGIN,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === 'root' ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: REGISTRY_ID,
-                type: REGISTRY_PLUGIN,
-                properties: {
-                  label: ['plugin registry label', { ns: REGISTRY_PLUGIN }],
-                  icon: 'ph--squares-four--regular',
-                  disposition: 'pin-end',
-                  testId: 'treeView.pluginRegistry',
-                },
-                nodes: [
-                  {
-                    id: `${REGISTRY_KEY}+all`,
-                    type: 'category',
-                    data: `${REGISTRY_KEY}+all`,
-                    properties: {
-                      label: ['all plugins label', { ns: REGISTRY_PLUGIN }],
-                      icon: 'ph--squares-four--regular',
-                      key: REGISTRY_KEY,
-                      testId: 'pluginRegistry.all',
-                    },
-                  },
-                  {
-                    id: `${REGISTRY_KEY}+installed`,
-                    type: 'category',
-                    data: `${REGISTRY_KEY}+installed`,
-                    properties: {
-                      label: ['installed plugins label', { ns: REGISTRY_PLUGIN }],
-                      icon: 'ph--check--regular',
-                      key: REGISTRY_KEY,
-                      testId: 'pluginRegistry.installed',
-                    },
-                  },
-                  {
-                    id: `${REGISTRY_KEY}+recommended`,
-                    type: 'category',
-                    data: `${REGISTRY_KEY}+recommended`,
-                    properties: {
-                      label: ['recommended plugins label', { ns: REGISTRY_PLUGIN }],
-                      icon: 'ph--star--regular',
-                      key: REGISTRY_KEY,
-                      testId: 'pluginRegistry.recommended',
-                    },
-                  },
-                  {
-                    id: `${REGISTRY_KEY}+labs`,
-                    type: 'category',
-                    data: `${REGISTRY_KEY}+labs`,
-                    properties: {
-                      label: ['labs plugins label', { ns: REGISTRY_PLUGIN }],
-                      icon: 'ph--flask--regular',
-                      key: REGISTRY_KEY,
-                      testId: 'pluginRegistry.labs',
-                    },
-                  },
-                ],
+    modules: [],
+  }) as Plugin.Plugin;
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
+    const extensions = yield* Effect.all([
+      GraphBuilder.createExtension({
+        id: 'openRegistry',
+        match: NodeMatcher.whenRoot,
+        actions: () =>
+          Effect.succeed([
+            {
+              id: 'openRegistry',
+              data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
+              properties: {
+                label: ['open-plugin-registry.label', { ns: meta.id }],
+                icon: 'ph--squares-four--regular',
+                disposition: 'menu',
               },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-    createExtension({
-      id: `${REGISTRY_PLUGIN}/actions`,
-      actions: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
-            Option.map(() => [
-              {
-                id: `${REGISTRY_PLUGIN}/load-by-url`,
-                data: async () => {},
-                properties: {
-                  label: ['load by url label', { ns: REGISTRY_PLUGIN }],
-                  icon: 'ph--cloud-arrow-down--regular',
-                  disabled: true,
-                },
+            },
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'registry',
+        match: NodeMatcher.whenRoot,
+        connector: (_node, get) => {
+          const manager = capabilities.get(Capabilities.PluginManager);
+          const plugins = get(manager.plugins);
+          const filterContext = {
+            core: get(manager.core),
+            enabled: get(manager.enabled),
+            remoteIds: getRemotePluginIds(),
+          };
+          const categoryCount = (category: string) =>
+            plugins.filter(getCategoryPredicate(category, filterContext)).length;
+          const registryCount = get(manager.pluginRegistry.plugins).entries.length;
+
+          return Effect.succeed([
+            Node.make({
+              id: REGISTRY_ID,
+              type: meta.id,
+              properties: {
+                label: ['plugin-registry.label', { ns: meta.id }],
+                icon: 'ph--squares-four--regular',
+                disposition: 'pin-end',
+                position: 'first',
+                testId: 'treeView.pluginRegistry',
               },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-    createExtension({
-      id: `${REGISTRY_PLUGIN}/plugins`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
-            Option.map(() => {
-              const manager = context.getCapability(Capabilities.PluginManager);
-              return manager.plugins.map((plugin) => ({
-                id: plugin.meta.id.replaceAll('/', ':'),
-                type: 'dxos.org/plugin',
+              nodes: [
+                Node.make({
+                  id: registryCategoryId('bundled'),
+                  type: 'category',
+                  data: registryCategoryId('bundled'),
+                  properties: {
+                    label: ['bundled-plugins.label', { ns: meta.id }],
+                    icon: 'ph--squares-four--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.bundled',
+                    count: categoryCount(registryCategoryId('bundled')),
+                  },
+                }),
+                Node.make({
+                  id: registryCategoryId('installed'),
+                  type: 'category',
+                  data: registryCategoryId('installed'),
+                  properties: {
+                    label: ['installed-plugins.label', { ns: meta.id }],
+                    icon: 'ph--check--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.installed',
+                    count: categoryCount(registryCategoryId('installed')),
+                  },
+                }),
+                Node.make({
+                  id: registryCategoryId('recommended'),
+                  type: 'category',
+                  data: registryCategoryId('recommended'),
+                  properties: {
+                    label: ['recommended-plugins.label', { ns: meta.id }],
+                    icon: 'ph--star--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.recommended',
+                    count: categoryCount(registryCategoryId('recommended')),
+                  },
+                }),
+                Node.make({
+                  id: registryCategoryId('labs'),
+                  type: 'category',
+                  data: registryCategoryId('labs'),
+                  properties: {
+                    label: ['labs-plugins.label', { ns: meta.id }],
+                    icon: 'ph--flask--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.labs',
+                    count: categoryCount(registryCategoryId('labs')),
+                  },
+                }),
+                Node.make({
+                  id: registryCategoryId('registry'),
+                  type: 'category',
+                  data: registryCategoryId('registry'),
+                  properties: {
+                    label: ['registry-plugins.label', { ns: meta.id }],
+                    icon: 'ph--users-three--regular',
+                    key: REGISTRY_KEY,
+                    testId: 'pluginRegistry.registry',
+                    count: registryCount,
+                  },
+                }),
+              ],
+            }),
+          ]);
+        },
+      }),
+      GraphBuilder.createExtension({
+        id: 'actions',
+        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        actions: () =>
+          Effect.succeed([
+            {
+              id: 'loadByUrl',
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+                  subject: LOAD_PLUGIN_DIALOG,
+                  state: true,
+                });
+              }),
+              properties: {
+                label: ['load-by-url.label', { ns: meta.id }],
+                icon: 'ph--cloud-arrow-down--regular',
+                disposition: 'list-item-primary',
+              },
+            },
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'plugins',
+        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
+        connector: (_node, get) => {
+          const manager = capabilities.get(Capabilities.PluginManager);
+          const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.id));
+
+          const installedNodes = manager.getPlugins().map((plugin) =>
+            Node.make({
+              id: plugin.meta.id,
+              type: 'org.dxos.plugin',
+              data: plugin,
+              properties: {
+                label: plugin.meta.name ?? plugin.meta.id,
+                icon: plugin.meta.icon ?? 'ph--circle--regular',
+                disposition: 'hidden',
+              },
+            }),
+          );
+
+          const registryEntries = get(manager.pluginRegistry.plugins).entries;
+          const registryNodes = registryEntries
+            .filter((entry) => !installedIds.has(DXN.make(entry.id)))
+            .map((entry) => {
+              const plugin = toDisplayPlugin(entry);
+              return Node.make({
+                id: plugin.meta.id,
+                type: 'org.dxos.plugin',
                 data: plugin,
                 properties: {
                   label: plugin.meta.name ?? plugin.meta.id,
                   icon: plugin.meta.icon ?? 'ph--circle--regular',
                   disposition: 'hidden',
                 },
-              }));
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-  ]);
+              });
+            });
+
+          return Effect.succeed([...installedNodes, ...registryNodes]);
+        },
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

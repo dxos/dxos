@@ -5,13 +5,14 @@
 import { createContext, useContext } from 'react';
 
 import { type Orientation, type Size } from './Stack';
-import { type StackItemSize, type StackItemRearrangeHandler } from './defs';
+import { type StackItemRearrangeHandler, type StackItemSize } from './types';
 
 export type StackContextValue = {
   orientation: Orientation;
   rail: boolean;
   size: Size;
   onRearrange?: StackItemRearrangeHandler;
+  stackId?: string;
 };
 
 export const StackContext = createContext<StackContextValue>({

@@ -2,6 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-import { NetworkPanel } from './NetworkPanel';
-
-export default NetworkPanel;
+export { NetworkPanel as default } from './NetworkPanel';

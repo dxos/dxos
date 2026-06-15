@@ -1,0 +1,145 @@
+#!/usr/bin/env node
+
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as CliConfig from '@effect/cli/CliConfig';
+import * as Command from '@effect/cli/Command';
+import * as CommandDescriptor from '@effect/cli/CommandDescriptor';
+import * as CommandDirective from '@effect/cli/CommandDirective';
+import * as BunContext from '@effect/platform-bun/BunContext';
+import * as BunRuntime from '@effect/platform-bun/BunRuntime';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as Logger from 'effect/Logger';
+import * as Option from 'effect/Option';
+
+import { createCliApp } from '@dxos/app-framework/cli';
+import { unrefTimeout } from '@dxos/async';
+import { ConfigService, DXOS_VERSION } from '@dxos/client';
+import { DEFAULT_PROFILE } from '@dxos/client-protocol';
+import { LogLevel, levels, log } from '@dxos/log';
+import { loadEnabledPlugins } from '@dxos/plugin-registry';
+
+import { admin, chat, debug, dx, fn, hub, reflect, repl, reset } from './commands';
+import { getDefaults, getPlugins } from './commands/plugin-defs';
+import { setDispatcher } from './dispatcher';
+import { installStderrFilter } from './util';
+
+// Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
+// of the process. The warnings come from eager space initialisation in
+// ClientPlugin and similar — they're noise to a user running e.g.
+// `dx space list`. Set DX_KEEP_WARNINGS=1 to opt out.
+if (!process.env.DX_KEEP_WARNINGS) {
+  installStderrFilter();
+}
+
+let filter = LogLevel.ERROR;
+const level = process.env.DX_DEBUG;
+if (level) {
+  filter = levels[level] ?? LogLevel.ERROR;
+}
+log.config({ filter });
+
+let leaksTracker: any;
+if (process.env.DX_TRACK_LEAKS) {
+  const wtf = await import('wtfnode');
+  leaksTracker = wtf;
+}
+
+const EXIT_GRACE_PERIOD = 1_000;
+const FORCE_EXIT = true;
+const CLI_CONFIG = {
+  name: 'DXOS CLI',
+  version: DXOS_VERSION,
+};
+
+const program = Effect.gen(function* () {
+  const directive = yield* CommandDescriptor.parse(
+    ['dx', ...process.argv.slice(2)],
+    CliConfig.defaultConfig,
+  )(dx.descriptor);
+  const value = CommandDirective.isUserDefined(directive) ? Option.some(directive.value) : Option.none();
+  const profile = value.pipe(
+    Option.map(({ profile }) => profile),
+    Option.getOrElse(() => DEFAULT_PROFILE),
+  );
+  const config = yield* value.pipe(
+    Option.map(({ config, profile }) => ConfigService.load({ config, profile })),
+    Option.getOrElse(() => Effect.succeed(undefined)),
+  );
+
+  const savedEnabled = yield* loadEnabledPlugins({ profile });
+  const enabled = savedEnabled.length > 0 ? [...savedEnabled] : getDefaults();
+
+  const { command, layer: pluginLayer } = yield* createCliApp({
+    rootCommand: dx,
+    subCommands: [
+      repl,
+      reset,
+
+      // TODO(wittjosiah): Factor out.
+      //   Currently would require standalone plugins due to clash between solid & react compilation.
+      //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
+      // Note: ClientPlugin already contributes ClientService via its layer, so we don't need to provide it again.
+      chat,
+      fn,
+
+      // TODO(burdon): Admin-only. Where should these commands live?
+      admin,
+      debug,
+      hub,
+      reflect,
+    ],
+    plugins: getPlugins({ config }),
+    enabled,
+  });
+
+  // Memoize the layer in the program scope so each `Effect.provide(layer)`
+  // — both the top-level command and every REPL dispatch — reuses the
+  // already-built services (ClientPlugin, Config, etc.) instead of rebuilding
+  // them per invocation.
+  const layer = yield* Layer.memoize(Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty));
+
+  // Register in-process dispatcher so `repl` can reuse the already-built
+  // command tree and plugin layer instead of spawning a child `dx` process
+  // per command. See src/dispatcher.ts.
+  // NOTE: The final `as` matches the same Effect type-system workaround
+  // applied at the outer `program` scope — `Command.run`'s inferred
+  // `Requirements` channel becomes overly restrictive even when the layer
+  // provides everything.
+  setDispatcher(
+    (argv) => Command.run(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
+  );
+
+  return yield* Command.run(command, CLI_CONFIG)(process.argv).pipe(Effect.provide(layer));
+}).pipe(
+  Effect.provide(Layer.mergeAll(BunContext.layer, Logger.pretty)),
+  Effect.scoped,
+  // Work around Effect type system limitation where Requirements type becomes overly restrictive.
+) as Effect.Effect<void, unknown>;
+
+BunRuntime.runMain(program, {
+  teardown: (exit, onExit) => {
+    const exitCode = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause) ? 1 : 0;
+    onExit(exitCode);
+    if (FORCE_EXIT) {
+      process.exit(exitCode);
+    } else {
+      const timeout = setTimeout(() => {
+        log.error('Process did not exit within grace period. There may be a leak.');
+        if (process.env.DX_TRACK_LEAKS) {
+          leaksTracker.dump();
+        } else {
+          log.error('Re-run with DX_TRACK_LEAKS=1 to dump information about leaks.');
+        }
+      }, EXIT_GRACE_PERIOD);
+
+      // Don't block process exit.
+      unrefTimeout(timeout);
+    }
+  },
+});

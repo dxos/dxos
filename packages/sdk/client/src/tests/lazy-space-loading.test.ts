@@ -2,26 +2,29 @@
 // Copyright 2021 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type Client } from '../client';
-import { live, Expando, SpaceState } from '../echo';
+import { SpaceState } from '../echo';
 import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '../testing';
 
 describe('Lazy Space Loading', () => {
-  test('default space is open by default', async () => {
+  test('explicitly created space is closed after reload', async () => {
     const [client] = await createInitializedClients(1);
+    const createdSpace = await client.spaces.create();
     await reload(client);
-    const space = client.spaces.default;
-    expect(space.state.get()).to.eq(SpaceState.SPACE_READY);
+    const space = findClientSpace(client, createdSpace);
+    expect(space.state.get()).to.eq(SpaceState.SPACE_CLOSED);
   });
 
   test('can access closed space information', async () => {
@@ -100,11 +103,12 @@ describe('Lazy Space Loading', () => {
 
   test('replication starts after space gets opened', async () => {
     const [host, guest] = await createInitializedClients(2, { fastPresence: true });
+    await Promise.all([host, guest].map((c) => c.addTypes([TestSchema.Expando])));
     const createdSpace = await host.spaces.create();
     const guestSpace = await inviteMember(createdSpace, guest);
 
     await reload(host);
-    const guestObject = guestSpace.db.add(live(Expando, {}));
+    const guestObject = guestSpace.db.add(Obj.make(TestSchema.Expando, {}));
 
     const hostSpace = findClientSpace(host, createdSpace);
     await openAndWaitReady(hostSpace);
@@ -112,7 +116,9 @@ describe('Lazy Space Loading', () => {
 
     await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)).not.toEqual(undefined);
 
-    guestObject.content = 'foo';
+    Obj.update(guestObject, (guestObject) => {
+      guestObject.content = 'foo';
+    });
 
     await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)?.content).toEqual(guestObject.content);
   });
@@ -130,12 +136,9 @@ describe('Lazy Space Loading', () => {
   };
 
   const reload = async (client: Client) => {
-    await client.spaces.waitUntilReady();
     await client.destroy();
     log('restarted');
     await client.initialize();
-    await client.spaces.waitUntilReady();
-    await client.spaces.default.waitUntilReady();
   };
 });
 

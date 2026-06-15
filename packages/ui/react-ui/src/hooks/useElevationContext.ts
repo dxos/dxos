@@ -4,9 +4,9 @@
 
 import { useContext } from 'react';
 
-import { type Elevation } from '@dxos/react-ui-types';
+import { type Elevation } from '@dxos/ui-types';
 
-import { ElevationContext } from '../components';
+import { ElevationContext } from '../primitives';
 
 export const useElevationContext = (propsElevation?: Elevation) => {
   const { elevation } = useContext(ElevationContext);

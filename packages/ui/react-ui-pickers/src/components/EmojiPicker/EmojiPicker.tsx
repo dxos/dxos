@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import './emoji.css';
+
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -9,19 +11,18 @@ import React, { useState } from 'react';
 
 import {
   Button,
+  ButtonGroup,
   type ButtonProps,
+  Icon,
+  IconButton,
   Popover,
   type ThemedClassName,
   Toolbar,
-  Tooltip,
   useMediaQuery,
   useThemeContext,
   useTranslation,
-  Icon,
-  ButtonGroup,
 } from '@dxos/react-ui';
-
-import './emoji.css';
+import { osTranslations } from '@dxos/ui-theme';
 
 export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;
@@ -42,7 +43,7 @@ export const EmojiPickerToolbarButton = ({
   defaultEmoji,
   onChangeEmoji,
 }: Omit<EmojiPickerProps, 'onClickClear'>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   const { themeMode } = useThemeContext();
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
@@ -60,14 +61,15 @@ export const EmojiPickerToolbarButton = ({
         setEmojiPickerOpen(nextOpen);
       }}
     >
-      <Tooltip.Trigger asChild content={t('select emoji label')} side='bottom'>
-        <Popover.Trigger asChild>
-          <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
-            <span className='sr-only'>{t('select emoji label')}</span>
-            <Icon icon='ph--user-circle--regular' size={5} />
-          </Toolbar.Button>
-        </Popover.Trigger>
-      </Tooltip.Trigger>
+      <Popover.Trigger asChild>
+        <Toolbar.IconButton
+          icon='ph--user-circle--regular'
+          label={t('select-emoji.label')}
+          iconOnly
+          tooltipSide='bottom'
+          disabled={disabled}
+        />
+      </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           side='bottom'
@@ -111,8 +113,8 @@ export const EmojiPickerBlock = ({
   triggerVariant = 'ghost',
   classNames,
 }: EmojiPickerProps) => {
-  const { t } = useTranslation('os');
-  const [isMd] = useMediaQuery('md', { ssr: false });
+  const { t } = useTranslation(osTranslations);
+  const [isMd] = useMediaQuery('md');
 
   const [emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,
@@ -126,8 +128,8 @@ export const EmojiPickerBlock = ({
     <ButtonGroup classNames={classNames}>
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
         <Popover.Trigger asChild>
-          <Button variant={triggerVariant} classNames='grow gap-2 text-2xl plb-1' disabled={disabled}>
-            <span className='sr-only'>{t('select emoji label')}</span>
+          <Button variant={triggerVariant} classNames='grow gap-2 text-2xl py-1' disabled={disabled}>
+            <span className='sr-only'>{t('select-emoji.label')}</span>
             <span>{emojiValue}</span>
             <Icon icon='ph--caret-down--bold' size={3} />
           </Button>
@@ -157,12 +159,15 @@ export const EmojiPickerBlock = ({
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Root>
-      <Tooltip.Trigger asChild content={t('clear label')} side='right'>
-        <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled}>
-          <span className='sr-only'>{t('clear label')}</span>
-          <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
-        </Button>
-      </Tooltip.Trigger>
+      <IconButton
+        icon='ph--arrow-counter-clockwise--regular'
+        iconOnly
+        label={t('clear.label')}
+        tooltipSide='right'
+        variant={triggerVariant}
+        onClick={onClickClear}
+        disabled={disabled}
+      />
     </ButtonGroup>
   );
 };

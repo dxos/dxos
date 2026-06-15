@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
+import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { ClientProvider } from '@dxos/react-client';
 
-import { Main } from './Main';
 import { getConfig } from '../config';
-import { createTodoList, TodoList, Todo } from '../types';
+import { Todo, TodoList, createTodoList } from '../types';
+import { Main } from './Main';
 
 const createWorker = () =>
   new SharedWorker(new URL('../shared-worker', import.meta.url), {
@@ -19,6 +21,8 @@ const createWorker = () =>
 
 export const Root = () => {
   const navigate = useNavigate();
+  const registry = useMemo(() => Registry.make(), []);
+
   return (
     <ClientProvider
       config={getConfig}
@@ -26,16 +30,16 @@ export const Root = () => {
       shell='./shell.html'
       types={[TodoList, Todo]}
       onInitialized={async (client) => {
-        const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        const searchProps = new URLSearchParams(location.search);
+        const deviceInvitationCode = searchProps.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
-          await client.spaces.default.waitUntilReady();
-          createTodoList(client.spaces.default);
+          const space = await client.spaces.create();
+          await space.waitUntilReady();
+          createTodoList(space);
         }
 
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+        const spaceInvitationCode = searchProps.get('spaceInvitationCode');
         if (spaceInvitationCode) {
           void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(({ space }) => {
             space && navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
@@ -45,7 +49,9 @@ export const Root = () => {
         }
       }}
     >
-      <Main />
+      <RegistryContext.Provider value={registry}>
+        <Main />
+      </RegistryContext.Provider>
     </ClientProvider>
   );
 };

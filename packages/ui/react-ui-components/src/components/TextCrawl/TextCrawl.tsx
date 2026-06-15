@@ -1,0 +1,292 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, {
+  type Ref,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+
+import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+const emptyLines: string[] = [];
+
+// The per-line opacity fade runs at 1/3 of the ribbon translate duration, so
+// the active line is fully bright by the time the ribbon settles in place.
+const LINE_FADE_RATIO = 1 / 3;
+
+// TODO(burdon): Factor out to theme?
+export type Size = 'sm' | 'md' | 'lg';
+export const sizes: Size[] = ['sm', 'md', 'lg'];
+
+export type TextCrawlProps = {
+  /** Auto-advance after `minDuration`. */
+  autoAdvance?: boolean;
+  /** Start at the last line. */
+  greedy?: boolean;
+  /** Minimum time after update before scrolling. */
+  minDuration?: number;
+} & Pick<TextRibbonProps, 'classNames' | 'textClassNames' | 'size' | 'lines' | 'index' | 'cyclic' | 'transition'>;
+
+/**
+ * Scrolling text lines.
+ */
+export const TextCrawl = ({
+  autoAdvance = false,
+  greedy = false,
+  minDuration = 1_000,
+  size = 'md',
+  lines = emptyLines,
+  index: indexProp,
+  cyclic,
+  transition = 500,
+  ...props
+}: TextCrawlProps) => {
+  const [index, setIndex] = useState(() => (greedy ? Math.max(0, lines.length - 1) : 0));
+
+  // Control ribbon.
+  const controllerRef = useRef<TextRibbonController>(null);
+  const setPosition = useCallback<TextRibbonController['setPosition']>((index, animate = false) => {
+    controllerRef.current?.setPosition(index, animate);
+  }, []);
+
+  // Determine if reset.
+  const prevLinesRef = useRef<string[]>(lines);
+  const wasReset = useMemo(() => {
+    const prevLines = prevLinesRef.current;
+    const wasReset =
+      lines.length < prevLines.length || prevLines.length === 0 || !prevLines.every((line, i) => line === lines[i]);
+    prevLinesRef.current = lines;
+    return wasReset;
+  }, [lines]);
+
+  // Starting index.
+  useEffect(() => {
+    setPosition(index, false);
+  }, []);
+
+  // Greedy: keep uncontrolled index on the last line when lines or greedy change.
+  useEffect(() => {
+    if (!greedy || indexProp !== undefined) {
+      return;
+    }
+
+    const lastIndex = Math.max(0, lines.length - 1);
+    if (lines.length === 0) {
+      return;
+    }
+
+    setIndex((prev) => (prev === lastIndex ? prev : lastIndex));
+  }, [greedy, lines, indexProp]);
+
+  // Controlled.
+  useEffect(() => {
+    if (indexProp === undefined || indexProp === index) {
+      return;
+    }
+
+    const next = Math.max(0, Math.min(indexProp, lines.length - 1));
+    setIndex(next);
+    setPosition(next, true);
+  }, [indexProp, index]);
+
+  // Uncontrolled.
+  useEffect(() => {
+    if (indexProp !== undefined) {
+      return;
+    }
+
+    let i: NodeJS.Timeout;
+    const lastLineIndex = Math.max(0, lines.length - 1);
+    const showLastLineImmediately = greedy && index === lastLineIndex;
+    setPosition(index, index !== 0 && !wasReset && !showLastLineImmediately);
+    if (cyclic && index >= lines.length) {
+      i = setTimeout(() => {
+        setIndex(0);
+        setPosition(0, false);
+      }, transition);
+    }
+
+    return () => {
+      clearTimeout(i);
+    };
+  }, [wasReset, lines, index, indexProp, cyclic, greedy]);
+
+  // Auto-advance.
+  const lastUpdatedRef = useRef(Date.now());
+  useEffect(() => {
+    if (!autoAdvance) {
+      return;
+    }
+
+    const next = () => {
+      setIndex((prev) => {
+        const next = Math.min(prev + 1, lines.length);
+        if (next >= lines.length) {
+          if (cyclic) {
+            return next;
+          } else {
+            clearInterval(i);
+            return prev;
+          }
+        }
+
+        return next;
+      });
+    };
+
+    if (wasReset) {
+      setIndex(greedy ? Math.max(0, lines.length - 1) : 0);
+    } else {
+      const now = Date.now();
+      const wasVisible = now - lastUpdatedRef.current >= minDuration;
+      lastUpdatedRef.current = now;
+      if (wasVisible) {
+        next();
+      }
+    }
+
+    const i = setInterval(next, minDuration);
+    return () => clearInterval(i);
+  }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
+
+  return (
+    <TextRibbon
+      ref={controllerRef}
+      size={size}
+      lines={lines}
+      index={index}
+      cyclic={cyclic}
+      transition={transition}
+      {...props}
+    />
+  );
+};
+
+//
+// Ribbon
+//
+
+const sizeClassNames: Record<Size, { lineHeight: number; className: string }> = {
+  sm: { lineHeight: 20, className: 'h-[20px] text-sm' },
+  md: { lineHeight: 24, className: 'h-[24px]' },
+  lg: { lineHeight: 28, className: 'h-[28px] text-lg' },
+};
+
+export interface TextRibbonController {
+  setPosition: (index: number, animate?: boolean) => void;
+}
+
+export type TextRibbonProps = ThemedClassName<{
+  textClassNames?: ClassNameValue;
+  size?: Size;
+  lines?: string[];
+  index?: number;
+  cyclic?: boolean;
+  transition?: number;
+}>;
+
+export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
+  (
+    {
+      classNames,
+      textClassNames,
+      size = 'md',
+      lines = emptyLines,
+      index = 0,
+      cyclic,
+      transition = 500,
+    }: TextRibbonProps,
+    forwardedRef: Ref<TextRibbonController>,
+  ) => {
+    const { className, lineHeight } = sizeClassNames[size];
+    const containerRef = useRef<HTMLDivElement>(null);
+    const reducedMotion = useReducedMotion();
+
+    const setPosition = useCallback<TextRibbonController['setPosition']>(
+      (index, animate = false) => {
+        if (containerRef.current) {
+          const shouldAnimate = animate && !reducedMotion;
+          containerRef.current.style.transition = shouldAnimate
+            ? `transform ${transition}ms ease-in-out`
+            : 'transform 0ms';
+          containerRef.current.style.transform = `translateY(-${index * lineHeight}px)`;
+        }
+      },
+      [lineHeight, transition, reducedMotion],
+    );
+
+    // Controller.
+    useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
+
+    return (
+      <div className={mx('relative overflow-hidden', className, classNames)}>
+        <div ref={containerRef} className={mx('flex flex-col')}>
+          {lines.map((line, i) => (
+            <Line
+              key={i}
+              line={lines[i]}
+              active={index === i || (i === 0 && index === lines.length)}
+              transition={transition}
+              reducedMotion={reducedMotion}
+              classNames={[className, textClassNames]}
+            />
+          ))}
+          {cyclic && (
+            <Line
+              line={lines[0]}
+              active={index === lines.length || index === 0}
+              transition={transition}
+              reducedMotion={reducedMotion}
+              classNames={[className, textClassNames]}
+            />
+          )}
+        </div>
+      </div>
+    );
+  },
+);
+
+const Line = ({
+  classNames,
+  line,
+  active,
+  transition,
+  reducedMotion,
+}: ThemedClassName<{ line: string; active: boolean; transition: number; reducedMotion: boolean }>) => {
+  return (
+    <div
+      style={{ transitionDuration: reducedMotion ? '0ms' : `${transition * LINE_FADE_RATIO}ms` }}
+      className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
+    >
+      {line}
+    </div>
+  );
+};
+
+const subscribeReducedMotion = (onChange: () => void): (() => void) => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => {};
+  }
+  const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+
+const getReducedMotionSnapshot = (): boolean => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+const useReducedMotion = (): boolean =>
+  useSyncExternalStore(subscribeReducedMotion, getReducedMotionSnapshot, () => false);

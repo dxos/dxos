@@ -4,11 +4,11 @@
 
 import { useContext } from 'react';
 
-import { type Density } from '@dxos/react-ui-types';
+import { type Density } from '@dxos/ui-types';
 
-import { DensityContext } from '../components';
+import { DensityContext } from '../primitives';
 
-export const useDensityContext = (propsDensity?: Density) => {
+export const useDensityContext = (densityProp?: Density): Density | undefined => {
   const { density } = useContext(DensityContext);
-  return propsDensity ?? density;
+  return densityProp ?? density;
 };

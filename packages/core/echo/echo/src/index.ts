@@ -2,12 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as Key from './Key';
-export * as Obj from './Obj';
-export * as Ref from './Ref';
-export * as Relation from './Relation';
-export * as Type from './Type';
+export { QueryAST } from '@dxos/echo-protocol';
+export { DXN, EID, URI } from '@dxos/keys';
 
-export { DXN } from '@dxos/keys';
-export { Filter, Query } from './query';
-export { type Live } from '@dxos/live-object';
+export * as Annotation from './Annotation';
+export * as Database from './Database';
+export * as Entity from './Entity';
+// TODO(burdon): Rename to Error (less problematic than Obj/Object).
+export * as Err from './Err';
+export * as Feed from './Feed';
+export * as Filter from './Filter';
+export * as Format from './Format';
+export * as Hypergraph from './Hypergraph';
+export * as Json from './Json';
+export * as JsonSchema from './JsonSchema';
+export * as Key from './Key';
+export * as Migration from './Migration';
+export * as Obj from './Obj';
+export * as Order from './Order';
+export * as Query from './Query';
+export * as QueryResult from './QueryResult';
+export * as Ref from './Ref';
+export * as Registry from './Registry';
+export * as Relation from './Relation';
+export * as Scope from './Scope';
+export * as Tag from './Tag';
+export * as Type from './Type';
+export * as Collection from './Collection';
+export * as View from './View';
+export * as Dataset from './Dataset';

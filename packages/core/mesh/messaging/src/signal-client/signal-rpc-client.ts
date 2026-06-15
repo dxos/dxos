@@ -4,16 +4,15 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { scheduleTaskInterval, TimeoutError, Trigger } from '@dxos/async';
+import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
 import { type Any, type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { type Message as SignalMessage, type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type Signal, type Message as SignalMessage } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
 
@@ -36,7 +35,7 @@ export type SignalCallbacks = {
   getMetadata?: () => any;
 };
 
-export type SignalRPCClientParams = {
+export type SignalRPCClientProps = {
   url: string;
   callbacks?: SignalCallbacks;
 };
@@ -61,9 +60,8 @@ export class SignalRPCClient {
 
   private readonly _monitor = new SignalRpcClientMonitor();
 
-  constructor({ url, callbacks = {} }: SignalRPCClientParams) {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.mesh.signal-rpc-client.constructor', trace.begin({ id: traceId }));
+  constructor({ url, callbacks = {} }: SignalRPCClientProps) {
+    log('creating signal rpc client', { url });
     this._url = url;
     this._callbacks = callbacks;
     this._socket = new WebSocket(this._url);
@@ -149,7 +147,7 @@ export class SignalRPCClient {
       log.warn(`Socket ${event.type ?? 'unknown'} error`, { message: event.message, url: this._url });
     };
 
-    log.trace('dxos.mesh.signal-rpc-client.constructor', trace.end({ id: traceId }));
+    log('created signal rpc client', { url });
   }
 
   async close(): Promise<void> {
@@ -169,7 +167,7 @@ export class SignalRPCClient {
 
       await this._closeComplete.wait({ timeout: 1_000 });
     } catch (err) {
-      const failureReason = err instanceof TimeoutError ? 'timeout' : err?.constructor?.name ?? 'unknown';
+      const failureReason = err instanceof TimeoutError ? 'timeout' : (err?.constructor?.name ?? 'unknown');
       this._monitor.recordClientCloseFailure({ failureReason });
     }
   }

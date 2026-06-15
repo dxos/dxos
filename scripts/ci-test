@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -euxo pipefail
+
+moon run :lint :build
+moon run :test
+VITEST_COVERAGE=true moon run :test

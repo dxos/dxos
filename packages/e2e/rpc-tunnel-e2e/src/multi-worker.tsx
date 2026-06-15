@@ -8,7 +8,7 @@ import { JSONTree } from 'react-json-tree';
 
 import { schema } from '@dxos/protocols/proto';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { createProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';

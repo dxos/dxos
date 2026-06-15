@@ -14,7 +14,7 @@
     ]
   },
   "exclude": [
-    "src/playwright/playwright.config.cts"
+    "src/playwright/playwright.config.ts"
   ],
   "include": [
     "src"
@@ -42,7 +42,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     }
   ]
 }

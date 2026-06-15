@@ -3,4 +3,4 @@
 //
 
 export * from './stack';
-export * from './types';
+export type * from './types';

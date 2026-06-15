@@ -5,14 +5,12 @@
 import { appendFileSync, mkdirSync, openSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { jsonlogify } from '@dxos/util';
-
-import { getRelativeFilename } from './common';
 import { type LogFilter, LogLevel } from '../config';
-import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
+import { type LogProcessor, shouldLog } from '../context';
 
 // Amount of time to retry writing after encountering EAGAIN before giving up.
 const EAGAIN_MAX_DURATION = 1000;
+
 /**
  * Create a file processor.
  * @param path - Path to log file to create or append to, or existing open file descriptor e.g. stdout.
@@ -37,6 +35,7 @@ export const createFileProcessor = ({
     if (!shouldLog(entry, filters)) {
       return;
     }
+
     if (typeof pathOrFd === 'number') {
       fd = pathOrFd;
     } else {
@@ -47,10 +46,12 @@ export const createFileProcessor = ({
     }
 
     const record = {
-      ...entry,
-      timestamp: Date.now(),
-      ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
-      context: jsonlogify(getContextFromEntry(entry)),
+      level: entry.level,
+      message: entry.message,
+      timestamp: entry.timestamp,
+      meta: entry.computedMeta,
+      context: entry.computedContext,
+      error: entry.computedError,
     };
     let retryTS: number = 0;
 

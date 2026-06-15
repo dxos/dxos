@@ -4,12 +4,12 @@
 
 import { expect, test } from '@playwright/test';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { AppManager } from './app-manager';
 import { Markdown, Thread } from './plugins';
 
-faker.seed(0);
+random.seed(0);
 
 // NOTE: Reduce flakiness in CI by using waitForExpect.
 test.describe('Comments tests', () => {
@@ -26,7 +26,7 @@ test.describe('Comments tests', () => {
 
   test('create', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -40,7 +40,7 @@ test.describe('Comments tests', () => {
 
   test('edit message', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -81,15 +81,15 @@ test.describe('Comments tests', () => {
     }
 
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = faker.lorem.paragraph();
+    const editorText = random.lorem.paragraph();
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, editorText);
-    const firstMessage = faker.lorem.sentence();
+    const firstMessage = random.lorem.sentence();
     await Thread.createComment(host.page, plank.locator, firstMessage);
     const thread = Thread.getThread(host.page, editorText);
     await expect(Thread.getComments(host.page)).toHaveCount(1);
@@ -97,7 +97,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getMessages(thread)).toHaveCount(2);
 
     // Add a second message to the thread.
-    const secondMessage = faker.lorem.sentence();
+    const secondMessage = random.lorem.sentence();
     await Thread.addMessage(thread, secondMessage);
     await expect(Thread.getMessages(thread)).toHaveCount(3);
 
@@ -113,15 +113,15 @@ test.describe('Comments tests', () => {
 
   test('delete thread', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = faker.lorem.paragraph();
+    const editorText = random.lorem.paragraph();
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, editorText);
-    const firstMessage = faker.lorem.sentence();
+    const firstMessage = random.lorem.sentence();
     await Thread.createComment(host.page, plank.locator, firstMessage);
     await expect(Thread.getComments(host.page)).toHaveCount(1);
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
@@ -134,15 +134,15 @@ test.describe('Comments tests', () => {
 
   test('undo delete thread', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = faker.lorem.paragraph();
+    const editorText = random.lorem.paragraph();
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, editorText);
-    const firstMessage = faker.lorem.sentence();
+    const firstMessage = random.lorem.sentence();
     await Thread.createComment(host.page, plank.locator, firstMessage);
     await expect(Thread.getComments(host.page)).toHaveCount(1);
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
@@ -160,50 +160,50 @@ test.describe('Comments tests', () => {
 
   test('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = faker.lorem.paragraphs(3);
+    const editorText = random.lorem.paragraphs(3);
     const firstMessage = editorText.slice(0, 10);
     const secondMessage = editorText.slice(100, 115);
     const thirdMessage = editorText.slice(-20);
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, firstMessage);
-    await Thread.createComment(host.page, plank.locator, faker.lorem.sentence());
+    await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
     await Markdown.select(editorTextbox, secondMessage);
-    await Thread.createComment(host.page, plank.locator, faker.lorem.sentence());
+    await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
     await Markdown.select(editorTextbox, thirdMessage);
-    await Thread.createComment(host.page, plank.locator, faker.lorem.sentence());
-    await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('class', 'cm-comment-current');
+    await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
+    await expect(Thread.getComment(host.page, thirdMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, thirdMessage)).toHaveAttribute('aria-current', 'location');
 
     // Selecting a comment should highlight the thread.
     await Thread.getComment(host.page, firstMessage).click();
-    await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('class', 'cm-comment-current');
+    await expect(Thread.getComment(host.page, firstMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, firstMessage)).toHaveAttribute('aria-current', 'location');
 
     // Selecting a thread should highlight the comment.
     await Thread.getThread(host.page, secondMessage).click();
-    await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('class', 'cm-comment-current');
+    await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, secondMessage)).toHaveAttribute('aria-current', 'location');
   });
 
   // TODO(wittjosiah): Paste doesn't work in headless mode.
   test.skip('cut & paste comment', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const editorTextbox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    const editorText = faker.lorem.paragraphs(3);
+    const editorText = random.lorem.paragraphs(3);
     const messageText = editorText.slice(10, 20);
     await editorTextbox.fill(editorText);
     await Markdown.select(editorTextbox, messageText);
-    await Thread.createComment(host.page, plank.locator, faker.lorem.sentence());
-    await expect(Thread.getComment(host.page, messageText)).toHaveAttribute('class', 'cm-comment-current');
+    await Thread.createComment(host.page, plank.locator, random.lorem.sentence());
+    await expect(Thread.getComment(host.page, messageText)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, messageText)).toHaveAttribute('aria-current', 'location');
 
     await Markdown.getMarkdownTextbox(host.page).focus();

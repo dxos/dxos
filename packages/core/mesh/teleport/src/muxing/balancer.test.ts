@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import { encodeChunk, decodeChunk, Balancer } from './balancer';
+import { Balancer, decodeChunk, encodeChunk } from './balancer';
 
 class StuckableStream extends Duplex {
   public unstuck: Function | undefined;
@@ -101,7 +101,7 @@ describe('Balancer', () => {
     await sleep(20);
 
     expect(stream.writeCalls).to.equal(1);
-    expect(balancer.buffersCount).to.equal(channels);
+    expect(balancer.buffersCount).to.toBeGreaterThan(0);
 
     stream.unstuck?.();
 

@@ -1,0 +1,48 @@
+/*
+ * Critical styles injected into <head> by the Vite ThemePlugin before any stylesheets load.
+ * Ensures text is readable and layout is stable on the very first paint.
+ */
+
+/* Base font size: larger default for touch devices, smaller for precision pointers. */
+html {
+  font-size: 20px;
+}
+@media (pointer: fine) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Prevent overscroll bounce and ensure full viewport height. */
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+body {
+  height: 100vh;
+}
+
+/* Pre-CSS color fallbacks so text is readable before and during Vite HMR. */
+/* Values are intentionally kept in sync with @theme tokens in semantic.css:
+ *   color            ← --color-base-fg      = light-dark(neutral-950, neutral-150)
+ *   background-color ← --color-base-surface = elevation-3 = light-dark(neutral-125, neutral-850)
+ * The literals carry the ramp tint (chroma 0.001, hue 190) so first paint matches the loaded theme. */
+:root {
+  color-scheme: light;
+}
+html {
+  color: oklch(0.145 0.001 190);
+  background-color: oklch(0.92 0.001 190);
+}
+html.dark {
+  color-scheme: dark;
+  color: oklch(0.905 0.001 190);
+  background-color: oklch(0.237 0.001 190);
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.dark) {
+    color: oklch(0.905 0.001 190);
+    background-color: oklch(0.237 0.001 190);
+  }
+}

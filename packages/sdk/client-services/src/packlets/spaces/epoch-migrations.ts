@@ -5,7 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
-import { type EchoHost } from '@dxos/echo-pipeline';
+import { type EchoHost } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -36,8 +36,8 @@ const LOAD_DOC_TIMEOUT = 10_000;
 export const runEpochMigration = async (ctx: Context, context: MigrationContext): Promise<MigrationResult> => {
   switch (context.migration) {
     case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
-      const document = context.echoHost.createDoc();
-      await context.echoHost.flush();
+      const document = await context.echoHost.createDoc();
+      await context.echoHost.flush(ctx);
       return { newRoot: document.url };
     }
     case CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY: {
@@ -47,9 +47,10 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       const rootHandle = await context.echoHost.loadDoc(ctx, context.currentRoot as AutomergeUrl, {
         timeout: LOAD_DOC_TIMEOUT,
       });
+      invariant(rootHandle, 'Automerge root document must load for history prune migration.');
 
-      const newRoot = context.echoHost.createDoc(rootHandle.doc());
-      await context.echoHost.flush();
+      const newRoot = await context.echoHost.createDoc(rootHandle.doc());
+      await context.echoHost.flush(ctx);
       return { newRoot: newRoot.url };
     }
     case CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT: {
@@ -63,7 +64,7 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
       invariant(context.newAutomergeRoot);
 
       // Defensive programming - it should be the responsibility of the caller to flush the new root.
-      await context.echoHost.flush();
+      await context.echoHost.flush(ctx);
       return {
         newRoot: context.newAutomergeRoot,
       };

@@ -2,20 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { type Meta } from '@storybook/react';
-
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { UserAccountAvatar } from './UserAccountAvatar';
 
-const meta: Meta<typeof UserAccountAvatar> = {
-  title: 'plugins/plugin-navtree/UserAccountAvatar',
+const meta = {
+  title: 'plugins/plugin-navtree/components/UserAccountAvatar',
+  decorators: [withTheme()],
   component: UserAccountAvatar,
-  decorators: [withTheme],
-};
+} satisfies Meta<typeof UserAccountAvatar>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -2,48 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Record } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Record from 'effect/Record';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { flattenExtensions, GraphBuilder, type ExpandableGraph, ROOT_ID } from '@dxos/app-graph';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 // TODO(wittjosiah): Remove or restore graph caching.
-// import { GRAPH_PLUGIN } from './meta';
+// import { meta } from './meta';
 
-// const KEY = `${GRAPH_PLUGIN}/app-graph`;
+// const KEY = `${meta.id}.app-graph`;
 
-export default async (context: PluginContext) => {
-  const registry = context.getCapability(Capabilities.RxRegistry);
-  const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
-  // const interval = setInterval(() => {
-  //   localStorage.setItem(KEY, builder.graph.pickle());
-  // }, 5_000);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
-  const unsubscribe = registry.subscribe(
-    context.capabilities(Capabilities.AppGraphBuilder),
-    (extensions) => {
-      const next = flattenExtensions(extensions);
-      const current = Record.values(registry.get(builder.extensions));
-      const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
-      removed.forEach((extension) => builder.removeExtension(extension.id));
-      next.forEach((extension) => builder.addExtension(extension));
-    },
-    { immediate: true },
-  );
+    const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
+    // const interval = setInterval(() => {
+    //   localStorage.setItem(KEY, builder.graph.pickle());
+    // }, 5_000);
 
-  // await builder.initialize();
-  void builder.graph.expand(ROOT_ID);
+    const unsubscribe = registry.subscribe(
+      extensionsByModuleAtom,
+      (extensionsByModule) => {
+        const next: GraphBuilder.BuilderExtension[] = [];
+        for (const [moduleId, extensions] of Object.entries(extensionsByModule)) {
+          for (const ext of GraphBuilder.flattenExtensions(extensions)) {
+            next.push({ ...ext, id: `${moduleId}.${ext.id}` });
+          }
+        }
+        const current = Record.values(registry.get(builder.extensions));
+        const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
+        removed.forEach((extension) => GraphBuilder.removeExtension(builder, extension.id));
+        next.forEach((extension) => GraphBuilder.addExtension(builder, extension));
+      },
+      { immediate: true },
+    );
 
-  setupDevtools(builder.graph);
+    // await builder.initialize();
+    void Graph.expand(builder.graph, Node.RootId, 'child');
 
-  return contributes(Capabilities.AppGraph, { graph: builder.graph, explore: builder.explore }, () => {
-    // clearInterval(interval);
-    unsubscribe();
-  });
-};
+    setupDevtools(builder.graph);
+
+    return Capability.contributes(
+      AppCapabilities.AppGraph,
+      { graph: builder.graph, explore: GraphBuilder.explore },
+      () =>
+        Effect.sync(() => {
+          // clearInterval(interval);
+          unsubscribe();
+        }),
+    );
+  }),
+);
 
 // Expose the graph to the window for debugging.
-const setupDevtools = (graph: ExpandableGraph) => {
+const setupDevtools = (graph: Graph.ExpandableGraph) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.graph = graph;
 };

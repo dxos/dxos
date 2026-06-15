@@ -18,7 +18,7 @@ export const useSubscription = (cb: () => void, selection: Selection) => {
   const callbackRef = useRef(cb);
   callbackRef.current = cb;
 
-  const subscriptionRef = useRef<SubscriptionHandle>();
+  const subscriptionRef = useRef<SubscriptionHandle>(null);
 
   useEffect(() => {
     subscriptionRef.current = createSubscription(() => {

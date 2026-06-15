@@ -2,9 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
-
-export const MeetingContainer = lazy(() => import('./MeetingContainer'));
-export const MeetingsList = lazy(() => import('./MeetingsList'));
-
-export * from './MeetingSettings';
+// No components: plugin settings are rendered by the generic surface in plugin-settings.
+export {};

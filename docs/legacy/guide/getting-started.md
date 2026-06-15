@@ -12,8 +12,8 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](./
 
 ::: note In this guide
 
-* Using with [TypeScript](#usage-with-typescript).
-* Using with [React](#usage-with-react).
+- Using with [TypeScript](#usage-with-typescript).
+- Using with [React](#usage-with-react).
 
 :::
 

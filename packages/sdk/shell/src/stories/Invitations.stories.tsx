@@ -1,0 +1,242 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo, useState } from 'react';
+
+import { log } from '@dxos/log';
+import { random } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
+import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
+import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
+import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { IdentityListItem } from '../components';
+import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
+import { translations } from '../translations';
+import { SpaceListItem } from './SpaceListItem';
+
+export type PanelType = Space | 'identity' | 'devices' | 'join';
+
+const createInvitationUrl = (invitation: string) => invitation;
+
+const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPanel: (panel?: PanelType) => void }) => {
+  const client = useClient();
+  const spaces = useSpaces();
+
+  useMemo(() => {
+    if (panel && typeof panel !== 'string') {
+      (window as any)[`peer${id}CreateSpaceInvitation`] = (options?: Partial<Invitation>) => {
+        const invitation = panel.share(options);
+
+        invitation.subscribe((invitation) => {
+          const invitationCode = InvitationEncoder.encode(invitation);
+          if (invitation.state === Invitation.State.CONNECTING) {
+            log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          }
+        });
+      };
+    }
+  }, [panel]);
+
+  if (panel && typeof panel !== 'string') {
+    return <SpacePanel space={panel} createInvitationUrl={createInvitationUrl} />;
+  }
+
+  switch (panel) {
+    case 'identity': {
+      return <JoinPanel mode='halo-only' onDone={() => setPanel(undefined)} onExit={() => setPanel(undefined)} />;
+    }
+
+    case 'devices': {
+      return <IdentityPanel createInvitationUrl={createInvitationUrl} onDone={() => setPanel(undefined)} />;
+    }
+
+    case 'join': {
+      return <JoinPanel onDone={() => setPanel(undefined)} onExit={() => setPanel(undefined)} />;
+    }
+
+    default: {
+      // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
+      const controls = (
+        <ButtonGroup classNames='mb-4'>
+          {/* <Tooltip content='Create Space'> */}
+          <IconButton
+            icon='ph--plus-circle--regular'
+            label='Create Space'
+            iconOnly
+            onClick={() => client.spaces.create({ name: random.commerce.productName() })}
+            data-testid='invitations.create-space'
+          />
+          {/* </Tooltip>
+          <Tooltip content='Join Space'> */}
+          <IconButton
+            icon='ph--sign-in--fill'
+            label='Join Space'
+            iconOnly
+            onClick={() => setPanel('join')}
+            data-testid='invitations.open-join-space'
+          />
+          {/* </Tooltip> */}
+        </ButtonGroup>
+      );
+
+      const header = (
+        <div className='flex'>
+          Spaces
+          <span className='grow' />
+          {controls}
+        </div>
+      );
+
+      return (
+        <div>
+          <h1>{header}</h1>
+          {spaces.length > 0 ? (
+            <List>
+              {spaces.map((space) => (
+                <SpaceListItem key={space.key.toHex()} space={space} onClick={() => setPanel(space)} />
+              ))}
+            </List>
+          ) : (
+            <div className='text-center'>No spaces</div>
+          )}
+        </div>
+      );
+    }
+  }
+};
+
+const Invitations = () => {
+  const { index: id = 0 } = useClientStory();
+  const client = useClient();
+  const networkStatus = useNetworkStatus().swarm;
+  const identity = useIdentity();
+  const [panel, setPanel] = useState<PanelType>();
+
+  useMemo(() => {
+    (window as any)[`peer${id}CreateHaloInvitation`] = (options?: Partial<Invitation>) => {
+      const invitation = client.halo.share(options);
+
+      invitation.subscribe((invitation) => {
+        const invitationCode = InvitationEncoder.encode(invitation);
+        if (invitation.state === Invitation.State.CONNECTING) {
+          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+        }
+      });
+    };
+  }, [client]);
+
+  // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
+  const controls = (
+    <ButtonGroup classNames='mb-4'>
+      {/* <Tooltip content='Create Identity'> */}
+      <IconButton
+        icon='ph--plus--regular'
+        label='Create Identity'
+        iconOnly
+        onClick={() => client.halo.createIdentity({ displayName: random.person.firstName() })}
+        disabled={Boolean(identity)}
+        data-testid='invitations.create-identity'
+      />
+      {/* </Tooltip>
+      <Tooltip content='Join Existing Identity'> */}
+      <IconButton
+        icon='ph--qr-code--fill'
+        label='Join Existing Identity'
+        iconOnly
+        onClick={() => setPanel('identity')}
+        disabled={panel === 'identity'}
+        data-testid='invitations.open-join-identity'
+      />
+      {/* </Tooltip>
+      <Tooltip content='Devices'> */}
+      <IconButton
+        icon='ph--laptop--fill'
+        label='Devices'
+        iconOnly
+        onClick={() => setPanel('devices')}
+        disabled={!identity || panel === 'devices'}
+        data-testid='invitations.open-devices'
+      />
+      {/* </Tooltip>
+      <Tooltip content='List Spaces'> */}
+      <IconButton
+        icon='ph--planet--fill'
+        label='List Spaces'
+        iconOnly
+        onClick={() => setPanel(undefined)}
+        disabled={!panel}
+        data-testid='invitations.list-spaces'
+      />
+      {/* </Tooltip> */}
+      {/* <ToolTip content='Toggle Network'> */}
+      <IconButton
+        icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
+        label='Toggle Network'
+        iconOnly
+        onClick={() =>
+          client.mesh.updateConfig(
+            networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE,
+          )
+        }
+        data-testid='invitations.toggle-network'
+      />
+      {/* </ToolTip> */}
+    </ButtonGroup>
+  );
+
+  return (
+    <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
+      <div className='bg-base-surface rounded-sm p-2 mb-2'>
+        <div data-testid='invitations.identity-header'>{controls}</div>
+        {identity ? (
+          <List>
+            <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+          </List>
+        ) : (
+          <div className='text-center'>No identity</div>
+        )}
+      </div>
+      {identity || panel ? (
+        <div className='bg-base-surface rounded-sm p-2'>
+          <Panel id={id} panel={panel} setPanel={setPanel} />
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const meta = {
+  title: 'sdk/shell/Invitations',
+  decorators: [withTheme()],
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// TODO(wittjosiah): This story fails to start in Safari/Webkit.
+//   The issue appears to be related to dynamic imports during client initialization.
+//   This does not seem to be a problem in other browsers nor in Safari in the app.
+export const Default: Story = {
+  render: () => {
+    return (
+      // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.
+      <Clipboard.Provider>
+        <Invitations />
+      </Clipboard.Provider>
+    );
+  },
+  decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
+  tags: ['test'],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+};

@@ -2,33 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
 // import { IntentResolver } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const TransformerPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () => [],
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, []),
-    }),
-    // defineModule({
-    //   id: `${meta.id}/module/intent-resolver`,
-    //   activatesOn: Events.SetupIntentResolver,
-    //   activate: IntentResolver,
-    // }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const TransformerPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addSchemaModule({ schema: [] }),
+  AppPlugin.addTranslationsModule({ translations }),
+  // Plugin.addModule({
+  //   id: 'intent-resolver',
+  //   activatesOn: Events.SetupIntentResolver,
+  //   activate: IntentResolver,
+  // }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default TransformerPlugin;

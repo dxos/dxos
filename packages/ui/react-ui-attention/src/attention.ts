@@ -2,119 +2,166 @@
 // Copyright 2024 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
-import { Schema } from 'effect';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { live, type Live } from '@dxos/live-object';
-import { ComplexMap } from '@dxos/util';
-
-// NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
-export const ATTENDABLE_PATH_SEPARATOR = '~';
-
-export const AttentionSchema = Schema.mutable(
-  Schema.Struct({
-    hasAttention: Schema.Boolean,
-    isAncestor: Schema.Boolean,
-    isRelated: Schema.Boolean,
-  }),
-);
-
-export type Attention = Schema.Schema.Type<typeof AttentionSchema>;
-
-// TODO(wittjosiah): Use mosaic path utility?
-const stringKey = (key: string[]) => key.join(',');
+export type Attention = {
+  hasAttention: boolean;
+  isAncestor: boolean;
+  isRelated: boolean;
+};
 
 /**
  * Manages attention state for an application.
+ * Attention keys are slash-qualified graph IDs; ancestry is derived from progressive prefixes.
  */
-// TODO(wittjosiah): Write unit tests.
 export class AttentionManager {
-  // Each attention path is associated with an attention object.
-  // The lookup is not a reactive object to ensure that attention for each path is subscribable independently.
-  private readonly _map = new ComplexMap<string[], Live<Attention>>(stringKey);
-  private readonly _state = live<{ current: string[] }>({ current: [] });
+  private readonly _map = new Map<string, Atom.Writable<Attention>>();
+  private readonly _currentAtom: Atom.Writable<string[]>;
 
-  constructor(initial: string[] = []) {
+  constructor(
+    private readonly _registry: Registry.Registry,
+    initial: string[] = [],
+  ) {
+    this._currentAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     if (initial.length > 0) {
       this.update(initial);
     }
   }
 
   /**
-   * Currently attended element.
-   *
-   * @reactive
+   * Atom for the currently attended element IDs.
    */
-  get current(): Live<readonly string[]> {
-    return this._state.current;
+  get current(): Atom.Atom<string[]> {
+    return this._currentAtom;
   }
 
   /**
-   * All attention paths.
+   * Gets the currently attended element IDs.
    */
-  keys(): string[][] {
+  getCurrent(): readonly string[] {
+    return this._registry.get(this._currentAtom);
+  }
+
+  /**
+   * Subscribe to changes in the current attention IDs.
+   */
+  subscribeCurrent(cb: (current: readonly string[]) => void): () => void {
+    this._registry.get(this._currentAtom);
+    return this._registry.subscribe(this._currentAtom, () => {
+      cb(this._registry.get(this._currentAtom));
+    });
+  }
+
+  /**
+   * All tracked qualified IDs.
+   */
+  keys(): string[] {
     return Array.from(this._map.keys());
   }
 
   /**
-   * Get the attention state for a given path.
+   * Get the attention state for a given qualified ID.
    */
-  get(key: string[]): Live<Attention> {
-    const object = this._map.get(key);
-    if (object) {
-      return object;
+  get(id: string): Attention {
+    const atom = this._getAtom(id);
+    return this._registry.get(atom);
+  }
+
+  /**
+   * Subscribe to changes in the attention state for a given qualified ID.
+   */
+  subscribe(id: string, cb: (attention: Attention) => void): () => void {
+    const atom = this._getAtom(id);
+    this._registry.get(atom);
+    return this._registry.subscribe(atom, () => {
+      cb(this._registry.get(atom));
+    });
+  }
+
+  private _getAtom(id: string): Atom.Writable<Attention> {
+    const existing = this._map.get(id);
+    if (existing) {
+      return existing;
     }
 
-    const newObject = live(AttentionSchema, { hasAttention: false, isAncestor: false, isRelated: false });
-    this._map.set(key, newObject);
-    return newObject;
+    const newAtom = Atom.make<Attention>({ hasAttention: false, isAncestor: false, isRelated: false }).pipe(
+      Atom.keepAlive,
+    );
+    this._map.set(id, newAtom);
+    return newAtom;
   }
 
   /**
    * Update the currently attended element.
+   * Takes the array of qualified IDs collected from the DOM; the first element is the primary attended item.
+   * Ancestry is derived from the progressive prefixes of the primary ID.
+   * Relatedness is derived from the segment ID: any tracked key whose last `/` segment matches the
+   * attended ID's segment ID is marked `isRelated`. Additionally, if the primary ID is a linked segment
+   * (starts with `~`), its immediate parent gets `isRelated` alongside `isAncestor`.
    *
    * @internal
    */
-  update(nextKey: string[]): void {
-    const currentKey = untracked(() => this.current);
-    const currentRelatedTo = currentKey[0];
-    const nextRelatedTo = nextKey[0];
+  update(nextIds: string[]): void {
+    const primaryId = nextIds[0];
+    if (!primaryId) {
+      return;
+    }
 
-    // Ensure related attention object is initialized.
-    this.get([nextRelatedTo]);
+    const currentIds = this.getCurrent();
+    const prevPrimaryId = currentIds[0];
+    // Clear previous attention state: ancestors, primary, and related keys.
+    if (prevPrimaryId) {
+      const prevPrefixes = expandAttendableId(prevPrimaryId);
+      for (const prefix of prevPrefixes) {
+        this._set(prefix, {});
+      }
+      const prevSegmentId = getSegmentId(prevPrimaryId);
+      for (const key of this.keys()) {
+        if (getSegmentId(key) === prevSegmentId) {
+          this._set(key, {});
+        }
+      }
+    }
 
-    const currentRelatedKeys = this.keys().filter((key) => key[0] === currentRelatedTo);
-    const nextRelatedKeys = this.keys().filter(
-      (key) => key[0] === nextRelatedTo && stringKey(key) !== stringKey(nextKey),
-    );
-    const prevRelatedKeys = currentRelatedKeys.filter(
-      (curr) => !nextRelatedKeys.find((next) => stringKey(curr) === stringKey(next)),
-    );
+    this._registry.set(this._currentAtom, nextIds);
 
-    const currentAncestorKeys = currentKey.slice(1).map((_, i) => currentKey.slice(i + 1, currentKey.length));
-    const nextAncestorKeys = nextKey.slice(1).map((_, i) => nextKey.slice(i + 1, nextKey.length));
-    const prevAncestorKeys = currentAncestorKeys.filter(
-      (curr) => !nextAncestorKeys.find((next) => stringKey(curr) === stringKey(next)),
-    );
+    // Set ancestors and primary.
+    const prefixes = expandAttendableId(primaryId);
+    const prefixSet = new Set(prefixes);
+    const linkedParent = isLinkedSegment(primaryId) ? getParentId(primaryId) : undefined;
 
-    this._state.current = nextKey;
-    prevRelatedKeys.forEach((key) => this._set(key, {}));
-    prevAncestorKeys.forEach((key) => this._set(key, {}));
-    nextRelatedKeys.forEach((key) => this._set(key, { isRelated: true }));
-    nextAncestorKeys.forEach((key) => this._set(key, { isAncestor: true }));
-    this._set(nextKey, { hasAttention: true });
+    for (const prefix of prefixes) {
+      if (prefix === primaryId) {
+        this._set(prefix, { hasAttention: true });
+      } else if (prefix === linkedParent) {
+        this._set(prefix, { isAncestor: true, isRelated: true });
+      } else {
+        this._set(prefix, { isAncestor: true });
+      }
+    }
+
+    // Set related keys: any tracked key sharing the same segment ID.
+    const segmentId = getSegmentId(primaryId);
+    for (const key of this.keys()) {
+      if (!prefixSet.has(key) && getSegmentId(key) === segmentId) {
+        this._set(key, { isRelated: true });
+      }
+    }
   }
 
-  private _set(key: string[], attention: Partial<Attention>): void {
-    const object = this.get(key);
-    object.hasAttention = attention.hasAttention ?? false;
-    object.isAncestor = attention.isAncestor ?? false;
-    object.isRelated = attention.isRelated ?? false;
+  private _set(id: string, attention: Partial<Attention>): void {
+    const atom = this._getAtom(id);
+    this._registry.set(atom, {
+      hasAttention: attention.hasAttention ?? false,
+      isAncestor: attention.isAncestor ?? false,
+      isRelated: attention.isRelated ?? false,
+    });
   }
 }
 
 /**
- * Accumulates all attendable id’s between the element provided and the root, inclusive.
+ * Accumulates all attendable IDs between the element provided and the root, inclusive.
+ * Each `data-attendable-id` value is treated as a single qualified ID (no splitting).
  */
 export const getAttendables = (selector: string, cursor: Element, acc: string[] = []): string[] => {
   // Find the closest element with `data-attendable-id`, if any; start from cursor and move up the DOM tree.
@@ -130,8 +177,7 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
         return getAttendables(selector, trigger, acc);
       }
     } else {
-      acc.push(...attendableId.split(ATTENDABLE_PATH_SEPARATOR));
-      // TODO: Attempt tail recursion.
+      acc.push(attendableId);
       return !closestAttendable.parentElement ? acc : getAttendables(selector, closestAttendable.parentElement, acc);
     }
   }
@@ -142,3 +188,62 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
 export type AttendableId = { attendableId?: string };
 
 export type Related = { related?: boolean };
+
+/**
+ * Prefix for linked segments. A linked segment's attention state is shared with its parent:
+ * when a linked node has attention, the parent is marked as both ancestor and related.
+ */
+const LINKED_PREFIX = '~';
+
+/**
+ * Decompose a qualified graph ID into progressive prefixes for ancestry tracking.
+ * e.g. `root/a/b/c` yields `['root', 'root/a', 'root/a/b', 'root/a/b/c']`.
+ */
+export const expandAttendableId = (qualifiedId: string): string[] => {
+  const segments = qualifiedId.split('/');
+  return segments.map((_, index) => segments.slice(0, index + 1).join('/'));
+};
+
+/**
+ * Whether the last segment of a qualified ID is a linked segment (starts with `~`).
+ * Linked segments share their attention state with the parent node.
+ */
+export const isLinkedSegment = (qualifiedId: string): boolean => {
+  const lastSegment = qualifiedId.split('/').pop() ?? '';
+  return lastSegment.startsWith(LINKED_PREFIX);
+};
+
+/**
+ * Build a linked segment ID from a variant name (e.g., `'settings'` -> `'~settings'`).
+ * Nodes identified by linked segments share their attention state with the parent node.
+ */
+export const linkedSegment = (variant: string): string => `${LINKED_PREFIX}${variant}`;
+
+/**
+ * Extract the variant name from the last segment of a qualified ID, stripping the linked prefix.
+ * e.g. `'root/space/obj/~settings'` -> `'settings'`.
+ * If the segment is not linked (no `~` prefix), returns the segment as-is.
+ */
+export const getLinkedVariant = (qualifiedId: string): string => {
+  const lastSegment = qualifiedId.split('/').pop() ?? '';
+  return lastSegment.startsWith(LINKED_PREFIX) ? lastSegment.slice(LINKED_PREFIX.length) : lastSegment;
+};
+
+/**
+ * Get the parent qualified ID (everything before the last `/` segment).
+ */
+export const getParentId = (qualifiedId: string | undefined): string | undefined => {
+  if (!qualifiedId) {
+    return undefined;
+  }
+
+  const lastSlash = qualifiedId.lastIndexOf('/');
+  return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
+};
+
+/**
+ * Extract the segment ID (last segment) of a qualified ID.
+ */
+export const getSegmentId = (qualifiedId: string): string => {
+  return qualifiedId.split('/').pop() ?? qualifiedId;
+};

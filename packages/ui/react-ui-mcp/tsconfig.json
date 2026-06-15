@@ -1,0 +1,29 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}

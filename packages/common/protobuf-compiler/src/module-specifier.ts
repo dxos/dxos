@@ -3,9 +3,9 @@
 //
 
 import { createRequire } from 'node:module';
-import { isAbsolute, resolve, relative } from 'path';
+import { isAbsolute, relative, resolve } from 'path';
 
-import { invariant } from '@dxos/invariant';
+import { assertArgument } from '@dxos/invariant';
 
 const require = createRequire(import.meta.url);
 
@@ -26,7 +26,7 @@ export class ModuleSpecifier {
     public readonly name: string,
     public readonly contextPath: string,
   ) {
-    invariant(isAbsolute(contextPath));
+    assertArgument(isAbsolute(contextPath), 'contextPath', 'must be an absolute path');
   }
 
   isAbsolute(): boolean {

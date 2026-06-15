@@ -2,7 +2,7 @@
 title: DXOS Client
 ---
 
-This API reference documents the `Client` class. 
+This API reference documents the `Client` class.
 It's the main DXOS client object. Is the entrypoint to ECHO, HALO, DXNS.
 
 ## constructor
@@ -17,7 +17,7 @@ Takes an `options` object as a parameter. Supported fields of this object are de
 import { Client } from '@dxos/client';
 
 const client = new Client({
-  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' }
+  swarm: { signal: 'wss://apollo3.kube.moon.dxos.network/dxos/signal' },
 });
 ```
 

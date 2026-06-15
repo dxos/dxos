@@ -2,29 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { PublicKeySelector } from './PublicKeySelector';
 
-const meta: Meta = {
+const meta = {
   title: 'devtools/devtools/PublicKeySelector',
   component: PublicKeySelector,
-  decorators: [withTheme],
-};
+  render: (args) => (
+    <Toolbar.Root>
+      <PublicKeySelector {...args} />
+    </Toolbar.Root>
+  ),
+  decorators: [withTheme()],
+} satisfies Meta<typeof PublicKeySelector>;
 
 export default meta;
 
-export const Normal = (props: any) => {
-  return (
-    <Toolbar.Root>
-      <PublicKeySelector keys={[PublicKey.random(), PublicKey.random()]} {...props} />
-    </Toolbar.Root>
-  );
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    placeholder: 'Select key',
+    keys: [PublicKey.random(), PublicKey.random()],
+  },
 };

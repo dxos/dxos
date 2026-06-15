@@ -6,7 +6,8 @@ import * as localForage from 'localforage';
 import React from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { useSpaces, type Space, SpaceId } from '@dxos/react-client/echo';
+import { SpaceId } from '@dxos/keys';
+import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Select } from '@dxos/react-ui';
 
@@ -42,7 +43,7 @@ export const DataSpaceSelector = () => {
   }, []);
 
   const getLabel = (space: Space) => {
-    return space?.isOpen ? space?.properties.name ?? 'New space' : '(closed)';
+    return space?.isOpen ? (space?.properties.name ?? 'New space') : '(closed)';
   };
 
   return (
@@ -65,6 +66,7 @@ export const DataSpaceSelector = () => {
               </Select.Option>
             ))}
           </Select.Viewport>
+          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

@@ -1,0 +1,75 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { createContext } from '@radix-ui/react-context';
+import React, { type PropsWithChildren } from 'react';
+
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+//
+// Context
+//
+
+const ${NAME}_CONTEXT_NAME = '${name}';
+
+type ${name}ContextValue = {};
+
+const [${name}ContextProvider, use${name}Context] = createContext<${name}ContextValue>(${NAME}_CONTEXT_NAME);
+
+//
+// Root
+//
+
+const ${NAME}_ROOT_NAME = '${name}.Root';
+
+type ${name}RootProps = PropsWithChildren<{}>;
+
+const ${name}Root = ({ children }: ${name}RootProps) => {
+  return <${name}ContextProvider>{children}</${name}ContextProvider>;
+};
+
+${name}Root.displayName = ${NAME}_ROOT_NAME;
+
+//
+// Viewport
+//
+
+const ${NAME}_VIEWPORT_NAME = '${name}.Viewport';
+
+type ${name}ViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+
+const ${name}Viewport = ({ classNames, children }: ${name}ViewportProps) => {
+  const context = use${name}Context(${NAME}_VIEWPORT_NAME);
+  return <div className={mx('flex h-full is-full overflow-y-auto', classNames)}>{children}</div>;
+};
+
+${name}Viewport.displayName = ${NAME}_VIEWPORT_NAME;
+
+//
+// Content
+//
+
+const ${NAME}_CONTENT_NAME = '${name}.Content';
+
+type ${name}ContentProps = ThemedClassName<{}>;
+
+const ${name}Content = ({ classNames }: ${name}ContentProps) => {
+  const context = use${name}Context(${NAME}_CONTENT_NAME);
+  return <div className={mx('flex flex-col is-full', classNames)}>{JSON.stringify(context)}</div>;
+};
+
+${name}Content.displayName = ${NAME}_CONTENT_NAME;
+
+//
+// ${name}
+//
+
+export const ${name} = {
+  Root: ${name}Root,
+  Viewport: ${name}Viewport,
+  Content: ${name}Content,
+};
+
+export type { ${name}RootProps, ${name}ViewportProps, ${name}ContentProps };

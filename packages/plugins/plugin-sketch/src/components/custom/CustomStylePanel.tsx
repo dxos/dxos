@@ -6,7 +6,7 @@ import { useEditor } from '@tldraw/editor';
 import { DefaultStylePanelContent, type TLUiStylePanelProps, useRelevantStyles } from '@tldraw/tldraw';
 import React, { memo, useCallback } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
   const editor = useEditor();

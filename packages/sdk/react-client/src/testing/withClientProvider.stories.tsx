@@ -2,33 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 
-import { withClientProvider, type WithClientProviderProps, withMultiClientProvider } from './withClientProvider';
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
+import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider';
 
 const SpaceInfo = ({ space }: { space: Space }) => {
   const name = space.isOpen ? space.properties.name : '';
-  return <SyntaxHighlighter language='json'>{JSON.stringify({ id: space.id, name }, null, 2)}</SyntaxHighlighter>;
+  return <JsonHighlighter data={{ id: space.id, name }} />;
 };
 
-const Test = () => {
+const DefaultStory = () => {
   const client = useClient();
   const spaces = useSpaces();
   if (!client) {
-    return null;
+    return <Loading data={{ client: !!client }} />;
   }
 
   return (
-    <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded'>
-      <SyntaxHighlighter language='json'>{JSON.stringify(client.toJSON(), null, 2)}</SyntaxHighlighter>
+    <div className='flex flex-col divide-y divide-separator border border-separator'>
+      <JsonHighlighter data={client.toJSON()} />
       {spaces.map((space) => (
         <SpaceInfo key={space.id} space={space} />
       ))}
@@ -36,10 +36,16 @@ const Test = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'sdk/react-client/withClientProvider',
-  render: Test,
-};
+  render: DefaultStory,
+  decorators: [withTheme()],
+  tags: ['test'],
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const clientProps: WithClientProviderProps = {
   createIdentity: true,
@@ -47,19 +53,27 @@ const clientProps: WithClientProviderProps = {
   onInitialized: async (client) => {
     log.info('onInitialized', { client });
   },
-  onSpaceCreated: async ({ client, space }) => {
-    log.info('onSpaceCreated', { client, space });
+  onCreateSpace: async ({ client, space }) => {
+    log.info('onCreateSpace', { client, space });
   },
 };
 
-export const Default = {
-  decorators: [withClientProvider(clientProps), withTheme, withLayout({ classNames: ['flex gap-2'] })],
+export const Default: Story = {
+  decorators: [withClientProvider(clientProps)],
+  parameters: {
+    layout: 'centered',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const initializedText = await canvas.findByText(/"initialized": true/i, {}, { timeout: 30_000 });
+    await expect(initializedText).toBeVisible();
+  },
 };
 
-export const Multiple = {
+export const Multiple: Story = {
   decorators: [
+    withTheme(),
+    withLayout({ classNames: 'grid grid-cols-3' }),
     withMultiClientProvider({ ...clientProps, numClients: 3 }),
-    withTheme,
-    withLayout({ classNames: ['flex gap-2'] }),
   ],
 };

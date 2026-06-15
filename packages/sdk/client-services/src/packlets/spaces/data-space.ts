@@ -3,7 +3,7 @@
 //
 
 import { save } from '@automerge/automerge';
-import { type DocHandle } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
@@ -11,48 +11,48 @@ import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context'
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
-  type EchoHost,
   type DatabaseRoot,
-  createMappedFeedWriter,
-  type MetadataStore,
+  type EchoHost,
+  type IMetadataStore,
   type Space,
-  FIND_PARAMS,
-} from '@dxos/echo-pipeline';
-import { SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
+  createMappedFeedWriter,
+} from '@dxos/echo-host';
+import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { CancelledError, SystemError } from '@dxos/protocols';
+import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
 import {
   type CreateEpochRequest,
-  SpaceState,
   type Space as SpaceProto,
+  SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   AdmittedFeed,
-  SpaceMember,
   type Credential,
   type Epoch,
+  MembershipPolicy,
   type ProfileDocument,
+  SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { CallbackCollection, ComplexSet, type AsyncCallback } from '@dxos/util';
+import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
+import { TrustedKeySetAuthVerifier } from '../identity';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { EdgeFeedReplicator } from './edge-feed-replicator';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
-import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**
@@ -71,18 +71,19 @@ export type DataSpaceCallbacks = {
   beforeClose?: () => Promise<void>;
 };
 
-export type DataSpaceParams = {
+export type DataSpaceProps = {
   initialState: SpaceState;
   inner: Space;
-  metadataStore: MetadataStore;
+  metadataStore: IMetadataStore;
   gossip: Gossip;
   presence: Presence;
-  keyring: Keyring;
+  keyring: KeyringApi;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
+  tags?: string[];
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
@@ -103,9 +104,9 @@ export class DataSpace {
 
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
-  private readonly _keyring: Keyring;
+  private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
-  private readonly _metadataStore: MetadataStore;
+  private readonly _metadataStore: IMetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;
@@ -119,6 +120,9 @@ export class DataSpace {
   private readonly _epochProcessingMutex = new Mutex();
 
   private _state = SpaceState.SPACE_CLOSED;
+
+  /** Immutable tags from space metadata, available immediately. */
+  readonly tags: string[];
 
   private _databaseRoot: DatabaseRoot | null = null;
 
@@ -135,7 +139,7 @@ export class DataSpace {
 
   public metrics: SpaceProto.Metrics = {};
 
-  constructor(params: DataSpaceParams) {
+  constructor(params: DataSpaceProps) {
     this._inner = params.inner;
     this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
 
@@ -167,6 +171,7 @@ export class DataSpace {
     });
 
     this._cache = params.cache;
+    this.tags = params.tags ?? [];
 
     if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
       this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.id });
@@ -212,6 +217,11 @@ export class DataSpace {
     return this._cache;
   }
 
+  /** Membership policy from the genesis credential, defaults to INVITE. */
+  get membershipPolicy(): MembershipPolicy {
+    return this._inner.spaceState.genesisCredential ? this._inner.spaceState.membershipPolicy : MembershipPolicy.INVITE;
+  }
+
   get automergeSpaceState() {
     return this._automergeSpaceState;
   }
@@ -229,13 +239,14 @@ export class DataSpace {
   }
 
   @synchronized
-  async open(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  async open(ctx: Context): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
-      await this._open();
+      await this._open(ctx);
     }
   }
 
-  private async _open(): Promise<void> {
+  private async _open(ctx: Context): Promise<void> {
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
@@ -247,8 +258,8 @@ export class DataSpace {
       this.inner.protocol.feedAdded.append(this._onFeedAdded);
     }
 
-    await this._inner.open(new Context());
-    await this._inner.startProtocol();
+    await this._inner.open(ctx);
+    await this._inner.startProtocol(ctx);
 
     await this._edgeFeedReplicator?.open();
 
@@ -262,11 +273,12 @@ export class DataSpace {
   }
 
   @synchronized
-  async close(): Promise<void> {
-    await this._close();
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  async close(ctx: Context): Promise<void> {
+    await this._close(ctx);
   }
 
-  private async _close(): Promise<void> {
+  private async _close(ctx: Context): Promise<void> {
     await this._callbacks.beforeClose?.();
 
     await this.preClose.callSerial();
@@ -284,7 +296,7 @@ export class DataSpace {
 
     await this.authVerifier.close();
 
-    await this._inner.close();
+    await this._inner.close(ctx);
     await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
     await this._automergeSpaceState.close();
     await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
@@ -304,12 +316,14 @@ export class DataSpace {
 
   /**
    * Initialize the data pipeline in a separate task.
+   * @param callerCtx - Trace context from the caller (e.g., activate or createSpace) for span parenting.
    */
-  initializeDataPipelineAsync(): void {
+  initializeDataPipelineAsync(callerCtx?: Context): void {
+    const traceCtx = callerCtx ?? this._ctx;
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
-        await this.initializeDataPipeline();
+        await this.initializeDataPipeline(traceCtx);
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
@@ -327,17 +341,17 @@ export class DataSpace {
     });
   }
 
-  @trace.span({ showInBrowserTimeline: true })
-  async initializeDataPipeline(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  async initializeDataPipeline(ctx: Context): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
-      throw new SystemError('Invalid operation');
+      throw new SystemError({ message: 'Invalid operation' });
     }
 
     this._state = SpaceState.SPACE_INITIALIZING;
     log('new state', { state: SpaceState[this._state] });
 
     log('initializing control pipeline');
-    await this._initializeAndReadControlPipeline();
+    await this._initializeAndReadControlPipeline(ctx);
 
     // Allow other tasks to run before loading the data pipeline.
     await sleep(1);
@@ -360,9 +374,17 @@ export class DataSpace {
     yield [this._databaseRoot.documentId, root];
 
     for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
-      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
+      const data = await this._echoHost.exportDoc(documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }
+  }
+
+  /**
+   * Get all feeds and their blocks for this space.
+   * Used for space archive export.
+   */
+  async getAllFeeds(): Promise<Array<{ feedId: string; feedNamespace: string; blocks: FeedProtocol.Block[] }>> {
+    return this._echoHost.getAllFeedsForSpace(this.id);
   }
 
   private async _enterReadyState(): Promise<void> {
@@ -375,10 +397,10 @@ export class DataSpace {
     await this._callbacks.afterReady?.();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
-  private async _initializeAndReadControlPipeline(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
+      ctx,
       timeout: 10_000,
       breakOnStall: false,
     });
@@ -450,6 +472,9 @@ export class DataSpace {
 
         log('credentials notarized');
       } catch (err) {
+        if (err instanceof ContextDisposedError) {
+          return;
+        }
         log.error('error notarizing credentials for feed admission', err);
         throw err;
       }
@@ -462,7 +487,7 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    let handle: DocHandle<DatabaseDirectory>;
+    let handle: DocHandle<DatabaseDirectory> | null = null;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
@@ -470,11 +495,16 @@ export class DataSpace {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           handle = await cancelWithContext(
             this._ctx,
-            this._echoHost.automergeRepo.find<DatabaseDirectory>(rootUrl as any, FIND_PARAMS),
+            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+              fetchFromNetwork: true,
+            }),
           );
-          await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {
+          return;
+        }
+        if (!handle) {
+          log.warn('automerge root doc not available yet', { space: this.key, rootUrl });
           return;
         }
 
@@ -482,7 +512,7 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space keys to legacy documents.
-        const doc = handle.doc() ?? failedInvariant();
+        const doc = handle.doc();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };
@@ -491,7 +521,7 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.openSpaceRoot(this.id, handle.url);
+        const root = await this._echoHost.openSpaceRoot(this._ctx, this.id, handle.url);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
@@ -568,27 +598,44 @@ export class DataSpace {
   }
 
   @synchronized
-  async activate(): Promise<void> {
+  async activate(ctx: Context): Promise<void> {
     if (![SpaceState.SPACE_CLOSED, SpaceState.SPACE_INACTIVE].includes(this._state)) {
       return;
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
-    await this._open();
-    this.initializeDataPipelineAsync();
+    await this._open(ctx);
+    this.initializeDataPipelineAsync(ctx);
   }
 
   @synchronized
-  async deactivate(): Promise<void> {
+  async deactivate(ctx: Context): Promise<void> {
     if (this._state === SpaceState.SPACE_INACTIVE) {
       return;
     }
-    // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_INACTIVE);
     if (this._state !== SpaceState.SPACE_CLOSED) {
-      await this._close();
+      await this._close(ctx);
     }
     this._state = SpaceState.SPACE_INACTIVE;
+    log('new state', { state: SpaceState[this._state] });
+    this.stateUpdate.emit();
+  }
+
+  /**
+   * Tombstones (soft-deletes) the space by moving it to a terminal state.
+   * This is intentionally separate from teardown: the caller is responsible for {@link close}-ing the
+   * space (teardown uses the resource lifecycle, distinct from this state transition).
+   * Terminal: {@link activate} will not re-open a deleted space. Data is not removed until garbage
+   * collection (future work).
+   */
+  @synchronized
+  async delete(): Promise<void> {
+    if (this._state === SpaceState.SPACE_DELETED) {
+      return;
+    }
+    await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_DELETED);
+    this._state = SpaceState.SPACE_DELETED;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
   }

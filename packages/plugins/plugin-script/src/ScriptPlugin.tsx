@@ -2,91 +2,46 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
-
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
-import { RefArray } from '@dxos/live-object';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Script } from '@dxos/compute';
 
 import {
   AppGraphBuilder,
-  ArtifactDefinition,
+  BlueprintDefinition,
   Compiler,
-  IntentResolver,
+  CreateObject,
+  OperationHandler,
   ReactSurface,
   ScriptSettings,
-} from './capabilities';
-import { ScriptEvents } from './events';
-import { meta } from './meta';
-import translations from './translations';
-import { ScriptAction } from './types';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { ScriptEvents } from '#types';
 
-export const ScriptPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: ScriptSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/compiler`,
-      activatesOn: ScriptEvents.SetupCompiler,
-      activate: Compiler,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: ScriptType.typename,
-          metadata: {
-            icon: 'ph--code--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: ScriptType,
-            formSchema: ScriptAction.CreateScriptSchema.pipe(Schema.omit('initialTemplateId')),
-            getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      // TODO(wittjosiah): Should occur before the script editor is loaded when surfaces activation is more granular.
-      activatesBefore: [ScriptEvents.SetupCompiler],
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const ScriptPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [Script.Script] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ScriptSettings,
+  }),
+  Plugin.addModule({
+    activatesOn: ScriptEvents.SetupCompiler,
+    activate: Compiler,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default ScriptPlugin;

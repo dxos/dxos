@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../testing';
 
 const DefaultStory = () => {
   return (
-    <div className='mli-auto p-8 max-is-[60rem] space-b-4'>
+    <div className='mx-auto p-8 max-w-[60rem] space-b-4'>
       <h1 className='text-4xl font-medium'>
         Việc <span className='italic'>thừa</span> nhận{' '}
         <span className='font-mono bg-neutral-500/10'>
@@ -43,13 +42,16 @@ const DefaultStory = () => {
   );
 };
 
-export default {
-  title: 'ui/react-ui-core/Playground/Typography',
+const meta = {
+  title: 'ui/react-ui-core/playground/Typography',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

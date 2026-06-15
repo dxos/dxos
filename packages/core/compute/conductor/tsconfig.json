@@ -1,0 +1,72 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
+    },
+    {
+      "path": "../../../common/graph"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/schema"
+    },
+    {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
+    },
+    {
+      "path": "../../mesh/edge-client"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../assistant"
+    },
+    {
+      "path": "../compute"
+    },
+    {
+      "path": "../functions"
+    },
+    {
+      "path": "../functions-runtime"
+    },
+    {
+      "path": "../operation"
+    }
+  ]
+}

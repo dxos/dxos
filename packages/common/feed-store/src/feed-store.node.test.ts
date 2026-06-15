@@ -4,10 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { faker } from '@dxos/random';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { random } from '@dxos/random';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { TestItemBuilder } from './testing';
+import { type TestItem, TestItemBuilder } from './testing';
 
 describe('FeedStore', () => {
   test('reopens a feed and reads data from storage', async () => {
@@ -27,8 +27,8 @@ describe('FeedStore', () => {
       for (const i of Array.from(Array(numBlocks)).keys()) {
         await feed.append({
           id: String(i),
-          value: faker.lorem.sentence(),
-        });
+          value: random.lorem.sentence(),
+        } as TestItem);
       }
 
       expect(feed.properties.length).to.eq(numBlocks);

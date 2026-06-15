@@ -4,29 +4,31 @@
 
 import '@dxos-theme';
 
-import { BaselimeRum } from '@baselime/react-rum';
-import { withProfiler } from '@sentry/react';
 import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { initializeAppObservability } from '@dxos/observability';
-import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
+import { log } from '@dxos/log';
+// TODO(wittjosiah): Restore observability for testbench.
+// import { initializeAppObservability } from '@dxos/observability';
+import { type Client, ClientProvider } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/react-ui';
+import { Expando } from '@dxos/schema';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { AppContainer, Error, Main } from './components';
+import { SyncBench } from './components/SyncBench';
 import { getConfig } from './config';
 import { Document, Item } from './data';
-import translations from './translations';
+import { translations } from './translations';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 
-void initializeAppObservability({
-  namespace: 'testbench.dxos.org',
-  config: new Config(Defaults()),
-});
+// void initializeAppObservability({
+//   namespace: 'testbench.dxos.org',
+//   config: new Config(Defaults()),
+// });
 
 const router = createBrowserRouter([
   {
@@ -37,6 +39,10 @@ const router = createBrowserRouter([
         <Main />
       </AppContainer>
     ),
+  },
+  {
+    path: '/sync-bench',
+    element: <SyncBench />,
   },
 ]);
 
@@ -58,28 +64,22 @@ const useThemeWatcher = () => {
   return themeMode;
 };
 
-const App = withProfiler(() => {
+const App = () => {
   const themeMode = useThemeWatcher();
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations} noCache>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
-});
+};
 
 const main = async () => {
   const config = await getConfig();
-  const createWorker = config.values.runtime?.app?.env?.DX_HOST
-    ? undefined
-    : () =>
-        new SharedWorker(new URL('./shared-worker', import.meta.url), {
-          type: 'module',
-          name: 'dxos-client-worker',
-        });
+  log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
 
   const handleInitialized = async (client: Client) => {
-    const searchParams = new URLSearchParams(location.search);
-    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    const searchProps = new URLSearchParams(location.search);
+    const deviceInvitationCode = searchProps.get('deviceInvitationCode');
     const identity = client.halo.identity.get();
     if (!identity && !deviceInvitationCode) {
       await client.halo.createIdentity({ displayName: 'Testbench User' });
@@ -100,24 +100,16 @@ const main = async () => {
       });
     }
 
-    client.addTypes([Item, Document]);
-    await client.spaces.waitUntilReady();
+    await client.addTypes([Item, Document]);
   };
 
   const root = createRoot(document.getElementById('root')!);
   root.render(
     // NOTE: StrictMode will cause the entire stack to render twice.
     <StrictMode>
-      <BaselimeRum apiKey={config.values.runtime?.app?.env?.BASELIME_API_KEY} enableWebVitals>
-        <ClientProvider
-          config={config}
-          createWorker={createWorker}
-          shell='./shell.html'
-          onInitialized={handleInitialized}
-        >
-          <App />
-        </ClientProvider>
-      </BaselimeRum>
+      <ClientProvider config={config} onInitialized={handleInitialized} types={[Expando.Expando]}>
+        <App />
+      </ClientProvider>
     </StrictMode>,
   );
 };

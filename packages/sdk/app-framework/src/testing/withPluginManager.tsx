@@ -2,29 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
-import React, { useEffect, useMemo } from 'react';
+import { type Decorator, type StoryContext } from '@storybook/react';
+import * as Effect from 'effect/Effect';
+import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
+import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
+import { useAsyncEffect } from '@dxos/react-hooks';
+import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
-import { useApp, type CreateAppOptions } from '../App';
-import { Capabilities, Events } from '../common';
-import {
-  contributes,
-  defineModule,
-  definePlugin,
-  type ActivationEvent,
-  type AnyCapability,
-  PluginManager,
-  type PluginContext,
-} from '../core';
-
-// TODO(burdon): Factor out (use consistently in plugin framework?)
-export type Provider<C, R> = (context: C) => R;
-export type ProviderOrValue<C, R> = Provider<C, R> | R;
-export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
-  return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
-};
+import { ActivationEvents, Capabilities } from '../common';
+import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
+import { type UseAppOptions, useApp } from '../ui';
 
 /**
  * @internal
@@ -32,19 +22,21 @@ export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: 
 export const setupPluginManager = ({
   capabilities,
   plugins = [],
-  core = plugins.map(({ meta }) => meta.id),
   ...options
-}: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
-  const pluginManager = new PluginManager({
+}: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
+  // Auto-enable every non-system plugin so stories don't have to spell out
+  // enablement. System-tagged plugins are force-enabled by the manager.
+  const enabled = plugins.filter(({ meta }) => !meta.tags?.includes('system')).map(({ meta }) => meta.id);
+  const pluginManager = PluginManager.make({
     pluginLoader: () => raise(new Error('Not implemented')),
-    plugins: [storyPlugin(), ...plugins],
-    core: [STORY_PLUGIN, ...core],
+    plugins: [StoryPlugin, ...plugins],
+    enabled,
     ...options,
   });
 
   if (capabilities) {
-    getValue(capabilities, pluginManager.context).forEach((capability) => {
-      pluginManager.context.contributeCapability({
+    getProviderValue(capabilities, pluginManager.capabilities).forEach((capability) => {
+      pluginManager.capabilities.contribute({
         interface: capability.interface,
         implementation: capability.implementation,
         module: 'story',
@@ -55,56 +47,92 @@ export const setupPluginManager = ({
   return pluginManager;
 };
 
-export type WithPluginManagerOptions = CreateAppOptions & {
-  capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
-  fireEvents?: (ActivationEvent | string)[];
+type ManagedPluginManagerState = {
+  fireEvents?: (ActivationEvent.ActivationEvent | string)[];
+  pluginManager: PluginManager.PluginManager;
+  setupEvents?: ActivationEvent.ActivationEvent[];
+  storyId: string;
 };
+
+export type WithPluginManagerOptions = UseAppOptions & {
+  /** @deprecated */
+  capabilities?: MaybeProvider<Capability.Any[], CapabilityManager.CapabilityManager>;
+  /** @deprecated */
+  fireEvents?: (ActivationEvent.ActivationEvent | string)[];
+};
+
+export type WithPluginManagerInitializer<Args = void> =
+  | WithPluginManagerOptions
+  | ((context: StoryContext<Args>) => WithPluginManagerOptions);
 
 /**
  * Wraps a story with a plugin manager.
  * NOTE: This builds up and tears down the plugin manager on every render.
  */
-export const withPluginManager = (options: WithPluginManagerOptions = {}): Decorator => {
+export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
   return (Story, context) => {
-    const pluginManager = useMemo(() => setupPluginManager(options), [options]);
+    const storyId = context.id;
+    const options = typeof init === 'function' ? init(context as any) : init;
+    const [managerState, setManagerState] = useState<ManagedPluginManagerState>();
 
-    // Set-up root capability.
+    // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
-      const capability = contributes(Capabilities.ReactRoot, {
-        id: context.id,
+      const pluginManager = setupPluginManager(options);
+      const capability = Capability.contributes(Capabilities.ReactRoot, {
+        id: storyId,
         root: () => <Story />,
       });
 
-      pluginManager.context.contributeCapability({
+      pluginManager.capabilities.contribute({
         ...capability,
-        module: 'dxos.org/app-framework/withPluginManager',
+        module: 'org.dxos.app-framework.with-plugin-manager',
+      });
+
+      setManagerState({
+        pluginManager,
+        setupEvents: options.setupEvents,
+        fireEvents: options.fireEvents,
+        storyId,
       });
 
       return () => {
-        pluginManager.context.removeCapability(capability.interface, capability.implementation);
+        pluginManager.capabilities.remove(capability.interface, capability.implementation);
+        void EffectEx.runAndForwardErrors(pluginManager.shutdown());
       };
-    }, [pluginManager, context]);
+    }, [storyId, init]);
 
-    // Fire events.
-    useEffect(() => {
-      const timeout = setTimeout(async () => {
-        await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-      });
+    // Avoid mounting useApp with a stale manager from the previous story.
+    if (!managerState || managerState.storyId !== storyId) {
+      return <></>;
+    }
 
-      return () => clearTimeout(timeout);
-    }, [pluginManager]);
-
-    // Create app.
-    const App = useApp({ pluginManager });
-
-    return <App />;
+    return <WithPluginManagerApp {...managerState} />;
   };
 };
 
+const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId }: ManagedPluginManagerState) => {
+  // Fire deprecated events only after the effect-owned manager for this story exists.
+  useAsyncEffect(async () => {
+    await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
+  }, [fireEvents, pluginManager, storyId]);
+
+  const App = useApp({ pluginManager, setupEvents });
+  return <App />;
+};
+
+const storyMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.appFramework.story'),
+  name: 'Story',
+  tags: ['system'],
+});
+
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
-const STORY_PLUGIN = 'dxos.org/app-framework/story';
-const storyPlugin = () =>
-  definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
-    defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
-  ]);
+const StoryPlugin = Plugin.define(storyMeta).pipe(
+  Plugin.addModule({
+    id: 'Story',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed([]),
+  }),
+  Plugin.make,
+)();

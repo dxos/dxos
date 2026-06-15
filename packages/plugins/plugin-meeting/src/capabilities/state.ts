@@ -2,12 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 
-import { MeetingCapabilities } from './capabilities';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
-export default () => {
-  const state = live<MeetingCapabilities.State>({});
-  return contributes(MeetingCapabilities.State, state);
-};
+import { type MeetingCapabilities as MC, MeetingCapabilities } from '#types';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const stateAtom = Atom.make<MC.MeetingState>({}).pipe(Atom.keepAlive);
+
+    const updateState = (updater: (current: MC.MeetingState) => MC.MeetingState) => {
+      registry.set(stateAtom, updater(registry.get(stateAtom)));
+    };
+
+    return Capability.contributes(MeetingCapabilities.State, {
+      stateAtom,
+      get state() {
+        return registry.get(stateAtom);
+      },
+      updateState,
+    });
+  }),
+);

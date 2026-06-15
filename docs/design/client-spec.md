@@ -26,35 +26,35 @@ The Client should implement the following features:
 
 ### 2.1. Identity and Device Management
 
-*   Create a new HALO identity.
-*   Recover an existing HALO identity.
-    *   Using a seed phrase.
-    *   Using a credential issued from another device.
-*   Display and edit metadata relating to the user's identity.
-*   Securely store the user's HALO using password protected encryption.
-*   Securely uninstall the client erasing all local information.
-*   Manage multiple client instances installed on other devices and platforms.
-    *   Authenticate new clients.
-    *   Revoke existing clients.
-    *   View the set of existing clients.
-    *   Initiate the installation of other platform clients:
-        *   Terminal opens a PWA in the browser and initiates client authentication.
-    *   Support multiple isolated instances in the CLI (e.g., via ENV variable).
-    *   Support installation from a KUBE node (e.g., via a URL).
+- Create a new HALO identity.
+- Recover an existing HALO identity.
+  - Using a seed phrase.
+  - Using a credential issued from another device.
+- Display and edit metadata relating to the user's identity.
+- Securely store the user's HALO using password protected encryption.
+- Securely uninstall the client erasing all local information.
+- Manage multiple client instances installed on other devices and platforms.
+  - Authenticate new clients.
+  - Revoke existing clients.
+  - View the set of existing clients.
+  - Initiate the installation of other platform clients:
+    - Terminal opens a PWA in the browser and initiates client authentication.
+  - Support multiple isolated instances in the CLI (e.g., via ENV variable).
+  - Support installation from a KUBE node (e.g., via a URL).
 
 ### 2.2. Circles and Collaboration
 
-*   Provide a discovery key that can be presented to other users running the client.
-*   Manage a set of contacts (user identities).
-*   Send and receive ephemeral messages to other users.
-*   Publish identity to DXNS.
-*   Manage HALO credentials and keychain.
-    *   Store and use KUBE credentials to manage KUBE nodes.
+- Provide a discovery key that can be presented to other users running the client.
+- Manage a set of contacts (user identities).
+- Send and receive ephemeral messages to other users.
+- Publish identity to DXNS.
+- Manage HALO credentials and keychain.
+  - Store and use KUBE credentials to manage KUBE nodes.
 
 ### 2.3. Branespace Exploration
 
-*   List Brane Spaces.
-*   Query/navigate/visualize Space graph.
+- List Brane Spaces.
+- Query/navigate/visualize Space graph.
 
 ## 3. Design Overview
 
@@ -112,8 +112,7 @@ The Client proxy can be configured to connect to Client services (running in a s
 
 The following developer tools projects use the DXOS client.
 
-*   [Kodama CLI](https://github.com/dxos/dxos/tree/main/packages/demos/kodama)
-*   [HALO wallet browser extension](https://github.com/dxos/dxos/tree/main/packages/wallet/wallet-extension)
-*   [Devtools browser extension](https://github.com/dxos/dxos/tree/main/packages/devtools/devtools-extension)
-*   [DX CLI](https://github.com/dxos/cli)
-
+- [Kodama CLI](https://github.com/dxos/dxos/tree/main/packages/demos/kodama)
+- [HALO wallet browser extension](https://github.com/dxos/dxos/tree/main/packages/wallet/wallet-extension)
+- [Devtools browser extension](https://github.com/dxos/dxos/tree/main/packages/devtools/devtools-extension)
+- [DX CLI](https://github.com/dxos/cli)

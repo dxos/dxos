@@ -9,12 +9,12 @@ order: 0
 
 ECHO (The **E**ventually **C**onsistent **H**ierarchical **O**bject store) is a peer-to-peer graph database written in TypeScript.
 
-* Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
-* No servers or central authority, all the data is with the clients.
-* Connectivity with peers via [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
-* Support for multiple concurrent writers.
-* Collaboration on key-value objects and text.
-* Support for offline writes and conflict resolution when peers rejoin the network.
+- Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
+- No servers or central authority, all the data is with the clients.
+- Connectivity with peers via [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
+- Support for multiple concurrent writers.
+- Collaboration on key-value objects and text.
+- Support for offline writes and conflict resolution when peers rejoin the network.
 
 ::: note Tell us what you think
 Join our [Discord](https://dxos.org/discord) and talk to us about the kind of database you are looking for.
@@ -44,8 +44,8 @@ If you're using `react`, DXOS provides a simple [UI flow](./react/#joining-space
 
 **Next steps:**
 
-* Create or join a space in [TypeScript](./typescript/)
-* Create or join a space in [React](./react/)
+- Create or join a space in [TypeScript](./typescript/)
+- Create or join a space in [React](./react/)
 
 ## Objects
 
@@ -59,13 +59,13 @@ The top-level of a DXOS `object` is always a JS object, never a number, string, 
 
 ## How to use ECHO
 
-* Install the appropriate npm package [`@dxos/client`](./installation/) or [`@dxos/react-client`](./installation/react.md)
-* Create a [Client](./typescript#configuration) (or a [ClientProvider](./react#cofiguration) in react)
-* Set up an identity with [HALO](../halo/)
-* Create or Join a [Space](#spaces)
-* [Query objects](./typescript/queries.md) (in [react](./react/queries.md))
-* [Create objects](./typescript/mutations.md#creating-objects) (in [react](./react/mutations.md))
-* [Mutate objects](./typescript/mutations.md) (in [react](./react/mutations.md))
+- Install the appropriate npm package [`@dxos/client`](./installation/) or [`@dxos/react-client`](./installation/react.md)
+- Create a [Client](./typescript#configuration) (or a [ClientProvider](./react#cofiguration) in react)
+- Set up an identity with [HALO](../halo/)
+- Create or Join a [Space](#spaces)
+- [Query objects](./typescript/queries.md) (in [react](./react/queries.md))
+- [Create objects](./typescript/mutations.md#creating-objects) (in [react](./react/mutations.md))
+- [Mutate objects](./typescript/mutations.md) (in [react](./react/mutations.md))
 
 ## ECHO and HALO
 
@@ -77,5 +77,5 @@ For Node.js applications, the ECHO database is implemented as an in-process stor
 
 ## Next steps
 
-* If using `react` see the [React guide](./react/)
-* Otherwise, follow the [TypeScript guide](./typescript/)
+- If using `react` see the [React guide](./react/)
+- Otherwise, follow the [TypeScript guide](./typescript/)

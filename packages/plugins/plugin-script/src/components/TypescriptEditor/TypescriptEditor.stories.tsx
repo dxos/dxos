@@ -2,43 +2,98 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Meta } from '@storybook/react';
-import React, { useMemo } from 'react';
+import { createDocAccessor } from '@dxos/echo-client';
+import { createObject } from '@dxos/react-client/echo';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { createDataExtensions } from '@dxos/ui-editor';
+import { trim } from '@dxos/util';
 
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { createDataExtensions } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
-import { TypescriptEditor } from './TypescriptEditor';
-import { templates } from '../../templates';
+const SCRIPT = trim`
+  x * 2
+`;
 
-// TODO(burdon): Features:
-// - language support for S
-// - hierarchical editor (DND)
-// - virtual document image rendering
-// - mobile rendering error
+const DefaultStory = (props: TypescriptEditorProps) => {
+  const object = useMemo(() => createObject({ content: SCRIPT }), []);
+  const [result, setResult] = useState<object | undefined>({});
 
-// TODO(burdon): JSX.
-// TODO(burdon): Effect schema.
-// TODO(burdon): react-buddy for storybook?
+  // TODO(burdon): Make this work.
+  // const object = useMemo(() => Text.make(templates[1].source), []);
+  // const script = useMemo(
+  //   () =>
+  //     Obj.make(ScriptType, {
+  //       source: Ref.make(createObject({ content: templates[0].source })),
+  //     }),
+  //   [object],
+  // );
 
-const DefaultStory = () => {
-  const object = useMemo(() => createObject({ content: templates[0].source }), []);
-  const initialValue = useMemo(() => object.content, [object]);
-  const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
-  const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
-  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
+  const extensions = useMemo(
+    () => [
+      createDataExtensions({
+        id: object.id,
+        text: createDocAccessor(object, ['content']),
+      }),
+    ],
+    [],
+  );
+
+  const handleRun = useCallback(async () => {
+    try {
+      const definitions: [string, any][] = [['x', 100]];
+
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const result = new Function(...definitions.map(([name]) => name), `return ${object.content.trim()}`)(
+        ...definitions.map(([, value]) => value),
+      );
+
+      setResult({
+        timestamp: Date.now(),
+        result,
+      });
+    } catch (err) {
+      setResult({
+        timestamp: Date.now(),
+        error: String(err),
+      });
+    }
+  }, [object]);
+
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
+          <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
+          <JsonHighlighter data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
+  );
 };
 
-export const Default = {};
-
-const meta: Meta = {
-  title: 'plugins/plugin-script/TypescriptEditor',
+const meta = {
+  title: 'plugins/plugin-script/components/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme],
-};
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-document-max-width' })],
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    id: 'test',
+  },
+};

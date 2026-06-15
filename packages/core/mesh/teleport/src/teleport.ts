@@ -4,10 +4,10 @@
 
 import { type Duplex } from 'node:stream';
 
-import { runInContextAsync, synchronized, scheduleTask, type Event } from '@dxos/async';
+import { type Event, runInContextAsync, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
@@ -15,7 +15,7 @@ import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { ControlExtension } from './control-extension';
 import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
 
-export type TeleportParams = {
+export type TeleportProps = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
@@ -59,10 +59,10 @@ export class Teleport {
     return this._open;
   }
 
-  constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportParams) {
-    invariant(typeof initiator === 'boolean');
-    invariant(PublicKey.isPublicKey(localPeerId));
-    invariant(PublicKey.isPublicKey(remotePeerId));
+  constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportProps) {
+    assertArgument(typeof initiator === 'boolean', 'initiator');
+    assertArgument(PublicKey.isPublicKey(localPeerId), 'localPeerId');
+    assertArgument(PublicKey.isPublicKey(remotePeerId), 'remotePeerId');
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;
@@ -76,7 +76,7 @@ export class Teleport {
             return;
           }
           log.info('abort teleport due to onTimeout in ControlExtension');
-          this.abort(new TimeoutError('control extension')).catch((err) => log.catch(err));
+          this.abort(new TimeoutError({ message: 'control extension' })).catch((err) => log.catch(err));
         },
       },
       this.localPeerId,

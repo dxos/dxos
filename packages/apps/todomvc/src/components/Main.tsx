@@ -3,17 +3,19 @@
 //
 
 import React, { useEffect } from 'react';
-import { generatePath, Navigate, Outlet, useParams } from 'react-router-dom';
+import { Navigate, Outlet, generatePath, useParams } from 'react-router-dom';
 
+import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { SpaceList } from './SpaceList';
 
 export const Main = () => {
-  const { spaceId } = useParams();
+  const { spaceProp } = useParams();
   const client = useClient();
   const spaces = useSpaces();
+  const { spaceId } = parseId(spaceProp);
   const space = useSpace(spaceId);
 
   useEffect(() => {

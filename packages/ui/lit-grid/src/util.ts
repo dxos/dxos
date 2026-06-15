@@ -4,19 +4,19 @@
 
 import { defaultRowSize } from './defs';
 import {
-  type DxGridPlaneCellIndex,
+  type DxGridAxis,
   type DxGridCellIndex,
-  type DxGridPosition,
-  type DxGridPointer,
-  type DxGridSelectionProps,
-  type DxGridPositionNullable,
-  type DxGridPlane,
-  type DxGridFrozenRowsPlane,
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
-  type DxGridAxis,
+  type DxGridFrozenRowsPlane,
+  type DxGridPlane,
+  type DxGridPlaneCellIndex,
   type DxGridPlanePosition,
+  type DxGridPointer,
+  type DxGridPosition,
+  type DxGridPositionNullable,
   type DxGridReadonlyValue,
+  type DxGridSelectionProps,
   separator,
 } from './types';
 
@@ -25,7 +25,7 @@ export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPla
 
 export function parseCellIndex(index: DxGridCellIndex): DxGridPosition;
 export function parseCellIndex(index: DxGridPlaneCellIndex): DxGridPlanePosition;
-// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+
 export function parseCellIndex(index: DxGridPlaneCellIndex | DxGridCellIndex): DxGridPlanePosition | DxGridPosition {
   const coords = index.split(separator);
   if (coords.length === 3) {
@@ -63,9 +63,11 @@ export const rowToA1Notation = (row: number): string => {
 };
 
 /**
- * The size in pixels of the gap between cells
+ * The size in pixels of the gap between cells.
+ * Must match `--dx-grid-gap` / `--dx-plane-gap` in `dx-grid.pcss`. Cells
+ * paint their own borders edge-to-edge, so this is 0.
  */
-export const gap = 1;
+export const gap = 0;
 
 /**
  * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
@@ -121,6 +123,10 @@ export const cellSelected = (
 export const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
   const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
   return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
+};
+
+export const accessoryHandlesPointerdownAttrs = {
+  'data-dx-grid-action': 'accessory',
 };
 
 export const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): DxGridPositionNullable => {

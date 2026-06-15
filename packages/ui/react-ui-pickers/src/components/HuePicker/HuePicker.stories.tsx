@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { HuePicker, type HuePickerProps } from './HuePicker';
 
-const ToolbarStory = (props: HuePickerProps) => {
+const DefaultStory = (props: HuePickerProps) => {
   const [hue, setHue] = useState<string | undefined>(props.defaultValue);
 
   return (
@@ -28,18 +26,18 @@ const ToolbarStory = (props: HuePickerProps) => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-pickers/HuePicker',
-  decorators: [withTheme, withLayout()],
-  parameters: {
-    layout: 'centered',
-  },
-};
+  component: HuePicker,
+  render: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+} satisfies Meta<typeof HuePicker>;
 
 export default meta;
 
-export const Default: StoryObj<HuePickerProps> = {
-  render: ToolbarStory,
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     defaultValue: 'red',
   },

@@ -4,8 +4,10 @@
 
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { useId, useThemeContext, type ButtonProps, useElevationContext } from '@dxos/react-ui';
-import { descriptionText, descriptionTextPrimary, mx } from '@dxos/react-ui-theme';
+import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+// TODO(burdon): Convert to radix primitive and move to react-ui.
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;
@@ -37,13 +39,8 @@ export const CompoundButton = ({
   const { tx } = useThemeContext();
   const elevation = useElevationContext(propsElevation);
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
-  const buttonClassName = tx(
-    'button.root',
-    'button button--compound',
-    styleProps,
-    'flex items-center gap-4 plb-2.5',
-    slots.root?.className,
-  );
+  const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 py-2.5', slots.root?.className);
+
   return (
     <button
       {...buttonProps}
@@ -52,13 +49,8 @@ export const CompoundButton = ({
       aria-labelledby={labelId}
       {...(description && { 'aria-describedby': descriptionId })}
     >
-      {before && (
-        <div role='none' className='grow-0'>
-          {before}
-        </div>
-      )}
+      {before && <div className='grow-0'>{before}</div>}
       <div
-        role='none'
         {...slots.middle}
         className={mx('grow whitespace-normal flex flex-col gap-1 text-left', slots.middle?.className)}
       >
@@ -70,8 +62,8 @@ export const CompoundButton = ({
             id={descriptionId}
             {...slots.description}
             className={mx(
-              'text-xs mbe-1 font-normal',
-              variant === 'primary' ? descriptionTextPrimary : descriptionText,
+              'text-xs mb-1 font-normal',
+              variant === 'primary' ? 'text-sm font-normal text-base-fg' : 'text-description',
               slots.description?.className,
             )}
           >
@@ -79,11 +71,7 @@ export const CompoundButton = ({
           </p>
         )}
       </div>
-      {after && (
-        <div role='none' className='grow-0'>
-          {after}
-        </div>
-      )}
+      {after && <div className='grow-0'>{after}</div>}
     </button>
   );
 };

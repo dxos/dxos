@@ -1,24 +1,10 @@
 {
   "project": {
-    "ignored": [
-      "@dxos/dxos"
-    ],
-    "fixedKeys": [
-      "$schema",
-      "name",
-      "tags",
-      "sourceRoot",
-      "projectType",
-      "targets"
-    ]
+    "ignored": ["@dxos/dxos"],
+    "fixedKeys": ["$schema", "name", "tags", "sourceRoot", "projectType", "targets"]
   },
   "package": {
-    "commonKeys": [
-      "license",
-      "author",
-      "homepage",
-      "bugs"
-    ],
+    "commonKeys": ["license", "author", "homepage", "bugs", "repository"],
     "withCustomExports": [
       "@dxos/async",
       "@dxos/codec-protobuf",
@@ -40,21 +26,16 @@
     ]
   },
   "tsconfig": {
-    "fixedKeys": [
-      "extends",
-      "compilerOptions"
-    ],
+    "fixedKeys": ["extends", "compilerOptions"],
     "pathMapping": {
-      "roots": [
-        "@dxos/composer-app"
-      ],
+      "roots": ["@dxos/composer-app"],
       "include": [
         "packages/common/storybook-utils",
-        "packages/core/artifact-testing",
-        "packages/core/assistant",
-        "packages/core/compute",
-        "packages/core/conductor",
-        "packages/core/functions",
+        "packages/core/compute/assistant-toolkit",
+        "packages/core/compute/assistant",
+        "packages/core/compute/compute",
+        "packages/core/compute/conductor",
+        "packages/core/compute/functions",
         "packages/devtools/devtools",
         "packages/plugins/*",
         "packages/sdk/app-framework",

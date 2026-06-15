@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
@@ -15,9 +15,9 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { Box } from './common';
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { Box } from './common';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 //
 // Data

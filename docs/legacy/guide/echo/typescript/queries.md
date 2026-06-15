@@ -54,22 +54,26 @@ Consider this expression of schema declared with Effect Schema:
 ```ts file=./snippets/schema.ts#L5-
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 
-export class TaskType extends TypedObject({
-  typename: 'dxos.org/type/Task',
-  version: '0.1.0',
-})({
+export const TaskType = Schema.Struct({
   name: Schema.String,
   completed: Schema.optional(Schema.Boolean),
-}) {}
+}).pipe(
+  Type.makeObject({
+    typename: 'org.dxos.type.task',
+    version: '0.1.0',
+  }),
+);
+
+export interface TaskType extends Schema.Schema.Type<typeof TaskType> {}
 ```
 
 Types can be used to make queries as well:
 
 ```ts{10,19} file=./snippets/read-items-typed-2.ts#L5-
 import { Client } from '@dxos/client';
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 
 import { TaskType } from './schema';
 

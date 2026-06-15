@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState, useEffect, cloneElement } from 'react';
+import React, { cloneElement, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Actions, StepHeading, Action, Input } from '../../../components';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
@@ -18,8 +19,8 @@ export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps
 
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('spaceInvitationCode') ?? searchParams.get('deviceInvitationCode');
+    const searchProps = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    const invitation = searchProps.get('spaceInvitationCode') ?? searchProps.get('deviceInvitationCode');
     return invitation ?? text;
   } catch (err) {
     log.catch(err);
@@ -31,7 +32,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
   const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent, succeededKeys } =
     props;
   const disabled = !active;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const [inputValue, setInputValue] = useState(unredeemedCode ?? '');
 
@@ -58,16 +59,16 @@ export const InvitationInput = (props: InvitationInputProps) => {
       {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
       data-testid='join-exit'
     >
-      {t('cancel label')}
+      {t('cancel.label')}
     </Action>
   );
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
-        <Input
-          label={<StepHeading>{t('invitation input label')}</StepHeading>}
-          placeholder={t('invitation input placeholder')}
+      <div className='grow flex flex-col justify-center'>
+        <TextInput
+          label={<InputLabel>{t('invitation-input.label')}</InputLabel>}
+          placeholder={t('invitation-input.placeholder')}
           disabled={disabled}
           value={inputValue}
           onChange={({ target: { value } }) => setInputValue(value)}
@@ -76,7 +77,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
           onKeyUp={({ key }) => key === 'Enter' && handleNext()}
         />
       </div>
-      <Actions>
+      <ActionBar>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow. */}
         {Kind === 'Halo'
           ? null
@@ -91,9 +92,9 @@ export const InvitationInput = (props: InvitationInputProps) => {
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
-          {t('continue label')}
+          {t('continue.label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };

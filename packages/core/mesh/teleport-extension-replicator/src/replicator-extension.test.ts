@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Event, sleep } from '@dxos/async';
 import { range } from '@dxos/util';
 
-import { createReplicatorPair, TestBuilder } from './testing';
+import { TestBuilder, createReplicatorPair } from './testing';
 
 describe('ReplicatorExtension', () => {
   test('replicates a feed', async () => {
@@ -131,7 +131,6 @@ describe('ReplicatorExtension', () => {
   });
 
   // TODO: not working yet.
-  // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('enabling upload mid replication', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();

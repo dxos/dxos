@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components';
+// TODO(wittjosiah): StatusBar should be factored out of plugin-status-bar into a shared UI package.
 export * from './meta';
-export * from './StatusBarPlugin';

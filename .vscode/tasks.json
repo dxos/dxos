@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "build (tsc)",
       "type": "typescript",
       "tsconfig": "tsconfig.all.json",
       "problemMatcher": ["$tsc-watch"],
@@ -19,7 +19,7 @@
       }
     },
     {
-      "label": "build current tsconfig",
+      "label": "build current tsconfig (tsc)",
       "type": "typescript",
       "tsconfig": "${relativeFile}",
       "problemMatcher": ["$tsc-watch"],
@@ -60,7 +60,7 @@
     {
       "label": "storybook",
       "type": "shell",
-      "command": "pnpm -w nx storybook stories",
+      "command": "moon run storybook:serve",
       "isBackground": true,
       "presentation": {
         "echo": true,
@@ -75,7 +75,7 @@
     {
       "label": "serve composer-app",
       "type": "shell",
-      "command": "pnpm -w nx serve composer-app",
+      "command": "moon run composer-app:serve",
       "isBackground": true,
       "presentation": {
         "echo": true,
@@ -93,12 +93,71 @@
       }
     },
     {
-      "label": "build and test all packages",
+      "label": "serve composer-app (local edge)",
       "type": "shell",
-      "command": "pnpm -w nx run-many --target=build,test --parallel 12",
+      "command": "lsof -ti:5173 | xargs kill -9 2>/dev/null; lsof -i:5173 && DX_EDGE_BASE_URL=http://localhost:8787 moon r composer-app:serve --port 5173 --strictPort",
+      "isBackground": true,
       "presentation": {
         "echo": true,
         "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
+      "label": "build and test all packages",
+      "type": "shell",
+      "command": "moon run :build :test --concurrency 12",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "build all",
+      "type": "shell",
+      "command": "moon exec --on-failure continue :build",
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": [
+          {
+            "regexp": "^(.*?)\\s*\\|\\s*(.*?)\\((\\d+),(\\d+)\\):\\s*error\\s*TS(\\d+):\\s*(.*)",
+            "file": 2,
+            "line": 3,
+            "column": 4,
+            "code": 5,
+            "message": 6
+          }
+        ]
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "compile vscode-extension",
+      "type": "shell",
+      "command": "pnpm run compile",
+      "options": {
+        "cwd": "${workspaceFolder}/packages/devtools/vscode-extension"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
         "focus": false,
         "panel": "shared"
       },

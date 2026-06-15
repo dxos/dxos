@@ -7,9 +7,10 @@ import React, { useMemo } from 'react';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
-import { useTranslation, List } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { List, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations';
 import { IdentityListItem } from './IdentityListItem';
 
 // TODO(burdon): Consolidate into single component?
@@ -42,7 +43,7 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
 };
 
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const visibleMembers = members.filter((member) => member.identity);
   return visibleMembers.length > 0 ? (
     <List classNames='flex flex-col gap-2' data-testid='space-members-list'>
@@ -58,8 +59,8 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
       })}
     </List>
   ) : (
-    <div role='none' className='grow flex items-center p-2'>
-      <p className={mx(descriptionText, 'text-center is-full mlb-2')}>{t('empty space members message')}</p>
+    <div className='grow flex items-center p-2'>
+      <p className={mx('text-description', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>
     </div>
   );
 };

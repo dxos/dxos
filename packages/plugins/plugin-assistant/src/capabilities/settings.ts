@@ -2,18 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import * as Effect from 'effect/Effect';
 
-import { meta } from '../meta';
-import { type AssistantSettingsProps, AssistantSettingsSchema } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { createKvsStore } from '@dxos/effect';
 
-export default () => {
-  const settings = live<AssistantSettingsProps>({});
+import { meta } from '#meta';
+import { Assistant, AssistantCapabilities } from '#types';
 
-  return contributes(Capabilities.Settings, {
-    prefix: meta.id,
-    schema: AssistantSettingsSchema,
-    value: settings,
-  });
-};
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: Assistant.Settings,
+      defaultValue: () => ({}),
+    });
+
+    return [
+      Capability.contributes(AssistantCapabilities.Settings, settingsAtom),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.id,
+        schema: Assistant.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

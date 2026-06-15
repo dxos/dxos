@@ -2,66 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { getSpace } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Transcript } from '@dxos/types';
 
-import { IntentResolver, ReactSurface, Transcriber } from './capabilities';
-import { renderMarkdown } from './components';
-import { meta } from './meta';
-import translations from './translations';
-import { TranscriptType } from './types';
+import { BlueprintDefinition, OperationHandler, ReactSurface, TextContent, Transcriber } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const TranscriptionPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: (context) =>
-        contributes(Capabilities.Metadata, {
-          id: TranscriptType.typename,
-          metadata: {
-            icon: 'ph--subtitles--regular',
-            // TODO(wittjosiah): Factor out. Artifact? Separate capability?
-            getTextContent: async (transcript: TranscriptType) => {
-              const space = getSpace(transcript);
-              const members = space?.members.get().map((member) => member.identity) ?? [];
-              const queue = space?.queues.get<DataType.Message>(transcript.queue.dxn);
-              await queue?.refresh();
-              const content = queue?.objects
-                .filter((message) => Obj.instanceOf(DataType.Message, message))
-                .flatMap((message, index) => renderMarkdown(members)(message, index))
-                .join('\n\n');
-              return content;
-            },
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [TranscriptType])],
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/transcription`,
-      activatesOn: Events.SetupAppGraph,
-      activate: Transcriber,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const TranscriptionPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addTextContentModule({ activate: TextContent }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'transcription',
+    activatesOn: AppActivationEvents.SetupAppGraph,
+    activate: Transcriber,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default TranscriptionPlugin;

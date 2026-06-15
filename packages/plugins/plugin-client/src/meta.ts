@@ -2,11 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
-export const CLIENT_PLUGIN = 'dxos.org/plugin/client';
-
-export const meta: PluginMeta = {
-  id: CLIENT_PLUGIN,
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.client'),
   name: 'Client',
-};
+  author: 'DXOS',
+  description: trim`
+    Core client connectivity and peer-to-peer networking infrastructure.
+    Manages identity, authentication, and real-time synchronization across devices.
+  `,
+  tags: ['system'],
+});

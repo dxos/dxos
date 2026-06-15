@@ -2,35 +2,38 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { baseSurface, modalSurface, activeSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
-import { type MessageValence } from '@dxos/react-ui-types';
+import { type MessageValence } from '@dxos/ui-types';
 
+import { withLayoutVariants, withTheme } from '../../testing';
 import {
   type CheckboxProps,
+  type DateInputProps,
+  type DateTimeInputProps,
   Input,
   type PinInputProps,
   type SwitchProps,
-  type TextInputProps,
   type TextAreaProps,
+  type TextInputProps,
+  type TimeProps,
 } from './Input';
-import { withTheme } from '../../testing';
 
 type VariantMap = {
   text: TextInputProps;
   pin: PinInputProps;
   textarea: TextAreaProps;
+  time: TimeProps;
+  date: DateInputProps;
+  datetime: DateTimeInputProps;
   checkbox: CheckboxProps;
   switch: SwitchProps;
 };
 
 type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
 
-type BaseProps = Partial<{
+type DefaultStoryProps = Partial<{
   kind: keyof VariantMap;
   label: string;
   labelVisuallyHidden: boolean;
@@ -40,7 +43,7 @@ type BaseProps = Partial<{
   validationMessage: string;
 }>;
 
-const Wrapper = ({
+const DefaultStory = ({
   kind,
   label,
   description,
@@ -49,7 +52,7 @@ const Wrapper = ({
   validationValence,
   validationMessage,
   ...props
-}: BaseProps) => {
+}: DefaultStoryProps) => {
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
@@ -57,82 +60,48 @@ const Wrapper = ({
       {kind === 'text' && <Input.TextInput {...props} />}
       {kind === 'pin' && <Input.PinInput {...props} />}
       {kind === 'textarea' && <Input.TextArea {...props} />}
+      {kind === 'time' && <Input.Time {...props} />}
+      {kind === 'date' && <Input.Date {...props} />}
+      {kind === 'datetime' && <Input.DateTime {...props} />}
       {kind === 'checkbox' && <Input.Checkbox {...props} />}
       {kind === 'switch' && <Input.Switch {...props} />}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
-        {validationMessage && (
-          <>
-            <Input.Validation>{validationMessage}</Input.Validation>{' '}
-          </>
-        )}
+        {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
         <Input.Description>{description}</Input.Description>
       </Input.DescriptionAndValidation>
     </Input.Root>
   );
 };
 
-const DefaultStory = (props: BaseProps) => {
-  return (
-    <div className='space-b-4'>
-      <div className={mx(baseSurface, 'p-4')}>
-        <Wrapper {...props} />
-      </div>
-      <div className={mx(activeSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
-        <Wrapper {...props} />
-      </div>
-      <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
-        <Wrapper {...props} />
-      </div>
-    </div>
-  );
-};
-
-const meta: Meta<BaseProps> = {
-  title: 'ui/react-ui-core/Input',
-  component: Input.Root,
+const meta = {
+  title: 'ui/react-ui-core/components/Input',
+  component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme(), withLayoutVariants()],
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<BaseProps & Variant>;
+type Story = StoryObj<DefaultStoryProps & Variant>;
 
-export const Default: Story = {
-  args: {
-    kind: 'text',
-    label: 'Hello',
-    placeholder: 'This is an input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-  },
-};
-
-export const DensityFine: Story = {
-  args: {
-    kind: 'text',
-    label: 'This is an Input with a density value of ‘fine’',
-    placeholder: 'This is a density:fine input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'fine',
-  },
+export const Density: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4'>
+      {(['lg', 'md', 'sm', 'xs'] as const).map((density) => (
+        <Input.Root key={density}>
+          <Input.Label>{`density="${density}"`}</Input.Label>
+          <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
 };
 
 export const Subdued: Story = {
   args: {
     kind: 'text',
-    label: 'Hello',
+    label: 'Input value',
     placeholder: 'This is a subdued input',
     disabled: false,
     description: undefined,
@@ -162,7 +131,7 @@ export const LabelVisuallyHidden: Story = {
   },
 };
 
-export const InputWithDescription: Story = {
+export const WithDescription: Story = {
   args: {
     kind: 'text',
     label: 'Described input',
@@ -171,7 +140,7 @@ export const InputWithDescription: Story = {
   },
 };
 
-export const InputWithErrorAndDescription: Story = {
+export const WithErrorAndDescription: Story = {
   args: {
     kind: 'text',
     label: 'Described invalid input',
@@ -182,7 +151,7 @@ export const InputWithErrorAndDescription: Story = {
   },
 };
 
-export const InputWithValidationAndDescription: Story = {
+export const WithValidationAndDescription: Story = {
   args: {
     kind: 'text',
     label: 'Described input with validation message',
@@ -208,23 +177,135 @@ export const PinInput: Story = {
     label: 'This input is a PIN-style input',
     length: 6,
     description: 'Type in secret you received',
-    placeholder: '••••••',
+    pattern: '\\d*',
+    density: 'lg',
   },
+};
+
+export const Time: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time',
+    defaultValue: '09:30',
+  },
+};
+
+export const TimeUncontrolled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (uncontrolled)',
+    defaultValue: '14:00',
+  },
+};
+
+export const TimeAmPm: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (12-hour, AM/PM)',
+    defaultValue: '14:00',
+    hourCycle: 12,
+  } as any,
+};
+
+export const TimeDisabled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (disabled)',
+    defaultValue: '12:00',
+    disabled: true,
+  },
+};
+
+export const Date: Story = {
+  args: {
+    kind: 'date',
+    label: 'Date',
+    defaultValue: '1990-05-12',
+  },
+};
+
+export const DateTime: Story = {
+  args: {
+    kind: 'datetime',
+    label: 'Date & time',
+    defaultValue: '2026-06-01T15:30',
+  },
+};
+
+export const DateWithPicker: Story = {
+  render: () => (
+    <Input.Root>
+      <Input.Label>Date (with picker)</Input.Label>
+      <div className='flex items-center gap-1'>
+        <Input.Date defaultValue='2026-06-01' />
+        <Input.TriggerIcon />
+      </div>
+      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
+    </Input.Root>
+  ),
+};
+
+export const DateTimeWithPicker: Story = {
+  render: () => (
+    <Input.Root>
+      <Input.Label>Date & time (with picker)</Input.Label>
+      <div className='flex items-center gap-1'>
+        <Input.DateTime defaultValue='2026-06-01T15:30' />
+        <Input.TriggerIcon />
+      </div>
+      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
+    </Input.Root>
+  ),
 };
 
 export const Checkbox: Story = {
   args: {
     kind: 'checkbox',
     label: 'This is a checkbox',
-    description: 'It’s checked, indeterminate, or unchecked',
+    description: 'Checked, indeterminate, or unchecked',
     size: 5,
   },
 };
 
-export const Switch = {
+export const Switch: Story = {
   args: {
     kind: 'switch',
     label: 'This is a switch',
-    description: 'It’s either off... or on.',
+    description: 'On or off',
   },
+};
+
+/**
+ * Native HTML input types. `Input.TextInput` accepts every standard
+ * `<input type="…">` value via its `type` prop; this story exercises the most
+ * commonly used ones so the rendering across themes/browsers can be
+ * inspected at a glance.
+ */
+const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
+  { type: 'text', placeholder: 'Plain text' },
+  { type: 'email', placeholder: 'name@example.com' },
+  { type: 'password', placeholder: '••••••••' },
+  { type: 'search', placeholder: 'Search…' },
+  { type: 'tel', placeholder: '+1 (555) 555-5555' },
+  { type: 'url', placeholder: 'https://example.com' },
+  { type: 'number', placeholder: '42' },
+  { type: 'date', placeholder: '' },
+  { type: 'time', placeholder: '' },
+  { type: 'datetime-local', placeholder: '' },
+  { type: 'month', placeholder: '' },
+  { type: 'week', placeholder: '' },
+  { type: 'color', placeholder: '' },
+];
+
+export const TextInputTypes: Story = {
+  render: () => (
+    <div className='flex flex-col gap-3 min-w-[24rem]'>
+      {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
+        <Input.Root key={type}>
+          <Input.Label>{`type="${type}"`}</Input.Label>
+          <Input.TextInput type={type} placeholder={placeholder} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
 };

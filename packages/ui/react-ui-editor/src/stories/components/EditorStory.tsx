@@ -3,64 +3,67 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, forwardRef, useEffect, useState, useImperativeHandle, useMemo } from 'react';
+import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
-
-import { editorSlots, editorGutter } from '../../defaults';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
-  createDataExtensions,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-} from '../../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../../hooks';
+  documentSlots,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
+
+import { type EditorController, createEditorController } from '../../components';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 // Type definitions.
 export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 
 const defaultId = 'editor-' + PublicKey.random().toHex().slice(0, 8);
 
-export type StoryProps = Pick<UseTextEditorProps, 'scrollTo' | 'selection' | 'extensions'> &
+export type EditorStoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection' | 'extensions'> &
   Pick<ThemeExtensionsOptions, 'slots'> & {
-    id?: string;
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    object?: Expando;
+    object?: Obj.OfShape<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
+    monospace?: boolean;
     onReady?: (view: EditorView) => void;
   };
 
-export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
-  ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
-    const attentionAttrs = useAttentionAttributes('testing');
+export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
+  ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
+    const controllerRef = useRef<EditorController>(null);
+    const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
+
+    const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
-    const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
-    const viewRef = useForwardedRef(forwardedRef);
-    const view = viewRef.current;
+    const [object] = useState(Obj.make(TestSchema.Expando, { content: text ?? '' }));
+
     const extensions = useMemo(
-      () => (debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions),
-      [debug, _extensions],
+      () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),
+      [debug, extensionsProp],
     );
 
+    const view = controllerRef.current?.view;
     return (
-      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
-        <EditorComponent ref={viewRef} object={object} text={text} extensions={extensions} {...props} />
+      <div className={mx('dx-container grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+        <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
           <div
@@ -73,7 +76,16 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
                 {view?.state.doc.toString()}
               </pre>
             )}
-            {(debug === 'tree' || debug === 'raw+tree') && <JsonFilter data={tree} classNames='p-1 text-xs' />}
+            {(debug === 'tree' || debug === 'raw+tree') && (
+              <Syntax.Root data={tree}>
+                <Syntax.Content>
+                  <Syntax.Filter />
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='p-1 text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            )}
           </div>
         )}
       </div>
@@ -84,7 +96,7 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
 /**
  * Default story component.
  */
-export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
+const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
   (
     {
       id = defaultId,
@@ -93,10 +105,11 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
       readOnly,
       placeholder = 'New document.',
       lineNumbers,
+      monospace,
       scrollTo,
       selection,
       extensions,
-      slots = editorSlots,
+      slots = documentSlots,
       onReady,
     },
     forwardedRef,
@@ -111,18 +124,20 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
         selection,
         initialValue: text,
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
-          createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
-          editorGutter,
+          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
+          createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
+          createMarkdownExtensions(),
           extensions || [],
         ],
       }),
       [id, object, extensions, themeMode],
     );
 
-    useImperativeHandle(forwardedRef, () => view, [view]);
+    // External controller.
+    useImperativeHandle(forwardedRef, () => {
+      log.info('view updated', { id });
+      return createEditorController(view);
+    }, [id, view]);
 
     useEffect(() => {
       if (view) {

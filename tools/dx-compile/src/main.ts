@@ -1,0 +1,243 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
+import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
+import glsl from 'esbuild-plugin-glsl';
+import RawPlugin from 'esbuild-plugin-raw';
+import esbuildPluginYaml from 'esbuild-plugin-yaml';
+import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
+import pkgUp from 'pkg-up';
+
+const { yamlPlugin } = esbuildPluginYaml;
+
+import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
+
+import { BabelSolidTransformPlugin } from './babel-solid-transform-plugin.ts';
+import { bundleDepsPlugin } from './bundle-deps-plugin.ts';
+import { esmOutputToCjs } from './esm-output-to-cjs-plugin.ts';
+import { fixRequirePlugin } from './fix-require-plugin.ts';
+import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports.ts';
+import { SwcTransformPlugin } from './swc-transform-plugin.ts';
+
+export interface EsbuildExecutorOptions {
+  bundle: boolean;
+  bundlePackages: string[];
+  ignorePackages: string[];
+  alias: Record<string, string>;
+  entryPoints: string[];
+  injectGlobals: boolean;
+  importGlobals: boolean;
+  metafile: boolean;
+  outputPath: string;
+  platforms: Platform[];
+  moduleFormat: Format[];
+  sourcemap: boolean;
+  watch: boolean;
+  verbose: boolean;
+  mainFields: string[];
+}
+
+export default async (options: EsbuildExecutorOptions): Promise<{ success: boolean }> => {
+  if (options.verbose) {
+    console.info('Executing esbuild...');
+    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  }
+
+  try {
+    await readdir(options.outputPath);
+    await rm(options.outputPath, { recursive: true });
+  } catch {}
+
+  const packagePath = pkgUp.sync({ cwd: process.cwd() });
+  if (!packagePath) {
+    throw new Error('Could not find package.json.');
+  }
+  const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
+
+  let tsConfig: any;
+  try {
+    const tsConfigPath = join(dirname(packagePath), 'tsconfig.json');
+    const content = await readFile(tsConfigPath, 'utf-8');
+    const json = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    tsConfig = JSON.parse(json);
+  } catch (err) {
+    tsConfig = { compilerOptions: {} };
+  }
+  const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
+
+  // Solid packages need `babel-preset-solid` to compile JSX into reactive
+  // primitives. SWC's React JSX runtime would emit `_jsx(...)` calls plus
+  // `import { jsx } from 'solid-js/jsx-runtime'`, but solid-js doesn't export
+  // a JSX runtime at all — its `./jsx-runtime` subpath resolves to the main
+  // bundle which has no `jsx`/`jsxs` symbols. When `jsxImportSource: 'solid-js'`
+  // is set in tsconfig, we route `.tsx` files through Babel instead, keeping
+  // SWC for plain `.ts` (which has no JSX and is ~5x faster).
+  const isSolidPackage = jsxImportSource === 'solid-js';
+  const babelSolidTransformPlugin = isSolidPackage
+    ? new BabelSolidTransformPlugin({ isVerbose: options.verbose })
+    : undefined;
+
+  // Log-meta injection (`__dxlog_file`, `{F,L,S,...}`) is also applied here on the
+  // post-SWC output via `@dxos/vite-plugin-log`'s `transformLogMeta`. The Rolldown
+  // app-build pass still runs at the consumer side, but doing it here too means
+  // packages that ship pre-compiled `dist/` (e.g. e2e fixtures, library consumers
+  // that don't go through Rolldown) keep the same call-site metadata.
+  const swcTransformPlugin = new SwcTransformPlugin({
+    isVerbose: options.verbose,
+    getTranspilerOptions: ({ filePath }) => ({
+      filename: basename(filePath),
+      sourceMaps: 'inline',
+      minify: false,
+      jsc: {
+        parser: {
+          syntax: 'typescript',
+          decorators: true,
+          tsx: true,
+        },
+        transform: {
+          react: {
+            runtime: jsxImportSource ? 'automatic' : 'classic',
+            importSource: jsxImportSource,
+            pragma: jsxFactory,
+            pragmaFrag: jsxFragmentFactory,
+          },
+        },
+        target: 'esnext',
+      },
+    }),
+  });
+
+  const configurations = options.platforms.flatMap((platform) => {
+    return platform === 'node'
+      ? [
+          ...(options.moduleFormat.includes('esm')
+            ? [{ platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false }]
+            : []),
+          ...(options.moduleFormat.includes('cjs')
+            ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
+            : []),
+        ]
+      : platform === 'browser'
+        ? [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }]
+        : platform === 'neutral'
+          ? [{ platform: 'neutral', format: 'esm', slug: 'neutral', replaceRequire: true }]
+          : [];
+  });
+
+  const errors = await Promise.all(
+    configurations.map(async ({ platform, format, slug, replaceRequire }) => {
+      const extension = format === 'esm' ? '.mjs' : '.cjs';
+      const outdir = `${options.outputPath}/${slug}`;
+
+      const start = Date.now();
+      const result = await build({
+        entryPoints: options.entryPoints,
+        outdir,
+        outExtension: { '.js': extension },
+        format: 'esm', // Output is later transpiled to CJS via plugin.
+        write: true,
+        splitting: true,
+        sourcemap: options.sourcemap,
+        jsx: jsx === 'preserve' ? 'preserve' : jsxImportSource ? 'automatic' : undefined,
+        jsxImportSource,
+        jsxFactory,
+        jsxFragment: jsxFragmentFactory,
+        metafile: options.metafile,
+        bundle: options.bundle,
+        // watch: options.watch,
+        alias: options.alias,
+        platform: platform as Platform,
+        // https://esbuild.github.io/api/#log-override
+        logOverride: {
+          // The log transform was generating this warning.
+          'this-is-undefined-in-esm': 'info',
+        },
+        logLevel: 'silent',
+        absPaths: ['log'],
+        banner: {
+          js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
+        },
+        mainFields: options.mainFields,
+        define:
+          format === 'cjs'
+            ? {
+                'import.meta.dirname': '__dirname',
+              }
+            : undefined,
+        plugins: [
+          restrictRelativeImportsPlugin({
+            allowedDirectory: process.cwd(),
+          }),
+          NodeExternalPlugin({
+            injectGlobals: options.injectGlobals,
+            importGlobals: options.importGlobals,
+            nodeStd: Boolean(packageJson.dependencies?.['@dxos/node-std']),
+          }),
+          replaceRequire ? fixRequirePlugin() : undefined,
+          bundleDepsPlugin({
+            packages: options.bundlePackages,
+            packageDir: dirname(packagePath),
+            ignore: options.ignorePackages,
+            alias: options.alias,
+          }),
+          // Register babel before swc — esbuild's onLoad is first-match-wins,
+          // so babel claims `.tsx` for solid packages and swc handles `.ts`.
+          babelSolidTransformPlugin?.createPlugin(),
+          swcTransformPlugin.createPlugin(),
+          RawPlugin(),
+          // Substitute '/*?url' imports with empty string.
+          {
+            name: 'url',
+            setup: ({ onResolve, onLoad }) => {
+              onResolve({ filter: /\?url$/ }, (args) => {
+                return {
+                  path: args.path.replace(/\?url$/, '/empty-url'),
+                  namespace: 'url',
+                };
+              });
+
+              onLoad({ filter: /\/empty-url/, namespace: 'url' }, async (args) => {
+                return { contents: 'export default ""' };
+              });
+            },
+          } satisfies Plugin,
+          yamlPlugin({}),
+          // GLSL support for shaders.
+          // https://github.com/vanruesc/esbuild-plugin-glsl
+          glsl({}),
+          ...(format === 'cjs' ? [esmOutputToCjs()] : []),
+        ].filter((x) => x !== undefined),
+      });
+
+      await writeFile(`${outdir}/meta.json`, JSON.stringify(result.metafile), 'utf-8');
+
+      if (options.verbose) {
+        console.log(`Build took ${Date.now() - start}ms.`);
+      }
+
+      return result.errors;
+    }),
+  );
+
+  const formatted = await formatMessages(Function.pipe(errors, Array.flatten, Array.dedupe), {
+    kind: 'warning',
+    color: true,
+  });
+  const filtered = formatted.filter((_) => _.trim().length > 0);
+  if (filtered.length > 0) {
+    console.log(filtered.join('\n'));
+  }
+
+  if (options.watch) {
+    await new Promise(() => {}); // Wait indefinitely.
+  }
+
+  return { success: errors.flat().length === 0 };
+};
+
+const CREATE_REQUIRE_BANNER =
+  "import { createRequire } from 'node:module';const require = createRequire(import.meta.url);";

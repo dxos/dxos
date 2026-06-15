@@ -2,59 +2,79 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import React, { ReactNode, useMemo } from 'react';
 
-import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
-import { THEME_PLUGIN } from './meta';
-import compositeEnUs from './translations/en-US';
+import { translations } from '#translations';
+
+import { meta } from './meta';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
+  platform?: 'mobile' | 'desktop';
 };
 
-export default (
-  { appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' },
-) => {
-  const state = live<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({
+    appName,
+    tx: propsTx = defaultTx,
+    resourceExtensions = [],
+    platform,
+    ...rest
+  }: ThemePluginOptions = {}) {
+    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
-  const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
-    document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
-    state.themeMode = prefersDark ? 'dark' : 'light';
-  };
+    const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
+      document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+      registry.set(themeAtom, { themeMode: prefersDark ? 'dark' : 'light' });
+    };
 
-  const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  setTheme({ matches: modeQuery.matches });
-  modeQuery.addEventListener('change', setTheme);
+    const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme({ matches: modeQuery.matches });
+    modeQuery.addEventListener('change', setTheme);
 
-  return contributes(
-    Capabilities.ReactContext,
-    {
-      id: THEME_PLUGIN,
-      context: ({ children }) => {
-        const _resources = useCapabilities(Capabilities.Translations);
-        const resources = useMemo(
-          () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],
-          [appName, resourceExtensions, _resources],
-        );
+    return Capability.contributes(
+      Capabilities.ReactContext,
+      {
+        id: meta.id,
+        context: ({ children }: { children?: ReactNode }) => {
+          const _resources = useCapabilities(AppCapabilities.Translations);
+          const { themeMode } = useAtomValue(themeAtom);
+          const resources = useMemo(
+            () => [
+              ...translations,
+              ...resourceExtensions,
+              ..._resources.flat(),
+              ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),
+            ],
+            [appName, resourceExtensions, _resources],
+          );
 
-        return (
-          <ThemeProvider {...{ tx: propsTx, themeMode: state.themeMode, resourceExtensions: resources, ...rest }}>
-            <Toast.Provider>
-              <Tooltip.Provider delayDuration={2_000} skipDelayDuration={100} disableHoverableContent>
-                {children}
-              </Tooltip.Provider>
-              <Toast.Viewport />
-            </Toast.Provider>
-          </ThemeProvider>
-        );
+          return (
+            <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, platform, ...rest }}>
+              <Toast.Provider>
+                <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
+                  {children}
+                </Tooltip.Provider>
+                <Toast.Viewport />
+              </Toast.Provider>
+            </ThemeProvider>
+          );
+        },
       },
-    },
-    () => {
-      modeQuery.removeEventListener('change', setTheme);
-    },
-  );
-};
+      () =>
+        Effect.sync(() => {
+          modeQuery.removeEventListener('change', setTheme);
+        }),
+    );
+  }),
+);

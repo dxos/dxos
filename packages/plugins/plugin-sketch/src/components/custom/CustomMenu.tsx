@@ -5,8 +5,8 @@
 import {
   DefaultQuickActions,
   DefaultQuickActionsContent,
-  TldrawUiMenuItem,
   type TLUiStylePanelProps,
+  TldrawUiMenuItem,
   useActions,
   useReadonly,
 } from '@tldraw/tldraw';

@@ -3,92 +3,105 @@
 //
 
 import { format } from 'date-fns/format';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Ref } from '@dxos/echo';
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
+import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { OUTLINER_PLUGIN } from '../../meta';
-import {
-  createJournalEntry,
-  getJournalEntries,
-  getDateString,
-  parseDateString,
-  type JournalType,
-  type JournalEntryType,
-} from '../../types';
-import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
+import { meta } from '#meta';
+import { Journal as JournalType, getDateString, parseDateString } from '#types';
 
-// TODO(burdon): Only show one selected line entry.
+import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
-type JournalProps = ThemedClassName<{
-  journal: JournalType;
-}>;
+const RECENT = 7 * 24 * 60 * 60 * 1_000;
+
+export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
+  journal: JournalType.Journal;
+};
 
 // TODO(burdon): Virtualize.
-export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
-  const { t } = useTranslation(OUTLINER_PLUGIN);
+export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
+  const { t } = useTranslation(meta.id);
   const date = new Date();
 
-  const [showAddEntry, setShowAddEntry] = useState(false);
-  useEffect(() => {
-    if (!journal) {
-      return;
-    }
+  // Subscribe to the journal object reactively so we pick up new entries.
+  const [journalSnapshot] = useObject(journal);
+  // TODO(burdon): CRDT issue (merge entries with same date?)
+  const entryRefs = useMemo(
+    () =>
+      Object.entries(journalSnapshot?.entries ?? {})
+        .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([dateKey, ref]) => ({ dateKey, ref })),
+    [journalSnapshot],
+  );
 
-    // TODO(burdon): CRDT issue (merge entries with same date?)
-    const entries = getJournalEntries(journal, date);
-    setShowAddEntry(entries.length === 0);
-  }, [journal, journal?.entries.length, date]);
+  const hasTodayEntry = useMemo(() => entryRefs.some(({ dateKey }) => dateKey === getDateString()), [entryRefs]);
 
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
       return;
     }
 
-    const entry = createJournalEntry();
-    journal.entries.push(Ref.make(entry));
-    setShowAddEntry(false);
+    const entry = JournalType.makeEntry();
+    Obj.update(journal, (journal) => {
+      journal.entries[getDateString(date)] = Ref.make(entry);
+    });
   }, [journal, date]);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-y-auto', classNames)}>
-      {showAddEntry && (
-        <div className='p-2'>
-          <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
-        </div>
-      )}
-      {Ref.Array.targets(journal?.entries ?? [])
-        .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
-        .map((entry, i) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Viewport>
+        {entryRefs.map(({ dateKey, ref }, i) => (
+          <JournalEntry
+            key={dateKey}
+            entryRef={ref}
+            classNames='p-2'
+            onSelect={onSelect}
+            autoFocus={i === entryRefs.length - 1}
+          />
         ))}
-    </div>
+        {!hasTodayEntry && (
+          <div className='p-2'>
+            <IconButton label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
+          </div>
+        )}
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
-};
+});
 
-const RECENT = 7 * 24 * 60 * 60 * 1_000;
+Journal.displayName = 'Journal';
 
 type JournalEntryProps = ThemedClassName<
   {
-    entry: JournalEntryType;
-  } & Pick<OutlinerProps, 'autoFocus'>
+    entryRef: Ref.Ref<JournalType.JournalEntry>;
+    onSelect?: (event: { date: Date }) => void;
+  } & Pick<OutlineRootProps, 'autoFocus'>
 >;
 
-const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
-  const { t } = useTranslation(OUTLINER_PLUGIN);
-  const date = parseDateString(entry.date);
-  const isToday = getDateString() === entry.date;
-  const isRecent = useMemo(() => Date.now() - new Date(entry.date).getTime() < RECENT, [entry.date]);
-  const outlinerRef = useRef<OutlinerController>(null);
+const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
+  const { t } = useTranslation(meta.id);
+  const [entry] = useObject(entryRef);
+  // Subscribe to the content ref to trigger a re-render when the Text object loads.
+  useObject(entry?.content);
+  const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
+
+  const date = entry ? parseDateString(entry.date) : undefined;
+  const isToday = entry ? getDateString() === entry.date : false;
+  const isRecent = useMemo(() => (entry ? Date.now() - new Date(entry.date).getTime() < RECENT : false), [entry?.date]);
 
   const handleFocus = useCallback(() => {
     outlinerRef.current?.focus();
-  }, []);
+    if (date) {
+      onSelect?.({ date });
+    }
+  }, [date, onSelect]);
 
-  if (!entry.content.target) {
+  if (!entry || !entry.content.target) {
     return null;
   }
 
@@ -102,23 +115,23 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
     >
       <div className='flex items-center gap-2 bg-transparent'>
         <IconButton
-          label={format(date, 'MMM d, yyyy')}
-          size={5}
+          label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />
-        {isRecent && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
-        {isToday && <div className='text-xs'>{t('today label')}</div>}
+        {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
+        {isToday && <div className='text-xs'>{t('today.label')}</div>}
       </div>
-      <Outliner
+      <Outline.Root
         ref={outlinerRef}
         id={entry.id}
         text={entry.content.target}
-        classNames='pbs-2 pbe-2'
         scrollable={false}
         showSelected={false}
         {...props}
-      />
+      >
+        <Outline.Content classNames='py-2' />
+      </Outline.Root>
     </div>
   );
 };

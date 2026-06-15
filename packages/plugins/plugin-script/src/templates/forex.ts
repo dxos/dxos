@@ -2,23 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-export default defineFunction({
-  description: 'Returns the exchange rate between two currencies.',
+import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
-  inputSchema: S.Struct({
-    from: S.String.annotations({ description: 'The source currency' }),
-    to: S.String.annotations({ description: 'The target currency' }),
-  }),
-
-  handler: async ({ data: { from, to } }: any) => {
-    const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
-    const {
-      data: { rates },
-    } = await res.json();
-
-    return rates[to].toString();
+const Forex = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.script.forex'),
+    name: 'Forex',
+    description: 'Returns the exchange rate between two currencies.',
   },
+  input: Schema.Struct({
+    from: Schema.String.annotations({ description: 'The source currency' }),
+    to: Schema.String.annotations({ description: 'The target currency' }),
+  }),
+  output: Schema.Any,
 });
+
+export default Forex.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ from: rawFrom, to: rawTo }) {
+      const from = rawFrom.toUpperCase();
+      const to = rawTo.toUpperCase();
+      const res = yield* Effect.promise(() => fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`));
+      const {
+        data: { rates },
+      } = yield* Effect.promise(() => res.json());
+
+      return rates[to].toString();
+    }),
+  ),
+);

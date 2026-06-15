@@ -2,19 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import { type Obj } from '@dxos/echo';
+import { type Collection, type Obj } from '@dxos/echo';
 import { type Label } from '@dxos/react-ui';
 import { type StackItemSize } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
 
 export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
 
 export type CollapsedSections = Record<string, boolean>;
 
-export type CollectionItem = DataType.Collection['objects'][number];
+export type CollectionItem = Collection.Collection['objects'][number];
 
 export type StackSectionView = {
   title?: string;
@@ -29,7 +27,7 @@ type StackSectionAction = {
   testId: string;
   type: string | [string, { ns: string }];
   label: string | [string, { ns: string }];
-  icon: FC<IconProps>;
+  icon: FC<{ className?: string; size?: number }>;
 };
 
 export type StackSectionMetadata = {
@@ -40,7 +38,7 @@ export type StackSectionMetadata = {
 
 export type StackSectionItem = {
   id: string;
-  object: Obj.Any;
+  object: Obj.Unknown;
   view: StackSectionView;
   metadata: StackSectionMetadata;
 };

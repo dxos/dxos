@@ -2,19 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
-import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
   type Edge,
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
-  forwardRef,
   type MouseEvent,
   type PropsWithChildren,
+  forwardRef,
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -23,16 +25,28 @@ import React, {
 } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { invariant } from '@dxos/invariant';
-import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
+import { DxAvatar } from '@dxos/lit-ui/react';
+import { useActionRunner } from '@dxos/plugin-graph';
+import {
+  Icon,
+  IconButton,
+  ListItem,
+  ScrollArea,
+  type ThemedClassName,
+  Tooltip,
+  toLocalizedString,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
-import { arrayMove, getFirstTwoRenderableChars } from '@dxos/util';
+import { mx } from '@dxos/ui-theme';
+import { arrayMove } from '@dxos/util';
 
-import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
+import { useNavTreeState } from '#hooks';
+import { meta } from '#meta';
+
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { UserAccountAvatar } from '../UserAccountAvatar';
@@ -47,43 +61,41 @@ type L0ItemData = {
 };
 
 type L0ItemRootProps = {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
+  onMouseEnter?: () => void;
 };
 
 type L0ItemProps = L0ItemRootProps & {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
+  onItemHover?: (params: { item: Node.Node }) => void;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
-  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const { onSelect, onTabChange } = useNavTreeContext();
+  const { getItem } = useNavTreeState();
+  const [isLg] = useMediaQuery('lg');
+  const runAction = useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
         case 'action': {
-          const {
-            data: invoke,
-            properties: { caller },
-          } = item;
-
-          return invoke?.(caller ? { node: parent, caller } : { node: parent });
+          const { properties: { caller } = {} } = item;
+          return void runAction(item as Node.Action, caller ? { parent, path, caller } : { parent, path });
         }
-
         case 'tab':
           return onTabChange?.(item);
-
         case 'link':
-          return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
+          return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
       }
     },
-    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg],
+    [item, parent, type, getItem, onSelect, onTabChange, isLg, runAction],
   );
 };
 
@@ -91,74 +103,61 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
-const l0ItemRoot =
-  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer app-no-drag dx-focus-ring-group';
+const L0ItemRoot = memo(
+  forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
+    ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
+      const { t } = useTranslation(meta.id);
+      const { model } = useNavTreeContext();
+      const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+      const { id, testId } = useAtomValue(model.itemProps(itemPath));
+      const localizedString = toLocalizedString(item.properties.label, t);
 
-const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
+      const type = l0ItemType(item);
+      const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
 
-const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
-  ({ item, parent, path, children }, forwardedRef) => {
-    const { getProps } = useNavTreeContext();
-    const { id, testId } = getProps?.(item, path) ?? {};
-    const type = l0ItemType(item);
-    const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
-
-    const { t } = useTranslation(NAVTREE_PLUGIN);
-    const localizedString = toLocalizedString(item.properties.label, t);
-
-    const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
-    const rootProps =
-      type === 'tab'
-        ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
-        : type !== 'collection'
-          ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
-          : { onClick: handleClick };
-
-    const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
-
-    return (
-      <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-        <Root
-          {...(rootProps as any)}
-          data-type={type}
-          className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
-          ref={forwardedRef}
-        >
-          {children}
-        </Root>
-      </Tooltip.Trigger>
-    );
-  },
+      return (
+        <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
+          <Tabs.TabPrimitive
+            className={mx(
+              'group/l0item flex w-full justify-center items-center relative',
+              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer',
+              l0Breakpoints[item.properties.l0Breakpoint],
+            )}
+            tabIndex={type === 'tab' ? 0 : undefined}
+            data-type={type}
+            data-testid={testId}
+            data-object-id={id}
+            value={item.id}
+            onClick={handleClick}
+            onMouseEnter={onMouseEnter}
+            ref={forwardedRef}
+          >
+            {children}
+          </Tabs.TabPrimitive>
+        </Tooltip.Trigger>
+      );
+    },
+  ),
 );
 
-const L0Avatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const type = l0ItemType(item);
-  const hue = item.properties.hue ?? null;
-  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
-  const localizedString = toLocalizedString(item.properties.label, t);
-  const avatarValue = useMemo(
-    () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('').toUpperCase() : []),
-    [type, item.properties.label, t],
-  );
-
-  return (
-    <span role='img' className='place-self-center text-xl font-light' {...hueFgStyle}>
-      {avatarValue}
-    </span>
-  );
-};
+export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
+  <div
+    className={mx(
+      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-bg rounded-sm',
+      classNames,
+    )}
+  />
+);
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
-const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const itemElement = useRef<HTMLElement | null>(null);
+const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
+  const { t } = useTranslation(meta.id);
+  const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
 
   useLayoutEffect(() => {
-    // NOTE(thure): This is copied from StackItem, perhaps this should be DRYed out.
     if (!itemElement.current || !onRearrange) {
       return;
     }
@@ -213,94 +212,49 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
     );
   }, [item, onRearrange]);
 
+  const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
+
   return (
-    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path}>
+    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
       <div
-        role='none'
         data-frame={true}
-        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
-          l0ItemContent,
+          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
-            ? 'p-2 group-hover/l0item:bg-activeSurface'
-            : 'is-[--l0-avatar-size] bs-[--l0-avatar-size] bg-activeSurface',
+            ? 'p-2 group-hover/l0item:bg-current-surface'
+            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-current-surface',
         )}
       >
         <ItemAvatar item={item} />
       </div>
-      <div
-        role='none'
-        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie'
-      />
+      <L0ItemActiveTabIndicator />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
       {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
-};
+});
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const type = l0ItemType(item);
+  const { t } = useTranslation(meta.id);
+
+  // Actions.
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
-    return <Icon icon={item.properties.icon} size={5} {...hueFgStyle} />;
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
+    return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
+  const type = l0ItemType(item);
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
-    return <L0Avatar item={item} />;
+    const hue = item.properties.hue ?? null;
+    const localizedString = toLocalizedString(item.properties.label, t);
+    return <DxAvatar hue={hue} hueVariant='surface' variant='square' size={12} fallback={localizedString} />;
   }
 
   return null;
-};
-
-//
-// L0Collection
-//
-
-const L0Collection = ({ item, path }: L0ItemProps) => {
-  const navTreeContext = useNavTreeContext();
-  useLoadDescendents(item);
-  const collectionItems = navTreeContext.useItems(item);
-  const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
-
-  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
-    (source, target, closestEdge) => {
-      invariant(item.properties.onRearrangeChildren);
-      const sourceIndex = collectionItems.findIndex((i) => i.id === source.id);
-      const targetIndex = collectionItems.findIndex((i) => i.id === target.id);
-      const insertIndex =
-        source.id === target.id
-          ? sourceIndex
-          : targetIndex +
-            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
-      const nextOrder = arrayMove([...collectionItems], sourceIndex, insertIndex);
-      return item.properties.onRearrangeChildren(nextOrder);
-    },
-    [collectionItems, item.properties.onRearrangeChildren],
-  );
-
-  return (
-    <div
-      role='group'
-      className='contents group/l0c'
-      aria-labelledby={`${item.id}__label`}
-      data-itemid={id}
-      data-testid={testId}
-    >
-      {collectionItems.map((collectionItem) => (
-        <L0Item
-          key={collectionItem.id}
-          item={collectionItem}
-          parent={item}
-          path={groupPath}
-          {...(item.properties.onRearrangeChildren && { onRearrange: handleRearrange })}
-        />
-      ))}
-    </div>
-  );
 };
 
 //
@@ -309,82 +263,109 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
 
 export type L0MenuProps = {
   menuActions: MenuItem[];
-  topLevelItems: Node<any>[];
-  pinnedItems: Node<any>[];
-  userAccountItem?: Node<any>;
-  parent?: Node<any>;
+  topLevelItems: Node.Node[];
+  pinnedItems: Node.Node[];
+  userAccountItem?: Node.Node;
+  parent?: Node.Node;
   path: string[];
+  onItemHover?: (params: { item: Node.Node }) => void;
 };
 
-export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+export const L0Menu = ({
+  menuActions,
+  topLevelItems,
+  pinnedItems,
+  userAccountItem,
+  parent,
+  path,
+  onItemHover,
+}: L0MenuProps) => {
+  const { t } = useTranslation(meta.id);
+  const runAction = useActionRunner();
+  const handleAction = useCallback(
+    (action: Node.Action, params: Node.InvokeProps) => {
+      void runAction(action, params);
+    },
+    [runAction],
+  );
+
+  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
+    (source, target, closestEdge) => {
+      const sourceItem = topLevelItems.find((i) => i.id === source.id);
+      if (!sourceItem?.properties.onRearrange) {
+        return;
+      }
+
+      const sourceIndex = topLevelItems.findIndex((i) => i.id === source.id);
+      const targetIndex = topLevelItems.findIndex((i) => i.id === target.id);
+      const insertIndex =
+        source.id === target.id
+          ? sourceIndex
+          : targetIndex +
+            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
+      const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
+      return sourceItem.properties.onRearrange(nextOrder.map((item) => item.data));
+    },
+    [topLevelItems],
+  );
+
+  // Check if any items have onRearrange to enable drag-and-drop.
+  const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
 
   return (
     <Tabs.Tablist
+      data-tauri-drag-region
       classNames={[
-        'group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is',
-        'grid grid-cols-[var(--l0-size)] grid-rows-[var(--rail-size)_1fr_min-content_var(--l0-size)] contain-layout',
-        '!is-[--l0-size] bg-baseSurface border-ie border-subduedSeparator app-drag pbe-[env(safe-area-inset-bottom)]',
+        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
+        'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
+        'w-(--dx-l0-size) bg-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        '[body[data-platform="macos"]_&]:pt-[30px]',
+        '[body[data-platform="ios"]_&]:pt-[max(env(safe-area-inset-top),0.25rem)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <MenuProvider>
-        <DropdownMenu.Root group={parent} items={menuActions}>
-          <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-            <DropdownMenu.Trigger
-              data-testid='spacePlugin.addSpace'
-              className={mx(l0ItemRoot, 'grid place-items-center')}
-            >
-              <div
-                role='none'
-                className={mx(
-                  l0ItemContent,
-                  'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
-                )}
-              >
-                <Icon icon='ph--list--regular' size={5} />
-              </div>
-            </DropdownMenu.Trigger>
-          </Tooltip.Trigger>
-        </DropdownMenu.Root>
-      </MenuProvider>
+      <Menu.Root onAction={handleAction}>
+        <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
+          <div className='grid place-items-center'>
+            <IconButton
+              density='lg'
+              variant='ghost'
+              size={5}
+              icon='ph--list--regular'
+              iconOnly
+              square
+              label={t('app-menu.label')}
+            />
+          </div>
+        </Menu.Trigger>
+        <Menu.Content group={parent} items={menuActions} />
+      </Menu.Root>
 
       {/* Space list. */}
-      <ScrollArea.Root>
-        <ScrollArea.Viewport>
-          <div
-            role='none'
-            className={mx([
-              'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
-              '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
-            ])}
-          >
-            {topLevelItems.map((item) => {
-              if (l0ItemType(item) === 'collection') {
-                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-              } else {
-                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-              }
-            })}
-          </div>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
+      <ScrollArea.Root centered thin orientation='vertical'>
+        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+          {topLevelItems.map((item) => (
+            <L0Item
+              key={item.id}
+              item={item}
+              parent={parent}
+              path={path}
+              onItemHover={onItemHover}
+              {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+            />
+          ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
-        {pinnedItems
-          .filter((item) => l0ItemType(item) !== 'collection')
-          .map((item) => (
-            <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
-          ))}
+      <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
+        {pinnedItems.map((item) => (
+          <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
+        ))}
       </div>
 
       {userAccountItem && (
-        <div role='none' className='grid app-no-drag'>
+        <div className='grid dx-app-no-drag'>
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
               userId={userAccountItem.properties.userId}
@@ -396,15 +377,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           </L0ItemRoot>
         </div>
       )}
-
-      <div
-        role='none'
-        className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
-        style={{
-          background:
-            'linear-gradient(to bottom, var(--dx-sidebarSurface) 0%, var(--dx-sidebarSurface) 70%, transparent 100%)',
-        }}
-      />
     </Tabs.Tablist>
   );
 };

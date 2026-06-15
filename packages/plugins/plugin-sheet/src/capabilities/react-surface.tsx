@@ -2,38 +2,48 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { SheetCapabilities } from './capabilities';
-import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../components';
-import { SHEET_PLUGIN } from '../meta';
-import { SheetType } from '../types';
+import { RangeList, SheetArticle } from '#containers';
+import { Sheet, SheetCapabilities } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${SHEET_PLUGIN}/sheet`,
-      role: ['article', 'section'],
-      filter: (data): data is { subject: SheetType } =>
-        Obj.instanceOf(SheetType, data.subject) && !!getSpace(data.subject),
-      component: ({ data, role }) => {
-        const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'sheet',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        role: ['article', 'section'],
+        filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Sheet.Sheet, data.subject) &&
+          !!Obj.getDatabase(data.subject),
+        component: ({ data, role }) => {
+          const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
-        return (
-          <ComputeGraphContextProvider registry={computeGraphRegistry}>
-            <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
-          </ComputeGraphContextProvider>
-        );
-      },
-    }),
-    createSurface({
-      id: `${SHEET_PLUGIN}/object-settings`,
-      role: 'object-settings',
-      filter: (data): data is { subject: SheetType } => Obj.instanceOf(SheetType, data.subject),
-      component: ({ data }) => <RangeList sheet={data.subject} />,
-    }),
-  ]);
+          return (
+            <SheetArticle
+              role={role}
+              subject={data.subject}
+              attendableId={data.attendableId}
+              space={getSpace(data.subject)!}
+              registry={computeGraphRegistry}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'objectProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Sheet.Sheet),
+        component: ({ data }) => <RangeList sheet={data.subject} />,
+      }),
+    ]),
+  ),
+);

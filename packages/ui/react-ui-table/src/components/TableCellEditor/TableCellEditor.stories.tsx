@@ -2,120 +2,83 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
-import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import { Obj, Type, View } from '@dxos/echo';
+import { random } from '@dxos/random';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ViewModel } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
-import { Obj } from '@dxos/echo';
-import { type EchoSchema, isMutable } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
-import { Filter, useQuery, live } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { defaultRowSize, Grid, type GridEditing } from '@dxos/react-ui-grid';
-import { ViewProjection, ViewType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { translations } from '#translations';
 
-import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
-import { useTableModel } from '../../hooks';
-import { type TableFeatures } from '../../model';
-import translations from '../../translations';
-import { TableType } from '../../types';
-import { initializeTable } from '../../util';
+import { useTestTableModel } from '../../testing';
+import { Table } from '../../types';
+import { TableCellEditor } from './TableCellEditor';
 
-type StoryProps = {
+type DefaultStoryProps = {
   editing: GridEditing;
 };
 
-const DefaultStory = ({ editing }: StoryProps) => {
-  const { space } = useClientProvider();
-  invariant(space);
+// TODO(burdon): Broken layout.
+const DefaultStory = ({ editing }: DefaultStoryProps) => {
+  const { model, table } = useTestTableModel();
 
-  const tables = useQuery(space, Filter.type(TableType));
-  const [table, setTable] = useState<TableType>();
-  const [schema, setSchema] = useState<EchoSchema>();
-  useEffect(() => {
-    if (space && tables.length && !table) {
-      const table = tables[0];
-      invariant(table.view);
-      setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.typename!));
-    }
-  }, [space, tables]);
-
-  const projection = useMemo(() => {
-    if (schema && table?.view) {
-      return new ViewProjection(schema.jsonSchema, table.view.target!);
-    }
-  }, [schema, table?.view]);
-
-  const features: Partial<TableFeatures> = useMemo(
-    () => ({
-      selection: { enabled: true, mode: 'multiple' },
-      dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
-    }),
-    [schema],
-  );
-
-  const model = useTableModel({ table, projection, features });
-
-  const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
-    // TODO(dmaretskyi): If no schema query nothing
-    const { objects } = await space.db.query(schema ? Filter.type(schema) : Filter.everything()).run();
-    return objects.map((obj) => {
-      const label = obj[field.referencePath ?? 'id'];
-      return {
-        label,
-        data: obj,
-      };
-    });
-  };
-
-  if (!model || !schema || !table) {
+  if (!model || !table) {
     return <div />;
   }
 
   return (
-    <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
+    <div className='border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
-        <TableCellEditor model={model} onQuery={handleQuery} />
+        <TableCellEditor model={model} schema={Task.Task} />
       </Grid.Root>
     </div>
   );
 };
 
-const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/TableCellEditor',
+const meta = {
+  title: 'ui/react-ui-table/TableCellEditor',
   component: DefaultStory,
   render: DefaultStory,
-  parameters: { translations, layout: 'centered' },
   decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [View.View, Task.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        const schema = await initializeTable({ client, space, table });
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(Task.Task),
+        });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            live(schema, {
-              name: faker.person.fullName(),
+            Obj.make(Task.Task, {
+              title: random.person.fullName(),
+              status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              description: random.lorem.sentence(),
             }),
           );
         });
       },
     }),
-    withTheme,
-    withLayout(),
   ],
-};
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

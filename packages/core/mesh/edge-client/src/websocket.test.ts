@@ -3,7 +3,7 @@
 //
 
 import WebSocket from 'isomorphic-ws';
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState } from '@dxos/async';
 

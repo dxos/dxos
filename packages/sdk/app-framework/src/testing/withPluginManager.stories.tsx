@@ -2,35 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme, type Meta } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
+import { Capabilities } from '../common';
+import { Capability } from '../core';
+import { Surface } from '../ui';
 import { withPluginManager } from './withPluginManager';
-import { Capabilities, createSurface } from '../common';
-import { contributes } from '../core';
-import { Surface } from '../react';
 
 const DefaultStory = () => {
   console.log('Render');
   return (
     <div>
       <div>Hello</div>
-      <Surface role='main' />
+      <Surface.Surface role='main' />
     </div>
   );
 };
 
-const meta: Meta = {
-  title: 'sdk/app-framework/withPluginManager',
+const meta = {
+  title: 'sdk/app-framework/testing/withPluginManager',
   render: DefaultStory,
   decorators: [
-    withTheme,
+    withTheme(),
     withPluginManager({
       capabilities: [
-        contributes(
+        Capability.contributes(
           Capabilities.ReactSurface,
-          createSurface({
+          Surface.create({
             id: 'test',
             role: 'main',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
@@ -39,8 +40,10 @@ const meta: Meta = {
       ],
     }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

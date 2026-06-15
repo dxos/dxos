@@ -1,0 +1,11 @@
+layer: automation
+language: typescript
+tags:
+  - typecheck
+  - ts-test
+  - pack
+tasks:
+  snapshot:
+    command: vite-node ./src/bin/snapshot.ts
+    deps:
+      - 'build'

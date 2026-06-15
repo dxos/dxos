@@ -2,26 +2,47 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { WelcomeScreen, WELCOME_SCREEN } from '../components';
-import { WELCOME_PLUGIN } from '../meta';
+import {
+  ABOUT_DIALOG,
+  AboutDialog,
+  NATIVE_REDIRECT_DIALOG,
+  NativeRedirectDialog,
+  WELCOME_SCREEN,
+  WelcomeScreen,
+} from '../components';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${WELCOME_PLUGIN}/welcome`,
-      role: 'dialog',
-      filter: (data): data is any => data.component === WELCOME_SCREEN,
-      component: () => {
-        const client = useClient();
-        const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-        invariant(hubUrl, 'Hub URL not found');
-        return <WelcomeScreen hubUrl={hubUrl} />;
-      },
-    }),
-  ]);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'welcome',
+        filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
+        component: () => {
+          const client = useClient();
+          const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+          invariant(hubUrl, 'Hub URL not found');
+          return <WelcomeScreen hubUrl={hubUrl} />;
+        },
+      }),
+      Surface.create({
+        id: 'nativeRedirect',
+        filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
+        component: ({ data }) => <NativeRedirectDialog {...data.props} />,
+      }),
+      Surface.create({
+        id: 'aboutDialog',
+        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
+        component: () => <AboutDialog />,
+      }),
+    ]),
+  ),
+);

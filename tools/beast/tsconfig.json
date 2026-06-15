@@ -3,10 +3,9 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "emitDeclarationOnly": false,
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist",
-    "target": "ESNext",
     "types": [
       "node"
     ]

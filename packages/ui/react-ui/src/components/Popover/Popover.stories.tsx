@@ -2,17 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
-import { Popover } from './Popover';
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
+import { Popover } from './Popover';
 
-faker.seed(1234);
+random.seed(1234);
 
 const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
   return (
@@ -20,7 +19,7 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
       <Popover.Content>
         <Popover.Viewport>
-          <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{children}</p>
+          <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{children}</p>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -28,18 +27,21 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
   );
 };
 
-export default {
-  title: 'ui/react-ui-core/Popover',
-  component: Popover,
+const meta = {
+  title: 'ui/react-ui-core/components/Popover',
+  component: Popover.Root,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     openTrigger: <Button>Open popover</Button>,
-    children: faker.lorem.paragraphs(3),
+    children: random.lorem.paragraphs(3),
   },
 };
 
@@ -56,7 +58,7 @@ export const VirtualTrigger = {
           <Popover.VirtualTrigger virtualRef={buttonRef} />
           <Popover.Content>
             <Popover.Viewport>
-              <p className='pli-2 plb-1 min-is-[18rem] max-is-[38rem]'>{faker.lorem.paragraphs(3)}</p>
+              <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{random.lorem.paragraphs(3)}</p>
             </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>

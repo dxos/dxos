@@ -2,30 +2,34 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { type Meta } from '@storybook/react';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { createSlide } from '#testing';
 
 import { Slide } from './Slide';
-import { createSlide } from '../../testing';
 
-const meta: Meta = {
-  title: 'plugins/plugin-presenter/Slide',
+const meta = {
+  title: 'plugins/plugin-presenter/components/Slide',
   component: Slide,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof Slide>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     content: createSlide(),
   },
 };
 
-export const Code = {
+export const Code: Story = {
   args: {
     content: createSlide({ code: true }),
   },

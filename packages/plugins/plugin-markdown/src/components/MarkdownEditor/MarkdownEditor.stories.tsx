@@ -2,43 +2,79 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React from 'react';
 
-import { type Meta } from '@storybook/react';
-import React, { useMemo } from 'react';
-
-import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { withAttention } from '@dxos/react-ui-attention/testing';
-import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Filter, Obj } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { corePlugins } from '@dxos/plugin-testing';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
+import { AttendableContainer } from '@dxos/react-ui-attention';
+import { Editor } from '@dxos/react-ui-editor';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
-import translations from '../../translations';
+import { translations } from '#translations';
+import { Markdown } from '#types';
 
-const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
+import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProps } from './MarkdownEditor';
 
-type StoryProps = MarkdownEditorProps & {
-  content?: string;
-  toolbar?: boolean;
+type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' | 'children'>;
+
+const DefaultStory = (props: DefaultStoryProps) => {
+  const [space] = useSpaces();
+  const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
+  const id = doc && Obj.getURI(doc);
+  if (!id) {
+    return <Loading data={{ id }} />;
+  }
+
+  return (
+    <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
+      <MarkdownEditorProvider id={id} object={doc} {...props}>
+        {(editorRootProps) => (
+          <Editor.Root {...editorRootProps}>
+            <Panel.Root>
+              <Panel.Toolbar asChild>
+                <MarkdownEditor.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <MarkdownEditor.Content />
+              </Panel.Content>
+            </Panel.Root>
+          </Editor.Root>
+        )}
+      </MarkdownEditorProvider>
+    </AttendableContainer>
+  );
 };
 
-const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
-  const doc = useMemo(() => createObject({ content }), [content]); // TODO(burdon): Remove dependency on createObject.
-  const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
-  return <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />;
-};
-
-const meta: Meta<typeof MarkdownEditor> = {
-  title: 'plugins/plugin-markdown/MarkdownEditor',
-  component: MarkdownEditor,
+const meta: Meta<typeof DefaultStory> = {
+  title: 'plugins/plugin-markdown/components/MarkdownEditor',
   render: DefaultStory,
   decorators: [
-    withPluginManager({ plugins: [IntentPlugin()] }),
-    withAttention,
-    withTheme,
-    withLayout({ fullscreen: true }),
+    withLayout({ layout: 'column' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        // TODO(burdon): Try to write story without ClientPlugin.
+        ClientPlugin({
+          types: [Markdown.Document, Text.Text],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { personalSpace } = yield* initializeIdentity(client);
+              personalSpace.db.add(
+                Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
+              );
+            }),
+        }),
+      ],
+    }),
   ],
   parameters: {
     translations: [...translations, ...editorTranslations],
@@ -47,15 +83,6 @@ const meta: Meta<typeof MarkdownEditor> = {
 
 export default meta;
 
-export const Default = {
-  args: {
-    content,
-  },
-};
+type Story = StoryObj<typeof meta>;
 
-export const WithToolbar = {
-  args: {
-    toolbar: true,
-    content,
-  },
-};
+export const Default: Story = {};

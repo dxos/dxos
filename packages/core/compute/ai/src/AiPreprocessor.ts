@@ -1,0 +1,781 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Prompt from '@effect/ai/Prompt';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import { flow } from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Predicate from 'effect/Predicate';
+import * as TokenX from 'tokenx';
+
+import { log } from '@dxos/log';
+import { ContentBlock, type Message } from '@dxos/types';
+import { bufferToArray } from '@dxos/util';
+
+import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+
+export type CacheControl = 'no-cache' | 'ephemeral';
+
+/**
+ * Preprocesses messages for AI input.
+ *
+ * This function takes a list of Messages and returns a list of Prompt objects.
+ * The conversion is done by:
+ * 1. Filtering out messages that are not from the user or assistant.
+ * 2. Converting each message into an Prompt.
+ * 3. Removing any invalid Prompt.
+ *
+ * The function returns a list of valid Prompt objects.
+ */
+export const preprocessPrompt: (
+  messages: readonly Message.Message[],
+  opts?: { system?: string; cacheControl?: CacheControl },
+) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
+  messages,
+  { system, cacheControl = 'no-cache' } = {},
+) {
+  return yield* Function.pipe(
+    messages,
+    applySummaryTrimming,
+    Effect.map(groupAssistantMessages),
+    Effect.flatMap(
+      Effect.forEach(
+        Effect.fnUntraced(function* (msg) {
+          switch (msg.sender.role) {
+            case 'user':
+              return [
+                Prompt.makeMessage('user', {
+                  content: yield* Function.pipe(
+                    msg.blocks,
+                    Effect.forEach(convertUserMessagePart),
+                    Effect.map(Array.filter(Predicate.isNotUndefined)),
+                  ),
+                }),
+              ];
+            case 'assistant':
+              return [
+                Prompt.makeMessage('assistant', {
+                  content: yield* Function.pipe(
+                    msg.blocks,
+                    Effect.forEach(convertAssistantMessagePart),
+                    Effect.map(Array.filter(Predicate.isNotUndefined)),
+                  ),
+                }),
+              ];
+
+            case 'tool':
+              return yield* convertToolMessage(msg);
+
+            default:
+              return [];
+          }
+        }),
+      ),
+    ),
+    Effect.map(Array.flatten),
+    Effect.map(Array.filter((_) => _.content.length > 0)),
+    Effect.map(Prompt.fromMessages),
+    Effect.map(fixMissingToolResults),
+    Effect.map(fixDuplicateToolResults),
+    Effect.map(removeUnsatisfiedServerToolCalls),
+    Effect.map(system ? Prompt.setSystem(system) : Function.identity),
+    Effect.map(setCacheControl(cacheControl)),
+  );
+});
+
+/**
+ * Fast regex-based token estimation.
+ * This is only an approximation and might differ from the actual token count.
+ */
+export const estimateTokens: (prompt: Prompt.Prompt) => Effect.Effect<number> = Effect.fn(
+  'AiPreprocessor.estimateTokens',
+)(function* (prompt) {
+  let totalTokens = 0;
+
+  for (const message of prompt.content) {
+    totalTokens += MESSAGE_DELIMITER_TOKENS;
+
+    switch (message.role) {
+      case 'system': {
+        totalTokens += TokenX.estimateTokenCount(message.content);
+        break;
+      }
+      case 'user':
+      case 'assistant': {
+        for (const part of message.content) {
+          totalTokens += estimatePartTokens(part);
+        }
+        break;
+      }
+      case 'tool': {
+        for (const part of message.content) {
+          totalTokens += TokenX.estimateTokenCount(part.name);
+          totalTokens += TokenX.estimateTokenCount(JSON.stringify(part.result));
+        }
+        break;
+      }
+    }
+  }
+
+  totalTokens += REPLY_PRIMING_TOKENS;
+
+  return totalTokens;
+});
+
+/** Per-message overhead for role/start/end delimiter tokens. */
+const MESSAGE_DELIMITER_TOKENS = 4;
+
+/** Overhead for the assistant reply priming at the end of a prompt. */
+const REPLY_PRIMING_TOKENS = 3;
+
+const estimatePartTokens = (part: Prompt.UserMessagePart | Prompt.AssistantMessagePart): number => {
+  switch (part.type) {
+    case 'text':
+    case 'reasoning':
+      return TokenX.estimateTokenCount(part.text);
+    case 'tool-call':
+      return TokenX.estimateTokenCount(part.name) + TokenX.estimateTokenCount(JSON.stringify(part.params));
+    case 'tool-result':
+      return TokenX.estimateTokenCount(part.name) + TokenX.estimateTokenCount(JSON.stringify(part.result));
+    case 'file':
+      return 0;
+  }
+};
+
+/**
+ * Finds the last message containing a summary block and trims the conversation accordingly.
+ * If the summary is in an assistant message, all prior messages and non-summary blocks are removed.
+ * If the summary is in a user or tool message, an error is raised.
+ */
+const applySummaryTrimming: (
+  messages: readonly Message.Message[],
+) => Effect.Effect<readonly Message.Message[], PromptPreprocesorError, never> = Effect.fn('applySummaryTrimming')(
+  function* (messages) {
+    let lastSummaryIndex = -1;
+    for (let idx = messages.length - 1; idx >= 0; idx--) {
+      if (messages[idx].blocks.some(ContentBlock.is('summary'))) {
+        lastSummaryIndex = idx;
+        break;
+      }
+    }
+
+    if (lastSummaryIndex === -1) {
+      return messages;
+    }
+
+    const summaryMessage = messages[lastSummaryIndex];
+
+    if (summaryMessage.sender.role !== 'assistant') {
+      return yield* Effect.fail(
+        new PromptPreprocesorError({
+          message: `Summary blocks are only allowed in assistant messages, found in "${summaryMessage.sender.role}" message.`,
+        }),
+      );
+    }
+
+    const trimmedSummaryMessage: Message.Message = {
+      ...summaryMessage,
+      blocks: summaryMessage.blocks.filter(ContentBlock.is('summary')),
+    };
+
+    return [trimmedSummaryMessage, ...messages.slice(lastSummaryIndex + 1)];
+  },
+);
+
+const convertUserMessagePart: (
+  block: ContentBlock.Any,
+) => Effect.Effect<Prompt.UserMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
+  function* (block) {
+    switch (block._tag) {
+      case 'text':
+        return Prompt.makePart('text', {
+          text: block.text,
+        });
+      case 'reference':
+        // TODO(dmaretskyi): Consider inlining content.
+        return Prompt.makePart('text', {
+          text: `<object>${block.reference}</object>`,
+        });
+      case 'transcript':
+        return Prompt.makePart('text', {
+          text: block.text,
+        });
+      case 'anchor':
+        // TODO(dmaretskyi): Notify of artifact changes based on the version progression.
+        return undefined;
+      case 'image':
+        switch (block.source?.type) {
+          case 'base64':
+            return Prompt.makePart('file', {
+              mediaType: block.source.mediaType,
+              data: bufferToArray(Buffer.from(block.source.data, 'base64')),
+            });
+          case 'http':
+            return Prompt.makePart('file', {
+              data: new URL(block.source.url),
+              mediaType: 'application/octet-stream', // Likely doesn't work.
+            });
+          default:
+            return yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid image source' }));
+        }
+      case 'file':
+        // TODO(dmaretskyi): Convert data URIs into Prompt.FilePart
+        return Prompt.makePart('file', {
+          data: new URL(block.url),
+          mediaType: block.mediaType ?? 'application/octet-stream',
+        });
+      case 'toolResult':
+        return yield* Effect.fail(
+          new PromptPreprocesorError({
+            message: `Tool results are not supported inside user messages, use "tool" actor instead.`,
+          }),
+        );
+      default:
+        return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid user content block: ${block._tag}` }));
+    }
+  },
+);
+
+const parseToolJson = (
+  raw: string,
+  context: { field: 'result' | 'input'; toolCallId: string },
+): Effect.Effect<unknown, PromptPreprocesorError, never> =>
+  Effect.try({
+    try: () => JSON.parse(raw),
+    catch: (cause) =>
+      new PromptPreprocesorError({
+        message: `Failed to parse tool ${context.field} JSON for tool call ${context.toolCallId}: ${(cause as Error)?.message ?? cause}`,
+        cause,
+      }),
+  });
+
+/**
+ * Decode file payload from a data URL, standard base64, or base64url string.
+ * Returns standard base64 suitable for Anthropic `source.data`.
+ */
+const unwrapFileBase64Data = (url: string): Effect.Effect<string, PromptPreprocesorError, never> =>
+  Effect.try({
+    try: () => {
+      if (/^https?:\/\//i.test(url)) {
+        throw new Error('HTTP(S) file URLs are not supported for tool result documents');
+      }
+
+      if (url.startsWith('data:')) {
+        const commaIndex = url.indexOf(',');
+        if (commaIndex === -1) {
+          throw new Error('Invalid data URL');
+        }
+        const meta = url.slice(5, commaIndex);
+        const payload = url.slice(commaIndex + 1);
+        if (!meta.includes('base64')) {
+          throw new Error('Data URL must use base64 encoding');
+        }
+        return payload;
+      }
+
+      // Node accepts both base64 and base64url alphabets; normalize to standard base64.
+      return Buffer.from(url, 'base64url').toString('base64');
+    },
+    catch: (cause) =>
+      new PromptPreprocesorError({
+        message: `File url must be base64 or base64url encoded data: ${(cause as Error)?.message ?? cause}`,
+        cause,
+      }),
+  });
+
+const contentBlockToUserMessagePart = (
+  block: ContentBlock.Text | ContentBlock.Image | ContentBlock.File,
+): Effect.Effect<Prompt.UserMessagePart, PromptPreprocesorError, never> =>
+  Match.value(block).pipe(
+    Match.tags({
+      text: (textBlock) => Effect.succeed(Prompt.makePart('text', { text: textBlock.text })),
+      image: (imageBlock) =>
+        Effect.gen(function* () {
+          switch (imageBlock.source?.type) {
+            case 'base64':
+              return Prompt.makePart('file', {
+                mediaType: imageBlock.source.mediaType,
+                data: bufferToArray(Buffer.from(imageBlock.source.data, 'base64')),
+              });
+            case 'http':
+              return Prompt.makePart('file', {
+                data: new URL(imageBlock.source.url),
+                mediaType: 'application/octet-stream',
+              });
+            default:
+              return yield* Effect.fail(
+                new PromptPreprocesorError({ message: 'Invalid image source for tool result content' }),
+              );
+          }
+        }),
+      file: (fileBlock) =>
+        Effect.gen(function* () {
+          const data = yield* unwrapFileBase64Data(fileBlock.url);
+          return Prompt.makePart('file', {
+            mediaType: fileBlock.mediaType ?? 'application/octet-stream',
+            data: bufferToArray(Buffer.from(data, 'base64')),
+            fileName: fileBlock.name,
+          });
+        }),
+    }),
+    Match.exhaustive,
+  );
+
+const makeToolResultPart = (
+  block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
+  result: unknown,
+  isFailure: boolean,
+): Prompt.ToolMessagePart =>
+  Prompt.makePart('tool-result', {
+    id: block.toolCallId,
+    name: block.name,
+    result,
+    isFailure,
+    providerExecuted: false,
+  });
+
+/**
+ * Build a `tool-result` prompt part from a `toolResult` content block, validating the JSON
+ * payload and preserving the `isFailure` flag when the block carries an error.
+ */
+const buildToolResultPart = (
+  block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
+): Effect.Effect<Prompt.ToolMessagePart, PromptPreprocesorError, never> =>
+  Effect.gen(function* () {
+    const hasError = block.error != null;
+    const result = hasError
+      ? block.error
+      : block.result != null
+        ? ContentBlock.isContentBlockResult(block.result)
+          ? block.result
+          : yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
+        : {};
+    return makeToolResultPart(block, result, hasError);
+  });
+
+const toolResultSeeBelowMessage = (toolCallId: string): string => `See result for ${toolCallId} below`;
+
+const toolResultHeaderMessage = (toolCallId: string): string => `Result from ${toolCallId}:`;
+
+/**
+ * Tool messages with {@link ContentBlock.ContentBlockResult} are expanded for Anthropic:
+ * stub `tool-result` parts first, then a `user` message with headers and file/text parts.
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
+ */
+const convertToolMessage = (message: Message.Message): Effect.Effect<Prompt.Message[], PromptPreprocesorError, never> =>
+  Effect.gen(function* () {
+    const toolResults = message.blocks.filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+
+    if (toolResults.length === 0) {
+      return [];
+    }
+
+    const contentBlockResults = toolResults.filter(
+      (block) => block.error == null && ContentBlock.isContentBlockResult(block.result),
+    );
+
+    if (contentBlockResults.length === 0) {
+      const content = yield* Effect.forEach(toolResults, buildToolResultPart);
+      return [Prompt.makeMessage('tool', { content })];
+    }
+
+    const toolParts: Prompt.ToolMessagePart[] = [];
+    const userParts: Prompt.UserMessagePart[] = [];
+
+    for (const block of toolResults) {
+      if (block.error != null) {
+        toolParts.push(makeToolResultPart(block, block.error, true));
+        continue;
+      }
+
+      if (ContentBlock.isContentBlockResult(block.result)) {
+        toolParts.push(makeToolResultPart(block, toolResultSeeBelowMessage(block.toolCallId), false));
+      } else {
+        toolParts.push(yield* buildToolResultPart(block));
+      }
+    }
+
+    for (const block of toolResults) {
+      if (block.error != null || !ContentBlock.isContentBlockResult(block.result)) {
+        continue;
+      }
+
+      userParts.push(Prompt.makePart('text', { text: toolResultHeaderMessage(block.toolCallId) }));
+      for (const contentBlock of block.result.content) {
+        userParts.push(yield* contentBlockToUserMessagePart(contentBlock));
+      }
+    }
+
+    const messages: Prompt.Message[] = [Prompt.makeMessage('tool', { content: toolParts })];
+    if (userParts.length > 0) {
+      messages.push(Prompt.makeMessage('user', { content: userParts }));
+    }
+    return messages;
+  });
+
+const convertAssistantMessagePart: (
+  block: ContentBlock.Any,
+) => Effect.Effect<Prompt.AssistantMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
+  function* (block) {
+    switch (block._tag) {
+      case 'text':
+        return Prompt.makePart('text', {
+          text: block.text,
+        });
+      case 'reasoning': {
+        const anthropicOptions = block.redactedText
+          ? { type: 'redacted_thinking' as const, redactedData: block.redactedText }
+          : block.signature
+            ? { type: 'thinking' as const, signature: block.signature }
+            : undefined;
+        return Prompt.makePart('reasoning', {
+          text: block.reasoningText ?? '',
+          ...(anthropicOptions ? { options: { anthropic: anthropicOptions } } : {}),
+        });
+      }
+
+      case 'toolCall': {
+        const params =
+          block.input === '' ? {} : yield* parseToolJson(block.input, { field: 'input', toolCallId: block.toolCallId });
+        return Prompt.makePart('tool-call', {
+          id: block.toolCallId,
+          name: block.name,
+          params,
+          providerExecuted: block.providerExecuted,
+        });
+      }
+      case 'toolResult':
+        return yield* buildToolResultPart(block);
+
+      case 'reference':
+        // TODO(dmaretskyi): Consider inlining content.
+        return Prompt.makePart('text', {
+          text: `<object>${block.reference}</object>`,
+        });
+      case 'transcript':
+        return Prompt.makePart('text', {
+          text: block.text,
+        });
+      case 'status':
+        return Prompt.makePart('text', {
+          text: `<status>${block.statusText}</status>`,
+        });
+      case 'suggestion':
+        return Prompt.makePart('text', {
+          text: `<suggestion>${block.text}</suggestion>`,
+        });
+      case 'select':
+        return Prompt.makePart('text', {
+          text: `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`,
+        });
+      case 'anchor':
+        // TODO(dmaretskyi): Notify of artifact changes based on the version progression.
+        return undefined;
+      case 'proposal':
+        return Prompt.makePart('text', {
+          text: `<proposal>${block.text}</proposal>`,
+        });
+      case 'summary':
+        return Prompt.makePart('text', {
+          text: `This is the continuation of a conversation that was compacted to preserve context-window space. Summary of what happened in this conversation previously: <summary>${block.content}</summary>`,
+        });
+      case 'toolkit':
+        return Prompt.makePart('text', {
+          text: '<toolkit/>',
+        });
+      case 'json':
+        return Prompt.makePart('text', {
+          text: block.data,
+        });
+      case 'image':
+      case 'file':
+        // TODO(burdon): Just log and ignore?
+        return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid content block: ${block._tag}` }));
+      case 'stats':
+        break;
+      default:
+        // Ignore spurious tags.
+        log.warn('ignoring spurious tag', { block });
+        return undefined;
+    }
+  },
+);
+
+const mergeMessages = (messages: Message.Message[]): Message.Message => ({
+  ...messages[0],
+  blocks: messages.flatMap((msg) => msg.blocks),
+});
+
+/**
+ * Detects missing tool call results which can arise due to the conversation being interrupted.
+ * Notifies the model to retry the tool call.
+ */
+const fixMissingToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  const result: Prompt.Message[] = [];
+  for (let messageIndex = 0; messageIndex < prompt.content.length; messageIndex++) {
+    const message = prompt.content[messageIndex];
+    if (message.role !== 'assistant') {
+      result.push(message);
+      continue;
+    }
+
+    const unsatisfiedToolCalls: Prompt.ToolCallPart[] = [];
+    let startPartIndex = 0;
+    for (let partIndex = 0; partIndex < message.content.length; partIndex++) {
+      const part = message.content[partIndex];
+      if (part.type === 'tool-call' && !part.providerExecuted) {
+        unsatisfiedToolCalls.push(part);
+      } else if (part.type === 'tool-result' && !part.providerExecuted) {
+        const idx = unsatisfiedToolCalls.findIndex((call) => call.id === part.id);
+        if (idx !== -1) {
+          unsatisfiedToolCalls.splice(idx, 1);
+        }
+      } else {
+        if (unsatisfiedToolCalls.length > 0) {
+          // Insert first part of the assistant message before the current part.
+          result.push(
+            Prompt.makeMessage('assistant', {
+              content: message.content.slice(startPartIndex, partIndex),
+            }),
+          );
+          startPartIndex = partIndex;
+
+          // Insert missing tool results.
+          result.push(
+            Prompt.makeMessage('tool', {
+              content: unsatisfiedToolCalls.map((call) =>
+                Prompt.makePart('tool-result', {
+                  id: call.id,
+                  name: call.name,
+                  result:
+                    'Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.',
+                  isFailure: true,
+                  providerExecuted: false,
+                }),
+              ),
+            }),
+          );
+          unsatisfiedToolCalls.length = 0;
+        }
+      }
+    }
+
+    // Check if the next message satisfies remaining tool calls.
+    if (unsatisfiedToolCalls.length > 0) {
+      const nextMessage = prompt.content[messageIndex + 1];
+      if (nextMessage?.role === 'tool') {
+        for (const toolResult of nextMessage.content) {
+          const idx = unsatisfiedToolCalls.findIndex((call) => call.id === toolResult.id);
+          if (idx !== -1) {
+            unsatisfiedToolCalls.splice(idx, 1);
+          }
+        }
+      }
+    }
+
+    if (unsatisfiedToolCalls.length > 0) {
+      result.push(
+        Prompt.makeMessage('assistant', {
+          content: message.content.slice(startPartIndex, message.content.length),
+        }),
+      );
+      startPartIndex = message.content.length;
+
+      result.push(
+        Prompt.makeMessage('tool', {
+          content: unsatisfiedToolCalls.map((call) =>
+            Prompt.makePart('tool-result', {
+              id: call.id,
+              name: call.name,
+              result:
+                'Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.',
+              isFailure: true,
+              providerExecuted: false,
+            }),
+          ),
+        }),
+      );
+    }
+
+    if (startPartIndex < message.content.length) {
+      result.push(
+        Prompt.makeMessage('assistant', {
+          content: message.content.slice(startPartIndex),
+        }),
+      );
+    }
+  }
+
+  return Prompt.fromMessages(result);
+};
+
+/**
+ * Removes tool-result parts that reference no tool-call id (in prior messages or the same
+ * message), and drops duplicate tool results for the same id (keeps the first in conversation order).
+ *
+ * Tool-call ids in the current message are collected up front so a `tool-result` is still kept
+ * when it appears before its matching `tool-call` in the part list (e.g. provider web_search blocks).
+ */
+const fixDuplicateToolResults = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  const seenToolCallIds = new Set<string>();
+  const seenToolResultIds = new Set<string>();
+
+  const processUserOrAssistantPart = (
+    part: Prompt.UserMessagePart | Prompt.AssistantMessagePart,
+  ): Prompt.UserMessagePart | Prompt.AssistantMessagePart | undefined => {
+    if (part.type === 'tool-call') {
+      seenToolCallIds.add(part.id);
+      return part;
+    }
+    if (part.type === 'tool-result') {
+      if (!part.providerExecuted && (!seenToolCallIds.has(part.id) || seenToolResultIds.has(part.id))) {
+        return undefined;
+      }
+      seenToolResultIds.add(part.id);
+      return part;
+    }
+    return part;
+  };
+
+  const result: Prompt.Message[] = [];
+  for (const message of prompt.content) {
+    switch (message.role) {
+      case 'system': {
+        result.push(message);
+        break;
+      }
+      case 'user': {
+        const filtered: Prompt.UserMessagePart[] = [];
+        for (const part of message.content) {
+          const next = processUserOrAssistantPart(part);
+          if (next !== undefined) {
+            filtered.push(next as Prompt.UserMessagePart);
+          }
+        }
+        if (filtered.length > 0) {
+          result.push(
+            message.options !== undefined
+              ? Prompt.makeMessage('user', { content: filtered, options: message.options })
+              : Prompt.makeMessage('user', { content: filtered }),
+          );
+        }
+        break;
+      }
+      case 'assistant': {
+        const filtered: Prompt.AssistantMessagePart[] = [];
+        for (const part of message.content) {
+          const next = processUserOrAssistantPart(part);
+          if (next !== undefined) {
+            filtered.push(next);
+          }
+        }
+        if (filtered.length > 0) {
+          result.push(
+            message.options !== undefined
+              ? Prompt.makeMessage('assistant', { content: filtered, options: message.options })
+              : Prompt.makeMessage('assistant', { content: filtered }),
+          );
+        }
+        break;
+      }
+      case 'tool': {
+        const filtered: Prompt.ToolMessagePart[] = [];
+        for (const part of message.content) {
+          const next = processUserOrAssistantPart(part);
+          if (next !== undefined) {
+            filtered.push(next as any);
+          }
+        }
+        if (filtered.length > 0) {
+          result.push(Prompt.makeMessage('tool', { content: filtered }));
+        }
+        break;
+      }
+    }
+  }
+
+  return Prompt.fromMessages(result);
+};
+
+const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt => {
+  const seeToolResultIds = new Set<string>();
+
+  //1. Scan all assistant message and collect all tool-result ids that are not provider-executed.
+  for (const message of prompt.content) {
+    if (message.role !== 'assistant') {
+      continue;
+    }
+    for (const part of message.content) {
+      if (part.type === 'tool-result' && !part.providerExecuted) {
+        seeToolResultIds.add(part.id);
+      }
+    }
+  }
+
+  const result: Prompt.Message[] = [];
+  for (const message of prompt.content) {
+    if (message.role !== 'assistant') {
+      result.push(message);
+      continue;
+    }
+    const filtered: Prompt.AssistantMessagePart[] = [];
+    for (const part of message.content) {
+      if (part.type === 'tool-call' && part.providerExecuted) {
+        if (seeToolResultIds.has(part.id)) {
+          filtered.push(part);
+        }
+      } else {
+        filtered.push(part);
+      }
+    }
+    if (filtered.length > 0) {
+      result.push(
+        message.options !== undefined
+          ? Prompt.makeMessage('assistant', { content: filtered, options: message.options })
+          : Prompt.makeMessage('assistant', { content: filtered }),
+      );
+    }
+  }
+  return Prompt.fromMessages(result);
+};
+
+/**
+ * Groups consecutive assistant messages into a single message.
+ */
+const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = flow(
+  (messages) =>
+    Array.isNonEmptyReadonlyArray(messages)
+      ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
+      : [],
+  Array.map(mergeMessages),
+);
+
+const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) => Prompt.Prompt =
+  (cacheControl) => (prompt) => {
+    if (cacheControl === 'ephemeral') {
+      return Prompt.fromMessages(
+        prompt.content.map((message, index) =>
+          index !== prompt.content.length - 1
+            ? message
+            : {
+                ...message,
+                options: {
+                  anthropic: {
+                    cacheControl: {
+                      ttl: '5m',
+                      type: 'ephemeral',
+                    },
+                  },
+                },
+              },
+        ),
+      );
+    } else {
+      return prompt;
+    }
+  };

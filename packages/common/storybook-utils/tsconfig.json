@@ -12,25 +12,13 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../ui/lit-theme-editor"
-    },
-    {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../log"
-    },
-    {
-      "path": "../theme-editor-addon"
     }
   ]
 }

@@ -2,19 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
-export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
-
-export const meta: PluginMeta = {
-  id: MARKDOWN_PLUGIN,
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.markdown'),
   name: 'Markdown',
-  description: `
-    A Markdown editor that is collaborative and fully extensible. It provides rich text editing as well as read only and markdown view.
-    In addition to markdown capabilities, it also support threaded in-line comments which can be accessed from the right hand sidebar at any times inside the document.
-    Your AI agent will have access to all markdown docs in your Space which means you can use them to extend the memory of your personal agent and add long term context for automated workflows.
+  author: 'DXOS',
+  description: trim`
+    A full-featured markdown editor for authoring documents in your space. Edits flow through a collaborative CodeMirror surface backed by ECHO Text, so every keystroke replicates to other peers in real time without merge conflicts or lost work.
+
+    Documents can be opened in source, preview, or read-only mode and rendered as a full-surface article or as embeddable cards. An optional formatting toolbar exposes headings, lists, links, and other common markdown actions, and dispositional toolbar actions contributed by other plugins are surfaced inline alongside it.
+
+    The editor integrates with the rest of the workspace through @ references that link to any ECHO object, image and file uploads stored in the active space, and anchored comment threads on text ranges. Comments can optionally be routed to an AI agent on every message or only on @mention.
+
+    A built-in blueprint exposes create, open, and update operations as tools for AI agents. Updates are applied as compact find-and-replace diffs against the document, making it safe for agents to edit large documents incrementally while you continue collaborating.
   `,
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
   icon: 'ph--text-aa--regular',
-  screenshots: ['https://dxos.network/plugin-details-markdown-dark.png'],
-};
+  iconHue: 'indigo',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
+  screenshots: [
+    'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/cdf2656365bb1fd327c1fc2105d75e5a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Fcdf2656365bb1fd327c1fc2105d75e5a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+    'https://dxos.network/plugin-details-markdown-dark.png',
+  ],
+});

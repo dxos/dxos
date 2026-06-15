@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus, Table, List, ListMagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Input, Select, Toolbar } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Icon, Input, Select, Toolbar } from '@dxos/react-ui';
+import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
 
@@ -28,10 +27,8 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
   useEffect(() => onViewChange?.(view), [view]);
 
   return (
-    <Toolbar.Root classNames='p-1'>
-      <Toolbar.Button onClick={() => onAdd(count)} title='Create objects.'>
-        <Plus />
-      </Toolbar.Button>
+    <Toolbar.Root>
+      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Input.Root>
         <Input.TextInput
           classNames='max-w-16 text-right'
@@ -53,6 +50,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
                   </Select.Option>
                 ))}
               </Select.Viewport>
+              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>
@@ -69,21 +67,16 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
           <Toolbar.ToggleGroupItem value='table'>
-            <Table className={getSize(5)} />
+            <Icon icon='ph--table--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='list'>
-            <List className={getSize(5)} />
+            <Icon icon='ph--list--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='debug'>
-            <ListMagnifyingGlass className={getSize(5)} />
+            <Icon icon='ph--list-magnifying-glass--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
       )}
     </Toolbar.Root>
   );
-};
-
-const safeParseInt = (str: string): number | undefined => {
-  const value = parseInt(str);
-  return isNaN(value) ? undefined : value;
 };

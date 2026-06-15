@@ -2,44 +2,44 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { live } from '@dxos/client/echo';
-import { BaseGraphNode, Graph } from '@dxos/graph';
+import { Graph } from '@dxos/graph';
 import {
+  CanvasBoard,
+  CanvasGraphModel,
   Polygon,
   createEllipse,
   createPath,
   createRectangle,
   isPath,
   isPolygon,
-  Shape,
 } from '@dxos/react-ui-canvas-editor';
 
-import { createSwitch, ComputeShape, createFunction } from './shapes';
+import { ComputeShape, createFunction, createSwitch } from './shapes';
 
 describe('compute', () => {
   test('model', ({ expect }) => {
-    // const model = CanvasGraphModel.create<ComputeShape>();
+    const model = CanvasGraphModel.create<ComputeShape>();
     const node = createSwitch({ id: 'x', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } });
     console.log(JSON.stringify(node, null, 2));
     expect(Schema.is(ComputeShape)(node)).toBe(true);
     expect(Schema.is(Polygon)(node)).toBe(true);
-    expect(Schema.is(Shape)(node)).toBe(true);
-    expect(Schema.is(BaseGraphNode)(node)).toBe(true);
+    expect(Schema.is(CanvasBoard.Shape)(node)).toBe(true);
+    expect(Schema.is(Graph.Node)(node)).toBe(true);
 
-    const graph = live(Graph, { nodes: [], edges: [] });
-    graph.nodes.push(node); // Throws.
+    const graph: Graph.Any = { nodes: [], edges: [] };
+    graph.nodes.push(node);
 
-    // model.createNode(node);
-    // console.log(JSON.stringify(model, null, 2));
+    model.createNode(node);
+    console.log(JSON.stringify(model, null, 2));
   });
 });
 
 describe('schema', () => {
   test('basic types', ({ expect }) => {
-    const shapes: Shape[] = [];
+    const shapes: CanvasBoard.Shape[] = [];
     shapes.push(createRectangle({ id: 'shape-1', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } }));
     shapes.push(createEllipse({ id: 'shape-2', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } }));
     shapes.push(createFunction({ id: 'shape-3', center: { x: 0, y: 0 } }));

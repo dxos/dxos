@@ -1,0 +1,131 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+import { describe, test } from 'vitest';
+
+import { raise } from '@dxos/debug';
+
+import { Entity, Obj, Ref, Relation, Type } from '../index';
+import { TestSchema } from './test-schema';
+
+describe('Experimental API review', () => {
+  test('type checks', ({ expect }) => {
+    const contact = Obj.make(TestSchema.Person, { name: 'Test' });
+    const type = Obj.getType(contact) ?? raise(new Error('No type found'));
+
+    expect(Type.getTypename(type)).to.eq(Type.getTypename(TestSchema.Person));
+    expect(Type.getTypename(type)).to.eq('com.example.type.person');
+    expect(Type.getVersion(type)).to.eq('0.1.0');
+    // `Type.getMeta` returns `EntityMeta` (`{ keys, tags?, key?, version? }`) —
+    // the same shape `Obj.getMeta` and `Relation.getMeta` return. The
+    // schema-kind brand lives on `[SchemaKindId]`, not in meta.
+    expect(Type.getMeta(type)).to.deep.eq({
+      keys: [],
+      tags: [],
+      annotations: {},
+      key: 'com.example.type.person',
+      version: '0.1.0',
+    });
+    expect(Type.isObject(type)).to.be.true;
+  });
+
+  test('instance checks', ({ expect }) => {
+    const organization = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+    const contact = Obj.make(TestSchema.Person, {
+      name: 'Test',
+      employer: Ref.make(organization),
+    });
+
+    expect(Schema.is(Type.getSchema(TestSchema.Person))(contact)).to.be.true;
+    expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
+    expect(Obj.instanceOf(TestSchema.Organization, organization)).to.be.true;
+
+    const isPerson = Obj.instanceOf(TestSchema.Person);
+    const x: any = {};
+    if (isPerson(x)) {
+      x.name;
+    }
+  });
+
+  test('default props', ({ expect }) => {
+    const message = Obj.make(TestSchema.Message, TestSchema.MessageStruct.make({}));
+    expect(message.timestamp).to.exist;
+  });
+
+  test('Obj.isObject', ({ expect }) => {
+    const guy = Obj.make(TestSchema.Person, { name: 'Test' });
+    expect(Obj.isObject(guy)).to.be.true;
+    expect(Obj.isObject(null)).to.be.false;
+    expect(Obj.isObject(undefined)).to.be.false;
+    expect(Obj.isObject(1)).to.be.false;
+    expect(Obj.isObject('string')).to.be.false;
+  });
+
+  test('create relation', ({ expect }) => {
+    const person = Obj.make(TestSchema.Person, { name: 'Test' });
+    const organization = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+    const worksFor = Relation.make(TestSchema.EmployedBy, {
+      [Relation.Source]: person,
+      [Relation.Target]: organization,
+      role: 'CEO',
+    });
+    expect(Relation.getSource(worksFor)).to.eq(person);
+    expect(Relation.getTarget(worksFor)).to.eq(organization);
+  });
+
+  test('version', ({ expect }) => {
+    const person = Obj.make(TestSchema.Person, { name: 'Test' });
+    const version = Obj.version(person);
+    expect(Obj.isVersion(version)).to.be.true;
+    expect(Obj.versionValid(version)).to.be.false;
+  });
+
+  // TODO(burdon): Implement test.
+  test.skip('type narrowing', () => {
+    const any: Entity.Unknown = null as any;
+
+    {
+      if (Obj.isObject(any)) {
+        any;
+      } else {
+        any;
+      }
+    }
+
+    {
+      if (Relation.isRelation(any)) {
+        any;
+      } else {
+        any;
+      }
+    }
+  });
+
+  /**
+   * Test that Obj.make return types are clean and don't expose internal markers like OfKind.
+   * The return type of Obj.make(Schema, props) should be assignable to Obj.Obj<InstanceType>.
+   */
+  describe('Obj.make return type', () => {
+    test('Obj.make with custom schema should be assignable to Obj.Obj<Person>', ({ expect }) => {
+      {
+        const expando = Obj.make(TestSchema.Expando, { content: 'Test' });
+        expect(Obj.isObject(expando)).to.be.true;
+        expect(expando.content).to.eq('Test');
+
+        // This should work: assign to Obj.Obj of the schema's instance type
+        const _typed: Obj.OfShape<TestSchema.Expando> = expando;
+      }
+
+      {
+        const person = Obj.make(TestSchema.Person, { name: 'Test' });
+        expect(Obj.isObject(person)).to.be.true;
+        expect(person.name).to.eq('Test');
+
+        // This should work: assign to Obj.Obj of the schema's instance type
+        const _typed: Obj.OfShape<TestSchema.Person> = person;
+      }
+    });
+  });
+});

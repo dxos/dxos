@@ -1,0 +1,124 @@
+/**
+ * Text
+ * Example: <span className='dx-text' data-hue={getHashHue(object.id)}>
+ */
+
+@layer dx-components {
+  /*
+   * System
+   */
+
+  .dx-text[data-hue='info'],
+  .dx-text--info {
+    @apply text-cyan-text;
+  }
+
+  .dx-text[data-hue='success'],
+  .dx-text--success {
+    @apply text-emerald-text;
+  }
+
+  .dx-text[data-hue='warning'],
+  .dx-text--warning {
+    @apply text-amber-text;
+  }
+
+  .dx-text[data-hue='error'],
+  .dx-text--error {
+    @apply text-rose-text;
+  }
+
+  /*
+   * Colors
+   */
+
+  .dx-text[data-hue='neutral'],
+  .dx-text--neutral {
+    @apply text-neutral-text;
+  }
+
+  .dx-text[data-hue='red'],
+  .dx-text--red {
+    @apply text-red-text;
+  }
+
+  .dx-text[data-hue='orange'],
+  .dx-text--orange {
+    @apply text-orange-text;
+  }
+
+  .dx-text[data-hue='amber'],
+  .dx-text--amber {
+    @apply text-amber-text;
+  }
+
+  .dx-text[data-hue='yellow'],
+  .dx-text--yellow {
+    @apply text-yellow-text;
+  }
+
+  .dx-text[data-hue='lime'],
+  .dx-text--lime {
+    @apply text-lime-text;
+  }
+
+  .dx-text[data-hue='green'],
+  .dx-text--green {
+    @apply text-green-text;
+  }
+
+  .dx-text[data-hue='emerald'],
+  .dx-text--emerald {
+    @apply text-emerald-text;
+  }
+
+  .dx-text[data-hue='teal'],
+  .dx-text--teal {
+    @apply text-teal-text;
+  }
+
+  .dx-text[data-hue='cyan'],
+  .dx-text--cyan {
+    @apply text-cyan-text;
+  }
+
+  .dx-text[data-hue='sky'],
+  .dx-text--sky {
+    @apply text-sky-text;
+  }
+
+  .dx-text[data-hue='blue'],
+  .dx-text--blue {
+    @apply text-blue-text;
+  }
+
+  .dx-text[data-hue='indigo'],
+  .dx-text--indigo {
+    @apply text-indigo-text;
+  }
+
+  .dx-text[data-hue='violet'],
+  .dx-text--violet {
+    @apply text-violet-text;
+  }
+
+  .dx-text[data-hue='purple'],
+  .dx-text--purple {
+    @apply text-purple-text;
+  }
+
+  .dx-text[data-hue='fuchsia'],
+  .dx-text--fuchsia {
+    @apply text-fuchsia-text;
+  }
+
+  .dx-text[data-hue='pink'],
+  .dx-text--pink {
+    @apply text-pink-text;
+  }
+
+  .dx-text[data-hue='rose'],
+  .dx-text--rose {
+    @apply text-rose-text;
+  }
+}

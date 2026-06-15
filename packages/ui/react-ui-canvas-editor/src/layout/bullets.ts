@@ -4,8 +4,8 @@
 
 import { type Selection, easeLinear, interpolate, select } from 'd3';
 
-import type { BaseGraphEdge, GraphEdge } from '@dxos/graph';
-import { isNotFalsy } from '@dxos/util';
+import type { Graph } from '@dxos/graph';
+import { isTruthy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
 import type { CanvasGraphModel } from '../types';
@@ -20,13 +20,13 @@ export const getPaths = (
   graph: CanvasGraphModel,
   root: HTMLElement,
   filter: { source?: string; target?: string },
-): { edge: BaseGraphEdge; el: SVGPathElement }[] => {
+): { edge: Graph.Edge.Any; el: SVGPathElement }[] => {
   return getShapeElements<SVGPathElement>(root, 'path')
     .map((el) => {
       const edge = graph.getEdge(el.getAttribute(DATA_SHAPE_ID)!);
       return edge && edge.source === filter.source ? { edge, el } : null;
     })
-    .filter(isNotFalsy);
+    .filter(isTruthy);
 };
 
 export type BulletOptions = {
@@ -58,10 +58,10 @@ export const fireBullet = (
   root: HTMLElement,
   g: SVGGElement,
   graph: CanvasGraphModel,
-  edge: Partial<GraphEdge>,
+  edge: Partial<Graph.Edge.Any>,
   propagate = false,
 ) => {
-  const cb = (edge: BaseGraphEdge) => {
+  const cb = (edge: Graph.Edge.Any) => {
     const num = select(g).selectAll('circle').size();
     if (num < defaultBulletOptions.max) {
       const paths = getPaths(graph, root, { source: edge.target });
@@ -81,10 +81,10 @@ export const fireBullet = (
  * Creates a bullet animation.
  */
 export const createBullet = (
-  edge: BaseGraphEdge,
+  edge: Graph.Edge.Any,
   path: SVGPathElement,
   options: BulletOptions = defaultBulletOptions,
-  cb?: (edge: BaseGraphEdge) => void,
+  cb?: (edge: Graph.Edge.Any) => void,
 ) => {
   return (selection: Selection<any, any, any, any>) => {
     selection.each(function () {

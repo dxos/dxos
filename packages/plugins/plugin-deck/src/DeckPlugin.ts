@@ -4,83 +4,75 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
-import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 
 import {
   AppGraphBuilder,
   CheckAppScheme,
   DeckSettings,
   DeckState,
-  LayoutIntentResolver,
+  NotificationTracker,
+  OperationHandler,
   ReactRoot,
   ReactSurface,
-  Tools,
   UrlHandler,
-} from './capabilities';
-import { DeckEvents } from './events';
-import { meta } from './meta';
-import translations from './translations';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { DeckEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
-export const DeckPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/check-app-scheme`,
-      activatesOn: Events.SettingsReady,
-      activate: CheckAppScheme,
-    }),
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: DeckSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/layout`,
-      // TODO(wittjosiah): Does not integrate with settings store.
-      //   Should this be a different event?
-      //   Should settings store be renamed to be more generic?
-      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
-      activatesAfter: [Events.LayoutReady, DeckEvents.StateReady],
-      activate: DeckState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-root`,
-      activatesOn: Events.Startup,
-      activate: ReactRoot,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/layout-intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: LayoutIntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/tools`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: Tools,
-    }),
-    defineModule({
-      id: `${meta.id}/module/url`,
-      activatesOn: allOf(Events.DispatcherReady, DeckEvents.StateReady),
-      activate: UrlHandler,
-    }),
-  ]);
+export const DeckPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [DeckEvents.SettingsReady],
+    activate: DeckSettings,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.ProcessManagerReady),
+    activate: CheckAppScheme,
+  }),
+  Plugin.addModule({
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+    firesAfterActivation: [AppActivationEvents.LayoutReady, DeckEvents.StateReady],
+    activate: DeckState,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvents.Startup,
+    activate: ReactRoot,
+  }),
+  // Plugin.addModule({
+  //   activatesOn: Events.SetupArtifactDefinition,
+  //   activate: Tools,
+  // }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
+    activate: UrlHandler,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
+    activate: NotificationTracker,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default DeckPlugin;

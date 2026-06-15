@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { idle, type ItemDragState, type ListItemRecord } from './ListItem';
+import { type ItemDragState, type ListItemRecord, idle } from './ListItem';
 
 type ListContext<T extends ListItemRecord> = {
   // TODO(burdon): Rename drag state.
@@ -26,14 +26,14 @@ export const [ListProvider, useListContext] = createContext<ListContext<any>>(LI
 
 export type ListRendererProps<T extends ListItemRecord> = {
   state: ListContext<T>['state'];
-  items: T[];
+  items: readonly T[];
 };
 
 const defaultGetId = <T extends ListItemRecord>(item: T) => (item as any)?.id;
 
 export type ListRootProps<T extends ListItemRecord> = {
   children?: (props: ListRendererProps<T>) => ReactNode;
-  items?: T[];
+  items?: readonly T[];
   onMove?: (fromIndex: number, toIndex: number) => void;
 } & Pick<ListContext<T>, 'isItem' | 'getId' | 'readonly' | 'dragPreview'>;
 

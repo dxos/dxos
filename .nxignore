@@ -1,5 +1,0 @@
-**/dist/**
-**/out/**
-
-packages/common/observability/src/cli-observability-secrets.json
-packages/sdk/examples/src/template/**

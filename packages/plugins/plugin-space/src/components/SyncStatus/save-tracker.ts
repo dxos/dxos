@@ -4,8 +4,9 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { type Space, type SpaceId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
 
 export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving') => void) => {
   const CleanupFns: Record<SpaceId, CleanupFn> = {};
@@ -46,15 +47,15 @@ const createSpaceSaveTracker = (space: Space, cb: (state: 'saved' | 'saving') =>
 
     let hasUnsavedChanges = false;
     let lastFlushPromise: Promise<void> | undefined;
-    space.crud.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
+    space.internal.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
       hasUnsavedChanges = unsavedDocuments.length > 0;
     });
-    space.crud.saveStateChanged.debounce(500).on(ctx, () => {
+    space.internal.db.saveStateChanged.debounce(500).on(ctx, () => {
       if (hasUnsavedChanges) {
         lastFlushPromise = undefined;
         cb('saving');
       } else {
-        const flushPromise = space.crud.flush();
+        const flushPromise = space.db.flush();
         lastFlushPromise = flushPromise;
         void flushPromise.then(() => {
           if (lastFlushPromise === flushPromise) {

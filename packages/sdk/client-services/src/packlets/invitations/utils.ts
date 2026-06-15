@@ -3,7 +3,7 @@
 //
 
 import { type Mutex, type MutexGuard } from '@dxos/async';
-import { cancelWithContext, type Context, ContextDisposedError } from '@dxos/context';
+import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 export const stateToString = (state: Invitation.State): string => {

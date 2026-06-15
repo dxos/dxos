@@ -3,20 +3,20 @@
 //
 
 // TODO(burdon): workerize-loader dep.
-import { Graph, type Edge, type PlainObject } from '@antv/graphlib';
+import { type Edge, Graph, type PlainObject } from '@antv/graphlib';
 import {
-  type Layout,
   D3ForceLayout,
   type D3ForceLayoutOptions,
   GridLayout,
   type GridLayoutOptions,
+  type Layout,
   RadialLayout,
   type RadialLayoutOptions,
 } from '@antv/layout';
-import { createBindingId, createShapeId, type Editor, type SerializedStore, type TLRecord } from '@tldraw/tldraw';
+import { type Editor, type SerializedStore, type TLRecord, createBindingId, createShapeId } from '@tldraw/tldraw';
 
-import { faker } from '@dxos/random';
-import { isNotFalsy, range } from '@dxos/util';
+import { random } from '@dxos/random';
+import { isTruthy, range } from '@dxos/util';
 
 // TODO(burdon): Graph layout:
 //  - https://www.npmjs.com/package/@antv/layout (uses d3)
@@ -32,10 +32,10 @@ import { isNotFalsy, range } from '@dxos/util';
 // TODO(burdon): Factor out.
 // TODO(burdon): Map ECHO to Graph.
 export const generateGraph = (): Graph<PlainObject, PlainObject> => {
-  const nodes = range(faker.number.int({ min: 8, max: 32 })).map(() => ({
-    id: faker.string.uuid(),
+  const nodes = range(random.number.int({ min: 8, max: 32 })).map(() => ({
+    id: random.string.uuid(),
     data: {
-      label: faker.lorem
+      label: random.lorem
         .words(2)
         .split(' ')
         .map((word) => word.charAt(0).toUpperCase())
@@ -46,7 +46,7 @@ export const generateGraph = (): Graph<PlainObject, PlainObject> => {
   const unlinked = new Set(nodes.map((node) => node.id));
   const pop = () => {
     if (unlinked.size) {
-      const id = faker.helpers.arrayElement(Array.from(unlinked));
+      const id = random.helpers.arrayElement(Array.from(unlinked));
       unlinked.delete(id);
       return id;
     }
@@ -54,12 +54,12 @@ export const generateGraph = (): Graph<PlainObject, PlainObject> => {
 
   const edges: Edge<PlainObject>[] = [];
   const link = (source: string, target: string) => {
-    edges.push({ id: faker.string.uuid(), source, target, data: {} });
+    edges.push({ id: random.string.uuid(), source, target, data: {} });
   };
 
   const branching = 3;
   const traverse = (source: string) => {
-    const targets = range(faker.number.int({ min: 1, max: branching }))
+    const targets = range(random.number.int({ min: 1, max: branching }))
       .map(() => {
         const target = pop();
         if (target) {
@@ -67,7 +67,7 @@ export const generateGraph = (): Graph<PlainObject, PlainObject> => {
         }
         return target;
       })
-      .filter(isNotFalsy);
+      .filter(isTruthy);
 
     for (const target of targets) {
       traverse(target);
@@ -106,7 +106,7 @@ export const drawGraph = async (
     preventOverlap: true,
   };
 
-  const layoutType = faker.helpers.arrayElement(['d3force', 'grid', 'radial']);
+  const layoutType = random.helpers.arrayElement(['d3force', 'grid', 'radial']);
   let layout: Layout<any>;
   switch (layoutType) {
     case 'd3force': {

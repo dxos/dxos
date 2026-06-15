@@ -2,15 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-export default [
+import { type Resource } from '@dxos/react-ui';
+
+export const translationKey = '@dxos/composer';
+
+export const translations = [
   {
     'en-US': {
-      composer: {
+      [translationKey]: {
         'composer.title': 'composer',
         'composer.description': 'DXOS.org',
-        'button.auth': 'Authenticate',
-        'input.placeholder': 'Search...',
+        'chat.placeholder': 'Ask or search for anything...',
+        'chat.clear.button': 'Clear',
+        'clip.button': 'Clip',
+        'launch-composer.button': 'Launch Composer',
+        'settings.dev-mode.label': 'Developer Mode',
+        'settings.space-mode.label': 'Space Mode',
+        'settings.space-id.label': 'Space ID',
+        'settings.composer-urls.label': 'Composer URLs',
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -6,14 +6,14 @@ import { type FC } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { type ShapeComponentProps } from './Shape';
-import { type Shape, type Polygon } from '../../types';
+import { type CanvasBoard, type Polygon } from '../../types';
 import { type Anchor } from '../anchors';
+import { type ShapeComponentProps } from './Shape';
 
 /**
  * Shape definition.
  */
-export type ShapeDef<S extends Shape = any> = {
+export type ShapeDef<S extends CanvasBoard.Shape = any> = {
   type: string;
   name: string;
   icon: string;
@@ -24,7 +24,10 @@ export type ShapeDef<S extends Shape = any> = {
   resizable?: boolean;
 };
 
-export type ShapeDefSet<S extends Shape = any> = { title?: string; shapes: ShapeDef<S>[] };
+export type ShapeDefSet<S extends CanvasBoard.Shape = any> = {
+  title?: string;
+  shapes: ShapeDef<S>[];
+};
 
 /**
  * Shape registry provided to the Editor.
@@ -65,7 +68,7 @@ export class ShapeRegistry {
 export class ShapeLayout {
   constructor(protected readonly _registry: ShapeRegistry) {}
 
-  getAnchors(shape: Shape): Record<string, Anchor> {
+  getAnchors(shape: CanvasBoard.Shape): Record<string, Anchor> {
     const shapeDef = this._registry.getShapeDef(shape.type);
     return shapeDef?.getAnchors?.(shape) ?? {};
   }

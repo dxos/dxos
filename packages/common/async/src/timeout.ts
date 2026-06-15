@@ -4,7 +4,6 @@
 
 import { type Context, ContextDisposedError } from '@dxos/context';
 
-import { createPromiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
 /**
@@ -28,46 +27,7 @@ export const sleep = (ms: number) => {
   });
 };
 
-/**
- * Can be used in long-running tasks to let other callbacks be invoked.
- */
-export const asyncReturn = () => sleep(0);
-
-/**
- * Wait for promise or throw error.
- */
-export const asyncTimeout = async <T>(
-  // TODO(dmaretskyi): This callback API is unintuitive and leads to bugs.
-  promise: Promise<T> | (() => Promise<T>),
-  timeout: number,
-  err?: Error | string,
-): Promise<T> => {
-  let timeoutId: NodeJS.Timeout;
-  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
-  const timeoutPromise = new Promise<T>((resolve, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(throwable);
-    }, timeout);
-
-    unrefTimeout(timeoutId);
-  });
-
-  const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
-  return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
-    clearTimeout(timeoutId);
-  });
-};
-
-/**
- * In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
- * https://nodejs.org/api/timers.html#timeoutunref
- */
-export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
-  if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
-    timeoutId.unref();
-  }
-};
-
+// TODO(burdon): Reconcile with sleep.
 export const sleepWithContext = (ctx: Context, ms: number) => {
   const error = new ContextDisposedError();
   return new Promise<void>((resolve, reject) => {
@@ -86,4 +46,42 @@ export const sleepWithContext = (ctx: Context, ms: number) => {
       reject(error);
     });
   });
+};
+
+/**
+ * Can be used in long-running tasks to let other callbacks be invoked.
+ */
+export const asyncReturn = () => sleep(0);
+
+/**
+ * Wait for promise or throw error.
+ */
+export const asyncTimeout = async <T>(promise: Promise<T>, timeout: number, err?: Error | string): Promise<T> => {
+  if (typeof promise === 'function') {
+    throw new Error('First argument must be a promise.');
+  }
+
+  let timeoutId: NodeJS.Timeout;
+  const throwable = err === undefined || typeof err === 'string' ? new TimeoutError(timeout, err) : err;
+  const timeoutPromise = new Promise<T>((resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(throwable);
+    }, timeout);
+
+    unrefTimeout(timeoutId);
+  });
+
+  return await Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeoutId);
+  });
+};
+
+/**
+ * In Node.JS, `unref` prevents the timeout from blocking the process from exiting. Not available in browsers.
+ * https://nodejs.org/api/timers.html#timeoutunref
+ */
+export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
+  if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
+    timeoutId.unref();
+  }
 };

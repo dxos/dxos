@@ -6,25 +6,21 @@
 
 /**
  * Determines priority order:
- * - `static` - Remain in natural order.
- * - `hoist` - Placed before `static`.
- * - `fallback` - Placed after `static`.
+ * - `undefined` - Remain in natural order.
+ * - `first` - Placed before items in natural order.
+ * - `last` - Placed after items in natural order.
  */
-// TODO(wittjosiah): Change to 'static' | 'start' | 'end'.
-export type Position = 'static' | 'hoist' | 'fallback';
+export type Position = 'first' | 'last';
 
 /**
  * Sorting function for sorting by position.
  */
-export const byPosition = <T extends { position?: Position }>(
-  { position: a = 'static' }: T,
-  { position: b = 'static' }: T,
-) => {
+export const byPosition = <T extends { position?: Position }>({ position: a }: T, { position: b }: T) => {
   if (a === b) {
     return 0;
-  } else if (a === 'hoist' || b === 'fallback') {
+  } else if (a === 'first' || b === 'last') {
     return -1;
-  } else if (b === 'hoist' || a === 'fallback') {
+  } else if (b === 'first' || a === 'last') {
     return 1;
   } else {
     return 0;

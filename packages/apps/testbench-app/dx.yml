@@ -4,7 +4,7 @@ package:
     - name: testbench-app
       type: dxos:type/app
       build:
-        command: pnpm -w nx bundle testbench-app
+        command: moon run testbench-app:bundle
         outdir: out/testbench-app
 runtime:
   client:
@@ -14,6 +14,11 @@ runtime:
     edgeFeatures:
       signaling: true
       echoReplicator: true
+      feedReplicator: true
+      agents: true
+    disableP2pReplication: true
+    log:
+      filter: 'echo-edge-replicator:debug,info'
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal

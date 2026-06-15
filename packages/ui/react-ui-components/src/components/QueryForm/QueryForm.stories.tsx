@@ -1,0 +1,72 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import { Filter, Query, Tag, Type } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { Toolbar } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
+
+import { translations } from '#translations';
+
+import { QueryForm, type QueryFormProps } from './QueryForm';
+
+const types = [
+  // TODO(burdon): Get label from annotation.
+  { value: Type.getURI(Organization.Organization), label: 'Organization' },
+  { value: Type.getURI(Person.Person), label: 'Person' },
+  { value: Type.getURI(Pipeline.Pipeline), label: 'Project' },
+  { value: Type.getURI(Employer.Employer), label: 'Employer' },
+];
+
+const tags = Tag.createTagList({
+  [EntityId.random().toString()]: Tag.make({ label: 'Important' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'Investor' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'New' }),
+});
+
+const meta = {
+  title: 'ui/react-ui-components/QueryForm',
+  component: QueryForm,
+  render: (args: QueryFormProps) => {
+    const [query, setQuery] = useState<Query.Any>(Query.select(Filter.nothing()));
+
+    return (
+      <div>
+        <Toolbar.Root classNames='border-b border-subdued-separator'>
+          <QueryForm {...args} onChange={setQuery} />
+        </Toolbar.Root>
+
+        <JsonHighlighter data={query} classNames='p-2 text-xs' />
+      </div>
+    );
+  },
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    withClientProvider({
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
+      createIdentity: true,
+    }),
+  ],
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof QueryForm>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    types,
+    tags,
+  },
+};

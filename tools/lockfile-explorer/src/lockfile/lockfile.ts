@@ -9,7 +9,7 @@ import * as yaml from 'yaml';
 
 import { entries } from '@dxos/util';
 
-import type { PackageName, VersionId, VersionSpecifier, PackageId, PackageIndex, Lockfile } from './types';
+import type { Lockfile, PackageId, PackageIndex, PackageName, VersionId, VersionSpecifier } from './types';
 
 export const findLockfile = (path: string): string => {
   if (path.endsWith('pnpm-lock.yaml') && existsSync(path)) {

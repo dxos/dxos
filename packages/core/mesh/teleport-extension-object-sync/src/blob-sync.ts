@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { trackLeaks, Trigger, Mutex } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Mutex, Trigger, trackLeaks } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -11,11 +11,11 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { type WantList } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
 import { BitField, ComplexMap } from '@dxos/util';
 
-import { type BlobStore } from './blob-store';
+import { type BlobStoreApi } from './blob-store';
 import { BlobSyncExtension } from './blob-sync-extension';
 
-export type BlobSyncParams = {
-  blobStore: BlobStore;
+export type BlobSyncProps = {
+  blobStore: BlobStoreApi;
 };
 
 type DownloadRequest = {
@@ -36,7 +36,7 @@ export class BlobSync {
 
   private readonly _extensions = new Set<BlobSyncExtension>();
 
-  constructor(private readonly _params: BlobSyncParams) {}
+  constructor(private readonly _params: BlobSyncProps) {}
 
   async open(): Promise<void> {}
 

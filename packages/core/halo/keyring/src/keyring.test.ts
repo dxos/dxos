@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Keyring } from './keyring';
 import { generateJWKKeyPair, parseJWKKeyPair } from './testing';

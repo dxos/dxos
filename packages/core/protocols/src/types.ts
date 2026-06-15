@@ -5,8 +5,8 @@
 import { type PublicKey } from '@dxos/keys';
 import { type Timeframe } from '@dxos/timeframe';
 
-import { type CredentialsMessage, type FeedMessage } from './proto/gen/dxos/echo/feed.js';
-import { type EchoObjectBatch } from './proto/gen/dxos/echo/object.js';
+import { type CredentialsMessage, type FeedMessage } from './proto/gen/dxos/echo/feed.ts';
+import { type EchoObjectBatch } from './proto/gen/dxos/echo/object.ts';
 
 // TODO(burdon): Replace with proto definition.
 export type FeedMeta = {

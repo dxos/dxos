@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './resource-lock';
-export * from './node';
+export type * from './resource-lock';
+export * from '#locks-platform';

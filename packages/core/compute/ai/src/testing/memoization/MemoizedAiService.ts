@@ -1,0 +1,74 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { TestContextService } from '@dxos/effect/testing';
+
+import * as AiService from '../../AiService';
+import * as MemoizedLanguageModel from './MemoizedLanguageModel';
+
+export interface MemoizedAiService extends AiService.Service {}
+
+export type MakeProps = {
+  upstream: AiService.Service;
+  /** Filename for memoized conversations to be stored at. */
+  storePath: string;
+  allowGeneration: boolean;
+  /**
+   * Patterns matching run-specific identifiers (e.g. {@link MemoizedLanguageModel.SPACE_ID_PATTERN})
+   * to canonicalize for matching and substitute back into the response on a cache hit. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
+};
+
+export const make = (options: MakeProps): MemoizedAiService => ({
+  model: (model) =>
+    Layer.provide(
+      MemoizedLanguageModel.layer({
+        modelName: model,
+        storePath: options.storePath,
+        allowGeneration: options.allowGeneration,
+        dynamicValuePatterns: options.dynamicValuePatterns,
+      }),
+      options.upstream.model(model),
+    ),
+});
+
+/**
+ * Memoizes the requests to the AI service.
+ * All conversations will be saved in `<test-file>.conversations.json`.
+ * Unless `ALLOW_LLM_GENERATION=1` is specified, no generation will be performed and the agent will error if it cannot find a memoized conversation with matching prompt
+ * If `ALLOW_LLM_GENERATION=1` is specified, the agent will generate a response if it cannot find a memoized conversation with matching prompt.
+ * Requires `TestContextService` to be provided to extract the test file path.
+ *
+ * @param options.storePath [default: `<test-file>.conversations.json`] - Filename for memoized conversations to be stored at.
+ * @param options.allowGeneration [default: `ALLOW_LLM_GENERATION=1`] - Whether to allow generation if no memoized conversation is found.
+ */
+export const layerTest = (options: Partial<Omit<MakeProps, 'upstream'>> = {}) =>
+  Layer.effect(
+    AiService.AiService,
+    Effect.gen(function* () {
+      const ctx = yield* TestContextService;
+      const upstream = yield* AiService.AiService;
+      return make({
+        upstream,
+        storePath:
+          options.storePath ??
+          (ctx.task.file.filepath.endsWith('.eval.ts')
+            ? ctx.task.file.filepath.replace('.eval.ts', '.conversations.json')
+            : ctx.task.file.filepath.replace('.test.ts', '.conversations.json')),
+        allowGeneration: options.allowGeneration ?? isGenerationEnabled(),
+        dynamicValuePatterns: options.dynamicValuePatterns,
+      });
+    }),
+  );
+
+/**
+ * @returns true if generation is enabled according to the environment variable `ALLOW_LLM_GENERATION`.
+ */
+export const isGenerationEnabled = () => ['1', 'true'].includes(process.env.ALLOW_LLM_GENERATION ?? '0');

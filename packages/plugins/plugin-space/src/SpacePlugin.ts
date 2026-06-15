@@ -2,193 +2,167 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  oneOf,
-} from '@dxos/app-framework';
-import { Ref, Type } from '@dxos/echo';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Tag } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
-import { DataType } from '@dxos/schema';
-import { osTranslations } from '@dxos/shell/react';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { DataTypes } from '@dxos/schema';
+import { translations as shellTranslations } from '@dxos/shell/react';
+import {
+  AnchoredTo,
+  Employer,
+  Event,
+  HasConnection,
+  HasRelationship,
+  HasSubject,
+  Organization,
+  Person,
+  Pipeline,
+  Project,
+  Task,
+} from '@dxos/types';
 
 import {
-  AppGraphBuilder,
   AppGraphSerializer,
+  CreateObject,
   IdentityCreated,
-  IntentResolver,
+  NavigationHandler,
+  NavigationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactRoot,
   ReactSurface,
-  SchemaDefs,
-  SchemaTools,
-  SpaceCapabilities,
+  Repair,
   SpaceSettings,
-  SpacesReady,
   SpaceState,
-} from './capabilities';
-import { SpaceEvents } from './events';
-import { meta } from './meta';
-import translations from './translations';
-import { CollectionAction, defineObjectForm } from './types';
+  SpacesReady,
+  AppGraphBuilder,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { SpaceEvents } from '#types';
+import { type SpacePluginOptions } from '#types';
 
-export type SpacePluginOptions = {
-  /**
-   * Base URL for the invitation link.
-   */
-  invitationUrl?: string;
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
-  /**
-   * Query parameter for the invitation code.
-   */
-  invitationParam?: string;
+export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
+    activate: () => NavigationHandler({ invitationProp }),
+  })),
+  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addReactRootModule({ activate: ReactRoot }),
+  AppPlugin.addSchemaModule({
+    schema: [
+      ...DataTypes,
+      AnchoredTo.AnchoredTo,
+      Employer.Employer,
+      Event.Event,
+      HasConnection.HasConnection,
+      HasRelationship.HasRelationship,
+      HasSubject.HasSubject,
+      Organization.Organization,
+      Person.Person,
+      Pipeline.Pipeline,
+      Project.Project,
+      Tag.Tag,
+      Task.Task,
+    ],
+  }),
+  AppPlugin.addSettingsModule({ activate: SpaceSettings }),
+  AppPlugin.addTranslationsModule({
+    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
+  }),
+  Plugin.addModule({
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: ActivationEvent.oneOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+    firesAfterActivation: [SpaceEvents.StateReady],
+    activate: SpaceState,
+  }),
+  Plugin.addModule(
+    ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      invitationPath = '/',
+      invitationProp = 'spaceInvitationCode',
+    }) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
 
-  /**
-   * Whether to send observability events.
-   */
-  observability?: boolean;
-};
+      return {
+        id: Capability.getModuleTag(ReactSurface),
+        activatesOn: ActivationEvents.SetupReactSurface,
+        // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
+        firesBeforeActivation: [SpaceEvents.SetupSettingsPanel],
+        activate: () => ReactSurface({ createInvitationUrl }),
+      };
+    },
+  ),
+  Plugin.addModule(
+    ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
+      id: Capability.getModuleTag(AppGraphBuilder),
+      activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+      activate: () => AppGraphBuilder({ shareableLinkOrigin }),
+    }),
+  ),
+  Plugin.addModule(
+    ({
+      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+      invitationPath = '/',
+      invitationProp = 'spaceInvitationCode',
+      observability = false,
+    }) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
 
-export const SpacePlugin = ({
-  invitationUrl = window.location.origin,
-  invitationParam = 'spaceInvitationCode',
-  observability = false,
-}: SpacePluginOptions = {}) => {
-  const createInvitationUrl = (invitationCode: string) => {
-    const baseUrl = new URL(invitationUrl);
-    baseUrl.searchParams.set(invitationParam, invitationCode);
-    return baseUrl.toString();
-  };
+      return {
+        id: Capability.getModuleTag(UndoMappings),
+        activatesOn: ActivationEvents.SetupProcessManager,
+        activate: () => UndoMappings({ createInvitationUrl, observability }),
+      };
+    },
+  ),
+  // TODO(wittjosiah): This could probably be deferred.
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: AppGraphSerializer,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.IdentityCreated,
+    firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
+    activate: IdentityCreated,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.ProcessManagerReady,
+      AppActivationEvents.LayoutReady,
+      AppActivationEvents.AppGraphReady,
+      AttentionEvents.AttentionReady,
+      SpaceEvents.StateReady,
+      ClientEvents.SpacesReady,
+    ),
+    activate: SpacesReady,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SpacesReady,
+    activate: Repair,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
 
-  return definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/state`,
-      // TODO(wittjosiah): Does not integrate with settings store.
-      //   Should this be a different event?
-      //   Should settings store be renamed to be more generic?
-      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
-      activatesAfter: [SpaceEvents.StateReady],
-      activate: SpaceState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: SpaceSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [...translations, osTranslations]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () => [
-        contributes(Capabilities.Metadata, {
-          id: Type.getTypename(DataType.Collection),
-          metadata: {
-            icon: 'ph--cards-three--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
-          },
-        }),
-        contributes(Capabilities.Metadata, {
-          id: Type.getTypename(DataType.QueryCollection),
-          metadata: {
-            label: (object: DataType.QueryCollection) => [
-              'typename label',
-              { ns: object.query.typename, count: 2, defaultValue: 'New smart collection' },
-            ],
-            icon: 'ph--funnel-simple--regular',
-          },
-        }),
-      ],
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: DataType.Collection,
-            formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-            getIntent: (props) => createIntent(CollectionAction.Create, props),
-          }),
-        ),
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: DataType.QueryCollection,
-            formSchema: CollectionAction.QueryCollectionForm,
-            getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
-          }),
-        ),
-      ],
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.ClientReady,
-      activatesBefore: [ClientEvents.SetupSchema],
-      activate: SchemaDefs,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-root`,
-      activatesOn: Events.Startup,
-      activate: ReactRoot,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
-      activatesBefore: [SpaceEvents.SetupSettingsPanel],
-      activate: () => ReactSurface({ createInvitationUrl }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, createInvitationUrl, observability }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    // TODO(wittjosiah): This could probably be deferred.
-    defineModule({
-      id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.AppGraphReady,
-      activate: AppGraphSerializer,
-    }),
-    defineModule({
-      id: `${meta.id}/module/identity-created`,
-      activatesOn: ClientEvents.IdentityCreated,
-      activatesAfter: [SpaceEvents.DefaultSpaceReady],
-      activate: IdentityCreated,
-    }),
-    defineModule({
-      id: `${meta.id}/module/spaces-ready`,
-      activatesOn: allOf(
-        Events.DispatcherReady,
-        Events.LayoutReady,
-        Events.AppGraphReady,
-        AttentionEvents.AttentionReady,
-        SpaceEvents.StateReady,
-        ClientEvents.SpacesReady,
-      ),
-      activate: SpacesReady,
-    }),
-    defineModule({
-      id: `${meta.id}/module/tools`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: SchemaTools,
-    }),
-  ]);
-};
+export default SpacePlugin;

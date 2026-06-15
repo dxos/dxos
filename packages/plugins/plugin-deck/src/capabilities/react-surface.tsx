@@ -2,29 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { SettingsStore } from '@dxos/local-storage';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { NOT_FOUND_PATH } from '@dxos/app-toolkit';
+import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
-import { DeckSettings, Banner } from '../components';
-import { DECK_PLUGIN } from '../meta';
-import { type DeckSettingsProps } from '../types';
+import { DeckSettings } from '#components';
+import { meta } from '#meta';
+import { type Settings } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${DECK_PLUGIN}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<DeckSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === DECK_PLUGIN,
-      component: ({ data: { subject } }) => <DeckSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${DECK_PLUGIN}/banner`,
-      role: 'banner',
-      component: ({ data }) => {
-        return <Banner variant={data.variant} />;
-      },
-    }),
-  ]);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return <DeckSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
+      Surface.create({
+        id: 'notFound',
+        role: 'article',
+        filter: (data): data is { attendableId: string } => data.attendableId === NOT_FOUND_PATH,
+        component: () => <NotFoundArticle />,
+      }),
+    ]),
+  ),
+);

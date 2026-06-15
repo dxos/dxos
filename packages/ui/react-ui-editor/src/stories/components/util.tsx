@@ -4,12 +4,9 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
-import React, { type FC } from 'react';
 
-import { faker } from '@dxos/random';
-import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
-
+import { random } from '@dxos/random';
+import { Domino } from '@dxos/ui';
 import {
   type EditorSelectionState,
   decorateMarkdown,
@@ -18,15 +15,18 @@ import {
   image,
   linkTooltip,
   table,
-} from '../../extensions';
-import { str } from '../../testing';
-import { createRenderer } from '../../util';
+} from '@dxos/ui-editor';
+import { type RenderCallback } from '@dxos/ui-editor/types';
+import { safeUrl } from '@dxos/util';
 
-export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();
+import { str } from '../../util';
+
+export const num = () => random.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 export const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
 
 export const code = str(
+  // prettier-ignore
   '// Code',
   'const Component = () => {',
   '  const x = 100;',
@@ -38,54 +38,77 @@ export const code = str(
 // Content blocks for stories
 export const content = {
   tasks: str(
-    //
+    // prettier-ignore
     '### TaskList',
     '',
-    `- [x] ${faker.lorem.sentences()}`,
-    `- [ ] ${faker.lorem.sentences()}`,
-    `  - [ ] ${faker.lorem.sentences()}`,
-    `    - [ ] ${faker.lorem.sentences()}`,
-    `    - [x] ${faker.lorem.sentences()}`,
+    `- [x] ${random.lorem.sentences()}`,
+    `- [ ] ${random.lorem.sentences()}`,
+    `  - [ ] ${random.lorem.sentences()}`,
+    `    - [ ] ${random.lorem.sentences()}`,
+    `    - [x] ${random.lorem.sentences()}`,
     '',
   ),
 
   bullets: str(
-    //
+    // prettier-ignore
     '### BulletList',
     '',
-    `- ${faker.lorem.sentences()}`,
-    `- ${faker.lorem.sentences()}`,
-    `  - ${faker.lorem.sentences()}`,
-    `  - ${faker.lorem.sentences()}`,
-    `- ${faker.lorem.sentences()}`,
+    `- ${random.lorem.sentences()}`,
+    `- ${random.lorem.sentences()}`,
+    `  - ${random.lorem.sentences()}`,
+    `  - ${random.lorem.sentences()}`,
+    `- ${random.lorem.sentences()}`,
     '',
   ),
 
   numbered: str(
-    //
+    // prettier-ignore
     '### OrderedList (part 1)',
     '',
-    `1. ${faker.lorem.sentences()}`,
-    `1. ${faker.lorem.sentences()}`,
-    `1. ${faker.lorem.sentences()}`,
-    `    1. ${faker.lorem.sentences()}`,
-    `    1. ${faker.lorem.sentences()}`,
-    `        1. ${faker.lorem.sentences()}`,
-    `1. ${faker.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
+    `    1. ${random.lorem.sentences()}`,
+    `    1. ${random.lorem.sentences()}`,
+    `        1. ${random.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
     '',
     '### OrderedList (part 2)',
     '',
-    `1. ${faker.lorem.sentences()}`,
+    `1. ${random.lorem.sentences()}`,
     '',
   ),
 
   typescript: code,
 
-  codeblocks: str('### Code', '', '```bash', '$ ls -las', '```', '', '```tsx', code, '```', ''),
+  codeblocks: str(
+    // prettier-ignore
+    '### Code',
+    '',
+    '```bash',
+    '$ ls -las',
+    '```',
+    '',
+    '```tsx',
+    code,
+    '```',
+    '',
+  ),
 
-  comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
+  comment: str(
+    // prettier-ignore
+    '### Comment',
+    '',
+    '<!--',
+    'A comment',
+    '-->',
+    '',
+    'Partial comment. <!-- comment. -->',
+    '',
+  ),
 
   links: str(
+    // prettier-ignore
     '### Links',
     '',
     'This is a naked link https://dxos.org within a sentence.',
@@ -97,9 +120,10 @@ export const content = {
   ),
 
   table: str(
+    // prettier-ignore
     '### Tables',
     '',
-    `| ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} | ${faker.lorem.word().padStart(12)} |`,
+    `| ${random.lorem.word().padStart(12)} | ${random.lorem.word().padStart(12)} | ${random.lorem.word().padStart(12)} |`,
     `|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|-${''.padStart(12, '-')}-|`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
     `| ${num().padStart(12)} | ${num().padStart(12)} | ${num().padStart(12)} |`,
@@ -110,12 +134,21 @@ export const content = {
   image: str('### Image', '', img),
 
   headings: str(
-    ...[1, 2, 3, 4, 5, 6].map((level) => ['#'.repeat(level) + ` Heading ${level}`, faker.lorem.sentences(), '']).flat(),
+    ...[1, 2, 3, 4, 5, 6]
+      .map((level) => ['#'.repeat(level) + ` Heading ${level}`, random.lorem.sentences(), ''])
+      .flat(),
   ),
 
-  formatting: str('### Formatting', '', 'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.', ''),
+  formatting: str(
+    // prettier-ignore
+    '### Formatting',
+    '',
+    'This this is **bold**, ~~strikethrough~~, _italic_, and `f(INLINE)`.',
+    '',
+  ),
 
   blockquotes: str(
+    // prettier-ignore
     '### Blockquotes',
     '',
     '> This is a block quote.',
@@ -128,7 +161,7 @@ export const content = {
     '',
   ),
 
-  paragraphs: str(...faker.helpers.multiple(() => [faker.lorem.paragraph(), ''], { count: 3 }).flat()),
+  paragraphs: str(...random.helpers.multiple(() => [random.lorem.paragraph(), ''], { count: 3 }).flat()),
 
   footer: str('', '', '', '', ''),
 };
@@ -154,6 +187,7 @@ export const text = str(
   '---',
   '## Misc',
   content.codeblocks,
+  content.comment,
   content.table,
   content.image,
   content.footer,
@@ -172,29 +206,26 @@ export const links: Completion[] = [
 export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-sm text-baseText text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-xs text-base-fg text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
-const LinkTooltip: FC<{ url: string }> = ({ url }) => {
-  const web = new URL(url);
-  return (
-    <a href={url} target='_blank' rel='noreferrer' className={mx(hover, 'flex items-center gap-2')}>
-      {web.origin}
-      <Icon icon='ph--arrow-square-out--regular' size={4} />
-    </a>
+export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
+  el.appendChild(
+    Domino.of('a')
+      .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
+      .classNames(hover, 'flex items-center gap-2')
+      .text(safeUrl(url)?.toString() ?? url)
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
 
-export const renderLinkTooltip = createRenderer(LinkTooltip);
-
-const LinkButton: FC<{ url: string }> = ({ url }) => {
-  return (
-    <a href={url} target='_blank' rel='noreferrer' className={mx(hover)}>
-      <Icon icon='ph--arrow-square-out--regular' size={4} classNames='inline-block mis-1 mb-[3px]' />
-    </a>
+export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) => {
+  el.appendChild(
+    Domino.of('span')
+      .attributes({ 'aria-hidden': 'true' })
+      .classNames(hover, 'ms-1 inline-block align-[-0.125em]')
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
-
-export const renderLinkButton = createRenderer(LinkButton);
 
 // Shared extensions.
 export const defaultExtensions: Extension[] = [
@@ -213,18 +244,18 @@ export const allExtensions: Extension[] = [
 ];
 
 // Long text for scrolling stories.
-export const longText = faker.helpers
-  .multiple(() => faker.lorem.paragraph({ min: 8, max: 16 }), { count: 20 })
+export const longText = random.helpers
+  .multiple(() => random.lorem.paragraph({ min: 8, max: 16 }), { count: 20 })
   .join('\n\n');
 
-export const largeWithImages = faker.helpers
-  .multiple(() => [faker.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
+export const largeWithImages = random.helpers
+  .multiple(() => [random.lorem.paragraph({ min: 12, max: 16 }), img], { count: 20 })
   .flatMap((x) => x)
   .join('\n\n');
 
 export const headings = str(
   ...[1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 2, 3, 3, 2, 2, 6, 1]
-    .map((level) => ['#'.repeat(level) + ' ' + faker.lorem.sentence(3), faker.lorem.sentences(), ''])
+    .map((level) => ['#'.repeat(level) + ' ' + random.lorem.sentence(3), random.lorem.sentences(), ''])
     .flat(),
 );
 

@@ -2,23 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
+import { withTheme } from '../../testing';
+import { withLayoutVariants } from '../../testing';
 import { Select } from './Select';
-import { withSurfaceVariantsLayout, withTheme } from '../../testing';
 
-faker.seed(1234);
+random.seed(1234);
 
 type ItemProps = { id: string; text: string };
 
-type StoryProps = { items: ItemProps[] };
+type DefaultStoryProps = { items: ItemProps[] };
 
-const DefaultStory = ({ items = [] }: StoryProps) => {
+const DefaultStory = ({ items = [] }: DefaultStoryProps) => {
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>
@@ -41,15 +40,18 @@ const DefaultStory = ({ items = [] }: StoryProps) => {
   );
 };
 
-export const Default: StoryObj<StoryProps> = {
-  args: {
-    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
-  },
-};
-
-export default {
-  title: 'ui/react-ui-core/Select',
+const meta = {
+  title: 'ui/react-ui-core/components/Select',
   render: DefaultStory,
-  decorators: [withSurfaceVariantsLayout(), withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+  decorators: [withTheme(), withLayoutVariants()],
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: random.lorem.word() })),
+  },
 };

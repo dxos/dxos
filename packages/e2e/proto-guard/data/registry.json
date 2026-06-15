@@ -1,0 +1,9 @@
+[
+  {
+    "name": "2026-06-12",
+    "version": 2,
+    "dataRoot": "snapshots/2026-06-12/snapshot",
+    "jsonDataPath": "snapshots/2026-06-12/expected.json",
+    "timestamp": "2026-06-12T13:42:25.322Z"
+  }
+]

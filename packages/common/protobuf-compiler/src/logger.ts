@@ -16,12 +16,7 @@ type LoggerOptions = {
 export class Logger {
   constructor(private readonly _options: LoggerOptions = {}) {}
 
-  // prettier-ignore
-  logCompilationOptions(
-    protoFilePaths: string[],
-    baseDirPath: string | undefined,
-    outDirPath: string
-  ): void {
+  logCompilationOptions(protoFilePaths: string[], baseDirPath: string | undefined, outDirPath: string): void {
     if (this._options?.verbose) {
       console.log(chalk`Output: {bold ${outDirPath}}`);
       console.log(chalk`Sources:`);
@@ -32,12 +27,7 @@ export class Logger {
     }
   }
 
-  // prettier-ignore
-  logParsedSubstitutions(
-    substitutionsModule: ModuleSpecifier,
-    substitutions: SubstitutionsMap
-  ): void {
-    console.log('Processing substitutions...');
+  logParsedSubstitutions(substitutionsModule: ModuleSpecifier, substitutions: SubstitutionsMap): void {
     if (this._options?.verbose) {
       console.log(chalk`Definitions: {bold ${substitutionsModule.resolve()}}`);
       if (Object.keys(substitutions).length > 0) {

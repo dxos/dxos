@@ -1,0 +1,45 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+  - ts-test
+tasks:
+  # Bundles the CLI into per-platform executables. This is the CLI's real build
+  # artifact (not a library `compile`), so it is intentionally NOT named `compile`
+  # and the project is not tagged `ts-build` — that keeps `cli` out of the
+  # `^:compile` / `#ts-build:build` fan-out (e.g. storybook serve no longer waits
+  # on it). Type-checking is provided by the `typecheck` tag's `build` task.
+  bundle:
+    command: bun
+    args:
+      - ./scripts/build.ts
+    deps:
+      - ^:compile
+    options:
+      timeout: 60
+    inputs:
+      - src/**/*
+      - scripts/build.ts
+      - bunfig.toml
+      - package.json
+      - LICENSE
+    outputs:
+      - dist/cli/
+      - dist/cli-darwin-arm64/
+      - dist/cli-darwin-x64/
+      - dist/cli-linux-arm64/
+      - dist/cli-linux-x64/
+      - dist/cli-win32-x64/
+  dev:
+    # Runs the CLI directly from source (no build step) via ./bin/dx.
+    command: ./bin/dx
+    preset: server
+  publish:
+    command: bun
+    args:
+      - ./scripts/publish.ts
+    deps:
+      - bundle
+    inputs:
+      - scripts/publish.ts
+      - dist/**/*

@@ -1,30 +1,29 @@
 //
-
-//
 // Copyright 2023 DXOS.org
 //
 
 import { InvalidConfigError } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+
+import { getRootPath } from './util';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
-import { getRootPath } from './util';
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {
   const { persistent = false, keyStore, dataStore } = config ?? {};
   if (persistent && dataStore === StorageDriver.RAM) {
-    throw new InvalidConfigError('RAM storage cannot be used in persistent mode.');
+    throw new InvalidConfigError({ message: 'RAM storage cannot be used in persistent mode.' });
   }
   if (!persistent && dataStore !== undefined && dataStore !== StorageDriver.RAM) {
-    throw new InvalidConfigError('Cannot use a persistent storage in not persistent mode.');
+    throw new InvalidConfigError({ message: 'Cannot use a persistent storage in not persistent mode.' });
   }
   if (persistent && keyStore === StorageDriver.RAM) {
-    throw new InvalidConfigError('RAM key storage cannot be used in persistent mode.');
+    throw new InvalidConfigError({ message: 'RAM key storage cannot be used in persistent mode.' });
   }
   if (!persistent && keyStore !== StorageDriver.RAM && keyStore !== undefined) {
-    throw new InvalidConfigError('Cannot use a persistent key storage in not persistent mode.');
+    throw new InvalidConfigError({ message: 'Cannot use a persistent key storage in not persistent mode.' });
   }
 
   return {

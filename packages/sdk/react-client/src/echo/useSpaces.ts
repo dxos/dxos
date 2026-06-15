@@ -2,51 +2,54 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
-
-import { type PublicKeyLike } from '@dxos/client';
+import { PublicKey } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { type SpaceId } from '@dxos/keys';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useClient } from '../client';
 
 /**
- * Get a specific Space using its key.
+ * Get a specific Space using its id.
  * The space is not guaranteed to be in the ready state.
- * Returns the default space if no key is provided.
+ * Returns undefined if no id is provided.
  * Requires a ClientProvider somewhere in the parent tree.
  *
- * @param spaceKeyLike the key of the space to look for
+ * @param spaceId the id of the space to look for.
  */
-export const useSpace = (spaceKeyLike?: PublicKeyLike): Space | undefined => {
+// TODO(wittjosiah): Currently unable to remove `PublicKey` from this api.
+//  When initially joining a space that is all that is returned.
+export const useSpace = (spaceId?: SpaceId | PublicKey): Space | undefined => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
-  const [ready, setReady] = useState(false);
+  if (!spaceId) {
+    return undefined;
+  }
 
-  useEffect(() => {
-    // Only wait for ready if looking for the default space.
-    if (spaceKeyLike) {
-      return;
+  return spaces.find((space) => {
+    if (spaceId instanceof PublicKey) {
+      return space.key.equals(spaceId);
     }
 
-    const timeout = setTimeout(async () => {
-      await client.spaces.waitUntilReady();
-      setReady(true);
-    });
-
-    return () => clearTimeout(timeout);
-  }, [client, spaceKeyLike]);
-
-  if (spaceKeyLike) {
-    return spaces.find((space) => space.key.equals(spaceKeyLike) || space.id === spaceKeyLike);
-  }
-
-  if (ready && client.halo.identity.get()) {
-    return client.spaces.default;
-  }
+    return space.id === spaceId;
+  });
 };
 
-export type UseSpacesParams = {
+/**
+ * Get a Space database by the id of the space.
+ * The space is not guaranteed to be in the ready state.
+ * Returns undefined if no id is provided.
+ * Requires a ClientProvider somewhere in the parent tree.
+ *
+ * @param spaceId the id of the space to look for.
+ * @deprecated Use useSpace.
+ */
+export const useDatabase = (spaceId?: SpaceId): Space['db'] | undefined => {
+  const space = useSpace(spaceId);
+  return space?.db;
+};
+
+export type UseSpacesProps = {
   /**
    * Return uninitialized spaces as well.
    */
@@ -57,9 +60,9 @@ export type UseSpacesParams = {
  * Get all Spaces available to current user.
  * Requires a ClientProvider somewhere in the parent tree.
  * By default, only ready spaces are returned.
- * @returns an array of Spaces
+ * @returns an array of Spaces.
  */
-export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
+export const useSpaces = ({ all = false }: UseSpacesProps = {}): Space[] => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
 

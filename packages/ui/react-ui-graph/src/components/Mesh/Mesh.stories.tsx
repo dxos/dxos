@@ -2,15 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Mesh } from './Mesh';
 import { SVG, type SVGRootProps } from '../SVG';
+import { Mesh } from './Mesh';
 
 // TODO(burdon): Create waves/game of life.
 const DefaultStory = (props: SVGRootProps) => {
@@ -35,28 +33,33 @@ const DefaultStory = (props: SVGRootProps) => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-graph/Mesh',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
+// Selectors use the descendant combinator (`[&_X]`) — the mesh / hexagon / border elements
+// live inside the SVG inside the div, so direct-child (`>`) selectors don't match.
 export const Default: Story = {
   args: {
     classNames: [
-      '[&>.mesh]:fill-none',
-      '[&>.hexagon>path.fill]:fill-blue-800 [&>.hexagon]:stroke-blue-700',
-      '[&>.border]:fill-none [&>.border]:stroke-blue-500 [&>.border]:stroke-2',
+      '[&_.mesh]:fill-none',
+      '[&_.hexagon>path.fill]:fill-blue-800 [&_.hexagon]:stroke-blue-700',
+      '[&_.border]:fill-none [&_.border]:stroke-blue-500 [&_.border]:stroke-2',
     ],
   },
 };
 
 export const Outline: Story = {
   args: {
-    classNames: ['[&>.mesh]:fill-none', '[&>.border]:fill-none [&>.border]:stroke-red-500 [&>.border]:stroke-2'],
+    classNames: ['[&_.mesh]:fill-none', '[&_.border]:fill-none [&_.border]:stroke-red-500 [&_.border]:stroke-2'],
   },
 };

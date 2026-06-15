@@ -3,25 +3,32 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
 
-import { MAP_PLUGIN } from './meta';
-import { MapType } from './types';
+import { meta } from '#meta';
+import { Map } from '#types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(MapType)]: {
-        'typename label': 'Map',
-        'typename label_zero': 'Maps',
-        'typename label_one': 'Map',
-        'typename label_other': 'Maps',
-        'object name placeholder': 'New map',
+      [Type.getTypename(Map.Map)]: {
+        'typename.label': 'Map',
+        'typename.label_zero': 'Maps',
+        'typename.label_one': 'Map',
+        'typename.label_other': 'Maps',
+        'object-name.placeholder': 'New map',
+        'add-object.label': 'Add map',
+        'rename-object.label': 'Rename map',
+        'delete-object.label': 'Delete map',
+        'object-deleted.label': 'Map deleted',
       },
-      [MAP_PLUGIN]: {
-        'plugin name': 'Maps',
-        'delete object label': 'Delete',
-        'toggle type label': 'Toggle view',
+      [meta.id]: {
+        'plugin.name': 'Maps',
+        'toggle-type.label': 'Toggle view',
+        'map.companion.label': 'Map',
       },
     },
   },
-];
+  ...geoTranslations,
+] as const satisfies Resource[];

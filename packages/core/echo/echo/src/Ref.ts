@@ -2,28 +2,115 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as EchoSchema from '@dxos/echo-schema';
+// @import-as-namespace
 
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+
+import { type URI } from '@dxos/keys';
+
+import type * as Entity from './Entity';
+import type * as internal from './internal';
+import * as refInternal from './internal/Ref';
+import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as TypeNs from './Type';
 
-export type Ref<T> = EchoSchema.Ref<T>;
-export type Any = EchoSchema.Ref<Obj.Any>;
+/**
+ * Instance type for a reference.
+ *
+ * Reference can point to any object or relation.
+ * References are lazy loaded.
+ *
+ * `ref.dxn` is the DXN of the referenced object.
+ *
+ * @example
+ * ```ts
+ * const taskRef: Ref<Task> = Ref.make(task);
+ *
+ * await taskRef.load(); // Returns Promise<Task>
+ * yield* Database.load(taskRef); // Effectful version.
+ *
+ * database.makeRef(dxn); // Create a ref from a DXN.
+ * ```
+ */
+export type Ref<T> = refInternal.Ref<T>;
+export type Unknown = refInternal.Ref<Obj.Unknown>;
 
-export const Array = EchoSchema.RefArray;
+/**
+ * Factory function to create a Ref schema for the given target schema.
+ * Use this in schema definitions to declare reference fields.
+ *
+ * @example
+ * ```ts
+ * const Task = Schema.Struct({
+ *   assignee: Ref.Ref(Person),  // Creates a Ref schema
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
+ * ```
+ */
+export const Ref: {
+  <S extends TypeNs.AnyObj | TypeNs.AnyRelation>(type: S): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
+
+  // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
+  // trigger that points to a stored function/workflow definition.
+  <T extends TypeNs.Type<any>>(type: T): RefSchema<TypeNs.InstanceType<T>>;
+
+  // Schema-side overload for the well-known "any object" / "any relation" schemas.
+  // Other raw `Schema.Schema` values are intentionally rejected — callers should
+  // pass a `Type.Type` entity instead.
+  <S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> & Obj.Unknown>;
+} = refInternal.Ref as any;
+
+export const Array = refInternal.RefArray;
+
+/**
+ * TypeScript type for a Ref schema.
+ * This is the type of the SCHEMA itself, not the runtime ref instance.
+ * For the instance type, use `Ref.Ref<T>` from the Ref module.
+ *
+ * @example
+ * ```ts
+ * // Schema type annotation (rarely needed, usually inferred):
+ * const refSchema: Ref.RefSchema<typeof Task> = Ref.Ref(Task);
+ *
+ * // Instance type annotation (use Ref.Ref instead):
+ * const refInstance: Ref.Ref<Task> = Ref.make(task);
+ * ```
+ */
+// TODO(dmaretskyi): Investigate if we can remove this type.
+//                   Post DX-836 it will become just `Schema.Schema<Ref.Ref<T>>`.
+//                   NOTE: This could be Type.Ref<T> instead, but since it going to be removed, it's better to keep it here, self-contained.
+export interface RefSchema<T extends Entity.Unknown> extends refInternal.RefSchema<T> {}
 
 /**
  * Extract reference target.
  */
-export type Target<R extends Any> = R extends EchoSchema.Ref<infer T> ? T : never;
+export type Target<R extends Unknown> = R extends refInternal.Ref<infer T> ? T : never;
 
 /**
  * Reference resolver.
  */
-export type Resolver = EchoSchema.RefResolver;
+export type Resolver = refInternal.RefResolver;
 
-export const isRef: (value: unknown) => value is Any = EchoSchema.Ref.isRef;
+export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef;
 
-export const make = EchoSchema.Ref.make;
+export const make = refInternal.Ref.make;
 
-// TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = EchoSchema.Ref.fromDXN;
+// TODO(dmaretskyi): Consider just allowing `make` to accept URI.
+export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
+
+export const hasEntityId = refInternal.Ref.hasEntityId;
+
+// TODO(wittjosiah): Factor out?
+export const isRefType = (ast: SchemaAST.AST): boolean => {
+  return SchemaAST.getAnnotation<JsonSchema.JsonSchema>(ast, SchemaAST.JSONSchemaAnnotationId).pipe(
+    Option.flatMap((jsonSchema) => ('$id' in jsonSchema ? Option.some(jsonSchema) : Option.none())),
+    Option.flatMap((jsonSchema) => {
+      const { typename } = refInternal.getSchemaReference(jsonSchema) ?? {};
+      return typename ? Option.some(true) : Option.some(false);
+    }),
+    Option.getOrElse(() => false),
+  );
+};

@@ -1,0 +1,46 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { mx } from '@dxos/ui-theme';
+
+import { type ThemeExtensionsOptions } from './extensions';
+
+export const editorClassNames = (role?: string) =>
+  mx(
+    'dx-attention-surface data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
+    role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24' : 'dx-container overflow-hidden',
+  );
+
+export const documentSlots: ThemeExtensionsOptions['slots'] = {
+  content: {
+    /**
+     * CodeMirror content width.
+     * 40rem = 640px. Corresponds to initial plank width (Google docs, Stashpad, etc.)
+     * 50rem = 800px. Maximum content width for solo mode.
+     * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
+     */
+    className: mx(
+      // Inline-size container for widget sizing (children use `max-w-[100cqi]`).
+      // NOTE: Use inline-size, not full size containment — `container-type: size` on the
+      // editor content breaks CodeMirror's viewport measurement, leaving blank gaps during
+      // scroll until a click forces a re-measure.
+      'dx-inline-size-container',
+      // Wider margin for web (vs. mobile).
+      'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
+      'mx-auto! w-full',
+    ),
+  },
+};
+
+export const compactSlots: ThemeExtensionsOptions['slots'] = {
+  content: {
+    className: 'mx-2!',
+  },
+};
+
+export const mobileSlots: ThemeExtensionsOptions['slots'] = {
+  content: {
+    className: 'mx-2!',
+  },
+};

@@ -1,0 +1,105 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
+import { useType } from '@dxos/react-client/echo';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
+import { getTypeURIFromQuery } from '@dxos/schema';
+
+import { type Map } from '#types';
+
+// TODO(wittjosiah): Add center and zoom.
+export const MapSettingsSchema = Schema.Struct({
+  coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
+  coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
+});
+
+type MapViewEditorProps = { object: Map.Map };
+
+export const MapViewEditor = ({ object }: MapViewEditorProps) => {
+  const db = Obj.getDatabase(object);
+  const view = object?.view?.target;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const currentSchema = useType(db, typeUri);
+  const [allSchemata, setAllSchemata] = useState<Type.AnyEntity[]>([]);
+
+  useEffect(() => {
+    if (!db) {
+      return;
+    }
+
+    setAllSchemata([...db.graph.registry.list().filter(Type.isType)]);
+    return db.graph.registry.changed.on(() => {
+      setAllSchemata([...db.graph.registry.list().filter(Type.isType)]);
+    });
+  }, [db]);
+
+  const schemaOptions = useMemo(() => {
+    const uniqueTypenames = new Set(
+      allSchemata.map((schema) => Type.getTypename(schema)).filter((typename): typename is string => typename != null),
+    );
+    return Array.from(uniqueTypenames).map((typename) => ({
+      value: typename,
+      label: typename,
+    }));
+  }, [allSchemata]);
+
+  const jsonSchema = useMemo(() => (currentSchema ? currentSchema.jsonSchema : {}), [currentSchema]);
+  const locationFields = useMemo(() => {
+    if (!jsonSchema?.properties) {
+      return [];
+    }
+
+    const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
+      if (typeof value === 'object' && (value as { format?: string })?.format === Format.TypeFormat.GeoPoint) {
+        acc.push(key);
+      }
+      return acc;
+    }, []);
+
+    return columns.map((column) => ({ value: column, label: column }));
+  }, [jsonSchema]);
+
+  const onSave = useCallback(
+    (values: Partial<{ coordinateColumn: string }>) => {
+      if (view && values.coordinateColumn) {
+        Obj.update(view, (view) => {
+          view.projection.pivotFieldId = values.coordinateColumn;
+        });
+      }
+    },
+    [view],
+  );
+
+  const initialValues = useMemo(
+    () => ({
+      // The coordinate-source select lists schemas by typename, so match the current type by typename.
+      coordinateSource: currentSchema ? Type.getTypename(currentSchema) : undefined,
+      coordinateColumn: view?.projection.pivotFieldId,
+    }),
+    [currentSchema, view],
+  );
+
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({
+      coordinateSource: (props) => <SelectField {...props} options={schemaOptions} />,
+      coordinateColumn: (props) => <SelectField {...props} options={locationFields} />,
+    }),
+    [schemaOptions, locationFields],
+  );
+
+  if (!db || !object) {
+    return null;
+  }
+
+  return (
+    <Form.Root schema={MapSettingsSchema} values={initialValues} fieldMap={fieldMap} autoSave onSave={onSave}>
+      <Form.FieldSet />
+    </Form.Root>
+  );
+};

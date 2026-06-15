@@ -5,11 +5,13 @@
 import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { type SpaceId, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
+import { Context } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Icon, IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -35,7 +37,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
     }
 
     try {
-      const response = await client.edge.createSpace({ agentKey });
+      const response = await client.edge.http.createSpace(Context.default(), { agentKey });
       log.info('space created', { response });
       const space = await waitForCondition({
         condition: () => client.spaces.get(response.spaceId as SpaceId),
@@ -68,10 +70,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
       toolbar={
         <Toolbar.Root>
           <DataSpaceSelector />
-          <Toolbar.Button onClick={handleSpaceCreate}>
-            <Icon icon='ph--plus' />
-            Create Space
-          </Toolbar.Button>
+          <Toolbar.IconButton icon='ph--plus--regular' label='Create Space' onClick={handleSpaceCreate} />
         </Toolbar.Root>
       }
     >

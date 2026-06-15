@@ -2,86 +2,214 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconWeight } from '@phosphor-icons/react';
-import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, forwardRef, type ForwardRefExoticComponent, useCallback } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type ForwardRefExoticComponent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
-  InputRoot,
-  type InputRootProps,
-  PinInput as PinInputPrimitive,
-  type PinInputProps as PinInputPrimitiveProps,
-  TextInput as TextInputPrimitive,
-  type TextInputProps as TextInputPrimitiveProps,
-  TextArea as TextAreaPrimitive,
-  type TextAreaProps as TextAreaPrimitiveProps,
-  useInputContext,
-  INPUT_NAME,
-  type InputScopedProps,
-  Description as DescriptionPrimitive,
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
   type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
+  Description as DescriptionPrimitive,
   type DescriptionProps as DescriptionPrimitiveProps,
+  INPUT_NAME,
+  InputRoot,
+  type InputRootProps,
+  type InputScopedProps,
   Label as LabelPrimitive,
   type LabelProps as LabelPrimitiveProps,
+  PinInput as PinInputPrimitive,
+  type PinInputProps as PinInputPrimitiveProps,
+  TextArea as TextAreaPrimitive,
+  type TextAreaProps as TextAreaPrimitiveProps,
+  TextInput as TextInputPrimitive,
+  type TextInputProps as TextInputPrimitiveProps,
   Validation as ValidationPrimitive,
   type ValidationProps as ValidationPrimitiveProps,
+  useInputContext,
 } from '@dxos/react-input';
-import { mx } from '@dxos/react-ui-theme';
-import { type Density, type Elevation, type ClassNameValue, type Size } from '@dxos/react-ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type Density, type Elevation, type Size } from '@dxos/ui-types';
+
+import { translationKey } from '#translations';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
+import {
+  SegmentedDate,
+  type SegmentedDateProps,
+  SegmentedDateTime,
+  type SegmentedDateTimeProps,
+  SegmentedTime,
+  type SegmentedTimeProps,
+} from './SegmentedInput';
 
 type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
 
+//
+// Trigger context — lets a sibling `Input.TriggerIcon` open a picker registered by a field inside
+// the same `Input.Root`. Each registered handler is keyed; the most recent registration wins.
+//
+
+type InputTriggerHandler = () => void;
+
+type InputTriggerContextValue = {
+  registerTrigger: (handler: InputTriggerHandler) => () => void;
+  trigger: () => void;
+  hasTrigger: boolean;
+};
+
+// Default context makes the trigger registry a no-op outside `Input.Root` (consumers opt in).
+const [InputTriggerProvider, useInputTriggerContext] = createContext<InputTriggerContextValue>(INPUT_NAME, {
+  registerTrigger: () => () => {},
+  trigger: () => {},
+  hasTrigger: false,
+});
+
+/**
+ * Field hook. Pass an opener function; while the field is mounted, an `Input.TriggerIcon`
+ * sibling will call this opener on press. Returns a no-op when used outside `Input.Root`.
+ */
+const useInputTrigger = (handler: InputTriggerHandler | undefined) => {
+  const ctx = useInputTriggerContext('useInputTrigger');
+  useEffect(() => {
+    if (!handler) {
+      return;
+    }
+    return ctx.registerTrigger(handler);
+  }, [ctx, handler]);
+};
+
+//
+// Root — wraps the @dxos/react-input primitive root with the trigger registry.
+//
+
+const Root = (props: InputRootProps) => {
+  const handlerRef = useRef<InputTriggerHandler | null>(null);
+  const [hasTrigger, setHasTrigger] = useState(false);
+
+  const registerTrigger = useCallback((handler: InputTriggerHandler) => {
+    handlerRef.current = handler;
+    setHasTrigger(true);
+    return () => {
+      if (handlerRef.current === handler) {
+        handlerRef.current = null;
+        setHasTrigger(false);
+      }
+    };
+  }, []);
+
+  const trigger = useCallback(() => {
+    handlerRef.current?.();
+  }, []);
+
+  return (
+    <InputTriggerProvider registerTrigger={registerTrigger} trigger={trigger} hasTrigger={hasTrigger}>
+      <InputRoot {...props} />
+    </InputTriggerProvider>
+  );
+};
+
+Root.displayName = 'Input.Root';
+
+//
+// TriggerIcon — sibling button that opens the picker of the registered field. Renders nothing
+// when no field in the surrounding `Input.Root` has registered an opener.
+//
+
+// `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Input.TriggerIcon />`).
+// `onClick` is reserved — the trigger always opens the registered picker.
+type TriggerIconProps = Omit<IconButtonProps, 'label' | 'onClick'> & { label?: string };
+
+const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
+  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const ctx = useInputTriggerContext('Input.TriggerIcon');
+    if (!ctx.hasTrigger) {
+      return null;
+    }
+
+    return (
+      <IconButton
+        ref={forwardedRef}
+        variant='ghost'
+        icon={icon}
+        iconOnly
+        classNames={classNames}
+        aria-label={ariaLabel}
+        label={label ?? ariaLabel ?? t('trigger-button.label')}
+        {...props}
+        onClick={ctx.trigger}
+      />
+    );
+  },
+);
+
+TriggerIcon.displayName = 'Input.TriggerIcon';
+
+//
+// Label
+//
+
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
-const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, children, ...props }, forwardedRef) => {
+const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <LabelPrimitive {...props} className={tx('input.label', 'input__label', { srOnly }, classNames)} ref={forwardedRef}>
+    <LabelPrimitive {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
       {children}
     </LabelPrimitive>
   );
 });
 
+Label.displayName = 'Input.Label';
+
+//
+// Description
+//
+
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
-  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DescriptionPrimitive
-        {...props}
-        className={tx('input.description', 'input__description', { srOnly }, classNames)}
-        ref={forwardedRef}
-      >
+      <DescriptionPrimitive {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
         {children}
       </DescriptionPrimitive>
     );
   },
 );
 
+Description.displayName = 'Input.Description';
+
+//
+// Validation
+//
+
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
 const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
     return (
       <ValidationPrimitive
         {...props}
-        className={tx(
-          'input.validation',
-          `input__validation-message input__validation-message--${validationValence}`,
-          { srOnly, validationValence },
-          classNames,
-        )}
+        className={tx('input.validation', { srOnly, validationValence }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -90,15 +218,21 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
   },
 );
 
+Validation.displayName = 'Input.Validation';
+
+//
+// DescriptionAndValidation
+//
+
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <DescriptionAndValidationPrimitive
         {...props}
-        className={tx('input.descriptionAndValidation', 'input__description-and-validation', { srOnly }, classNames)}
+        className={tx('input.descriptionAndValidation', { srOnly }, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -107,80 +241,66 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
   },
 );
 
-type PinInputProps = InputSharedProps &
-  Omit<PinInputPrimitiveProps, 'segmentClassName' | 'inputClassName'> & {
-    segmentClassName?: ClassNameValue;
-    inputClassName?: ClassNameValue;
-  };
+DescriptionAndValidation.displayName = 'Input.DescriptionAndValidation';
+
+//
+// PinInput
+//
+
+type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
-  (
-    {
-      density: propsDensity,
-      elevation: propsElevation,
-      segmentClassName: propsSegmentClassName,
-      inputClassName,
-      variant,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ classNames, density: propsDensity, elevation: propsElevation, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
 
-    const segmentClassName = useCallback(
-      ({ focused, validationValence }: Parameters<Exclude<PinInputPrimitiveProps['segmentClassName'], undefined>>[0]) =>
-        tx(
-          'input.input',
-          'input--pin-segment',
-          {
-            variant: 'static',
-            focused,
-            disabled: props.disabled,
-            density,
-            elevation,
-            validationValence,
-          },
-          propsSegmentClassName,
-        ),
-      [tx, props.disabled, elevation, propsElevation, density],
-    );
     return (
       <PinInputPrimitive
         {...{
           ...props,
-          segmentClassName,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        inputClassName={tx('input.inputWithSegments', 'input input--pin', { disabled: props.disabled }, inputClassName)}
+        className={tx('input.inputWithSegments', { disabled: props.disabled }, classNames) || ''}
+        segmentClassName={tx('input.segment', { disabled: props.disabled, density, elevation }) || ''}
         ref={forwardedRef}
       />
     );
   },
 );
 
-// TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
+PinInput.displayName = 'Input.PinInput';
 
-type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps>;
+//
+// TextInput
+// TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
+//
+
+type AutoFillProps = {
+  noAutoFill?: boolean;
+};
+
+type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps;
 
 const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
-  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  (
+    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, ...props },
+    forwardedRef,
+  ) => {
     const { hasIosKeyboard } = useThemeContext();
-    const themeContextValue = useThemeContext();
-    const density = useDensityContext(propsDensity);
-    const elevation = useElevationContext(propsElevation);
+    const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
+    const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-
-    const { tx } = themeContextValue;
 
     return (
       <TextInputPrimitive
         {...props}
+        // TODO(wittjosiah): Factor out autofill properies.
+        {...{ 'data-1p-ignore': noAutoFill }}
         className={tx(
           'input.input',
-          'input',
           {
             variant,
             disabled: props.disabled,
@@ -196,6 +316,12 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
     );
   },
 );
+
+TextInput.displayName = 'Input.TextInput';
+
+//
+// TextArea
+//
 
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
@@ -211,8 +337,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
       <TextAreaPrimitive
         {...props}
         className={tx(
-          'input.input',
-          'input--text-area',
+          'input.textArea',
           {
             variant,
             disabled: props.disabled,
@@ -220,7 +345,6 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
             elevation,
             validationValence,
           },
-          '-mbe-labelSpacingBlock',
           classNames,
         )}
         {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
@@ -230,7 +354,15 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   },
 );
 
-type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
+TextArea.displayName = 'Input.TextArea';
+
+//
+// Checkbox
+//
+
+type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
+  size?: Size;
+};
 
 const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   HTMLButtonElement,
@@ -239,12 +371,11 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   (
     {
       __inputScope,
+      classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
       size,
-      weight = 'bold',
-      classNames,
       ...props
     },
     forwardedRef,
@@ -258,7 +389,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
     const { tx } = useThemeContext();
 
     return (
-      <CheckboxPrimitive
+      <CheckboxPrimitive.Root
         {...{
           ...props,
           checked,
@@ -269,18 +400,24 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', 'input--checkbox', { size }, 'shrink-0', classNames),
+          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >
         <Icon
           icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
-          classNames={tx('input.checkboxIndicator', 'input--checkbox__indicator', { size, checked })}
+          classNames={tx('input.checkboxIndicator', { size, checked })}
         />
-      </CheckboxPrimitive>
+      </CheckboxPrimitive.Root>
     );
   },
 );
+
+Checkbox.displayName = 'Input.Checkbox';
+
+//
+// Switch
+//
 
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
@@ -290,10 +427,10 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   (
     {
       __inputScope,
+      classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
-      classNames,
       ...props
     },
     forwardedRef,
@@ -327,11 +464,39 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   },
 );
 
+Switch.displayName = 'Input.Switch';
+
+//
+// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
+// spinbutton semantics, and immutable separators. ISO string API:
+//   - Date     `YYYY-MM-DD`
+//   - Time     `HH:mm`
+//   - DateTime `YYYY-MM-DDTHH:mm`
+// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
+// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
+//
+
+const Time = SegmentedTime;
+const Date = SegmentedDate;
+const DateTime = SegmentedDateTime;
+
+type TimeProps = SegmentedTimeProps;
+type DateInputProps = SegmentedDateProps;
+type DateTimeInputProps = SegmentedDateTimeProps;
+
+//
+// Input
+//
+
 export const Input = {
-  Root: InputRoot,
+  Root,
+  TriggerIcon,
   PinInput,
   TextInput,
   TextArea,
+  Time,
+  Date,
+  DateTime,
   Checkbox,
   Switch,
   Label,
@@ -340,6 +505,8 @@ export const Input = {
   DescriptionAndValidation,
 };
 
+export { useInputTrigger };
+
 export type {
   InputVariant,
   InputRootProps,
@@ -347,6 +514,9 @@ export type {
   PinInputProps,
   TextInputProps,
   TextAreaProps,
+  TimeProps,
+  DateInputProps,
+  DateTimeInputProps,
   CheckboxProps,
   SwitchProps,
   LabelProps,

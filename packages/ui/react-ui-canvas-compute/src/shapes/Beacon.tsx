@@ -2,16 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
-import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const BeaconShape = Schema.extend(
   ComputeShape,
@@ -36,7 +35,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon='ph--sun--regular'
-        classNames={mx('transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500')}
+        classNames={['transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500']}
         size={8}
       />
     </div>

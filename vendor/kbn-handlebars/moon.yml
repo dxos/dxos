@@ -1,0 +1,28 @@
+id: vendor-kbn-handlebars
+layer: library
+language: typescript
+tags:
+  - vendor
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
+
+tasks:
+  compile:
+    command: node build.mjs
+    options:
+      mergeArgs: replace
+      mergeInputs: replace
+      mergeOutputs: replace
+      mergeDeps: replace
+    args: []
+    deps:
+      - ^:compile
+    inputs:
+      - 'src/**/*'
+      - 'build.mjs'
+      - 'package.json'
+    outputs:
+      - dist/

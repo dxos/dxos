@@ -21,6 +21,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -42,40 +45,40 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute-runtime"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/artifact-testing"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/compute/functions"
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/compute/functions-runtime"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../core/functions"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -87,10 +90,16 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../react-ui"
     },
     {
       "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-audio"
     },
     {
       "path": "../react-ui-canvas"
@@ -102,10 +111,13 @@
       "path": "../react-ui-editor"
     },
     {
+      "path": "../react-ui-experimental"
+    },
+    {
       "path": "../react-ui-form"
     },
     {
-      "path": "../react-ui-sfx"
+      "path": "../react-ui-mosaic"
     },
     {
       "path": "../react-ui-stack"
@@ -114,7 +126,7 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

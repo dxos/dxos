@@ -1,0 +1,26 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { ToolId } from '@dxos/ai';
+import { Sequence } from '@dxos/conductor';
+
+export const RESEARCH_SEQUENCE_DEFINITION: Sequence.Definition = {
+  steps: [
+    {
+      instructions: 'Research information and entities related to the selected objects.',
+      tools: [ToolId.make('search/web-search')],
+    },
+    {
+      instructions:
+        'Based on your research find matching entires that are already in the graph. Do exaustive research.',
+      tools: [ToolId.make('search/local-search')],
+    },
+    {
+      instructions: 'Add researched data to the graph. Make connections to existing objects.',
+      tools: [ToolId.make('search/local-search'), ToolId.make('graph/writer')],
+    },
+  ],
+};
+
+export const RESEARCH_SEQUENCE = Sequence.Parser.create().parse(RESEARCH_SEQUENCE_DEFINITION);

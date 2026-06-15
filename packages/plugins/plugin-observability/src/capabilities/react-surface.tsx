@@ -2,26 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
-import { SettingsStore } from '@dxos/local-storage';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { HelpContainer, ObservabilitySettings, type ObservabilitySettingsProps } from '../components';
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { ObservabilitySettings } from '#components';
+import { meta } from '#meta';
+import { ObservabilityOperation } from '#types';
+import { type Settings } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: OBSERVABILITY_PLUGIN,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<ObservabilitySettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === OBSERVABILITY_PLUGIN,
-      component: ({ data: { subject } }) => <ObservabilitySettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${OBSERVABILITY_PLUGIN}/help`,
-      role: 'deck-companion--help',
-      component: () => <HelpContainer />,
-    }),
-  ]);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'root',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings } = useSettingsState<Settings.Settings>(subject.atom);
+          const { invokePromise } = useOperationInvoker();
+          const handleSettingsChange = (cb: (current: Settings.Settings) => Settings.Settings) => {
+            const next = cb(settings);
+            void invokePromise(ObservabilityOperation.Toggle, { state: next.enabled });
+          };
+          return <ObservabilitySettings settings={settings} onSettingsChange={handleSettingsChange} />;
+        },
+      }),
+    ]),
+  ),
+);

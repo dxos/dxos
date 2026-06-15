@@ -2,44 +2,93 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import {
-  type FieldSortType,
-  FormatEnum,
-  getValue,
-  setValue,
-  type JsonProp,
-  getSnapshot,
-  getSchema,
-} from '@dxos/echo-schema';
+import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
+import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject, makeRef } from '@dxos/live-object';
+import { EntityId } from '@dxos/keys';
+import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
-  type DxGridPlaneRange,
   type DxGridPlanePosition,
+  type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ViewType, type ViewProjection, type PropertyType, validateSchema } from '@dxos/schema';
+import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
+
+import { type Table } from '../types';
+import { extractOrder } from '../util';
+import { compareValues } from '../util/sort';
+import { extractTagIds } from '../util/tag';
+
+/**
+ * Field sort configuration.
+ */
+export type FieldSortType = {
+  fieldId: string;
+  direction: QueryAST.OrderDirection;
+};
 
 import { type SelectionMode, SelectionModel } from './selection-model';
-import { TableSorting } from './table-sorting';
-import { touch } from '../util';
-import { extractTagIds } from '../util/tag';
+
+/**
+ * Callback type for wrapping mutations in Obj.update().
+ * Contains separate callbacks for table object and row mutations.
+ */
+export type TableChangeCallback<T extends TableRow> = {
+  /** Callback to wrap table object mutations. */
+  table: (mutate: (mutableTable: Table.Table) => void) => void;
+  /** Callback to wrap row mutations. */
+  row: (row: T, mutate: (mutableRow: T) => void) => void;
+};
+
+/**
+ * Creates a change callback for ECHO-backed table and rows.
+ * Use this when the table and rows are stored in the ECHO database.
+ */
+export const createEchoChangeCallback = <T extends TableRow>(table: Table.Table): TableChangeCallback<T> => ({
+  table: (mutate) => Obj.update(table, (table) => mutate(table as unknown as Table.Table)),
+  row: (row, mutate) => {
+    if (Obj.isObject(row)) {
+      Obj.update(row, (row) => mutate(row as T));
+    } else {
+      mutate(row);
+    }
+  },
+});
+
+/**
+ * Creates a change callback that directly mutates objects without wrapping.
+ * Use this for plain JavaScript objects (tests, non-ECHO scenarios).
+ */
+export const createDirectChangeCallback = <T extends TableRow>(table: Table.Table): TableChangeCallback<T> => ({
+  table: (mutate) => mutate(table),
+  row: (row, mutate) => mutate(row),
+});
+
+// Domain types for cell classification
+export type TableCellType = 'standard' | 'draft' | 'header';
 
 // TODO(ZaymonFC): Use a common type?
 export type ValidationResult = { valid: true } | { valid: false; error: string };
 
+export type DraftRow<T extends TableRow = TableRow> = {
+  data: T;
+  valid: boolean;
+  validationErrors: ValidationError[];
+};
+
 // TODO(burdon): Use schema types.
-export type TableRow = Record<JsonProp, any> & { id: string };
+export type TableRow = Record<SchemaEx.JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  translationKey: string;
+  label: Label;
 };
 
 export type TableFeatures = {
@@ -54,71 +103,92 @@ const defaultFeatures: TableFeatures = {
   schemaEditable: false,
 };
 
+export type InsertRowResult = 'draft' | 'final';
+
 export type TableModelProps<T extends TableRow = TableRow> = {
-  id?: string;
-  space?: Space;
-  view?: ViewType;
-  projection: ViewProjection;
+  registry: Registry.Registry;
+  object: Table.Table;
+  projection: ProjectionModel;
+  db?: Database.Database;
+  /**
+   * Callbacks to wrap mutations in Obj.update().
+   * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
+   */
+  change?: TableChangeCallback<T>;
   features?: Partial<TableFeatures>;
-  sorting?: FieldSortType[];
+  initialSelection?: string[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
-  onInsertRow?: (index?: number) => void;
+  onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
+  onInsertRow?: (data?: any) => InsertRowResult;
   onDeleteRows?: (index: number, obj: T[]) => void;
-  onDeleteColumn?: (fieldId: string) => void;
+  onColumnDelete?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
   onRowOrderChange?: () => void;
   onRowAction?: (actionId: string, data: T) => void;
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _id: string | undefined;
-  private readonly _space: Space | undefined;
-  private readonly _view: ViewType | undefined;
-  private readonly _projection: ViewProjection;
+  private readonly _registry: Registry.Registry;
+  private readonly _object: Table.Table;
+  private readonly _projection: ProjectionModel;
+  private readonly _db?: Database.Database;
+  private readonly _change: TableChangeCallback<T>;
 
-  private readonly _visibleRange = signal<DxGridPlaneRange>({
-    start: { row: 0, col: 0 },
-    end: { row: 0, col: 0 },
-  });
+  private readonly _visibleRange: Atom.Writable<DxGridPlaneRange>;
 
-  private readonly _onInsertRow?: TableModelProps<T>['onInsertRow'];
+  private readonly _onInsertRow?: (data?: any) => InsertRowResult;
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
-  private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
+  private readonly _onColumnDelete?: TableModelProps<T>['onColumnDelete'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly _onRowOrderChange?: TableModelProps<T>['onRowOrderChange'];
   private readonly _onRowAction?: TableModelProps<T>['onRowAction'];
   private readonly _rowActions: TableRowAction[];
   private readonly _features: TableFeatures;
 
-  private readonly _rows = signal<T[]>([]);
-  private readonly _sorting: TableSorting<T>;
+  private readonly _rows: Atom.Writable<T[]>;
+  private readonly _draftRows: Atom.Writable<DraftRow<T>[]>;
+  // In-memory sort state - changes are local until saved.
+  private readonly _inMemorySort: Atom.Writable<FieldSortType | undefined>;
+  // Derived atom for persisted sort from view.query.ast.
+  private readonly _persistedSort: Atom.Atom<FieldSortType | undefined>;
+  // Derived atom for current sort (in-memory takes precedence over persisted).
+  private readonly _sorting: Atom.Atom<FieldSortType | undefined>;
+  // Derived atom for sorted rows (used by rows getter and SelectionModel).
+  private readonly _sortedRows: Atom.Atom<T[]>;
+  // Derived atom for viewDirty state.
+  private readonly _viewDirty: Atom.Atom<boolean>;
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
   private _selection!: SelectionModel<T>;
-  private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
+  private _columnMeta?: Atom.Atom<DxGridAxisMeta>;
+  // Counter atom that increments when cells are updated - allows UI to react to cell changes.
+  private readonly _cellUpdateCounter: Atom.Writable<number>;
 
   constructor({
-    id,
-    space,
-    view,
+    registry,
+    object,
     projection,
+    db,
+    change,
     features = {},
-    sorting = [],
+    initialSelection = [],
     pinnedRows = { top: [], bottom: [] },
     rowActions = [],
     onCellUpdate,
-    onDeleteColumn,
+    onColumnDelete,
     onDeleteRows,
     onInsertRow,
     onRowOrderChange,
     onRowAction,
   }: TableModelProps<T>) {
     super();
-    this._id = id;
-    this._space = space;
-    this._view = view;
+    this._registry = registry;
+    this._object = object;
     this._projection = projection;
+    this._projection.normalizeView();
+    this._db = db;
+    this._change = change ?? createEchoChangeCallback<T>(object);
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
@@ -128,41 +198,159 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting(this._rows, this._view, projection);
+    // Initialize writable atoms.
+    this._visibleRange = Atom.make<DxGridPlaneRange>({
+      start: { row: 0, col: 0 },
+      end: { row: 0, col: 0 },
+    });
+    this._rows = Atom.make<T[]>([]);
+    this._draftRows = Atom.make<DraftRow<T>[]>([]);
+    this._inMemorySort = Atom.make<FieldSortType | undefined>(undefined);
+    this._cellUpdateCounter = Atom.make<number>(0);
 
-    if (sorting.length > 0) {
-      const [sort] = sorting;
-      this._sorting.setSort(sort.fieldId, sort.direction);
-    }
+    // Create derived atom for persisted sort from view.query.ast.
+    this._persistedSort = Atom.make((get) => {
+      // Subscribe to the view ref's atom so this recomputes once the reference resolves; the view
+      // is loaded asynchronously in _open() and is absent before then (and after disposal).
+      const view = get(this._object.view.atom);
+      if (!view) {
+        return undefined;
+      }
+
+      const viewSnapshot = Obj.getSnapshot(view);
+      const ast = viewSnapshot.query.ast;
+      const orders = extractOrder(ast);
+
+      if (orders && orders.length > 0) {
+        const firstOrder = orders[0];
+        if (firstOrder.kind === 'property') {
+          // Find field by property path.
+          const field = this._projection.getFields().find((f) => f.path === firstOrder.property);
+          if (field) {
+            return {
+              fieldId: field.id,
+              direction: firstOrder.direction,
+            };
+          }
+        }
+      }
+
+      return undefined;
+    });
+
+    // Create derived atom for current sort (in-memory takes precedence over persisted).
+    this._sorting = Atom.make((get) => {
+      const inMemorySort = get(this._inMemorySort);
+      return inMemorySort ?? get(this._persistedSort);
+    });
+
+    // Create derived atom for sorted rows (used by rows getter and SelectionModel).
+    this._sortedRows = Atom.make((get) => {
+      const rows = get(this._rows);
+      const sort = get(this._sorting);
+
+      if (!sort || rows.length === 0) {
+        return rows;
+      }
+
+      const field = this._projection.getFields().find((f) => f.id === sort.fieldId);
+      if (!field) {
+        return rows;
+      }
+
+      // Get field projection to check format.
+      const fieldProjection = this._projection.getFieldProjection(field.id);
+
+      const sorted = [...rows].sort((a, b) => {
+        const aValue = SchemaEx.getValue(a, field.path);
+        const bValue = SchemaEx.getValue(b, field.path);
+        return compareValues(aValue, bValue, fieldProjection.props.format, sort.direction);
+      });
+
+      return sorted;
+    });
+
+    this._selection = new SelectionModel(
+      this._registry,
+      this._sortedRows,
+      this._features.selection.mode ?? 'multiple',
+      initialSelection,
+      () => this._onRowOrderChange?.(),
+    );
+
+    // Create derived atom for viewDirty.
+    this._viewDirty = Atom.make((get) => {
+      const inMemorySort = get(this._inMemorySort);
+      if (!inMemorySort) {
+        return false;
+      }
+
+      const persisted = get(this._persistedSort);
+      if (!persisted) {
+        return true; // In-memory sort but no persisted sort.
+      }
+
+      return inMemorySort.fieldId !== persisted.fieldId || inMemorySort.direction !== persisted.direction;
+    });
 
     this._pinnedRows = pinnedRows;
     this._rowActions = rowActions;
     this._onInsertRow = onInsertRow;
     this._onDeleteRows = onDeleteRows;
-    this._onDeleteColumn = onDeleteColumn;
+    this._onColumnDelete = onColumnDelete;
     this._onCellUpdate = onCellUpdate;
     this._onRowOrderChange = onRowOrderChange;
     this._onRowAction = onRowAction;
   }
 
-  public get id() {
-    return this._id;
+  public get id(): string {
+    return Obj.getURI(this._object);
   }
 
-  public get space() {
-    return this._space;
+  public get view(): View.View {
+    const view = this._object.view.target;
+    invariant(view, 'Table model not initialized');
+    return view;
   }
 
-  public get view() {
-    return this._view;
+  public get table(): Table.Table {
+    return this._object;
   }
 
-  public get projection() {
+  public get projection(): ProjectionModel {
     return this._projection;
   }
 
-  public get rows(): ReadonlySignal<T[]> {
-    return this._sorting.sortedRows;
+  public get db(): Database.Database | undefined {
+    return this._db;
+  }
+
+  /**
+   * Atom for reactive access to rows with in-memory sorting applied.
+   */
+  public get rows(): Atom.Atom<T[]> {
+    return this._sortedRows;
+  }
+
+  /**
+   * Gets rows with in-memory sorting applied.
+   * In-memory sort is local to this instance until saved.
+   */
+  public getRows(): T[] {
+    return this._registry.get(this._sortedRows);
+  }
+
+  /** Atom for reactive access to cell changes. */
+  public get cellUpdate(): Atom.Atom<number> {
+    return this._cellUpdateCounter;
+  }
+
+  /**
+   * Change a row using the configured change callback.
+   * Use this instead of directly mutating to ensure consistent mutation handling.
+   */
+  public changeRow(row: T, mutate: (mutableRow: T) => void): void {
+    this._change.row(row, mutate);
   }
 
   public get features(): TableFeatures {
@@ -170,39 +358,36 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
-   * @reactive
+   * Gets the current sort state.
+   * Priority: in-memory sort (local changes) > persisted sort (from query AST).
    */
-  public get sorting(): TableSorting<T> | undefined {
-    return this._sorting;
+  public getSorting(): FieldSortType | undefined {
+    return this._registry.get(this._sorting);
   }
 
   /**
    * Gets the row data at the specified display index.
    */
   public getRowAt(displayIndex: number): T | undefined {
-    if (displayIndex < 0 || displayIndex >= this._sorting.sortedRows.value.length) {
+    const sortedRows = this._registry.get(this._sortedRows);
+    if (displayIndex < 0 || displayIndex >= sortedRows.length) {
       return undefined;
     }
 
-    return this._sorting.sortedRows.value[displayIndex];
+    return sortedRows[displayIndex];
   }
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
   }
 
-  public get columnMeta(): ReadonlySignal<DxGridAxisMeta> {
+  public get columnMeta(): Atom.Atom<DxGridAxisMeta> {
     invariant(this._columnMeta);
     return this._columnMeta;
   }
 
   public get selection() {
     return this._selection;
-  }
-
-  /** @reactive */
-  public get isViewDirty(): boolean {
-    return this._sorting.isDirty;
   }
 
   public get rowActions(): TableRowAction[] {
@@ -214,57 +399,77 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   protected override async _open(): Promise<void> {
+    await this._object.view.load();
     this.initializeColumnMeta();
     this.initializeEffects();
-    this._selection = new SelectionModel(this._sorting.sortedRows, this._features.selection.mode ?? 'multiple', () =>
-      this._onRowOrderChange?.(),
-    );
     await this._selection.open(this._ctx);
   }
 
   private initializeColumnMeta(): void {
-    this._columnMeta = computed(() => {
-      const fields = this._view?.fields ?? [];
+    invariant(this._object.view.target, 'View must be loaded before initializing column meta');
+
+    // Derive columnMeta from the projection's fields atom - updates when fields change.
+    // The projection.fields atom handles subscriptions to view changes internally.
+    this._columnMeta = Atom.make((get) => {
+      const fields = get(this._projection.fields);
       const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
+        fields.map((field, index: number) => [index, { size: this.table.sizes[field.path] ?? 256, resizeable: true }]),
       );
 
       return {
         grid: meta,
         frozenColsStart: { 0: { size: 30, resizeable: false } },
-        frozenColsEnd: { 0: { size: 40, resizeable: false } },
+        frozenColsEnd: { 0: { size: 32, resizeable: false } },
       };
     });
   }
 
   private initializeEffects(): void {
-    const rowOrderWatcher = effect(() => {
-      touch(this._sorting.sortedRows.value);
+    // Subscribe to rows changes to notify row order changed.
+    const rowsUnsubscribe = this._registry.subscribe(this._rows, () => {
       this._onRowOrderChange?.();
     });
-    this._ctx.onDispose(rowOrderWatcher);
+    this._ctx.onDispose(rowsUnsubscribe);
 
-    /**
-     * Creates reactive effects for each row in the visible range.
-     * Subscribes to changes in the visible range, recreating row effects when it changes.
-     * When a row's data changes, invokes onCellUpdate to notify subscribers and trigger UI updates.
-     */
-    const rowEffectManager = effect(() => {
-      const { start, end } = touch(this._visibleRange.value);
-      const rowEffects: ReturnType<typeof effect>[] = [];
-      for (let row = start.row; row <= end.row; row++) {
-        rowEffects.push(
-          effect(() => {
-            const obj = this._sorting.sortedRows.value[row];
-            this._view?.fields.forEach((field) => touch(getValue(obj, field.path)));
-            this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
-          }),
-        );
+    // Track row subscriptions for cleanup.
+    const rowSubscriptions = new Map<string, () => void>();
+
+    // Subscribe to visible range changes to set up row subscriptions.
+    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, () => {
+      // Unsubscribe from old row subscriptions.
+      for (const [id, unsub] of rowSubscriptions) {
+        unsub();
+        rowSubscriptions.delete(id);
       }
 
-      return () => rowEffects.forEach((cleanup) => cleanup());
+      const { start, end } = this._registry.get(this._visibleRange);
+      const sortedRows = this._registry.get(this._sortedRows);
+
+      // Subscribe to each visible row's changes.
+      for (let row = start.row; row <= end.row && row < sortedRows.length; row++) {
+        const obj = sortedRows[row];
+        if (Obj.isObject(obj) && !rowSubscriptions.has(obj.id)) {
+          const unsub = Obj.subscribe(obj, () => {
+            // Increment cell update counter to notify UI of changes.
+            this._registry.set(this._cellUpdateCounter, this._registry.get(this._cellUpdateCounter) + 1);
+            this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
+          });
+          rowSubscriptions.set(obj.id, unsub);
+        }
+      }
     });
-    this._ctx.onDispose(rowEffectManager);
+    this._ctx.onDispose(() => {
+      visibleRangeUnsubscribe();
+      for (const unsub of rowSubscriptions.values()) {
+        unsub();
+      }
+    });
+
+    // Subscribe to draft rows changes to notify grid.
+    const draftRowsUnsubscribe = this._registry.subscribe(this._draftRows, () => {
+      this._onRowOrderChange?.();
+    });
+    this._ctx.onDispose(draftRowsUnsubscribe);
   }
 
   //
@@ -272,31 +477,128 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   public setRows = (obj: T[]): void => {
-    this._rows.value = obj;
+    this._registry.set(this._rows, obj);
   };
 
-  public getRowCount = (): number => this._rows.value.length;
+  public getRowCount = (): number => this._registry.get(this._sortedRows).length;
 
-  public getColumnCount = (): number => this._view?.fields.length ?? 0;
+  public getDraftRowCount(): number {
+    return this._registry.get(this._draftRows).length;
+  }
 
-  public insertRow = (rowIndex?: number): void => {
-    const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
-    this._onInsertRow?.(row);
+  /** Atom for reactive access to draft rows. */
+  public get draftRows(): Atom.Atom<DraftRow<T>[]> {
+    return this._draftRows;
+  }
+
+  /** Gets the current draft rows. */
+  public getDraftRows(): DraftRow<T>[] {
+    return this._registry.get(this._draftRows);
+  }
+
+  /**
+   * Checks if a specific field path has validation errors for a given draft row.
+   * @param draftRowIndex - The index of the draft row to check
+   * @param fieldPath - The path of the field to check for validation errors
+   * @returns true if the field has validation errors, false otherwise
+   */
+  public hasDraftRowValidationError(draftRowIndex: number, fieldPath: string): boolean {
+    if (draftRowIndex < 0 || draftRowIndex >= this._registry.get(this._draftRows).length) {
+      return false;
+    }
+
+    const draftRow = this._registry.get(this._draftRows)[draftRowIndex];
+    const validationErrors = draftRow.validationErrors || [];
+    return validationErrors.some((error) => error.path === fieldPath);
+  }
+
+  public getColumnCount = (): number => this._projection?.getFields().length ?? 0;
+
+  public insertRow = (): InsertRowResult => {
+    const result = this._onInsertRow?.();
+    if (result === 'draft' && this._registry.get(this._draftRows).length === 0) {
+      this.createDraftRow();
+    }
+    return result ?? 'final';
+  };
+
+  private createDraftRow(): void {
+    if (!this._projection) {
+      return;
+    }
+
+    // NOTE(ZaymonFC): This is initialized with id because it's required in all schemata?
+    const draftData = { id: EntityId.random() } as any as T;
+    const validationErrors = this.validateDraftRowData(draftData);
+
+    const draftRow: DraftRow<T> = {
+      data: draftData,
+      valid: validationErrors.length === 0,
+      validationErrors,
+    };
+
+    this._registry.set(this._draftRows, [...this._registry.get(this._draftRows), draftRow]);
+  }
+
+  private validateDraftRow(draftRowIndex: number): void {
+    if (draftRowIndex < 0 || draftRowIndex >= this._registry.get(this._draftRows).length) {
+      return;
+    }
+
+    const draftRow = this._registry.get(this._draftRows)[draftRowIndex];
+    const validationErrors = this.validateDraftRowData(draftRow.data);
+
+    const updatedDraftRow = {
+      ...draftRow,
+      valid: validationErrors.length === 0,
+      validationErrors,
+    };
+
+    const newDraftRows = [...this._registry.get(this._draftRows)];
+    newDraftRows[draftRowIndex] = updatedDraftRow;
+    this._registry.set(this._draftRows, newDraftRows);
+  }
+
+  private validateDraftRowData(data: T): ValidationError[] {
+    const schema = toEffectSchema(this._projection.baseSchema);
+    return validateSchema(schema, data) || [];
+  }
+
+  public commitDraftRow = (draftRowIndex: number): boolean => {
+    if (draftRowIndex < 0 || draftRowIndex >= this._registry.get(this._draftRows).length) {
+      return false;
+    }
+
+    const draftRow = this._registry.get(this._draftRows)[draftRowIndex];
+    if (!draftRow.valid) {
+      return false;
+    }
+
+    const insertRowResult = this._onInsertRow?.(draftRow.data);
+
+    if (insertRowResult === 'final') {
+      const newDraftRows = this._registry.get(this._draftRows).filter((_, index) => index !== draftRowIndex);
+      this._registry.set(this._draftRows, newDraftRows);
+    }
+
+    return insertRowResult === 'final';
   };
 
   public deleteRow = (rowIndex: number): void => {
-    const row = this._sorting.getDataIndex(rowIndex);
-    const obj = this._rows.value[row];
+    const sortedRows = this._registry.get(this._sortedRows);
+    const obj = sortedRows[rowIndex];
     const objectsToDelete = [];
 
-    if (this.features.selection.enabled && this._selection.hasSelection.value) {
+    if (this.features.selection.enabled && this._selection.hasSelection) {
       const selectedRows = this._selection.getSelectedRows();
       objectsToDelete.push(...selectedRows);
-    } else {
+    } else if (obj) {
       objectsToDelete.push(obj);
     }
 
-    this._onDeleteRows?.(row, objectsToDelete);
+    if (objectsToDelete.length > 0) {
+      this._onDeleteRows?.(rowIndex, objectsToDelete);
+    }
   };
 
   public handleRowAction = (actionId: string, rowIndex: number): void => {
@@ -304,79 +606,119 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    const row = this._sorting.getDataIndex(rowIndex);
-    const data = this._rows.value[row];
+    const sortedRows = this._registry.get(this._sortedRows);
+    const data = sortedRows[rowIndex];
 
     if (data) {
       this._onRowAction(actionId, data);
     }
   };
 
-  public getCellData = ({ col, row }: DxGridPlanePosition): any => {
-    const fields = this._view?.fields ?? [];
+  public getCellData = (cell: DxGridPosition): any => {
+    const { col, row, plane } = cell;
+    const fields = this._projection?.getFields() ?? [];
     if (col < 0 || col >= fields.length) {
       return undefined;
     }
 
     const field = fields[col];
-    const dataIndex = this._sorting.getDataIndex(row);
-    const value = getValue(this._rows.value[dataIndex], field.path);
+    let value: any;
+
+    if (plane === 'frozenRowsEnd') {
+      // Get data from draft row
+      if (row >= 0 && row < this._registry.get(this._draftRows).length) {
+        value = SchemaEx.getValue(this._registry.get(this._draftRows)[row].data, field.path);
+      } else {
+        return undefined;
+      }
+    } else {
+      // Get data from regular row (use sorted rows for display index)
+      const sortedRows = this._registry.get(this._sortedRows);
+      value = SchemaEx.getValue(sortedRows[row], field.path);
+    }
+
     if (value == null) {
       return '';
     }
 
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
-      case FormatEnum.Ref: {
+      case Format.TypeFormat.Ref: {
         if (!field.referencePath) {
           return ''; // TODO(burdon): Show error.
         }
 
-        return getValue(value.target, field.referencePath);
+        return SchemaEx.getValue(value.target, field.referencePath);
       }
 
       default: {
-        return formatForEditing({ type: props.type, format: props.format, value });
+        return formatForEditing({
+          type: props.type,
+          format: props.format,
+          value,
+        });
       }
     }
   };
 
-  public validateCellData = async ({ col, row }: DxGridPlanePosition, value: any): Promise<ValidationResult> => {
-    const rowIdx = this._sorting.getDataIndex(row);
-    const fields = this._view?.fields ?? [];
+  public validateCellData = async ({ col, row, plane }: DxGridPosition, value: any): Promise<ValidationResult> => {
+    const fields = this._projection?.getFields() ?? [];
     if (col < 0 || col >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
     }
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.id);
-
-    const currentRow = this._rows.value[rowIdx];
-    invariant(currentRow, 'Invalid row index');
-
-    // Get a snapshot of the current object.
-    const snapshot = getSnapshot(currentRow);
     const transformedValue = editorTextToCellValue(props, value);
 
-    // Set the proposed value.
-    setValue(snapshot, field.path, transformedValue);
+    const isDraftRow = plane === 'frozenRowsEnd';
 
-    const schema = getSchema(currentRow);
-    invariant(schema);
+    if (isDraftRow) {
+      const isInvalidDraftRowIndex = row < 0 || row >= this._registry.get(this._draftRows).length;
+      if (isInvalidDraftRowIndex) {
+        return { valid: false, error: 'Invalid draft row index' };
+      }
 
-    const validationResult = validateSchema(schema, snapshot);
-    if (validationResult && validationResult.length > 0) {
-      const error = validationResult[0];
-      invariant(error.path === field.path);
-      return { valid: false, error: error.message };
+      const draftRow = this._registry.get(this._draftRows)[row];
+      const snapshot = { ...draftRow.data };
+      SchemaEx.setValue(snapshot, field.path, transformedValue);
+
+      const validationErrors = this.validateDraftRowData(snapshot);
+      // TODO(thure): These errors sometimes result in a useless message like “is missing” (what is missing?)
+      if (validationErrors.length > 0) {
+        const error = validationErrors.find((err) => err.path === field.path);
+        if (error) {
+          return { valid: false, error: error.message };
+        }
+      }
+      return { valid: true };
+    } else {
+      const currentRow = this._registry.get(this._rows)[row];
+      invariant(currentRow, 'Invalid row index');
+
+      // TableRow is a generic type; cast to Obj.Unknown for Echo introspection APIs.
+      const snapshot = { ...getSnapshot(currentRow as unknown as Obj.Unknown) };
+      SchemaEx.setValue(snapshot, field.path, transformedValue);
+
+      const type = Obj.getType(currentRow as unknown as Obj.Unknown);
+      invariant(type);
+      const schema = Type.getSchema(type);
+
+      const validationResult = validateSchema(schema, snapshot);
+      if (validationResult && validationResult.length > 0) {
+        const error = validationResult.find((err) => err.path === field.path);
+        if (error) {
+          return { valid: false, error: error.message };
+        }
+      }
+
+      return { valid: true };
     }
-
-    return { valid: true };
   };
 
-  public setCellData = ({ col, row }: DxGridPlanePosition, value: any): void => {
-    const rowIdx = this._sorting.getDataIndex(row);
-    const fields = this._view?.fields ?? [];
+  public setCellData = (cell: DxGridPosition, value: any): void => {
+    const { col, row, plane } = cell;
+    const fields = this._projection?.getFields() ?? [];
     if (col < 0 || col >= fields.length) {
       return;
     }
@@ -386,13 +728,25 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const transformedValue = editorTextToCellValue(props, value);
 
     // Special handling for Ref format to preserve existing behavior
-    if (props.format === FormatEnum.Ref && !isLiveObject(value)) {
-      // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
-      //   plain string value. Maybe onBlur should be called with the actual value?
+    if (props.format === Format.TypeFormat.Ref && !Obj.isObject(value)) {
       return;
     }
 
-    setValue(this._rows.value[rowIdx], field.path, transformedValue);
+    if (plane === 'frozenRowsEnd') {
+      // Update draft row data (draft rows are plain objects, not ECHO objects).
+      if (row >= 0 && row < this._registry.get(this._draftRows).length) {
+        SchemaEx.setValue(this._registry.get(this._draftRows)[row].data, field.path, transformedValue);
+        // Re-validate the draft row after the update
+        this.validateDraftRow(row);
+      }
+    } else {
+      // Update regular row data (use sorted rows for display index)
+      const sortedRows = this._registry.get(this._sortedRows);
+      const rowData = sortedRows[row];
+      this._change.row(rowData, (mutableRow) => {
+        SchemaEx.setValue(mutableRow, field.path, transformedValue);
+      });
+    }
   };
 
   /**
@@ -401,13 +755,43 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
   public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
-    const dataRow = this._sorting.getDataIndex(row);
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     const field = fields[col];
+    const sortedRows = this._registry.get(this._sortedRows);
+    const rowData = sortedRows[row];
 
-    const value = getValue(this._rows.value[dataRow], field.path);
+    const value = SchemaEx.getValue(rowData, field.path);
     const updatedValue = update(value);
-    setValue(this._rows.value[dataRow], field.path, updatedValue);
+    this._change.row(rowData, (mutableRow) => {
+      SchemaEx.setValue(mutableRow, field.path, updatedValue);
+    });
+  }
+
+  /**
+   * Gets the domain-appropriate cell type for a given cell position.
+   * This abstracts away the low-level grid plane concepts and provides domain-specific types.
+   * @param cell - The cell position to classify
+   * @returns The domain-appropriate cell type
+   */
+  public getCellType(cell: DxGridPosition): TableCellType {
+    switch (cell.plane) {
+      case 'frozenRowsEnd':
+        return 'draft';
+      case 'frozenRowsStart':
+        return 'header';
+      case 'grid':
+      default:
+        return 'standard';
+    }
+  }
+
+  /**
+   * Convenience method to check if a cell is a draft cell.
+   * @param cell - The cell position to check
+   * @returns true if the cell is a draft cell, false otherwise
+   */
+  public isDraftCell(cell: DxGridPosition): boolean {
+    return this.getCellType(cell) === 'draft';
   }
 
   //
@@ -415,13 +799,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   public deleteColumn(fieldId: string): void {
-    if (!this._view) {
+    if (!this._projection) {
       return;
     }
 
-    const field = this._view?.fields.find((field) => field.id === fieldId);
-    if (field && this._onDeleteColumn) {
-      this._onDeleteColumn(field.id);
+    const field = this._projection?.getFields().find((field) => field.id === fieldId);
+    if (field && this._onColumnDelete) {
+      this._onColumnDelete(field.id);
     }
   }
 
@@ -430,12 +814,14 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   public setColumnWidth(columnIndex: number, width: number): void {
-    const fields = this._view?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     if (columnIndex < fields.length) {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
       if (field) {
-        field.size = newWidth;
+        this._change.table((mutableTable) => {
+          mutableTable.sizes[field.path] = newWidth;
+        });
       }
     }
   }
@@ -455,24 +841,112 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   //
-  // View operations
+  // Sort operations
   //
+
+  /**
+   * Sets the sort order for a field in-memory (local to this instance).
+   * Use saveView() to persist the sort to the view query.
+   */
+  public setSort(fieldId: string, direction: QueryAST.OrderDirection): void {
+    const field = this._projection.getFields().find((f) => f.id === fieldId);
+    if (!field) {
+      return;
+    }
+
+    // Update in-memory sort (local changes).
+    this._registry.set(this._inMemorySort, {
+      fieldId,
+      direction,
+    });
+  }
+
+  /**
+   * Toggles the sort direction for a field in-memory.
+   */
+  public toggleSort(fieldId: string): void {
+    const currentSort = this.getSorting();
+    if (!currentSort || currentSort.fieldId !== fieldId) {
+      this.setSort(fieldId, 'asc');
+      return;
+    }
+
+    const newDirection = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    this.setSort(fieldId, newDirection);
+  }
+
+  /**
+   * Clears the in-memory sort order.
+   */
+  public clearSort(): void {
+    this._registry.set(this._inMemorySort, undefined);
+  }
+
+  /**
+   * Saves the current in-memory sort to the view query AST.
+   * This persists the sort so it becomes the default for all viewers.
+   */
   public saveView(): void {
-    this._sorting.save();
+    const view = this.view;
+    const inMemorySort = this._registry.get(this._inMemorySort);
+
+    // Snapshot view before accessing query.ast
+    const viewSnapshot = Obj.getSnapshot(view);
+    const currentQuery = Query.fromAst(viewSnapshot.query.ast);
+    const baseQuery = this._getBaseQuery(currentQuery);
+
+    if (inMemorySort) {
+      // Find the field to get its path
+      const field = this._projection.getFields().find((f) => f.id === inMemorySort.fieldId);
+      if (field) {
+        // Persist sort to view.query.ast
+        const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
+        Obj.update(view, (view) => {
+          view.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
+        });
+      }
+    } else {
+      // Clear sort from view.query.ast
+      Obj.update(view, (view) => {
+        view.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
+      });
+    }
+
+    // Clear in-memory sort since it's now persisted.
+    this._registry.set(this._inMemorySort, undefined);
+  }
+
+  /**
+   * Extracts the base query without order clauses.
+   */
+  private _getBaseQuery(query: Query.Any): Query.Any {
+    const ast = query.ast;
+    // If the query has an order clause, extract the inner query
+    if (ast.type === 'order') {
+      return Query.fromAst(ast.query);
+    }
+    return query;
+  }
+
+  /**
+   * Checks if the view has unsaved changes (in-memory sort differs from persisted sort).
+   */
+  public getViewDirty(): boolean {
+    return this._registry.get(this._viewDirty);
   }
 }
 
 const editorTextToCellValue = (props: PropertyType, value: any): any => {
   switch (props.format) {
-    case FormatEnum.Ref: {
-      if (isLiveObject(value)) {
-        return makeRef(value);
+    case Format.TypeFormat.Ref: {
+      if (Obj.isObject(value)) {
+        return Ref.make(value);
       } else {
         return value;
       }
     }
 
-    case FormatEnum.SingleSelect: {
+    case Format.TypeFormat.SingleSelect: {
       const ids = extractTagIds(value);
       if (ids && ids.length > 0) {
         return ids[0];
@@ -481,7 +955,7 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       }
     }
 
-    case FormatEnum.MultiSelect: {
+    case Format.TypeFormat.MultiSelect: {
       const ids = extractTagIds(value);
       return ids || value;
     }

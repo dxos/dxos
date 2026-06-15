@@ -15,7 +15,7 @@ declare module 'hypercore' {
   import type { ProtocolStream } from 'hypercore-protocol';
   import type { Nanoresource, NanoresourceProperties } from 'nanoresource';
   import type { RandomAccessStorageConstructor } from 'random-access-storage';
-  import { Readable, Writable } from 'streamx';
+  import { type Readable, type Writable } from 'streamx';
 
   export type Callback<T> = (err: Error | null, result: T) => void;
 

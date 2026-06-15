@@ -2,29 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { Atom, Registry } from '@effect-atom/atom-react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
 
-import { type Meta } from '@storybook/react';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Script } from '@dxos/compute';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';
+import { translations } from '#translations';
 
 import { ScriptToolbar } from './ScriptToolbar';
-import { templates } from '../../templates';
 
-export const Default = {
-  args: {
-    binding: 'example',
-    deployed: true,
-    templates,
-    onFormat: () => console.log('Format'),
-    onTogglePanel: () => {},
+// Create a mock store for stories.
+const createMockStore = (initialState: ScriptToolbarState = {}): ScriptToolbarStateStore => {
+  const registry = Registry.make();
+  const atom = Atom.make<ScriptToolbarState>(initialState);
+  return {
+    atom,
+    get value() {
+      return registry.get(atom);
+    },
+    update: (updater) => registry.set(atom, updater(registry.get(atom))),
+    set: (key, value) => registry.set(atom, { ...registry.get(atom), [key]: value }),
+  };
+};
+
+const ScriptToolbarStory = () => {
+  const state = useMemo(() => createMockStore(), []);
+  const script = useMemo(
+    () =>
+      Script.make({
+        name: 'test',
+        description: 'test',
+        source: 'test',
+      }),
+    [],
+  );
+  return <ScriptToolbar state={state} script={script} />;
+};
+
+const meta = {
+  title: 'plugins/plugin-script/components/Toolbar',
+  component: ScriptToolbarStory,
+  // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+  decorators: [
+    withTheme(),
+    withLayout({ classNames: 'w-document-max-width' }),
+    withPluginManager({
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+    }),
+  ],
+  parameters: {
+    layout: 'centered',
+    translations,
   },
-};
-
-const meta: Meta = {
-  title: 'plugins/plugin-script/Toolbar',
-  component: ScriptToolbar,
-  decorators: [withTheme, withLayout()],
-};
+} satisfies Meta<typeof ScriptToolbarStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

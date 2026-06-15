@@ -5,15 +5,16 @@
 import type { TLRecord } from '@tldraw/tldraw';
 import { isShape } from '@tldraw/tlschema';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 
-import type { DiagramType } from '../types';
+import type { Sketch } from '#types';
+
 import { getDeep } from '../util';
 
 /**
  * Snap to grid.
  */
-export const handleSnap = async (sketch: DiagramType) => {
+export const handleSnap = async (sketch: Sketch.Sketch) => {
   const snap = (value: number, tolerance = 40) => {
     return Math.round(value / tolerance) * tolerance;
   };

@@ -2,58 +2,65 @@
 // Copyright 2024 DXOS.org
 //
 
-import { addressToA1Notation } from '@dxos/compute';
+import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Ref } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo-schema';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { createSheet } from '@dxos/plugin-sheet/types';
-import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
-import { faker } from '@dxos/random';
+import { EID, Filter, Key, Type, View } from '@dxos/echo';
+import { OperationInvoker } from '@dxos/operation';
+import { Markdown } from '@dxos/plugin-markdown';
+import { Sheet } from '@dxos/plugin-sheet';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { random } from '@dxos/random';
+import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
-import { createView, DataType } from '@dxos/schema';
-import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
+import { getTypeURIFromQuery } from '@dxos/schema';
+import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
-export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
+const findViewByTypeUri = async (views: View.View[], typeUri: string) => {
+  return views.find((view) => getTypeURIFromQuery(view.query.ast) === typeUri);
+};
 
-export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
-  return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
-    // Find or create mutable schema.
-    const schema =
-      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
-      (await space.db.schemaRegistry.register([type]))[0];
+export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-    // Create objects.
-    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
-    const objects = await generate.createObjects(n);
+export const createGenerator = <S extends Type.AnyObj>(
+  client: Client,
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
+  schema: S,
+): ObjectGenerator<Type.InstanceType<S>> => {
+  return async (space: Space, n: number): Promise<Type.InstanceType<S>[]> => {
+    const typename = Type.getTypename(schema);
 
     // Find or create table and view.
-    const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
-    if (!table) {
-      const name = type.typename.split('/').pop() ?? type.typename;
-      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      space.db.add(Obj.make(TableType, { name, view: Ref.make(view) }));
+    const views = await space.db.query(Filter.type(View.View)).run();
+    const view = await findViewByTypeUri(views, Type.getURI(schema));
+    const staticSchema = client
+      ? client.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((s) => Type.getTypename(s) === typename)
+      : undefined;
+    if (!view && !staticSchema) {
+      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
     }
 
-    return objects;
+    // Create objects.
+    const generate = createAsyncGenerator(generator, schema, { db: space.db });
+    return generate.createObjects(n);
   };
 };
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
-    DocumentType.typename,
+    Type.getTypename(Markdown.Document),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Obj.make(DocumentType, {
-            name: faker.commerce.productName(),
-            content: Ref.make(Obj.make(DataType.Text, { content: faker.lorem.sentences(5) })),
+          Markdown.make({
+            name: random.commerce.productName(),
+            content: random.lorem.sentences(5),
           }),
         );
       });
@@ -63,17 +70,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    DiagramType.typename,
+    Type.getTypename(Sketch.Sketch),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        // TODO(burdon): Generate diagram.
-        const obj = space.db.add(
-          Obj.make(DiagramType, {
-            name: faker.commerce.productName(),
-            canvas: Ref.make(Obj.make(CanvasType, { content: {} })),
-          }),
-        );
-
+        const obj = space.db.add(Sketch.make({ name: random.commerce.productName() }));
         return obj;
       });
 
@@ -83,10 +83,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
   // TODO(burdon): Create unit tests.
   [
-    SheetType.typename,
+    Type.getTypename(Sheet.Sheet),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const cells: Record<string, CellValue> = {};
+        const cells: Record<string, Sheet.CellValue> = {};
         const year = new Date().getFullYear();
         const cols = 4;
         const rows = 16;
@@ -108,8 +108,8 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         // TODO(burdon): Set width.
         // TODO(burdon): Set formatting for columns.
         return space.db.add(
-          createSheet({
-            name: faker.commerce.productName(),
+          Sheet.make({
+            name: random.commerce.productName(),
             cells,
           }),
         );
@@ -120,7 +120,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    ComputeGraph.typename,
+    Type.getTypename(ComputeGraph),
     async (space, n, cb) => {
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();
@@ -130,7 +130,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           .createNode({
             id: 'gpt-QUEUE_ID',
             type: 'constant',
-            value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+            value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
           })
           .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })

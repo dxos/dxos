@@ -1,0 +1,76 @@
+{
+  "name": "@dxos/assistant",
+  "version": "0.9.0",
+  "description": "Natural language interface to DXOS",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./extraction": {
+      "source": "./src/extraction/index.ts",
+      "types": "./dist/types/src/extraction/index.d.ts",
+      "default": "./dist/lib/neutral/extraction/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "run:chat": "vite-node ./bin/chat.ts"
+  },
+  "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/ai": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/mcp-client": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/ai": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@xenova/transformers": "catalog:",
+    "lodash.defaultsdeep": "catalog:"
+  },
+  "devDependencies": {
+    "@types/lodash.defaultsdeep": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

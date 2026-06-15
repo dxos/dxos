@@ -2,21 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { getTarget } from '@dxos/react-client/echo';
+import * as Effect from 'effect/Effect';
 
-import { compareIndexPositions, SheetType } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { Relation, Type } from '@dxos/echo';
 
-export default () =>
-  contributes(Capabilities.AnchorSort, {
-    key: Type.getTypename(SheetType)!,
-    sort: (anchorA, anchorB) => {
-      const sheet = getTarget(anchorA) as SheetType;
-      if (sheet !== getTarget(anchorB)) {
-        return 0;
-      }
+import { Sheet, compareIndexPositions } from '#types';
 
-      return !anchorA.anchor || !anchorB.anchor ? 0 : compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
-    },
-  });
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(AppCapabilities.AnchorSort, {
+      key: Type.getTypename(Sheet.Sheet),
+      sort: (anchorA, anchorB) => {
+        const sheet = Relation.getTarget(anchorA) as Sheet.Sheet;
+        if (sheet !== Relation.getTarget(anchorB)) {
+          return 0;
+        }
+
+        return !anchorA.anchor || !anchorB.anchor ? 0 : compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
+      },
+    }),
+  ),
+);

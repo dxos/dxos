@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Page, type Locator } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
 
 // TODO(Zan): Extend this with other plank types.
 type PlankKind = 'markdown' | 'collection' | 'unknown';

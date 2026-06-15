@@ -2,82 +2,94 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { createSystemPrompt } from '@dxos/artifact';
-import { Obj } from '@dxos/echo';
+import { createSystemPrompt } from '@dxos/assistant';
+import { Blueprint, Template } from '@dxos/compute';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
+
+import { translations } from '#translations';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
-import translations from '../../translations';
-import { TemplateType } from '../../types';
 
-const TEMPLATE = [
-  '{{! System Prompt }}',
-  '',
-  'You are a machine that is an expert chess player.',
-  'The move history of the current game is: {{history}}',
-  'If asked to suggest a move explain why it is a good move.',
-  '',
-  '{{#each artifacts}}',
-  '- {{this}}',
-  '{{/each}}',
-  '',
-  '---',
-  '',
-  '{{input}}',
-  '',
-].join('\n');
+const FENCE = '```';
 
-const DefaultStory = ({ text }: TemplateEditorProps & { text: string }) => {
+const TEMPLATE = trim`
+  {{! System Prompt }}
+  
+  You are an expert chess player.
+  The move history of the current game is: {{history}}.
+  If asked to suggest a move explain why it is a good move.
+
+  {{#each artifacts}}
+    {{this}}
+  {{/each}}
+
+  Reponse in the format: <suggestion>SUGGESTION</suggestion>
+
+  @echo://B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ/01K24XPK464FSCKVQJAB2H662M
+
+  ---
+
+  ${FENCE}ts
+  const x = 100;
+  ${FENCE}
+
+  {{input}}
+`;
+
+const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
-  const [template] = useState(() => {
-    const space = client.spaces.default;
-    return space.db.add(Obj.make(TemplateType, { source: text, kind: { include: 'manual' } }));
+  const [blueprint] = useState(() => {
+    const space = client.spaces.get()[0];
+    return space.db.add(
+      Blueprint.make({
+        key: 'com.example.blueprint.test',
+        name: 'Test',
+        instructions: Template.make({ source }),
+      }),
+    );
   });
 
   return (
-    <div role='none' className='flex w-[50rem] overflow-hidden border-x border-separator'>
-      <TemplateEditor template={template} />
-    </div>
+    <TemplateEditor classNames='dx-document bg-base-surface' id={blueprint.id} source={blueprint.instructions.source} />
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-assistant/TemplateEditor',
-  component: TemplateEditor,
+const meta = {
+  title: 'plugins/plugin-assistant/components/TemplateEditor',
+  component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({
+      types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
-      types: [TemplateType],
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
-    withTheme,
   ],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = Meta<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: TEMPLATE,
+    source: TEMPLATE,
   },
 };
 
 export const System: Story = {
   args: {
-    text: createSystemPrompt(),
+    source: createSystemPrompt({}),
   },
 };

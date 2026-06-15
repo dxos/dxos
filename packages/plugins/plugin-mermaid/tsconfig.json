@@ -18,13 +18,25 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/operation"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../ui/react-ui"
@@ -33,13 +45,13 @@
       "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-space"
     }
   ]
 }

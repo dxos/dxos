@@ -11,6 +11,9 @@
   ],
   "references": [
     {
+      "path": "../../../vendor/hypercore"
+    },
+    {
       "path": "../async"
     },
     {
@@ -18,9 +21,6 @@
     },
     {
       "path": "../crypto"
-    },
-    {
-      "path": "../debug"
     },
     {
       "path": "../invariant"

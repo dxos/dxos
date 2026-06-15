@@ -46,7 +46,7 @@
 
  ;; Display all lines of a block when referencing ((block)).
  ;; Default value: false
- :ui/show-full-blocks? false
+ :ui/shois-full-blocks? false
 
  ;; Automatically expand block references when zooming in.
  ;; Default value: true

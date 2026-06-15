@@ -6,10 +6,10 @@ import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 import { getPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { valueEncoding } from '@dxos/echo-pipeline';
-import { createEphemeralEdgeIdentity, EdgeClient, EdgeIdentityChangedError } from '@dxos/edge-client';
+import { valueEncoding } from '@dxos/echo-host';
+import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -45,7 +45,7 @@ describe('EdgeFeedReplicator', () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
     admitConnection.wake();
-    await expect.poll(() => messenger.status).toBe(EdgeStatus.CONNECTED);
+    await expect.poll(() => messenger.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
 
     await attachReplicator(messenger);
     await expect.poll(() => messageSink.length).toEqual(1);
@@ -107,7 +107,7 @@ describe('EdgeFeedReplicator', () => {
     const { feed } = await attachReplicator(messenger);
     await appendMessage(feed);
 
-    sendSpy.mockImplementationOnce(async (request: any) => {
+    sendSpy.mockImplementationOnce(async (_ctx: any, request: any) => {
       sendResponseMessage(request, encodeCbor({ type: 'metadata', feedKey: feed.key.toHex(), length: 0 }));
       return Promise.resolve();
     });

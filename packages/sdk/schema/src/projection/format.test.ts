@@ -1,0 +1,108 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+import { describe, test } from 'vitest';
+
+import { Format } from '@dxos/echo';
+import { TypeEnum } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+
+import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
+
+describe('format', () => {
+  test('get format schema', ({ expect }) => {
+    for (const value of Object.values(Format.TypeFormat)) {
+      const node = getFormatSchema(value);
+      expect(node, `Missing schema for: ${value}`).to.exist;
+    }
+  });
+
+  test('invalid state', ({ expect }) => {
+    const prop: Partial<PropertyType> = { property: 'test' as SchemaEx.JsonProp };
+    const schema = getFormatSchema(prop.format);
+    expect(schema).to.eq(formatToSchema[Format.TypeFormat.None]);
+    const validate = Schema.validate(PropertySchema);
+    expect(() => validate(prop)).to.throw;
+  });
+
+  test('encode/decode format', async ({ expect }) => {
+    const prop: PropertyType = {
+      property: 'salary' as SchemaEx.JsonProp,
+      type: TypeEnum.Number,
+      format: Format.TypeFormat.Currency,
+      title: 'Base salary',
+      multipleOf: 0.01,
+      currency: 'USD',
+    };
+
+    // Encode and decode.
+    {
+      const schema = getFormatSchema(prop.format);
+      invariant(schema);
+
+      const decoded = Schema.decodeSync(schema)(prop);
+      expect(decoded).to.include({
+        multipleOf: 2,
+      });
+
+      const encoded = Schema.encodeSync(schema)(decoded);
+      expect(encoded).to.deep.eq(prop);
+    }
+
+    // Changing format will change the schema.
+    {
+      const { property: _, format, ...props } = prop;
+      expect(format).to.eq(Format.TypeFormat.Currency);
+      const newProp: PropertyType = {
+        property: 'amount' as SchemaEx.JsonProp,
+        format: Format.TypeFormat.Percent,
+        ...props,
+      };
+      newProp.format = Format.TypeFormat.Percent;
+
+      const schema = getFormatSchema(newProp.format);
+      invariant(schema);
+
+      const decoded = Schema.decodeSync(schema)(newProp);
+      expect(Object.keys(newProp)).to.include('currency');
+      expect(Object.keys(decoded)).not.to.include('currency');
+    }
+  });
+
+  test('ref format', async ({ expect }) => {
+    const validate = Schema.validateSync(PropertySchema);
+    const prop: Partial<PropertyType> = {
+      property: 'organization' as SchemaEx.JsonProp,
+      type: TypeEnum.Ref,
+      format: Format.TypeFormat.Ref,
+    };
+
+    // Invalid.
+    {
+      expect(() => validate(prop)).to.throw;
+    }
+
+    // Valid.
+    {
+      prop.referenceSchema = 'dxn:com.example.type.test';
+      expect(validate(prop)).to.deep.eq(prop);
+    }
+  });
+
+  test('get properties', ({ expect }) => {
+    const prop: Partial<PropertyType> = {
+      property: 'org' as SchemaEx.JsonProp,
+      type: TypeEnum.Ref,
+      format: Format.TypeFormat.Ref,
+    };
+
+    const schema = getFormatSchema(prop.format);
+    invariant(schema);
+
+    const props = SchemaEx.getProperties(schema.ast);
+    expect(props).to.have.length(7);
+  });
+});

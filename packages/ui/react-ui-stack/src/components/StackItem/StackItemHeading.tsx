@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
-  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
-  forwardRef,
+  type ComponentPropsWithoutRef,
   type PropsWithChildren,
+  forwardRef,
 } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttention, type AttendableId, type Related } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/react-ui-theme';
+import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
+import { mx } from '@dxos/ui-theme';
 
 import { useStack } from '../StackContext';
 
@@ -27,40 +27,33 @@ export const StackItemHeading = ({
   classNames,
   asChild,
   separateOnScroll,
+  role,
   ...props
 }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
-
-  const Root = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot : Primitive.div;
 
   return (
-    <Root
-      role='heading'
+    <Comp
       {...props}
-      tabIndex={0}
-      {...focusableGroupAttrs}
+      role={role ?? 'heading'}
       className={mx(
-        'flex items-center dx-focus-ring-inset-over-all relative !border-is-0 bg-headerSurface',
+        'flex items-center border-x-0! bg-header-surface',
         separateOnScroll
-          ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subduedSeparator'
-          : 'border-subduedSeparator',
-        orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size] flex-col',
-        orientation === 'horizontal' ? 'border-be' : 'border-ie',
+          ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subdued-separator'
+          : 'border-subdued-separator',
+        orientation === 'horizontal' ? 'h-(--dx-rail-size)' : 'w-(--dx-rail-size) flex-col',
+        orientation === 'horizontal' ? '' : 'border-e',
         classNames,
       )}
     >
       {children}
-    </Root>
+    </Comp>
   );
 };
 
 export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <div role='none' className='sticky block-start-0 bg-[--sticky-bg] p-1 is-full'>
-      {children}
-    </div>
-  );
+  return <div className='sticky top-0 bg-(--sticky-bg) p-1 w-full'>{children}</div>;
 };
 
 export type StackItemHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;
@@ -74,7 +67,7 @@ export const StackItemHeadingLabel = forwardRef<HTMLHeadingElement, StackItemHea
         {...props}
         data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
-          'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText self-center',
+          'px-1 min-w-0 w-0 grow truncate font-medium text-base-fg data-[attention=true]:text-accent-text self-center',
           classNames,
         )}
         ref={forwardedRef}

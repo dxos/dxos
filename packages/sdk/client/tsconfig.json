@@ -20,10 +20,10 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -44,6 +44,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {
@@ -59,22 +62,13 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/indexing"
-    },
-    {
-      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../core/halo/credentials"

@@ -7,9 +7,9 @@ import { type PublicKey } from '@dxos/keys';
 import { type LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
 import { ComplexSet } from '@dxos/util';
 
-import type { ShellManager } from './shell-manager';
 import type { Space, SpaceMember } from '../echo';
 import type { Device, Identity } from '../halo';
+import type { ShellManager } from './shell-manager';
 
 type ShellResult = {
   cancelled: boolean;
@@ -33,7 +33,7 @@ type JoinSpaceResult = ShellResult & {
   target?: string;
 };
 
-type ShellParams = {
+type ShellProps = {
   shellManager: ShellManager;
   identity: MulticastObservable<Identity | null>;
   devices: MulticastObservable<Device[]>;
@@ -49,7 +49,7 @@ export class Shell {
   private readonly _devices: MulticastObservable<Device[]>;
   private readonly _spaces: MulticastObservable<Space[]>;
 
-  constructor({ shellManager, identity, devices, spaces }: ShellParams) {
+  constructor({ shellManager, identity, devices, spaces }: ShellProps) {
     this._shellManager = shellManager;
     this._identity = identity;
     this._devices = devices;
@@ -104,7 +104,9 @@ export class Shell {
    * @returns Shell result with the new identity.
    */
   async createIdentity(): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY });
+    await this._shellManager.setLayout({
+      layout: ShellLayout.INITIALIZE_IDENTITY,
+    });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -128,8 +130,15 @@ export class Shell {
    *
    * @returns Shell result with the new identity.
    */
-  async joinIdentity({ invitationCode }: { invitationCode?: string } = {}): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION, invitationCode });
+  async joinIdentity({
+    invitationCode,
+  }: {
+    invitationCode?: string;
+  } = {}): Promise<InitializeIdentityResult> {
+    await this._shellManager.setLayout({
+      layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION,
+      invitationCode,
+    });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -177,7 +186,9 @@ export class Shell {
    * @returns Shell result with the identity.
    */
   async recoverIdentity(): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY });
+    await this._shellManager.setLayout({
+      layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY,
+    });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -225,7 +236,12 @@ export class Shell {
       (key) => key.toHex(),
       space.members.get().map((member) => member.identity.identityKey),
     );
-    await this._shellManager.setLayout({ layout: ShellLayout.SPACE, spaceKey, spaceId, target });
+    await this._shellManager.setLayout({
+      layout: ShellLayout.SPACE,
+      spaceKey,
+      spaceId,
+      target,
+    });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -245,12 +261,19 @@ export class Shell {
    * @returns The joined space.
    * @throws {Error} If no identity exists.
    */
-  async joinSpace({ invitationCode }: { invitationCode?: string } = {}): Promise<JoinSpaceResult> {
+  async joinSpace({
+    invitationCode,
+  }: {
+    invitationCode?: string;
+  } = {}): Promise<JoinSpaceResult> {
     if (!this._identity.get()) {
       return { error: new Error('Identity does not exist'), cancelled: false };
     }
 
-    await this._shellManager.setLayout({ layout: ShellLayout.JOIN_SPACE, invitationCode });
+    await this._shellManager.setLayout({
+      layout: ShellLayout.JOIN_SPACE,
+      invitationCode,
+    });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         const space = context.spaceKey && this._spaces.get().find((space) => context.spaceKey?.equals(space.key));

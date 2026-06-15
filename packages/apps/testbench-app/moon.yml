@@ -1,0 +1,13 @@
+layer: application
+language: typescript
+tags:
+  - ts-test
+  - typecheck
+  - vite
+  - storybook
+tasks:
+  test:
+    inputs:
+      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
+      - vite.config.ts

@@ -2,36 +2,35 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
+import { InvitationManager, type InvitationManagerProps } from '../../steps';
+import { StorybookDialog } from '../../story-components';
+import { translations } from '../../translations';
 import { IdentityPanelImpl } from './IdentityPanel';
 import type { IdentityPanelImplProps } from './IdentityPanelProps';
 import { IdentityActionChooserImpl } from './steps';
-import { StorybookDialog } from '../../components/StorybookDialog';
-import { InvitationManager, type InvitationManagerProps } from '../../steps';
-import { osTranslations } from '../../translations';
 
-faker.seed(1234);
+random.seed(1234);
 
 const noOpProps: IdentityPanelImplProps = {
   titleId: 'storybookIdentityPanel',
   send: () => {},
-  activeView: 'identity action chooser',
+  activeView: 'identity-action-chooser',
   createInvitationUrl: (code) => code,
   identity: {
     did: IdentityDid.random(),
     identityKey: PublicKey.random(),
     profile: {
-      displayName: faker.person.firstName(),
+      displayName: random.person.firstName(),
     },
   },
   devices: [],
@@ -39,23 +38,24 @@ const noOpProps: IdentityPanelImplProps = {
   onManageCredentials: async () => console.log('manage credentials'),
 };
 
-export default {
+const meta = {
   title: 'sdk/shell/IdentityPanel',
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
-    translations: [osTranslations],
-    chromatic: {
-      disableSnapshot: false,
-    },
+    translations,
   },
-};
+} satisfies Meta<typeof IdentityDid>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const IdentityActionChooser = () => {
   return (
-    <StorybookDialog inOverlayLayout>
+    <StorybookDialog>
       <IdentityPanelImpl
         {...noOpProps}
-        activeView='identity action chooser'
+        activeView='identity-action-chooser'
         IdentityActionChooser={IdentityActionChooserImpl}
       />
     </StorybookDialog>
@@ -63,10 +63,10 @@ export const IdentityActionChooser = () => {
 };
 
 const DeviceInvitationManagerWithState = (extraProps: InvitationManagerProps) => (
-  <StorybookDialog inOverlayLayout>
+  <StorybookDialog>
     <IdentityPanelImpl
       {...noOpProps}
-      activeView='device invitation manager'
+      activeView='device-invitation-manager'
       IdentityActionChooser={IdentityActionChooserImpl}
       InvitationManager={(props) => <InvitationManager {...props} {...extraProps} />}
     />

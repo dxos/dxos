@@ -5,11 +5,12 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps } from '@dxos/react-ui';
+import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 
-import { ActionLabel } from './ActionLabel';
-import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
+import { executeMenuAction } from '../util';
+import { ActionLabel } from './ActionLabel';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
@@ -28,7 +29,7 @@ const DropdownMenuItem = ({
   // TODO(thure): handle other items.
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
-  const { iconSize } = useMenu('DropdownMenuItem', __menuScope);
+  const { iconSize } = useMenuScoped('DropdownMenuItem', __menuScope);
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
@@ -59,17 +60,23 @@ const DropdownMenuRoot = ({
     onChange: onOpenChange,
   });
 
+  const { onAction } = useMenuScoped('DropdownMenuRoot', __menuScope);
+
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {
       if (action.properties?.disabled) {
         return;
       }
       event.stopPropagation();
-      // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+      // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
       setOptionsMenuOpen(false);
-      void action.data?.({ parent: group, caller });
+      if (onAction) {
+        onAction(action, { parent: group, caller });
+      } else {
+        void executeMenuAction(action, { parent: group, caller });
+      }
     },
-    [group, caller],
+    [group, caller, onAction],
   );
 
   const items = useMenuItems(group, propsItems);
@@ -80,7 +87,9 @@ const DropdownMenuRoot = ({
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {items?.map((item) => <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />)}
+            {items?.map((item) => (
+              <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />
+            ))}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>

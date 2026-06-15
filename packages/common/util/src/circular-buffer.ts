@@ -26,6 +26,11 @@ export class CircularBuffer<T> {
     return this._elementCount;
   }
 
+  public clear(): void {
+    this._nextIndex = 0;
+    this._elementCount = 0;
+  }
+
   public getLast(): T | undefined {
     if (this._elementCount === 0) {
       return undefined;

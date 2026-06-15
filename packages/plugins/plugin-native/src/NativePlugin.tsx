@@ -2,22 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { PluginContext } from '@dxos/app-framework';
-import { definePlugin, Events, defineModule } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { AssistantEvents } from '@dxos/plugin-assistant';
 
-import { meta } from './meta';
+import { NativeSettings, Ollama, ReactSurface, SpotlightListener, Updater } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-// TODO(burdon): Initial url has index.html, which must be caught/redirected.
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
-export const NativePlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/startup`,
-      activatesOn: Events.DispatcherReady,
-      activate: async (context: PluginContext) => {
-        const { initializeNativeApp } = await import('./initialize');
-        await initializeNativeApp(context);
-        return [];
-      },
-    }),
-  ]);
+export const NativePlugin = Plugin.define(meta).pipe(
+  AppPlugin.addSettingsModule({ activate: NativeSettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'spotlight-listener',
+    activatesOn: ActivationEvents.ProcessManagerReady,
+    activate: SpotlightListener,
+  }),
+  Plugin.addModule({
+    id: 'updater',
+    activatesOn: ActivationEvents.ProcessManagerReady,
+    activate: Updater,
+  }),
+  Plugin.addModule({
+    id: 'ollama',
+    activatesOn: AssistantEvents.SetupAiServiceProviders,
+    activate: Ollama,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default NativePlugin;

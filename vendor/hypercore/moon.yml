@@ -1,0 +1,82 @@
+id: vendor-hypercore
+layer: library
+language: typescript
+tags:
+  - vendor
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
+
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/hypercore.js'
+      - '--entryPoint=src/hypercore-crypto.js'
+      - '--injectGlobals'
+      - >-
+        --alias='{"hypercore-default-storage":"./src/empty.js","os":"node:os","timers":"node:timers","tty":"node:tty","util":"node:util","sodium-native":"sodium-javascript","sodium-universal":"sodium-javascript","crypto":"node:crypto","worker_threads":"node:worker_threads"}'
+      - '--bundlePackage=events'
+      - '--bundlePackage=events-universal'
+      - '--bundlePackage=abstract-extension'
+      - '--bundlePackage=atomic-batcher'
+      - '--bundlePackage=b4a'
+      - '--bundlePackage=bitfield-rle'
+      - '--bundlePackage=blake2b'
+      - '--bundlePackage=blake2b-wasm'
+      - '--bundlePackage=buffer-alloc'
+      - '--bundlePackage=buffer-alloc-unsafe'
+      - '--bundlePackage=buffer-fill'
+      - '--bundlePackage=clone'
+      - '--bundlePackage=codecs'
+      - '--bundlePackage=count-trailing-zeros'
+      - '--bundlePackage=debug'
+      - '--bundlePackage=fast-bitfield'
+      - '--bundlePackage=fast-fifo'
+      - '--bundlePackage=flat-tree'
+      - '--bundlePackage=has-flag'
+      - '--bundlePackage=hmac-blake2b'
+      - '--bundlePackage=hypercore'
+      - '--bundlePackage=hypercore-cache'
+      - '--bundlePackage=hypercore-crypto'
+      - '--bundlePackage=hypercore-default-storage'
+      - '--bundlePackage=hypercore-protocol'
+      - '--bundlePackage=hypercore-streams'
+      - '--bundlePackage=inherits'
+      - '--bundlePackage=inspect-custom-symbol'
+      - '--bundlePackage=last-one-wins'
+      - '--bundlePackage=memory-pager'
+      - '--bundlePackage=merkle-tree-stream'
+      - '--bundlePackage=ms'
+      - '--bundlePackage=nanoassert'
+      - '--bundlePackage=nanoguard'
+      - '--bundlePackage=nanoresource'
+      - '--bundlePackage=noise-protocol'
+      - '--bundlePackage=pretty-hash'
+      - '--bundlePackage=protocol-buffers-encodings'
+      - '--bundlePackage=queue-tick'
+      - '--bundlePackage=signed-varint'
+      - '--bundlePackage=simple-handshake'
+      - '--bundlePackage=sodium-javascript'
+      - '--bundlePackage=sodium-native'
+      - '--bundlePackage=sodium-universal'
+      - '--bundlePackage=chacha20-universal'
+      - '--bundlePackage=sha256-universal'
+      - '--bundlePackage=sha256-wasm'
+      - '--bundlePackage=sha512-universal'
+      - '--bundlePackage=sha512-wasm'
+      - '--bundlePackage=siphash24'
+      - '--bundlePackage=simple-hypercore-protocol'
+      - '--bundlePackage=simple-message-channels'
+      - '--bundlePackage=sparse-bitfield'
+      - '--bundlePackage=streamx'
+      - '--bundlePackage=text-decoder'
+      - '--bundlePackage=supports-color'
+      - '--bundlePackage=timeout-refresh'
+      - '--bundlePackage=uint64be'
+      - '--bundlePackage=unordered-array-remove'
+      - '--bundlePackage=unordered-set'
+      - '--bundlePackage=varint'
+      - '--bundlePackage=xsalsa20'
+      - '--bundlePackage=xsalsa20-universal'

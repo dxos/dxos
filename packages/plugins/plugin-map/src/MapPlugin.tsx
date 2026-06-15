@@ -2,73 +2,52 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
-import { MapType, MapAction, CreateMapSchema } from './types';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  CreateObject,
+  MapSettings,
+  MapState,
+  MarkerProvider,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { Map } from '#types';
 
-export const MapPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/state`,
-      // TODO(wittjosiah): Does not integrate with settings store.
-      //   Should this be a different event?
-      //   Should settings store be renamed to be more generic?
-      activatesOn: Events.SetupSettings,
-      activate: MapState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: MapType.typename,
-          metadata: {
-            icon: 'ph--compass--regular',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: MapType,
-            formSchema: CreateMapSchema,
-            getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const MapPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [Map.Map] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSettingsModule({ activate: MapSettings }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'marker-provider',
+    activatesOn: ActivationEvents.Startup,
+    activate: MarkerProvider,
+  }),
+  Plugin.addModule({
+    id: 'state',
+    // TODO(wittjosiah): Does not integrate with settings store.
+    //   Should this be a different event?
+    //   Should settings store be renamed to be more generic?
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: MapState,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default MapPlugin;

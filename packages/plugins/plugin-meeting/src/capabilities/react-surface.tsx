@@ -2,44 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
-import { ChannelType } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/types';
 
-import { MeetingContainer, MeetingSettings, MeetingsList } from '../components';
-import { meta } from '../meta';
-import { type MeetingSettingsProps, MeetingType } from '../types';
+import { MeetingArticle, MeetingsList } from '#containers';
+import { Meeting } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${meta.id}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<MeetingSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-      component: ({ data: { subject } }) => <MeetingSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${meta.id}/meeting`,
-      role: 'article',
-      filter: (data): data is { subject: MeetingType } => Obj.instanceOf(MeetingType, data.subject),
-      component: ({ data }) => <MeetingContainer meeting={data.subject} />,
-    }),
-    createSurface({
-      id: `${meta.id}/meeting-companion`,
-      role: 'article',
-      filter: (data): data is { subject: MeetingType | 'meeting'; companionTo: ChannelType } =>
-        (Obj.instanceOf(MeetingType, data.subject) || data.subject === 'meeting') &&
-        Obj.instanceOf(ChannelType, data.companionTo),
-      component: ({ data }) => {
-        return data.subject === 'meeting' ? (
-          <MeetingsList channel={data.companionTo} />
-        ) : (
-          <MeetingContainer meeting={data.subject} />
-        );
-      },
-    }),
-  ]);
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'meeting',
+        filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
+        component: ({ role, data }) => (
+          <MeetingArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'meetingCompanion',
+        role: 'article',
+        filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
+          (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
+          Obj.instanceOf(Channel.Channel, data.companionTo),
+        component: ({ role, data }) => {
+          return data.subject === 'meeting' ? (
+            <MeetingsList companionTo={data.companionTo} />
+          ) : (
+            <MeetingArticle role={role} subject={data.subject} />
+          );
+        },
+      }),
+    ]),
+  ),
+);

@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
@@ -11,15 +10,14 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
+import { PanelContainer } from '../../../components';
+import { DataSpaceSelector } from '../../../containers';
+import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
 import { SyncStateInfo } from './SyncStateInfo';
-import { PanelContainer } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 export type SpaceInfoPanelProps = {
   space?: Space;
@@ -59,9 +57,12 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
     () => (
       <Toolbar.Root>
         {!props.space && <DataSpaceSelector />}
-        <Toolbar.Button onClick={() => forceUpdate({})}>
-          <ArrowClockwise className={getSize(5)} />
-        </Toolbar.Button>
+        <Toolbar.IconButton
+          icon='ph--arrow-clockwise--regular'
+          iconOnly
+          label='Refresh'
+          onClick={() => forceUpdate({})}
+        />
         <div className='grow' />
         <Toolbar.Button onClick={toggleActive}>
           {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
@@ -81,10 +82,10 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
       {space && metadata && (
         <div>
           <SpaceProperties space={space} metadata={metadata} />
-          <div className='bs-24'>
+          <div className='h-24'>
             <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
           </div>
-          <div className='bs-48'>
+          <div className='h-48'>
             <FeedTable onSelect={props.onSelectFeed} />
           </div>
           <div className='border-t border-separator'>

@@ -2,41 +2,66 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AUTOMATION_PLUGIN } from './meta';
+import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from '#meta';
+import { Automation } from '#types';
+
+export const translations = [
   {
     'en-US': {
-      [AUTOMATION_PLUGIN]: {
-        'plugin name': 'Automation',
-        'automation panel label': 'Automations',
-        'script automation label': 'Automation',
-        'automation verbose label': 'Manage automations',
-        'automation description': 'You can manage all the triggers which automate your space here.',
+      [Type.getTypename(Automation.Automation)]: {
+        'typename.label': 'Automation',
+        'typename.label_zero': 'Automations',
+        'typename.label_one': 'Automation',
+        'typename.label_other': 'Automations',
+        'object-name.placeholder': 'New automation',
+        'add-object.label': 'Add automation',
+        'rename-object.label': 'Rename automation',
+        'delete-object.label': 'Delete automation',
+      },
+      [meta.id]: {
+        'plugin.name': 'Automation',
+        'automation-panel.label': 'Automations',
+        'create-panel.template.placeholder': 'Search templates...',
 
-        'functions panel label': 'Functions',
-        'functions verbose label': 'Manage deployed functions',
-        'functions description': 'You can manage all the functions deployed from your space on EDGE here.',
-        'function copy id': 'Copy Function ID',
-        'no functions found': 'No functions found',
-        'go to function source button label': 'Show function source',
+        'automation-name.label': 'Name',
+        'general.title': 'General',
+        'general.description': 'Name and status.',
+        'action.title': 'Action',
+        'action.description': 'What this automation runs.',
+        'action.placeholder': 'Select an operation or routine',
+        'action-input.label': 'Input',
+        'action-kind.operation.label': 'Operation',
+        'action-kind.routine.label': 'Routine',
+        'trigger-picker.title': 'Trigger',
+        'trigger-picker.description': 'When this automation runs.',
+        'trigger-kind.placeholder': 'Select trigger type',
+        'trigger-kind.timer.label': 'Schedule (cron)',
+        'trigger-kind.feed.label': 'Feed',
+        'cron.placeholder': '0 0 * * *',
+        'feed.placeholder': 'Select a feed',
+        'enabled.label': 'Enabled',
+        'enabled.description': 'Turn this automation on or off.',
+        'add-trigger.label': 'Add trigger',
+        'add-trigger-first.message': 'Add a trigger to enable.',
+        'remove-trigger.label': 'Remove',
+        'select-action-first.message': 'Select an action first.',
+        'automation-companion.label': 'Automation',
+        'no-automations.message': 'No automations for this object.',
+        'automation-not-associated.message': 'Not yet associated with this object.',
+        'automation-detached.message': 'No longer associated with this object.',
 
-        'trigger editor title': 'Configure Trigger',
-        'new trigger label': 'Add Trigger',
-        'trigger type timer': 'Timer',
-        'trigger type webhook': 'Webhook',
-        'trigger type websocket': 'Websocket',
-        'trigger type subscription': 'Subscription',
-        'trigger type email': 'Email',
-        'trigger type queue': 'Queue',
+        'automation-verbose.label': 'Manage automations',
+        'automation.description': 'Manage where automations in this space run.',
 
-        'trigger copy url': 'Copy URL',
-        'trigger copy email': 'Copy Email',
-
-        'trigger payload add': 'Add',
-        'trigger payload remove': 'Remove',
-        'trigger payload prop name placeholder': 'New payload property name',
+        'runtime.label': 'Runtime location',
+        'runtime.description': 'Determines where automations in this space run.',
+        'runtime.disabled.label': 'Disabled',
+        'runtime.local.label': 'Local',
+        'runtime.edge.label': 'EDGE (experimental)',
       },
     },
   },
-];
+] as const satisfies Resource[];

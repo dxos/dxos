@@ -1,22 +1,25 @@
+@reference "../../../ui-theme/src/main.css";
+
 @layer dx-components {
   dx-tag-picker-item {
-    display: contents;
+    display: inline-block;
+    @apply p-0.5;
   }
 
   .dx-tag-picker-item.dx-tag {
-    @apply p-0 inline-flex;
+    @apply p-0 m-0 flex;
 
     button {
-      @apply pli-1;
-      padding-block: var(--dx-tag-padding-block);
+      @apply px-1;
+      padding-block: var(--spacing-tag-padding-block);
     }
 
     &[data-remove='true'] {
       button:first-child {
-        @apply pie-0.5;
+        @apply pr-0.5;
       }
       button:last-child {
-        @apply pis-0.5;
+        @apply pl-0.5;
       }
     }
   }

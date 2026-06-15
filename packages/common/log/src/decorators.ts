@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import { inspect } from 'node:util';
 
-import type { LogMethods } from './log';
+import { type LogMethods } from './log';
 import { type CallMetadata } from './meta';
 
 let nextPromiseId = 0;
@@ -190,12 +190,12 @@ const logAsyncRejected = (
   );
 };
 
+const COLOR_FUNCTION = [220, 220, 170] as const;
+
 // https://github.com/dxos/dxos/issues/7286
 const greenCheck = typeof chalk.green === 'function' ? chalk.green('✔') : '✔';
 
 const formatTimeElapsed = (startTime: number) => chalk.gray(`${(performance.now() - startTime).toFixed(0)}ms`);
-
-const COLOR_FUNCTION = [220, 220, 170] as const;
 
 const formatFunction = (name: string) => chalk.bold(chalk.rgb(...COLOR_FUNCTION)(name));
 

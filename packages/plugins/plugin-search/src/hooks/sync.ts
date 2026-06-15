@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+import { Entity, Obj, Type } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
-import { type SearchResult } from '../types';
+import { type SearchResult } from '#types';
 
 export const queryStringToMatch = (queryString?: string): RegExp | undefined => {
   const trimmed = queryString?.trim();
@@ -15,8 +15,12 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undefined => {
-  if (!(schema && SchemaAST.isTypeLiteral(schema.ast))) {
+const getIcon = (type: Type.AnyEntity | undefined): string | undefined => {
+  if (!type) {
+    return undefined;
+  }
+  const schema = Type.getSchema(type);
+  if (!SchemaAST.isTypeLiteral(schema.ast)) {
     return undefined;
   }
   const keys = schema.ast.propertySignatures.map((p) => p.name);
@@ -38,39 +42,34 @@ const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undef
 export type TextFields = Record<string, string>;
 
 // TODO(thure): This returns `SearchResult[]` which is not just a narrower set of objects as the name implies.
-export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], match?: RegExp): SearchResult[] => {
+export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?: RegExp): SearchResult<T>[] => {
   if (!match) {
     return [];
   }
 
-  return objects.reduce<SearchResult[]>((results, object) => {
+  return objects.reduce<SearchResult<T>[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof DataType.Text) {
+    if (Obj.instanceOf(Text.Text, object)) {
       return results;
     }
 
     const fields = mapObjectToTextFields(object);
     Object.entries(fields).some(([, value]) => {
-      const result = value.match(match);
-      if (result) {
-        // TODO(burdon): Use schema.
-        const label = getStringProperty(object, ['label', 'name', 'title']);
+      // TODO(burdon): Use schema.
+      const label = Obj.getLabel(object as any);
 
-        results.push({
-          id: object.id,
-          type: getIcon(Obj.getSchema(object)),
-          label,
-          match,
-          // TODO(burdon): Truncate.
-          // TODO(burdon): Issue with sketch documents.
-          snippet: value !== label ? value : fields.content ?? fields.description ?? undefined,
-          object,
-        });
+      results.push({
+        id: object.id,
+        type: getIcon(Entity.getType(object)),
+        label,
+        match,
+        // TODO(burdon): Truncate.
+        // TODO(burdon): Issue with sketch documents.
+        snippet: value !== label ? value : (fields.content ?? fields.description ?? undefined),
+        object,
+      });
 
-        return true;
-      }
-
-      return false;
+      return true;
     });
 
     return results;
@@ -94,13 +93,13 @@ export const getStringProperty = (object: any, keys: string[]): string | undefin
 };
 
 // TODO(burdon): Filter system fields.
-const getKeys = (object: Record<string, unknown>): string[] => {
+const getKeys = <T extends Entity.Unknown>(object: T): string[] => {
   try {
     const obj = JSON.parse(JSON.stringify(object));
     return Object.keys(obj).filter(
       (key) => key !== 'id' && key !== 'identityKey' && key[0] !== '_' && key[0] !== '@',
     ) as string[];
-  } catch (err) {
+  } catch {
     // TODO(burdon): Error with TLDraw sketch.
     //  Uncaught Error: Type with the name content has already been defined with a different constructor
     return [];
@@ -108,13 +107,13 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 };
 
 // TODO(burdon): Use ECHO schema.
-export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
+export const mapObjectToTextFields = <T extends Entity.Unknown>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
-    const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof DataType.Text) {
+    const value = (object as any)[key];
+    if (typeof value === 'string' || Obj.instanceOf(Text.Text, value)) {
       try {
         fields[key] = String(value);
-      } catch (err) {
+      } catch {
         // TODO(burdon): Exception when parsing sketch document.
       }
     }

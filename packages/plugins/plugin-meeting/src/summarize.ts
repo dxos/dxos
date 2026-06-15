@@ -2,42 +2,79 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DEFAULT_EDGE_MODEL, type AiServiceClient, Message, MixedStreamParser } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
+import type * as AiError from '@effect/ai/AiError';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import {
+  type AiModelNotAvailableError,
+  AiService,
+  type AiToolNotFoundError,
+  type PromptPreprocessingError,
+  ToolExecutionService,
+  ToolResolverService,
+} from '@dxos/ai';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { type AiAssistantError, AiRequest } from '@dxos/assistant';
+import { Trace, Operation } from '@dxos/compute';
+import { Database, Type } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TranscriptType } from '@dxos/plugin-transcription/types';
+import { Transcript } from '@dxos/types';
+import { trim } from '@dxos/util';
 
-import { type MeetingType } from './types';
+import { type Meeting } from '#types';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
-export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
+export const getMeetingContent = async (
+  meeting: Meeting.Meeting,
+  textContentCapabilities: AppCapabilities.TextContent[],
+) => {
   const notes = await meeting.notes.load();
-  const { getTextContent } = resolve(Type.getTypename(TranscriptType)!);
   const transcript = await meeting.transcript.load();
-  const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
+  const textContent = textContentCapabilities.find(({ id }) => id === Type.getTypename(Transcript.Transcript));
+  const content = `${await textContent?.getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };
 
-export const summarizeTranscript = async (ai: AiServiceClient, content: string): Promise<string> => {
-  log.info('summarizing meeting', { contentLength: content.length });
+export const summarizeTranscript: (content: string) => Effect.Effect<
+  string,
+  // TODO(dmaretskyi): There should be a clear re-export for all AI-related errors.
+  AiAssistantError | PromptPreprocessingError | AiModelNotAvailableError | AiToolNotFoundError | AiError.AiError,
+  AiService.AiService
+> = Effect.fn('summarizeTranscript')(
+  function* (content) {
+    log.info('summarizing meeting', { contentLength: content.length });
 
-  const parser = new MixedStreamParser();
-  const output = await parser.parse(
-    await ai.execStream({
-      model: DEFAULT_EDGE_MODEL,
-      systemPrompt: SUMMARIZE_PROMPT,
-      history: [Obj.make(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
-    }),
-  );
+    const output = yield* new AiRequest.Request().run({
+      system: SUMMARIZE_PROMPT,
+      prompt: content,
+    });
 
-  log.info('transcript summary', { output });
-  invariant(output[0].content[0].type === 'text', 'Expected text content');
-  return output[0].content[0].text;
-};
+    log.info('transcript summary', { output });
+    invariant(output[0].blocks[0]._tag === 'text', 'Expected text content');
+    return output[0].blocks[0].text;
+  },
+  Effect.provide(
+    Layer.mergeAll(
+      AiService.model('ai.claude.model.claude-haiku-4-5'),
+      ToolResolverService.layerEmpty,
+      ToolExecutionService.layerEmpty,
+      Trace.writerLayerNoop,
+      Database.notAvailable,
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Not available.'),
+        schedule: () => Effect.die('Not available.'),
+        invokePromise: async () => ({ error: new Error('Not available.') }),
+      } as any),
+      registryLayerNoop,
+    ),
+  ),
+);
 
 // TODO(dmaretskyi): Add example to set consistent structure for the summary.
-const SUMMARIZE_PROMPT = `
+const SUMMARIZE_PROMPT = trim`
   # Goal
   Create a markdown summary of the transcript provided.
 

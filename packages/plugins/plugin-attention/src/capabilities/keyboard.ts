@@ -2,25 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-import { Option } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { Capabilities as AppCapabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Keyboard } from '@dxos/keyboard';
 
-import { AttentionCapabilities } from './capabilities';
+import { AttentionCapabilities } from '#types';
 
-export default (context: PluginContext) => {
-  const { graph } = context.getCapability(AppCapabilities.AppGraph);
-  const attention = context.getCapability(AttentionCapabilities.Attention);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-  const unsubscribe = effect(() => {
-    const id = Array.from(attention.current)[0];
-    const path = id && graph.getPath({ target: id }).pipe(Option.getOrNull);
-    if (path) {
-      Keyboard.singleton.setCurrentContext(path.join('/'));
-    }
-  });
+    const unsubscribe = attention.subscribeCurrent((current) => {
+      const id = current[0];
+      if (id) {
+        Keyboard.singleton.setCurrentContext(id);
+      }
+    });
 
-  return contributes(AppCapabilities.Null, null, () => unsubscribe());
-};
+    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => unsubscribe()));
+  }),
+);

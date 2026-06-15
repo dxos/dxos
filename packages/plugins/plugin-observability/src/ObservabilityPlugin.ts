@@ -2,66 +2,88 @@
 // Copyright 2025 DXOS.org
 //
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
 import {
-  AppGraphBuilder,
   ClientReady,
-  IntentResolver,
-  ObservabilityCapabilities,
   ObservabilitySettings,
   ObservabilityState,
+  OperationHandler,
+  PrivacyNotice,
   ReactSurface,
-} from './capabilities';
-import { ObservabilityEvents, ClientReadyEvent } from './events';
-import { meta } from './meta';
-import translations from './translations';
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
 
-export const ObservabilityPlugin = (options: { namespace: string; observability: () => Promise<Observability> }) =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/observability`,
-      activatesOn: Events.Startup,
-      activate: async () => contributes(ObservabilityCapabilities.Observability, await options.observability()),
-    }),
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: ObservabilitySettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
-      activatesAfter: [ObservabilityEvents.StateReady],
-      activate: () => ObservabilityState({ namespace: options.namespace }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, namespace: options.namespace }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/client-ready`,
-      activatesOn: allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
-      activate: async (context) => {
-        const observability = await options.observability();
-        return ClientReady({ context, observability, namespace: options.namespace });
-      },
-    }),
-  ]);
+export type ObservabilityPluginOptions = {
+  namespace: string;
+  observability: () => Promise<Observability.Observability>;
+  /**
+   * Optional callback invoked by the help/feedback UI to download captured logs.
+   * When omitted the "Download logs" action is hidden.
+   */
+  downloadLogs?: () => void | Promise<void>;
+};
+
+export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(({ observability }) => ({
+    id: 'observability',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return Capability.contributes(ObservabilityCapabilities.Observability, obs);
+      }),
+  })),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ObservabilitySettings,
+  }),
+  Plugin.addModule(({ namespace }) => ({
+    id: Capability.getModuleTag(ObservabilityState),
+    activatesOn: ActivationEvents.Startup,
+    firesAfterActivation: [ObservabilityEvents.StateReady],
+    activate: () => ObservabilityState({ namespace }),
+  })),
+  Plugin.addModule(({ namespace }) => ({
+    id: 'namespace',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
+  })),
+  Plugin.addModule(({ downloadLogs }) => ({
+    id: 'log-downloader',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(
+        downloadLogs !== undefined ? Capability.contributes(ObservabilityCapabilities.LogDownloader, downloadLogs) : [],
+      ),
+  })),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.make('org.dxos.plugin.client.event.identity-created'),
+    activate: PrivacyNotice,
+  }),
+  Plugin.addModule(({ namespace, observability }) => ({
+    id: Capability.getModuleTag(ClientReady),
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.ProcessManagerReady,
+      ObservabilityEvents.StateReady,
+      ObservabilityEvents.ClientReadyEvent,
+    ),
+    activate: () =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return yield* ClientReady({ namespace, observability: obs });
+      }),
+  })),
+  Plugin.make,
+);
+
+export default ObservabilityPlugin;

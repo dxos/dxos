@@ -2,18 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useState, useCallback } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useCallback, useState } from 'react';
 
-import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { random } from '@dxos/random';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { Stack } from './Stack';
 import { StackItem } from '../StackItem';
-import { type StackItemData } from '../defs';
+import { type StackItemData } from '../types';
+import { Stack } from './Stack';
 
 type StoryStackItem = {
   id: string;
@@ -31,16 +29,16 @@ const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
 
 const DefaultStory = () => {
   const [columns, setColumns] = useState<StoryStackItem[]>(
-    faker.helpers.multiple(
+    random.helpers.multiple(
       () =>
         ({
-          id: faker.string.uuid(),
-          title: faker.lorem.paragraph(),
-          items: faker.helpers.multiple(
+          id: random.string.uuid(),
+          title: random.lorem.paragraph(),
+          items: random.helpers.multiple(
             () =>
               ({
-                id: faker.string.uuid(),
-                title: faker.lorem.paragraph(),
+                id: random.string.uuid(),
+                title: random.lorem.paragraph(),
               }) satisfies StoryStackItem,
             { count: { min: 32, max: 64 } },
           ),
@@ -78,7 +76,6 @@ const DefaultStory = () => {
             targetColumn.items
           ) {
             const [movedCard] = sourceColumn.items.splice(sourceCardIndex, 1);
-
             let insertIndex;
             if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
               insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
@@ -129,12 +126,12 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-stack/Stack',
   component: DefaultStory,
-  decorators: [withTheme],
   argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

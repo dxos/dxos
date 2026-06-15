@@ -2,18 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import type { Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Arrow, createPath } from './svg';
 import { testId } from './util';
 
 const DefaultStory = () => (
-  <svg className='border border-neutral-500 w-[30rem] h-[400px]'>
+  <svg className='border border-separator w-[30rem] h-[400px]'>
     <defs>
       <Arrow id='arrow-start' classNames='fill-none stroke-red-500' dir='start' />
       <Arrow id='arrow-end' classNames='fill-none stroke-red-500' dir='end' />
@@ -31,15 +29,17 @@ const DefaultStory = () => (
   </svg>
 );
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-canvas/svg',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

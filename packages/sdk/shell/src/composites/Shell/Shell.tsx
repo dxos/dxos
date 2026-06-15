@@ -4,16 +4,18 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import {
-  ShellDisplay,
-  ShellLayout,
   type InvitationUrlRequest,
   type LayoutRequest,
+  ShellDisplay,
+  ShellLayout,
   type ShellRuntime,
 } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { IdentityDialog } from '../IdentityDialog';
 import { JoinDialog } from '../JoinDialog';
@@ -38,7 +40,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     });
 
   const client = useClient();
-  const space = useSpace(spaceId ?? spaceKey);
+  const space = useSpace((spaceId as SpaceId | undefined) ?? spaceKey);
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -62,16 +64,11 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     };
   }, [runtime]);
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (layout === ShellLayout.SPACE && !space) {
       log.warn('No space found for shell space invitations.');
-
-      const timeout = setTimeout(async () => {
-        await runtime.setAppContext({ display: ShellDisplay.NONE });
-        runtime.setLayout({ layout: ShellLayout.DEFAULT });
-      });
-
-      return () => clearTimeout(timeout);
+      await runtime.setAppContext({ display: ShellDisplay.NONE });
+      runtime.setLayout({ layout: ShellLayout.DEFAULT });
     }
   }, [runtime, layout, space]);
 

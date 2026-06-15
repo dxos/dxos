@@ -2,36 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SchemaAST } from 'effect';
+import type * as SchemaAST from 'effect/SchemaAST';
 
-import { FormatEnum, ReferenceAnnotationId } from '@dxos/echo-schema';
-import { findAnnotation } from '@dxos/effect';
-import { type SchemaProperty } from '@dxos/schema';
-
-import { findArrayElementType } from './schema';
+import { Ref } from '@dxos/echo';
+import { type ReferenceAnnotationValue, ReferenceAnnotationId } from '@dxos/echo/Annotation';
+import { SchemaEx } from '@dxos/effect';
 
 type RefProps = {
   ast: SchemaAST.AST;
   isArray: boolean;
+  typename?: string;
 };
 
-export const getRefProps = (property: SchemaProperty<any>): RefProps | undefined => {
-  const { ast, format, array } = property;
-
-  // Direct reference.
-  if (format === FormatEnum.Ref) {
-    return { ast, isArray: false };
-  }
-
+export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
   // Array of references.
-  if (array) {
-    const elementType = findArrayElementType(ast);
+  if (SchemaEx.isArrayType(ast)) {
+    const elementType = SchemaEx.getArrayElementType(ast);
     if (elementType) {
-      const annotation = findAnnotation(elementType, ReferenceAnnotationId);
-      if (annotation) {
-        return { ast: elementType, isArray: true };
+      if (Ref.isRefType(elementType)) {
+        const typename = SchemaEx.findAnnotation<ReferenceAnnotationValue>(
+          elementType,
+          ReferenceAnnotationId,
+        )?.typename;
+        return { ast: elementType, isArray: true, typename };
       }
     }
+  }
+
+  // Direct reference.
+  if (Ref.isRefType(ast)) {
+    const typename = SchemaEx.findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename;
+    return { ast, isArray: false, typename };
   }
 
   return undefined;

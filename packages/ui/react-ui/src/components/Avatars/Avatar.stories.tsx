@@ -2,17 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
-import { type HuePalette } from '@dxos/react-ui-theme';
-import { type Size } from '@dxos/react-ui-types';
+import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
-import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 import { withTheme } from '../../testing';
+import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
-type StoryProps = {
+type DefaultStoryProps = PropsWithChildren<{
   id?: string;
   imgSrc?: string;
   fallbackText?: string;
@@ -22,10 +21,10 @@ type StoryProps = {
   variant?: AvatarVariant;
   animation?: AvatarAnimation;
   size?: Size;
-  hue?: HuePalette;
-};
+  hue?: ChromaticPalette;
+}>;
 
-const DefaultStory = (props: PropsWithChildren<StoryProps>) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const {
     id = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     status,
@@ -55,16 +54,18 @@ const DefaultStory = (props: PropsWithChildren<StoryProps>) => {
   );
 };
 
-export default {
-  title: 'ui/react-ui-core/Avatar',
-  component: Avatar,
-  render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+const meta = {
+  title: 'ui/react-ui-core/components/Avatar',
+  component: Avatar.Root,
+  decorators: [withTheme()],
+} satisfies Meta<typeof Avatar.Root>;
+
+export default meta;
 
 const sampleImage =
-  'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-is-surrounded-by-image_2931163.jpg';
+  'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-w-surrounded-by-image_2931163.jpg';
+
+const brokenImage = 'https://png.pngtree.com/potato_squirrel.png';
 
 const row = (size: Size) => (
   <>
@@ -94,6 +95,12 @@ export const Default = () => (
 export const Image = () => (
   <div>
     <DefaultStory variant='circle' imgSrc={sampleImage} />
+  </div>
+);
+
+export const BrokenImage = () => (
+  <div>
+    <DefaultStory variant='circle' imgSrc={brokenImage} />
   </div>
 );
 

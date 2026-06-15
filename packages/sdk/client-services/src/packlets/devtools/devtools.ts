@@ -11,14 +11,21 @@ import {
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
+  type ExportSqliteDatabaseResponse,
+  type GetBlobsResponse,
   type GetConfigResponse,
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
+  type GetSnapshotsResponse,
   type GetSpaceSnapshotRequest,
   type GetSpaceSnapshotResponse,
   type ResetStorageRequest,
+  type RunSqliteQueryRequest,
+  type RunSqliteQueryResponse,
   type SaveSpaceSnapshotRequest,
   type SaveSpaceSnapshotResponse,
+  type SignalResponse,
+  type StorageInfo,
   type SubscribeToCredentialMessagesRequest,
   type SubscribeToCredentialMessagesResponse,
   type SubscribeToFeedBlocksRequest,
@@ -29,42 +36,40 @@ import {
   type SubscribeToItemsResponse,
   type SubscribeToKeyringKeysRequest,
   type SubscribeToKeyringKeysResponse,
+  type SubscribeToMetadataResponse,
   type SubscribeToNetworkTopicsResponse,
+  type SubscribeToSignalStatusResponse,
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
-  type SubscribeToSignalStatusResponse,
-  type SignalResponse,
   type SubscribeToSwarmInfoResponse,
-  type StorageInfo,
-  type GetSnapshotsResponse,
-  type SubscribeToMetadataResponse,
-  type GetBlobsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 
+import { type ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';
 import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
 import { subscribeToSpaces } from './spaces';
-import { type ServiceContext } from '../services';
 
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();
 }
 
-export type DevtoolsServiceParams = {
+export type DevtoolsServiceProps = {
   events: DevtoolsHostEvents;
   config: Config;
   context: ServiceContext;
+  exportSqliteDatabase: () => Promise<Uint8Array>;
+  runSqliteQuery: (query: string, params?: unknown[]) => Promise<readonly Record<string, unknown>[]>;
 };
 
 /**
  * @deprecated
  */
 export class DevtoolsServiceImpl implements DevtoolsHost {
-  constructor(private readonly params: DevtoolsServiceParams) {}
+  constructor(private readonly params: DevtoolsServiceProps) {}
 
-  events(request: void): Stream<Event> {
+  events(_request: void): Stream<Event> {
     return new Stream<Event>(({ next }) => {
       this.params.events.ready.on(() => {
         next({ ready: {} });
@@ -72,18 +77,16 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     });
   }
 
-  async getConfig(request: void): Promise<GetConfigResponse> {
+  async getConfig(_request: void): Promise<GetConfigResponse> {
     return { config: JSON.stringify(this.params.config.values) }; // 😨
   }
 
   async getStorageInfo(): Promise<StorageInfo> {
-    const storageUsage = (await this.params.context.storage.getDiskInfo?.()) ?? { used: 0 };
-
     const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
 
     return {
-      type: this.params.context.storage.type,
-      storageUsage: storageUsage.used,
+      type: 'sqlite',
+      storageUsage: navigatorInfo?.usage ?? 0,
       originUsage: navigatorInfo?.usage ?? 0,
       usageQuota: navigatorInfo?.quota ?? 0,
     };
@@ -101,65 +104,65 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
     };
   }
 
-  resetStorage(request: ResetStorageRequest): Promise<void> {
+  resetStorage(_request: ResetStorageRequest): Promise<void> {
     throw new Error();
   }
 
-  enableDebugLogging(request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
+  enableDebugLogging(_request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
     throw new Error();
   }
 
-  disableDebugLogging(request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
+  disableDebugLogging(_request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
     throw new Error();
   }
 
-  subscribeToKeyringKeys(request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
+  subscribeToKeyringKeys(_request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
     return subscribeToKeyringKeys({ keyring: this.params.context.keyring });
   }
 
   subscribeToCredentialMessages(
-    request: SubscribeToCredentialMessagesRequest,
+    _request: SubscribeToCredentialMessagesRequest,
   ): Stream<SubscribeToCredentialMessagesResponse> {
     throw new Error();
   }
 
-  subscribeToSpaces(request: SubscribeToSpacesRequest): Stream<SubscribeToSpacesResponse> {
-    return subscribeToSpaces(this.params.context, request);
+  subscribeToSpaces(_request: SubscribeToSpacesRequest): Stream<SubscribeToSpacesResponse> {
+    return subscribeToSpaces(this.params.context, _request);
   }
 
-  subscribeToItems(request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
+  subscribeToItems(_request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
     throw new Error();
   }
 
-  subscribeToFeeds(request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    return subscribeToFeeds(this.params.context, request);
+  subscribeToFeeds(_request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
+    return subscribeToFeeds(this.params.context, _request);
   }
 
-  subscribeToFeedBlocks(request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
-    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request);
+  subscribeToFeedBlocks(_request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
+    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, _request);
   }
 
-  getSpaceSnapshot(request: GetSpaceSnapshotRequest): Promise<GetSpaceSnapshotResponse> {
+  getSpaceSnapshot(_request: GetSpaceSnapshotRequest): Promise<GetSpaceSnapshotResponse> {
     throw new Error();
   }
 
-  saveSpaceSnapshot(request: SaveSpaceSnapshotRequest): Promise<SaveSpaceSnapshotResponse> {
+  saveSpaceSnapshot(_request: SaveSpaceSnapshotRequest): Promise<SaveSpaceSnapshotResponse> {
     throw new Error();
   }
 
-  clearSnapshots(request: ClearSnapshotsRequest): Promise<void> {
+  clearSnapshots(_request: ClearSnapshotsRequest): Promise<void> {
     throw new Error();
   }
 
-  getNetworkPeers(request: GetNetworkPeersRequest): Promise<GetNetworkPeersResponse> {
+  getNetworkPeers(_request: GetNetworkPeersRequest): Promise<GetNetworkPeersResponse> {
     throw new Error();
   }
 
-  subscribeToNetworkTopics(request: void): Stream<SubscribeToNetworkTopicsResponse> {
+  subscribeToNetworkTopics(_request: void): Stream<SubscribeToNetworkTopicsResponse> {
     throw new Error();
   }
 
-  subscribeToSignalStatus(request: void): Stream<SubscribeToSignalStatusResponse> {
+  subscribeToSignalStatus(_request: void): Stream<SubscribeToSignalStatusResponse> {
     return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
   }
 
@@ -173,5 +176,24 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
     return subscribeToMetadata({ context: this.params.context });
+  }
+
+  async exportSqliteDatabase(): Promise<ExportSqliteDatabaseResponse> {
+    return {
+      data: await this.params.exportSqliteDatabase(),
+    };
+  }
+
+  async runSqliteQuery(request: RunSqliteQueryRequest): Promise<RunSqliteQueryResponse> {
+    try {
+      const parsedParams = request.params ? JSON.parse(request.params) : undefined;
+      if (parsedParams !== undefined && !Array.isArray(parsedParams)) {
+        throw new Error('Query params must be a JSON array.');
+      }
+      const rows = await this.params.runSqliteQuery(request.query, parsedParams);
+      return { rows: JSON.stringify(rows) };
+    } catch (err) {
+      return { rows: '[]', error: err instanceof Error ? err.message : String(err) };
+    }
   }
 }

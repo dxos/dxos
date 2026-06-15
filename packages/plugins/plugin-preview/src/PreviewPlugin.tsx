@@ -2,34 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType } from '@dxos/schema';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { Organization, Person } from '@dxos/types';
 
-import { PreviewPopover, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
+import { PreviewPopover, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const PreviewPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization])],
-    }),
-    defineModule({
-      id: `${meta.id}/module/preview-popover`,
-      activatesOn: Events.Startup,
-      activate: PreviewPopover,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-  ]);
+export const PreviewPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addSchemaModule({ schema: [Person.Person, Organization.Organization] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'preview-popover',
+    activatesOn: ActivationEvents.Startup,
+    activate: PreviewPopover,
+  }),
+  Plugin.make,
+);
+
+export default PreviewPlugin;

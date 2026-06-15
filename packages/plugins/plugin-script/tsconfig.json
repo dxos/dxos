@@ -3,12 +3,12 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "target": "ES2020",
     "types": [
       "node"
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -19,19 +19,16 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -46,31 +43,34 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/functions-simulator-cloudflare"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-protocol"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../core/functions"
+      "path": "../../core/echo/echo-query"
     },
     {
       "path": "../../core/mesh/rpc"
@@ -88,19 +88,25 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-edge-client"
+      "path": "../../sdk/schema"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -109,13 +115,13 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-menu"
@@ -127,16 +133,31 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-automation"
+    },
+    {
+      "path": "../plugin-chess"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
+      "path": "../plugin-explorer"
     },
     {
-      "path": "../plugin-explorer"
+      "path": "../plugin-game"
     },
     {
       "path": "../plugin-graph"
@@ -148,13 +169,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack"
-    },
-    {
-      "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-token-manager"
+      "path": "../plugin-testing"
     }
   ]
 }

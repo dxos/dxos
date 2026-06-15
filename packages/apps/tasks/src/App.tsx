@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
+import React, { useEffect, useMemo } from 'react';
 import {
   Navigate,
   RouterProvider,
@@ -12,19 +14,21 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { parseId } from '@dxos/keys';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { useSpace, useQuery, Filter, Query } from '@dxos/react-client/echo';
+import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
-import { TaskList } from './TaskList';
 import { getConfig } from './config';
+import { TaskList } from './TaskList';
 import { Task } from './types';
 
 export const TaskListContainer = () => {
-  const { spaceKey } = useParams<{ spaceKey: string }>();
+  const { spaceProp } = useParams<{ spaceProp: string }>();
 
-  const space = useSpace(spaceKey);
-  const tasks = useQuery(space, Query.select(Filter.type(Task)));
+  const { spaceId } = parseId(spaceProp);
+  const space = useSpace(spaceId);
+  const tasks = useQuery(space?.db, Query.select(Filter.type(Task)));
   const shell = useShell();
 
   return (
@@ -45,52 +49,46 @@ export const TaskListContainer = () => {
       onTaskRemove={(task) => {
         space?.db.remove(task);
       }}
-      onTaskTitleChange={(task, newTitle) => {
-        task.title = newTitle;
-      }}
-      onTaskCheck={(task, checked) => {
-        task.completed = checked;
-      }}
     />
   );
 };
 
 export const Home = () => {
-  const space = useSpace();
+  const [space] = useSpaces();
   const shell = useShell();
-  const [search, setSearchParams] = useSearchParams();
+  const [search, setSearchProps] = useSearchParams();
   const invitationCode = search.get('spaceInvitationCode');
   const deviceInvitationCode = search.get('deviceInvitationCode');
   const navigate = useNavigate();
 
   useEffect(() => {
     if (deviceInvitationCode) {
-      // TODO(???): desired API for joining a device.
+      // TODO(wittjosiah): desired API for joining a device.
       // shell.joinDevice({ invitationCode: deviceInvitationCode });
-      setSearchParams((p) => {
+      setSearchProps((p) => {
         p.delete('deviceInvitationCode');
         return p;
       });
     } else if (invitationCode) {
-      setSearchParams((p) => {
+      setSearchProps((p) => {
         p.delete('spaceInvitationCode');
         return p;
       });
       void (async () => {
         const { space } = await shell.joinSpace({ invitationCode });
         if (space) {
-          navigate(`/space/${space.key}`);
+          navigate(`/space/${space.id}`);
         }
       })();
     }
   }, [invitationCode, deviceInvitationCode]);
 
-  return space ? <Navigate to={`/space/${space.key}`} /> : null;
+  return space ? <Navigate to={`/space/${space.id}`} /> : null;
 };
 
 const router = createBrowserRouter([
   {
-    path: '/space/:spaceKey',
+    path: '/space/:spaceProp',
     element: <TaskListContainer />,
   },
   {
@@ -106,6 +104,9 @@ const createWorker = () =>
   });
 
 export const App = () => {
+  // Create a registry instance for atom reactivity
+  const registry = useMemo(() => Registry.make(), []);
+
   return (
     <ClientProvider
       config={getConfig}
@@ -113,13 +114,15 @@ export const App = () => {
       shell='./shell.html'
       types={[Task]}
       onInitialized={async (client) => {
-        const searchParams = new URLSearchParams(location.search);
-        if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
+        const searchProps = new URLSearchParams(location.search);
+        if (!client.halo.identity.get() && !searchProps.has('deviceInvitationCode')) {
           await client.halo.createIdentity();
         }
       }}
     >
-      <RouterProvider router={router} />
+      <RegistryContext.Provider value={registry}>
+        <RouterProvider router={router} />
+      </RegistryContext.Provider>
     </ClientProvider>
   );
 };

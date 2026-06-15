@@ -2,34 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
 export const Todo = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}).pipe(
-  Type.Obj({
-    typename: 'example.com/type/Todo',
-    version: '0.1.0',
-  }),
-);
-export type Todo = Schema.Schema.Type<typeof Todo>;
+}).pipe(Type.makeObject(DXN.make('com.example.type.todo', '0.1.0')));
+export type Todo = Type.InstanceType<typeof Todo>;
 
 export const TodoList = Schema.Struct({
-  todos: Schema.Array(Type.Ref(Todo)),
-}).pipe(
-  Type.Obj({
-    typename: 'example.com/type/TodoList',
-    version: '0.1.0',
-  }),
-);
-export type TodoList = Schema.Schema.Type<typeof TodoList>;
+  todos: Schema.Array(Ref.Ref(Todo)),
+}).pipe(Type.makeObject(DXN.make('com.example.type.todoList', '0.1.0')));
+export type TodoList = Type.InstanceType<typeof TodoList>;
 
-export const createTodoList = (space: Space) => {
+/** Typed annotation storing the root TodoList reference on space properties. */
+export const TodoListAnnotation = Annotation.make({
+  id: 'com.example.annotation.todoList',
+  schema: Ref.Ref(TodoList),
+});
+
+export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));
-  space.properties[Type.getTypename(TodoList)] = Ref.make(list);
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, TodoListAnnotation, Ref.make(list));
+  });
   return list;
 };

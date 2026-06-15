@@ -1,19 +1,25 @@
 {
   "name": "@dxos/shell",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/bundle/shell.js"
     },
-    "./style.css": "./dist/bundle/style.css",
+    "./style.css": "./dist/bundle/shell.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
@@ -29,16 +35,6 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "react": [
-        "dist/types/src/react.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -46,31 +42,24 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/client-services": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@emoji-mart/data": "^1.1.2",
-    "@emoji-mart/react": "^1.1.1",
-    "@fluentui/react-tabster": "^9.24.2",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@radix-ui/react-accordion": "1.2.3",
-    "@radix-ui/react-context": "1.1.1",
-    "@radix-ui/react-radio-group": "1.2.3",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
-    "@xstate/react": "^3.2.1",
-    "date-fns": "^3.3.1",
-    "emoji-mart": "^5.5.2",
-    "react-qr-rounded": "^1.0.0",
-    "url-join": "^5.0.0",
-    "xstate": "^4.37.0"
+    "@fluentui/react-tabster": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "@xstate/react": "catalog:",
+    "date-fns": "catalog:",
+    "react-qr-rounded": "catalog:",
+    "scheduler": "catalog:",
+    "use-sync-external-store": "catalog:",
+    "xstate": "catalog:"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
@@ -79,26 +68,29 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "@dxos/ui-theme": "workspace:*",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "rolldown": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5"
+    "@dxos/ui-theme": "workspace:*",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:"
   },
   "publishConfig": {
     "access": "public"

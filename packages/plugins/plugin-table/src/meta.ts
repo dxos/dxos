@@ -2,16 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
-export const TABLE_PLUGIN = 'dxos.org/plugin/table';
-
-export const meta: PluginMeta = {
-  id: TABLE_PLUGIN,
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.table'),
   name: 'Tables',
-  description:
-    'Tables in Composer allow you to create or display structured data. Composer Tables store their data locally inside of your ECHO database and can be linked to one another relationally. Tables can be created manually, or by prompting your AI chat assistant. Like all other plugins, Table data is available to the LLM in real time to provide additional content for any automated workflow.',
+  author: 'DXOS',
+  description: trim`
+    Tables brings structured, spreadsheet-style data views to DXOS Composer.
+    Any ECHO schema type can be bound to a Table, giving users a familiar grid interface
+    for browsing, creating, and editing objects stored in a local-first collaborative space.
+
+    Columns are derived automatically from the schema's fields and persisted in a View object
+    alongside the table. Rows can be inserted inline, sorted by column, filtered by tag or
+    global search, and deleted with multi-row selection — all changes are replicated in
+    real-time across peers via ECHO.
+
+    The plugin integrates deeply with the Composer lifecycle: a default Task table is created
+    when a new space is initialised, and a table is automatically opened whenever a new schema
+    type is added to a space. An AI blueprint lets agents create and populate tables
+    programmatically using the plugin's operation set.
+  `,
   icon: 'ph--table--regular',
+  iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-table',
+  spec: 'PLUGIN.mdl',
   screenshots: ['https://dxos.network/plugin-details-tables-dark.png'],
-};
+});

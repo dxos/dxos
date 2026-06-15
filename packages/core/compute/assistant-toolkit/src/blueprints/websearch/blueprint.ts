@@ -1,0 +1,30 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Blueprint } from '@dxos/compute';
+import { Ref } from '@dxos/echo';
+import { Text } from '@dxos/schema';
+
+import { Fetch } from './operations/definitions';
+
+const BLUEPRINT_KEY = 'org.dxos.blueprint.webSearch';
+
+const make = () =>
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
+    name: 'Web Search',
+    description: 'Search the web.',
+    agentCanEnable: true,
+    instructions: {
+      source: Ref.make(Text.make()),
+    },
+    tools: Blueprint.toolDefinitions({ operations: [Fetch] }),
+  });
+
+const blueprint: Blueprint.Definition = {
+  key: BLUEPRINT_KEY,
+  make,
+};
+
+export default blueprint;

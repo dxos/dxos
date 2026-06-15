@@ -4,15 +4,17 @@
 
 import React, { useCallback } from 'react';
 
+import { type DxGridCellIndex, type GridScopedProps, useGridContext } from '../Grid';
 import { CellEditor, type CellEditorProps } from './CellEditor';
-import { type GridScopedProps, useGridContext, type DxGridCellIndex } from '../Grid';
 
 export type GridCellEditorProps = GridScopedProps<
-  Pick<CellEditorProps, 'extension' | 'onBlur'> & { getCellContent: (index: DxGridCellIndex) => string | undefined }
+  Pick<CellEditorProps, 'extensions' | 'onBlur' | 'slots'> & {
+    getCellContent: (index: DxGridCellIndex) => string | undefined;
+  }
 >;
 
-export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope }: GridCellEditorProps) => {
-  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+export const GridCellEditor = ({ extensions, getCellContent, onBlur, slots, __gridScope }: GridCellEditorProps) => {
+  const { id, editing, setEditing, editBox } = useGridContext('GridCellEditor', __gridScope);
 
   const handleBlur = useCallback(
     (value?: string) => {
@@ -28,8 +30,9 @@ export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope 
       autoFocus
       box={editBox}
       onBlur={handleBlur}
-      extension={extension}
+      extensions={extensions}
       gridId={id}
+      slots={slots}
     />
   ) : null;
 };

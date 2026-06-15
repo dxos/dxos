@@ -2,77 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type StoryObj, type Meta } from '@storybook/react';
-import { type SerializedStore } from '@tldraw/store';
-import { type TLRecord } from '@tldraw/tldraw';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { createObject } from '@dxos/echo-client';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Sketch } from './Sketch';
+import { data } from '#testing';
+import { Sketch } from '#types';
+
 import { migrateCanvas } from '../../migrations';
-import { data } from '../../testing';
-import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
-
-const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
-  // TODO(burdon): Remove dependency on echo-db.
-  return Obj.make(DiagramType, {
-    canvas: Ref.make(Obj.make(CanvasType, { schema: TLDRAW_SCHEMA, content })),
-  });
-};
+import { SketchComponent } from './Sketch';
 
 const DefaultStory = () => {
-  const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
+  const [sketch, setSketch] = useState(createObject(Sketch.make({ canvas: { content: data.v2 } })));
 
   const handleClear = () => {
-    const sketch = createSketch();
+    const sketch = createObject(Sketch.make());
     setSketch(sketch);
   };
 
   const handleCreate = () => {
-    const sketch = createSketch(data.v2);
+    const sketch = createObject(Sketch.make({ canvas: { content: data.v2 } }));
     console.log(JSON.stringify(sketch, undefined, 2));
     setSketch(sketch);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
-    setSketch(createSketch(content));
+    setSketch(createObject(Sketch.make({ canvas: { content } })));
   };
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <Toolbar.Root classNames='p-1'>
-        <Button variant='primary' onClick={handleClear}>
-          Clear
-        </Button>
-        <Button variant='ghost' onClick={handleCreate}>
-          Create
-        </Button>
-        <Button variant='ghost' onClick={handleMigrate}>
-          Load V1 Sample
-        </Button>
-      </Toolbar.Root>
-      <div className='flex grow overflow-hidden'>
-        <Sketch sketch={sketch} assetsBaseUrl={null} autoZoom />
-      </div>
-    </div>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Button variant='primary' onClick={handleClear}>
+            Clear
+          </Button>
+          <Button variant='ghost' onClick={handleCreate}>
+            Create
+          </Button>
+          <Button variant='ghost' onClick={handleMigrate}>
+            Load V1 Sample
+          </Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
-const meta: Meta<typeof Sketch> = {
-  title: 'plugins/plugin-sketch/Sketch',
-  component: Sketch,
+const meta = {
+  title: 'plugins/plugin-sketch/components/Sketch',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

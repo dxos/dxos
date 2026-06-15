@@ -3,24 +3,31 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 
-import { EXPLORER_PLUGIN } from './meta';
-import { ViewType } from './types';
+import { meta } from '#meta';
+import { Graph } from '#types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ViewType)]: {
-        'typename label': 'Explorer',
-        'typename label_zero': 'Explorers',
-        'typename label_one': 'Explorer',
-        'typename label_other': 'Explorers',
-        'object name placeholder': 'New explorer',
+      [Type.getTypename(Graph.Graph)]: {
+        'typename.label': 'Explorer',
+        'typename.label_zero': 'Explorers',
+        'typename.label_one': 'Explorer',
+        'typename.label_other': 'Explorers',
+        'object-name.placeholder': 'New explorer',
+        'add-object.label': 'Add explorer',
+        'rename-object.label': 'Rename explorer',
+        'delete-object.label': 'Delete explorer',
+        'object-deleted.label': 'Explorer deleted',
       },
-      [EXPLORER_PLUGIN]: {
-        'plugin name': 'Explorer',
-        'object title label': 'Title',
+      [meta.id]: {
+        'plugin.name': 'Explorer',
+        'object-title.label': 'Title',
       },
     },
   },
-];
+  ...componentsTranslations,
+] as const satisfies Resource[];

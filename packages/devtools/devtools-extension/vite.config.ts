@@ -2,27 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
-import { defineConfig } from 'vite';
-// import { VitePluginFonts } from 'vite-plugin-fonts';
+// import VitePluginFonts from 'unplugin-fonts/vite';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
+import ReactPlugin from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
+import { defineConfig } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import packageJson from './package.json';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  root: __dirname,
   esbuild: {
     keepNames: true,
   },
   build: {
+    outDir: 'out/devtools-extension',
     sourcemap: true,
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
@@ -31,6 +32,18 @@ export default defineConfig({
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
         panel: resolve(__dirname, 'panel.html'),
       },
+      // `@anthropic-ai/tokenizer` is a CJS-only package whose transitive `tiktoken`
+      // wasm import contains top-level await. Rolldown rejects mixing TLA with
+      // require(); externalize the tokenizer chain. The Chrome extension bundle
+      // never actually exercises this LLM tokenization code path.
+      external: ['@anthropic-ai/tokenizer', 'tiktoken', 'tiktoken/lite', /^tiktoken\//],
+    },
+  },
+  resolve: {
+    alias: {
+      // `@anthropic-ai/tokenizer` transitively pulls in `tiktoken/lite`, whose wasm uses top-level await
+      // that rolldown can't put behind a CJS require. The tokenizer isn't needed in the extension bundle.
+      ['tiktoken/lite']: resolve(__dirname, 'stub.mjs'),
     },
   },
   worker: {
@@ -39,22 +52,20 @@ export default defineConfig({
   },
   plugins: [
     SourceMapsPlugin(),
-    ConfigPlugin(),
-    ThemePlugin({
-      root: __dirname,
-      content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
-    }),
+    ConfigPlugin({ root: __dirname }),
+    ThemePlugin({}),
 
     WasmPlugin(),
 
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
 
     ChromeExtensionPlugin({
       manifest: {
         manifest_version: 3,
         version: packageJson.version,
-        author: 'DXOS.org',
+        author: {
+          email: 'hello@dxos.org',
+        },
         name: 'DXOS Client Developer Tools',
         short_name: 'DXOS DevTools',
         description: 'Debugging tools for DXOS Client in the Chrome developer console.',
@@ -87,25 +98,11 @@ export default defineConfig({
       },
     }),
 
-    // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-    // https://www.npmjs.com/package/@sentry/vite-plugin
-    // TODO(wittjosiah): Seems to have some conflict with the chrome extension plugin.
-    //   If only one is included it builds but fails with both.
-    // sentryVitePlugin({
-    //   org: 'dxos',
-    //   project: 'devtools-extension',
-    //   sourcemaps: {
-    //     assets: './packages/devtools/devtools-extension/out/devtools-extension/**'
-    //   },
-    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-    //   disable: process.env.DX_ENVIRONMENT !== 'production'
-    // })
-
     // Add "style-src 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'unsafe-inline' https://fonts.googleapis.com" in content_security_policy in manifest.json when uncommenting this.
     /**
      * Bundle fonts.
      * https://fonts.google.com
-     * https://www.npmjs.com/package/vite-plugin-fonts
+     * https://www.npmjs.com/package/unplugin-fonts
      */
     // VitePluginFonts({
     //   google: {

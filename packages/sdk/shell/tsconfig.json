@@ -20,13 +20,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/display-name"
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -53,7 +53,7 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -62,16 +62,10 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/react-ui-types"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../client-protocol"
-    },
-    {
-      "path": "../client-services"
     },
     {
       "path": "../config"

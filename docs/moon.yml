@@ -1,0 +1,44 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+tasks:
+  build:
+    deps:
+      - prebuild
+    options:
+      mergeOutputs: replace
+    outputs: []
+  bundle:
+    command: pnpm exec astro build
+    deps:
+      - ^:build
+      - build
+      - typedoc
+    inputs:
+      - astro.config.ts
+      - '@group(sources)'
+    outputs:
+      - .astro
+      - dist
+  prebuild:
+    command: pnpm exec astro sync
+    inputs:
+      - astro.config.ts
+      - '@group(sources)'
+    outputs:
+      - .astro
+  serve:
+    command: pnpm exec astro dev
+    deps:
+      - ^:build
+      - typedoc
+    preset: server
+  typedoc:
+    command: pnpm run --silent typedoc
+    deps:
+      - ^:typedoc
+    inputs:
+      - scripts/collect-typedoc.sh
+    outputs:
+      - public/typedoc

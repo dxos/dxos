@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArchive } from '@phosphor-icons/react';
 import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
@@ -18,8 +17,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { DropdownMenu, Icon, ScrollArea, Toolbar, Tree, TreeItem } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
@@ -41,7 +39,7 @@ type SelectionValue =
 
 type Node = {
   id: string;
-  Icon: FC;
+  iconName: string;
   Element: ReactNode;
   items?: Node[];
   value?: SelectionValue;
@@ -55,7 +53,7 @@ const getInfoTree = (
 ): Node[] => [
   {
     id: 'origin',
-    Icon: GitCommit,
+    iconName: 'ph--git-commit--regular',
     Element: (
       <TreeItemText
         primary='origin'
@@ -67,27 +65,27 @@ const getInfoTree = (
     items: [
       {
         id: 'storage',
-        Icon: HardDrive,
+        iconName: 'ph--hard-drive--regular',
         Element: <TreeItemText primary={storageInfo.type} secondary={bytes.format(storageInfo.storageUsage)} />,
         items: [
           {
             id: 'feeds',
-            Icon: Queue,
+            iconName: 'ph--queue--regular',
             Element: <TreeItemText primary='feeds' secondary={feedInfo.feeds?.length ?? 0} />,
             items: feedInfo.feeds?.map((feed) => ({
               id: feed.feedKey.toHex(),
-              Icon: Rows,
+              iconName: 'ph--rows--regular',
               Element: <TreeItemText primary={feed.feedKey.truncate()} secondary={bytes.format(feed.bytes)} />,
               value: { kind: 'feed', feed },
             })),
           },
           {
             id: 'blobs',
-            Icon: Files,
+            iconName: 'ph--files--regular',
             Element: <TreeItemText primary='blobs' secondary={blobs.length} />,
             items: blobs.map((blob) => ({
               id: PublicKey.from(blob.id).toHex(),
-              Icon: FileArchive,
+              iconName: 'ph--file-archive--regular',
               Element: (
                 <TreeItemText primary={PublicKey.from(blob.id).truncate()} secondary={bytes.format(blob.length)} />
               ),
@@ -96,11 +94,11 @@ const getInfoTree = (
           },
           {
             id: 'snapshots',
-            Icon: Bookmarks,
+            iconName: 'ph--bookmarks--regular',
             Element: <TreeItemText primary='snapshots' secondary={snapshots.length} />,
             items: snapshots.map((snapshot) => ({
               id: snapshot.key,
-              Icon: Bookmark,
+              iconName: 'ph--bookmark--regular',
               Element: <TreeItemText primary={snapshot.key} secondary={bytes.format(snapshot.size)} />,
               value: { kind: 'snapshot' },
             })),
@@ -208,7 +206,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      classNames={mx('grid grid-cols-2 divide-x divide-separator')}
+      classNames='grid grid-cols-2 divide-x divide-separator'
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
@@ -241,30 +239,32 @@ export const StoragePanel = () => {
       <DataTree items={items} onSelect={setSelected} />
 
       {selectedValue && (
-        <div className='flex flex-col divide-y divide-separator grow overflow-auto scrollbar-thin'>
-          {selectedValue.kind === 'blob' && (
-            <>
-              <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
-              <Bitbar
-                value={selectedValue.blob.bitfield ?? new Uint8Array()}
-                length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
-                className='m-2'
-              />
-              <JsonView data={selectedValue.blob} />
-            </>
-          )}
+        <ScrollArea.Root thin>
+          <ScrollArea.Viewport classNames='divide-y divide-separator'>
+            {selectedValue.kind === 'blob' && (
+              <>
+                <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>
+                <Bitbar
+                  value={selectedValue.blob.bitfield ?? new Uint8Array()}
+                  length={Math.ceil(selectedValue.blob.length / selectedValue.blob.chunkSize)}
+                  className='m-2'
+                />
+                <JsonView data={selectedValue.blob} />
+              </>
+            )}
 
-          {selectedValue.kind === 'feed' && (
-            <>
-              <Bitbar
-                value={selectedValue.feed.downloaded ?? new Uint8Array()}
-                length={Math.ceil(selectedValue.feed.length ?? 0)}
-                className='m-2'
-              />
-              <JsonView data={selectedValue.feed} />
-            </>
-          )}
-        </div>
+            {selectedValue.kind === 'feed' && (
+              <>
+                <Bitbar
+                  value={selectedValue.feed.downloaded ?? new Uint8Array()}
+                  length={Math.ceil(selectedValue.feed.length ?? 0)}
+                  className='m-2'
+                />
+                <JsonView data={selectedValue.feed} />
+              </>
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       )}
     </PanelContainer>
   );
@@ -307,14 +307,14 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
   return (
     <>
       {items.map((item) => {
-        const { id, Icon, Element, items } = item;
+        const { id, iconName, Element, items } = item;
         return (
           <TreeItem.Root key={id} collapsible={!!items?.length} open>
-            <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
-              <Icon />
+            <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
+              <Icon icon={iconName} />
               {Element}
             </div>
-            <TreeItem.Body className='pis-4'>
+            <TreeItem.Body className='ps-4'>
               <Tree.Branch>{items && <DataItems items={items} onSelect={onSelect} />}</Tree.Branch>
             </TreeItem.Body>
           </TreeItem.Root>

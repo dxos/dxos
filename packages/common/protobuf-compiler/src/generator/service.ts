@@ -8,11 +8,11 @@ import * as ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
 
-import { type GeneratorContext } from './context';
-import { attachDocComment } from './doc-comment';
-import { types, getTypeReference } from './types';
 import { normalizeFullyQualifiedName } from '../namespaces';
 import { type SubstitutionsMap } from '../parser';
+import { type GeneratorContext } from './context';
+import { attachDocComment } from './doc-comment';
+import { getTypeReference, types } from './types';
 
 const f = ts.factory;
 

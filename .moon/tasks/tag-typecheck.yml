@@ -1,0 +1,16 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  build:
+    command: sh -c 'if [ "${DX_USE_TSC}" = "1" ]; then pnpm exec tsc --noEmit; else pnpm exec tsgo --noEmit; fi'
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+    options:
+      timeout: 60
+
+inheritedBy:
+  tags: typecheck

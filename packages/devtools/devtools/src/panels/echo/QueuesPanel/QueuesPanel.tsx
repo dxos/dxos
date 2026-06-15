@@ -4,42 +4,40 @@
 
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
-import { useQueue } from '@dxos/react-client/echo';
+import { Format } from '@dxos/echo/Format';
 import { Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { PanelContainer, Searchbar } from '../../../components';
 // import { DataSpaceSelector } from '../../../containers';
 // import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
-  const [queueInput, setQueueInput] = useState('');
-  const queueDxn = DXN.tryParse(queueInput);
-  const queue = useQueue<any>(queueDxn);
+  const [_queueInput, setQueueInput] = useState('');
+  // TODO(dmaretskyi): DXN-driven feed lookup removed; this panel is stubbed
+  // pending a Feed.Feed-aware replacement.
+  const objects: any[] = [];
   const [selected, setSelected] = useState<any>();
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID, size: 320 },
-      { name: 'type', format: FormatEnum.JSON, title: 'type' },
+      { name: 'id', format: Format.TypeFormat.DID, size: 320 },
+      { name: 'type', format: Format.TypeFormat.JSON, title: 'type' },
     ],
     [],
   );
 
   const rows = useMemo(() => {
-    return (queue?.objects ?? []).map((item: any) => ({
+    return objects.map((item: any) => ({
       id: item.id,
       type: item['@type'],
       _original: item,
     }));
-  }, [queue?.objects]);
+  }, [objects]);
 
   const handleRowClicked = (row: any) => {
     if (!row) {
@@ -48,7 +46,7 @@ export const QueuesPanel = () => {
     }
 
     // Always pick the last item in the queue.
-    const lastItem = queue?.objects[queue?.objects.length - 1];
+    const lastItem = objects[objects.length - 1];
     if (lastItem) {
       setSelectedVersionObject(null);
       setSelected(lastItem);
@@ -67,7 +65,7 @@ export const QueuesPanel = () => {
       }
     >
       {/* TODO(burdon): Convert to MasterDetailTable. */}
-      <div className={mx('flex grow flex-col divide-y divide-separator overflow-hidden', styles.border)}>
+      <div className='flex grow flex-col overflow-hidden divide-y divide-separator'>
         <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
@@ -82,8 +80,6 @@ export type ObjectDataViewerProps = {
 };
 
 const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
-  const text = JSON.stringify(object, null, 2);
-
   const rowRenderer = ({
     rows,
     stylesheet,
@@ -104,11 +100,7 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
     });
   };
 
-  return (
-    <SyntaxHighlighter language='json' renderer={rowRenderer}>
-      {text}
-    </SyntaxHighlighter>
-  );
+  return <JsonHighlighter data={object} renderer={rowRenderer} />;
 };
 
 interface rendererNode {

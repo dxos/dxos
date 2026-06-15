@@ -2,25 +2,30 @@
 // Copyright 2022 DXOS.org
 //
 
-import { next as am } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
+import * as Schema from 'effect/Schema';
 
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
+import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
-import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
-import { joinTables } from '@dxos/util';
+import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
+import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
+import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { SpaceState, Filter, getMeta } from '../echo';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
 
-exposeModule('@automerge/automerge', am);
+// TODO(burdon): Remove.
+const getMeta = Obj.getMeta;
+
+exposeModule('@automerge/automerge', A);
 
 /**
  * A hook bound to window.__DXOS__.
@@ -34,6 +39,12 @@ export interface DevtoolsHook {
   spaces?: Accessor<Space | DataSpace>;
   feeds?: Accessor<FeedWrapper>;
   halo?: Halo;
+
+  /**
+   * Resolves the DXN.
+   * @param id - The DXN or DXN ID or object ID or text query.
+   */
+  get?(id: string): Promise<any>;
 
   openClientRpcServer: () => Promise<boolean>;
 
@@ -62,7 +73,15 @@ export interface DevtoolsHook {
   joinTables: any;
 
   // Globals/
+  DXN: typeof DXN;
+  Type: typeof Type;
+  Obj: typeof Obj;
+  Relation: typeof Relation;
+  Ref: typeof Ref;
+  Query: typeof Query;
   Filter: typeof Filter;
+  Schema: typeof Schema;
+  Feed: typeof Feed;
 
   getMeta: typeof getMeta;
 }
@@ -115,13 +134,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     listDiagnostics: async () => {
       diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+
       // eslint-disable-next-line no-console
       console.table(
         diagnostics.map((diagnostic) => ({
           ...diagnostic,
           get fetch() {
             queueMicrotask(async () => {
-              // eslint-disable-next-line no-console
               const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
               if (error) {
                 log.error(`Error fetching diagnostic ${diagnostic.id}: ${error}`);
@@ -151,11 +170,20 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     joinTables,
 
     // Globals.
+    DXN,
+    Type,
+    Obj,
+    Ref,
+    Relation,
+    Query,
     Filter,
+    Schema,
+    Feed,
     getMeta,
   };
 
   if (client) {
+    hook.halo = client.halo;
     hook.spaces = createAccessor({
       getAll: () => client.spaces.get(),
       getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
@@ -165,12 +193,17 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
             .get()
             .flatMap((space) => [
               [space.id, space],
-              ...(space.state.get() === SpaceState.SPACE_READY ? ([[space.properties.name, space]] as const) : []),
+              ...(space.state.get() === SpaceState.SPACE_READY
+                ? ([[space.properties.name ?? '', space]] as const)
+                : []),
               [space.key.toHex(), space],
             ]),
         ),
     });
-    hook.halo = client.halo;
+
+    hook.get = async (dxn) => {
+      return client.graph.createRefResolver({}).resolve(URI.make(dxn));
+    };
 
     hook.openDevtoolsApp = async () => {
       const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
@@ -220,9 +253,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const data = await uploadFile();
 
-      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } = await import(
-        '@dxos/client-services'
-      );
+      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } =
+        await import('@dxos/client-services');
 
       const storageConfig = client.config.get('runtime.client.storage', {})!;
 
@@ -348,9 +380,7 @@ const port: RpcPort = {
   },
 };
 
-/**
- * Delete all data in the browser without depending on other packages.
- */
+/** Delete all data in the browser and reload. */
 const reset = async () => {
   log.info(`Deleting all data from ${typeof window.localStorage !== 'undefined' ? window.location?.origin : ''}`);
 
@@ -359,31 +389,29 @@ const reset = async () => {
     log.info('Cleared local storage');
   }
 
-  if (
-    typeof navigator !== 'undefined' &&
-    typeof navigator.storage !== 'undefined' &&
-    typeof navigator.storage.getDirectory === 'function'
-  ) {
-    const root = await navigator.storage.getDirectory();
-    for await (const entry of (root as any).keys() as Iterable<string>) {
-      try {
-        await root.removeEntry(entry, { recursive: true });
-      } catch (err) {
-        log.error(`Failed to delete ${entry}: ${err}`);
-      }
-    }
-    log.info('Cleared OPFS');
+  try {
+    await clearIndexedDB();
+    log.info('Cleared IndexedDB');
+  } catch (err) {
+    log.catch(err);
+  }
 
-    if (typeof location !== 'undefined' && typeof location.reload === 'function') {
-      location.reload();
-    } else if (typeof close === 'function') {
-      close(); // For web workers.
-    }
+  try {
+    await clearOPFS();
+    log.info('Cleared OPFS');
+  } catch (err) {
+    log.catch(err);
+  }
+
+  if (typeof location !== 'undefined' && typeof location.reload === 'function') {
+    location.reload();
+  } else if (typeof close === 'function') {
+    close(); // For web workers.
   }
 };
 
 const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
-  const url = URL.createObjectURL(new Blob([data], { type: contentType }));
+  const url = URL.createObjectURL(new Blob([data as Uint8Array<ArrayBuffer>], { type: contentType }));
   const element = document.createElement('a');
   element.setAttribute('href', url);
   element.setAttribute('download', filename);

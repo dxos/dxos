@@ -2,9 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import translations from './translations';
-
-export * from './Thread';
-export * from './Message';
-export * from './types';
-export { translations };
+export { Thread } from './Thread';
+export type {
+  ThreadRootProps,
+  ThreadContentProps,
+  ThreadHeaderProps,
+  ThreadMessagesProps,
+  ThreadTextboxProps,
+  ThreadStatusProps,
+} from './Thread';
+export { Message } from './Message';
+export type {
+  MessageRootProps,
+  MessageHeadingProps,
+  MessageAuthorNameProps,
+  MessageTimeProps,
+  MessageBodyProps,
+  MessageTextboxProps,
+  MessageTileProps,
+} from './Message';
+export { command } from './command';
+export { useThreadContext } from './context';
+export type {
+  MessageMetadata,
+  ObjectTileComponent,
+  ThreadComponents,
+  MessageCallbacks,
+  ThreadContextValue,
+} from './types';

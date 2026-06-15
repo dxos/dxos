@@ -7,12 +7,15 @@ import { useNavigate, useRoutes as useRouterRoutes } from 'react-router-dom';
 
 import { RootContainer } from '../containers';
 import {
+  AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
   DeviceListPanel,
   DiagnosticsPanel,
+  EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
+  InvocationTracePanel,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
@@ -22,15 +25,11 @@ import {
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
+  SqlitePanel,
   StoragePanel,
   SwarmPanel,
-  TracingPanel,
-  DashboardPanel,
-  EdgeDashboardPanel,
-  AutomergePanel,
-  WorkflowPanel,
-  InvocationTracePanel,
   TestingPanel,
+  WorkflowPanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -61,16 +60,16 @@ export const useRoutes = () => {
               element: <StoragePanel />,
             },
             {
+              path: '/client/sqlite',
+              element: <SqlitePanel />,
+            },
+            {
               path: '/client/logs',
               element: <LoggingPanel />,
             },
             {
               path: '/client/diagnostics',
               element: <DiagnosticsPanel />,
-            },
-            {
-              path: '/client/tracing',
-              element: <TracingPanel />,
             },
           ],
         },
@@ -142,15 +141,6 @@ export const useRoutes = () => {
             {
               path: '/mesh/network',
               element: <NetworkPanel />,
-            },
-          ],
-        },
-        {
-          path: '/agent',
-          children: [
-            {
-              path: '/agent/dashboard',
-              element: <DashboardPanel />,
             },
           ],
         },

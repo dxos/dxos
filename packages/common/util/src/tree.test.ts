@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { stringifyTree, type TreeNode } from './tree';
+import { type TreeNode, stringifyTree } from './tree';
 
 describe('Tree logging', () => {
   test('simple', () => {

@@ -2,18 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { OperationHandlerSet } from '@dxos/compute';
 
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const AppGraphSerializer = lazy(() => import('./app-graph-serializer'));
-export const IdentityCreated = lazy(() => import('./identity-created'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactRoot = lazy(() => import('./react-root'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const SchemaDefs = lazy(() => import('./schema-defs'));
-export const SchemaTools = lazy(() => import('./schema-tools'));
-export const SpaceSettings = lazy(() => import('./settings'));
-export const SpaceState = lazy(() => import('./state'));
-export const SpacesReady = lazy(() => import('./spaces-ready'));
+export * from './app-graph-builder';
+export { makeCreateObjectEntryForDatabaseType } from '../util';
 
-export * from './capabilities';
+export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
+export { NavigationHandler } from './navigation-handler';
+export type { NavigationHandlerOptions } from './navigation-handler';
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const Repair = Capability.lazy('Repair', () => import('./repair'));
+export const SpaceSettings = Capability.lazy('SpaceSettings', () => import('./settings'));
+export const SpacesReady = Capability.lazy('SpacesReady', () => import('./spaces-ready'));
+export const SpaceState = Capability.lazy('SpaceState', () => import('./state'));
+export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

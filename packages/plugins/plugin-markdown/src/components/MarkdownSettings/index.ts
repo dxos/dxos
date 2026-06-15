@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './MarkdownSettings';
+export { MarkdownSettings as default } from './MarkdownSettings';

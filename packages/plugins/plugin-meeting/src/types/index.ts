@@ -2,5 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './schema';
-export * from './types';
+/** @deprecated Use Event instead. */
+export * as Meeting from './Meeting';
+export * as MeetingCapabilities from './MeetingCapabilities';
+export * as MeetingOperation from './MeetingOperation';
+export * as Settings from './Settings';

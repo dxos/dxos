@@ -3,27 +3,33 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, DXN, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { DXN, EchoObject, Filter, EntityId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
-import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
+import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 import {
   DiscordConfig,
   DiscordREST,
   DiscordRESTMemoryLive,
   // @ts-ignore
-} from 'https://esm.sh/dfx@0.113.0?deps=effect@3.14.21&bundle=false';
+} from 'https://esm.sh/dfx@0.113.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import * as Config from 'https://esm.sh/effect@3.17.0/Config?bundle=false';
+// @ts-ignore
+import * as Effect from 'https://esm.sh/effect@3.17.0/Effect?bundle=false';
+// @ts-ignore
+import * as Redacted from 'https://esm.sh/effect@3.17.0/Redacted?bundle=false';
+// @ts-ignore
+import * as Ref from 'https://esm.sh/effect@3.17.0/Ref?bundle=false';
 
 const MessageSchema = S.Struct({
-  id: ObjectId,
+  id: EntityId,
   foreignId: S.Any, // bigint?
   from: S.String,
   created: S.String,
   content: S.String,
 }).pipe(
   EchoObject({
-    typename: 'example.com/type/Message',
+    typename: 'com.example.type.message',
     version: '0.1.0',
   }),
 );
@@ -36,6 +42,8 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
 };
 
 export default defineFunction({
+  key: 'org.dxos.script.discord',
+  name: 'Discord',
   inputSchema: S.Struct({
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: S.optional(S.String),
@@ -52,11 +60,11 @@ export default defineFunction({
   handler: ({ data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 }, context: { space } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
-        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
+        try: () => space.db.query(Filter.typename('org.dxos.type.accessToken', { source: 'discord.com' })).first(),
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        try: () => space.queues.queryQueue(DXN.tryMake(queueId)!),
         catch: (e: any) => e,
       });
       const backfill = objects.length === 0;
@@ -76,7 +84,7 @@ export default defineFunction({
           const queueMessages = messages
             .map((message: any) =>
               create(MessageSchema, {
-                id: ObjectId.random(),
+                id: EntityId.random(),
                 foreignId: message.id,
                 from: message.author.username,
                 created: message.timestamp,
@@ -86,7 +94,7 @@ export default defineFunction({
             .toReversed();
           if (queueMessages.length > 0) {
             yield* Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
+              try: () => space.queues.insertIntoQueue(DXN.tryMake(queueId)!, queueMessages),
               catch: (e: any) => e,
             });
             yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);

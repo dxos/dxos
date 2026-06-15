@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { OperationHandlerSet } from '@dxos/compute';
 
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const CheckAppScheme = lazy(() => import('./check-app-scheme'));
-export const DeckSettings = lazy(() => import('./settings'));
-export const DeckState = lazy(() => import('./state'));
-export const LayoutIntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactRoot = lazy(() => import('./react-root'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const Tools = lazy(() => import('./tools'));
-export const UrlHandler = lazy(() => import('./url-handler'));
-
-export * from './capabilities';
-export * from './state';
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const CheckAppScheme = Capability.lazy('CheckAppScheme', () => import('./check-app-scheme'));
+export const NotificationTracker = Capability.lazy('NotificationTracker', () => import('./notification-tracker'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const DeckSettings = Capability.lazy('DeckSettings', () => import('./settings'));
+export const DeckState = Capability.lazy('DeckState', () => import('./state'));
+export const UrlHandler = Capability.lazy('UrlHandler', () => import('./url-handler'));

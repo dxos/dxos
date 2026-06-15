@@ -22,5 +22,3 @@ export const getTracingContext = (target: any): TracingContext => {
     metricsProperties: {},
   });
 };
-
-export const TRACE_SPAN_ATTRIBUTE = 'dxos.trace-span';

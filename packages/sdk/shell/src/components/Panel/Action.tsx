@@ -2,12 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, Check, type IconProps, Placeholder } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type FC, forwardRef, type SetStateAction } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  forwardRef,
+} from 'react';
 
-import { type ButtonProps, Button, DropdownMenu, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import {
+  Button,
+  type ButtonProps,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '../../translations';
+
+// TODO(burdon): Move to react-ui.
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
@@ -16,9 +33,22 @@ export type LargeButtonProps = ButtonProps & {
 export type ActionMenuItem = {
   label: string;
   description: string;
-  icon: FC<IconProps>;
+  icon: string;
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
+
+const defaultActions = {
+  noopAction: {
+    label: 'No-op',
+    description: '',
+    icon: 'ph--circle-dashed--regular',
+    onClick: () => {},
+  },
+} as Record<string, ActionMenuItem>;
+
+//
+// BifurcatedAction
+//
 
 export type BifurcatedActionProps = {
   actions: Record<string, ActionMenuItem>;
@@ -27,15 +57,6 @@ export type BifurcatedActionProps = {
   defaultActiveAction?: string;
   'data-testid'?: string;
 } & Omit<LargeButtonProps, 'children' | 'onClick'>;
-
-const defaultActions = {
-  noopAction: {
-    label: 'No-op',
-    description: '',
-    icon: Placeholder,
-    onClick: () => {},
-  },
-} as Record<string, ActionMenuItem>;
 
 export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionProps>((props, forwardedRef) => {
   const {
@@ -60,27 +81,32 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 
   const activeAction = actions[activeActionKey as string] ?? {};
 
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   return (
-    <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'is-full')}>
+    <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
       <Button
         {...rest}
-        classNames={['bs-11 flex-1 min-is-0 flex gap-2 rounded-ie-none', classNames]}
+        classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
         variant={variant}
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <activeAction.icon className={getSize(5)} />}
+        {activeAction.icon && <Icon icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
-          <Button classNames={['bs-11 flex-none rounded-is-none', classNames]} data-testid={dropdownTestId}>
-            <span className='sr-only'>{t('invite options label')}</span>
-            <CaretDown className={getSize(4)} />
-          </Button>
+          <IconButton
+            size={4}
+            label={t('invite-options.label')}
+            icon='ph--caret-down--regular'
+            iconOnly
+            variant={variant}
+            classNames={['h-11 flex-none rounded-w-none', classNames]}
+            data-testid={dropdownTestId}
+          />
         </DropdownMenu.Trigger>
         {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
         <DropdownMenu.Portal>
@@ -97,17 +123,17 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <action.icon className={getSize(5)} />}
-                    <div role='none' className='flex-1 min-is-0 space-b-1'>
+                    {action.icon && <Icon icon={action.icon} />}
+                    <div className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
-                        <p id={`${id}__description`} className={descriptionText}>
+                        <p id={`${id}__description`} className='text-description'>
                           {action.description}
                         </p>
                       )}
                     </div>
                     <DropdownMenu.ItemIndicator asChild>
-                      <Check weight='bold' className={getSize(4)} />
+                      <Icon icon='ph--check--regular' size={4} />
                     </DropdownMenu.ItemIndicator>
                   </DropdownMenu.CheckboxItem>
                 );
@@ -121,16 +147,49 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   );
 });
 
+//
+// Action
+//
+
+/**
+ * @deprecated Use Button directly.
+ */
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button
-      {...rest}
-      classNames={[isFull && 'is-full', 'bs-11 flex gap-2 mbs-2', classNames]}
-      ref={forwardedRef}
-      variant={variant}
-    >
+    <Button {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
       {children}
     </Button>
   );
 });
+
+//
+// Actions
+//
+
+type ActionBarProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
+  children: ReactNode | ReactNode[];
+};
+
+/**
+ * @deprecated Use Dialog.ActionBar
+ */
+const ActionBar = forwardRef<HTMLDivElement, ActionBarProps>(({ classNames, children, ...props }, forwardedRef) => {
+  return (
+    <div
+      {...props}
+      className={mx(
+        'flex flex-col gap-2 mt-2',
+        Array.isArray(children) && children.length > 1 ? 'justify-between' : 'justify-center',
+        classNames,
+      )}
+      ref={forwardedRef}
+    >
+      {children}
+    </div>
+  );
+});
+
+export { ActionBar };
+
+export type { ActionBarProps };

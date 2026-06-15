@@ -1,0 +1,1126 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
+import { userEvent, within } from 'storybook/test';
+
+import { ToolId } from '@dxos/ai';
+import { EXA_API_KEY } from '@dxos/ai/testing';
+import {
+  AgentPrompt,
+  DelegationBlueprint,
+  LinearBlueprint,
+  PlanningBlueprint,
+  WebSearchBlueprint,
+} from '@dxos/assistant-toolkit';
+import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
+import { Reply } from '@dxos/compute/testing';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { AssistantBlueprint } from '@dxos/plugin-assistant';
+import { translations } from '@dxos/plugin-assistant/translations';
+import { ChessBlueprint, ChessOperation } from '@dxos/plugin-chess';
+import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
+import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox';
+import { MapBlueprint } from '@dxos/plugin-map';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
+import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text, ViewModel } from '@dxos/schema';
+import {
+  AccessToken,
+  Employer,
+  Event,
+  HasConnection,
+  HasSubject,
+  Message,
+  Organization,
+  Person,
+  Pipeline,
+  Task,
+  Transcript,
+} from '@dxos/types';
+import { trim } from '@dxos/util';
+
+import {
+  BlueprintModule,
+  ChatModule,
+  ChessModule,
+  CommentsModule,
+  ExecutionGraphModule,
+  GraphModule,
+  InboxModule,
+  InvocationsModule,
+  ProjectModule,
+  RoutineModule,
+  ResearchInputModule,
+  ResearchOutputModule,
+  ScriptModule,
+  TasksModule,
+  TokenManagerModule,
+  TraceModule,
+  TriggersModule,
+  ContextModule,
+} from '../components';
+import {
+  ModuleContainer,
+  ResearchInputQueue,
+  accessTokensFromEnv,
+  addTestData,
+  config,
+  createTestMailbox,
+  createTestTranscription,
+  getDecorators,
+  organizations,
+  testTypes,
+} from '../testing';
+
+/** Echo types used by research-related stories (replaces removed ResearchDataTypes). */
+const researchStoryEchoTypes = [Person.Person, Organization.Organization, Message.Message];
+
+const storybook: Meta<typeof ModuleContainer> = {
+  title: 'stories/stories-assistant/Chat',
+  render: ModuleContainer,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+};
+
+export default storybook;
+
+type Story = StoryObj<typeof storybook>;
+
+//
+// Stories
+//
+
+const MARKDOWN_DOCUMENT = trim`
+  # Hello, world!
+
+  This is a test document that contains Markdown content.
+  Markdown is a lightweight markup language for writing formatted text in plain text form.
+  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters.
+  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion.
+
+  Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+`;
+
+const DXOS_DOCUMENT = trim`
+  # DXOS
+  - ECHO Semantic Graph Database
+  - AI-Native workflows
+  - Privacy preserving P2P sync
+  - Edge computing
+  - Flexible access control
+  - Open and extensible
+`;
+
+const STYLE_GUIDE = trim`
+  # Style Guide
+  - Use short, simple sentences.
+  - Organize content with headings and bullet points.
+  - Avoid jargon and explain technical terms.
+  - Use active voice whenever possible.
+  - Highlight key points in bold.
+  - Keep paragraphs brief and focused on one idea.
+  - Proofread for clarity and correctness.
+`;
+
+const addSpellingMistakes = (text: string, n: number): string => {
+  const words = text.split(' ');
+  for (let i = 0; i < n; i++) {
+    const idx = Math.floor(Math.random() * words.length);
+    const word = words[idx];
+    const charIdx = Math.floor(Math.random() * word.length);
+    const typoChar = String.fromCharCode(word.charCodeAt(charIdx) + 1);
+    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1);
+  }
+
+  return words.join(' ');
+};
+
+//
+// Tests
+//
+
+export const Default: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+    config: config.remote,
+  }),
+  args: {
+    modules: [[ChatModule]],
+  },
+};
+
+export const WithPlanning: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    createAgent: true,
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+  }),
+  args: {
+    modules: [[ChatModule]],
+    blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
+  },
+};
+
+/**
+ * Two surfaces over a shared space: the conversational ChatModule (left) and the activity
+ * TraceModule (right). Prompt the supervisor to delegate work to a sub-agent; DelegateTask records
+ * it as an in-progress plan task and the sub-agent process surfaces as a nested lane in the trace.
+ */
+export const WithSubAgents: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    // TODO(burdon): Move instructions to blueprint?
+    createAgent: {
+      name: 'Supervisor',
+      instructions: 'You delegate units of work to sub-agents using the available tools.',
+    },
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TraceModule, ContextModule]],
+    blueprints: [DelegationBlueprint.key, PlanningBlueprint.key, MarkdownBlueprint.key],
+  },
+};
+
+/**
+ * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
+ * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
+ * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithSubAgentsTest: Story = {
+  ...WithSubAgents,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
+    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Chat editor not found.');
+    }
+
+    // Enter a prompt that delegates work to a sub-agent and submit it.
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.keyboard('{Enter}');
+
+    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
+    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
+  },
+};
+
+export const WithWebSearch: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+    config: config.remote,
+  }),
+  args: {
+    modules: [[ChatModule]],
+    blueprints: [WebSearchBlueprint.key],
+  },
+};
+
+/**
+ * Test with prompt: Propose changes to my document based on the style guide.
+ */
+export const WithMarkdown: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { CommentsPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-comments/plugin'),
+      ]);
+      return {
+        plugins: [MarkdownPlugin(), CommentsPlugin()],
+      };
+    },
+    config: config.remote, // TODO(burdon): Issue making persistent.
+    onInit: async ({ space }) => {
+      space.db.add(
+        Markdown.make({
+          name: 'My Document',
+          content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
+        }),
+      );
+      space.db.add(
+        Markdown.make({
+          name: 'Style Guide',
+          content: STYLE_GUIDE,
+        }),
+      );
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule], [CommentsModule]],
+    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, CommentBlueprint.key],
+  },
+};
+
+export const WithBlueprints: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-table/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      space.db.add(Markdown.make({ name: 'Tasks' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TasksModule, BlueprintModule]],
+  },
+};
+
+export const WithChess: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+        import('@dxos/plugin-chess'),
+        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-game'),
+        import('@dxos/plugin-game/plugin'),
+      ]);
+      return {
+        plugins: [GamePlugin(), ChessPlugin()],
+        types: [Game, Chess.State],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      const [{ Chess }, { make: makeGame }] = await Promise.all([
+        import('@dxos/plugin-chess'),
+        import('@dxos/plugin-game'),
+      ]);
+      // TODO(burdon): Add player DID (for user and assistant).
+      const state = space.db.add(
+        Chess.make({
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
+        }),
+      );
+      space.db.add(makeGame({ name: 'Challenge', variant: state }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { Game } = await import('@dxos/plugin-game');
+      const objects = await space.db.query(Filter.type(Game)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.key, ChessBlueprint.key],
+  },
+};
+
+// Test with prompt: Summarize my mailbox and write the summary in a new document.
+export const WithMail: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-thread/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const feedDxn = Feed.getQueueUri(feed)!;
+      const queue = space.queues.get<Message.Message>(feedDxn);
+      const messages = createTestMailbox();
+      await queue.append(messages);
+    },
+    types: [Feed.Feed, Mailbox.Mailbox],
+    onChatCreated: async ({ space, binder }) => {
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, InboxBlueprint.key],
+  },
+};
+
+// Test with prompt: Sync my email.
+export const WithGmail: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-integration/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), IntegrationPlugin()],
+      };
+    },
+    config: config.persistent,
+    types: [Feed.Feed, Mailbox.Mailbox],
+    onInit: async ({ space }) => {
+      space.db.add(Mailbox.make({ name: 'Mailbox' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule], [InboxModule, TokenManagerModule]],
+    blueprints: [AssistantBlueprint.key, InboxBlueprint.key],
+  },
+};
+
+// Test with prompt: Sync my calendar.
+export const WithCalendar: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { IntegrationPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-integration/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), IntegrationPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [Feed.Feed, Calendar.Calendar, Event.Event],
+    onInit: async ({ space }) => {
+      space.db.add(Calendar.make({ name: 'Calendar' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const calendars = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      const calendar = calendars[0];
+      if (calendar) {
+        await binder.bind({ objects: [Ref.make(calendar)] });
+      }
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule], [TokenManagerModule]],
+    blueprints: [AssistantBlueprint.key, CalendarBlueprint.key],
+  },
+};
+
+// Test with prompt: Create 10 locations.
+export const WithMap: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ Map }, { MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+        import('@dxos/plugin-map'),
+        import('@dxos/plugin-map/plugin'),
+        import('@dxos/plugin-table/plugin'),
+        import('@dxos/react-ui-table/types'),
+        import('@dxos/plugin-map/testing'),
+      ]);
+      return {
+        plugins: [MapPlugin(), TablePlugin()],
+        types: [View.View, Map.Map, Table.Table],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      const [{ Map }, { Table }, { createLocationSchema }] = await Promise.all([
+        import('@dxos/plugin-map'),
+        import('@dxos/react-ui-table/types'),
+        import('@dxos/plugin-map/testing'),
+      ]);
+      const type = await space.db.addType(createLocationSchema());
+      const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
+        db: space.db,
+        typename: Type.getTypename(type),
+      });
+      const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
+      const { view: mapView } = await ViewModel.makeFromDatabase({
+        db: space.db,
+        typename: Type.getTypename(type),
+        pivotFieldName: 'location',
+      });
+      const map = Map.make({ name: 'Map', view: mapView });
+      space.db.add(table);
+      space.db.add(map);
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const objects = await space.db.query(Filter.type(View.View)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.key, MapBlueprint.key],
+  },
+};
+
+export const WithTrip: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { Map }, { MapPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-map'),
+        import('@dxos/plugin-map/plugin'),
+      ]);
+      return {
+        plugins: [MarkdownPlugin(), MapPlugin()],
+        types: [Map.Map],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      const { Map } = await import('@dxos/plugin-map');
+      // TODO(burdon): Table.
+      const map = Map.make({ name: 'Trip' });
+      space.db.add(map);
+      space.db.add(
+        Markdown.make({
+          name: 'Itinerary',
+          content: trim`
+            # Itinerary
+
+            ## Day 1
+            - Visit the Sagrada Familia
+            - Visit the Park Güell
+            - Visit the Casa Batlló
+
+            ## Day 2
+            - Visit the Eiffel Tower
+            - Visit the Louvre
+            - Visit the Musée d'Orsay
+          `,
+        }),
+      );
+      space.db.add(
+        Markdown.make({
+          name: 'Barcelona',
+          content: trim`
+            # Barcelona
+
+            Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain.
+            It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat.
+            The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+          `,
+        }),
+      );
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { Map } = await import('@dxos/plugin-map');
+      const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+  },
+};
+
+export const WithBoard: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ Board }, { BoardPlugin }] = await Promise.all([
+        import('@dxos/plugin-board'),
+        import('@dxos/plugin-board/plugin'),
+      ]);
+      return {
+        plugins: [BoardPlugin()],
+        types: [Board.Board],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      const { Board } = await import('@dxos/plugin-board');
+      space.db.add(Board.makeBoard());
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { Board } = await import('@dxos/plugin-board');
+      const objects = await space.db.query(Filter.type(Board.Board)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+  },
+};
+
+/**
+ * PROMPT: "Create a research note for the organization."
+ */
+export const WithResearch: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { TablePlugin }, { ThreadPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-table/plugin'),
+        import('@dxos/plugin-thread/plugin'),
+      ]);
+      return {
+        plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [...researchStoryEchoTypes, Feed.Feed],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
+      space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
+      const documents = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
+    blueprints: [
+      // AssistantBlueprint.key
+      // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      WebSearchBlueprint.key,
+    ],
+  },
+};
+
+export const WithSearch: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    types: testTypes,
+    onInit: async ({ space }) => {
+      await addTestData(space);
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [GraphModule]],
+  },
+};
+
+export const WithTranscription: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ TranscriptionPlugin }, { PreviewPlugin }] = await Promise.all([
+        import('@dxos/plugin-transcription/plugin'),
+        import('@dxos/plugin-preview/plugin'),
+      ]);
+      return {
+        plugins: [TranscriptionPlugin(), PreviewPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [Transcript.Transcript],
+    onInit: async ({ space }) => {
+      const feed = space.db.add(Feed.make());
+      const queueDxn = Feed.getQueueUri(feed);
+      invariant(queueDxn);
+      const messages = createTestTranscription();
+      await space.queues.get(queueDxn).append(messages);
+      space.db.add(Transcript.make(Ref.make(feed)));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    blueprints: [AssistantBlueprint.key, TranscriptionBlueprint.key],
+  },
+};
+
+// TODO(burdon): Move to env.
+const VITE_LINEAR_API_KEY = process.env.VITE_LINEAR_API_KEY;
+
+export const WithLinearSync: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    types: [Task.Task, Person.Person, Pipeline.Pipeline],
+    accessTokens: accessTokensFromEnv({
+      'linear.app': VITE_LINEAR_API_KEY,
+    }),
+  }),
+  args: {
+    modules: [[ChatModule], [GraphModule]],
+    blueprints: [LinearBlueprint.key],
+  },
+};
+
+export const WithTriggers: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    onInit: async ({ space }) => {
+      space.db.add(
+        Trigger.make({
+          function: Ref.make(Operation.serialize(Reply)),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * * *'), // Every 5 seconds.
+        }),
+      );
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TriggersModule, InvocationsModule]],
+    blueprints: [],
+  },
+};
+
+export const WithChessTrigger: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ Chess }, { ChessPlugin }, { Game }, { GamePlugin }] = await Promise.all([
+        import('@dxos/plugin-chess'),
+        import('@dxos/plugin-chess/plugin'),
+        import('@dxos/plugin-game'),
+        import('@dxos/plugin-game/plugin'),
+      ]);
+      return {
+        plugins: [GamePlugin(), ChessPlugin()],
+        types: [Game, Chess.State],
+      };
+    },
+    config: config.remote,
+    onInit: async ({ space }) => {
+      const [{ Chess }, { Game, make: makeGame }] = await Promise.all([
+        import('@dxos/plugin-chess'),
+        import('@dxos/plugin-game'),
+      ]);
+      // TODO(burdon): Add player DID (for user and assistant).
+      const state = space.db.add(
+        Chess.make({
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
+        }),
+      );
+      space.db.add(makeGame({ name: 'Challenge', variant: state }));
+
+      space.db.add(
+        Trigger.make({
+          function: Ref.make(Operation.serialize(ChessOperation.Play)),
+          enabled: true,
+          spec: Trigger.specSubscription(Query.select(Filter.type(Game))),
+          input: {
+            id: '{{event.changedObjectId}}',
+            side: 'black', // NOTE: Removing it makes the bot play itself.
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    modules: [[ChessModule], [TriggersModule, InvocationsModule]],
+    blueprints: [],
+  },
+};
+
+export const WithResearchQueue: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    types: [...researchStoryEchoTypes, ResearchInputQueue, Feed.Feed],
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      const feed = space.db.add(Feed.make());
+      const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
+      const feedQueueDxn = Feed.getQueueUri(feed);
+      invariant(feedQueueDxn);
+      await space.queues.get(feedQueueDxn).append(orgs);
+
+      const researchPrompt = space.db.add(
+        Routine.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+          instructions:
+            'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
+        }),
+      );
+
+      space.db.add(
+        Trigger.make({
+          function: Ref.make(Operation.serialize(AgentPrompt)),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+          input: {
+            prompt: Ref.make(researchPrompt),
+            input: '{{event.item}}',
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    modules: [
+      [ResearchInputModule, ResearchOutputModule],
+      [TriggersModule, InvocationsModule, RoutineModule, GraphModule],
+    ],
+    blueprints: [WebSearchBlueprint.key],
+  },
+};
+
+export const WithProject: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { MarkdownPlugin }, { PipelinePlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-pipeline/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
+      };
+    },
+    config: config.remote,
+    accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    types: [
+      Tag.Tag,
+      Employer.Employer,
+      HasConnection.HasConnection,
+      HasSubject.HasSubject,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      Pipeline.Pipeline,
+      View.View,
+      Feed.Feed,
+    ],
+    onInit: async ({ space }) => {
+      await addTestData(space);
+      const people = await space.db.query(Filter.type(Person.Person)).run();
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
+      const tag = space.db.add(Tag.make({ label: 'Project' }));
+      const tagRef = Ref.make(tag);
+      const tagUri = Obj.getURI(tag);
+
+      people.slice(0, 4).forEach((person) => {
+        Obj.update(person, (person) => {
+          Obj.getMeta(person).tags = [tagRef];
+        });
+      });
+
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const mailboxDxn = Feed.getQueueUri(mailbox)!;
+      const queue = space.queues.get<Message.Message>(mailboxDxn);
+      const messages = createTestMailbox(people);
+      await queue.append(messages);
+
+      const dxosResearch = space.db.add(
+        Markdown.make({
+          name: 'DXOS Research',
+          content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+        }),
+      );
+      const blueyardResearch = space.db.add(
+        Markdown.make({
+          name: 'BlueYard Research',
+          content: 'BlueYard is a venture capital firm that invests in early-stage startups.',
+        }),
+      );
+      [dxosResearch, blueyardResearch].forEach((research) => {
+        Obj.update(research, (research) => {
+          Obj.getMeta(research).tags = [tagRef];
+        });
+      });
+
+      const dxos = organizations.find((org) => org.name === 'DXOS')!;
+      const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
+      [dxos, blueyard].forEach((organization) => {
+        Obj.update(organization, (organization) => {
+          Obj.getMeta(organization).tags = [tagRef];
+        });
+      });
+
+      // TODO(wittjosiah): Support relations.
+      // space.db.add(
+      //   Relation.make(HasSubject, {
+      //     [Relation.Source]: dxosResearch,
+      //     [Relation.Target]: dxos,
+      //     completedAt: new Date().toISOString(),
+      //   }),
+      // );
+      // space.db.add(
+      //   Relation.make(HasSubject, {
+      //     [Relation.Source]: blueyardResearch,
+      //     [Relation.Target]: blueyard,
+      //     completedAt: new Date().toISOString(),
+      //   }),
+      // );
+
+      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
+      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
+      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagUri));
+
+      const researchPrompt = space.db.add(
+        Routine.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            organization: Schema.Any,
+          }),
+          output: Schema.Any,
+          instructions: trim`
+            Research the organization provided as input.
+            Absolutely, in all cases, create a research note for it at the end.
+            NOTE: Do mocked reseach (set mockSearch to true).
+
+            {{organization}}
+          `,
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
+        }),
+      );
+
+      const researchTrigger = Trigger.make({
+        function: Ref.make(Operation.serialize(AgentPrompt)),
+        enabled: true,
+        spec: Trigger.specSubscription(organizationsQuery),
+        input: {
+          prompt: Ref.make(researchPrompt),
+          input: {
+            organization: '{{event.subject}}',
+          },
+        },
+      });
+      space.db.add(researchTrigger);
+
+      const mailboxView = ViewModel.make({
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagUri)).from(mailbox),
+        jsonSchema: JsonSchema.toJsonSchema(Message.Message),
+      });
+      const contactsView = ViewModel.make({
+        query: contactsQuery,
+        jsonSchema: JsonSchema.toJsonSchema(Person.Person),
+      });
+      const organizationsView = ViewModel.make({
+        query: organizationsQuery,
+        jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
+      });
+      const notesView = ViewModel.make({
+        query: notesQuery,
+        jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
+      });
+
+      space.db.add(
+        Pipeline.make({
+          name: 'Investor Research',
+          columns: [
+            {
+              name: 'Mailbox',
+              view: Ref.make(mailboxView),
+              order: [],
+            },
+            {
+              name: 'Contacts',
+              view: Ref.make(contactsView),
+              order: [],
+            },
+            {
+              name: 'Organizations',
+              view: Ref.make(organizationsView),
+              order: [],
+            },
+            {
+              name: 'Notes',
+              view: Ref.make(notesView),
+              order: [],
+            },
+          ],
+        }),
+      );
+    },
+  }),
+  args: {
+    modules: [[ProjectModule], [TriggersModule, InvocationsModule]],
+    blueprints: [],
+  },
+};
+
+export const WithScript: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { ScriptPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-script/plugin'),
+      ]);
+      return {
+        plugins: [MarkdownPlugin(), ScriptPlugin()],
+      };
+    },
+    config: config.local,
+    types: [Script.Script, Text.Text],
+    onInit: async ({ client, space }) => {
+      const [{ getAccessCredential }, { templates }] = await Promise.all([
+        import('@dxos/plugin-script'),
+        import('@dxos/plugin-script/templates'),
+      ]);
+      const { identityKey } = client.halo.identity.get()!;
+      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+
+      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
+      invariant(template, 'Template not found');
+      invariant(template.name, 'Template name not found');
+
+      // Ensure at least one Script exists so the React surface can render.
+      space.db.add(
+        Script.make({
+          name: template.name,
+          description: 'Function to get the exchange rates between two currencies.',
+          changed: true,
+          source: template.source,
+        }),
+      );
+
+      space.db.add(
+        Blueprint.make({
+          key: 'org.dxos.blueprint.forex',
+          name: 'Forex',
+          instructions: Template.make({
+            source: trim`
+              You can get the exchange rate between two currencies.
+            `,
+          }),
+          tools: [ToolId.make('org.dxos.script.forex-effect')],
+        }),
+      );
+
+      await space.db.flush();
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const blueprints = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [ScriptModule]],
+  },
+};
+
+export const WithPrompt: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [Text.Text],
+    onInit: async ({ space }) => {
+      space.db.add(Operation.serialize(AgentPrompt));
+      space.db.add(
+        Routine.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+          instructions:
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          blueprints: [Ref.make(WebSearchBlueprint.make())],
+        }),
+      );
+
+      await space.db.flush();
+    },
+  }),
+  args: {
+    modules: [[RoutineModule], [InvocationsModule]],
+  },
+};

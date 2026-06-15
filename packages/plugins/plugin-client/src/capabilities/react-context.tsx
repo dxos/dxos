@@ -2,19 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import * as Effect from 'effect/Effect';
+import React, { ReactNode } from 'react';
 
-import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/ui';
 import { ClientProvider } from '@dxos/react-client';
 
-import { ClientCapabilities } from './capabilities';
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactContext, {
-    id: CLIENT_PLUGIN,
-    context: ({ children }) => {
-      const client = useCapability(ClientCapabilities.Client);
-      return <ClientProvider client={client}>{children}</ClientProvider>;
-    },
-  });
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactContext, {
+      id: meta.id,
+      context: ({ children }: { children?: ReactNode }) => {
+        const client = useCapability(ClientCapabilities.Client);
+        return <ClientProvider client={client}>{children}</ClientProvider>;
+      },
+    }),
+  ),
+);

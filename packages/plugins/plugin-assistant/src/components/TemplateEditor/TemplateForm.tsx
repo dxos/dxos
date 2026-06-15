@@ -2,97 +2,104 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema } from 'effect';
-import React, { Fragment, useEffect } from 'react';
+import type * as Schema from 'effect/Schema';
+import React, { Fragment, useCallback, useEffect } from 'react';
 
+import { type Template } from '@dxos/compute';
+import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
+import { meta } from '#meta';
+
 import { TemplateEditor } from './TemplateEditor';
-import { ASSISTANT_PLUGIN } from '../../meta';
-import { type TemplateInput, TemplateInputType, type TemplateType } from '../../types';
+
+/**
+ * Callback type for mutating template within a parent object's Obj.update context.
+ */
+export type TemplateChangeCallback = (mutate: (template: Obj.Mutable<Template.Template>) => void) => void;
 
 export type TemplateFormProps = {
-  template: TemplateType;
+  id: string;
+  template: Template.Template;
   schema?: Schema.Schema<any, any, any>;
-  commandEditable?: boolean;
+  /**
+   * Callback to mutate the template. Should wrap mutations in parent's Obj.update.
+   * If not provided, the component is read-only.
+   */
+  onChange?: TemplateChangeCallback;
 };
 
-export const TemplateForm = ({ template, commandEditable = true }: TemplateFormProps) => {
-  const { t } = useTranslation(ASSISTANT_PLUGIN);
+export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
+  const { t } = useTranslation(meta.id);
+  usePromptInputs(template, onChange);
 
-  usePromptInputs(template);
+  const handleInputKindChange = useCallback(
+    (inputName: string, kind: Template.InputKind) => {
+      onChange?.((draft) => {
+        const input = draft.inputs?.find((i) => i?.name === inputName);
+        if (input) {
+          input.kind = kind;
+        }
+      });
+    },
+    [onChange],
+  );
+
+  const handleInputDefaultChange = useCallback(
+    (inputName: string, value: string) => {
+      onChange?.((draft) => {
+        const input = draft.inputs?.find((i) => i?.name === inputName);
+        if (input) {
+          input.default = value;
+        }
+      });
+    },
+    [onChange],
+  );
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-      {commandEditable && (
-        <div className='flex items-center pl-4'>
-          <span className='text-neutral-500'>/</span>
-          <Input.Root>
-            <Input.TextInput
-              placeholder={t('command placeholder')}
-              classNames={mx('is-full bg-transparent m-2')}
-              value={template.command ?? ''}
-              onChange={(event) => {
-                template.command = event.target.value.replace(/\w/g, '');
-              }}
-            />
-          </Input.Root>
-        </div>
-      )}
-
-      <TemplateEditor template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
+    <div className='flex flex-col w-full overflow-hidden gap-4'>
+      <TemplateEditor id={id} source={template.source} classNames='bg-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
-              <div className='pis-3 text-blueText'>{input.name}</div>
+              <div className='ps-3 text-blue-text'>{input.name}</div>
 
               <Input.Root>
                 <Select.Root
-                  value={String(input.type)}
-                  onValueChange={(type) => {
-                    input.type = getInputType(type) ?? TemplateInputType.VALUE;
-                  }}
+                  value={input.kind}
+                  onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
                 >
-                  <Select.TriggerButton placeholder='Type' classNames='is-full' />
+                  <Select.TriggerButton placeholder='Type' classNames='w-full' />
                   <Select.Portal>
                     <Select.Content>
                       <Select.Viewport>
-                        {inputTypes.map(({ value, label }) => (
-                          <Select.Option key={value} value={String(value)}>
+                        {inputs.map(({ kind, label }) => (
+                          <Select.Option key={kind} value={kind}>
                             {label}
                           </Select.Option>
                         ))}
                       </Select.Viewport>
+                      <Select.Arrow />
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>
               </Input.Root>
 
               <div>
-                {input.type !== undefined &&
-                  [
-                    TemplateInputType.VALUE,
-                    TemplateInputType.CONTEXT,
-                    TemplateInputType.RESOLVER,
-                    TemplateInputType.SCHEMA,
-                  ].includes(input.type) && (
-                    <div>
-                      <Input.Root>
-                        <Input.TextInput
-                          placeholder={t('command placeholder')}
-                          classNames={mx('is-full bg-transparent')}
-                          value={input.value ?? ''}
-                          onChange={(event) => {
-                            input.value = event.target.value;
-                          }}
-                        />
-                      </Input.Root>
-                    </div>
-                  )}
+                {input.kind === 'value' && (
+                  <Input.Root>
+                    <Input.TextInput
+                      placeholder={t('command.placeholder')}
+                      classNames='w-full bg-transparent'
+                      value={input.default ?? ''}
+                      onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
+                    />
+                  </Input.Root>
+                )}
               </div>
             </Fragment>
           ))}
@@ -102,57 +109,57 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
   );
 };
 
-const inputTypes = [
+// TODO(burdon): Translations.
+const inputs: { kind: Template.InputKind; label: string }[] = [
   {
-    value: TemplateInputType.VALUE,
+    kind: 'value',
     label: 'Value',
   },
   {
-    value: TemplateInputType.PASS_THROUGH,
-    label: 'Pass through',
-  },
-  {
-    value: TemplateInputType.RETRIEVER,
-    label: 'Retriever',
+    kind: 'operation',
+    label: 'Operation',
   },
   // {
-  //   value: TemplateInputType.FUNCTION,
-  //   label: 'Function',
+  //   kind: 'pass-through',
+  //   label: 'Pass through',
   // },
   // {
-  //   value: TemplateInputType.QUERY,
+  //   kind: 'retriever',
+  //   label: 'Retriever',
+  // },
+  // {
+  //   kind: 'query',
   //   label: 'Query',
   // },
-  {
-    value: TemplateInputType.RESOLVER,
-    label: 'Resolver',
-  },
-  {
-    value: TemplateInputType.CONTEXT,
-    label: 'Context',
-  },
-  {
-    value: TemplateInputType.SCHEMA,
-    label: 'Schema',
-  },
+  // {
+  //   kind: 'resolver',
+  //   label: 'Resolver',
+  // },
+  // {
+  //   kind: 'context',
+  //   label: 'Context',
+  // },
+  // {
+  //   kind: 'schema',
+  //   label: 'Schema',
+  // },
 ];
 
-export const nameRegex = /\{\{([\w-]+)\}\}/;
+export const NAME_REGEXP = /\{\{([\w-]+)\}\}/;
 
-const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
-
-const usePromptInputs = (template: TemplateType) => {
+const usePromptInputs = (template: Template.Template, onChange?: TemplateChangeCallback) => {
   useEffect(() => {
-    const text = template.source ?? '';
-    if (!template.inputs) {
-      template.inputs = []; // TODO(burdon): Required?
+    if (!onChange) {
+      return;
     }
 
-    const regex = new RegExp(nameRegex, 'g');
-    const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
+    const text = template.source ?? '';
+
+    const regex = new RegExp(NAME_REGEXP, 'g');
+    const variables = new Set<string>([...(text.target?.content.matchAll(regex) ?? [])].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
-    const unclaimed = new Map<string, TemplateInput>(
+    const unclaimed = new Map<string, Template.Input>(
       template.inputs?.filter(isNonNullable).map((input) => [input.name, input]),
     );
     const missing: string[] = [];
@@ -166,19 +173,32 @@ const usePromptInputs = (template: TemplateType) => {
 
     // Match or create new inputs.
     const values = unclaimed.values();
-    missing.forEach((name) => {
-      const next = values.next().value;
-      if (next) {
-        next.name = name;
-      } else {
-        template.inputs?.push({ name });
+    onChange((draft) => {
+      if (!draft.inputs) {
+        draft.inputs = [];
+      }
+
+      missing.forEach((name) => {
+        const next = values.next().value;
+        if (next) {
+          // Find the input in the mutable draft and update it.
+          const inputIndex = draft.inputs!.findIndex((i) => i?.name === next.name);
+          if (inputIndex !== -1) {
+            draft.inputs![inputIndex].name = name;
+          }
+        } else {
+          draft.inputs!.push({ name, kind: 'value' });
+        }
+      });
+
+      // Remove unclaimed (deleted) inputs.
+      // TODO(burdon): If user types incorrect name value, it will be deleted. Garbage collect?
+      for (const input of values) {
+        const inputIndex = draft.inputs!.findIndex((i) => i?.name === input.name);
+        if (inputIndex !== -1) {
+          draft.inputs!.splice(inputIndex, 1);
+        }
       }
     });
-
-    // Remove unclaimed (deleted) inputs.
-    // TODO(burdon): If user types incorrect name value, it will be deleted. Garbage collect?
-    for (const input of values) {
-      template.inputs.splice(template.inputs.indexOf(input), 1);
-    }
-  }, [template.source]);
+  }, [template.source, onChange]);
 };

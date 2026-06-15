@@ -42,6 +42,3 @@
       - logs associated with a node or a graph
       - node state updates (can a node have internal state separate from inputs/outputs)
       - timestep? - to correlate events that happen during a single execution time
-
-
-

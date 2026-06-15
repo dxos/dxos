@@ -21,19 +21,25 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/mesh/edge-client"

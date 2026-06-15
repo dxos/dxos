@@ -1,0 +1,629 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import type * as Response from '@effect/ai/Response';
+import type * as Tool from '@effect/ai/Tool';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
+import * as Stream from 'effect/Stream';
+import type * as Types from 'effect/Types';
+
+import { Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { EID, EntityId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { type ContentBlock } from '@dxos/types';
+
+import { type StreamBlock, StreamTransform } from './parser';
+
+/**
+ * Tags that are used by the model to indicate the type of content.
+ *
+ * NOTE: Keep in sync with system instructions.
+ */
+enum ModelTags {
+  /**
+   * Chain of thought.
+   */
+  COT = 'cot',
+
+  /**
+   * Chain of thought.
+   * Used by DeepSeek.
+   */
+  THINK = 'think',
+  STATUS = 'status',
+  ARTIFACT = 'artifact',
+
+  /**
+   * Block reference to an object.
+   */
+  OBJECT = 'object',
+  SUGGESTION = 'suggestion',
+  PROPOSAL = 'proposal',
+  SELECT = 'select',
+  TOOLKIT = 'toolkit',
+}
+
+export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> = any> {
+  /**
+   * Called when the stream begins.
+   */
+  onBegin: () => Effect.Effect<void>;
+
+  /**
+   * Called on every part received from the stream.
+   */
+  onPart: (part: Response.StreamPart<Tools>) => Effect.Effect<void>;
+
+  /**
+   * Called on every partial or completed content block.
+   * Partial blocks will have `pending` set to `true`.
+   * For each block this will be called 0..n times with a pending block and then once with the final state of the block.
+   *
+   * Example:
+   *  1. { pending: true, text: "Hello"}
+   *  2. { pending: true, text: "Hello, I am a"}
+   *  3. { pending: false, text: "Hello, I am a helpful assistant!"}
+   */
+  onBlock: (block: ContentBlock.Any) => Effect.Effect<void>;
+
+  /**
+   * Called when the stream ends.
+   */
+  onEnd: (block: ContentBlock.Stats) => Effect.Effect<void>;
+
+  /**
+   * Emit partial blocks in the output stream.
+   * Partial blocks will have `pending` set to `true`.
+   * @default false
+   */
+  emitPartial?: boolean;
+}
+
+export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
+  /**
+   * Whether to parse reasoning tags: <cot> and <think>.
+   */
+  parseReasoningTags: boolean;
+}
+
+/**
+ * Transforms the Response stream into a stream of complete ContentBlock messages.
+ * Partial blocks are emitted to support streaming to the UI.
+ *
+ * Uses `Stream.mapConcatEffect` instead of `Stream.asyncPush`: `asyncPush` batches
+ * `emit.single` via `scheduler.scheduleTask`, so downstream operators often see
+ * nothing until the producer fiber yields (e.g. after many SSE parts or end of stream).
+ */
+export const parseResponse =
+  <Tools extends Record<string, Tool.Any>>({
+    parseReasoningTags = false,
+    onBegin = Function.constant(Effect.void),
+    onPart = Function.constant(Effect.void),
+    onBlock = Function.constant(Effect.void),
+    onEnd = Function.constant(Effect.void),
+    emitPartial = false,
+  }: Partial<ParseResponseOptions<Tools>> = {}) =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+    Stream.unwrap(
+      Effect.gen(function* () {
+        const transformer = new StreamTransform();
+        const start = Date.now();
+
+        /** Stack of open tags. */
+        const tagStack: StreamBlock[] = [];
+        const stats: Types.Mutable<ContentBlock.Stats> = {
+          _tag: 'stats',
+        };
+
+        /** Current partial block used to accumulate content. */
+        let current: StreamBlock | undefined;
+        let block: Types.Mutable<ContentBlock.Any> | undefined;
+        let blocks = 0;
+        let parts = 0;
+        let toolCalls = 0;
+
+        const emitPartialContentBlock = Effect.fnUntraced(function* (
+          contentBlock: Types.Mutable<ContentBlock.Any>,
+          out: ContentBlock.Any[],
+        ) {
+          yield* onBlock({ ...contentBlock } as ContentBlock.Any);
+          if (emitPartial) {
+            log('emit partial content block', { type: contentBlock._tag });
+            out.push({ ...contentBlock } as ContentBlock.Any);
+          }
+          blocks++;
+        });
+
+        const emitFullBlock = Effect.fnUntraced(function* (
+          contentBlock: Types.Mutable<ContentBlock.Any>,
+          out: ContentBlock.Any[],
+        ) {
+          if (contentBlock.pending === false) {
+            delete contentBlock.pending;
+          }
+          yield* onBlock(contentBlock as ContentBlock.Any);
+          out.push(contentBlock as ContentBlock.Any);
+          blocks++;
+        });
+
+        const emitPartialBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
+          if (parsed) {
+            parsed.pending = true;
+            yield* emitPartialContentBlock(parsed, out);
+          }
+        });
+
+        const emitStreamBlock = Effect.fnUntraced(function* (streamBlock: StreamBlock, out: ContentBlock.Any[]) {
+          const parsed = makeContentBlock(streamBlock, { parseReasoningTags });
+          if (parsed) {
+            yield* emitFullBlock(parsed, out);
+          }
+          current = undefined;
+        });
+
+        const flushText = Effect.fnUntraced(function* (out: ContentBlock.Any[]) {
+          if (current) {
+            yield* emitStreamBlock(current, out);
+          }
+        });
+
+        const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>, out: ContentBlock.Any[]) {
+          log('part', { type: part.type });
+          yield* onPart(part);
+          switch (part.type) {
+            case 'text-start': {
+              // no-op
+              break;
+            }
+
+            case 'text-delta': {
+              const chunks = transformer.transform(part.delta);
+              for (const chunk of chunks) {
+                log('text_chunk', { type: current?.type, chunk });
+                switch (current?.type) {
+                  //
+                  // XML Fragment.
+                  //
+                  case 'tag': {
+                    if (chunk.type === 'tag') {
+                      if (chunk.selfClosing) {
+                        current.content.push(chunk);
+                      } else if (chunk.closing) {
+                        if (tagStack.length > 0) {
+                          const top = tagStack.pop();
+                          invariant(top && top.type === 'tag');
+                          log('pop', { top });
+                          current.closed = true;
+                          top.content.push(current);
+                          current = top;
+                        } else {
+                          current.closed = true;
+                          yield* emitStreamBlock(current, out);
+                          current = undefined;
+                        }
+                      } else {
+                        tagStack.push(current);
+                        current = chunk;
+                      }
+                    } else {
+                      // Append text.
+                      if (current.content.length === 0) {
+                        current.content.push(chunk);
+                      } else {
+                        const last = current.content.at(-1);
+                        invariant(last);
+                        if (last.type === 'text') {
+                          last.content += chunk.content;
+                        } else {
+                          current.content.push(chunk);
+                        }
+                      }
+                    }
+                    break;
+                  }
+
+                  //
+                  // Text Fragment.
+                  //
+                  case 'text': {
+                    if (chunk.type === 'tag') {
+                      yield* emitStreamBlock(current, out);
+                      if (chunk.selfClosing) {
+                        yield* emitStreamBlock(chunk, out);
+                        current = undefined;
+                      } else {
+                        current = chunk;
+                      }
+                    } else {
+                      // Append text.
+                      current.content += chunk.content;
+                    }
+                    break;
+                  }
+
+                  //
+                  // No current chunk.
+                  //
+                  default: {
+                    if (chunk.type === 'tag' && chunk.selfClosing) {
+                      yield* emitStreamBlock(chunk, out);
+                    } else {
+                      current = chunk;
+                    }
+                  }
+                }
+              }
+
+              if (current) {
+                yield* emitPartialBlock(current, out);
+              }
+              break;
+            }
+
+            case 'text-end': {
+              yield* flushText(out);
+              break;
+            }
+
+            case 'tool-params-start': {
+              invariant(!block);
+              block = {
+                _tag: 'toolCall',
+                toolCallId: part.id,
+                name: part.name,
+                input: '',
+                pending: true,
+                providerExecuted: part.providerExecuted,
+              } satisfies ContentBlock.ToolCall;
+              yield* emitPartialContentBlock(block, out);
+              break;
+            }
+
+            case 'tool-params-delta': {
+              invariant(block?._tag === 'toolCall');
+              block.input += part.delta;
+              yield* emitPartialContentBlock(block, out);
+              break;
+            }
+
+            case 'tool-params-end': {
+              invariant(block?._tag === 'toolCall');
+              block.pending = false;
+              yield* emitFullBlock(block, out);
+              toolCalls++;
+              block = undefined;
+              break;
+            }
+
+            case 'tool-call': {
+              // NOTE: Tool calls are handled via tool-params-start/delta/end streaming parts.
+              // This event is still emitted by Effect-ai but we ignore it.
+              break;
+            }
+
+            case 'tool-result': {
+              yield* emitFullBlock(
+                {
+                  _tag: 'toolResult',
+                  toolCallId: part.id,
+                  name: part.name,
+                  result: JSON.stringify(part.result),
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolResult,
+                out,
+              );
+              break;
+            }
+
+            case 'reasoning-start': {
+              invariant(!block);
+              block = {
+                _tag: 'reasoning',
+                reasoningText: '',
+                pending: true,
+              } satisfies ContentBlock.Reasoning;
+              if (part.metadata.anthropic?.type === 'thinking') {
+                block.signature = part.metadata.anthropic.signature;
+              }
+              if (part.metadata.anthropic?.type === 'redacted_thinking') {
+                block.redactedText = part.metadata.anthropic.redactedData;
+              }
+              yield* emitPartialContentBlock(block, out);
+              break;
+            }
+            case 'reasoning-delta': {
+              invariant(block?._tag === 'reasoning');
+              block.reasoningText += part.delta;
+              yield* emitPartialContentBlock(block, out);
+              break;
+            }
+            case 'reasoning-end': {
+              invariant(block?._tag === 'reasoning');
+              block.pending = false;
+              yield* emitFullBlock(block, out);
+              block = undefined;
+              break;
+            }
+
+            case 'source': {
+              yield* flushText(out);
+              // TODO(dmaretskyi): Handle sources.
+              break;
+            }
+
+            case 'response-metadata': {
+              yield* flushText(out);
+              stats.model = Option.getOrUndefined(part.modelId);
+              log('metadata', { metadata: part });
+              break;
+            }
+
+            case 'finish': {
+              yield* flushText(out);
+              const { inputTokens, outputTokens, totalTokens } = part.usage;
+              stats.duration = Date.now() - start;
+              stats.message = 'OK'; // part.reason;
+              stats.toolCalls = toolCalls;
+              stats.usage = {
+                inputTokens,
+                outputTokens,
+                totalTokens,
+              };
+              yield* emitFullBlock(
+                {
+                  ...stats,
+                  _tag: 'stats',
+                } satisfies ContentBlock.Stats,
+                out,
+              );
+              log('finish', { finish: part });
+              break;
+            }
+
+            default: {
+              log.warn('llm stream part ignored', { part: part.type });
+              break;
+            }
+          }
+
+          parts++;
+        });
+
+        log('begin');
+        yield* onBegin();
+
+        const main = input.pipe(
+          Stream.mapConcatEffect((part) =>
+            Effect.gen(function* () {
+              const out: ContentBlock.Any[] = [];
+              yield* handlePart(part, out);
+              return out;
+            }),
+          ),
+        );
+
+        const epilogue = Stream.fromIterableEffect(
+          Effect.gen(function* () {
+            const out: ContentBlock.Any[] = [];
+            yield* flushText(out);
+            log('end', { blocks, parts, summary: stats });
+            yield* onEnd(stats);
+            return out;
+          }),
+        );
+
+        return Stream.concat(main, epilogue);
+      }),
+    );
+
+/**
+ * @returns Mutable content block made from stream block.
+ */
+const makeContentBlock = (
+  block: StreamBlock,
+  { parseReasoningTags }: Pick<ParseResponseOptions<any>, 'parseReasoningTags'>,
+): Types.Mutable<ContentBlock.Any> | undefined => {
+  switch (block.type) {
+    //
+    // Text
+    //
+    case 'text': {
+      return {
+        _tag: 'text',
+        text: block.content,
+      } satisfies ContentBlock.Text;
+    }
+
+    //
+    // XML
+    //
+    case 'tag': {
+      switch (block.tag) {
+        case ModelTags.COT:
+        case ModelTags.THINK: {
+          const content = block.content
+            .map((block) => {
+              switch (block.type) {
+                case 'text':
+                  return block.content;
+                default:
+                  return null;
+              }
+            })
+            .filter(Predicate.isTruthy)
+            .join('\n');
+
+          if (!parseReasoningTags) {
+            return {
+              _tag: 'text',
+              text: content,
+            } satisfies ContentBlock.Text;
+          }
+          return {
+            _tag: 'reasoning',
+            reasoningText: content,
+          } satisfies ContentBlock.Reasoning;
+        }
+
+        case ModelTags.STATUS: {
+          const content = block.content
+            .map((block) => {
+              switch (block.type) {
+                case 'text':
+                  return block.content;
+                default:
+                  return null;
+              }
+            })
+            .filter(Predicate.isTruthy)
+            .join('\n');
+
+          return {
+            _tag: 'status',
+            statusText: content,
+          } satisfies ContentBlock.Status;
+        }
+
+        case ModelTags.OBJECT: {
+          return parseObjectBlock(block);
+        }
+
+        case ModelTags.ARTIFACT: {
+          log.warn('artifact tags not implemented', { block });
+          return undefined;
+        }
+
+        case ModelTags.SUGGESTION: {
+          if (block.content.length === 1 && block.content[0].type === 'text') {
+            return {
+              _tag: 'suggestion',
+              text: block.content[0].content,
+            } satisfies ContentBlock.Suggestion;
+          }
+
+          return undefined;
+        }
+
+        case ModelTags.PROPOSAL: {
+          if (block.content.length === 1 && block.content[0].type === 'text') {
+            return {
+              _tag: 'proposal',
+              text: block.content[0].content,
+            } satisfies ContentBlock.Proposal;
+          }
+
+          return undefined;
+        }
+
+        case ModelTags.SELECT: {
+          return {
+            _tag: 'select',
+            options: block.content.flatMap((content) =>
+              content.type === 'tag' && content.content.length === 1 && content.content[0].type === 'text'
+                ? [content.content[0].content]
+                : [],
+            ),
+          } satisfies ContentBlock.Select;
+        }
+
+        case ModelTags.TOOLKIT: {
+          return {
+            _tag: 'toolkit',
+          } satisfies ContentBlock.Toolkit;
+        }
+      }
+
+      // Unknown tag — preserve the original literal text so it survives downstream as part
+      // of the assistant's response (e.g. the model writes `<name>Claude</name>` because the
+      // user asked for an XML-wrapped answer; the tag is not in `ModelTags`, so it must be
+      // kept as plain text rather than silently dropped).
+      return {
+        _tag: 'text',
+        text: serializeStreamBlock(block),
+      } satisfies ContentBlock.Text;
+    }
+  }
+};
+
+/**
+ * Reconstruct the original literal text of a `StreamBlock`. Used as a fallback when a tag
+ * is not in `ModelTags` so the assistant's response text is preserved verbatim. Only emits
+ * a closing tag when the source had one — synthesizing a `</tag>` for an unclosed `<tag>`
+ * (e.g. mid-stream or when the model never closes it) corrupts the response text.
+ */
+const serializeStreamBlock = (block: StreamBlock): string => {
+  switch (block.type) {
+    case 'text':
+    case 'json':
+      return block.content;
+    case 'tag': {
+      const attrs = block.attributes
+        ? Object.entries(block.attributes)
+            .map(([key, value]) => ` ${key}="${value}"`)
+            .join('')
+        : '';
+      if (block.selfClosing) {
+        return `<${block.tag}${attrs}/>`;
+      }
+      const inner = block.content.map(serializeStreamBlock).join('');
+      return block.closed ? `<${block.tag}${attrs}>${inner}</${block.tag}>` : `<${block.tag}${attrs}>${inner}`;
+    }
+  }
+};
+
+const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefined => {
+  if (block.type !== 'tag') {
+    return undefined;
+  }
+
+  // <object dxn="..." />
+  if (typeof block.attributes?.dxn === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromURI(EID.parse(block.attributes.dxn)),
+      };
+    } catch {}
+  }
+
+  // <object id="..." />
+  if (typeof block.attributes?.id === 'string' && EntityId.isValid(block.attributes.id)) {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromURI(EID.make({ entityId: block.attributes.id })),
+      };
+    } catch {}
+  }
+
+  // <object>dxn:...</object>
+  if (block.content.length === 1 && block.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromURI(EID.parse(block.content[0].content)),
+      };
+    } catch {}
+  }
+
+  // <object><dxn>...</dxn></object>
+  const dxnTag = block.content.find((content) => content.type === 'tag' && content.tag === 'dxn');
+  if (dxnTag && dxnTag.type === 'tag' && dxnTag.content.length === 1 && dxnTag.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromURI(EID.parse(dxnTag.content[0].content)),
+      };
+    } catch {}
+  }
+
+  return undefined;
+};

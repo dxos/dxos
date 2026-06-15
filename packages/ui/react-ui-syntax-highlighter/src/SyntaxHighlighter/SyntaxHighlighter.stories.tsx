@@ -2,19 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
 
-import { withTheme } from '@dxos/storybook-utils';
-
+// @ts-ignore - Vite raw import.
+import TEXT from '../../package.json?raw';
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
-const meta: Meta<typeof SyntaxHighlighter> = {
+const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
-  decorators: [withTheme],
-};
+  decorators: [withTheme(), withLayout({ layout: 'column', scroll: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof SyntaxHighlighter>;
 
 export default meta;
 
@@ -23,20 +27,22 @@ type Story = StoryObj<typeof SyntaxHighlighter>;
 export const Default: Story = {
   args: {
     language: 'json',
-    classNames: 'text-sm',
-    children: JSON.stringify({ message: 'DXOS', initialized: true }, null, 2),
+    children: TEXT,
+    copyButton: true,
   },
 };
 
 export const Typescript: Story = {
   args: {
-    language: 'ts',
-    children: 'const x = 100;',
+    language: 'tsx',
+    children: trim`
+      import React from 'react'
+
+      const Test = () => {
+        return <div>Test</div>
+      }
+    `,
   },
 };
 
-export const Empty: Story = {
-  args: {
-    children: false,
-  },
-};
+export const Empty: Story = {};

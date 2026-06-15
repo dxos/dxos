@@ -2,24 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import { useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
-import { Filter, type Queue } from '@dxos/client/echo';
+import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type Key, Obj, Ref, Type } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo-schema';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
-import { useQueue, type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
-import { Testing, seedTestData } from '@dxos/schema/testing';
+import { random } from '@dxos/random';
+import { TestSchema } from '@dxos/schema/testing';
+import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
+import { seedTestData } from '@dxos/types/testing';
 
 // TODO(burdon): Reconcile with plugin-markdown. Move to @dxos/schema/testing.
 export const TestItem = Schema.Struct({
@@ -31,16 +29,11 @@ export const TestItem = Schema.Struct({
     title: 'Description',
     description: 'Product description',
   }),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Test',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.test', '0.1.0')));
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {
-  abstract createMessage(numSegments?: number): Promise<DataType.Message>;
+  abstract createMessage(numSegments?: number): Promise<Message.Message>;
 }
 
 /**
@@ -51,8 +44,8 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
   users = Array.from({ length: 5 }, () => ({
     identityDid: IdentityDid.random().toString(),
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
+    name: random.person.fullName(),
+    email: random.internet.email(),
   }));
 
   start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
@@ -61,27 +54,32 @@ export class MessageBuilder extends AbstractMessageBuilder {
     super();
   }
 
-  override async createMessage(numSegments = 1): Promise<DataType.Message> {
-    return Obj.make(DataType.Message, {
+  override async createMessage(numSegments = 1): Promise<Message.Message> {
+    return Obj.make(Message.Message, {
       created: this.next().toISOString(),
-      sender: faker.helpers.arrayElement(this.users),
+      sender: random.helpers.arrayElement(this.users),
       blocks: Array.from({ length: numSegments }).map(() => this.createBlock()),
     });
   }
 
-  createBlock(): DataType.MessageBlock.Transcription {
-    let text = faker.lorem.paragraph();
+  createBlock(): ContentBlock.Transcript {
+    let text = random.lorem.paragraph();
     if (this._space) {
-      const label = faker.commerce.productName();
-      const obj = this._space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
-      const dxn = Ref.make(obj).dxn.toString();
+      const label = random.commerce.productName();
+      const obj = this._space.db.add(
+        Obj.make(TestItem, {
+          title: label,
+          description: random.lorem.paragraph(),
+        }),
+      );
+      const dxn = Ref.make(obj).uri;
       const words = text.split(' ');
-      words.splice(Math.floor(Math.random() * words.length), 0, `[${label}][${dxn}]`);
+      words.splice(Math.floor(Math.random() * words.length), 0, `[${label}](${dxn})`);
       text = words.join(' ');
     }
 
     return {
-      type: 'transcription',
+      _tag: 'transcript',
       started: this.next().toISOString(),
       text,
     };
@@ -95,15 +93,9 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
 // TODO(burdon): Reconcile with BlockBuilder.
 class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  AiService = new EdgeAiServiceClient({
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-  });
-
-  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.AiService } }));
-
   space: Space | undefined;
   currentMessage: number = 0;
-  transcriptMessages: DataType.Message[] = [];
+  transcriptMessages: Message.Message[] = [];
 
   async connect(space: Space): Promise<void> {
     this.space = space;
@@ -111,14 +103,18 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     this.transcriptMessages = transcriptMessages;
   }
 
-  override async createMessage(): Promise<DataType.Message> {
+  override async createMessage(): Promise<Message.Message> {
     if (!this.space) {
       throw new Error('Space not connected');
     }
 
-    const { objects } = await this.space.db
+    const objects = await this.space.db
       .query(
-        Filter.or(Filter.type(DataType.Person), Filter.type(DataType.Organization), Filter.type(Testing.DocumentType)),
+        Filter.or(
+          Filter.type(Person.Person),
+          Filter.type(Organization.Organization),
+          Filter.type(TestSchema.DocumentType),
+        ),
       )
       .run();
 
@@ -129,8 +125,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
     const { message: enhancedMessage } = await processTranscriptMessage({
       input: { message },
-      executor: this.executor,
-      function: extractionAnthropicFn,
+      function: extractionAnthropicFunction,
     });
 
     return enhancedMessage;
@@ -139,71 +134,64 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
 type UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
-) => Queue<DataType.Message> | undefined;
+) => Feed.Feed | undefined;
 
 /**
- * Test transcriptionqueue.
+ * Test transcription feed.
  */
 export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
-    if (!queue || !running) {
+    if (!space || !feed || !running) {
       return;
     }
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await queue.append([Obj.make(DataType.Message, message)]);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
-  }, [queue, running, interval]);
+  }, [space, feed, running, interval]);
 
-  return queue;
+  return feed;
 };
 
 /**
- * Test transcription queue.
+ * Test transcription feed with entity extraction.
  */
 // TODO(burdon): Reconcile with useTestTranscriptionQueue.
 export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<DataType.Message>(queueDxn);
+  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
-    if (!queue || !running) {
+    if (!space || !feed || !running) {
       return;
     }
 
-    if (space) {
-      void builder.connect(space);
-    }
+    void builder.connect(space);
 
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const ctx = new Context();
     scheduleTaskInterval(
       ctx,
       async () => {
         const message = await builder.createMessage();
-        void queue.append([Obj.make(DataType.Message, message)]);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
       },
       interval,
     );
@@ -211,7 +199,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
     return () => {
       void ctx.dispose();
     };
-  }, [space, queue, running, interval]);
+  }, [space, feed, running, interval]);
 
-  return queue;
+  return feed;
 };

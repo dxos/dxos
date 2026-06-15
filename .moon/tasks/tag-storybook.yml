@@ -1,0 +1,16 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  storybook:
+    command: pnpm exec storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+      - static/*
+    preset: server
+
+inheritedBy:
+  tags: storybook

@@ -1,7 +1,7 @@
 ---
 title: Querying data
 sidebar_title: 5. Querying data
-description: 
+description:
 ---
 
 ## List items
@@ -12,7 +12,7 @@ We should add now some more code to be able to see the created tasks. For this w
 import { DocumentModel } from '@dxos/document-model';
 import { useSpace, useSelection } from '@dxos/react-client';
 
-const TASK_TYPE = 'example.com/type/task';
+const TASK_TYPE = 'com.example.type.task';
 
 const TaskList = ({ space_key }) => {
   const space = usespace(space_key);

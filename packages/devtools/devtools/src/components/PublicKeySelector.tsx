@@ -43,6 +43,7 @@ export const PublicKeySelector = ({
               </Select.Option>
             ))}
           </Select.Viewport>
+          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

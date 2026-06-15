@@ -3,7 +3,7 @@
 //
 
 // TODO(wittjosiah): Consider using playwright locator expects elsewhere for more robust tests.
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
 

@@ -1,47 +1,66 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { ux } from '@oclif/core';
-import { load } from 'js-yaml';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 
-import { table } from '@dxos/cli-base';
-import { Config } from '@dxos/config';
-import { type FunctionManifest } from '@dxos/functions';
+import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
+import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
+import { Context } from '@dxos/context';
+import { Database, Filter } from '@dxos/echo';
+import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
-import { BaseCommand } from '../../base';
+import { getFunctionStatus, printFunction } from './util';
 
-export default class List extends BaseCommand<typeof List> {
-  static override enableJsonFlag = true;
-  static override description = 'List functions.';
+export const list = Command.make(
+  'list',
+  {
+    spaceId: Common.spaceId.pipe(Options.optional),
+    remote: Options.boolean('remote').pipe(
+      Options.withDescription('Query EDGE service (defaults to local)'),
+      Options.withDefault(false),
+    ),
+  },
+  Effect.fn(function* ({ remote }) {
+    const { json } = yield* CommandConfig;
 
-  async run(): Promise<any> {
-    return await this.execWithClient(async ({ client }) => {
-      // TODO(dmaretskyi): Move into system service?
-      const host = await client.services.services.DevtoolsHost!;
-      const config = new Config(JSON.parse((await host.getConfig()).config));
-      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
-        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
+    const dbFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
+    const functions = remote
+      ? yield* Effect.gen(function* () {
+          const client = yield* ClientService;
+          return yield* Effect.promise(() => getDeployedFunctions(Context.default(), client, true));
+        })
+      : dbFunctions;
+
+    // Only calculate status for remote functions (comparing against DB)
+    const functionsWithStatus = functions.map((fn) => ({
+      function: fn,
+      status: remote ? getFunctionStatus(fn, dbFunctions) : undefined,
+    }));
+
+    // Print functions
+    if (json) {
+      yield* Console.log(
+        JSON.stringify(
+          functionsWithStatus.map(({ function: fn, status }) => ({ ...fn, status })),
+          null,
+          2,
+        ),
       );
-
-      const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
-      const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-      const { functions } = manifest;
-      printFunctions(functions);
-      return manifest;
-    });
-  }
-}
-
-// TODO(burdon): List stats.
-export const printFunctions = (functions: FunctionManifest['functions'] = []) => {
-  ux.stdout(
-    table(functions, {
-      name: { primary: true },
-      version: {},
-      description: {},
-    }),
-  );
-};
+    } else {
+      if (functionsWithStatus.length === 0) {
+        yield* Console.log('No functions found.');
+      } else {
+        const items = functionsWithStatus.map(({ function: fn, status }) => printFunction(fn, status));
+        yield* Console.log(printList(items));
+      }
+    }
+  }),
+).pipe(
+  Command.withDescription('List functions deployed to EDGE.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
+);

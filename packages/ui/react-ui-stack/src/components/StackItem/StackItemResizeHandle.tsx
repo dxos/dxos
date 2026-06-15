@@ -6,15 +6,15 @@ import React from 'react';
 
 import { ResizeHandle } from '@dxos/react-ui-dnd';
 
-import { DEFAULT_EXTRINSIC_SIZE } from './StackItem';
 import { useStack, useStackItem } from '../StackContext';
+import { DEFAULT_EXTRINSIC_SIZE } from './StackItem';
 
 const MIN_WIDTH = 20;
 const MIN_HEIGHT = 3;
 
 export type StackItemResizeHandleProps = {};
 
-export const StackItemResizeHandle = () => {
+export const StackItemResizeHandle = (_: StackItemResizeHandleProps) => {
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
 

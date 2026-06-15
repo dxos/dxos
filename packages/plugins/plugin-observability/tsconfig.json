@@ -18,16 +18,13 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -39,25 +36,19 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../core/protocols"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/observability"
+      "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../ui/react-ui"
@@ -66,13 +57,10 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-stack"
+      "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../plugin-graph"
+      "path": "../plugin-testing"
     }
   ]
 }

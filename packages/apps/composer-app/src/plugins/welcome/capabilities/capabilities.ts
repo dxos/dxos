@@ -2,11 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
-import { WELCOME_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type OnboardingManager } from '../onboarding-manager';
 
+export type WelcomeOptions = {
+  generateExemplarSpace: boolean;
+};
+
 export namespace WelcomeCapabilities {
-  export const Onboarding = defineCapability<OnboardingManager>(`${WELCOME_PLUGIN}/capability/onboarding`);
+  export const Onboarding = Capability.make<OnboardingManager>(`${meta.id}.capability.onboarding`);
 }

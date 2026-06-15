@@ -1,111 +1,130 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import {
-  Root as ScrollAreaPrimitiveRoot,
-  type ScrollAreaProps as ScrollAreaPrimitiveRootProps,
-  Viewport as ScrollAreaPrimitiveViewport,
-  type ScrollAreaViewportProps as ScrollAreaPrimitiveViewportProps,
-  Scrollbar as ScrollAreaPrimitiveScrollbar,
-  type ScrollAreaScrollbarProps as ScrollAreaPrimitiveScrollbarProps,
-  Thumb as ScrollAreaPrimitiveThumb,
-  type ScrollAreaThumbProps as ScrollAreaPrimitiveThumbProps,
-  Corner as ScrollAreaPrimitiveCorner,
-  type ScrollAreaCornerProps as ScrollAreaPrimitiveCornerProps,
-} from '@radix-ui/react-scroll-area';
-import React, { forwardRef } from 'react';
+import { createContext } from '@radix-ui/react-context';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { CSSProperties, useMemo } from 'react';
+
+import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { composableProps, slottable } from '../../util';
+import { scrollbar } from './scrollbar';
 
-type ScrollAreaVariant = 'coarse' | 'fine';
+//
+// Context
+//
 
-type ScrollAreaRootProps = ThemedClassName<ScrollAreaPrimitiveRootProps>;
+const SCROLLAREA_NAME = 'ScrollArea';
+
+type ScrollAreaContextType = {
+  /** Orientation of scrollbars. */
+  orientation: AllowedAxis;
+  /** Hide scrollbars when not scrolling. */
+  autoHide: boolean;
+  /** Apply padding to opposite side of scrollbar. */
+  centered?: boolean;
+  /** Apply padding. */
+  padding: boolean;
+  /** Use thin scrollbars. */
+  thin: boolean;
+  /** Enable snap scrolling. */
+  snap: boolean;
+};
+
+const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextType>(SCROLLAREA_NAME);
+
+//
+// Root
+//
+
+const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
+
+type ScrollAreaRootProps = Partial<ScrollAreaContextType>;
 
 /**
- * @deprecated
+ * ScrollArea provides native scrollbars with custom styling.
  */
-const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ScrollAreaPrimitiveRoot
-      {...props}
-      className={tx('scrollArea.root', 'scroll-area', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
-
-type ScrollAreaViewportProps = ThemedClassName<ScrollAreaPrimitiveViewportProps>;
-
-const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
+  (
+    {
+      children,
+      asChild,
+      orientation = 'vertical',
+      autoHide = true,
+      centered = false,
+      padding = false,
+      thin = false,
+      snap = false,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const options = useMemo(
+      () => ({ orientation, autoHide, centered, padding, thin, snap }),
+      [orientation, autoHide, centered, padding, thin, snap],
+    );
+
     return (
-      <ScrollAreaPrimitiveViewport
-        {...props}
-        className={tx('scrollArea.viewport', 'scroll-area', {}, classNames)}
-        ref={forwardedRef}
-      />
+      <ScrollAreaProvider {...options}>
+        <Comp {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
+          {children}
+        </Comp>
+      </ScrollAreaProvider>
     );
   },
 );
 
-type ScrollAreaScrollbarProps = ThemedClassName<ScrollAreaPrimitiveScrollbarProps> & { variant?: ScrollAreaVariant };
+ScrollAreaRoot.displayName = SCROLLAREA_ROOT_NAME;
 
-const ScrollAreaScrollbar = forwardRef<HTMLDivElement, ScrollAreaScrollbarProps>(
-  ({ classNames, variant = 'fine', ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <ScrollAreaPrimitiveScrollbar
-        data-variant={variant}
-        {...props}
-        className={tx('scrollArea.scrollbar', 'scroll-area__scrollbar', {}, classNames)}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
+//
+// Viewport
+//
 
-type ScrollAreaThumbProps = ThemedClassName<ScrollAreaPrimitiveThumbProps>;
+const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
 
-const ScrollAreaThumb = forwardRef<HTMLDivElement, ScrollAreaThumbProps>(({ classNames, ...props }, forwardedRef) => {
+type ScrollAreaViewportProps = SlottableProps;
+
+const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
+  const density = options.thin ? scrollbar.md : scrollbar.lg;
+  const { className, ...rest } = composableProps(props);
+  const { style, ...restWithoutStyle } = rest as { style?: CSSProperties; [key: string]: any };
+  const Comp = asChild ? Slot : Primitive.div;
+
   return (
-    <ScrollAreaPrimitiveThumb
-      {...props}
-      className={tx('scrollArea.thumb', 'scroll-area__thumb', {}, classNames)}
+    <Comp
+      {...restWithoutStyle}
+      style={
+        {
+          '--scroll-width': `${density.size}px`,
+          '--scroll-padding': `${density.padding}px`,
+          ...style,
+        } as CSSProperties
+      }
+      className={tx('scrollArea.viewport', options, className)}
       ref={forwardedRef}
-    />
+    >
+      {children}
+    </Comp>
   );
 });
 
-type ScrollAreaCornerProps = ThemedClassName<ScrollAreaPrimitiveCornerProps>;
+ScrollAreaViewport.displayName = SCROLLAREA_VIEWPORT_NAME;
 
-const ScrollAreaCorner = forwardRef<HTMLDivElement, ScrollAreaCornerProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ScrollAreaPrimitiveCorner
-      {...props}
-      className={tx('scrollArea.corner', 'scroll-area__corner', {}, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+//
+// ScrollArea
+//
 
 export const ScrollArea = {
   Root: ScrollAreaRoot,
   Viewport: ScrollAreaViewport,
-  Scrollbar: ScrollAreaScrollbar,
-  Thumb: ScrollAreaThumb,
-  Corner: ScrollAreaCorner,
 };
 
-export type {
-  ScrollAreaRootProps,
-  ScrollAreaViewportProps,
-  ScrollAreaScrollbarProps,
-  ScrollAreaThumbProps,
-  ScrollAreaCornerProps,
-};
+export type { ScrollAreaRootProps, ScrollAreaViewportProps };

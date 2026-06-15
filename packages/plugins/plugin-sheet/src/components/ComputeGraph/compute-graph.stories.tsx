@@ -2,37 +2,36 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { testFunctionPlugins } from '@dxos/compute/testing';
-import { Obj, Filter } from '@dxos/echo';
-import { FunctionType } from '@dxos/functions';
-import { useSpace } from '@dxos/react-client/echo';
+import { Operation } from '@dxos/compute';
+import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
+import { Filter, Obj } from '@dxos/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar, Button, Input } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
+import { Button, Input, Toolbar } from '@dxos/react-ui';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { useComputeGraph } from './ComputeGraphContextProvider';
+import { withComputeGraphDecorator } from '#testing';
+import { Sheet } from '#types';
+
 import { useSheetModel } from '../../model';
-import { withComputeGraphDecorator } from '../../testing';
-import { createSheet, SheetType } from '../../types';
+import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 
-const Story = () => {
-  const space = useSpace();
+const DefaultStory = () => {
+  const [space] = useSpaces();
   const graph = useComputeGraph(space);
-  const [sheet, setSheet] = useState<SheetType>();
+  const [sheet, setSheet] = useState<Sheet.Sheet>();
   const [text, setText] = useState(`${FUNCTION_NAME}(100)`);
   const [result, setResult] = useState<any>();
   const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (space) {
-      const sheet = space.db.add(createSheet());
+      const sheet = space.db.add(Sheet.make());
       setSheet(sheet);
     }
   }, [space]);
@@ -45,14 +44,20 @@ const Story = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(Obj.make(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
+      space.db.add(
+        Obj.make(Operation.PersistentOperation, {
+          [Obj.Meta]: { version: '0.0.1' },
+          name: 'test',
+          binding: FUNCTION_NAME,
+        }),
+      );
     }
   }, [space, graph]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleTest = async () => {
     if (space && graph) {
-      const { objects } = await space.db.query(Filter.type(FunctionType)).run();
+      const objects = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
       const mapped = graph.mapFunctionBindingToId(text);
       const unmapped = graph.mapFunctionBindingFromId(mapped);
       const internal = graph.mapFormulaToNative(text);
@@ -75,23 +80,27 @@ const Story = () => {
         </Input.Root>
         <Button onClick={handleTest}>Test</Button>
       </Toolbar.Root>
-      <SyntaxHighlighter language='json'>
-        {JSON.stringify({ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }, null, 2)}
-      </SyntaxHighlighter>
+      <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />
     </div>
   );
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/functions',
+const meta = {
+  title: 'plugins/plugin-sheet/components/functions',
+  render: DefaultStory,
   decorators: [
-    withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
+    withTheme(),
+    withClientProvider({
+      types: [Operation.PersistentOperation, Sheet.Sheet],
+      createIdentity: true,
+      createSpace: true,
+    }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
-    withTheme,
   ],
-  render: (args: any) => <Story {...args} />,
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

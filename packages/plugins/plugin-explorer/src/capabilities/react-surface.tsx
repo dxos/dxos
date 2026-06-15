@@ -2,22 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ExplorerContainer } from '../components';
-import { EXPLORER_PLUGIN } from '../meta';
-import { ViewType } from '../types';
+import { ExplorerArticle } from '#containers';
+import { Graph } from '#types';
 
-export default () =>
-  contributes(
-    Capabilities.ReactSurface,
-    createSurface({
-      id: `${EXPLORER_PLUGIN}/article`,
-      role: ['article', 'section'],
-      filter: (data): data is { subject: ViewType } => Obj.instanceOf(ViewType, data.subject),
-      component: ({ data, role }) => <ExplorerContainer view={data.subject} role={role} />,
-    }),
-  );
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(
+      Capabilities.ReactSurface,
+      Surface.create({
+        id: 'article',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Graph.Graph),
+          AppSurface.object(AppSurface.Section, Graph.Graph),
+        ),
+        component: ({ data, role }) => {
+          return <ExplorerArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
+        },
+      }),
+    ),
+  ),
+);

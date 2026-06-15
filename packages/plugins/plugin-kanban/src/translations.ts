@@ -3,34 +3,42 @@
 //
 
 import { Type } from '@dxos/echo';
-import { KanbanType } from '@dxos/react-ui-kanban';
+import { type Resource } from '@dxos/react-ui';
 
-import { KANBAN_PLUGIN } from './meta';
+import { meta } from '#meta';
+import { Kanban } from '#types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(KanbanType)]: {
-        'typename label': 'Kanban',
-        'typename label_zero': 'Kanbans',
-        'typename label_one': 'Kanban',
-        'typename label_other': 'Kanbans',
-        'object name placeholder': 'New kanban',
+      [Type.getTypename(Kanban.Kanban)]: {
+        'typename.label': 'Kanban',
+        'typename.label_zero': 'Kanbans',
+        'typename.label_one': 'Kanban',
+        'typename.label_other': 'Kanbans',
+        'object-name.placeholder': 'New kanban',
+        'add-object.label': 'Add kanban',
+        'rename-object.label': 'Rename kanban',
+        'delete-object.label': 'Delete kanban',
+        'object-deleted.label': 'Kanban deleted',
       },
-      [KANBAN_PLUGIN]: {
-        'plugin name': 'Kanban',
-        'kanban title label': 'Title',
-        'column title label': 'Column title',
-        'column title placeholder': 'New column',
-        'item title label': 'Item title',
-        'item title placeholder': 'New item',
-        'add column label': 'Add column',
-        'add item label': 'Add card',
-        'delete column label': 'Delete column',
-        'delete item label': 'Delete card',
-        'card field deleted label': 'Card field deleted',
-        'card deleted label': 'Card deleted',
+      [meta.id]: {
+        'action-menu.label': 'Actions',
+        'plugin.name': 'Kanban',
+        'kanban-title.label': 'Title',
+        'column-title.label': 'Column title',
+        'column-title.placeholder': 'New column',
+        'add-column.label': 'Add column',
+        'add-card.label': 'Add card',
+        'new-column-name.label': 'New column name',
+        'remove-card.label': 'Remove card',
+        'remove-empty-column.label': 'Remove empty column',
+        'column-drag-handle.label': 'Drag to rearrange',
+        'delete-column.label': 'Delete column',
+        'card-field-deleted.label': 'Card field deleted',
+        'card-deleted.label': 'Card deleted',
+        'select-pivot.placeholder': 'Select a pivot column in board settings to display columns.',
       },
     },
   },
-];
+] as const satisfies Resource[];

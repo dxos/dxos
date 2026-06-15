@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type WavConfig, type AudioChunk, type AudioRecorder } from './audio-recorder';
+import { type AudioChunk, type AudioRecorder, type WavConfig } from './audio-recorder';
 
 let initializingPromise: Promise<void> | undefined;
 
@@ -19,7 +19,7 @@ const initializeExtendableMediaRecorder = async () => {
   await register(await connect());
 };
 
-export type MediaStreamRecorderParams = {
+export type MediaStreamRecorderProps = {
   mediaStreamTrack: MediaStreamTrack;
   config: {
     interval: number;
@@ -37,12 +37,12 @@ export class MediaStreamRecorder implements AudioRecorder {
   /**
    * Default MediaRecorder implementation do not support wav encoding.
    */
-  private readonly _config: MediaStreamRecorderParams['config'];
+  private readonly _config: MediaStreamRecorderProps['config'];
   private _mediaRecorder?: IMediaRecorder = undefined;
   private _header?: Uint8Array = undefined;
   private _onChunk?: (chunk: AudioChunk) => void;
 
-  constructor({ mediaStreamTrack, config }: MediaStreamRecorderParams) {
+  constructor({ mediaStreamTrack, config }: MediaStreamRecorderProps) {
     this._mediaStreamTrack = mediaStreamTrack;
     this._config = config;
   }

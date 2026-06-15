@@ -3,11 +3,11 @@
 //
 
 import { expect, test } from '@playwright/test';
-
-import { sleep } from '@dxos/async';
+// TODO(wittjosiah): Importing this causes tests to fail.
+// import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
 import { AppManager } from './app-manager';
-import { Markdown, Stack } from './plugins';
+import { Markdown, Stack, StackPlugin } from './plugins';
 
 test.describe('Stack tests', () => {
   let host: AppManager;
@@ -19,34 +19,35 @@ test.describe('Stack tests', () => {
     host = new AppManager(browser, false);
     await host.init();
     // Sleep to allow first run to finish before reloading.
-    await sleep(500);
+    await host.page.waitForTimeout(500);
     await host.openPluginRegistry();
     await host.openRegistryCategory('recommended');
-    await host.enablePlugin('dxos.org/plugin/stack');
+    await host.enablePlugin(StackPlugin.meta.id);
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    // beforeEach calls `test.skip` early on webkit, leaving `host` unassigned;
+    // playwright still runs afterEach for skipped tests so guard against that.
+    await (host as AppManager | undefined)?.closePage();
   });
 
   test('create', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     const stack = Stack.getStack(host.page);
     await expect(stack.sections()).toHaveCount(0);
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
   test('create new document section', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.toggleCollectionCollapsed(2);
-    await Stack.createSection(host.page, 'Document');
+    await host.createObject({ type: 'Collection' });
+    await Stack.addSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(4);
+    await expect(host.getObjectLinks()).toHaveCount(2);
     await expect(stack.sections()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
@@ -54,8 +55,8 @@ test.describe('Stack tests', () => {
   // TODO(wittjosiah): This feature has been disabled.
   test.skip('create section from existing document', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Document' });
+    await host.createObject({ type: 'Collection' });
     const stack = Stack.getStack(host.page);
     const doc = host.getObjectLinks().nth(1);
 
@@ -76,12 +77,12 @@ test.describe('Stack tests', () => {
   // TODO(wittjosiah): This feature has been disabled.
   test.skip('reorder sections', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection' });
     await host.toggleCollectionCollapsed(2);
-    await Stack.createSection(host.page, 'Document');
-    await Stack.createSection(host.page, 'Document');
+    await Stack.addSection(host.page, 'Document');
+    await Stack.addSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(4);
     await expect(stack.sections()).toHaveCount(2);
 
     const originalOrder = await stack.order();

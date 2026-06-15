@@ -6,7 +6,7 @@
 import React, { useEffect, useReducer, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type FPSProps = ThemedClassName<{
   width?: number;
@@ -53,7 +53,7 @@ export const FPS = ({ classNames, width = 60, height = 30, bar = 'bg-cyan-500' }
     },
   );
 
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | null>(null);
   const tick = () => {
     dispatch();
     requestRef.current = requestAnimationFrame(tick);
@@ -73,7 +73,7 @@ export const FPS = ({ classNames, width = 60, height = 30, bar = 'bg-cyan-500' }
       style={{ width: width + 6 }}
       className={mx(
         'relative flex flex-col p-0.5',
-        'bg-baseSurface text-xs text-subdued font-thin pointer-events-none border border-separator',
+        'bg-base-surface text-xs text-subdued font-thin pointer-events-none border border-separator',
         classNames,
       )}
     >

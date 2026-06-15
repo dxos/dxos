@@ -2,28 +2,44 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UAParser } from 'ua-parser-js';
-
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { fromHost } from './local-client-services';
+import { type DedeciatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
+import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
+import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
-import { type WorkerClientServicesParams, fromWorker } from './worker-client-services';
+import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
+
+export type CreateClientServicesOptions = {
+  /** Factory for creating a shared worker. Required for {@link Runtime.Client.ServicesMode.SHARED_WORKER}. */
+  createWorker?: WorkerClientServicesProps['createWorker'];
+  /** Factory for creating a dedicated worker. Required for {@link Runtime.Client.ServicesMode.DEDICATED_WORKER}. */
+  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
+  createCoordinatorWorker?: () => SharedWorker;
+  /** Factory for creating an OPFS worker. */
+  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
+  /** Path to SQLite database file for persistent indexing in Node/Bun. */
+  sqlitePath?: LocalClientServicesParams['sqlitePath'];
+};
 
 /**
  * Create services from config.
- * @param config
- * @param createWorker
- * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
- * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
+ *
+ * The deployment mode is chosen exclusively from `runtime.client.services_mode` (or
+ * `runtime.client.remote_source` for a remote services endpoint). If the selected mode requires a
+ * worker factory that was not supplied via {@link CreateClientServicesOptions}, this function
+ * throws — there is no implicit fallback.
  */
-export const createClientServices = (
+export const createClientServices = async (
   config: Config,
-  createWorker?: WorkerClientServicesParams['createWorker'],
-  observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
+  options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
+  const { createWorker, createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath } = options;
+
+  // Remote services take precedence (proxy to a remote vault over a socket, etc.).
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
     const url = new URL(remote);
@@ -41,16 +57,53 @@ export const createClientServices = (
     }
   }
 
-  let useWorker = false;
-  if (typeof navigator !== 'undefined' && navigator.userAgent) {
-    const parser = new UAParser(navigator.userAgent);
-
-    // TODO(wittjosiah): Ideally this should not need to do any user agent parsing.
-    //  However, while SharedWorker is supported by iOS, it is not fully working and there's no way to inspect it.
-    useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
+  // UNSPECIFIED_SERVICES_MODE == 0, so falsy check also catches it.
+  const servicesMode = config.values.runtime?.client?.servicesMode;
+  if (!servicesMode) {
+    throw new Error(
+      'createClientServices: runtime.client.services_mode is not set; required when no remote_source is configured.',
+    );
   }
 
-  return createWorker && useWorker
-    ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-    : fromHost(config, {}, observabilityGroup, signalTelemetryEnabled);
+  switch (servicesMode) {
+    case Runtime.Client.ServicesMode.HOST: {
+      // Derive sqlitePath from dataRoot when not explicitly provided (only meaningful when the
+      // config selects FILE sqlite mode — LocalClientServices ignores sqlitePath otherwise).
+      const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
+      const effectiveSqlitePath = sqlitePath ?? (dataRoot ? `${dataRoot}/sqlite.db` : undefined);
+      return fromHost(config, { createOpfsWorker, sqlitePath: effectiveSqlitePath });
+    }
+
+    case Runtime.Client.ServicesMode.SHARED_WORKER: {
+      if (!createWorker) {
+        throw new Error(
+          'createClientServices: runtime.client.services_mode=SHARED_WORKER requires a createWorker option.',
+        );
+      }
+      return fromWorker(config, { createWorker });
+    }
+
+    case Runtime.Client.ServicesMode.DEDICATED_WORKER: {
+      if (!createDedicatedWorker) {
+        throw new Error(
+          'createClientServices: runtime.client.services_mode=DEDICATED_WORKER requires a createDedicatedWorker option.',
+        );
+      }
+      const singleClientMode = config.values.runtime?.client?.singleClientMode;
+      return new DedicatedWorkerClientServices({
+        createWorker: createDedicatedWorker,
+        createCoordinator: () =>
+          singleClientMode
+            ? new SingleClientCoordinator()
+            : createCoordinatorWorker
+              ? new SharedWorkerCoordinator(createCoordinatorWorker)
+              : new SharedWorkerCoordinator(),
+        config,
+      });
+    }
+
+    default: {
+      throw new Error(`createClientServices: unknown services_mode ${servicesMode}`);
+    }
+  }
 };

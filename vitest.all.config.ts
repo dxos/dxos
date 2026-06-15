@@ -1,22 +1,24 @@
-import tsconfigPaths from 'vite-tsconfig-paths';
+//
+// Copyright 2024 DXOS.org
+//
+
+import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vitest/config';
 
-//
-// Config for the vitest vscode extension.
-//
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
-// TODO(dmaretskyi): Migrate to https://vitest.dev/guide/projects once its stable.
+import { TEST_TAGS } from './vitest.tags';
 
-console.log({
-  proj: new URL('./tsconfig.paths.json', import.meta.url).pathname,
-});
-
-export default defineConfig({
+/**
+ * Config for the vitest vscode extension.
+ */
+export default defineConfig(async () => ({
   esbuild: {
-    target: 'es2020',
+    target: 'esnext',
   },
   test: {
     environment: 'node',
+    tags: TEST_TAGS,
     include: [
       '**/src/**/*.test.{ts,tsx}',
       '**/test/**/*.test.{ts,tsx}',
@@ -24,7 +26,7 @@ export default defineConfig({
       '!**/test/**/*.browser.test.{ts,tsx}',
     ],
     exclude: [
-      '.nx/*',
+      '.moon/*',
       '**/node_modules/*',
       '**/dist/*',
       '**/build/*',
@@ -35,8 +37,15 @@ export default defineConfig({
     ],
   },
   plugins: [
-    tsconfigPaths({
-      projects: [new URL('./tsconfig.paths.json', import.meta.url).pathname],
+    // Vitest extension for VSCode doesnt support ESM.
+    await import('@dxos/vite-plugin-import-source').then((m) => m.default()),
+
+    // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+    DxosLogPlugin({ logToFile: false }),
+
+    // We don't care about react but we want the SWC transformers.
+    react({
+      tsDecorators: true,
     }),
   ],
-});
+}));

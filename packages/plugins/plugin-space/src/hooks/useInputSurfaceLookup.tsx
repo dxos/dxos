@@ -2,29 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
-import { usePluginManager, isSurfaceAvailable, Surface } from '@dxos/app-framework';
-import { type InputProps } from '@dxos/react-ui-form';
+import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { type FormFieldProvider } from '@dxos/react-ui-form';
 
-// TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
 /**
  * Creates a surface input component based on plugin context.
  * @param baseData Additional data that will be merged with form data and passed to the surface.
  * This allows providing more context to the surface than what's available from the form itself.
  */
-export const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
+// TODO(burdon): Factor out?
+export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormFieldProvider => {
   const pluginManager = usePluginManager();
-
-  return useCallback(
-    ({ prop, schema, inputProps }: { prop: string; schema: Schema.Schema<any>; inputProps: InputProps }) => {
-      const composedData = { prop, schema, ...baseData };
-      if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
-        return undefined;
+  return useCallback<FormFieldProvider>(
+    ({ schema, prop, fieldProps }) => {
+      const data = {
+        prop,
+        schema,
+        /** Property Schema AST (`fieldProps.type`). Not spread as React prop `type` — Surface peels `type` for role tokens. */
+        fieldPropertyAst: fieldProps.type,
+        ...baseData,
+      };
+      const { type: _fieldPropertyAstExcluded, ...surfaceFieldProps } = fieldProps as Record<string, any>;
+      if (Surface.isAvailable(pluginManager.capabilities, { role: 'form-input', data })) {
+        return <Surface.Surface role='form-input' data={data} {...surfaceFieldProps} />;
       }
-
-      return <Surface role='form-input' data={composedData} {...inputProps} />;
     },
     [pluginManager, baseData],
   );

@@ -5,7 +5,7 @@
 import { type CleanupFn, Event, SubscriptionList } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PeerInfoHash, type PeerInfo as MessagingPeer } from '@dxos/messaging';
+import { type PeerInfo as MessagingPeer, PeerInfoHash } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
 import { type ConnectionState } from './connection';

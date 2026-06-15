@@ -2,5 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './EditorToolbar';
-export * from './Popover';
+export * from './Editor';
+
+export * from './EditorMenuProvider';
+export * from './EditorPreviewProvider';

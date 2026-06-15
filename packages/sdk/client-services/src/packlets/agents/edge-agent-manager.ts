@@ -3,6 +3,7 @@
 //
 
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -50,12 +51,12 @@ export class EdgeAgentManager extends Resource {
   }
 
   @synchronized
-  public async createAgent(): Promise<void> {
+  public async createAgent(ctx: Context): Promise<void> {
     invariant(this.isOpen);
     invariant(this._edgeHttpClient);
     invariant(this._edgeFeatures?.agents);
 
-    const response = await this._edgeHttpClient.createAgent({
+    const response = await this._edgeHttpClient.createAgent(ctx, {
       identityKey: this._identity.identityKey.toHex(),
       haloSpaceId: this._identity.haloSpaceId,
       haloSpaceKey: this._identity.haloSpaceKey.toHex(),
@@ -92,7 +93,7 @@ export class EdgeAgentManager extends Resource {
 
     this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
     this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
-      await this._fetchAgentStatus();
+      await this._fetchAgentStatus(this._ctx);
     });
     this._fetchAgentStatusTask.schedule();
 
@@ -117,11 +118,13 @@ export class EdgeAgentManager extends Resource {
     this._lastKnownDeviceCount = 0;
   }
 
-  protected async _fetchAgentStatus(): Promise<void> {
+  protected async _fetchAgentStatus(ctx: Context): Promise<void> {
     invariant(this._edgeHttpClient);
     try {
       log('fetching agent status');
-      const { agent } = await this._edgeHttpClient.getAgentStatus({ ownerIdentityKey: this._identity.identityKey });
+      const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
+        ownerIdentityKey: this._identity.identityKey,
+      });
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {
         const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
@@ -162,7 +165,7 @@ export class EdgeAgentManager extends Resource {
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
       activePollingEnabled = activePollingEnabled || agentFeedNeedsNotarization;
 
-      log.info('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });
+      log.verbose('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });
     }
 
     if (activePollingEnabled) {
@@ -178,6 +181,6 @@ export class EdgeAgentManager extends Resource {
     if (deviceKey) {
       this._ensureAgentIsInSpaces(deviceKey);
     }
-    log.info('agent status update', { status });
+    log.verbose('agent status update', { status });
   }
 }

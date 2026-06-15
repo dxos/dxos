@@ -2,17 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { mermaid } from './extensions';
-import { meta } from './meta';
+import { MarkdownExtension } from '#capabilities';
+import { meta } from '#meta';
 
-export const MermaidPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/markdown`,
-      activatesOn: MarkdownEvents.SetupExtensions,
-      activate: () => contributes(MarkdownCapabilities.Extensions, [mermaid]),
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const MermaidPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'markdown',
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: MarkdownExtension,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default MermaidPlugin;

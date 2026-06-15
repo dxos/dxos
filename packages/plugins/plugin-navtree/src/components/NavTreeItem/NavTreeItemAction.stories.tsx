@@ -2,57 +2,63 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 
-import { type Meta, type StoryObj } from '@storybook/react';
-
-import { type NodeArg } from '@dxos/app-graph';
-import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { type Node } from '@dxos/app-graph';
+import { corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 
 const parent = {
-  id: faker.string.uuid(),
+  id: random.string.uuid(),
   type: 'node',
   data: null,
   properties: {
-    label: faker.lorem.words(2),
+    label: random.lorem.words(2),
     icon: 'ph--circle--regular',
   },
-} satisfies NodeArg<any>;
+} satisfies Node.NodeArg<any>;
 
 // TODO(burdon): Factor out across tests.
-const menuActions = faker.helpers.multiple(
+const menuActions = random.helpers.multiple(
   () =>
     ({
-      id: faker.string.uuid(),
+      id: random.string.uuid(),
       type: 'action',
-      data: () => {
-        console.log('invoke');
-      },
+      data: () =>
+        Effect.sync(() => {
+          console.log('invoke');
+        }),
       properties: {
-        label: faker.lorem.words(2),
+        label: random.lorem.words(2),
         icon: 'ph--circle--regular',
       },
-    }) satisfies NodeArg<any>,
+    }) satisfies Node.NodeArg<any>,
   { count: 20 },
 );
 
-const meta: Meta<typeof NavTreeItemAction> = {
-  title: 'plugins/plugin-navtree/NavTreeItemAction',
+const meta = {
+  title: 'plugins/plugin-navtree/components/NavTreeItemAction',
   component: NavTreeItemAction,
-  decorators: [withTheme, withLayout()],
   args: {
     icon: 'ph--list--regular',
     parent,
     menuActions,
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
+  decorators: [
+    withPluginManager({
+      plugins: [...corePlugins(), ProcessManagerPlugin()],
+    }),
+  ],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof NavTreeItemAction>;
 
 export default meta;
 

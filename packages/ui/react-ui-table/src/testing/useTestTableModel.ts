@@ -1,0 +1,132 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { RegistryContext } from '@effect-atom/atom-react';
+import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
+
+import { type Database, Filter, Type } from '@dxos/echo';
+import { random } from '@dxos/random';
+import { useQuery, useType } from '@dxos/react-client/echo';
+import { useClientStory } from '@dxos/react-client/testing';
+import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
+import { type ProjectionModel, getTypeURIFromQuery } from '@dxos/schema';
+
+import { type TableController } from '../components';
+import { useAddRow, useProjectionModel, useTableModel } from '../hooks';
+import { type TableModel, TablePresentation } from '../model';
+import { Table } from '../types';
+
+random.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+
+export type TestTableModel<T extends Type.AnyObj = Type.AnyObj> = {
+  schema: T | undefined;
+  table: Table.Table | undefined;
+  projection: ProjectionModel | undefined;
+  tableRef: RefObject<TableController | null>;
+  model: TableModel | undefined;
+  presentation: TablePresentation | undefined;
+  db: Database.Database | undefined;
+  handleInsertRow: () => void;
+  handleSaveView: () => void;
+  handleDeleteRows: (rowIndex: number, objects: any[]) => void;
+  handleDeleteColumn: (fieldId: string) => void;
+};
+
+/**
+ * Custom hook to create and manage a test table model for storybook demonstrations.
+ * Provides table data, schema, and handlers for table operations.
+ */
+export const useTestTableModel = <T extends Type.AnyObj = Type.AnyObj>(): TestTableModel<T> => {
+  const registry = useContext(RegistryContext);
+  const { space } = useClientStory();
+  const db = space?.db;
+
+  const tables = useQuery(space?.db, Filter.type(Table.Table));
+  const table = tables.at(0);
+  const typeUri = table?.view.target?.query ? getTypeURIFromQuery(table.view.target.query.ast) : undefined;
+  const schema = useType<T>(space?.db, typeUri);
+  const projection = useProjectionModel(schema, table, registry);
+
+  const features = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' as const },
+      dataEditable: true,
+      schemaEditable: schema != null && Type.getDatabase(schema) != null,
+    }),
+    [schema],
+  );
+
+  const objects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
+  const filteredObjects = useGlobalFilteredObjects(objects);
+
+  const tableRef = useRef<TableController>(null);
+  const handleCellUpdate = useCallback((cell: any) => {
+    tableRef.current?.update?.(cell);
+  }, []);
+
+  const handleRowOrderChange = useCallback(() => {
+    tableRef.current?.update?.();
+  }, []);
+
+  const addRow = useAddRow({ db, schema });
+
+  const handleDeleteRows = useCallback(
+    (_: number, objects: any[]) => {
+      for (const object of objects) {
+        db?.remove(object);
+      }
+    },
+    [db],
+  );
+
+  const handleDeleteColumn = useCallback(
+    (fieldId: string) => {
+      if (projection) {
+        projection.deleteFieldProjection(fieldId);
+      }
+    },
+    [projection],
+  );
+
+  const model = useTableModel({
+    object: table,
+    projection,
+    features,
+    rows: filteredObjects,
+    onInsertRow: addRow,
+    onDeleteRows: handleDeleteRows,
+    onColumnDelete: handleDeleteColumn,
+    onCellUpdate: handleCellUpdate,
+    onRowOrderChange: handleRowOrderChange,
+  });
+
+  const handleInsertRow = useCallback(() => {
+    const insertResult = model?.insertRow();
+    tableRef.current?.handleInsertRowResult?.(insertResult);
+  }, [model]);
+
+  const handleSaveView = useCallback(() => {
+    model?.saveView();
+  }, [model]);
+
+  const presentation = useMemo(() => {
+    if (model) {
+      return new TablePresentation(registry, model);
+    }
+  }, [registry, model]);
+
+  return {
+    schema,
+    table,
+    projection,
+    tableRef,
+    model,
+    presentation,
+    db,
+    handleInsertRow,
+    handleSaveView,
+    handleDeleteRows,
+    handleDeleteColumn,
+  };
+};

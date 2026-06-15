@@ -2,55 +2,57 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { invariant } from '@dxos/invariant';
+import { createDocAccessor } from '@dxos/echo-client';
 import { log } from '@dxos/log';
-import { createDocAccessor } from '@dxos/react-client/echo';
-import { setDeep } from '@dxos/util';
+import { useAsyncEffect } from '@dxos/react-ui';
+
+import { Sketch } from '#types';
 
 import { TLDrawStoreAdapter } from './adapter';
-import { type DiagramType, TLDRAW_SCHEMA } from '../types';
-import { getDeep } from '../util';
 
-export const useStoreAdapter = (object?: DiagramType) => {
+/**
+ * Hook that manages the TLDraw store adapter lifecycle for a diagram object.
+ * Loads the canvas ref, creates a doc accessor, and opens the adapter.
+ *
+ * @param object - Optional diagram whose canvas will be loaded and synced.
+ * @returns The TLDrawStoreAdapter instance managing the tldraw store.
+ */
+export const useStoreAdapter = (object?: Sketch.Sketch) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
-  useEffect(() => {
-    if (!object || !object.canvas?.target) {
-      return;
-    }
-
-    if (object.canvas?.target?.schema !== TLDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: object.canvas.target?.schema });
-      return;
-    }
-
-    const t = setTimeout(async () => {
-      invariant(object.canvas);
-
-      try {
-        // OTF migration from old path.
-        const accessor = createDocAccessor(object, ['content']);
-        const oldData = getDeep(accessor.handle.doc(), accessor.path);
-        if (Object.keys(oldData ?? {}).length) {
-          object.canvas.target!.content = oldData;
-          accessor.handle.change((object) => setDeep(object, accessor.path, {}));
-        }
-      } catch (err) {
-        log.catch(err);
+  useAsyncEffect(
+    async (controller) => {
+      if (!object) {
+        return;
       }
 
-      const accessor = createDocAccessor(object.canvas.target!, ['content']);
-      await adapter.open(accessor);
-      forceUpdate({});
-    });
+      const canvas = await object.canvas.load();
+      if (controller.signal.aborted) {
+        return;
+      }
 
-    return () => {
-      clearTimeout(t);
-      void adapter.close();
-    };
-  }, [object, object?.canvas.target]);
+      if (canvas.schema !== Sketch.TLDRAW_SCHEMA) {
+        log.warn('invalid schema', { schema: canvas.schema });
+        return;
+      }
+
+      const accessor = createDocAccessor(canvas, ['content']);
+      await adapter.open(accessor);
+      if (controller.signal.aborted) {
+        void adapter.close();
+        return;
+      }
+
+      forceUpdate({});
+
+      return () => {
+        void adapter.close();
+      };
+    },
+    [object],
+  );
 
   return adapter;
 };

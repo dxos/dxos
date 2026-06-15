@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { createKeyPair } from '@dxos/crypto';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem } from './testing';
@@ -30,7 +30,7 @@ describe('HypercoreFactory', () => {
     {
       const data = Array.from({ length: numBlocks }).map((_, i) => createDataItem(i));
       for await (const datum of data) {
-        const feed = faker.helpers.arrayElement(feeds);
+        const feed = random.helpers.arrayElement(feeds);
         await py(feed, feed.append)(Buffer.from(JSON.stringify(datum)));
       }
     }
@@ -40,7 +40,7 @@ describe('HypercoreFactory', () => {
       const total = feeds.reduce((result, feed) => result + feed.length, 0);
       expect(total).to.eq(numBlocks);
 
-      const feed = faker.helpers.arrayElement(feeds);
+      const feed = random.helpers.arrayElement(feeds);
       const block1 = await py(feed, feed.head)();
       const block2 = await py(feed, feed.get)(feed.length - 1);
       expect(block1.toString()).to.eq(block2.toString());

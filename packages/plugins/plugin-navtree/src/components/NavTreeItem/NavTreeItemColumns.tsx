@@ -2,72 +2,61 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, memo } from 'react';
+import React, { Fragment, memo, useMemo } from 'react';
 
-import { isAction } from '@dxos/app-graph';
-import { DensityProvider, Popover, toLocalizedString, Treegrid, useTranslation } from '@dxos/react-ui';
+import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { NavTreeItemAction } from './NavTreeItemAction';
-import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
+import { getListActions, useActions } from '#hooks';
+import { meta } from '#meta';
+
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import type { NavTreeItemColumnsProps } from '../types';
+import { type NavTreeItemColumnsProps } from '../types';
+import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction';
 
-export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: NavTreeItemColumnsProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { getActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
+export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
+  const { t } = useTranslation(meta.id);
+  const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
+  const flattenedActions = useActions(item);
+  const allActions = useMemo(() => getListActions(flattenedActions), [flattenedActions]);
 
-  const { actions: _actions, groupedActions } = getActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, b) =>
-    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
-  );
-
-  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
-    .flatMap((action) => (isAction(action) ? [action] : []))
-    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
-
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
-
-  useLoadDescendents(item);
-  useLoadDescendents(primaryAction && !isAction(primaryAction) ? primaryAction : undefined);
+  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
   return (
-    <DensityProvider density={density}>
-      <div role='none' className='contents app-no-drag'>
-        {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
-          <NavTreeItemAction
-            testId={primaryAction.properties?.testId}
-            label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
-            parent={item}
-            monolithic={isAction(primaryAction)}
-            menuActions={isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction.id]}
-            menuType={primaryAction.properties?.menuType}
-            caller={NAV_TREE_ITEM}
-          />
+    <div className='contents dx-app-no-drag'>
+      <ActionRoot>
+        {allActions.length === 1 ? (
+          <Treegrid.Cell classNames='contents'>
+            <NavTreeItemMonolithicAction
+              baseLabel={toLocalizedString(allActions[0].properties?.label, t)}
+              parent={item}
+              path={path}
+              {...allActions[0]}
+            />
+          </Treegrid.Cell>
+        ) : allActions.length > 1 ? (
+          <Treegrid.Cell classNames='contents'>
+            <NavTreeItemActionDropdownMenu
+              testId={`navtree.treeItem.actionsLevel${level}`}
+              label={t('tree-item-actions.label')}
+              icon='ph--dots-three-vertical--regular'
+              parent={item}
+              path={path}
+              menuActions={allActions}
+              caller={NAV_TREE_ITEM}
+            />
+          </Treegrid.Cell>
         ) : (
           <Treegrid.Cell />
         )}
-        <ActionRoot>
-          {actions.length > 0 ? (
-            <NavTreeItemAction
-              testId={`navtree.treeItem.actionsLevel${level}`}
-              label={t('tree item actions label')}
-              icon='ph--dots-three-vertical--regular'
-              parent={item}
-              menuActions={actions}
-              menuType='dropdown'
-              caller={NAV_TREE_ITEM}
-            />
-          ) : (
-            <Treegrid.Cell />
-          )}
-        </ActionRoot>
-        {ItemEnd && <ItemEnd node={item} open={open} />}
-      </div>
-    </DensityProvider>
+      </ActionRoot>
+      {ItemEnd && (
+        <Treegrid.Cell classNames='contents'>
+          <ItemEnd node={item} open={open} />
+        </Treegrid.Cell>
+      )}
+    </div>
   );
 });

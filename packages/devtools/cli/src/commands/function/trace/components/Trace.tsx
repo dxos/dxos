@@ -1,0 +1,246 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type * as Context from 'effect/Context';
+import * as Option from 'effect/Option';
+import { createEffect, createSignal, onCleanup } from 'solid-js';
+
+import { Operation } from '@dxos/compute';
+import { type Database, Feed, Filter, Obj } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
+import {
+  InvocationOutcome,
+  type InvocationSpan,
+  InvocationTraceEndEvent,
+  type InvocationTraceEvent,
+  InvocationTraceStartEvent,
+  createInvocationSpans,
+} from '@dxos/functions-runtime';
+import { type URI } from '@dxos/keys';
+
+import { type Column, Table } from '../../../../components';
+import { theme } from '../../../../theme';
+
+export type TraceProps = {
+  db: Database.Database;
+  feedService: Context.Tag.Service<Feed.FeedService>;
+  feed: Option.Option<Feed.Feed>;
+  functionId: Option.Option<string>;
+};
+
+export const Trace = (props: TraceProps) => {
+  const [invocations, setInvocations] = createSignal<InvocationSpan[]>([]);
+  const [selectedInvocation, setSelectedInvocation] = createSignal<InvocationSpan | undefined>();
+  const [functions, setFunctions] = createSignal<Operation.PersistentOperation[]>([]);
+
+  // Set up effects.
+  useFunctionQuery(props.db, setFunctions);
+  useInvocationsSubscription(
+    () => props.feed,
+    () => props.feedService,
+    props.functionId,
+    setInvocations,
+    selectedInvocation,
+    setSelectedInvocation,
+  );
+
+  // Function name resolver (needs access to functions signal).
+  const getFunctionName = (invocationTarget: URI.URI | undefined): string | undefined => {
+    if (!invocationTarget) {
+      return undefined;
+    }
+
+    const uuidPart = getUuidFromDxn(invocationTarget);
+    if (!uuidPart) {
+      return undefined;
+    }
+
+    return functions().find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart)?.name;
+  };
+
+  // Target display name (uses getFunctionName).
+  const getTargetDisplayName = (span: InvocationSpan): string => {
+    const targetDxn = span.invocationTarget?.uri;
+    const name = getFunctionName(targetDxn);
+    return name ?? targetDxn?.split(':').pop() ?? '?';
+  };
+
+  const columns: Column<InvocationSpan>[] = [
+    {
+      header: 'Target',
+      width: 40,
+      render: getTargetDisplayName,
+    },
+    {
+      header: 'Started',
+      width: 22,
+      render: (r) => formatTime(r.timestamp),
+    },
+    {
+      header: 'Status',
+      width: 10,
+      render: (r) => formatStatus(r.outcome),
+    },
+    {
+      header: 'Duration',
+      width: 10,
+      render: (r) => (r.duration ? `${r.duration}ms` : '-'),
+    },
+  ];
+
+  return (
+    <box flexDirection='column' height='100%'>
+      <Table
+        columns={columns}
+        data={invocations()}
+        onRowClick={(row) => {
+          setSelectedInvocation(row);
+        }}
+        selectedId={selectedInvocation()?.id}
+        getId={(row) => row.id}
+        theme={theme}
+      />
+      <box height='50%' flexDirection='column' padding={1}>
+        {selectedInvocation() ? (
+          <>
+            <box height={1}>
+              <text>Invocation Details: {selectedInvocation()?.id}</text>
+            </box>
+            <box height={1}>
+              <text>Target: {getTargetDisplayName(selectedInvocation()!)}</text>
+            </box>
+            <box height={1}>
+              <text>Status: {selectedInvocation()?.outcome}</text>
+            </box>
+            <box marginTop={1} flexDirection='column'>
+              <box height={1}>
+                <text>Input:</text>
+              </box>
+              <text>{JSON.stringify(selectedInvocation()?.input, null, 2)}</text>
+            </box>
+            {selectedInvocation()?.error && (
+              <box marginTop={1} flexDirection='column'>
+                <box height={1}>
+                  <text>Error:</text>
+                </box>
+                <text>{selectedInvocation()?.error?.message}</text>
+                <text>{selectedInvocation()?.error?.stack}</text>
+              </box>
+            )}
+          </>
+        ) : (
+          <box height={1} borderStyle='single' border={['top']}>
+            <text>Select an invocation to view details.</text>
+          </box>
+        )}
+      </box>
+    </box>
+  );
+};
+
+// Helper: Extracts the UUID part from a DXN.
+const getUuidFromDxn = (dxn: URI.URI | undefined): string | undefined => {
+  if (!dxn) {
+    return undefined;
+  }
+  const dxnParts = dxn.split(':');
+  return dxnParts.at(-1);
+};
+
+// Helper: Format timestamp as time string.
+const formatTime = (timestamp: number): string => {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 3,
+  });
+};
+
+// Helper: Format invocation outcome as status string.
+const formatStatus = (outcome?: InvocationOutcome): string => {
+  if (outcome === InvocationOutcome.SUCCESS) {
+    return 'OK';
+  }
+  if (outcome === InvocationOutcome.FAILURE) {
+    return 'ERR';
+  }
+  return outcome ?? 'UNKNOWN';
+};
+
+// Effect: Query for Function objects to resolve target names.
+const useFunctionQuery = (
+  db: Database.Database,
+  setFunctions: (functions: Operation.PersistentOperation[]) => void,
+) => {
+  createEffect(() => {
+    const functionsQuery = db.query(Filter.type(Operation.PersistentOperation));
+    const update = () => {
+      setFunctions(functionsQuery.results as Operation.PersistentOperation[]);
+    };
+    const unsubscribe = functionsQuery.subscribe(update, { fire: true });
+    onCleanup(() => unsubscribe());
+  });
+};
+
+// Effect: Subscribe to invocations using the query API (which handles polling automatically).
+const useInvocationsSubscription = (
+  traceFeed: () => Option.Option<Feed.Feed>,
+  feedService: () => Context.Tag.Service<Feed.FeedService>,
+  functionId: Option.Option<string>,
+  setInvocations: (invocations: InvocationSpan[]) => void,
+  selectedInvocation: () => InvocationSpan | undefined,
+  setSelectedInvocation: (invocation: InvocationSpan | undefined) => void,
+) => {
+  createEffect(() => {
+    const feed = traceFeed();
+    if (Option.isNone(feed)) {
+      setInvocations([]);
+      return;
+    }
+
+    // Query both start and end events from the trace feed.
+    // The query subscription automatically handles polling via beginPolling().
+    const query = feedService().query(
+      feed.value,
+      Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)),
+    );
+
+    const update = async () => {
+      // Use run() to get all events, not just cached results.
+      const events = (await query.run()) as InvocationTraceEvent[];
+      let spans = createInvocationSpans(events);
+
+      // Filter by function ID if provided.
+      if (Option.isSome(functionId)) {
+        const targetId = functionId.value;
+        spans = spans.filter((span) => span.invocationTarget?.toString().includes(targetId));
+      }
+
+      // Sort by time descending (newest first).
+      spans.sort((a, b) => b.timestamp - a.timestamp);
+
+      setInvocations(spans);
+
+      // Auto-select first item if no selection exists.
+      if (spans.length > 0 && !selectedInvocation()) {
+        setSelectedInvocation(spans[0]);
+      }
+    };
+
+    // Subscribe to query updates. The query API automatically handles polling.
+    // Use { fire: true } to trigger the callback immediately for initial load.
+    const unsubscribe = query.subscribe(
+      () => {
+        void update();
+      },
+      { fire: true },
+    );
+
+    onCleanup(() => {
+      unsubscribe();
+    });
+  });
+};

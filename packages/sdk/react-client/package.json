@@ -1,81 +1,68 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     "./devtools": {
+      "source": "./src/devtools/index.ts",
       "types": "./dist/types/src/devtools/index.d.ts",
       "browser": "./dist/lib/browser/devtools/index.mjs",
       "node": "./dist/lib/node-esm/devtools/index.mjs"
     },
     "./echo": {
+      "source": "./src/echo/index.ts",
       "types": "./dist/types/src/echo/index.d.ts",
       "browser": "./dist/lib/browser/echo/index.mjs",
       "node": "./dist/lib/node-esm/echo/index.mjs"
     },
     "./halo": {
+      "source": "./src/halo/index.ts",
       "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
       "node": "./dist/lib/node-esm/halo/index.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./invitations": {
+      "source": "./src/invitations/index.ts",
       "types": "./dist/types/src/invitations/index.d.ts",
       "browser": "./dist/lib/browser/invitations/index.mjs",
       "node": "./dist/lib/node-esm/invitations/index.mjs"
     },
     "./mesh": {
+      "source": "./src/mesh/index.ts",
       "types": "./dist/types/src/mesh/index.d.ts",
       "browser": "./dist/lib/browser/mesh/index.mjs",
       "node": "./dist/lib/node-esm/mesh/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./worker": {
+      "source": "./src/worker.ts",
       "types": "./dist/types/src/worker.d.ts",
       "browser": "./dist/lib/browser/worker.mjs",
       "node": "./dist/lib/node-esm/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "devtools": [
-        "dist/types/src/devtools/index.d.ts"
-      ],
-      "echo": [
-        "dist/types/src/echo/index.d.ts"
-      ],
-      "halo": [
-        "dist/types/src/halo/index.d.ts"
-      ],
-      "invitations": [
-        "dist/types/src/invitations/index.d.ts"
-      ],
-      "mesh": [
-        "dist/types/src/mesh/index.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
-      "worker": [
-        "dist/types/src/worker.d.ts"
-      ]
-    }
-  },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },
@@ -87,37 +74,36 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "react-error-boundary": "^4.0.13"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "typedoc": "0.28.1"
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*"
+    "@dxos/ui-theme": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

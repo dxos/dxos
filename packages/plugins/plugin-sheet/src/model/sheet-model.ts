@@ -4,10 +4,6 @@
 
 import { Event } from '@dxos/async';
 import {
-  addressFromA1Notation,
-  addressToA1Notation,
-  createSheetName,
-  isFormula,
   type CellAddress,
   type CellRange,
   type CellScalarValue,
@@ -16,15 +12,19 @@ import {
   type ComputeNodeEvent,
   DetailedCellError,
   ExportedCellChange,
-  type SimpleCellRange,
   type SimpleCellAddress,
+  type SimpleCellRange,
   type SimpleDate,
   type SimpleDateTime,
-} from '@dxos/compute';
+  addressFromA1Notation,
+  addressToA1Notation,
+  createSheetName,
+  isFormula,
+} from '@dxos/compute-hyperformula';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { Format, TypeEnum } from '@dxos/echo/Format';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -38,22 +38,22 @@ import {
   insertIndices,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
-} from '../types';
-import { type SheetAction, type CellValue, type SheetType } from '../types';
+} from '#types';
+import { type Sheet, type SheetAction } from '#types';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
 //  - https://github.com/handsontable/hyperformula/blob/master/src/interpreter/InterpreterValue.ts (NumberType)
-const typeMap: Record<string, { type: TypeEnum; format?: FormatEnum }> = {
+const typeMap: Record<string, { type: TypeEnum; format?: Format.TypeFormat }> = {
   BOOLEAN: { type: TypeEnum.Boolean },
   NUMBER_RAW: { type: TypeEnum.Number },
-  NUMBER_PERCENT: { type: TypeEnum.Number, format: FormatEnum.Percent },
-  NUMBER_CURRENCY: { type: TypeEnum.Number, format: FormatEnum.Currency },
-  NUMBER_DATETIME: { type: TypeEnum.String, format: FormatEnum.DateTime },
-  NUMBER_DATE: { type: TypeEnum.String, format: FormatEnum.Date },
-  NUMBER_TIME: { type: TypeEnum.String, format: FormatEnum.Time },
+  NUMBER_PERCENT: { type: TypeEnum.Number, format: Format.TypeFormat.Percent },
+  NUMBER_CURRENCY: { type: TypeEnum.Number, format: Format.TypeFormat.Currency },
+  NUMBER_DATETIME: { type: TypeEnum.String, format: Format.TypeFormat.DateTime },
+  NUMBER_DATE: { type: TypeEnum.String, format: Format.TypeFormat.Date },
+  NUMBER_TIME: { type: TypeEnum.String, format: Format.TypeFormat.Time },
 };
 
 const getTopLeft = (range: CellRange): CellAddress => {
@@ -92,7 +92,7 @@ export class SheetModel extends Resource {
 
   constructor(
     private readonly _graph: ComputeGraph,
-    private readonly _sheet: SheetType,
+    private readonly _sheet: Sheet.Sheet,
     private readonly _options: SheetModelOptions = {},
   ) {
     super();
@@ -122,7 +122,9 @@ export class SheetModel extends Resource {
    */
   protected override async _open(): Promise<void> {
     log('initialize', { id: this.id });
-    initialize(this._sheet);
+    Obj.update(this._sheet, (obj) => {
+      initialize(obj);
+    });
 
     this._graph.update.on((event) => {
       if (event.type === 'functionsUpdated') {
@@ -181,13 +183,19 @@ export class SheetModel extends Resource {
   }
 
   insertRows(i: number, n = 1): string[] {
-    const idx = insertIndices(this._sheet.rows, i, n, MAX_ROWS);
+    let idx: string[] = [];
+    Obj.update(this._sheet, (obj) => {
+      idx = insertIndices(obj.rows, i, n, MAX_ROWS);
+    });
     this.reset();
     return idx;
   }
 
   insertColumns(i: number, n = 1): string[] {
-    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLS);
+    let idx: string[] = [];
+    Obj.update(this._sheet, (obj) => {
+      idx = insertIndices(obj.columns, i, n, MAX_COLS);
+    });
     this.reset();
     return idx;
   }
@@ -200,8 +208,10 @@ export class SheetModel extends Resource {
     const values = this.getCellValues(range).flat();
     const index = this._sheet.rows.indexOf(rowIndex);
     this.clear(range);
-    this._sheet.rows.splice(index, 1);
-    delete this._sheet.rowMeta[rowIndex];
+    Obj.update(this._sheet, (obj) => {
+      obj.rows.splice(index, 1);
+      delete obj.rowMeta[rowIndex];
+    });
     this.reset();
     return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
   }
@@ -214,35 +224,43 @@ export class SheetModel extends Resource {
     const values = this.getCellValues(range).flat();
     const index = this._sheet.columns.indexOf(colIndex);
     this.clear(range);
-    this._sheet.columns.splice(index, 1);
-    delete this._sheet.columnMeta[colIndex];
+    Obj.update(this._sheet, (obj) => {
+      obj.columns.splice(index, 1);
+      delete obj.columnMeta[colIndex];
+    });
     this.reset();
     return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
   }
 
   restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
-    this._sheet.rows.splice(index, 0, axisIndex);
-    values.forEach((value, col) => {
-      if (value) {
-        this._sheet.cells[`${this._sheet.columns[col]}@${axisIndex}`] = { value };
+    Obj.update(this._sheet, (obj) => {
+      obj.rows.splice(index, 0, axisIndex);
+      values.forEach((value, col) => {
+        if (value) {
+          obj.cells[`${obj.columns[col]}@${axisIndex}`] = { value };
+        }
+      });
+
+      if (axisMeta) {
+        obj.rowMeta[axisIndex] = axisMeta;
       }
     });
-    if (axisMeta) {
-      this._sheet.rowMeta[axisIndex] = axisMeta;
-    }
     this.reset();
   }
 
   restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
-    this._sheet.columns.splice(index, 0, axisIndex);
-    values.forEach((value, row) => {
-      if (value) {
-        this._sheet.cells[`${axisIndex}@${this._sheet.rows[row]}`] = { value };
+    Obj.update(this._sheet, (obj) => {
+      obj.columns.splice(index, 0, axisIndex);
+      values.forEach((value, row) => {
+        if (value) {
+          obj.cells[`${axisIndex}@${obj.rows[row]}`] = { value };
+        }
+      });
+
+      if (axisMeta) {
+        obj.columnMeta[axisIndex] = axisMeta;
       }
     });
-    if (axisMeta) {
-      this._sheet.columnMeta[axisIndex] = axisMeta;
-    }
     this.reset();
   }
 
@@ -259,18 +277,22 @@ export class SheetModel extends Resource {
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
     this._node.graph.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
-    this._iterRange(range, (cell) => {
-      const idx = addressToIndex(this._sheet, cell);
-      delete this._sheet.cells[idx];
+    Obj.update(this._sheet, (obj) => {
+      this._iterRange(range, (cell) => {
+        const idx = addressToIndex(this._sheet, cell);
+        delete obj.cells[idx];
+      });
     });
   }
 
   cut(range: CellRange): void {
     invariant(this._node);
     this._node.graph.hf.cut(toModelRange(this._node.sheetId, range));
-    this._iterRange(range, (cell) => {
-      const idx = addressToIndex(this._sheet, cell);
-      delete this._sheet.cells[idx];
+    Obj.update(this._sheet, (obj) => {
+      this._iterRange(range, (cell) => {
+        const idx = addressToIndex(this._sheet, cell);
+        delete obj.cells[idx];
+      });
     });
   }
 
@@ -283,13 +305,15 @@ export class SheetModel extends Resource {
     invariant(this._node);
     if (!this._node.graph.hf.isClipboardEmpty()) {
       const changes = this._node.graph.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
-      for (const change of changes) {
-        if (change instanceof ExportedCellChange) {
-          const { address, newValue } = change;
-          const idx = addressToIndex(this._sheet, { row: address.row, col: address.col });
-          this._sheet.cells[idx] = { value: newValue };
+      Obj.update(this._sheet, (obj) => {
+        for (const change of changes) {
+          if (change instanceof ExportedCellChange) {
+            const { address, newValue } = change;
+            const idx = addressToIndex(this._sheet, { row: address.row, col: address.col });
+            obj.cells[idx] = { value: newValue };
+          }
         }
-      }
+      });
     }
   }
 
@@ -361,7 +385,7 @@ export class SheetModel extends Resource {
   /**
    * Get value type.
    */
-  getValueDescription(cell: CellAddress): { type: TypeEnum; format?: FormatEnum } | undefined {
+  getValueDescription(cell: CellAddress): { type: TypeEnum; format?: Format.TypeFormat } | undefined {
     invariant(this._node);
     const addr = toSimpleCellAddress(this._node.sheetId, cell);
     const type = this._node.graph.hf.getCellValueDetailedType(addr);
@@ -380,11 +404,15 @@ export class SheetModel extends Resource {
     // Reallocate if > current bounds.
     let refresh = false;
     if (cell.row >= this._sheet.rows.length) {
-      insertIndices(this._sheet.rows, cell.row, 1, MAX_ROWS);
+      Obj.update(this._sheet, (obj) => {
+        insertIndices(obj.rows, cell.row, 1, MAX_ROWS);
+      });
       refresh = true;
     }
     if (cell.col >= this._sheet.columns.length) {
-      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLS);
+      Obj.update(this._sheet, (obj) => {
+        insertIndices(obj.columns, cell.col, 1, MAX_COLS);
+      });
       refresh = true;
     }
 
@@ -401,20 +429,24 @@ export class SheetModel extends Resource {
     // Insert into sheet.
     const idx = addressToIndex(this._sheet, cell);
     if (value === undefined || value === null) {
-      delete this._sheet.cells[idx];
+      Obj.update(this._sheet, (obj) => {
+        delete obj.cells[idx];
+      });
     } else {
       if (isFormula(value)) {
         value = this._graph.mapFunctionBindingToId(mapFormulaRefsToIndices(this._sheet, value));
       }
 
-      this._sheet.cells[idx] = { value };
+      Obj.update(this._sheet, (obj) => {
+        obj.cells[idx] = { value };
+      });
     }
   }
 
   /**
    * Sets values from a simple map.
    */
-  setValues(values: Record<string, CellValue>): void {
+  setValues(values: Record<string, Sheet.CellValue>): void {
     Object.entries(values).forEach(([key, { value }]) => {
       this.setValue(addressFromA1Notation(key), value);
     });
@@ -457,7 +489,7 @@ export class SheetModel extends Resource {
    * Map from indices to A1 notation.
    */
   mapFormulaIndicesToRefs(formula: string): string {
-    invariant(isFormula(formula));
+    assertArgument(isFormula(formula), 'formula');
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
       return addressToA1Notation(addressFromIndex(this._sheet, idx));
     });

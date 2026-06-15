@@ -1,0 +1,24 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/PipelinePlugin.tsx'
+      - '--entryPoint=src/PipelinePlugin.node.ts'
+      - '--entryPoint=src/PipelinePlugin.workerd.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/components/index.ts'
+      - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/hooks/index.ts'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'

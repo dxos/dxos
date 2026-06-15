@@ -2,16 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PRESENTER_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from '#meta';
+
+export const translations = [
   {
     'en-US': {
-      [PRESENTER_PLUGIN]: {
-        'plugin name': 'Presenter',
-        'toggle presentation label': 'Present',
-        'present collections label': 'Present collections (experimental)',
+      [meta.id]: {
+        'plugin.name': 'Presenter',
+        'settings.title': 'Presenter settings',
+        'toggle-presentation.label': 'Present',
       },
     },
   },
-];
+] as const satisfies Resource[];

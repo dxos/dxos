@@ -1,0 +1,93 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useCallback, useMemo, useState } from 'react';
+
+import { type Filter, Tag } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Employer, Organization, Person, Pipeline } from '@dxos/types';
+
+import { translations } from '#translations';
+
+import { QueryEditor, type QueryEditorProps } from './QueryEditor';
+
+// Create tags at render time to avoid Storybook serialization issues with ECHO objects.
+const createTags = (): Tag.Map => ({
+  tag_1: Tag.make({ label: 'Important' }),
+  tag_2: Tag.make({ label: 'Investor' }),
+  tag_3: Tag.make({ label: 'New' }),
+});
+
+const meta = {
+  title: 'ui/react-ui-components/QueryEditor',
+  component: QueryEditor,
+  render: (args: QueryEditorProps) => {
+    const { space } = useClientStory();
+    const [filter, setFilter] = useState<Filter.Any>();
+    // Create tags and builder at render time to avoid Storybook serialization issues.
+    const tags = useMemo(() => args.tags ?? createTags(), [args.tags]);
+    const builder = useMemo(() => new QueryBuilder(tags), [tags]);
+    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
+      (value) => {
+        setFilter(builder.build(value).filter);
+      },
+      [builder],
+    );
+
+    return (
+      <div className='flex flex-col gap-2'>
+        <QueryEditor
+          {...args}
+          classNames='p-2 border border-subdued-separator rounded-xs'
+          db={space?.db}
+          onChange={handleChange}
+        />
+
+        <JsonHighlighter data={filter} classNames='text-xs' />
+      </div>
+    );
+  },
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
+    withClientProvider({
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
+      createIdentity: true,
+    }),
+  ],
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof QueryEditor>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const Complex: Story = {
+  args: {
+    autoFocus: true,
+    value: '#important OR type:org.dxos.type.person AND { title: "DXOS", value: true }',
+  },
+};
+
+export const Relation: Story = {
+  args: {
+    autoFocus: true,
+    value: '(type:org.dxos.type.person -> type:org.dxos.type.organization)',
+  },
+};
+
+export const Tags: Story = {
+  args: {
+    autoFocus: true,
+    value: 'type:org.dxos.type.person #investor #new',
+  },
+};

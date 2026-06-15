@@ -1,0 +1,42 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test:
+    # `$VITEST_TAGS_FILTER` selects which tagged suites run via vitest's native
+    # `--tagsFilter` flag (boolean expression over tag names). The default skips
+    # all opt-in tags (flaky, LLM, sync, e2e) so local + PR CI runs only fast
+    # unit tests. CI overrides this via the `VITEST_TAGS_FILTER` env to opt-in
+    # specific tags (e.g. `flaky`).
+    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e}"'
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+      - /vitest.base.config.ts
+      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - vitest.config.ts
+      - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+      - $VITEST_TAGS_FILTER
+      - $ALLOW_LLM_GENERATION
+    outputs:
+      - /coverage/$project/node/**
+      - /test-results/$project/node/**
+    options:
+      timeout: 600
+  test-watch:
+    command: pnpm exec dx-killorphans vitest
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - ^:compile
+    preset: server
+
+inheritedBy:
+  tags: ts-test

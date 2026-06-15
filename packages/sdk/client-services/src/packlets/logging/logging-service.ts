@@ -5,27 +5,25 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { PublicKey } from '@dxos/keys';
+import { type LogLevel, type LogProcessor, type LogEntry as NaturalLogEntry, log } from '@dxos/log';
 import {
-  type LogLevel,
-  type LogProcessor,
-  type LogEntry as NaturalLogEntry,
-  getContextFromEntry,
-  log,
-} from '@dxos/log';
-import {
+  type ControlMetricsRequest,
+  type ControlMetricsResponse,
   type LogEntry,
   type LoggingService,
   type Metrics,
   QueryLogsRequest,
-  type ControlMetricsRequest,
-  type ControlMetricsResponse,
   type QueryMetricsRequest,
   type QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
+import { numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
+ *
+ * @deprecated This was created so that logs from the shared worker (WorkerClientServices) could be
+ * seen in the main window console without opening the shared worker DevTools. Shared worker client
+ * services is deprecated; dedicated worker logs already show in the main window console.
  */
 export class LoggingServiceImpl implements LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();
@@ -37,7 +35,7 @@ export class LoggingServiceImpl implements LoggingService {
   }
 
   async close(): Promise<void> {
-    const index = log.runtimeConfig.processors.findIndex((processor) => processor === this._logProcessor);
+    const index = log.runtimeConfig.processors.findIndex((processor: LogProcessor) => processor === this._logProcessor);
     log.runtimeConfig.processors.splice(index, 1);
   }
 
@@ -110,18 +108,25 @@ export class LoggingServiceImpl implements LoggingService {
           return;
         }
 
+        const { filename, line, context: scopeName } = entry.computedMeta;
+        const recordContext: Record<string, any> = { ...entry.computedContext };
+        if (entry.computedError !== undefined) {
+          recordContext.error = entry.computedError;
+        }
+
         const record: LogEntry = {
-          ...entry,
-          context: jsonify(getContextFromEntry(entry)),
-          timestamp: new Date(),
+          level: entry.level,
+          message: entry.message ?? entry.computedError ?? '',
+          context: recordContext,
+          timestamp: new Date(entry.timestamp),
           meta: {
             // TODO(dmaretskyi): Fix proto.
-            file: entry.meta?.F ?? '',
-            line: entry.meta?.L ?? 0,
+            file: filename ?? '',
+            line: line ?? 0,
             scope: {
               hostSessionId: this._sessionId,
               uptimeSeconds: (Date.now() - this._started) / 1000,
-              name: getDebugName(entry.meta?.S),
+              name: scopeName ?? '',
             },
           },
         };

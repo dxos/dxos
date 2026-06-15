@@ -1,0 +1,347 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { createContext } from '@radix-ui/react-context';
+import React, {
+  type PropsWithChildren,
+  type RefObject,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+
+import { addEventListener, combine } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
+import { useMergeRefs } from '@dxos/react-hooks';
+import { mx } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
+
+import { composable, composableProps, slottable } from '../../util';
+import { type ThemedClassName } from '../../util';
+import { IconButton } from '../Button';
+import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
+
+const isBottom = (el: HTMLElement | null) => {
+  return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
+};
+
+export interface ScrollController {
+  viewport: HTMLDivElement | null;
+  scrollToTop: (behavior?: ScrollBehavior) => void;
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
+}
+
+type ScrollContainerContextValue = {
+  controller?: ScrollController;
+  pinned?: boolean;
+  overflow?: boolean;
+  /** Called by Viewport to register/unregister the scroll element. */
+  setViewport: (el: HTMLDivElement | null) => void;
+  /** Called by Viewport on wheel events to update pinned state. */
+  setPinned: (value: boolean) => void;
+  /** Called by Viewport on scroll events to update overflow state. */
+  setOverflow: (value: boolean) => void;
+};
+
+const [ScrollContainerProvider, useScrollContainerContext] =
+  createContext<ScrollContainerContextValue>('ScrollContainer');
+
+//
+// Root
+//
+
+type ScrollContainerRootProps = PropsWithChildren<{
+  pin?: boolean;
+  behavior?: ScrollBehavior;
+}>;
+
+/**
+ * Headless scroll container that provides context for scroll state.
+ * Render ScrollContainer.Content and ScrollContainer.Viewport as children.
+ */
+const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProps>(
+  ({ children, pin, behavior: behaviorProp = 'smooth' }, forwardedRef) => {
+    const scrollerRef = useRef<HTMLDivElement | null>(null);
+    const autoScrollRef = useRef(false);
+    const [pinned, setPinned] = useState(pin);
+    const [overflow, setOverflow] = useState(false);
+
+    const timeoutRef = useRef<NodeJS.Timeout>(undefined);
+    const scrollToBottom = useCallback(
+      (behavior: ScrollBehavior = behaviorProp) => {
+        if (scrollerRef.current) {
+          if (behavior !== 'instant') {
+            // Temporarily hide scrollbar to prevent flickering during smooth scroll.
+            // For instant scrolling we skip this — there's no animation to hide,
+            // and adding the class changes element size which re-fires the ResizeObserver.
+            autoScrollRef.current = true;
+            scrollerRef.current.classList.add('scrollbar-none');
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = setTimeout(() => {
+              scrollerRef.current?.classList.remove('scrollbar-none');
+              autoScrollRef.current = false;
+            }, 500);
+          }
+
+          scrollerRef.current.scrollTo({
+            top: scrollerRef.current.scrollHeight,
+            behavior,
+          });
+
+          setPinned(true);
+        }
+      },
+      [behaviorProp],
+    );
+
+    const controller = useMemo<ScrollController>(
+      () => ({
+        get viewport() {
+          return scrollerRef.current;
+        },
+        scrollToTop: () => {
+          invariant(scrollerRef.current);
+          scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          setPinned(false);
+        },
+        scrollToBottom: (behavior = 'smooth' as ScrollBehavior) => {
+          scrollToBottom(behavior);
+        },
+      }),
+      [scrollToBottom],
+    );
+
+    // Scroll controller imperative ref.
+    useImperativeHandle(forwardedRef, () => controller, [controller]);
+
+    // Called by Viewport when the scroll element mounts/unmounts.
+    const setViewport = useCallback((el: HTMLDivElement | null) => {
+      scrollerRef.current = el;
+    }, []);
+
+    return (
+      <ScrollContainerProvider
+        pinned={pinned}
+        overflow={overflow}
+        controller={controller}
+        setViewport={setViewport}
+        setPinned={setPinned}
+        setOverflow={setOverflow}
+      >
+        {children}
+      </ScrollContainerProvider>
+    );
+  },
+);
+
+ScrollContainerRoot.displayName = 'ScrollContainer.Root';
+
+//
+// Content
+//
+
+type ScrollContainerContentProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+
+/**
+ * Composable wrapper around ScrollArea.Root.
+ * Provides the DOM structure for the scroll container.
+ */
+const ScrollContainerContent = composable<HTMLDivElement, ScrollContainerContentProps>(
+  ({ children, thin, padding, centered, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root
+        {...composableProps(props, { classNames: 'relative isolate' })}
+        thin={thin}
+        padding={padding}
+        centered={centered}
+        ref={forwardedRef}
+      >
+        {children}
+      </ScrollArea.Root>
+    );
+  },
+);
+
+ScrollContainerContent.displayName = 'ScrollContainer.Content';
+
+//
+// Viewport
+//
+
+const VIEWPORT_NAME = 'ScrollContainer.Viewport';
+
+type ScrollContainerViewportProps = SlottableProps;
+
+const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewportProps>(
+  ({ children, asChild, ...props }, forwardedRef) => {
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
+    const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
+
+    // Register the scroll element with Root and set up wheel/scroll listeners.
+    useEffect(() => {
+      const el = scrollerRef.current;
+      if (!el) {
+        return;
+      }
+
+      setViewport(el);
+
+      return combine(
+        addEventListener(el, 'wheel', () => setPinned(isBottom(el))),
+        addEventListener(el, 'scroll', () => setOverflow((el.scrollTop ?? 0) > 0)),
+        () => setViewport(null),
+      );
+    }, [setViewport, setPinned, setOverflow]);
+
+    return (
+      <>
+        <ScrollArea.Viewport asChild={asChild} {...composableProps(props)} ref={mergedRef}>
+          {children}
+        </ScrollArea.Viewport>
+        <ScrollContainerPinEffect scrollerRef={scrollerRef} />
+      </>
+    );
+  },
+);
+
+ScrollContainerViewport.displayName = VIEWPORT_NAME;
+
+/**
+ * Isolated component that consumes pinned/controller from context.
+ * Kept separate so that Viewport does not re-render when pinned changes.
+ */
+const PIN_EFFECT_NAME = 'ScrollContainer.PinEffect';
+
+const ScrollContainerPinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTMLDivElement | null> }) => {
+  const { pinned, controller } = useScrollContainerContext(PIN_EFFECT_NAME);
+
+  // Pin scroll to bottom when content changes.
+  useEffect(() => {
+    const viewport = scrollerRef.current;
+    if (!pinned || !viewport) {
+      return;
+    }
+
+    // Scroll instantly so we don't visually jump while content is being added.
+    controller?.scrollToBottom('instant');
+
+    // Setup resize observer on content children to detect size changes (e.g. streaming).
+    // We observe children rather than the viewport itself, because the viewport's size
+    // stays fixed — only its content grows.
+    // Use instant scroll in the callback — smooth scrolling adds/removes the
+    // scrollbar-none class, which changes the element size and re-fires the
+    // observer, creating an infinite loop.
+    const resizeObserver = new ResizeObserver(() => controller?.scrollToBottom('smooth'));
+    Array.from(viewport.children).forEach((child) => {
+      resizeObserver.observe(child);
+    });
+
+    // Watch for added/removed children.
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof Element) {
+            resizeObserver.observe(node);
+          }
+        });
+      });
+
+      controller?.scrollToBottom('smooth');
+    });
+    mutationObserver.observe(viewport, { childList: true });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [pinned, controller, scrollerRef]);
+
+  return null;
+};
+
+//
+// Fade
+//
+
+const FADE_NAME = 'ScrollContainer.Fade';
+
+type ScrollContainerFadeProps = {};
+
+function ScrollContainerFade() {
+  const { overflow } = useScrollContainerContext(FADE_NAME);
+
+  return (
+    <div
+      data-visible={overflow}
+      className={mx(
+        // NOTE: Gradients may not be visible with dark reader extensions.
+        'z-10 absolute top-0 inset-x-0 h-24 w-full',
+        'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
+        'bg-gradient-to-b from-(--color-base-surface) to-transparent pointer-events-none',
+      )}
+    />
+  );
+}
+
+ScrollContainerFade.displayName = FADE_NAME;
+
+//
+// ScrollDownButton
+//
+
+const SCROLL_DOWN_BUTTON_NAME = 'ScrollContainer.ScrollDownButton';
+
+type ScrollContainerScrollDownButtonProps = ThemedClassName;
+
+function ScrollContainerScrollDownButton({ classNames }: ScrollContainerScrollDownButtonProps) {
+  const { pinned, controller } = useScrollContainerContext(SCROLL_DOWN_BUTTON_NAME);
+
+  return (
+    <div
+      className={mx(
+        'absolute bottom-2 right-4 opacity-100 transition-opacity duration-300',
+        pinned && 'opacity-0',
+        classNames,
+      )}
+    >
+      <IconButton
+        variant='primary'
+        icon='ph--arrow-down--regular'
+        iconOnly
+        size={4}
+        label='Scroll down'
+        onClick={() => controller?.scrollToBottom()}
+      />
+    </div>
+  );
+}
+
+ScrollContainerScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
+
+//
+// ScrollContainer
+//
+
+export { useScrollContainerContext };
+
+export const ScrollContainer = {
+  Root: ScrollContainerRoot,
+  Content: ScrollContainerContent,
+  Viewport: ScrollContainerViewport,
+  Fade: ScrollContainerFade,
+  ScrollDownButton: ScrollContainerScrollDownButton,
+};
+
+export type {
+  ScrollContainerRootProps,
+  ScrollContainerContentProps,
+  ScrollContainerViewportProps,
+  ScrollContainerFadeProps,
+  ScrollContainerScrollDownButtonProps,
+};

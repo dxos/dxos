@@ -2,15 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect } from 'react';
 
-import { type CompleteCellRange, inRange } from '@dxos/compute';
-import { createMenuAction, createMenuItemGroup, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
+import { Obj } from '@dxos/echo';
+import {
+  type ActionGraphProps,
+  type ToolbarMenuActionGroupProperties,
+  createMenuAction,
+  createMenuItemGroup,
+} from '@dxos/react-ui-menu';
 
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '#meta';
+import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '#types';
+
 import { type SheetModel } from '../../model';
-import { rangeFromIndex, rangeToIndex, type StyleKey, type StyleValue } from '../../types';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
+import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
 export type StyleState = Partial<Record<StyleValue, boolean>>;
 
@@ -21,22 +30,30 @@ const styles: Record<StyleValue, string> = {
   softwrap: 'ph--paragraph--regular',
 };
 
-export const useStyleState = (state: StyleState) => {
+export const useStyleState = (stateAtom: ToolbarStateAtom) => {
+  const registry = useContext(RegistryContext);
   const { cursorFallbackRange, model } = useSheetContext();
 
   useEffect(() => {
-    state.highlight = false;
-    state.softwrap = false;
+    let highlight = false;
+    let softwrap = false;
     if (cursorFallbackRange && model.sheet.ranges) {
       model.sheet.ranges
         .filter(
           ({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
         )
         .forEach(({ value }) => {
-          state[value as StyleValue] = true;
+          if (value === 'highlight') {
+            highlight = true;
+          }
+          if (value === 'softwrap') {
+            softwrap = true;
+          }
         });
     }
-  }, [cursorFallbackRange, model.sheet]);
+    const prev = registry.get(stateAtom);
+    registry.set(stateAtom, { ...prev, highlight, softwrap });
+  }, [cursorFallbackRange, model.sheet, registry, stateAtom]);
 };
 
 const createStyleGroup = (state: StyleState) => {
@@ -49,7 +66,15 @@ const createStyleGroup = (state: StyleState) => {
   } as ToolbarMenuActionGroupProperties);
 };
 
-const createStyleActions = (model: SheetModel, state: StyleState, cursorFallbackRange?: CompleteCellRange) =>
+type StyleActionsContext = {
+  model: SheetModel;
+  state: ToolbarState;
+  stateAtom: ToolbarStateAtom;
+  registry: Registry.Registry;
+  cursorFallbackRange?: CompleteCellRange;
+};
+
+const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackRange }: StyleActionsContext) =>
   Object.entries(styles).map(([styleValue, icon]) => {
     return createMenuAction<StyleAction>(
       `style--${styleValue}`,
@@ -67,6 +92,7 @@ const createStyleActions = (model: SheetModel, state: StyleState, cursorFallback
           key: 'style',
           value: styleValue as StyleValue,
         };
+        const currentState = registry.get(stateAtom);
         if (
           model.sheet.ranges
             .filter(
@@ -77,32 +103,36 @@ const createStyleActions = (model: SheetModel, state: StyleState, cursorFallback
         ) {
           // this value should be unset
           if (index >= 0) {
-            model.sheet.ranges?.splice(index, 1);
+            Obj.update(model.sheet, (obj) => {
+              obj.ranges?.splice(index, 1);
+            });
           }
-          state[nextRangeEntity.value] = false;
+          registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: false });
         } else {
-          model.sheet.ranges?.push(nextRangeEntity);
-          state[nextRangeEntity.value] = true;
+          Obj.update(model.sheet, (obj) => {
+            obj.ranges?.push(nextRangeEntity);
+          });
+          registry.set(stateAtom, { ...currentState, [nextRangeEntity.value]: true });
         }
       },
       {
         key: 'style',
         value: styleValue as StyleValue,
         icon,
-        label: [`range value ${styleValue} label`, { ns: SHEET_PLUGIN }],
+        label: [`range-value.${styleValue}.label`, { ns: meta.id }],
         checked: !!state[styleValue as StyleValue],
       },
     );
   });
 
-export const createStyle = (model: SheetModel, state: StyleState, cursorFallbackRange?: CompleteCellRange) => {
-  const styleGroupAction = createStyleGroup(state);
-  const styleActions = createStyleActions(model, state, cursorFallbackRange);
+export const createStyle = (context: StyleActionsContext): ActionGraphProps => {
+  const styleGroupAction = createStyleGroup(context.state);
+  const styleActions = createStyleActions(context);
   return {
     nodes: [styleGroupAction, ...styleActions],
     edges: [
-      { source: 'root', target: 'style' },
-      ...styleActions.map(({ id }) => ({ source: styleGroupAction.id, target: id })),
+      { source: 'root', target: 'style', relation: 'child' },
+      ...styleActions.map(({ id }) => ({ source: styleGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

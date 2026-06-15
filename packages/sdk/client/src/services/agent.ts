@@ -4,11 +4,11 @@
 
 import { Event } from '@dxos/async';
 import {
-  DX_RUNTIME,
-  ENV_DX_PROFILE,
-  ENV_DX_PROFILE_DEFAULT,
   type ClientServices,
   type ClientServicesProvider,
+  DEFAULT_PROFILE,
+  DXEnv,
+  DX_RUNTIME,
   clientServiceBundle,
   getProfilePath,
 } from '@dxos/client-protocol';
@@ -29,7 +29,7 @@ export type FromAgentOptions = {
  * Connects to locally running CLI daemon.
  */
 export const fromAgent = ({
-  profile = process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT,
+  profile = DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE),
 }: FromAgentOptions = {}): ClientServicesProvider => {
   return new AgentClientServiceProvider(profile);
 };

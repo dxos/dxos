@@ -1,24 +1,26 @@
 {
   "name": "@dxos/hypercore",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Hypercore wrapper and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
@@ -27,29 +29,23 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "readable-stream": "^3.6.0",
-    "sodium-native": "^3.2.0",
-    "sodium-universal": "^3.0.2",
-    "streamx": "^2.12.5"
+    "@dxos/vendor-hypercore": "workspace:*",
+    "readable-stream": "catalog:",
+    "streamx": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/randombytes": "^2.0.0",
-    "@types/readable-stream": "^2.3.9",
-    "hypercore": "^9.12.0",
-    "hypercore-protocol": "^8.0.7",
-    "noise-protocol": "3.0.1",
-    "random-access-memory": "^4.1.0"
+    "@types/readable-stream": "catalog:",
+    "hypercore-protocol": "catalog:"
   },
   "publishConfig": {
     "access": "public"

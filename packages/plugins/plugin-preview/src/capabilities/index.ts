@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
-export const PreviewPopover = lazy(() => import('./preview-popover'));
-export const ReactSurface = lazy(() => import('./react-surface'));
+export const PreviewPopover = Capability.lazy('PreviewPopover', () => import('./preview-popover'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

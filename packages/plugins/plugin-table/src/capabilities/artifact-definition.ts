@@ -2,20 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+// ISSUE(burdon): defineArtifact
+// @ts-nocheck
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/artifact';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { defineArtifact } from '@dxos/compute';
+import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { type Space } from '@dxos/react-client/echo';
+import { Table, TableView } from '@dxos/react-ui-table/types';
+import { ViewModel } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
-import { meta } from '../meta';
-import { TableAction } from '../types';
+import { meta } from '#meta';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -31,189 +36,207 @@ const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the table `spaceID:objectID`',
 });
 
-export default () => {
-  const definition = defineArtifact({
-    id: `artifact:${meta.id}`,
-    name: meta.name,
-    // TODO(ZaymonFC): See if we need instructions beyond what the tools define.
-    instructions: `
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const definition = defineArtifact({
+      id: `artifact:${meta.id}`,
+      name: meta.name,
+      // TODO(ZaymonFC): See if we need instructions beyond what the tools define.
+      instructions: `
       - Before appending data to a table you must inspect the table to see its schema. Only add fields that are in the schema.
       - Inspect the table schema even if you have just created the table.
       - When adding rows you must not include the 'id' field -- it is automatically generated.
       - BEFORE adding rows, always make sure the table has been shown to the user.
     `,
-    schema: TableType,
-    tools: [
-      createTool(meta.id, {
-        name: 'create',
-        description: `
+      schema: TableView,
+      tools: [
+        createTool(meta.id, {
+          name: 'create',
+          description: `
           Create a new table using an existing schema.
           Use schema_create first to create a schema, or schema_list to choose an existing one.
         `,
-        caption: 'Creating table...',
-        schema: Schema.Struct({
-          typename: Schema.String.annotations({
-            description: 'The fully qualified typename of the schema to use for the table.',
+          caption: 'Creating table...',
+          schema: Schema.Struct({
+            typename: Schema.String.annotations({
+              description: 'The fully qualified name of the record type to use for the table.',
+            }),
+            name: Schema.optional(Schema.String).annotations({
+              description: 'Optional name for the table.',
+            }),
           }),
-          name: Schema.optional(Schema.String).annotations({
-            description: 'Optional name for the table.',
-          }),
-        }),
-        execute: async ({ typename, name }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-          invariant(extensions?.dispatch, 'No intent dispatcher');
+          execute: async ({ typename, name }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+            invariant(extensions?.invoke, 'No operation invoker');
 
-          // Validate schema exists first.
-          const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          if (!schema) {
-            return ToolResult.Error(`Schema not found: ${typename}`);
-          }
+            // Validate schema exists first.
+            const types = await extensions.space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
 
-          const intent = pipe(
-            createIntent(TableAction.Create, {
-              space: extensions.space,
+            const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+              db: extensions.space.db,
               typename,
-              name: name ?? schema.typename,
-            }),
-            chain(SpaceAction.AddObject, { target: extensions.space }),
-          );
+            });
+            const table = Table.make({ name: name ?? Type.getTypename(schema), view, jsonSchema });
 
-          const { data, error } = await extensions.dispatch(intent);
-          if (!data || error) {
-            return ToolResult.Error(error?.message ?? 'Failed to create table');
-          }
+            const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+              target: extensions.space,
+              object: table,
+            });
+            if (error) {
+              return ToolResult.Error(error?.message ?? 'Failed to create table');
+            }
 
-          // Verify the table was created with a view
-          const table = data.object;
-          const view = await table.view?.load();
-          invariant(view, 'Table view was not initialized correctly');
+            return ToolResult.Success(createArtifactElement(table.id));
+          },
+        }),
+        createTool(meta.id, {
+          name: 'list',
+          description: 'List all tables in the current space with their row types.',
+          caption: 'Querying tables...',
+          schema: Schema.Struct({}),
+          execute: async (_input, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+            const space = extensions.space;
+            // TODO(wittjosiah): This query needs to be able to filter to just the table view, post-filtering is awkward.
+            const { objects } = await space.db.query(Filter.type(View.View)).run();
+            const tableInfo = await Promise.all(
+              objects.map(async (view) => {
+                const presentation = await view.presentation.load();
+                if (!Obj.instanceOf(TableView, presentation)) {
+                  return null;
+                }
 
-          return ToolResult.Success(createArtifactElement(data.id));
-        },
-      }),
-      createTool(meta.id, {
-        name: 'list',
-        description: 'List all tables in the current space with their row types.',
-        caption: 'Querying tables...',
-        schema: Schema.Struct({}),
-        execute: async (_input, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-          const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const tableInfo = await Promise.all(
-            tables.map(async (table) => {
-              const view = await table.view?.load();
-              return {
-                id: fullyQualifiedId(table),
-                name: table.name ?? 'Unnamed Table',
-                typename: view?.query.typename,
-              };
-            }),
-          );
+                return {
+                  id: Obj.getURI(view),
+                  name: view.name ?? 'Unnamed Table',
+                  typename: view.query.typename,
+                };
+              }),
+            );
 
-          return ToolResult.Success(tableInfo);
-        },
-      }),
-      createTool(meta.id, {
-        name: 'inpect',
-        // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
-        description: 'Get the current schema of the table.',
-        caption: 'Loading table...',
-        schema: Schema.Struct({ id: QualifiedId }),
-        execute: async ({ id }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-          const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
+            return ToolResult.Success(tableInfo.filter(isNonNullable));
+          },
+        }),
+        createTool(meta.id, {
+          name: 'inspect',
+          // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
+          description: 'Get the current record type of the table.',
+          caption: 'Loading table...',
+          schema: Schema.Struct({ id: QualifiedId }),
+          execute: async ({ id }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+            const space = extensions.space;
+            const view = (await space.db
+              // TODO(wittjosiah): Filter.and should aggregate type
+              .query(Query.select(Filter.and(Filter.type(View.View), Filter.id(id))))
+              .first()) as View.View;
 
-          const view = await table.view?.load();
-          invariant(view);
-          const typename = view?.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
-          return ToolResult.Success(schema);
-        },
-      }),
-      // TODO(ZaymonFC): Search the row of a table? General search functionality? Can we (for now) just dump the entire
-      //   table into the context and have it not get too diluted?
-      // TODO(ZaymonFC): LIMIT number and indicate that.
-      createTool(meta.id, {
-        name: 'list-rows',
-        description: `
+            const table = await view.presentation.load();
+            invariant(Obj.instanceOf(TableView, table));
+
+            const typename = view.query.typename;
+            const types = await space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
+            return ToolResult.Success(schema);
+          },
+        }),
+        // TODO(ZaymonFC): Search the row of a table? General search functionality? Can we (for now) just dump the entire
+        //   table into the context and have it not get too diluted?
+        // TODO(ZaymonFC): LIMIT number and indicate that.
+        createTool(meta.id, {
+          name: 'list-rows',
+          description: `
           List all rows in a given table along with their values.
           NOTE: If the user wants to *see* the table, use the show tool.
         `,
-        caption: 'Loading table rows...',
-        schema: Schema.Struct({ id: QualifiedId }),
-        execute: async ({ id }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-          const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
+          caption: 'Loading table rows...',
+          schema: Schema.Struct({ id: QualifiedId }),
+          execute: async ({ id }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+            const space = extensions.space;
+            const view = (await space.db
+              // TODO(wittjosiah): Filter.and should aggregate type
+              .query(Query.select(Filter.and(Filter.type(View.View), Filter.id(id))))
+              .first()) as View.View;
 
-          const view = await table.view?.load();
-          invariant(view);
+            const table = await view.presentation.load();
+            invariant(Obj.instanceOf(TableView, table));
 
-          const typename = view.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
-
-          const { objects: rows } = await space.db.query(Filter.type(schema)).run();
-          return ToolResult.Success(rows);
-        },
-      }),
-      createTool(meta.id, {
-        name: 'insert-rows',
-        description: `
+            const typename = view.query.typename;
+            const types = await space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
+            const { objects: rows } = await space.db.query(Filter.type(schema)).run();
+            return ToolResult.Success(rows);
+          },
+        }),
+        createTool(meta.id, {
+          name: 'insert-rows',
+          description: `
           Add one or more rows to an existing table.
           Use table_inspect first to understand the schema.
         `,
-        caption: 'Inserting table rows...',
-        schema: Schema.Struct({
-          id: QualifiedId,
-          data: Schema.Array(Schema.Any).annotations({ description: 'Array of data payloads to add as rows' }),
-        }),
-        execute: async ({ id, data }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-          invariant(extensions?.dispatch, 'No intent dispatcher');
+          caption: 'Inserting table rows...',
+          schema: Schema.Struct({
+            id: QualifiedId,
+            data: Schema.Array(Schema.Any).annotations({ description: 'Array of data payloads to add as rows' }),
+          }),
+          execute: async ({ id, data }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+            invariant(extensions?.invoke, 'No operation invoker');
 
-          const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
-
-          const view = await table.view?.load();
-          invariant(view);
-
-          // Get schema for validation.
-          const typename = view.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
-
-          // Validate all rows.
-          // TODO(ZaymonFC): There should be a nicer way to do this!
-          const validationResults = data.map((row) => Schema.validateEither(schema)(Obj.make(schema, row)));
-          const validationError = validationResults.find((res) => res._tag === 'Left');
-          if (validationError) {
-            return ToolResult.Error(`Validation failed: ${validationError.left.message}`);
-          }
-
-          // Add rows sequentially.
-          for (const row of data) {
-            const intent = createIntent(TableAction.AddRow, { table, data: row });
-            const { error } = await extensions.dispatch(intent);
-            if (error) {
-              return ToolResult.Error(error?.message ?? 'Failed to add rows to table');
+            const space = extensions.space;
+            const view = (await space.db
+              // TODO(wittjosiah): Filter.and should aggregate type
+              .query(Query.select(Filter.and(Filter.type(View.View), Filter.id(id))))
+              .first()) as View.View;
+            // Get schema for validation.
+            const typename = view.query.typename;
+            const types = await space.db.query(Filter.type(Type.Type)).run();
+            const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
             }
-          }
 
-          return ToolResult.Success(`${data.length} rows added successfully`);
-        },
-      }),
-    ],
-  });
+            const table = await view.presentation.load();
+            invariant(Obj.instanceOf(TableView, table));
 
-  return contributes(Capabilities.ArtifactDefinition, definition);
-};
+            // Validate all rows.
+            // TODO(ZaymonFC): There should be a nicer way to do this!
+            const validationResults = data.map((row) => Schema.validateEither(schema)(Obj.make(schema, row)));
+            const validationError = validationResults.find((res) => res._tag === 'Left');
+            if (validationError) {
+              return ToolResult.Error(`Validation failed: ${validationError.left.message}`);
+            }
+
+            // Add rows sequentially.
+            for (const row of data) {
+              const object = Obj.make(schema, row);
+              const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+                target: space.db,
+                object,
+                hidden: true,
+              });
+              if (error) {
+                return ToolResult.Error(error?.message ?? 'Failed to add rows to table');
+              }
+            }
+
+            return ToolResult.Success(`${data.length} rows added successfully`);
+          },
+        }),
+      ],
+    });
+
+    return Capability.contributes(Capabilities.ArtifactDefinition, definition);
+  }),
+);

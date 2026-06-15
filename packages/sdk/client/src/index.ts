@@ -3,7 +3,7 @@
 //
 
 export { type ClientServices, type ClientServicesProvider, type ShellRuntime } from '@dxos/client-protocol';
-export { Config, Defaults, Dynamics, Envs, Local, Remote, Storage } from '@dxos/config';
+export { Config, ConfigService, Defaults, Dynamics, Envs, Local, Remote, Storage } from '@dxos/config';
 export { PublicKey, type PublicKeyLike } from '@dxos/keys';
 export {
   AlreadyJoinedError,
@@ -37,8 +37,8 @@ export {
 // TODO(wittjosiah): Should all api errors be exported here?
 
 // For some reason the * re-export from ./client gets removed by TSC. Looks like a compiler bug.
-export { type Client } from './client';
+export { Client } from './client';
 export * from './client';
+export * from './edge';
 export * from './services';
-export * from './util';
 export * from './version';

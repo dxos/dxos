@@ -2,18 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import * as Effect from 'effect/Effect';
 
-import { meta } from '../meta';
-import { type DebugSettingsProps, DebugSettingsSchema } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { createKvsStore } from '@dxos/effect';
 
-export default () => {
-  const settings = live<DebugSettingsProps>({});
+import { meta } from '#meta';
+import { DebugCapabilities, Settings } from '#types';
 
-  return contributes(Capabilities.Settings, {
-    prefix: meta.id,
-    schema: DebugSettingsSchema,
-    value: settings,
-  });
-};
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: Settings.Settings,
+      defaultValue: () => ({}),
+    });
+
+    return [
+      Capability.contributes(DebugCapabilities.Settings, settingsAtom),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.id,
+        schema: Settings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

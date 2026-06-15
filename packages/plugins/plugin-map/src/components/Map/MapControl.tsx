@@ -2,30 +2,56 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { Map, type MapController, useMapZoomHandler, type MapCanvasProps, type ControlProps } from '@dxos/react-ui-geo';
+import { composable } from '@dxos/react-ui';
+import {
+  type ControlProps,
+  Map,
+  type MapViewportProps,
+  type MapController,
+  type MapRootProps,
+  useMapZoomHandler,
+} from '@dxos/react-ui-geo';
 
-export type MapControlProps = MapCanvasProps & { onToggle?: () => void };
+import { type GeoControlProps } from '../types';
 
-export const MapControl = ({ classNames, markers, center, zoom, onToggle, onChange }: MapControlProps) => {
-  const [controller, setController] = useState<MapController | null>(null);
-  const handleZoomAction = useMapZoomHandler(controller);
+export type MapControlProps = GeoControlProps & MapViewportProps & MapRootProps;
 
-  const handleAction: ControlProps['onAction'] = (action) => {
-    switch (action) {
-      case 'toggle': {
-        onToggle?.();
-        break;
-      }
-    }
-  };
+export const MapControl = composable<HTMLDivElement, MapControlProps>(
+  // Map.Root is headless and exposes the controller via ref, so MapControl has no DOM ref to forward.
+  ({ center, zoom, markers, selected, onSelect, onToggle, onChange, tileUrl, lines, ...props }, _forwardedRef) => {
+    const [controller, setController] = useState<MapController | null>(null);
+    const handleZoomAction = useMapZoomHandler(controller);
 
-  return (
-    <Map.Root classNames={classNames} center={center} zoom={zoom}>
-      <Map.Canvas ref={setController} markers={markers} onChange={onChange} />
-      {onToggle && <Map.Action onAction={handleAction} />}
-      <Map.Zoom onAction={handleZoomAction} />
-    </Map.Root>
-  );
-};
+    const handleAction = useCallback<NonNullable<ControlProps['onAction']>>(
+      (action) => {
+        switch (action) {
+          case 'toggle': {
+            // Emit the live position so the next control inherits the user's current view.
+            const center = controller?.getCenter();
+            const zoom = controller?.getZoom();
+            if (center && typeof zoom === 'number') {
+              onChange?.({ center, zoom });
+            }
+            onToggle?.();
+            break;
+          }
+        }
+      },
+      [controller, onChange, onToggle],
+    );
+
+    return (
+      <Map.Root onChange={onChange} ref={setController}>
+        <Map.Viewport {...props} center={center} zoom={zoom} minZoom={3}>
+          <Map.Tiles url={tileUrl} />
+          <Map.Lines lines={lines} />
+          <Map.Markers markers={markers} lines={lines} selected={selected} onSelect={onSelect} />
+          {onToggle && <Map.Action onAction={handleAction} />}
+          <Map.Zoom onAction={handleZoomAction} />
+        </Map.Viewport>
+      </Map.Root>
+    );
+  },
+);

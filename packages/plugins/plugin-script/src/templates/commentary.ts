@@ -1,0 +1,252 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as A from '@automerge/automerge';
+import { Chess as ChessJS } from 'chess.js';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+
+import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { Trace, Operation } from '@dxos/compute';
+import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-client';
+import { registryLayerNoop } from '@dxos/echo/testing';
+import { log } from '@dxos/log';
+import { Chess } from '@dxos/plugin-chess';
+import { Game, GameRef, loadGame } from '@dxos/plugin-game';
+import { Markdown } from '@dxos/plugin-markdown';
+import { Text } from '@dxos/schema';
+import { HasSubject } from '@dxos/types';
+import { trim } from '@dxos/util';
+
+const Commentary = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.chess.commentary'),
+    name: 'Commentary',
+    description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
+  },
+  input: Schema.Struct({
+    game: GameRef(Chess.State).annotations({
+      description: 'The chess game to comment on.',
+    }),
+  }),
+  output: Schema.Union(
+    Schema.Struct({
+      documentId: URI.Schema.annotations({
+        description: 'The ID of the markdown document that was updated or created.',
+      }),
+      commentary: Schema.String.annotations({
+        description: 'The commentary that was added.',
+      }),
+    }),
+    Schema.Void.annotations({
+      description: 'Function did not find anything to comment on.',
+    }),
+  ),
+  types: [Game, Chess.State, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
+  services: [AiService.AiService, Database.Service],
+});
+
+export default Commentary.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ game: gameRef }) {
+        // Load the game and its Chess variant state.
+        log.info('load game', { gameRef });
+        const { game: chessGame, variant: chessState } = yield* loadGame(gameRef, Chess.State);
+
+        // Load the chess position from PGN or FEN.
+        const chess = new ChessJS();
+        if (chessState.pgn) {
+          chess.loadPgn(chessState.pgn);
+        } else if (chessState.fen) {
+          chess.load(chessState.fen);
+        } else {
+          log.info('Early return: no pgn or fen');
+          return;
+        }
+
+        // Get the most recent move
+        const history = chess.history({ verbose: true });
+        if (history.length === 0) {
+          throw new Error('No moves have been played yet');
+        }
+        const lastMove = history[history.length - 1];
+        const moveNumber = Math.ceil(history.length / 2);
+        const isWhiteMove = history.length % 2 === 1;
+        const player = isWhiteMove ? 'White' : 'Black';
+        const moveNotation = lastMove.san;
+
+        // Generate AI commentary about the move
+        const result = yield* new AiRequest.Request({
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
+        }).run({
+          prompt:
+            `Comment on this chess move as if you're commentating a live match for an audience:\n\n` +
+            `Move ${moveNumber}: ${player} plays ${moveNotation} (${lastMove.from} to ${lastMove.to})${lastMove.captured ? `, capturing ${lastMove.captured}` : ''}\n` +
+            `Current position: ${chess.fen()}\n` +
+            `${chess.isCheck() ? 'The king is in check! ' : ''}` +
+            `${chess.isCheckmate() ? 'CHECKMATE! ' : ''}` +
+            `${chess.isStalemate() ? 'STALEMATE! ' : ''}` +
+            `\nGame so far:\n${chess.pgn()}`,
+          system: COMMENTARY_SYSTEM_PROMPT,
+          history: [],
+        });
+
+        const commentaryText = Function.pipe(
+          result,
+          Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
+          Option.flatMap((msg) =>
+            Function.pipe(
+              msg.blocks,
+              Array.findLast((block) => block._tag === 'text'),
+              Option.map((block) => block.text),
+            ),
+          ),
+          Option.getOrThrowWith(() => new Error('No commentary generated')),
+        );
+
+        const commentary = `## Move ${moveNumber}: ${player} plays ${moveNotation}\n\n${commentaryText}\n\n`;
+        log.info('commentary', { commentary });
+
+        // TODO(wittjosiah): Functions currently don't support traversals.
+        // const docs = yield* Database.query(
+        //   Query.select(Filter.id(chessGame.id)).targetOf(HasSubject.HasSubject).source(),
+        // ).run.pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
+        const docs = yield* Database.query(Filter.type(HasSubject.HasSubject)).run.pipe(
+          Effect.map((relations) =>
+            relations.filter((relation) => {
+              // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
+              try {
+                log.info('relation', {
+                  source: Obj.getURI(Relation.getTarget(relation)),
+                  game: Obj.getURI(chessGame),
+                });
+                return Obj.getURI(Relation.getTarget(relation)) === Obj.getURI(chessGame);
+              } catch {
+                return false;
+              }
+            }),
+          ),
+          Effect.map((relations) =>
+            relations
+              .map((relation) => {
+                // TODO(wittjosiah): This is a workaround for getSource not handling deleted objects.
+                try {
+                  return Relation.getSource(relation);
+                } catch {
+                  return undefined;
+                }
+              })
+              .filter((source) => source !== undefined),
+          ),
+          Effect.map((sources) => {
+            const docs = sources.filter((source) => Obj.instanceOf(Markdown.Document, source));
+            log.info('docs', { sources, docs });
+            return docs;
+          }),
+        );
+        log.info('docs', { count: docs.length });
+
+        let document: Markdown.Document;
+        if (docs.length === 0) {
+          // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
+          const [properties] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.spaceProperties'))).run;
+          const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+          const rootCollection = rootCollectionRef
+            ? yield* Database.load<Collection.Collection>(rootCollectionRef)
+            : undefined;
+
+          log.info('rootCollection', { rootCollection });
+
+          // Create a new markdown document
+          const gameName = chessGame.name || 'Chess Game';
+          document = yield* Database.add(
+            Markdown.make({
+              name: `${gameName} Commentary`,
+              content: `# ${gameName} Commentary\n\n${commentary}`,
+            }),
+          );
+
+          const documentRef = Ref.make(document);
+          if (rootCollection) {
+            Obj.update(rootCollection, (rootCollection) => {
+              rootCollection.objects.push(documentRef);
+            });
+          }
+
+          // Create the HasSubject relation
+          yield* Database.add(
+            Relation.make(HasSubject.HasSubject, {
+              [Relation.Source]: document,
+              [Relation.Target]: chessGame,
+              completedAt: new Date().toISOString(),
+            }),
+          );
+        } else {
+          document = docs[0];
+
+          // Load the text content and append the commentary
+          const text = yield* Database.load(document.content);
+          const accessor = createDocAccessor(text, ['content']);
+          accessor.handle.change((doc: A.Doc<Text.Text>) => {
+            A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
+          });
+        }
+
+        log.info('result', { documentId: Obj.getURI(document), commentary });
+
+        yield* Database.flush();
+
+        return {
+          documentId: Obj.getURI(document),
+          commentary,
+        };
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model('ai.claude.model.claude-haiku-4-5'),
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
+          Trace.writerLayerNoop,
+          Database.notAvailable,
+          Layer.succeed(Operation.Service, {
+            invoke: () => Effect.die('Not available.'),
+            schedule: () => Effect.die('Not available.'),
+            invokePromise: async () => ({ error: new Error('Not available.') }),
+          } as any),
+          registryLayerNoop,
+        ),
+      ),
+    ),
+  ),
+);
+
+const COMMENTARY_SYSTEM_PROMPT = trim`
+  You are a professional chess commentator providing live commentary for a chess match.
+
+  # Style
+  - Write in an engaging, enthusiastic style as if commentating for a live audience
+  - Be concise but informative (2-4 sentences)
+  - Explain the strategic implications of the move
+  - Note any tactical elements (captures, threats, checks)
+  - Comment on the position and what it means for the game
+
+  # Format
+  - Write in plain text (no markdown formatting in the commentary itself)
+  - Be natural and conversational
+  - Use chess terminology appropriately but keep it accessible
+
+  # Special Situations
+  - If it's checkmate, express excitement about the conclusion
+  - If it's check, note the pressure on the king
+  - If a piece is captured, mention the material exchange
+  - Comment on the development of pieces and control of key squares when relevant
+`;

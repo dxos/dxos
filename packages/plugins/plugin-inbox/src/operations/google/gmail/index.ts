@@ -1,0 +1,21 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Operation, OperationHandlerSet } from '@dxos/compute';
+
+import Send from './send';
+import Sync from './sync';
+
+export const GmailFunctions: {
+  Send: Operation.WithHandler<Operation.Definition.Any>;
+  Sync: Operation.WithHandler<Operation.Definition.Any>;
+} = {
+  Send,
+  Sync,
+};
+
+export const GmailHandlers = OperationHandlerSet.lazy(
+  () => import('./send'),
+  () => import('./sync'),
+);

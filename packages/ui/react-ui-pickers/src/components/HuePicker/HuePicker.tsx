@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { hues } from '@dxos/react-ui-theme';
+import { type ButtonProps, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { getSize, hues, osTranslations } from '@dxos/ui-theme';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
 
@@ -18,12 +18,12 @@ export type HuePickerProps = {
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
 export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
 
   return (
     <PickerButton
       Component={HuePreview}
-      label={t('select hue label')}
+      label={t('select-hue.label')}
       icon='ph--palette--regular'
       values={hues}
       {...props}
@@ -31,15 +31,11 @@ export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
   );
 };
 
-const HuePreview = ({ value }: { value: string }) => {
-  const size = 16;
+const HuePreview = ({ value, size = 5 }: { value: string; size?: IconProps['size'] }) => {
   return (
-    <div className='flex p-[2px] justify-center items-center'>
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className='is-[var(--hue-preview-size,1rem)] bs-[var(--hue-preview-size,1rem)]'
-      >
-        <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${value}Fill)`} strokeWidth={4} />
+    <div className='flex justify-center items-center'>
+      <svg viewBox={`0 0 ${size} ${size}`} className={getSize(size)}>
+        <rect x={0} y={0} width={size} height={size} fill={`var(--color-${value}-surface)`} strokeWidth={4} />
       </svg>
     </div>
   );

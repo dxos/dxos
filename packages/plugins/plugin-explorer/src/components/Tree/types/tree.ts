@@ -2,40 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { Key, Obj, Type } from '@dxos/echo';
+import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
 
 export const TreeNodeType = Schema.Struct({
-  id: Key.ObjectId,
-  children: Schema.mutable(Schema.Array(Key.ObjectId)),
+  id: Key.EntityId,
+  children: Schema.mutable(Schema.Array(Key.EntityId)),
   data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
-  ref: Schema.optional(Type.Ref(Type.Expando)),
+  ref: Schema.optional(Ref.Ref(TestSchema.Expando)),
 }).pipe(Schema.mutable);
 
-export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}
+export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 
 export const TreeType = Schema.Struct({
-  root: Key.ObjectId,
-  nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Tree',
-    version: '0.1.0',
-  }),
-);
+  root: Key.EntityId,
+  nodes: Schema.mutable(Schema.Record({ key: Key.EntityId, value: TreeNodeType })),
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.tree', '0.1.0')));
 
-export interface TreeType extends Schema.Schema.Type<typeof TreeType> {}
+export type TreeType = Type.InstanceType<typeof TreeType>;
 
 /**
  * Wrapper object for tree.
  */
 export class Tree {
   static create = (): TreeType => {
-    const id = Key.ObjectId.random();
+    const id = Key.EntityId.random();
     return Obj.make(TreeType, {
       root: id,
       nodes: {
@@ -76,7 +72,7 @@ export class Tree {
    */
   tranverse<T>(
     callback: (node: TreeNodeType, depth: number) => T | void,
-    root: Key.ObjectId = this._tree.root,
+    root: Key.EntityId = this._tree.root,
     depth = 0,
   ): T | void {
     const node = this._tree.nodes[root];
@@ -93,7 +89,7 @@ export class Tree {
     }
   }
 
-  getNode(id: Key.ObjectId): TreeNodeType {
+  getNode(id: Key.EntityId): TreeNodeType {
     const node = this._tree.nodes[id];
     invariant(node);
     return node;
@@ -184,9 +180,11 @@ export class Tree {
   clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
-    this._tree.nodes = {
-      [root.id]: root,
-    };
+    Obj.update(this._tree, (obj) => {
+      obj.nodes = {
+        [root.id]: root,
+      };
+    });
   }
 
   /**
@@ -194,28 +192,35 @@ export class Tree {
    */
   addNode(parent: TreeNodeType, node?: TreeNodeType, index?: number): TreeNodeType {
     if (!node) {
-      const id = Key.ObjectId.random();
+      const id = Key.EntityId.random();
       node = { id, children: [], data: { text: '' } }; // TODO(burdon): Generic.
     }
 
-    this._tree.nodes[node.id] = node;
-    parent.children.splice(index ?? parent.children.length, 0, node.id);
+    const nodeToAdd = node;
+    Obj.update(this._tree, (obj) => {
+      obj.nodes[nodeToAdd.id] = nodeToAdd;
+      parent.children.splice(index ?? parent.children.length, 0, nodeToAdd.id);
+    });
     return node;
   }
 
   /**
    * Delete node.
    */
-  deleteNode(parent: TreeNodeType, id: Key.ObjectId): TreeNodeType | undefined {
+  deleteNode(parent: TreeNodeType, id: Key.EntityId): TreeNodeType | undefined {
     const node = this._tree.nodes[id];
     if (!node) {
       return undefined;
     }
 
-    delete this._tree.nodes[node.id];
+    Obj.update(this._tree, (obj) => {
+      delete obj.nodes[node.id];
+    });
     const idx = parent.children.findIndex((child) => child === id);
     if (idx !== -1) {
-      parent.children.splice(idx, 1);
+      Obj.update(this._tree, () => {
+        parent.children.splice(idx, 1);
+      });
     }
 
     return node;
@@ -232,8 +237,10 @@ export class Tree {
     }
 
     const child = node.children[from];
-    node.children.splice(from, 1);
-    node.children.splice(to, 0, child);
+    Obj.update(this._tree, () => {
+      node.children.splice(from, 1);
+      node.children.splice(to, 0, child);
+    });
     return this.getNode(child);
   }
 
@@ -252,8 +259,10 @@ export class Tree {
     }
 
     const previous = this.getNode(parent.children[idx - 1]);
-    parent.children.splice(idx, 1);
-    previous.children.push(node.id);
+    Obj.update(this._tree, () => {
+      parent.children.splice(idx, 1);
+      previous.children.push(node.id);
+    });
   }
 
   /**
@@ -270,16 +279,23 @@ export class Tree {
       return;
     }
 
-    // Remove node from parent.
+    // Remove node from parent and get following siblings.
     const nodeIdx = parent.children.findIndex((id) => id === node.id);
-    const [_, ...rest] = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
-    parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+    let rest: Key.EntityId[] = [];
+    Obj.update(this._tree, () => {
+      const removed = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+      rest = removed.slice(1); // Skip the node itself.
+    });
 
     // Add to ancestor.
     const parentIdx = this.getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-    ancestor.children.splice(parentIdx + 1, 0, node.id);
+    Obj.update(this._tree, () => {
+      ancestor.children.splice(parentIdx + 1, 0, node.id);
+    });
 
     // Transplant following siblings to current node.
-    node.children.push(...rest);
+    Obj.update(this._tree, () => {
+      node.children.push(...rest);
+    });
   }
 }

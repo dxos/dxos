@@ -6,10 +6,10 @@ import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { Actions, Action, Emoji, StepHeading, Label } from '../../../components';
+import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -35,7 +35,7 @@ export const InvitationAuthenticator = ({
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
   const disabled = !active || pending;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 
@@ -48,31 +48,34 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center gap-4'>
+      <div className='grow flex flex-col justify-center gap-4'>
         <Input.Root
           {...(failed && {
             validationValence: 'error',
           })}
         >
-          <Input.Label asChild>
-            {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
-              <StepHeading>{t('auth code input label')}</StepHeading>
-            ) : (
-              <>
-                <StepHeading className={descriptionText}>{t('authenticating label')}</StepHeading>
-                <div role='none' className='grow' />
-              </>
-            )}
-          </Input.Label>
+          {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
+            <Input.Label asChild>
+              <InputLabel>{t('auth-code-input.label')}</InputLabel>
+            </Input.Label>
+          ) : (
+            <>
+              <Input.Label>
+                <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
+              </Input.Label>
+              <div className='grow' />
+            </>
+          )}
           {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
             <Input.PinInput
               {...{
                 disabled,
+                density: 'lg',
                 length: pinLength,
-                onChange,
                 inputMode: 'numeric',
                 autoComplete: 'off',
                 pattern: '\\d*',
+                onChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,
                 'data-testid': `${invitationType}-auth-code-input`,
@@ -82,28 +85,28 @@ export const InvitationAuthenticator = ({
           )}
           {failed && (
             <Input.DescriptionAndValidation classNames='text-center'>
-              <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
+              <Input.Validation>{t('failed-to-authenticate.message')}</Input.Validation>
             </Input.DescriptionAndValidation>
           )}
         </Input.Root>
 
         {invitationId && authMethod === Invitation.AuthMethod.SHARED_SECRET && (
           <>
-            <Label>{t('auth other device emoji message')}</Label>
+            <Label>{t('auth-other-device-emoji.message')}</Label>
             <div className='flex justify-center'>
               <Emoji text={hexToEmoji(invitationId)} />
             </div>
           </>
         )}
       </div>
-      <Actions>
+      <ActionBar>
         <Action
           variant='ghost'
           disabled={disabled}
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
-          {t('cancel label')}
+          {t('cancel.label')}
         </Action>
         <Action
           variant='primary'
@@ -112,9 +115,9 @@ export const InvitationAuthenticator = ({
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
-          {t('next label')}
+          {t('next.label')}
         </Action>
-      </Actions>
+      </ActionBar>
     </>
   );
 };

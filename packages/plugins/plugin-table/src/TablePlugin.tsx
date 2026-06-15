@@ -2,85 +2,48 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
-import { translations as formTranslations } from '@dxos/react-ui-form';
-import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
-import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
+import * as Effect from 'effect/Effect';
 
-import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import { serializer } from './serializer';
-import translations from './translations';
-import { CreateTableSchema, TableAction } from './types';
+import { Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
+import { Table } from '@dxos/react-ui-table/types';
 
-export const TablePlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () =>
-        contributes(Capabilities.Translations, [...translations, ...formTranslations, ...tableTranslations]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: TableType.typename,
-          metadata: {
-            label: (object: TableType) => object.name,
-            icon: 'ph--table--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
-            serializer,
-            comments: 'unanchored',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: TableType,
-            formSchema: CreateTableSchema,
-            getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
-          }),
+import { BlueprintDefinition, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { TableOperation } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const TablePlugin = Plugin.define(meta).pipe(
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [Table.Table] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({
+    translations: [...translations, ...formTranslations, ...tableTranslations],
+  }),
+  Plugin.addModule({
+    id: 'on-type-added',
+    activatesOn: SpaceEvents.TypeAdded,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnTypeAdded, ({ db, type, show }) =>
+          Operation.invoke(TableOperation.OnTypeAdded, { db, type, show }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ViewType, ViewTypeV1]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/migration`,
-      activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
-    }),
-  ]);
+      ),
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default TablePlugin;

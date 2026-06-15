@@ -2,51 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type Obj } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
-import { ReactSurface } from './capabilities';
-import { meta, SECTION_IDENTIFIER } from './meta';
-import translations from './translations';
-import { StackViewType } from './types';
+import { ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { StackViewType } from '#types';
 
-export const StackPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () => [
-        contributes(Capabilities.Metadata, {
-          id: SECTION_IDENTIFIER,
-          metadata: {
-            parse: (section: { object: Obj.Any }, type: string) => {
-              switch (type) {
-                case 'node':
-                  return { id: section.object.id, label: (section.object as any).title, data: section.object };
-                case 'object':
-                  return section.object;
-                case 'view-object':
-                  return section;
-              }
-            },
-          },
-        }),
-      ],
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [StackViewType]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const StackPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addSchemaModule({ schema: [StackViewType] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default StackPlugin;

@@ -5,8 +5,8 @@
 import { type SystemService } from '@dxos/protocols/proto/dxos/client/services';
 
 import {
-  type CollectDiagnosticsBroadcastSender,
   type CollectDiagnosticsBroadcastHandler,
+  type CollectDiagnosticsBroadcastSender,
 } from './diagnostics-collector';
 
 export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBroadcastSender => {

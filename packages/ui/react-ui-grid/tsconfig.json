@@ -30,10 +30,16 @@
       "path": "../react-ui-editor"
     },
     {
-      "path": "../react-ui-searchlist"
+      "path": "../react-ui-list"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../react-ui-search"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

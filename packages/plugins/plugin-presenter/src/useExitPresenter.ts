@@ -2,34 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback } from 'react';
+import { useAtomValue } from '@effect-atom/atom-react';
+import { useCallback, useMemo } from 'react';
 
-import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { type Live } from '@dxos/live-object';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
+import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 
-export const useExitPresenter = (object: Live<any>) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
+export const useExitPresenter = (object: any) => {
+  const { invokePromise } = useOperationInvoker();
+  const stateAtom = useCapability(DeckCapabilities.State);
+  const state = useAtomValue(stateAtom);
+
+  // Compute deck from decks[activeDeck] since the getter doesn't survive spread operations.
+  const deck = useMemo(() => state.decks[state.activeDeck], [state.decks, state.activeDeck]);
 
   return useCallback(() => {
-    const objectId = fullyQualifiedId(object);
-    if (layout.deck.fullscreen) {
-      void dispatch(
-        createIntent(DeckAction.Adjust, {
-          type: 'solo--fullscreen',
-          id: objectId,
-        }),
-      );
+    const objectPath = getObjectPathFromObject(object);
+    const db = Obj.getDatabase(object);
+    if (deck?.fullscreen) {
+      void invokePromise(DeckOperation.Adjust, {
+        type: 'solo--fullscreen' as const,
+        id: objectPath,
+      });
     }
-    return dispatch(
-      createIntent(LayoutAction.Open, {
-        part: 'main',
-        subject: [objectId],
-        options: { workspace: getSpace(document)?.id },
-      }),
-    );
-  }, [dispatch, object]);
+
+    return invokePromise(LayoutOperation.Open, {
+      subject: [objectPath],
+      workspace: db ? getSpacePath(db.spaceId) : undefined,
+    });
+  }, [invokePromise, object, deck]);
 };

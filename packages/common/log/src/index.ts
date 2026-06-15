@@ -2,18 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import omit from 'lodash.omit';
-
-import { pick } from '@dxos/util';
+import { omit, pick } from '@dxos/util';
 
 export { omit, pick };
 
 export * from './config';
 export * from './context';
+export * from './environment';
+export * from './jsonl';
 export * from './log';
 export { parseFilter } from './options';
 export * from './processors';
 export * from './scope';
-export * from './meta';
+export type { CallMetadata } from './meta';
+export { LOG_META_MARKER, isLogMeta } from './meta';
+export { dbg } from './dbg';
+export * from './log-buffer';
 
 export { getCurrentOwnershipScope } from './experimental/ownership';

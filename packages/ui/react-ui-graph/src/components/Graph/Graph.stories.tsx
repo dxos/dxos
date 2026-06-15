@@ -2,40 +2,39 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
+import '../../../styles/graph.css';
 
-import { effect } from '@preact/signals-core';
-import { type StoryObj } from '@storybook/react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { type Graph, type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-stack';
-import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { Card } from '@dxos/react-ui';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
-import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { Pulsar } from '../../fx';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
   GraphHierarchicalProjector,
   type GraphHierarchicalProjectorOptions,
+  type GraphLayoutEdge,
+  type GraphLayoutNode,
+  type GraphProjector,
   GraphRadialProjector,
   type GraphRadialProjectorOptions,
   GraphRelationalProjector,
   type GraphRelationalProjectorOptions,
-  type GraphLayoutEdge,
-  type GraphLayoutNode,
-  type GraphProjector,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
-import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
-
-import '../../../styles/graph.css';
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 
@@ -50,12 +49,12 @@ const projectorTypes: Record<ProjectorType, Factory> = {
   relational: GraphRelationalProjector as Factory,
 };
 
-type StoryProps = GraphProps & {
+type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
-  singleSelect?: boolean;
-  graph: () => Graph;
+  graph: () => Graph.Any;
+  selectionMode?: SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -68,18 +67,22 @@ const DefaultStory = ({
   debug,
   grid,
   inspect,
-  singleSelect,
+  selectionMode,
   graph: _graph,
   projectorType: _projectorType = 'force',
   projectorOptions,
   ...props
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
+  const registry = useContext(RegistryContext);
 
   // Models.
-  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
-  const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
+  const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
+  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
+    const graph = _graph?.();
+    return graph ? new TestGraphModel(registry, graph) : undefined;
+  });
 
   // Projector.
   const [projectorType, setProjectorType] = useState<ProjectorType>(_projectorType);
@@ -156,8 +159,9 @@ const DefaultStory = ({
   }, [model]);
 
   const handleRegenerate = useCallback(() => {
-    setModel(new TestGraphModel(_graph?.()));
-  }, [_graph]);
+    const graph = _graph?.();
+    setModel(graph ? new TestGraphModel(registry, graph) : undefined);
+  }, [_graph, registry]);
 
   const handleClear = useCallback(() => {
     setModel(undefined);
@@ -181,7 +185,7 @@ const DefaultStory = ({
 
   const active = useMemo(() => new SelectionModel(), []);
   const handlePing = useCallback(() => {
-    for (const id of active.selected.value) {
+    for (const id of active.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
       if (node) {
         Pulsar.remove(select(node));
@@ -189,7 +193,7 @@ const DefaultStory = ({
     }
 
     active.clear();
-    for (const id of selection.selected.value) {
+    for (const id of selection.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
       if (node) {
         active.add(id);
@@ -201,7 +205,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('h-full w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -216,7 +220,7 @@ const DefaultStory = ({
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: getHashColor(node.data?.type ?? node.type)?.color,
+                    color: getHashStyles(node.data?.type ?? node.type)?.hue,
                   },
                   classes: {
                     'dx-selected': selection.contains(node.id),
@@ -224,7 +228,7 @@ const DefaultStory = ({
                 }),
                 edge: (edge: GraphLayoutEdge<TestNode>) => ({
                   data: {
-                    color: getHashColor(edge.data?.type ?? edge.type)?.color,
+                    color: getHashStyles(edge.data?.type ?? edge.type)?.hue,
                   },
                 }),
               }}
@@ -255,13 +259,9 @@ const DefaultStory = ({
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.Container role='popover'>
-            <SyntaxHighlighter
-              classNames='bg-transparent text-xs !mlb-cardSpacingBlock !pli-cardSpacingInline !overflow-visible'
-              language='json'
-              code={JSON.stringify(popover, null, 2)}
-            />
-          </Card.Container>
+          <Card.Root>
+            <JsonHighlighter data={popover} classNames='text-xs my-form-padding px-form-padding bg-transparent' />
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -282,7 +282,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel;
+  model?: GraphModel.ReactiveGraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
@@ -296,44 +296,50 @@ const Debug = ({
 }) => {
   const [data, setData] = useState({});
   useEffect(() => {
-    effect(() => {
-      setData({
-        projector,
-        selection: selection.toJSON(),
-        model: model?.toJSON(),
-      });
+    setData({
+      projector,
+      selection: selection.toJSON(),
+      model: model?.toJSON(),
     });
   }, [model, selection, projector]);
 
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root>
-        <IconButton onClick={onToggleProjector} size={5} label='Projector' icon='ph--graph--regular' iconOnly />
-        <IconButton onClick={onRefresh} size={5} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <IconButton onClick={onRepaint} size={5} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
-        <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
-        <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
-        <IconButton onClick={onPing} size={5} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+        <IconButton onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <IconButton onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <IconButton onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <IconButton onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <IconButton onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <IconButton onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
-      <JsonFilter data={data} classNames='text-sm' />
+      <Syntax.Root data={data}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code classNames='text-sm' />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </div>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
+    layout: 'fullscreen',
     controls: { disable: true },
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -353,7 +359,7 @@ export const Projector: Story = {
     debug: true,
     drag: true,
     arrows: true,
-    singleSelect: true,
+    selectionMode: 'single',
     projectorType: 'hierarchical',
     projectorOptions: {
       duration: 500,
@@ -449,14 +455,12 @@ export const WithPopover: Story = {
   },
 };
 
-export const Empty: Story = {
-  render: () => (
-    <SVG.Root>
-      <SVG.Markers />
-      <SVG.Grid axis />
-      <SVG.Zoom extent={[1 / 4, 4]}>
-        <GraphComponent />
-      </SVG.Zoom>
-    </SVG.Root>
-  ),
-};
+export const Empty = () => (
+  <SVG.Root>
+    <SVG.Markers />
+    <SVG.Grid axis />
+    <SVG.Zoom extent={[1 / 4, 4]}>
+      <GraphComponent />
+    </SVG.Zoom>
+  </SVG.Root>
+);

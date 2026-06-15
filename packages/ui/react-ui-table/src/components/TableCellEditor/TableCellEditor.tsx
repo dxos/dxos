@@ -3,64 +3,56 @@
 //
 
 import { type Completion } from '@codemirror/autocomplete';
-import { type Schema } from 'effect/Schema';
+import { EditorView } from '@codemirror/view';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { debounce } from '@dxos/async';
+import { type Type } from '@dxos/echo';
+import { Format, TypeEnum } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
-import { type DxGrid } from '@dxos/lit-grid';
-import { useThemeContext } from '@dxos/react-ui';
-import { createMarkdownExtensions } from '@dxos/react-ui-editor';
+import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import {
-  cellQuery,
-  editorKeys,
-  parseCellIndex,
-  useGridContext,
-  type DxGridPlanePosition,
+  type EditorBlurHandler,
   type EditorKeyEvent,
   type EditorKeyOrBlurHandler,
-  type EditorBlurHandler,
   GridCellEditor,
   type GridCellEditorProps,
   type GridScopedProps,
+  editorKeys,
+  parseCellIndex,
+  useGridContext,
 } from '@dxos/react-ui-grid';
-import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { type ModalController, type TableModel } from '../../model';
 import { CellValidationMessage } from './CellValidationMessage';
-import { FormCellEditor } from './FormCellEditor';
-import { completion } from './extension';
-import { type TableModel, type ModalController } from '../../model';
-
-const newValue = Symbol.for('newValue');
+import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
 /**
  * Option to create new object/value.
  */
-export const createOption = (text: string) => ({ [newValue]: true, text });
-
-const isCreateOption = (data: any) => typeof data === 'object' && data[newValue];
-
-export type QueryResult = Pick<Completion, 'label'> & { data: any };
-
-export type TableCellEditorProps = {
-  model?: TableModel;
-  modals?: ModalController;
-  schema?: Schema.AnyNoContext;
-  onEnter?: (cell: DxGridPlanePosition) => void;
-  onFocus?: DxGrid['refocus'];
-  onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
+export type QueryResult = Pick<Completion, 'label'> & {
+  data: any;
 };
 
-export const TableValueEditor = ({
+export type TableCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
+  schema?: T;
+  model?: TableModel;
+  modals?: ModalController;
+  onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
+  onCreate?: OnCreateHandler;
+  onSave?: () => void;
+};
+
+export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
+  __gridScope,
+  schema,
   model,
   modals,
-  schema,
-  onEnter,
   onFocus,
-  onQuery,
-  __gridScope,
-}: GridScopedProps<TableCellEditorProps>) => {
+  onSave,
+  onCreate,
+}: GridScopedProps<TableCellEditorProps<T>>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
@@ -69,41 +61,52 @@ export const TableValueEditor = ({
     }
 
     const { col } = parseCellIndex(editing.index);
-    const field = model.projection.view.fields[col];
+    const field = model.projection.getFields()[col];
     const fieldProjection = model.projection.getFieldProjection(field.id);
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
 
-  if (fieldProjection?.props.type === TypeEnum.Array) {
-    return <FormCellEditor fieldProjection={fieldProjection} model={model} schema={schema} __gridScope={__gridScope} />;
+  if (
+    fieldProjection?.props.type === TypeEnum.Array ||
+    fieldProjection?.props.format === Format.TypeFormat.SingleSelect ||
+    fieldProjection?.props.format === Format.TypeFormat.Ref
+    // TODO(thure): Support `Format.TypeFormat.MultiSelect`
+  ) {
+    return (
+      <FormCellEditor<T>
+        __gridScope={__gridScope}
+        schema={schema}
+        model={model}
+        fieldProjection={fieldProjection}
+        modals={modals}
+        onSave={onSave}
+        onCreate={onCreate}
+      />
+    );
   }
 
-  // For all other types, use the existing cell editor
-  return (
-    <TableCellEditor
-      model={model}
-      modals={modals}
-      onEnter={onEnter}
-      onFocus={onFocus}
-      onQuery={onQuery}
-      __gridScope={__gridScope}
-    />
-  );
+  // For all other types, use the existing cell editor.
+  return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
+};
+
+const cellEditorSlots: GridCellEditorProps['slots'] = {
+  content: {
+    className: '!py-(--dx-grid-cell-editor-padding-block)',
+  },
 };
 
 export const TableCellEditor = ({
+  __gridScope,
   model,
   modals,
-  onEnter,
   onFocus,
-  onQuery,
-  __gridScope,
+  onSave,
 }: GridScopedProps<TableCellEditorProps>) => {
-  const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+  const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
-  const { themeMode } = useThemeContext();
-  const [_validationError, setValidationError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -111,12 +114,13 @@ export const TableCellEditor = ({
     }
 
     const { col } = parseCellIndex(editing.index);
-    const field = model.projection.view.fields[col];
+    const field = model.projection.getFields()[col];
     const fieldProjection = model.projection.getFieldProjection(field.id);
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
 
+  // TOOD(burdon): Attach to event handler?
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {
@@ -124,34 +128,39 @@ export const TableCellEditor = ({
       }
 
       const cell = parseCellIndex(editing.index);
+      const validationResult = await model.validateCellData(cell, value);
 
-      // Validate the value
-      const result = await model.validateCellData(cell, value);
-
-      if (result.valid) {
+      if (validationResult.valid) {
         setValidationError(null);
         model.setCellData(cell, value);
-        onEnter?.(cell);
         onFocus?.();
         setEditing(null);
+        onSave?.();
       } else {
-        setValidationError(result.error);
-        // Editor stays open on validation failure
+        setValidationError(validationResult.error);
+        setValidationVariant('error');
       }
     },
-    [model, editing, onEnter, onFocus, setEditing],
+    [model, editing, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
     async (value) => {
-      if (!model || !editing) {
-        return;
-      }
       if (suppressNextBlur.current) {
         suppressNextBlur.current = false;
+      } else if (model && editing) {
+        // Save silently if validation passes
+        const cell = parseCellIndex(editing.index);
+        if (value !== undefined) {
+          const result = await model.validateCellData(cell, value);
+          if (result.valid) {
+            setValidationError(null);
+            model.setCellData(cell, value);
+            setEditing(null);
+            onSave?.();
+          }
+        }
       }
-
-      // Don't save on blur - let handleClose handle validation and saving
     },
     [model, editing],
   );
@@ -163,177 +172,75 @@ export const TableCellEditor = ({
       }
 
       const cell = parseCellIndex(editing.index);
-
       if (value !== undefined) {
         // Pre-commit validation check.
         const result = await model.validateCellData(cell, value);
 
         if (result.valid) {
+          suppressNextBlur.current = true;
           setValidationError(null);
           model.setCellData(cell, value);
           setEditing(null);
-          onEnter?.(cell);
+          onSave?.();
           if (event && onFocus) {
-            onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+            onFocus(determineNavigationAxis(event), determineNavigationDelta(event), cell);
           }
         } else {
           setValidationError(result.error);
+          setValidationVariant('error');
         }
       } else {
+        suppressNextBlur.current = true;
         setValidationError(null);
         setEditing(null);
+        onSave?.();
         if (event && onFocus) {
           onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
         }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, setEditing],
+    [model, editing, onFocus, fieldProjection, setEditing, onSave],
   );
 
-  const extension = useMemo(() => {
+  const extensions = useMemo(() => {
     if (!fieldProjection) {
       return [];
     }
 
-    const extension = [
+    const extensions = [
       editorKeys({
         onClose: handleClose,
         ...(editing?.initialContent && { onNav: handleClose }),
       }),
     ];
+    // Add validation extension to handle content changes.
+    if (model && editing) {
+      extensions.push(
+        EditorView.updateListener.of(
+          debounce((update) => {
+            const content = update.state.doc.toString();
+            const cell = parseCellIndex(editing.index);
 
-    const format = fieldProjection.props.format;
-
-    if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
-      // TODO(ZaymonFC): Reconcile this with the TagPicker component?
-      // Add markdown extensions needed by tag picker.
-      extension.push(createMarkdownExtensions({ themeMode }));
-
-      const options = fieldProjection.props.options || [];
-
-      const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
-
-      extension.push(
-        tagPickerExtension({
-          mode,
-          inGrid: true,
-          onSearch: (text, selectedIds) => {
-            return options
-              .filter(
-                (option) =>
-                  selectedIds.indexOf(option.id) === -1 &&
-                  (text.length === 0 || option.title.toLowerCase().includes(text.toLowerCase())),
-              )
-              .map((option) => ({
-                id: option.id,
-                label: option.title,
-                hue: option.color as any,
-              }));
-          },
-          onUpdate: (ids) => {
-            if (model && editing) {
-              if (ids.length === 0) {
-                return;
-              }
-              if (mode === 'single-select') {
-                void handleEnter(ids[0]);
+            // Perform validation on content change.
+            void model.validateCellData(cell, content).then((result) => {
+              if (result.valid) {
+                setValidationError(null);
               } else {
-                void handleEnter(ids);
+                setValidationError(result.error);
+                setValidationVariant('error');
               }
-            }
-          },
-        }),
+            });
+          }, 10),
+        ),
       );
     }
 
-    if (onQuery) {
-      switch (fieldProjection.props.format) {
-        case FormatEnum.Ref: {
-          extension.push([
-            completion({
-              onQuery: (text) => onQuery(fieldProjection, text),
-              onMatch: (data) => {
-                if (model && editing && modals) {
-                  if (isCreateOption(data)) {
-                    const { field, props } = fieldProjection;
-                    if (props.referenceSchema) {
-                      suppressNextBlur.current = true;
-                      modals.openCreateRef(
-                        props.referenceSchema,
-                        document.querySelector(cellQuery(editing.index, gridId)),
-                        {
-                          [field.referencePath!]: data.text,
-                        },
-                        (data) => {
-                          void handleEnter(data);
-                        },
-                      );
-                    }
-                  } else {
-                    void handleEnter(data);
-                  }
-                }
-              },
-            }),
-          ]);
-          break;
-        }
-      }
-    }
-
-    return extension;
-  }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
+    return extensions;
+  }, [model, modals, editing, fieldProjection, handleClose]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
       const cell = parseCellIndex(editing.index);
-      const { col } = cell;
-      const field = model.projection.view.fields[col];
-      const fieldProjection = model.projection.getFieldProjection(field.id);
-
-      if (
-        fieldProjection?.props.format === FormatEnum.SingleSelect ||
-        fieldProjection?.props.format === FormatEnum.MultiSelect
-      ) {
-        const value = model.getCellData(cell);
-
-        if (value !== undefined) {
-          const options = fieldProjection.props.options || [];
-
-          if (fieldProjection.props.format === FormatEnum.MultiSelect && Array.isArray(value)) {
-            const tagItems = value
-              .map((id) => {
-                const option = options.find((o) => o.id === id);
-                if (option) {
-                  return {
-                    id,
-                    label: option.title,
-                    hue: option.color as any,
-                  };
-                }
-                return undefined;
-              })
-              .filter((item): item is { id: any; label: string; hue: any } => item !== undefined);
-
-            return createLinks(tagItems);
-          } else {
-            const option = options.find((o) => o.id === value);
-
-            if (option) {
-              const tagItem = {
-                id: value,
-                label: option.title,
-                hue: option.color as any,
-              };
-
-              return createLinks([tagItem]);
-            }
-          }
-        }
-
-        return '';
-      }
-
       const value = model.getCellData(cell);
       return value !== undefined ? String(value) : '';
     }
@@ -341,8 +248,13 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage validationError={_validationError} __gridScope={__gridScope} />
-      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
+      <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
+      <GridCellEditor
+        extensions={extensions}
+        slots={cellEditorSlots}
+        getCellContent={getCellContent}
+        onBlur={handleBlur}
+      />
     </>
   );
 };

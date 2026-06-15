@@ -2,32 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
+import { AppGraphBuilder, DevPluginLoader, OperationHandler, ReactSurface, RegistrySettings } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const RegistryPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-  ]);
+export const RegistryPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSettingsModule({ activate: RegistrySettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'dev-plugin-loader',
+    activatesOn: ActivationEvents.Startup,
+    activate: DevPluginLoader,
+  }),
+  Plugin.make,
+);
+
+export default RegistryPlugin;

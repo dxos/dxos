@@ -32,7 +32,7 @@ end
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
+| Module                                      | Direct  |
+| ------------------------------------------- | ------- |
 | [`@dxos/debug`](../../debug/docs/README.md) | &check; |
-| [`@dxos/log`](../../log/docs/README.md) | &check; |
+| [`@dxos/log`](../../log/docs/README.md)     | &check; |

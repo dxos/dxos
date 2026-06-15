@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger, scheduleMicroTask } from '@dxos/async';
-import { type Context, rejectOnDispose, Resource } from '@dxos/context';
+import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
+import { type Context, Resource, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
-import { logInfo, log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -33,14 +33,14 @@ const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
 const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
 
-export type NotarizationPluginParams = {
+export type NotarizationPluginProps = {
   spaceId: SpaceId;
   edgeClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
   activeEdgePollingInterval?: number;
 };
 
-export type NotarizeParams = {
+export type NotarizeProps = {
   /**
    * For cancellation.
    */
@@ -97,7 +97,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
   private readonly _edgeClient: EdgeHttpClient | undefined;
 
-  constructor(params: NotarizationPluginParams) {
+  constructor(params: NotarizationPluginProps) {
     super();
     this._spaceId = params.spaceId;
     this._activeEdgePollingInterval = params.activeEdgePollingInterval ?? DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL;
@@ -149,7 +149,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     retryTimeout = DEFAULT_RETRY_TIMEOUT,
     successDelay = DEFAULT_SUCCESS_DELAY,
     edgeRetryJitter,
-  }: NotarizeParams): Promise<void> {
+  }: NotarizeProps): Promise<void> {
     log('notarize', { credentials });
     invariant(
       credentials.every((credential) => credential.id),
@@ -246,6 +246,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     scheduleTask(ctx, async () => {
       try {
         await client.notarizeCredentials(
+          ctx,
           this._spaceId,
           { credentials: encodedCredentials },
           { retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
@@ -302,7 +303,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>): void {
     scheduleMicroTask(this._ctx, async () => {
       try {
-        const response = await client.getCredentialsForNotarization(this._spaceId, {
+        const response = await client.getCredentialsForNotarization(this._ctx, this._spaceId, {
           retry: { count: MAX_EDGE_RETRIES },
         });
 
@@ -392,21 +393,21 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 }
 
 const handleEdgeError = (error: any) => {
-  if (!(error instanceof EdgeCallFailedError) || error.errorData) {
+  if (!(error instanceof EdgeCallFailedError) || error.data) {
     log.catch(error);
   } else {
-    log.info('Edge notarization failure', { reason: error.reason });
+    log.info('Edge notarization failure', { message: error.message });
   }
 };
 
-export type NotarizationTeleportExtensionParams = {
+export type NotarizationTeleportExtensionProps = {
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
   onNotarize: (request: NotarizeRequest) => Promise<void>;
 };
 
 export class NotarizationTeleportExtension extends RpcExtension<Services, Services> {
-  constructor(private readonly _params: NotarizationTeleportExtensionParams) {
+  constructor(private readonly _params: NotarizationTeleportExtensionProps) {
     super({
       requested: {
         NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),

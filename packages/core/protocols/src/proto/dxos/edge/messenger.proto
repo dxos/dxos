@@ -76,7 +76,17 @@ message Message {
   /// Maybe be used to address a service at EDGE, but also to address components inside the client.
   optional string service_id = 20;
 
+  optional TraceContext trace_context = 21;
+
   optional google.protobuf.Any payload = 100;
+}
+
+/// W3C Trace Context propagation (https://www.w3.org/TR/trace-context/).
+message TraceContext {
+  /// W3C `traceparent` header value (e.g. "00-<trace-id>-<parent-id>-<trace-flags>").
+  string traceparent = 1;
+  /// W3C `tracestate` header value; vendor-specific key-value pairs.
+  optional string tracestate = 2;
 }
 
 //

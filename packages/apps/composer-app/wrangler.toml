@@ -13,15 +13,15 @@ pages_build_output_dir = "./out/composer"
 #
 # Dev
 # http://localhost:8788
-# pnpm -w nx bundle composer-app
+# moon run composer-app:bundle
 # wrangler pages dev [--persist-to=/tmp/dxos/composer-app]
 #
 
-vars = { ENVIRONMENT = "dev" }
+vars = { ENVIRONMENT = "dev", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
 
-d1_databases = [
-  { binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }
-]
+d1_databases = [{ binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }]
+
+r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs-dev" }]
 
 #
 # Preview
@@ -35,11 +35,11 @@ d1_databases = [
 
 [env.preview]
 
-vars = { ENVIRONMENT = "preview" }
+vars = { ENVIRONMENT = "preview", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
 
-d1_databases = [
-  { binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }
-]
+d1_databases = [{ binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }]
+
+r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs-preview" }]
 
 #
 # Production
@@ -56,9 +56,9 @@ d1_databases = [
 
 [env.production]
 
-vars = { ENVIRONMENT = "production" }
+vars = { ENVIRONMENT = "production", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
 
-d1_databases = [
-  { binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }
-]
+d1_databases = [{ binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }]
+
+r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs" }]
 

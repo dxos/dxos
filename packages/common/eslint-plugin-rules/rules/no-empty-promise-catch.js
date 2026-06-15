@@ -9,7 +9,7 @@ const isCatchCallSite = (expression) =>
   expression.callee.type === 'MemberExpression' &&
   expression.callee.property.name === 'catch';
 
-module.exports = {
+export default {
   meta: {
     type: 'problem',
     fixable: 'code',

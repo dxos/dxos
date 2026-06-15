@@ -5,70 +5,48 @@
 import React, { type ComponentPropsWithoutRef, forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStack, useStackItem } from '../StackContext';
 
-export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  /**
-   * This flag is required in order to clarify a developer experience that seemed like it needed extra boilerplate
-   * (`row-span-2`) or was buggy. See the description of the StackItem.Content component itself for more information.
-   */
+export type StackItemContentProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'role' | 'scrollable'>> & {
   toolbar?: boolean;
-
-  /**
-   * Whether to provide for the layout of a statusbar after the content.
-   */
   statusbar?: boolean;
-
-  /**
-   * Whether the consumer intends to do something custom and typical affordances should not apply
-   */
-  layoutManaged?: boolean;
-
-  /**
-   * Whether to set a certain aspect ratio on the content, including the toolbar and statusbar. This is provided for
-   * convenience and consistency; it can instead be specified by the `classNames` or `style` props as needed.
-   */
-  size?: 'intrinsic' | 'video' | 'square';
 };
 
 /**
- * This component should be used by plugins for rendering content within a stack item, a.k.a. a “plank” or “section”.
- * The `toolbar` flag must be provided since this component provides for the layout of content with the toolbar.
+ * This component should be used by plugins for rendering content within a stack item (i.e., a “plank” or “section”).
  */
 export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps>(
-  ({ children, toolbar, statusbar, layoutManaged, classNames, size = 'intrinsic', ...props }, forwardedRef) => {
+  ({ classNames, children, toolbar, statusbar, ...props }, forwardedRef) => {
     const { size: stackItemSize } = useStack();
     const { role } = useStackItem();
     const style = useMemo(
-      () =>
-        layoutManaged
-          ? {}
-          : {
-              gridTemplateRows: [
-                ...(toolbar ? [role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)'] : []),
-                '1fr',
-                ...(statusbar ? ['var(--statusbar-size)'] : []),
-              ].join(' '),
-            },
-      [toolbar, statusbar, layoutManaged],
+      () => ({
+        gridTemplateRows: [
+          toolbar && role === 'section' ? 'calc(var(--dx-toolbar-size) - 1px)' : 'var(--dx-toolbar-size)',
+          '1fr',
+          statusbar && 'var(--dx-statusbar-size)',
+        ]
+          .filter(Boolean)
+          .join(' '),
+      }),
+      [toolbar, statusbar],
     );
+
     return (
       <div
-        role='none'
         {...props}
+        style={style}
         className={mx(
-          'group grid grid-cols-[100%]',
-          stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
-          size === 'video' ? 'aspect-video' : size === 'square' && 'aspect-square',
-          toolbar && '[&_.dx-toolbar]:relative [&_.dx-toolbar]:border-be [&_.dx-toolbar]:border-subduedSeparator',
-          role === 'section' &&
-            toolbar &&
-            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
+          'group grid grid-cols-[100%] dx-density-lg',
+          stackItemSize === 'contain' && 'min-h-0 overflow-hidden',
+          toolbar &&
+            role === 'section' &&
+            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:top-0 [&_.dx-toolbar]:-mb-px [&_.dx-toolbar]:min-w-0',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
           classNames,
         )}
-        style={style}
         data-popover-collision-boundary={true}
         ref={forwardedRef}
       >
@@ -77,3 +55,5 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
     );
   },
 );
+
+StackItemContent.displayName = 'StackItemContent';

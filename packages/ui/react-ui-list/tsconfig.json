@@ -30,10 +30,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../react-primitives/react-list"
     },
     {
       "path": "../react-ui"
@@ -42,10 +42,10 @@
       "path": "../react-ui-text-tooltip"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

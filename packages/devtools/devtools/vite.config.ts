@@ -2,22 +2,31 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import VitePluginFonts from 'unplugin-fonts/vite';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import { VitePluginFonts } from 'vite-plugin-fonts';
 import { VitePWA } from 'vite-plugin-pwa';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
+
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 const PACKAGE_VERSION = require('./package.json').version;
 
+// Aligned with composer-app. These targets support top-level await natively,
+// so no `vite-plugin-top-level-await` polyfill is needed.
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
+
 // https://vitejs.dev/config
 export default defineConfig({
+  root: dirname,
   base: '', // Ensures relative path to assets.
   server: {
     host: true,
@@ -29,22 +38,31 @@ export default defineConfig({
       ],
     },
   },
+  oxc: {
+    target: [...browserTargets],
+  },
   build: {
     sourcemap: true,
+    target: [...browserTargets],
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom'],
+        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+        // record form that worked in Rollup is rejected at runtime.
+        manualChunks: (id: string) => {
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-router-dom/') ||
+            id.includes('/node_modules/react-dom/')
+          ) {
+            return 'vendor';
+          }
         },
       },
     },
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      TopLevelAwaitPlugin(),
-      WasmPlugin(),
-    ],
+    plugins: () => [WasmPlugin()],
   },
   plugins: [
     {
@@ -52,22 +70,23 @@ export default defineConfig({
       config: () => ({
         define: {
           'process.env.PACKAGE_VERSION': `'${PACKAGE_VERSION}'`,
-        }
-      })
+        },
+      }),
     },
-    ConfigPlugin({ env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'] }),
-    ThemePlugin({
-      root: __dirname,
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+    ConfigPlugin({
+      root: dirname,
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_IPDATA_API_KEY',
+        'DX_POSTHOG_API_KEY',
+        'DX_POSTHOG_API_HOST',
+        'DX_POSTHOG_FEEDBACK_SURVEY_ID',
+        'PACKAGE_VERSION',
       ],
     }),
-    TopLevelAwaitPlugin(),
+    ThemePlugin({}),
     WasmPlugin(),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    react(),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,
@@ -98,7 +117,7 @@ export default defineConfig({
     /**
      * Bundle fonts.
      * https://fonts.google.com
-     * https://www.npmjs.com/package/vite-plugin-fonts
+     * https://www.npmjs.com/package/unplugin-fonts
      */
     VitePluginFonts({
       google: {
@@ -137,12 +156,13 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'out');
+        const outDir = path.join(dirname, 'out');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],
+  ...createTestConfig({ dirname, node: true, storybook: true }),
 });

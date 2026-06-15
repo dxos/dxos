@@ -2,49 +2,50 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
+
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
+import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity, type EdgeConnection } from '@dxos/edge-client';
+import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import {
   SwarmNetworkManager,
+  type TransportFactory,
   createIceProvider,
   createRtcTransportFactory,
-  type TransportFactory,
 } from '@dxos/network-manager';
-import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type Storage } from '@dxos/random-access-storage';
-import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
-import { ServiceRegistry } from './service-registry';
 import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
+  type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
-  type CollectDiagnosticsBroadcastHandler,
 } from '../diagnostics';
-import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
+import { type CreateIdentityOptions, IdentityServiceImpl } from '../identity';
 import { ContactsServiceImpl } from '../identity/contacts-service';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
-import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
+import { ServiceRegistry } from './service-registry';
 
-export type ClientServicesHostParams = {
+export type ClientServicesHostProps = {
   /**
    * Can be omitted if `initialize` is later called.
    */
@@ -52,11 +53,10 @@ export type ClientServicesHostParams = {
   transportFactory?: TransportFactory;
   signalManager?: SignalManager;
   connectionLog?: boolean;
-  storage?: Storage;
-  level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
-  runtimeParams?: ServiceContextRuntimeParams;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
+  runtimeProps?: ServiceContextRuntimeProps;
 };
 
 export type ClientServicesHostCallbacks = {
@@ -79,21 +79,21 @@ export class ClientServicesHost {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
-  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
+  private readonly _statusUpdate = new Event<void>();
 
   private _config?: Config;
-  private readonly _statusUpdate = new Event<void>();
   private _signalManager?: SignalManager;
   private _networkManager?: SwarmNetworkManager;
-  private _storage?: Storage;
-  private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   private _edgeConnection?: EdgeConnection = undefined;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtimeParams: ServiceContextRuntimeParams;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<
+    SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
+  >;
+  private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
@@ -109,25 +109,15 @@ export class ClientServicesHost {
     config,
     transportFactory,
     signalManager,
-    storage,
-    level,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
-    runtimeParams,
-  }: ClientServicesHostParams = {}) {
-    this._storage = storage;
-    this._level = level;
+    runtime,
+    runtimeProps,
+  }: ClientServicesHostProps) {
     this._callbacks = callbacks;
-    this._runtimeParams = runtimeParams ?? {};
-
-    if (this._runtimeParams.disableP2pReplication === undefined) {
-      this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
-    }
-
-    if (this._runtimeParams.enableVectorIndexing === undefined) {
-      this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
-    }
+    this._runtime = runtime;
+    this._runtimeProps = runtimeProps ?? {};
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -141,7 +131,7 @@ export class ClientServicesHost {
             void this.open(new Context());
           }
         },
-        onRelease: () => this.close(),
+        onRelease: () => this.close(Context.default()),
       });
     }
 
@@ -170,7 +160,6 @@ export class ClientServicesHost {
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
-      TracingService: this._tracingService,
     });
   }
 
@@ -199,6 +188,30 @@ export class ClientServicesHost {
   }
 
   /**
+   * Debugging util.
+   */
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    return await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
+  }
+
+  /**
+   * Debugging util.
+   */
+  async runSqliteQuery(query: string, params?: unknown[]): Promise<readonly Record<string, unknown>[]> {
+    return await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        return yield* sql`${sql.unsafe(query, params)}`;
+      }),
+    );
+  }
+
+  /**
    * Initialize the service host with the config.
    * Config can also be provided in the constructor.
    * Can only be called once.
@@ -208,21 +221,27 @@ export class ClientServicesHost {
     log('initializing...');
 
     if (config) {
+      if (this._runtimeProps.disableP2pReplication === undefined) {
+        this._runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+      }
+      if (this._runtimeProps.enableVectorIndexing === undefined) {
+        this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      }
+
       invariant(!this._config, 'config already set');
       this._config = config;
-      if (!this._storage) {
-        this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
-      }
     }
 
+    // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
     if (!options.signalManager) {
-      log.warn('running signaling without telemetry metadata.');
+      // log.warn('running signaling without telemetry metadata.');
     }
 
-    const edgeEndpoint = config?.get('runtime.services.edge.url');
-    if (edgeEndpoint) {
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
-      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
+    const endpoint = config?.get('runtime.services.edge.url');
+    if (endpoint) {
+      const clientTag = resolveTelemetryTag(config);
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
     const {
@@ -261,11 +280,9 @@ export class ClientServicesHost {
       return;
     }
 
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.client-services.host.open', trace.begin({ id: traceId }));
+    log('opening service host');
 
     invariant(this._config, 'config not set');
-    invariant(this._storage, 'storage not set');
     invariant(this._signalManager, 'signal manager not set');
     invariant(this._networkManager, 'network manager not set');
 
@@ -274,21 +291,15 @@ export class ClientServicesHost {
 
     await this._resourceLock?.acquire();
 
-    if (!this._level) {
-      this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
-    }
-    await this._level.open();
-
     await this._loggingService.open();
 
     this._serviceContext = new ServiceContext(
-      this._storage,
-      this._level,
       this._networkManager,
       this._signalManager,
       this._edgeConnection,
       this._edgeHttpClient,
-      this._runtimeParams,
+      this._runtime,
+      this._runtimeProps,
       this._config.get('runtime.client.edgeFeatures'),
     );
 
@@ -306,8 +317,7 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      () => this._serviceContext.dataSpaceManager!,
-      (params) => this._createIdentity(params),
+      (params, ctx) => this._createIdentity(params, ctx),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
 
@@ -327,11 +337,13 @@ export class ClientServicesHost {
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
+        this._serviceContext.echoHost,
         dataSpaceManagerProvider,
       ),
 
       DataService: this._serviceContext.echoHost.dataService,
       QueryService: this._serviceContext.echoHost.queryService,
+      QueueService: this._serviceContext.echoHost.queuesService,
 
       NetworkService: new NetworkServiceImpl(
         this._serviceContext.networkManager,
@@ -340,20 +352,26 @@ export class ClientServicesHost {
       ),
 
       LoggingService: this._loggingService,
-      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({
         events: new DevtoolsHostEvents(),
         config: this._config,
         context: this._serviceContext,
+        exportSqliteDatabase: () => this.exportSqliteDatabase(),
+        runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
       }),
 
       EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
     });
 
+    log('service-host: opening service context...');
     await this._serviceContext.open(ctx);
+    log('service-host: service context opened');
+
+    log('service-host: opening identity service...');
     await identityService.open();
+    log('service-host: identity service opened');
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
@@ -372,12 +390,11 @@ export class ClientServicesHost {
     this._statusUpdate.emit();
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('opened', { deviceKey });
-    log.trace('dxos.client-services.host.open', trace.end({ id: traceId }));
   }
 
   @synchronized
   @Trace.span()
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     if (!this._open) {
       return;
     }
@@ -389,30 +406,54 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
-    await this._level?.close();
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
   }
 
   async reset(): Promise<void> {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
-
     log.info('resetting...');
     // Emit this status update immediately so app returns to fallback.
     // This state is never cleared because the app reloads.
     this._resetting = true;
     this._statusUpdate.emit();
     await this._serviceContext?.close();
-    await this._storage!.reset();
+    // Wipe all SQLite tables so next open starts fresh.
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        // Echo metadata + large space data.
+        yield* sql`DELETE FROM space_metadata`;
+        yield* sql`DELETE FROM space_large`;
+        // Blob store.
+        yield* sql`DELETE FROM blobs_meta`;
+        yield* sql`DELETE FROM blobs_data`;
+        // Keyring.
+        yield* sql`DELETE FROM keyring`;
+        // Automerge chunks + heads.
+        yield* sql`DELETE FROM automerge_chunks`;
+        yield* sql`DELETE FROM automerge_heads`;
+        // Hypercore feed files.
+        yield* sql`DELETE FROM hypercore_files`;
+        // Feed store (queue feeds, blocks, etc.).
+        yield* sql`DELETE FROM feeds`;
+        yield* sql`DELETE FROM blocks`;
+        yield* sql`DELETE FROM subscriptions`;
+        yield* sql`DELETE FROM cursor_tokens`;
+        yield* sql`DELETE FROM sync_state`;
+        // Index tables.
+        yield* sql`DELETE FROM indexCursor`;
+        yield* sql`DELETE FROM objectMeta`;
+        yield* sql`DELETE FROM reverseRef`;
+        yield* sql`DELETE FROM ftsIndex`;
+      }),
+    );
     log.info('reset');
-    log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
   }
 
-  private async _createIdentity(params: CreateIdentityOptions) {
-    const identity = await this._serviceContext.createIdentity(params);
+  private async _createIdentity(params: CreateIdentityOptions, ctx?: Context) {
+    const identity = await this._serviceContext.createIdentity(params, ctx);
     await this._serviceContext.initialized.wait();
     return identity;
   }

@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
-export * from './Settings';
+export * from './NotebookStack';
+export * from './QueryEditor';
+export * from './ScriptToolbar';
 export * from './TestPanel';
-export { DEPLOYMENT_DIALOG } from './DeploymentDialog';
+export * from './TypescriptEditor';
 
-export const ScriptContainer = lazy(() => import('./ScriptContainer'));
-export const DeploymentDialog = lazy(() => import('./DeploymentDialog'));
+export const ScriptPluginSettings: ComponentType<any> = lazy(() => import('./ScriptPluginSettings'));

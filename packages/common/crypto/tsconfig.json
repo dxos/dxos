@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../../vendor/hypercore"
+    },
+    {
       "path": "../invariant"
     },
     {

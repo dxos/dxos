@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { DXN, Type } from '@dxos/echo';
 
-export class TaskType extends TypedObject({ typename: 'dxos.docs.Task', version: '0.1.0' })({
+export const TaskType = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}) {}
+}).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));

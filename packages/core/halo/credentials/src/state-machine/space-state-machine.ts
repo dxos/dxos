@@ -7,15 +7,15 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TypedMessage } from '@dxos/protocols/proto';
-import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
-import { InvitationStateMachine } from './invitation-state-machine';
-import { MemberStateMachine, type MemberInfo } from './member-state-machine';
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { type CredentialProcessor } from '../processor/credential-processor';
+import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
+import { InvitationStateMachine } from './invitation-state-machine';
+import { type MemberInfo, MemberStateMachine } from './member-state-machine';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
@@ -23,6 +23,8 @@ export interface SpaceState {
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
+  readonly tags: string[];
+  readonly membershipPolicy: MembershipPolicy;
   readonly creator: MemberInfo | undefined;
   readonly invitations: ReadonlyMap<PublicKey, DelegateSpaceInvitation>;
 
@@ -52,23 +54,30 @@ export type CredentialEntry = {
  * Keeps and in-memory index of credentials and allows to query them.
  */
 export class SpaceStateMachine implements SpaceState {
-  private readonly _members = new MemberStateMachine(this._spaceKey);
-  private readonly _feeds = new FeedStateMachine(this._spaceKey);
+  private readonly _members: MemberStateMachine;
+  private readonly _feeds: FeedStateMachine;
   private readonly _invitations = new InvitationStateMachine();
   private readonly _credentials: CredentialEntry[] = [];
   private readonly _credentialsById = new ComplexMap<PublicKey, CredentialEntry>(PublicKey.hash);
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _genesisCredential: Credential | undefined;
+  private _tags: string[] = [];
+  private _membershipPolicy: MembershipPolicy = MembershipPolicy.INVITE;
   private _credentialProcessors: CredentialConsumer<any>[] = [];
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
-  readonly onMemberRoleChanged = this._members.onMemberRoleChanged;
-  readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
+  readonly onMemberRoleChanged: Callback<AsyncCallback<MemberInfo[]>>;
+  readonly onFeedAdmitted: Callback<AsyncCallback<FeedInfo>>;
   readonly onDelegatedInvitation = this._invitations.onDelegatedInvitation;
   readonly onDelegatedInvitationRemoved = this._invitations.onDelegatedInvitationRemoved;
 
-  constructor(private readonly _spaceKey: PublicKey) {}
+  constructor(private readonly _spaceKey: PublicKey) {
+    this._members = new MemberStateMachine(this._spaceKey);
+    this._feeds = new FeedStateMachine(this._spaceKey);
+    this.onMemberRoleChanged = this._members.onMemberRoleChanged;
+    this.onFeedAdmitted = this._feeds.onFeedAdmitted;
+  }
 
   get creator(): MemberInfo | undefined {
     return this._members.creator;
@@ -96,6 +105,14 @@ export class SpaceStateMachine implements SpaceState {
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
+  }
+
+  get tags(): string[] {
+    return this._tags;
+  }
+
+  get membershipPolicy(): MembershipPolicy {
+    return this._membershipPolicy;
   }
 
   get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
@@ -174,6 +191,8 @@ export class SpaceStateMachine implements SpaceState {
           return false;
         }
         this._genesisCredential = credential;
+        this._tags = assertion.tags ?? [];
+        this._membershipPolicy = assertion.membershipPolicy ?? MembershipPolicy.INVITE;
         break;
       }
 
@@ -254,6 +273,11 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {
+    if (this._membershipPolicy === MembershipPolicy.LOCKED) {
+      // When locked, only the space key can add the initial owner during genesis.
+      // Once a member exists, no new members can be added.
+      return key.equals(this._spaceKey) && this._members.members.size === 0;
+    }
     return (
       key.equals(this._spaceKey) ||
       this._members.getRole(key) === SpaceMember.Role.ADMIN ||

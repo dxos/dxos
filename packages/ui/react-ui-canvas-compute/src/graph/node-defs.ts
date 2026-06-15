@@ -3,16 +3,16 @@
 //
 
 import {
-  NODE_INPUT,
-  NODE_OUTPUT,
   type ComputeNode,
   type Executable,
+  NODE_INPUT,
+  NODE_OUTPUT,
   type NodeType,
-  registry,
   getTemplateInputSchema,
+  registry,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
-import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { type ComputeShape, type ConstantShape, type TemplateShape } from '../shapes';
@@ -39,44 +39,45 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   [NODE_OUTPUT]: () => createNode(NODE_OUTPUT),
 
   // Extensions.
-  ['text-to-image' as const]: () => createNode('text-to-image'), // TODO(burdon): Rename ai-impage-tool
-  ['and' as const]: () => createNode('and'),
-  ['append' as const]: () => createNode('append'),
-  ['audio' as const]: () => createNode('audio'),
-  ['beacon' as const]: () => createNode('beacon'),
-  ['chat' as const]: () => createNode('chat'),
-  ['constant' as const]: (shape) =>
+  'text-to-image': () => createNode('text-to-image'), // TODO(burdon): Rename ai-impage-tool
+  and: () => createNode('and'),
+  append: () => createNode('append'),
+  audio: () => createNode('audio'),
+  beacon: () => createNode('beacon'),
+  chat: () => createNode('chat'),
+  constant: (shape) =>
     createNode('constant', {
       value: (shape as ConstantShape).value,
     }),
-  ['database' as const]: () => createNode('database'),
-  ['gpt' as const]: () => createNode('gpt'),
-  ['gpt-realtime' as const]: () => createNode('gpt-realtime'),
-  ['if' as const]: () => createNode('if'),
-  ['if-else' as const]: () => createNode('if-else'),
-  ['function' as const]: () => createNode('function'),
-  ['json' as const]: () => createNode('json'),
-  ['json-transform' as const]: () => createNode('json-transform'),
-  ['not' as const]: () => createNode('not'),
-  ['or' as const]: () => createNode('or'),
-  ['queue' as const]: () => createNode('queue'),
-  ['rng' as const]: () => createNode('rng'),
-  ['reducer' as const]: () => createNode('reducer'),
-  ['scope' as const]: () => createNode('scope'),
-  ['surface' as const]: () => createNode('surface'),
-  ['switch' as const]: () => createNode('switch'),
-  ['template' as const]: (shape) => {
+  'make-queue': () => createNode('make-queue'),
+  database: () => createNode('database'),
+  gpt: () => createNode('gpt'),
+  'gpt-realtime': () => createNode('gpt-realtime'),
+  if: () => createNode('if'),
+  'if-else': () => createNode('if-else'),
+  function: () => createNode('function'),
+  json: () => createNode('json'),
+  'json-transform': () => createNode('json-transform'),
+  not: () => createNode('not'),
+  or: () => createNode('or'),
+  queue: () => createNode('queue'),
+  rng: () => createNode('rng'),
+  reducer: () => createNode('reducer'),
+  scope: () => createNode('scope'),
+  surface: () => createNode('surface'),
+  switch: () => createNode('switch'),
+  template: (shape) => {
     const node = createNode('template', { valueType: (shape as TemplateShape).valueType, value: shape.text });
-    node.inputSchema = toJsonSchema(getTemplateInputSchema(node));
+    node.inputSchema = JsonSchema.toJsonSchema(getTemplateInputSchema(node));
     return node;
   },
-  ['text' as const]: () => createNode('text'),
-  ['thread' as const]: () => createNode('thread'),
-  ['trigger' as const]: () => createNode(NODE_INPUT),
+  text: () => createNode('text'),
+  thread: () => createNode('thread'),
+  trigger: () => createNode(NODE_INPUT),
 };
 
 const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({
-  id: ObjectId.random(),
+  id: Obj.ID.random(),
   type,
   ...props,
 });

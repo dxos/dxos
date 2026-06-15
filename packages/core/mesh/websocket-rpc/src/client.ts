@@ -6,11 +6,11 @@ import WebSocket from 'isomorphic-ws';
 
 import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
-import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
+import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 import { WebSocketWithTokenAuth } from './token-auth';
 
-export type WebsocketRpcClientParams<C, S> = {
+export type WebsocketRpcClientProps<C, S> = {
   url: string;
   authenticationToken?: string;
 } & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers' | 'noHandshake'>;
@@ -24,7 +24,7 @@ export class WebsocketRpcClient<C, S> {
   readonly disconnected = new Event();
   readonly error = new Event<Error>();
 
-  constructor(private readonly _params: WebsocketRpcClientParams<C, S>) {
+  constructor(private readonly _params: WebsocketRpcClientProps<C, S>) {
     this._rpc = createProtoRpcPeer({
       requested: this._params.requested,
       exposed: this._params.exposed,

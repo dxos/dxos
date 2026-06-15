@@ -2,34 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IdentificationCard, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
+import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Clipboard, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
+import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import { errorText, getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
+import { CloseButton, Heading, Viewport } from '../../components';
+import { ConfirmReset, InvitationManager } from '../../steps';
+import { translationKey } from '../../translations';
+import { useIdentityMachine } from './identityMachine';
 import {
   type IdentityPanelHeadingProps,
   type IdentityPanelImplProps,
   type IdentityPanelProps,
 } from './IdentityPanelProps';
-import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
-import { Viewport, CloseButton, Heading } from '../../components';
-import { ConfirmReset, InvitationManager } from '../../steps';
 
-const viewStyles = 'pbs-1 pbe-3 pli-3';
+const viewStyles = 'pt-1 pb-3 px-3';
 
 // TODO(thure): Factor out?
 const getHueValue = (identity?: Identity) =>
@@ -48,7 +47,7 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
@@ -56,7 +55,11 @@ const IdentityHeading = ({
   const updateDisplayName = useMemo(
     () =>
       debounce(
-        (nextDisplayName: string) => onUpdateProfile?.({ ...identity.profile, displayName: nextDisplayName }),
+        (nextDisplayName: string) =>
+          onUpdateProfile?.({
+            ...identity.profile,
+            displayName: nextDisplayName,
+          }),
         3_000,
       ),
     [onUpdateProfile, identity.profile],
@@ -64,17 +67,23 @@ const IdentityHeading = ({
 
   const setDisplayName = (nextDisplayName: string) => {
     setDisplayNameDirectly(nextDisplayName);
-    updateDisplayName(nextDisplayName);
+    void updateDisplayName(nextDisplayName);
   };
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, emoji: nextEmoji } });
+    void onUpdateProfile?.({
+      ...identity.profile,
+      data: { ...identity.profile?.data, emoji: nextEmoji },
+    });
   };
 
   const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
-    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
+    void onUpdateProfile?.({
+      ...identity.profile,
+      data: { ...identity.profile?.data, hue: nextHue },
+    });
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -82,14 +91,14 @@ const IdentityHeading = ({
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root>
-        <Toolbar.Root classNames='flex justify-center'>
+        <Toolbar.Root classNames='justify-center'>
           <Avatar.Content
             size={16}
             variant='circle'
             status={isConnected ? 'active' : 'error'}
             hue={hue || fallbackValue.hue}
             fallback={emoji || fallbackValue.emoji}
-            classNames='relative z-[2] -mli-4 chromatic-ignore'
+            classNames='relative z-[2] -mx-4 chromatic-ignore'
           />
         </Toolbar.Root>
 
@@ -98,49 +107,50 @@ const IdentityHeading = ({
         </Avatar.Label>
 
         <Input.Root>
-          <Input.Label srOnly>{t('display name input label')}</Input.Label>
+          <Input.Label srOnly>{t('display-name-input.label')}</Input.Label>
           <Input.TextInput
             variant='subdued'
             data-testid='display-name-input'
-            placeholder={t('display name input placeholder')}
-            classNames='mbs-2 text-center font-light text-xl'
+            placeholder={t('display-name-input.placeholder')}
+            classNames='mt-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
           />
         </Input.Root>
 
-        <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
-          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
+        <Toolbar.Root classNames='justify-center pt-3'>
+          <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--dx-rail-action)' />
           <HuePicker
             value={hue}
             onChange={setHue}
             onReset={() => setHue(undefined)}
-            classNames='bs-[--rail-action]'
+            classNames='h-(--dx-rail-action)'
             rootVariant='toolbar-button'
           />
           <Clipboard.IconButton
-            classNames='bs-[--rail-action]'
+            classNames='h-(--dx-rail-action)'
             data-testid='update-profile-form-copy-key'
-            label={t('copy self did label')}
+            label={t('copy-self-did.label')}
             value={identity.did}
           />
           {onManageCredentials && (
-            <Tooltip.Trigger asChild content={t('manage credentials label')} side='bottom'>
-              <Toolbar.Button classNames='bs-[--rail-action]' onClick={onManageCredentials}>
-                <span className='sr-only'>{t('manage credentials label')}</span>
-                <IdentificationCard className={getSize(5)} />
-              </Toolbar.Button>
-            </Tooltip.Trigger>
+            <Toolbar.IconButton
+              icon='ph--identification-card--regular'
+              label={t('manage-credentials.label')}
+              iconOnly
+              tooltipSide='bottom'
+              classNames='h-(--dx-rail-action)'
+              onClick={onManageCredentials}
+            />
           )}
-          <Tooltip.Trigger asChild content={t(isConnected ? 'disconnect label' : 'connect label')} side='bottom'>
-            <Toolbar.Button
-              classNames={['bs-[--rail-action]', !isConnected && errorText]}
-              onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
-            >
-              <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-              {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
-            </Toolbar.Button>
-          </Tooltip.Trigger>
+          <Toolbar.IconButton
+            icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
+            label={t(isConnected ? 'disconnect.label' : 'connect.label')}
+            iconOnly
+            tooltipSide='bottom'
+            classNames={['h-(--dx-rail-action)', !isConnected && 'text-error-text']}
+            onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
+          />
         </Toolbar.Root>
       </Avatar.Root>
     </Heading>
@@ -164,13 +174,13 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onManageCredentials,
     ...rest
   } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
-      case 'device invitation manager':
-        return t('choose add device label');
+      case 'device-invitation-manager':
+        return t('choose-add-device.label');
       default:
-        return t('identity heading');
+        return t('identity.heading');
     }
   }, [activeView, t]);
 
@@ -194,43 +204,43 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
       />
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='identity action chooser' classNames={viewStyles}>
+          <Viewport.View id='identity-action-chooser' classNames={viewStyles}>
             <IdentityActionChooserComponent
-              active={activeView === 'identity action chooser'}
+              active={activeView === 'identity-action-chooser'}
               {...rest}
               connectionState={connectionState}
             />
           </Viewport.View>
-          <Viewport.View id='device invitation manager' classNames={viewStyles}>
+          <Viewport.View id='device-invitation-manager' classNames={viewStyles}>
             <InvitationManagerComponent
-              active={activeView === 'device invitation manager'}
+              active={activeView === 'device-invitation-manager'}
               {...rest}
               invitationUrl={rest.createInvitationUrl(rest.invitationCode!)}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='confirm join new identity'>
+          <Viewport.View classNames={viewStyles} id='confirm-join-new-identity'>
             <ConfirmReset
-              active={activeView === 'confirm join new identity'}
+              active={activeView === 'confirm-join-new-identity'}
               {...rest}
-              mode='join new identity'
+              mode='join-new-identity'
               onConfirm={onJoinNewIdentity}
               onCancel={onCancelReset}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='confirm recover'>
+          <Viewport.View classNames={viewStyles} id='confirm-recover'>
             <ConfirmReset
-              active={activeView === 'confirm recover'}
+              active={activeView === 'confirm-recover'}
               {...rest}
               mode='recover'
               onConfirm={onRecover}
               onCancel={onCancelReset}
             />
           </Viewport.View>
-          <Viewport.View classNames={viewStyles} id='confirm reset storage'>
+          <Viewport.View classNames={viewStyles} id='confirm-reset-storage'>
             <ConfirmReset
-              active={activeView === 'confirm reset storage'}
+              active={activeView === 'confirm-reset-storage'}
               {...rest}
-              mode='reset storage'
+              mode='reset-storage'
               onConfirm={onResetStorage}
               onCancel={onCancelReset}
             />
@@ -244,7 +254,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
 const IdentityPanelWithInvitationImpl = ({
   invitation,
   ...props
-}: IdentityPanelImplProps & { invitation: CancellableInvitationObservable }) => {
+}: IdentityPanelImplProps & {
+  invitation: CancellableInvitationObservable;
+}) => {
   const invitationStatus = useInvitationStatus(invitation);
   return <IdentityPanelImpl {...props} {...invitationStatus} />;
 };
@@ -284,17 +296,17 @@ export const IdentityPanel = ({
   const activeView = useMemo(() => {
     switch (true) {
       case identityState.matches('choosingAction'):
-        return 'identity action chooser';
+        return 'identity-action-chooser';
       case identityState.matches('managingDeviceInvitation'):
-        return 'device invitation manager';
+        return 'device-invitation-manager';
       case identityState.matches('confirmingResetStorage'):
-        return 'confirm reset storage';
+        return 'confirm-reset-storage';
       case identityState.matches('confirmingRecover'):
-        return 'confirm recover';
+        return 'confirm-recover';
       case identityState.matches('confirmingJoinNewIdentity'):
-        return 'confirm join new identity';
+        return 'confirm-join-new-identity';
       default:
-        return 'identity action chooser';
+        return 'identity-action-chooser';
     }
   }, [identityState]);
 

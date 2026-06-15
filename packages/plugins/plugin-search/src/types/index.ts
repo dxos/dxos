@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './action';
-export * from './search';
+export type * from './search';
+
+export * as SearchOperation from './SearchOperation';

@@ -2,39 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { random } from '@dxos/random';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { blast, defaultOptions, dropFile, join, snippets } from '@dxos/ui-editor';
 
 import { EditorStory, content } from './components';
-import { typewriter, blast, defaultOptions, dropFile } from '../extensions';
-import { str } from '../testing';
 
-const meta: Meta<typeof EditorStory> = {
+const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
 
+type Story = StoryObj<typeof meta>;
+
 //
-// Typewriter
+// Snippets
 //
 
-const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+const snippetItems = localStorage.getItem('org.dxos.testing.snippets')?.split(',');
 
-export const Typewriter = {
+export const Snippets: Story = {
   render: () => (
     <EditorStory
-      text={str('# Typewriter', '', content.paragraphs, content.footer)}
-      extensions={[typewriter({ items: typewriterItems })]}
+      text={join('# Snippets', '', content.paragraphs, content.footer)}
+      extensions={[snippets({ items: snippetItems })]}
     />
   ),
 };
@@ -43,20 +45,20 @@ export const Typewriter = {
 // Blast
 //
 
-export const Blast = {
+export const Blast: Story = {
   render: () => (
     <EditorStory
-      text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
+      text={join('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
-        typewriter({ items: typewriterItems }),
+        snippets({ items: snippetItems }),
         blast(
           defaultsDeep(
             {
               effect: 2,
               particleGravity: 0.2,
               particleShrinkRate: 0.995,
-              color: () => [faker.number.int({ min: 100, max: 200 }), 0, 0],
-              // color: () => [faker.number.int(256), faker.number.int(256), faker.number.int(256)],
+              color: () => [random.number.int({ min: 100, max: 200 }), 0, 0],
+              // color: () => [random.number.int(256), random.number.int(256), random.number.int(256)],
             },
             defaultOptions,
           ),
@@ -70,10 +72,10 @@ export const Blast = {
 // DND
 //
 
-export const DND = {
+export const DND: Story = {
   render: () => (
     <EditorStory
-      text={str('# DND', '')}
+      text={join('# DND', '')}
       extensions={[
         dropFile({
           onDrop: (view, event) => {

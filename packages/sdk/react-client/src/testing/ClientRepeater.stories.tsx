@@ -2,35 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Input } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { ClientRepeater, type ClientRepeatedComponentProps } from './ClientRepeater';
 import { useClient } from '../client';
 import { useSpace } from '../echo';
+import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater';
 
-export default {
+const meta = {
   title: 'sdk/react-client/ClientRepeater',
-  decorators: [withTheme],
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof Input>;
 
-const JsonPanel = ({ value }: { value: any }) => (
-  <SyntaxHighlighter language='json'>{JSON.stringify(value, undefined, 2)}</SyntaxHighlighter>
-);
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const JsonPanel = ({ value }: { value: any }) => <JsonHighlighter data={value} />;
 
 const ClientStory = () => {
   const client = useClient();
   return <JsonPanel value={client.toJSON()} />;
 };
 
-const ClientSpace = ({ spaceKey }: ClientRepeatedComponentProps) => {
+const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
   const client = useClient();
-  const space = useSpace(spaceKey);
+  const space = useSpace(spaceId);
   if (!space?.isOpen) {
     return null;
   }
@@ -41,7 +43,11 @@ const ClientSpace = ({ spaceKey }: ClientRepeatedComponentProps) => {
         <Input.TextInput
           placeholder='Name'
           value={space.properties.name}
-          onChange={(event) => (space.properties.name = event.target.value)}
+          onChange={(event) =>
+            Obj.update(space.properties, (obj) => {
+              obj.name = event.target.value;
+            })
+          }
         />
       </Input.Root>
       <JsonPanel value={client.toJSON()} />
@@ -49,10 +55,10 @@ const ClientSpace = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export const Default = {
+export const Default: Story = {
   render: () => <ClientRepeater component={ClientStory} count={2} />,
 };
 
-export const Space = {
+export const Space: Story = {
   render: () => <ClientRepeater component={ClientSpace} count={2} createSpace />,
 };

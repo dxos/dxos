@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { type Operation, Script } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getInvocationUrl } from '@dxos/functions-runtime';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { getMeta, getSpace } from '@dxos/react-client/echo';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**
  * Get the function URL for a given script and client configuration
@@ -14,40 +18,70 @@ export const getFunctionUrl = ({
   fn,
   edgeUrl,
 }: {
-  script: ScriptType;
+  script: Script.Script;
   fn: any;
   edgeUrl: string;
 }): string | undefined => {
-  const space = getSpace(script);
-  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
+  const spaceId = Obj.getDatabase(script)?.spaceId;
+  const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
 
-  if (!existingFunctionUrl) {
+  if (!existingFunctionId) {
     return undefined;
   }
 
-  return getInvocationUrl(existingFunctionUrl, edgeUrl, {
-    spaceId: space?.id,
+  return getInvocationUrl(existingFunctionId, edgeUrl, {
+    spaceId,
   });
 };
 
-export const updateFunctionMetadata = (script: ScriptType, storedFunction: any, meta: any, functionId: string) => {
-  if (script.description !== undefined && script.description.trim() !== '') {
-    storedFunction.description = script.description;
-  } else if (meta.description) {
-    storedFunction.description = meta.description;
-  } else {
-    log.verbose('no description in function metadata', { functionId });
-  }
+export const updateFunctionMetadata = (
+  script: Script.Script,
+  storedFunction: Operation.PersistentOperation,
+  meta: any,
+  functionId: string,
+) => {
+  Obj.update(storedFunction, (storedFunction) => {
+    if (script.description !== undefined && script.description.trim() !== '') {
+      storedFunction.description = script.description;
+    } else if (meta.description) {
+      storedFunction.description = meta.description;
+    } else {
+      log.verbose('no description in function metadata', { functionId });
+    }
 
-  if (meta.inputSchema) {
-    storedFunction.inputSchema = meta.inputSchema;
-  } else {
-    log.verbose('no input schema in function metadata', { functionId });
-  }
+    if (meta.inputSchema) {
+      storedFunction.inputSchema = meta.inputSchema;
+    } else {
+      log.verbose('no input schema in function metadata', { functionId });
+    }
 
-  if (meta.outputSchema) {
-    storedFunction.outputSchema = meta.outputSchema;
-  } else {
-    log.verbose('no output schema in function metadata', { functionId });
-  }
+    if (meta.outputSchema) {
+      storedFunction.outputSchema = meta.outputSchema;
+    } else {
+      log.verbose('no output schema in function metadata', { functionId });
+    }
+
+    if (meta.key) {
+      Obj.getMeta(storedFunction).key = meta.key;
+    } else {
+      log.verbose('no key in function metadata', { functionId });
+    }
+  });
+};
+
+export const getAccessCredential = (identityKey: PublicKey): Credential => {
+  return {
+    issuer: identityKey,
+    issuanceDate: new Date(),
+    subject: {
+      id: identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.ServiceAccess',
+        serverName: 'hub.dxos.network',
+        serverKey: identityKey,
+        identityKey,
+        capabilities: ['composer:beta'],
+      },
+    },
+  };
 };

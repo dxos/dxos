@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
 import { useClient } from '../client';
-import { useInvitationStatus, type CancellableInvitationObservable } from '../invitations';
+import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';
 
 export const useHaloInvitations = (): CancellableInvitationObservable[] => {
   const client = useClient();

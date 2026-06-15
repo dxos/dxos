@@ -1,0 +1,311 @@
+/*
+ * Boot loader stylesheet — injected into the host's `<head>` by `bootLoaderPlugin`
+ * so the full-screen backdrop paints before any JS bundle is fetched. The Solid
+ * `Loader` renders the ring + status into the `#boot-loader` backdrop; this
+ * sheet styles both. Class/id names here form a contract with `Loader.tsx`,
+ * guarded by `BootLoader.solid-stories.tsx` (it mounts the real component).
+ */
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/*
+ * Defaults match `@dxos/ui-theme`'s `--color-base-surface`, which resolves to
+ * Tailwind's `neutral-50` / `neutral-950` in light / dark mode respectively
+ * (see `packages/ui/ui-theme/src/css/theme/semantic.css`). Hosts can override
+ * with the `--boot-loader-bg-*` / `--boot-loader-fg-*` custom properties on
+ * `:root` if they need a different palette. Keeping the boot loader's
+ * background identical to the app's `body` eliminates the flash on handoff
+ * to the rendered React shell.
+ */
+#boot-loader {
+  --color-composer-100: rgb(5 40 61);
+  --color-composer-200: rgb(10 75 105);
+  --color-composer-300: rgb(1 122 183);
+  --color-composer-400: rgb(6 197 253);
+
+  /*
+   * Caps the disc / mark at the design pixel sizes on roomy viewports while
+   * shrinking proportionally on narrow ones (`vmin` follows the smaller of
+   * width / height) so neither the ring nor the mark crops on phones.
+   */
+  --boot-loader-disc-size: min(384px, 80vmin);
+  /*
+   * Match the React `Placeholder`'s logo box (`h-[300px] w-[300px]` at the
+   * `stage >= 1` keyframe) so the brand mark doesn't visibly jump size when
+   * the loader hands off — the responsive cap keeps the same 300/384 ratio
+   * (≈78%) at any viewport width.
+   */
+  --boot-loader-mark-size: min(300px, 62.5vmin);
+  --boot-loader-status-gap: 32px;
+
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  font-size: 13px;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  /*
+   * Dismissal outro — `mountLoader` toggles `data-dismissing` on this element
+   * when the host calls `__bootLoader.ready()`; the loader cross-fades out over
+   * the real app shell rendering beneath it, and removes itself once this
+   * opacity transition completes (a fallback timer covers reduced-motion).
+   */
+  transition: opacity 500ms ease-out;
+}
+
+#boot-loader {
+  background: var(--boot-loader-bg-light, #fafafa);
+  color: var(--boot-loader-fg-light, #0a0a0a);
+  --boot-loader-accent: var(--boot-loader-accent-light, var(--color-composer-200));
+}
+
+@media (prefers-color-scheme: dark) {
+  #boot-loader {
+    background: var(--boot-loader-bg-dark, #0a0a0a);
+    color: var(--boot-loader-fg-dark, #f0f0f0);
+    --boot-loader-accent: var(--boot-loader-accent-dark, var(--color-composer-300));
+  }
+}
+
+#boot-loader[data-dismissing] {
+  opacity: 0;
+}
+
+/* Gently shrink the disc + mark as the loader fades, echoing the prior handoff. */
+#boot-loader[data-dismissing] #boot-loader-disc {
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: transform 500ms ease-out;
+}
+
+/*
+ * Stack the ring (the SVG `#boot-loader-ring`) and the brand mark in the same
+ * grid cell so the mark sits centered inside the circle.
+ */
+#boot-loader-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  transform: translate(-50%, -50%);
+}
+
+#boot-loader-disc > * {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/*
+ * Default to grayscale so the mark reads as a quiet monochrome silhouette
+ * before any host-driven progress lands; the brand palette swaps in once
+ * `Loader.tsx` sets `data-host-driven` on the disc (the first
+ * `__bootLoader.progress()` call). Hover keeps a parallel reveal affordance
+ * for inspection in the storybook. The 1000ms ease lets the grayscale → color
+ * transition play through the activation phase rather than snapping.
+ */
+#boot-loader-mark {
+  width: var(--boot-loader-mark-size);
+  height: var(--boot-loader-mark-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: grayscale(100%);
+  transition: filter 1000ms ease-out;
+}
+
+/*
+ * `grayscale(0%)` (identity) rather than `none` — `filter: none` changes
+ * the filter function list and most engines treat that as a discrete
+ * transition (snap, not ease). Keeping `grayscale(...)` on both sides of
+ * the rule lets the browser interpolate the percentage smoothly.
+ */
+#boot-loader-disc[data-host-driven] #boot-loader-mark,
+#boot-loader-mark:hover {
+  filter: grayscale(0%);
+}
+
+#boot-loader-mark svg {
+  width: 100%;
+  height: 100%;
+  /*
+   * The host SVG carries its own brand-palette fills, so we don't apply a
+   * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
+   * still pick up the loader's text colour via `#boot-loader`'s `color`.
+   */
+}
+
+/*
+ * Circular determinate progress — a single SVG `<path>` arc that sweeps
+ * anticlockwise from 12 o'clock, its angle growing with progress (the `d` is
+ * recomputed by the component each tick). There is no static track;
+ * `stroke-linecap: round` rounds the trailing edge, and `marker-end` paints the
+ * leading-edge dot. Stroke width is in viewBox units so it scales with the disc.
+ */
+#boot-loader-ring {
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  overflow: visible;
+  /*
+   * Fade the arc linearly from the head (the marker, fully opaque) back to the
+   * tail (12 o'clock, transparent). A conic-gradient mask does this along the
+   * curve — `Loader.tsx` writes the eased progress into `--boot-loader-arc`
+   * (0–100), and the arc occupies the conic range `(100 - arc)%`…`100%`, so the
+   * head sits at `(100 - arc)%` (opaque) and the tail at `100%` (transparent).
+   * NOTE: We start at -1.16deg so that we don't mask the marker.
+   */
+  --boot-loader-arc: 0;
+  mask: conic-gradient(
+    from -1.16deg at 50% 50%,
+    transparent 0,
+    transparent calc((100 - var(--boot-loader-arc)) * 1%),
+    #000 calc((100 - var(--boot-loader-arc)) * 1%),
+    transparent 100%
+  );
+  -webkit-mask: conic-gradient(
+    from -1.16deg at 50% 50%,
+    transparent 0,
+    transparent calc((100 - var(--boot-loader-arc)) * 1%),
+    #000 calc((100 - var(--boot-loader-arc)) * 1%),
+    transparent 100%
+  );
+}
+
+/*
+ * The leading-edge dot's layer — same geometry as `#boot-loader-ring` but with no
+ * mask, so the dot renders as a full circle (the ring's conic fade mask would
+ * otherwise bisect it where it sits on the mask's transparent→opaque edge).
+ */
+#boot-loader-ring-head {
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  overflow: visible;
+}
+
+.boot-loader-ring-progress {
+  fill: none;
+  stroke: var(--boot-loader-accent);
+  /* viewBox units: ~1.9px on the 384px disc, scaling down on smaller viewports. */
+  stroke-width: 0.5;
+  opacity: 0.5;
+  stroke-linecap: butt;
+  overflow: visible;
+  /* Dashed line: dash + gap lengths in viewBox units (~2 units ≈ 7.7px @384px). */
+  /* stroke-dasharray: 2 1; */
+}
+
+/* The `marker-end` dot at the arc's leading edge. */
+.boot-loader-ring-marker {
+  fill: var(--boot-loader-accent);
+  stroke: none;
+  overflow: visible;
+  /* opacity: 0.5; */
+}
+
+#boot-loader-status {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  /* 
+   * Sit just below the centered disc — half the disc plus the configured gap.
+   */
+  transform: translate(0, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  /*
+   * Slightly de-emphasised vs body text so the brand mark + ring stay the
+   * dominant focus, but high enough to remain legible on both light and dark
+   * backgrounds without a custom palette.
+   */
+  opacity: 0.5;
+  /*
+   * Terminal-style log viewport (3 rows at the default `line-height`) over
+   * a vertically-stacked track of every status the driver has emitted. The
+   * track is bottom-anchored via `justify-content: flex-end` so the newest
+   * line always sits on the last visible row, older lines stack above it,
+   * and anything that doesn't fit is clipped at the top by
+   * `overflow: hidden`. The driver runs a FLIP-style transform animation
+   * per append so each new line slides up from below the bottom edge —
+   * independent of any `scroll-behavior` smooth-scroll support, which
+   * Playwright/headless Chrome strips even from spec-compliant
+   * `scrollTo({ behavior: 'smooth' })` calls.
+   */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 4.5em;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  /* 
+   * Fixed-width digits so the `(i/n)` counter on range-bearing status
+   * updates ("Loading plugins (12/80)") doesn't jitter as the index
+   * ticks through different glyph widths. 
+   */
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  overflow: hidden;
+}
+
+#boot-loader-status-fade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 32px;
+  background: linear-gradient(to bottom, var(--boot-loader-bg-light, #fafafa), transparent);
+  z-index: 1;
+}
+@media (prefers-color-scheme: dark) {
+  #boot-loader-status-fade {
+    background: linear-gradient(to bottom, var(--boot-loader-bg-dark, #0a0a0a), transparent);
+  }
+}
+
+#boot-loader-rss {
+  background: var(--boot-loader-bg-light, #fafafa);
+  text-wrap: balance;
+}
+@media (prefers-color-scheme: dark) {
+  #boot-loader-rss {
+    background: var(--boot-loader-bg-dark, #0a0a0a);
+  }
+}
+
+/*
+ * Track of every appended `.boot-loader-status-line`.
+ */
+#boot-loader-status-track {
+  display: flex;
+  flex-direction: column;
+  /*
+   * Resting transform is `translateY(0)` — the bottom-anchored flex parent
+   * already positions the newest line on the last visible row. On each append
+   * `Loader.tsx` runs a one-shot FLIP: snap to `translateY(<lineHeight>px)` with
+   * no transition (placing the new line just below the viewport), force a
+   * reflow, then animate back to 0 so the track rises by one line-height and the
+   * new entry slides up into the bottom row.
+   */
+  transform: translateY(0);
+  transition: transform 500ms ease-out;
+}
+
+/* Honour reduced-motion preferences explicitly — `transition` doesn't auto-respect it. */
+@media (prefers-reduced-motion: reduce) {
+  #boot-loader-status-track {
+    transition: none;
+  }
+}
+
+.boot-loader-status-line {
+  flex: 0 0 auto;
+  height: 1.5em;
+  white-space: nowrap;
+}

@@ -2,36 +2,41 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed } from '@preact/signals-core';
-import { Schema } from 'effect';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Registry } from '@effect-atom/atom-react';
+import * as Schema from 'effect/Schema';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
-import { updateCounter } from '@dxos/echo-schema/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { createEchoSchema } from '@dxos/live-object/testing';
-import { live } from '@dxos/react-client/echo';
-import { createView, ViewProjection } from '@dxos/schema';
+import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
+import { createEchoSchema } from '@dxos/echo/testing';
+import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
-import { TableModel, type TableModelProps } from './table-model';
-import { TableType } from '../types';
+import { Table } from '../types';
+import {
+  TableModel,
+  type TableModelProps,
+  createDirectChangeCallback as createTableDirectChangeCallback,
+} from './table-model';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.
 
-registerSignalsRuntime();
-
 describe('TableModel', () => {
   let updateCount = 0;
-  let model: TableModel;
+  let model: any;
+  let registry: Registry.Registry;
 
   beforeEach(async () => {
     updateCount = 0;
-    model = createTableModel({
+    registry = Registry.make();
+    model = createTableModel(registry, {
       onCellUpdate: () => updateCount++,
     });
     await model.open();
+    model.setRows([
+      { id: '1', title: 'Test', completed: false },
+      { id: '2', title: 'Test 2', completed: true },
+      { id: '3', title: 'Test 3', completed: false },
+    ]);
   });
 
   afterEach(async () => {
@@ -39,76 +44,101 @@ describe('TableModel', () => {
   });
 
   describe('methods', () => {
-    it('should pin a row', () => {
+    test('should pin a row', () => {
       model.pinRow(1, 'top');
       expect(model.pinnedRows.top).toContain(1);
     });
 
-    it('should unpin a row', () => {
+    test('should unpin a row', () => {
       model.pinRow(1, 'top');
       model.unpinRow(1);
       expect(model.pinnedRows.top).not.toContain(1);
     });
 
-    it('should toggle row selection', () => {
+    test('should toggle row selection', () => {
       model.selection.toggleSelectionForRowIndex(2);
-      expect(model.selection.hasSelection.value).toBe(true);
+      expect(model.selection.hasSelection).toBe(true);
     });
 
-    it('should deselect a row', () => {
+    test('should deselect a row', () => {
       model.selection.toggleSelectionForRowIndex(2);
       model.selection.toggleSelectionForRowIndex(2);
-      expect(model.selection.hasSelection.value).toBe(false);
+      expect(model.selection.hasSelection).toBe(false);
     });
 
-    it('should bulk select rows', () => {
+    test('should bulk select rows', () => {
       model.selection.setSelection('all');
-      expect(model.selection.allRowsSeleted.value).toBe(true);
+      expect(model.selection.allRowsSelected).toBe(true);
       model.selection.setSelection('none');
-      expect(model.selection.hasSelection.value).toBe(false);
+      expect(model.selection.hasSelection).toBe(false);
     });
   });
 
   describe('reactivity', () => {
-    it('pure signals should nest', () => {
-      const signal$ = live({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
+    test('rows should update when setRows is called', () => {
+      model.setRows([{ id: '4', title: 'Test 4', completed: false }]);
+      expect(model.getRows()).toHaveLength(1);
+      expect(model.getRows()[0].id).toBe('4');
 
-      const computed$ = computed(() => {
-        return signal$.arr.map((row) =>
-          computed(() => {
-            return row.thingInside;
-          }),
-        );
-      });
+      model.setRows([
+        { id: '5', title: 'Test 5', completed: false },
+        { id: '6', title: 'Test 6', completed: true },
+      ]);
+      expect(model.getRows()).toHaveLength(2);
+      expect(model.getRows()[0].id).toBe('5');
+      expect(model.getRows()[1].id).toBe('6');
+    });
 
-      using outerCounter = updateCounter(() => {
-        computed$.value.map((c) => c.value);
-      });
+    test('selection should update when toggled', () => {
+      model.selection.toggleSelectionForRowIndex(0);
+      expect(model.selection.hasSelection).toBe(true);
+      expect(model.selection.selection.size).toBe(1);
 
-      using innerCounter = updateCounter(() => {
-        computed$.value[0].value;
-      });
+      model.selection.toggleSelectionForRowIndex(0);
+      expect(model.selection.hasSelection).toBe(false);
+      expect(model.selection.selection.size).toBe(0);
+    });
 
-      expect(computed$.value.map((v) => v.value)).toEqual([1, 2]);
+    test('derived atoms should reflect current state', () => {
+      // Set initial rows.
+      model.setRows([
+        { id: '1', title: 'Zebra', completed: false },
+        { id: '2', title: 'Apple', completed: true },
+        { id: '3', title: 'Mango', completed: false },
+      ]);
 
-      signal$.arr[0].thingInside = 3;
-
-      expect(computed$.value.map((v) => v.value)).toEqual([3, 2]);
-      expect(outerCounter.count).toBe(1);
-      expect(innerCounter.count).toBe(1);
+      // Verify rows are accessible.
+      const rows = model.getRows();
+      expect(rows).toHaveLength(3);
+      expect(rows[0].id).toBeDefined();
     });
   });
 });
 
-class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}) {}
+}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
-const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
-  const schema = createEchoSchema(Test);
-  const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema.jsonSchema, view);
-  const table = Obj.make(TableType, { view: Ref.make(view) });
-  return new TableModel({ id: table.id, space: undefined, view, projection, ...props });
+const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+  const schema = createEchoSchema(Type.getSchema(Test));
+  const view = ViewModel.make({
+    query: Query.select(Filter.type(schema)),
+    jsonSchema: schema.jsonSchema,
+  });
+  const object = Table.make({ view });
+  const projection = new ProjectionModel({
+    registry,
+    view,
+    baseSchema: schema.jsonSchema,
+    change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(Type.getSchema(schema))),
+  });
+  projection.normalizeView();
+  return new TableModel({
+    registry,
+    object,
+    projection,
+    change: createTableDirectChangeCallback(object),
+    ...props,
+  });
 };

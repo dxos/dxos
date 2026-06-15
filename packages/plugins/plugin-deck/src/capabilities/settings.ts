@@ -2,25 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import * as Effect from 'effect/Effect';
 
-import { meta } from '../meta';
-import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { createKvsStore } from '@dxos/effect';
 
-export default () => {
-  const settings = live<DeckSettingsProps>({
-    showHints: false,
-    enableDeck: false,
-    enableStatusbar: false,
-    enableNativeRedirect: false,
-    newPlankPositioning: 'start',
-    overscroll: 'none',
-  });
+import { meta } from '#meta';
+import { DeckCapabilities, Settings } from '#types';
 
-  return contributes(Capabilities.Settings, {
-    prefix: meta.id,
-    schema: DeckSettingsSchema,
-    value: settings,
-  });
-};
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: Settings.Settings,
+      defaultValue: () => ({
+        showHints: false,
+        enableDeck: false,
+        enableNativeRedirect: false,
+        encapsulatedPlanks: false,
+      }),
+    });
+
+    return [
+      Capability.contributes(DeckCapabilities.Settings, settingsAtom),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.id,
+        schema: Settings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

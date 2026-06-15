@@ -5,13 +5,13 @@
 import { describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
-import { faker } from '@dxos/random';
-import { DataType } from '@dxos/schema';
+import { random } from '@dxos/random';
+import { Task } from '@dxos/types';
 
+import { createTree } from '../../../testing';
 import { type Tree } from './tree';
-import { createTree } from '../testing';
 
-faker.seed(0);
+random.seed(0);
 
 const print = (tree: Tree) => {
   let count = 0;
@@ -123,11 +123,13 @@ describe('tree', () => {
   });
 
   test('task', ({ expect }) => {
-    const task = Obj.make(DataType.Task, { text: 'Test task.' });
-    expect(task.text).to.eq('Test task.');
+    const task = Obj.make(Task.Task, { title: 'Test task.' });
+    expect(task.title).to.eq('Test task.');
 
     const tree = createTree();
     const node = tree.addNode(tree.root);
-    node.ref = Ref.make(task);
+    Obj.update(tree.tree, () => {
+      node.ref = Ref.make(task);
+    });
   });
 });

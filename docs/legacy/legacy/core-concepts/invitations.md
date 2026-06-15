@@ -22,11 +22,11 @@ The Invitation flow requires the inviter and invitee to be online at the same ti
 
 ### Return Values
 
-| Property            | Description                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------- |
-| `secretProvider`    | Shared secret provider, the other peer creating the invitation must have the same secret. |
-| `resetPin`          | Function allowing you to reset the flow with a new pin code                               |
-| `pin`               | Protection pin code that the invitee should fill in once the `inviteCode` is validated    |
+| Property         | Description                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `secretProvider` | Shared secret provider, the other peer creating the invitation must have the same secret. |
+| `resetPin`       | Function allowing you to reset the flow with a new pin code                               |
+| `pin`            | Protection pin code that the invitee should fill in once the `inviteCode` is validated    |
 
 ## Redeem an Invitation
 

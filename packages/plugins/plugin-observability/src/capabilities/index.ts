@@ -2,13 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { OperationHandlerSet } from '@dxos/compute';
 
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const ClientReady = lazy(() => import('./client-ready'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const ObservabilitySettings = lazy(() => import('./settings'));
-export const ObservabilityState = lazy(() => import('./state'));
+import type { ClientReadyOptions } from './client-ready';
 
-export * from './capabilities';
+export const ClientReady = Capability.lazy<ClientReadyOptions>('ClientReady', () => import('./client-ready'));
+export const PrivacyNotice = Capability.lazy('PrivacyNotice', () => import('./privacy-notice'));
+export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+  'OperationHandler',
+  () => import('./operation-handler'),
+);
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const ObservabilitySettings = Capability.lazy('ObservabilitySettings', () => import('./settings'));
+export const ObservabilityState = Capability.lazy('ObservabilityState', () => import('./state'));

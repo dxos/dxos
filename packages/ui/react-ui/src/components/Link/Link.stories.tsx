@@ -2,16 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { Link } from './Link';
 import { withTheme } from '../../testing';
+import { Link } from './Link';
 
-export default {
-  title: 'ui/react-ui-core/Link',
+const meta = {
+  title: 'ui/react-ui-core/components/Link',
   component: Link,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-} as any;
+  decorators: [withTheme()],
+} satisfies Meta<typeof Link>;
 
-export const Default = { args: { children: 'Hello', href: '#' } };
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = { args: { children: 'Hello', href: '#' } };

@@ -1,17 +1,21 @@
 {
   "name": "@dxos/codemorph",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Large scale code refactoring.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "scripts": {
-    "codemorph": "tsx ./src/main.ts"
+    "codemorph": "vite-node ./src/main.ts"
   },
   "dependencies": {
-    "ts-morph": "^16.0.0"
+    "ts-morph": "catalog:"
   },
   "devDependencies": {}
 }

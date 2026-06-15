@@ -7,8 +7,8 @@ import { log } from '@dxos/log';
 import { type SystemService } from '@dxos/protocols/proto/dxos/client/services';
 
 import {
-  type CollectDiagnosticsBroadcastSender,
   type CollectDiagnosticsBroadcastHandler,
+  type CollectDiagnosticsBroadcastSender,
 } from './diagnostics-collector';
 
 const CHANNEL_NAME = 'dxos.diagnostics.broadcast';

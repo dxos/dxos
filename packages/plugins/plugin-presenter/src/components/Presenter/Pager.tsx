@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Play, X, CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { type FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
-import { Button, useControlledState } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { IconButton, useControlledState } from '@dxos/react-ui';
 
 export type PagerProps = {
   index?: number;
@@ -16,8 +14,8 @@ export type PagerProps = {
   onExit?: () => void;
 };
 
-export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
-  const [index, setIndex] = useControlledState(controlledIndex);
+export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
+  const [index, setIndex] = useControlledState(indexProp);
   useEffect(() => {
     onChange?.(index);
   }, [index]);
@@ -78,18 +76,46 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, o
 
   return (
     <div className='flex items-center text-neutral-500'>
-      <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(0)}>
-        <CaretDoubleLeft className={mx(getSize(6))} />
-      </Button>
-      <Button variant='ghost' classNames='p-0' onClick={() => handleChangeIndex(-1)}>
-        <CaretLeft className={mx(getSize(6))} />
-      </Button>
-      <Button variant='ghost' classNames='p-0' onClick={() => handleChangeIndex(1)}>
-        <CaretRight className={mx(getSize(6))} />
-      </Button>
-      <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(count - 1)}>
-        <CaretDoubleRight className={mx(getSize(6))} />
-      </Button>
+      <IconButton
+        icon='ph--caret-double-left--regular'
+        size={6}
+        label='Jump to first'
+        iconOnly
+        noTooltip
+        variant='ghost'
+        classNames='p-0'
+        onClick={() => onChange?.(0)}
+      />
+      <IconButton
+        icon='ph--caret-left--regular'
+        size={6}
+        label='Previous'
+        iconOnly
+        noTooltip
+        variant='ghost'
+        classNames='p-0'
+        onClick={() => handleChangeIndex(-1)}
+      />
+      <IconButton
+        icon='ph--caret-right--regular'
+        size={6}
+        label='Next'
+        iconOnly
+        noTooltip
+        variant='ghost'
+        classNames='p-0'
+        onClick={() => handleChangeIndex(1)}
+      />
+      <IconButton
+        icon='ph--caret-double-right--regular'
+        size={6}
+        label='Jump to last'
+        iconOnly
+        noTooltip
+        variant='ghost'
+        classNames='p-0'
+        onClick={() => onChange?.(count - 1)}
+      />
     </div>
   );
 };
@@ -113,10 +139,17 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   );
 };
 
-export const StartButton: FC<{ running?: boolean; onClick?: (start: boolean) => void }> = ({ running, onClick }) => {
+export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
   return (
-    <Button variant='ghost' classNames='p-0' onClick={() => onClick?.(!running)}>
-      {(running && <X className={mx(getSize(6))} />) || <Play className={mx(getSize(6))} />}
-    </Button>
+    <IconButton
+      icon={running ? 'ph--x--regular' : 'ph--play--regular'}
+      size={6}
+      label={running ? 'Stop' : 'Play'}
+      iconOnly
+      noTooltip
+      variant='ghost'
+      classNames='p-0'
+      onClick={() => onClick?.(!running)}
+    />
   );
 };

@@ -1,0 +1,53 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React from 'react';
+
+import { type AiContext } from '@dxos/assistant';
+import { type Database, Obj } from '@dxos/echo';
+import { Icon, IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { getStyles, mx } from '@dxos/ui-theme';
+
+import { useContextObjects } from '#hooks';
+import { meta } from '#meta';
+
+export type ChatReferencesProps = ThemedClassName<{
+  context: AiContext.Binder;
+  db: Database.Database;
+}>;
+
+export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps) => {
+  const { t } = useTranslation(meta.id);
+  const { objects, onUpdateObject } = useContextObjects({ db, context });
+
+  return (
+    <ul className={mx('flex', classNames)}>
+      {objects.map((obj) => {
+        const uri = Obj.getURI(obj);
+        const typename = Obj.getTypename(obj);
+        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
+        const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
+        const styles = hue ? getStyles(hue) : undefined;
+        return (
+          <li key={uri.toString()} className='dx-tag py-0 flex items-center gap-1' data-hue='neutral'>
+            <Icon icon={icon} size={4} />
+            {toLocalizedString(label, t)}
+            <IconButton
+              icon='ph--x--bold'
+              iconOnly
+              variant='ghost'
+              label={t('remove-object.label')}
+              classNames='p-0 hover:bg-transparent'
+              size={3}
+              onClick={() => onUpdateObject?.(uri, false)}
+            />
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
+// TODO(dmaretskyi): Extract those somewhere else.
+const DEFAULT_OBJECT_ICON = 'ph--cube--regular';

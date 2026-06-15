@@ -23,26 +23,27 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 2. Then to build the extension:
 
 ```
-pnpm -w nx bundle devtools-extension
+moon run devtools-extension:bundle
 ```
+
 ### Manifest
 
 We use Vite to bundle extension, you can find manifest setup inside `vite.config.ts`
 
 ### Chromium
 
-4. Open the __extensions__ manager in your browser: 
+4. Open the **extensions** manager in your browser:
 
 - [brave://extensions](brave://extensions)
 - [chrome://extensions](chrome://extensions)
 - Edge (Not Supported Yet)
 
-5. Make sure you have the `developer` toggle __on__ and click on `Load Unpacked Extension` button.
-6. Search for the extension __dist__ folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
+5. Make sure you have the `developer` toggle **on** and click on `Load Unpacked Extension` button.
+6. Search for the extension **dist** folder (`<repo-root>/packages/devtools-extension/dist`) and select it.
 
 ### Firefox
 
-4. Run `pnpm -w nx pack:webext devtools-extension`.
+4. Run `pnpm run pack:webext`.
 5. Navigate to [This Firefox](about:debugging#/runtime/this-firefox) tab of the `about:debugging` page.
 6. Click `Load Temporary Add-on...` and select the zip file in `web-ext-artifacts`.
 
@@ -69,13 +70,13 @@ The injected script sends messages through the content script via window events 
 
 1. SDK sets `window.__DXOS__` hook.
 1. Content script is injected into the page automatically by browser.
-    1. Allows messaging with the page.
+   1. Allows messaging with the page.
 1. Devtools page is created.
-    1. Creates devtools panel.
+   1. Creates devtools panel.
 1. Devtools panel is loaded.
-    1. Waits for `window.__DXOS__` hook to appear.
-    1. Renders the devtools application.
-    1. Client API connects via the `window.__DXOS__` hook.
+   1. Waits for `window.__DXOS__` hook to appear.
+   1. Renders the devtools application.
+   1. Client API connects via the `window.__DXOS__` hook.
 1. Devtools panel is ready.
 
 ## References

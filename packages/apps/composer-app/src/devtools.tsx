@@ -8,14 +8,11 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DevtoolsApp } from '@dxos/devtools';
-import { initializeAppObservability } from '@dxos/observability';
-
-const namespace = 'devtools';
+import { meta as debugMeta } from '@dxos/plugin-debug';
 
 const main = async () => {
   const enter =
-    localStorage.getItem('dxos.org/plugin/debug/devtools') === 'true' ||
-    window.confirm('Continue to DXOS developer tools?');
+    localStorage.getItem(`${debugMeta.id}.devtools`) === 'true' || window.confirm('Continue to DXOS developer tools?');
   if (!enter) {
     window.location.pathname = '/';
     return;
@@ -23,10 +20,9 @@ const main = async () => {
 
   const { Remote, Config, Defaults } = await import('@dxos/react-client');
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const target = searchParams.get('target');
+  const searchProps = new URLSearchParams(window.location.search);
+  const target = searchProps.get('target');
   const config = new Config(target ? Remote(target) : {}, Defaults());
-  void initializeAppObservability({ namespace, config });
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

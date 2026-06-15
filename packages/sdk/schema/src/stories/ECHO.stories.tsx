@@ -2,29 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Config } from '@dxos/client';
-import { Filter } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
-import { DataType, DataTypes } from '../common';
+import { TestSchema } from '../testing';
+import { DataTypes } from '../types';
 
-faker.seed(1);
+random.seed(1);
 
 // TODO(burdon): Evolve dxos/random to support this directly.
-const generator = faker as any as ValueGenerator;
+const generator = random as any as ValueGenerator;
 
 const DefaultStory = () => {
   const [events, setEvents] = useState<{ type: string; duration: number }[]>([]);
@@ -49,7 +47,7 @@ const DefaultStory = () => {
   const handleCreate = async () => {
     await test('create', async () => {
       invariant(space);
-      space.db.add(Obj.make(DataType.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
+      space.db.add(Obj.make(TestSchema.Organization, { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' }));
     });
   };
 
@@ -57,7 +55,7 @@ const DefaultStory = () => {
     await test('create-objects', async () => {
       invariant(space);
       const createObjects = createObjectFactory(space.db, generator);
-      await createObjects([{ type: DataType.Organization, count: 1_000 }]);
+      await createObjects([{ type: TestSchema.Organization, count: 1_000 }]);
     });
   };
 
@@ -91,15 +89,24 @@ const DefaultStory = () => {
         <Button onClick={handleFlush}>Flush</Button>
         <Button onClick={handleQuery}>Query</Button>
       </Toolbar.Root>
-      <JsonFilter data={data} />
+      <Syntax.Root data={data}>
+        <Syntax.Content>
+          <Syntax.Filter />
+          <Syntax.Viewport>
+            <Syntax.Code />
+          </Syntax.Viewport>
+        </Syntax.Content>
+      </Syntax.Root>
     </div>
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
   decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       config: new Config({
@@ -112,15 +119,16 @@ const meta: Meta<typeof DefaultStory> = {
           },
         },
       }),
-      types: DataTypes,
+      types: [...DataTypes, TestSchema.Organization],
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
-};
-
-type Story = StoryObj<typeof DefaultStory>;
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

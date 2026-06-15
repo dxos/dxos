@@ -2,247 +2,236 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
 
+import { Capability } from '@dxos/app-framework';
 import {
-  Capabilities,
-  contributes,
-  createIntent,
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  type PluginContext,
-} from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+  AppCapabilities,
+  AppNode,
+  LayoutOperation,
+  createTypeSectionExtension,
+  createTypeSectionPathResolver,
+  getActiveSpace,
+  getPersonalSpace,
+} from '@dxos/app-toolkit';
+import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
+import { isSpace } from '@dxos/client/echo';
+import { Operation, Routine } from '@dxos/compute';
+import { Sequence } from '@dxos/conductor';
+import { DXN, Database, Filter, Obj, Query, Type, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
-import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
-import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import {
-  type Space,
-  Filter,
-  Query,
-  type QueryResult,
-  fullyQualifiedId,
-  getSpace,
-  isSpace,
-} from '@dxos/react-client/echo';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
-import { AIChatType, AssistantAction, CompanionTo, TemplateType } from '../types';
+import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
+import { AssistantCapabilities, AssistantOperation } from '#types';
 
-export default (context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: `${ASSISTANT_PLUGIN}/assistant`,
-      actions: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => [
-              {
-                id: `${LayoutAction.UpdateDialog._tag}/assistant/open`,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  const client = context.getCapability(ClientCapabilities.Client);
+import { getChatsPath } from '../paths';
 
-                  const space = getActiveSpace(context) ?? client.spaces.default;
-                  const chat = await getOrCreateChat(dispatch, space);
-                  if (!chat) {
-                    return;
-                  }
+/** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
+const computeOperationsToImport = [AgentPrompt] as const;
 
-                  await dispatch(
-                    createIntent(LayoutAction.UpdateDialog, {
-                      part: 'dialog',
-                      subject: ASSISTANT_DIALOG,
-                      options: {
-                        state: true,
-                        blockAlign: 'end',
-                        props: {
-                          chat,
-                        },
-                      },
-                    }),
-                  );
-                },
-                properties: {
-                  label: ['open assistant label', { ns: ASSISTANT_PLUGIN }],
-                  icon: 'ph--sparkle--regular',
-                  disposition: 'pin-end',
-                  position: 'hoist',
-                  keyBinding: {
-                    macos: 'shift+meta+k',
-                    windows: 'shift+ctrl+k',
-                  },
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
+/** Match ECHO objects that are NOT chats. */
+const whenNonChatObject = NodeMatcher.whenAll(
+  NodeMatcher.whenEchoObject,
+  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+);
 
-    createExtension({
-      id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
-      connector: (node) => {
-        let query: QueryResult<AIChatType> | undefined;
-        return Rx.make((get) => {
-          const nodeOption = get(node);
-          if (Option.isNone(nodeOption)) {
-            return [];
-          }
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
 
-          const object = nodeOption.value.data;
-          if (!Obj.isObject(object)) {
-            return [];
-          }
-
-          const space = getSpace(object);
-          if (!space) {
-            return [];
-          }
-
-          if (!query) {
-            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(CompanionTo).source());
-          }
-
-          const chat = get(rxFromQuery(query))[0];
-          return [
-            {
-              id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
-              type: PLANK_COMPANION_TYPE,
-              data: chat ?? 'assistant-chat',
+    const extensions = yield* Effect.all([
+      GraphBuilder.createTypeExtension({
+        id: 'root',
+        type: Chat.Chat,
+        actions: (chat) => {
+          return Effect.succeed([
+            Node.makeAction({
+              id: AssistantOperation.UpdateChatName.meta.key,
+              data: () =>
+                Effect.gen(function* () {
+                  // TODO(dmaretskyi): This goes away when composer will have unified operation invocations.
+                  const db = Obj.getDatabase(chat);
+                  invariant(db);
+                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db.spaceId });
+                }),
               properties: {
-                label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
+                label: ['chat-update-name.label', { ns: meta.id }],
+                icon: 'ph--magic-wand--regular',
+                disposition: 'list-item',
+              },
+            }),
+          ]);
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'assistant',
+        match: NodeMatcher.whenRoot,
+        actions: () =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'importComputeOperations',
+              data: Effect.fnUntraced(function* () {
+                const capabilities = yield* Capability.Service;
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
+                for (const definition of computeOperationsToImport) {
+                  const key = definition.meta.key;
+                  if (!key) {
+                    continue;
+                  }
+                  const existing = yield* Effect.promise(
+                    (): Promise<Operation.PersistentOperation[]> =>
+                      space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
+                  );
+                  if (existing.length === 0) {
+                    space.db.add(Operation.serialize(definition));
+                  }
+                }
+                yield* Database.flush();
+              }),
+              properties: {
+                label: ['import-compute-operations.label', { ns: meta.id }],
+                icon: 'ph--download-simple--regular',
+              },
+            }),
+            Node.makeAction({
+              id: AssistantOperation.ToggleTracePanelDebug.meta.key,
+              data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
+              properties: {
+                label: ['toggle-trace-panel-debug.label', { ns: meta.id }],
+                icon: 'ph--brackets-curly--regular',
+              },
+            }),
+          ]),
+      }),
+
+      // Don't show assistant companion when a chat is already the primary object.
+      GraphBuilder.createExtension({
+        id: 'companionChat',
+        match: whenNonChatObject,
+        connector: (object, get) =>
+          Effect.gen(function* () {
+            const state = get(yield* Capability.get(AssistantCapabilities.State));
+            const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
+            const objectUri = Obj.getURI(object);
+
+            // Resolve chat from persisted state or transient cache.
+            const chat = pipe(
+              Option.fromNullable(state.currentChat[objectUri]),
+              Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryMake(dxnStr))),
+              Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
+              Option.map((ref) => get(Obj.atom(ref as Ref.Ref<Obj.Unknown>))),
+              Option.filter(Obj.isObject),
+              Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
+              Option.getOrNull,
+            );
+
+            return [
+              AppNode.makeCompanion({
+                id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
+                label: ['assistant-chat.label', { ns: meta.id }],
                 icon: 'ph--sparkle--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
-          ];
-        });
-      },
-    }),
+                data: chat,
+                position: 'first',
+              }),
+            ];
+          }),
+      }),
 
-    createExtension({
-      id: `${ASSISTANT_PLUGIN}/blueprint-logs`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (Obj.instanceOf(Blueprint, node.data) ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: [node.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
-                type: PLANK_COMPANION_TYPE,
-                data: 'logs',
-                properties: {
-                  label: ['blueprint logs label', { ns: ASSISTANT_PLUGIN }],
-                  icon: 'ph--clock-countdown--regular',
-                  disposition: 'hidden',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
+      GraphBuilder.createExtension({
+        id: 'invocations',
+        match: NodeMatcher.whenAny(
+          NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
+          NodeMatcher.whenEchoTypeMatches(Routine.Routine),
         ),
-    }),
-
-    createExtension({
-      id: `${ASSISTANT_PLUGIN}/root`,
-      connector: (node) => {
-        let query: QueryResult<TemplateType> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(TemplateType));
-              }
-
-              const templates = get(rxFromQuery(query));
-              return templates.length > 0
-                ? [
-                    {
-                      id: `${ASSISTANT_PLUGIN}/templates`,
-                      type: `${ASSISTANT_PLUGIN}/templates`,
-                      data: null,
-                      properties: {
-                        label: ['templates label', { ns: ASSISTANT_PLUGIN }],
-                        icon: 'ph--file-code--regular',
-                        space,
-                      },
-                    },
-                  ]
-                : [];
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'invocations',
+              label: ['invocations.label', { ns: meta.id }],
+              icon: 'ph--clock-countdown--regular',
+              data: 'invocations',
             }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
+          ]),
+      }),
 
-    createExtension({
-      id: `${ASSISTANT_PLUGIN}/templates`,
-      connector: (node) => {
-        let query: QueryResult<TemplateType> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.id === `${ASSISTANT_PLUGIN}/templates` && isSpace(node.properties.space)
-                ? Option.some(node.properties.space)
-                : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(TemplateType));
-              }
-              return get(rxFromQuery(query))
-                .toSorted((a, b) => {
-                  const nameA = a.name ?? '';
-                  const nameB = b.name ?? '';
-                  return nameA.localeCompare(nameB);
-                })
-                .map((template) => ({
-                  id: fullyQualifiedId(template),
-                  type: `${ASSISTANT_PLUGIN}/template`,
-                  data: template,
-                  properties: {
-                    label: template.name ?? ['object placeholder', { ns: ASSISTANT_PLUGIN }],
-                    icon: 'ph--file-code--regular',
-                  },
-                }));
+      GraphBuilder.createExtension({
+        id: 'trace',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: linkedSegment('trace'),
+              label: ['trace.label', { ns: meta.id }],
+              icon: 'ph--line-segments--regular',
+              data: 'trace' as const,
+              position: 'last',
             }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-  ]);
+          ]),
+      }),
 
-// TODO(burdon): Factor out.
-const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
-  // TODO(wittjosiah): This should be possible with a single query.
-  const { objects: allChats } = await space.db.query(Query.type(AIChatType)).run();
-  const { objects: relatedChats } = await space.db.query(Query.type(AIChatType).sourceOf(CompanionTo).source()).run();
-  const chats = allChats.filter((chat) => !relatedChats.includes(chat));
-  // console.log('objects', JSON.stringify(objects, null, 2));
-  if (chats.length > 0) {
-    // TODO(burdon): Is this the most recent?
-    return chats[chats.length - 1];
-  }
+      // Section node: standalone Chat.Chat objects per space (companions are excluded).
+      createTypeSectionExtension(Chat.Chat, {
+        // Exclude chats that are the source of a CompanionTo relation; those belong to
+        // their primary object's companion panel and should not appear in the top-level list.
+        query: Query.without(
+          Query.select(Filter.type(Chat.Chat)),
+          Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
+        ),
+      }),
 
-  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-  invariant(Obj.instanceOf(AIChatType, data?.object));
-  await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
-  return data.object;
-};
+      // Create-chat action on the Chats section header.
+      GraphBuilder.createExtension({
+        id: 'chatsSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-chat',
+              data: () =>
+                Effect.gen(function* () {
+                  const { object: chat } = yield* Operation.invoke(
+                    AssistantOperation.CreateChat,
+                    { db: space.db },
+                    { spaceId: space.db.spaceId },
+                  );
+                  const { subject } = yield* Operation.invoke(
+                    SpaceOperation.AddObject,
+                    { object: chat, target: space.db, hidden: true, targetNodeId: getChatsPath(space.db.spaceId) },
+                    { spaceId: space.db.spaceId },
+                  );
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [...subject] },
+                    { spaceId: space.db.spaceId },
+                  );
+                }),
+              properties: {
+                label: ['create-chat.label', { ns: meta.id }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
+            }),
+          ]),
+      }),
+    ]);
+
+    return [
+      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Chat.Chat)),
+    ];
+  }),
+);

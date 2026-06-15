@@ -1,0 +1,231 @@
+---
+id: org.dxos.plugin.chess
+name: ChessPlugin
+version: 0.3.0
+extends: [dxos.plugin.chess@0.2.0]
+---
+
+Extends chess-2 to introduce operations and services: move validation,
+game state transitions, and the chess engine service dependency.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## Services
+
+```mdl
+service ChessEngine
+  desc: Validates moves and computes game state. May be local (WASM) or remote.
+  loading: lazy
+  ops:
+    validate(board: Board, move: Move) → Move
+    legalMoves(board: Board, square: Square) → Square[]
+    applyMove(board: Board, move: Move) → Board
+  errors:
+    EngineNotReady: engine has not finished loading
+```
+
+```mdl
+service GameStore
+  desc: Persists and replicates Game state via ECHO.
+  ops:
+    create(white: Player, black: Player) → Game
+    load(id: string) → Game
+    save(game: Game) → Game
+    list() → Game[]
+  effects: [echo:write, echo:read]
+```
+
+## Operations
+
+Pure operations (no effects, no service dependencies) — safe to call anywhere.
+
+```mdl
+op getLegalMoves
+  desc: Returns legal target squares for the piece on the given square.
+  input:
+    board: Board
+    square: Square
+  output: Square[]
+  errors:
+    EmptySquare: no piece on square
+    WrongSide: piece does not belong to the active side
+  requires: [ChessEngine]
+```
+
+```mdl
+op validateMove
+  desc: Checks a move against chess rules without mutating state.
+  input:
+    board: Board
+    move: Move
+  output: Move
+  errors:
+    IllegalMove: move violates chess rules
+    WrongTurn: piece does not belong to the active side
+    GameOver: game has already ended
+  requires: [ChessEngine]
+```
+
+```mdl
+op applyMove
+  desc: Applies a validated move and returns the next board state.
+  input:
+    board: Board
+    move: Move                  # must be pre-validated
+  output: Board
+  requires: [ChessEngine]
+  note: does not persist; use submitMove for the full transactional flow
+```
+
+Effectful operations — mutate persistent state.
+
+```mdl
+op startGame
+  desc: Creates a new Game with two players and an initial Board.
+  input:
+    white: Player
+    black: Player
+  output: Game
+  effects: [echo:write]
+  requires: [GameStore]
+```
+
+```mdl
+op submitMove
+  desc: Validates and applies a move, then persists the updated Game.
+  input:
+    game: Game
+    player: Player
+    move: Move
+  output: Game
+  errors:
+    WrongTurn: player is not the active side
+    IllegalMove: move violates chess rules
+    GameOver: game has already ended
+  effects: [echo:write]
+  requires: [ChessEngine, GameStore]
+  note: |
+    Composes validateMove → applyMove → GameStore.save.
+    Atomic: Game is not persisted if validation fails.
+```
+
+```mdl
+op resignGame
+  desc: Player forfeits; opponent wins.
+  input:
+    game: Game
+    player: Player
+  output: Game                  # Game.status === finished, Game.winner set
+  errors:
+    GameOver: game has already ended
+  effects: [echo:write]
+  requires: [GameStore]
+```
+
+## Features
+
+```mdl
+feat F-5: Move Validation
+
+  req F-5.1:
+    when: Gameboard calls submitMove
+    then: op:validateMove runs before any state change
+
+  req F-5.2:
+    when: validation fails
+    then: error returned to caller; Game state unchanged
+
+  req F-5.3:
+    when: square is selected on Gameboard
+    then: op:getLegalMoves called; results drive component:Gameboard.highlights
+```
+
+```mdl
+feat F-6: Game Persistence
+
+  req F-6.1:
+    when: op:startGame completes
+    then: Game written to ECHO and visible in component:Lobby game list
+
+  req F-6.2:
+    when: op:submitMove completes
+    then: updated Game replicated to all peers via ECHO
+
+  req F-6.3:
+    when: peer receives a Game update
+    then: component:Gameboard re-renders with new Board state
+    tags: [collaborative]
+```
+
+## Acceptance
+
+```mdl
+test T-6: Submit valid move
+  given: active game, white's turn, white player logged in
+  when: white submits pawn e2→e4
+  then:
+    - op:validateMove returns move without error
+    - Board updated: e4 occupied by white pawn, e2 empty
+    - Game.board.turn === black
+    - Game persisted to ECHO
+```
+
+```mdl
+test T-7: Submit invalid move rejected atomically
+  given: active game, white's turn
+  when: white submits an illegal move (e2→e5)
+  then:
+    - IllegalMove error returned
+    - Game.board unchanged
+    - no ECHO write occurs
+```
+
+```mdl
+test T-8: Legal moves highlighted
+  given: new game, white's turn, Gameboard shown
+  when: player selects e2
+  then:
+    - op:getLegalMoves returns [e3, e4]
+    - Gameboard.highlights === [e3, e4]
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```

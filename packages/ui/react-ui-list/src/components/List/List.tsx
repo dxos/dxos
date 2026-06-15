@@ -3,11 +3,9 @@
 //
 
 import {
-  IconButton,
-  type IconButtonProps,
   ListItem,
+  ListItemIconButton,
   ListItemDeleteButton,
-  ListItemButton,
   ListItemDragHandle,
   ListItemDragPreview,
   type ListItemProps,
@@ -17,17 +15,21 @@ import {
 } from './ListItem';
 import { ListRoot, type ListRootProps } from './ListRoot';
 
-// TODO(burdon): Multi-select model.
-// TODO(burdon): Key nav.
-// TODO(burdon): Animation.
-// TODO(burdon): Constrain axis.
-// TODO(burdon): Tree view.
-// TODO(burdon): Fix autoscroll while dragging.
-
 /**
- * Draggable list.
+ * Draggable list with per-row drag handles and delete buttons.
  * Ref: https://github.com/atlassian/pragmatic-drag-and-drop
  * Ref: https://github.com/alexreardon/pdnd-react-tailwind/blob/main/src/task.tsx
+ *
+ * @deprecated New code should use one of:
+ *
+ *   - `RowList` / `CardList` from this same package — for selectable
+ *     pickers (master/detail). Correct ARIA + dx-* by construction.
+ *   - `Mosaic.Stack` / `Mosaic.VirtualStack` from `@dxos/react-ui-mosaic`
+ *     — for virtualized or drag-reorderable card stacks.
+ *
+ * This component is retained for the existing reorder-with-delete-button
+ * use cases (plugin-meeting, plugin-automation, plugin-zen, etc.) until
+ * each is migrated; see `AUDIT.md` Phase 6 for the migration plan.
  */
 export const List = {
   Root: ListRoot,
@@ -35,12 +37,11 @@ export const List = {
   ItemDragPreview: ListItemDragPreview,
   ItemWrapper: ListItemWrapper,
   ItemDragHandle: ListItemDragHandle,
+  ItemIconButton: ListItemIconButton,
   ItemDeleteButton: ListItemDeleteButton,
-  ItemButton: ListItemButton,
   ItemTitle: ListItemTitle,
-  IconButton,
 };
 
 type ListItem = ListItemRecord;
 
-export type { ListRootProps, ListItemProps, IconButtonProps, ListItem, ListItemRecord };
+export type { ListRootProps, ListItemProps, ListItem, ListItemRecord };

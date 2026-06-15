@@ -2,70 +2,50 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { registerSW } from 'virtual:pwa-register';
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  LayoutAction,
-} from '@dxos/app-framework';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/observability/sentry';
 
-import { meta, PWA_PLUGIN } from './meta';
-import translations from './translations';
+import { meta } from '#meta';
+import { translations } from '#translations';
 
-export const PwaPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
+export const PwaPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'register-pwa',
+    activatesOn: ActivationEvents.ProcessManagerReady,
+    activate: Effect.fnUntraced(function* () {
+      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+
+      const updateSW = registerSW({
+        onNeedRefresh: () => {
+          void invokePromise(LayoutOperation.AddToast, {
+            id: `${meta.id}.need-refresh`,
+            title: ['need-refresh.label', { ns: meta.id }],
+            description: ['need-refresh.description', { ns: meta.id }],
+            duration: 4 * 60 * 1000, // 4m
+            actionLabel: ['refresh.label', { ns: meta.id }],
+            actionAlt: ['refresh.alt', { ns: meta.id }],
+            onAction: () => updateSW(true),
+          });
+        },
+        onOfflineReady: () => {
+          void invokePromise(LayoutOperation.AddToast, {
+            id: `${meta.id}.offline-ready`,
+            title: ['offline-ready.label', { ns: meta.id }],
+            closeLabel: ['confirm.label', { ns: meta.id }],
+          });
+        },
+        onRegisterError: (err) => {
+          log.error(err);
+        },
+      });
     }),
-    defineModule({
-      id: `${meta.id}/module/register-pwa`,
-      activatesOn: Events.DispatcherReady,
-      activate: (context) => {
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  }),
+  Plugin.make,
+);
 
-        const updateSW = registerSW({
-          onNeedRefresh: () =>
-            dispatch?.(
-              createIntent(LayoutAction.AddToast, {
-                part: 'toast',
-                subject: {
-                  id: `${PWA_PLUGIN}/need-refresh`,
-                  title: ['need refresh label', { ns: PWA_PLUGIN }],
-                  description: ['need refresh description', { ns: PWA_PLUGIN }],
-                  duration: 4 * 60 * 1000, // 4m
-                  actionLabel: ['refresh label', { ns: PWA_PLUGIN }],
-                  actionAlt: ['refresh alt', { ns: PWA_PLUGIN }],
-                  onAction: () => updateSW(true),
-                },
-              }),
-            ),
-          onOfflineReady: () =>
-            dispatch?.(
-              createIntent(LayoutAction.AddToast, {
-                part: 'toast',
-                subject: {
-                  id: `${PWA_PLUGIN}/offline-ready`,
-                  title: ['offline ready label', { ns: PWA_PLUGIN }],
-                  closeLabel: ['confirm label', { ns: PWA_PLUGIN }],
-                },
-              }),
-            ),
-          onRegisterError: (err) => {
-            captureException(err);
-            log.error(err);
-          },
-        });
-
-        return contributes(Capabilities.Null, null);
-      },
-    }),
-  ]);
+export default PwaPlugin;

@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { type SwarmInfo, type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 

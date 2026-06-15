@@ -2,21 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/react-ui/testing';
 
-import { useCredentials } from './useCredentials';
-import { useIdentity } from './useIdentity';
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';
+import { useCredentials } from './useCredentials';
+import { useIdentity } from './useIdentity';
 
 const getNewChallenge = () => Math.random().toString(36).substring(2);
 
@@ -43,7 +42,7 @@ const Test = () => {
           challenge: new TextEncoder().encode(challenge),
           rp: { id: location.hostname, name: 'Test' },
           user: {
-            id: lookupKey.asUint8Array(),
+            id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
             name: identity.did,
             displayName: identity.profile?.displayName ?? '',
           },
@@ -105,7 +104,7 @@ const Test = () => {
 
   return (
     <>
-      <div className='mbe-4 flex gap-2'>
+      <div className='mb-4 flex gap-2'>
         <Button disabled={!!identity} onClick={handleCreateIdentity}>
           Create Identity
         </Button>
@@ -116,18 +115,11 @@ const Test = () => {
           Authenticate with Passkey
         </Button>
       </div>
-      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded'>
-        <SyntaxHighlighter language='json'>
-          {JSON.stringify({ identity, credentials: credentials.length }, null, 2)}
-        </SyntaxHighlighter>
+      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded-sm'>
+        <JsonHighlighter data={{ identity, credentials: credentials.length }} />
       </div>
     </>
   );
-};
-
-export default {
-  title: 'sdk/react-client/Passkeys',
-  render: Test,
 };
 
 const config = new Config({
@@ -150,6 +142,14 @@ const config = new Config({
   },
 });
 
-export const Default = {
-  decorators: [withClientProvider({ config }), withTheme],
-};
+const meta = {
+  title: 'sdk/react-client/Passkeys',
+  render: Test,
+  decorators: [withClientProvider({ config }), withTheme()],
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

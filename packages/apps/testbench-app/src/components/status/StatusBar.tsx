@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsClockwise, ChartBar } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, IconButton } from '@dxos/react-ui';
 
 import { ErrorIndicator } from './ErrorIndicator';
 import { NetworkIndicator } from './NetworkIndicator';
@@ -33,13 +32,21 @@ export type StatusBarProps = {
 export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) => {
   return (
     <div className='flex items-center'>
-      <Button variant='ghost' onClick={() => onShowStats?.(!showStats)}>
-        <ChartBar />
-      </Button>
+      <IconButton
+        icon='ph--chart-bar--regular'
+        iconOnly
+        label='Toggle stats'
+        onClick={() => onShowStats?.(!showStats)}
+        variant='ghost'
+      />
       {flushing && (
-        <Button variant='ghost'>
-          <ArrowsClockwise className='animate-spin' />
-        </Button>
+        <IconButton
+          classNames='animate-spin'
+          icon='ph--arrows-clockwise--regular'
+          iconOnly
+          label='Syncing'
+          variant='ghost'
+        />
       )}
       <Button variant='ghost'>
         <NetworkIndicator />

@@ -1,7 +1,7 @@
 ---
 title: Updating and deleting data
 sidebar_title: 6. Mutating data
-description: 
+description:
 ---
 
 ## Updating items
@@ -12,7 +12,7 @@ Let's add the possibility to check/uncheck our tasks to mark which ones are alre
 import { DocumentModel } from '@dxos/document-model';
 import { usespace, useSelection } from '@dxos/react-client';
 
-const TASK_TYPE = 'example.com/type/task';
+const TASK_TYPE = 'com.example.type.task';
 
 const TaskList = ({ space_key }) => {
   // ...
@@ -60,7 +60,7 @@ To complete the famous CRUD operations, we just need to add a deletion option. L
 import { DocumentModel } from '@dxos/document-model';
 import { usespace, useSelection } from '@dxos/react-client';
 
-const TASK_TYPE = 'example.com/type/task';
+const TASK_TYPE = 'com.example.type.task';
 
 const TaskList = ({ space_key }) => {
   // ...

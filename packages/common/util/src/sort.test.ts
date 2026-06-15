@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { compareMulti, compareScalar, compareObject, compareString } from './sort';
+import { compareMulti, compareObject, compareScalar, compareString } from './sort';
 
 const data = [
   { i: 0, idx: 1, label: 'apple' },

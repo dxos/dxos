@@ -3,31 +3,28 @@
 //
 
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import { type Schema } from 'effect';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { Obj, Type } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useFileDownload } from '@dxos/react-ui';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
 
+import { Document, Item } from '../data';
+import { defs } from '../defs';
+import { exportData, importData } from '../util';
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
-import { Document, Item } from '../data';
-import { defs } from '../defs';
-import { exportData, importData } from '../util';
 
 export const Main = () => {
   const client = useClient();
-  // Filter default so that the first space visible is the shared space.
-  const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
+  const spaces = useSpaces({ all: true });
   const [space, setSpace] = useState<Space>();
   useEffect(() => {
     if (!space && spaces.length) {
@@ -43,7 +40,7 @@ export const Main = () => {
   const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
-  const flushingPromise = useRef<Promise<void>>();
+  const flushingPromise = useRef<Promise<void>>(null);
   const download = useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
@@ -53,35 +50,30 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, Schema.Schema<any>>()),
+      }, new Map<string, typeof Item | typeof Document>()),
     [],
   );
 
-  const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
-  const objectsOfSchema = useQuery(space, Query.type(getSchema(type)));
+  const getType = (typename: string | undefined) => typeMap.get(typename ?? Type.getTypename(Item)) ?? Item;
+  const objectsOfType = useQuery(space?.db, Query.type(getType(type)));
   const objects = useMemo(
-    () => objectsOfSchema.filter((object) => match(filter, object.content)),
-    [objectsOfSchema, filter],
+    () => objectsOfType.filter((object) => match(filter, object.content)),
+    [objectsOfType, filter],
   );
 
   const identity = client.halo.identity.get();
 
   // Handle invitation.
-  useEffect(() => {
+  useAsyncEffect(async () => {
     const url = new URL(window.location.href);
     const invitationCode = url.searchParams.get('spaceInvitationCode');
-    let t: ReturnType<typeof setTimeout>;
     if (invitationCode && identity) {
-      t = setTimeout(async () => {
-        const { space } = await client.shell.joinSpace({ invitationCode });
-        setSpace(space);
+      const { space } = await client.shell.joinSpace({ invitationCode });
+      setSpace(space);
 
-        url.searchParams.delete('spaceInvitationCode');
-        history.replaceState({}, document.title, url.href);
-      });
+      url.searchParams.delete('spaceInvitationCode');
+      history.replaceState({}, document.title, url.href);
     }
-
-    return () => clearTimeout(t);
   }, [identity]);
 
   const handleObjectCreate = (n = 1) => {
@@ -91,9 +83,9 @@ export const Main = () => {
 
     // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      let object: Live<any>;
+      let object: Obj.Unknown;
       switch (type) {
-        case Document.typename: {
+        case Type.getTypename(Document): {
           object = Obj.make(Document, {
             title: randWord(),
             content: randSentence(),
@@ -101,7 +93,7 @@ export const Main = () => {
           break;
         }
 
-        case Item.typename:
+        case Type.getTypename(Item):
         default: {
           object = Obj.make(Item, {
             content: randSentence(),
@@ -135,7 +127,7 @@ export const Main = () => {
     }
 
     // TODO(burdon): [API]: Rename delete and just provide ID?
-    const object = space.db.getObjectById(id);
+    const object = space.db.query(Filter.id(id)).runSync()[0];
     if (object) {
       space.db.remove(object);
     }
@@ -193,7 +185,7 @@ export const Main = () => {
 
   return (
     <div className='flex flex-row grow justify-center overflow-hidden'>
-      <div className='flex flex-col grow bg-baseSurface'>
+      <div className='flex flex-col grow bg-base-surface'>
         <AppToolbar
           onHome={() => window.open(defs.issueUrl, 'DXOS')}
           onProfile={() => {
@@ -220,7 +212,7 @@ export const Main = () => {
             onViewChange={(view) => setView(view)}
           />
 
-          {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
+          {view === 'table' && <ItemTable type={getType(type)} objects={objects} />}
           {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
           {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
         </div>

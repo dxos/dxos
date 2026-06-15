@@ -1,0 +1,51 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as shellTranslations } from '@dxos/shell/react';
+
+import { initializeIdentity } from '#testing';
+import { translations } from '#translations';
+
+import { ClientPlugin } from '../../ClientPlugin';
+import { DevicesContainer } from './DevicesContainer';
+
+const meta = {
+  title: 'plugins/plugin-client/containers/DevicesContainer',
+  component: DevicesContainer,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      plugins: [
+        ClientPlugin({
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* initializeIdentity(client);
+            }),
+        }),
+        ProcessManagerPlugin(),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...shellTranslations],
+  },
+} satisfies Meta<typeof DevicesContainer>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    createInvitationUrl: () => 'https://example.com',
+  },
+};

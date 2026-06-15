@@ -1,0 +1,6 @@
+layer: scaffolding
+language: typescript
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint

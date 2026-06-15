@@ -6,15 +6,16 @@ import { format } from 'prettier';
 import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '#meta';
 
 export type FormatActionProperties = { type: 'format' };
 
-export const createFormat = (script: ScriptType) => {
+export const createFormat = (script: Script.Script) => {
   const formatAction = createMenuAction(
     'format',
     async () => {
@@ -23,11 +24,14 @@ export const createFormat = (script: ScriptType) => {
       }
 
       try {
-        script.source.target!.content = await format(script.source.target!.content, {
+        const formatted = await format(script.source.target!.content, {
           parser: 'typescript',
           plugins: [prettierPluginEstree, prettierPluginTypescript],
           semi: true,
           singleQuote: true,
+        });
+        Obj.update(script.source.target!, (obj) => {
+          obj.content = formatted;
         });
       } catch (err: any) {
         // TODO(wittjosiah): Show error in UI.
@@ -35,7 +39,7 @@ export const createFormat = (script: ScriptType) => {
       }
     },
     {
-      label: ['format label', { ns: SCRIPT_PLUGIN }],
+      label: ['format.label', { ns: meta.id }],
       icon: 'ph--magic-wand--regular',
     },
   );
@@ -46,6 +50,7 @@ export const createFormat = (script: ScriptType) => {
       {
         source: 'root',
         target: 'format',
+        relation: 'child',
       },
     ],
   };

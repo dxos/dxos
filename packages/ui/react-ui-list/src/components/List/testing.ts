@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/echo-schema';
-import { faker } from '@dxos/random';
+import { Obj } from '@dxos/echo';
+import { random } from '@dxos/random';
 
 export const TestItemSchema = Schema.Struct({
-  id: ObjectId,
+  id: Obj.ID,
   name: Schema.String,
 });
 
@@ -21,10 +21,10 @@ export const TestList = Schema.Struct({
 export type TestList = Schema.Schema.Type<typeof TestList>;
 
 export const createList = (n = 10): TestList => ({
-  items: faker.helpers.multiple(
+  items: random.helpers.multiple(
     () => ({
-      id: faker.string.uuid(),
-      name: faker.commerce.productName(),
+      id: random.string.uuid(),
+      name: random.commerce.productName(),
     }),
     { count: n },
   ),

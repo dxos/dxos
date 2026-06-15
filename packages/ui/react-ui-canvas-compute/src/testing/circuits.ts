@@ -2,15 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createSystemPrompt } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
-import type { ServiceContainer } from '@dxos/functions';
-import { DXN, SpaceId } from '@dxos/keys';
+import { createSystemPrompt } from '@dxos/assistant';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeGraphController } from '../graph';
-import { createComputeGraph } from '../hooks';
 import {
   type ComputeShape,
   createAnd,
@@ -28,7 +24,7 @@ import {
   createJsonTransform,
   createNot,
   createOr,
-  createQueue,
+  createFeed,
   createRandom,
   createScope,
   createSurface,
@@ -38,18 +34,13 @@ import {
   createTextToImage,
 } from '../shapes';
 
-export const createComputeGraphController = (
-  graph: CanvasGraphModel<ComputeShape>,
-  serviceContainer: ServiceContainer,
-) => {
-  const computeGraph = createComputeGraph(graph);
-  const controller = new ComputeGraphController(serviceContainer, computeGraph);
-  return { controller, graph };
-};
-
 //
 // Circuits
 //
+
+export const createEmptyCircuit = () => {
+  return CanvasGraphModel.create<ComputeShape>();
+};
 
 export const createBasicCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
@@ -76,7 +67,7 @@ export const createTransformCircuit = () => {
 
     model.builder
       // TODO(burdon): Make id optional.
-      .createNode(createNote({ id: ObjectId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }))
+      .createNode(createNote({ id: EntityId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }))
       .createEdge({ source: a.id, target: c.id })
       .createEdge({ source: b.id, target: c.id, input: 'expression' })
       .createEdge({ source: c.id, target: d.id });
@@ -207,7 +198,7 @@ export const createArtifactCircuit = () => {
   model.builder.call((builder) => {
     const prompt = model.createNode(
       createTemplate({
-        text: createSystemPrompt(),
+        text: createSystemPrompt({}),
         ...position({ x: -10, y: -5, width: 8, height: 18 }),
       }),
     );
@@ -245,12 +236,12 @@ export const createGptCircuit = (options: {
     if (options.history) {
       const queue = model.createNode(
         createConstant({
-          value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+          value: EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() }),
           ...position({ x: -18, y: 5, width: 8, height: 6 }),
         }),
       );
 
-      const thread = model.createNode(createQueue(position({ x: -3, y: 3, width: 14, height: 10 })));
+      const thread = model.createNode(createFeed(position({ x: -3, y: 3, width: 14, height: 10 })));
       const append = model.createNode(createAppend(position({ x: 10, y: 6 })));
 
       builder
@@ -262,7 +253,7 @@ export const createGptCircuit = (options: {
     if (options.instructions) {
       const prompt = model.createNode(
         createTemplate({
-          text: createSystemPrompt(),
+          text: createSystemPrompt({}),
           ...position({ x: -18, y: -12, width: 8, height: 10 }),
         }),
       );

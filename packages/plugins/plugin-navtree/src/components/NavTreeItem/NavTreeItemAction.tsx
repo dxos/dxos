@@ -2,105 +2,129 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { type Action, type Node } from '@dxos/app-graph';
-import { useTranslation, toLocalizedString, IconButton, useDensityContext } from '@dxos/react-ui';
-import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
-import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { type Node } from '@dxos/app-graph';
+import { useActionRunner } from '@dxos/plugin-graph';
+import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { Menu, type MenuItem } from '@dxos/react-ui-menu';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { NAVTREE_PLUGIN } from '../../meta';
-import { type ActionProperties } from '../../types';
+import { meta } from '#meta';
+import { type ActionProperties } from '#types';
+
+const fallbackIcon = 'ph--circle-dashed--regular';
+
+const mdActionButtonProps = {
+  size: 4 as const,
+  density: 'md' as const,
+};
+
+const lgActionButtonProps = {
+  size: 5 as const,
+  density: 'lg' as const,
+};
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
-  parent: Node;
+  parent: Node.Node;
+  path?: string[];
   caller?: string;
   monolithic?: boolean;
-  menuActions?: Action[];
+  menuActions?: Node.Action[];
 };
 
-const fallbackIcon = 'ph--placeholder--regular';
+export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
+  ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+    const density = useDensityContext();
+    const runAction = useActionRunner();
+    const handleAction = useCallback(
+      (action: Node.Action, params: Node.InvokeProps = {}) => runAction(action, { ...params, path }),
+      [runAction, path],
+    );
 
-const fineActionButtonProps = {
-  size: 4 as const,
-  density: 'fine' as const,
-};
-const coarseActionButtonProps = {
-  size: 5 as const,
-  density: 'coarse' as const,
-};
-
-export const NavTreeItemActionDropdownMenu = ({
-  parent,
-  label,
-  icon,
-  testId,
-  menuActions,
-  caller,
-}: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const density = useDensityContext();
-  return (
-    <MenuProvider>
-      <DropdownMenu.Root group={parent} items={menuActions as MenuItem[]} caller={caller}>
-        <DropdownMenu.Trigger asChild>
+    return (
+      <Menu.Root caller={caller} onAction={handleAction}>
+        <Menu.Trigger asChild>
           <IconButton
-            {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
-            classNames={mx('shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem)}
+            {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
+            {...composableProps(props)}
+            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon={icon ?? fallbackIcon}
             iconOnly
             label={toLocalizedString(label, t)}
             data-testid={testId}
+            ref={forwardedRef}
           />
-        </DropdownMenu.Trigger>
-      </DropdownMenu.Root>
-    </MenuProvider>
-  );
-};
+        </Menu.Trigger>
+        <Menu.Content group={parent} items={menuActions as MenuItem[]} />
+      </Menu.Root>
+    );
+  },
+);
 
-export const NavTreeItemMonolithicAction = ({
-  parent,
-  properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
-  data: invoke,
-  baseLabel,
-}: Action & { parent: Node; onAction?: (action: Action) => void; baseLabel: string }) => {
+NavTreeItemActionDropdownMenu.displayName = 'NavTreeItemActionDropdownMenu';
+
+export const NavTreeItemMonolithicAction = (
+  props: Node.Action & {
+    parent: Node.Node;
+    path?: string[];
+    onAction?: (action: Node.Action) => void;
+    baseLabel: string;
+  },
+) => {
+  const {
+    parent,
+    path,
+    properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
+    baseLabel,
+  } = props;
   const density = useDensityContext();
+  const runAction = useActionRunner();
   return (
     <IconButton
-      {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
+      {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
       variant={variant}
-      classNames={mx(
+      classNames={[
         'shrink-0',
         hoverableControlItem,
         hoverableOpenControlItem,
-        iconOnly ? 'pli-2 pointer-fine:pli-1' : 'p-2 pointer-fine:p-2 mie-1',
-      )}
+        iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1',
+      ]}
       icon={icon ?? fallbackIcon}
       iconOnly={iconOnly}
       label={baseLabel}
       disabled={disabled}
       onClick={(event) => {
+        event.stopPropagation();
         if (disabled) {
           return;
         }
-        event.stopPropagation();
-        void invoke?.(caller ? { parent, caller } : { parent });
+
+        void runAction(props, caller ? { parent, caller, path } : { parent, path });
       }}
       data-testid={testId}
     />
   );
 };
 
-export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...props }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+export const NavTreeItemAction = ({
+  monolithic,
+  menuActions,
+  menuType,
+  parent,
+  path,
+  ...props
+}: NavTreeItemActionMenuProps) => {
+  const { t } = useTranslation(meta.id);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
-
   return monolithic && menuActions?.length === 1 ? (
-    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={node} {...menuActions[0]} />
+    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={parent} path={path} {...menuActions[0]} />
   ) : (
-    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={node} menuActions={menuActions} />
+    <NavTreeItemActionDropdownMenu {...props} label={baseLabel} parent={parent} path={path} menuActions={menuActions} />
   );
 };

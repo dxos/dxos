@@ -4,7 +4,7 @@
 
 import type { ConsoleMessage, Page } from '@playwright/test';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 
 import { ScopedShellManager } from './scoped-shell-manager';
 
@@ -12,6 +12,7 @@ import { ScopedShellManager } from './scoped-shell-manager';
 
 const CONFIRM_INPUT = 'RESET';
 
+/** @deprecated */
 export class ShellManager extends ScopedShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
@@ -78,8 +79,6 @@ export class ShellManager extends ScopedShellManager {
   }
 
   async authenticateDevice(authCode: string, skipDone = true): Promise<void> {
-    // Wait for focus to shift before typing.
-    await sleep(1500);
     await this.authenticateInvitation('device', authCode, this.shell);
     // TODO(wittjosiah): When "signing out" and joinging a new identity, the done step seems to be skipped.
     if (!skipDone) {
@@ -109,8 +108,6 @@ export class ShellManager extends ScopedShellManager {
   }
 
   async authenticate(authCode: string): Promise<void> {
-    // Wait for focus to shift before typing.
-    await sleep(1500);
     await this.authenticateInvitation('space', authCode, this.shell);
   }
 

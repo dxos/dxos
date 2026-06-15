@@ -5,6 +5,7 @@
 //
 
 import { ArgumentParser } from 'argparse';
+import { globSync } from 'glob';
 import { resolve } from 'node:path';
 import readPkg from 'read-pkg';
 
@@ -21,7 +22,7 @@ const main = async () => {
   });
 
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
-  parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' }); // TODO(burdon): Glob.
+  parser.add_argument('--src', { help: 'Protobuf input files', nargs: '*' });
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });
   parser.add_argument('--baseDir', {
     help: 'Base path to resolve fully qualified packages',
@@ -31,9 +32,26 @@ const main = async () => {
     required: true,
   });
 
-  const { proto, substitutions, baseDir, outDir } = parser.parse_args();
+  const { src, substitutions, baseDir, outDir } = parser.parse_args();
 
-  const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
+  // Handle both glob patterns and individual file paths
+  let protoFilePaths: string[];
+  if (Array.isArray(src) && src.length > 0) {
+    // If src is an array, check if the first item is a glob pattern
+    if (src.length === 1 && (src[0].includes('*') || src[0].includes('?'))) {
+      // Single glob pattern
+      protoFilePaths = globSync(src[0], { cwd: process.cwd() }).map((file: string) => resolve(process.cwd(), file));
+    } else {
+      // Multiple individual file paths
+      protoFilePaths = src.map((file: string) => resolve(process.cwd(), file));
+    }
+  } else if (typeof src === 'string') {
+    // Single glob pattern (legacy behavior)
+    protoFilePaths = globSync(src, { cwd: process.cwd() }).map((file: string) => resolve(process.cwd(), file));
+  } else {
+    throw new Error('No source files specified');
+  }
+
   const substitutionsModule = substitutions
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
@@ -44,7 +62,17 @@ const main = async () => {
   registerResolver(baseDirPath);
   preconfigureProtobufjs();
 
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, process.cwd());
+  await parseAndGenerateSchema(
+    substitutionsModule,
+    protoFilePaths,
+    baseDirPath,
+    outDirPath,
+    process.cwd(),
+    // TODO(wittjosiah): Expose as args.
+    undefined,
+    true,
+    false,
+  );
 };
 
 void main();

@@ -2,77 +2,97 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'react-ui-form';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = '@dxos/react-ui-form';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'fields label': 'Fields',
-        'hidden fields label': 'Hidden Fields',
-        'empty readonly ref field label': '(none)',
+        'ref-editor.placeholder': "Type '@' to add a reference, or enter a value",
+        'ref-editor-auto.placeholder': 'Search by name, or enter a value',
 
-        // TODO(burdon): Standardize field/property.
-        'button add property': 'Add property',
-        'field property label': 'Property',
-        'field property placeholder': 'Property name',
-        'field format label': 'Type',
-        'field path label': 'Field path',
-        'add field': 'Add field',
-        'delete field': 'Delete field',
-        'field limit reached': 'Maximum number of fields reached',
-        'boolean input true value': 'Yes',
-        'boolean input false value': 'No',
+        'fields.label': 'Fields',
+        'hidden-fields.label': 'Hidden Fields',
+        'empty-readonly-ref-field.label': '(none)',
 
-        // TODO(burdon): Factor out?
-        'button cancel': 'Cancel',
-        'button save': 'Save',
+        'field-property.label': 'Property',
+        'field-property.placeholder': 'Property name',
+        'field-format.label': 'Type',
+        'field-path.label': 'Field path',
 
-        // FormatEnum
-        'format boolean': 'Boolean',
-        'format currency': 'Currency',
-        'format date': 'Date',
-        'format date-time': 'DateTime',
-        'format did': 'DID',
-        'format duration': 'Duration',
-        'format dxn': 'DXN',
-        'format email': 'Email',
-        'format formula': 'Formula',
-        'format hostname': 'Hostname',
-        'format integer': 'Integer',
-        'format json': 'JSON',
-        'format latlng': 'Geopoint',
-        'format markdown': 'Markdown',
-        'format percent': 'Percent',
-        'format ref': 'Reference',
-        'format regex': 'RegExp',
-        'format string': 'String',
-        'format single-select': 'Select',
-        'format multi-select': 'Multi-select',
-        'format text': 'Long text',
-        'format time': 'Time',
-        'format timestamp': 'Timestamp',
-        'format user': 'User',
-        'format number': 'Number',
-        'format uri': 'URI',
-        'format url': 'URL',
-        'format uuid': 'UUID',
+        'remove-item.button': 'Delete item',
+        'add-item.button': 'Add item',
+        'add-property-button.label': 'Add property',
+        'boolean-input-true.value': 'Yes',
+        'boolean-input-false.value': 'No',
+        'show-field.label': 'Show field',
+        'hide-field.label': 'Hide field',
+        'expand-fields.label': 'Expand',
+        'collapse-fields.label': 'Collapse',
+        'delete-field.label': 'Delete field',
+        'create-option.label': 'Create',
+        'add-tag.label': 'Add tag',
 
-        // Placeholders.
-        'placeholder latitude': 'Latitude',
-        'placeholder longitude': 'Longitude',
+        'ref-field-combobox-input.placeholder': 'Search…',
+        'ref-field.placeholder': 'Select…',
+        'ref-field.placeholder_one': 'Select…',
+        'ref-field.placeholder_other': 'Select items…',
 
-        // SelectOptionsInput.
-        'select option label': 'Label',
-        'select option label placeholder': 'Option label',
-        'select option color': 'Color',
-        'select option delete': 'Delete',
-        'select option add': 'Add option',
+        'example.placeholder': 'Example',
+        'latitude.placeholder': 'Latitude (e.g., 40.7128)',
+        'longitude.placeholder': 'Longitude (e.g., -74.0060)',
+
+        'cancel-button.label': 'Cancel',
+        'save-button.label': 'Save',
+        'create-text.label': 'Create text',
+
+        // TypeFormat
+        'format.boolean.label': 'Boolean',
+        'format.currency.label': 'Currency',
+        'format.date.label': 'Date',
+        'format.date-time.label': 'DateTime',
+        'format.did.label': 'DID',
+        'format.duration.label': 'Duration',
+        'format.dxn.label': 'DXN',
+        'format.email.label': 'Email',
+        'format.formula.label': 'Formula',
+        'format.hostname.label': 'Hostname',
+        'format.integer.label': 'Integer',
+        'format.json.label': 'JSON',
+        'format.lnglat.label': 'Geopoint',
+        'format.markdown.label': 'Markdown',
+        'format.percent.label': 'Percent',
+        'format.ref.label': 'Reference',
+        'format.regex.label': 'RegExp',
+        'format.string.label': 'String',
+        'format.single-select.label': 'Select',
+        'format.multi-select.label': 'Multi-select',
+        'format.text.label': 'Long text',
+        'format.time.label': 'Time',
+        'format.timestamp.label': 'Timestamp',
+        'format.user.label': 'User',
+        'format.number.label': 'Number',
+        'format.uri.label': 'URI',
+        'format.url.label': 'URL',
+        'format.uuid.label': 'UUID',
+
+        // GeoPointField.
+        'latitude.label': 'Latitude',
+        'longitude.label': 'Longitude',
+
+        // SelectOptionsField.
+        'select-option.label': 'Label',
+        'select-option-label.placeholder': 'Option label',
+        'select-option-delete.button': 'Delete',
+        'select-option-add.button': 'Add option',
 
         // System schema message.
-        'system schema title': 'System Schema',
-        'system schema description': 'This is a system schema and cannot be modified.',
+        'system-schema.title': 'System type',
+        'system-schema.description': 'System type: cannot add or remove fields.',
+        'remove.button': 'Delete',
       },
     },
   },
-];
+] as const satisfies Resource[];

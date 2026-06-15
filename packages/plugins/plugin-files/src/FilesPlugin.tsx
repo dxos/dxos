@@ -2,62 +2,52 @@
 // Copyright 2023 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities, allOf } from '@dxos/app-framework';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { ROOT_TYPE } from '@dxos/plugin-graph';
+import * as Effect from 'effect/Effect';
 
-import { AppGraphBuilder, FileSettings, FileState, IntentResolver, Markdown, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
+import { AttentionEvents } from '@dxos/plugin-attention';
+import { Node } from '@dxos/plugin-graph';
+
+import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { FileCapabilities } from '#types';
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-export const FilesPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: FileSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/state`,
-      activatesOn: allOf(Events.DispatcherReady, Events.SettingsReady, AttentionEvents.AttentionReady),
-      activate: FileState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/markdown`,
-      activatesOn: Events.SettingsReady,
-      activate: Markdown,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.AppGraphReady,
-      activate: () =>
-        contributes(Capabilities.AppGraphSerializer, [
+const SettingsReady = AppActivationEvents.createSettingsEvent(FileCapabilities.Settings.identifier);
+
+export const FilesPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSettingsModule({ activate: FileSettings, firesAfterActivation: [SettingsReady] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'state',
+    activatesOn: ActivationEvent.allOf(
+      ActivationEvents.ProcessManagerReady,
+      SettingsReady,
+      AttentionEvents.AttentionReady,
+    ),
+    activate: FileState,
+  }),
+  Plugin.addModule({
+    id: 'markdown',
+    activatesOn: SettingsReady,
+    activate: Markdown,
+  }),
+  Plugin.addModule({
+    id: 'app-graph-serializer',
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(AppCapabilities.AppGraphSerializer, [
           {
-            inputType: ROOT_TYPE,
+            inputType: Node.RootType,
             outputType: 'text/directory',
-            position: 'fallback',
+            position: 'last',
             serialize: async () => ({
               name: 'root',
               data: 'root',
@@ -68,5 +58,9 @@ export const FilesPlugin = () =>
             },
           },
         ]),
-    }),
-  ]);
+      ),
+  }),
+  Plugin.make,
+);
+
+export default FilesPlugin;

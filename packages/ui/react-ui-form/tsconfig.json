@@ -15,10 +15,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/effect"
     },
     {
-      "path": "../../common/effect"
+      "path": "../../common/effect-proto"
     },
     {
       "path": "../../common/invariant"
@@ -42,16 +42,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/react-client"
@@ -60,10 +60,19 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../lit-ui"
     },
     {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-components"
+    },
+    {
+      "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-list"
@@ -72,19 +81,22 @@
       "path": "../react-ui-pickers"
     },
     {
-      "path": "../react-ui-stack"
+      "path": "../react-ui-search"
     },
     {
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-tag-picker"
+      "path": "../ui"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-editor"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

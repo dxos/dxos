@@ -2,103 +2,90 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { type SidebarState } from '@dxos/react-ui';
 
-import { DeckCapabilities } from './capabilities';
-import { DECK_PLUGIN } from '../meta';
-import { getMode, type DeckPluginState, defaultDeck, type DeckState } from '../types';
+import { meta } from '#meta';
+import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
 
-const boolean = /true|false/;
+import { sanitizePersistedState } from '../util';
 
-// TODO(thure, 18 Feb 2025): Remove after the next release.
-
-const migrateSidebarStateDefaults = {
-  [`${DECK_PLUGIN}/complementary-sidebar-state`]: 'expanded',
-  [`${DECK_PLUGIN}/sidebar-state`]: 'collapsed',
+/** Default persisted state. */
+const defaultDeckState: StoredDeckState = {
+  sidebarState: 'expanded',
+  complementarySidebarState: 'collapsed',
+  complementarySidebarPanel: undefined,
+  activeDeck: 'default',
+  previousDeck: 'default',
+  decks: {
+    default: { ...defaultDeck },
+  },
+  previousMode: {},
 };
 
-const migrateSidebarState = () => {
-  Object.entries(migrateSidebarStateDefaults).forEach(([key, defaultValue]) => {
-    if (boolean.test(localStorage.getItem(key) ?? 'never')) {
-      localStorage.setItem(key, defaultValue);
+/** Default ephemeral state. */
+const defaultDeckEphemeralState: EphemeralDeckState = {
+  dialogContent: null,
+  dialogOpen: false,
+  dialogBlockAlign: undefined,
+  dialogType: undefined,
+  popoverContent: null,
+  popoverAnchor: undefined,
+  popoverAnchorId: undefined,
+  popoverOpen: false,
+  toasts: [],
+  currentUndoId: undefined,
+  scrollIntoView: undefined,
+};
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+
+    // Persisted state using KVS store.
+    const stateAtom = createKvsStore({
+      key: `${meta.id}.state`,
+      schema: StoredDeckState,
+      defaultValue: () => ({ ...defaultDeckState }),
+    });
+
+    // Ephemeral state (not persisted, but kept alive to prevent GC resets).
+    const ephemeralAtom = Atom.make<EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
+
+    // Sanitize persisted state on startup (see sanitizePersistedState for details).
+    const currentState = registry.get(stateAtom);
+    const sanitizedState = sanitizePersistedState(currentState);
+    if (sanitizedState !== currentState) {
+      registry.set(stateAtom, sanitizedState);
     }
-  });
-};
 
-const DeckStateFactory = () => {
-  migrateSidebarState();
+    // Create derived layout atom (read-only) from both state atoms.
+    const layoutAtom = Atom.make((get) => {
+      const state = get(stateAtom);
+      const ephemeral = get(ephemeralAtom);
+      const deck = state.decks[state.activeDeck];
+      invariant(deck, `Deck not found: ${state.activeDeck}`);
+      return {
+        mode: getMode(deck),
+        dialogOpen: ephemeral.dialogOpen,
+        sidebarOpen: state.sidebarState === 'expanded',
+        complementarySidebarOpen: state.complementarySidebarState === 'expanded',
+        workspace: state.activeDeck,
+        active: deck.solo ? [deck.solo] : deck.active,
+        inactive: deck.inactive,
+        scrollIntoView: ephemeral.scrollIntoView,
+      } satisfies AppCapabilities.Layout;
+    }).pipe(Atom.keepAlive);
 
-  const state = new LocalStorageStore<DeckPluginState>(DECK_PLUGIN, {
-    sidebarState: 'expanded',
-    complementarySidebarState: 'collapsed',
-    complementarySidebarPanel: undefined,
-    dialogContent: null,
-    dialogOpen: false,
-    dialogBlockAlign: undefined,
-    dialogType: undefined,
-    popoverContent: null,
-    popoverAnchor: undefined,
-    popoverAnchorId: undefined,
-    popoverOpen: false,
-    toasts: [],
-    currentUndoId: undefined,
-    activeDeck: 'default',
-    previousDeck: 'default',
-    decks: {
-      default: { ...defaultDeck },
-    },
-    get deck() {
-      const deck = this.decks[this.activeDeck];
-      invariant(deck, `Deck not found: ${this.activeDeck}`);
-      return deck;
-    },
-    previousMode: {},
-    scrollIntoView: undefined,
-  });
-
-  state
-    .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
-    .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
-    .prop({ key: 'complementarySidebarPanel', type: LocalStorageStore.string({ allowUndefined: true }) })
-    .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, DeckState>>() })
-    .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
-    .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
-
-  const layout = live<Capabilities.Layout>({
-    get mode() {
-      return getMode(state.values.deck);
-    },
-    get dialogOpen() {
-      return state.values.dialogOpen;
-    },
-    get sidebarOpen() {
-      return state.values.sidebarState === 'expanded';
-    },
-    get complementarySidebarOpen() {
-      return state.values.complementarySidebarState === 'expanded';
-    },
-    get workspace() {
-      return state.values.activeDeck;
-    },
-    get active() {
-      return state.values.deck.solo ? [state.values.deck.solo] : state.values.deck.active;
-    },
-    get inactive() {
-      return state.values.deck.inactive;
-    },
-    get scrollIntoView() {
-      return state.values.scrollIntoView;
-    },
-  });
-
-  return [
-    contributes(DeckCapabilities.DeckState, state.values, () => state.close()),
-    contributes(Capabilities.Layout, layout),
-  ];
-};
-
-export default DeckStateFactory;
+    return [
+      Capability.contributes(DeckCapabilities.State, stateAtom),
+      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+    ];
+  }),
+);

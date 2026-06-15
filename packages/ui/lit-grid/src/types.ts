@@ -83,6 +83,10 @@ export type DxGridCellValue = {
    * Controls the read-only state of the cell.
    */
   readonly?: DxGridReadonlyValue;
+  /**
+   * Controls whether the cell content should unfurl when the cell has focus.
+   */
+  focusUnfurl?: boolean;
 };
 
 export type DxGridAxisMetaProps = {
@@ -90,6 +94,9 @@ export type DxGridAxisMetaProps = {
   description?: string;
   resizeable?: boolean;
   readonly?: DxGridReadonlyValue;
+  focusUnfurl?: boolean;
+  minSize?: number;
+  maxSize?: number;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
@@ -120,6 +127,10 @@ export type DxGridSelectionProps = {
   rowMax: number;
   visible?: boolean;
 };
+
+export type DxGridFocusIndicatorVariant = 'sheet' | 'stack';
+
+export type DxGridOverscroll = 'inline' | 'block' | 'trap' | undefined;
 
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;

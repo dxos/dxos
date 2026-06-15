@@ -2,21 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type Registry, type View } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
-import { type FieldType } from '@dxos/schema';
 
-import { type TableModel, type ModalController } from '../../model';
+import { type ModalController, type TableModel } from '../../model';
 
-type ColumnSettingsProps = { model?: TableModel; modals: ModalController; onNewColumn: () => void };
+type ColumnSettingsProps = {
+  registry?: Registry.Registry;
+  model?: TableModel;
+  modals: ModalController;
+  onNewColumn: () => void;
+};
 
-export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsProps) => {
-  const [newField, setNewField] = useState<FieldType>();
-  const state = modals.state.value;
-
-  const space = model?.space;
+export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnSettingsProps) => {
+  const [newField, setNewField] = useState<View.FieldType>();
+  const state = useAtomValue(modals.state);
 
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
@@ -33,11 +37,11 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.view?.fields.find((f) => f.id === mode.fieldId);
+        return model?.projection?.getFields().find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.view?.fields, state]);
+  }, [model?.projection, state]);
 
   const field = existingField ?? newField;
 
@@ -47,11 +51,11 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
 
   const handleCancel = useCallback(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
-      model?.projection?.deleteFieldProjection(newField.id);
+      model?.projection.deleteFieldProjection(newField.id);
     }
   }, [model?.projection, state, newField]);
 
-  if (!model?.view || !model.projection || !field) {
+  if (!model?.projection || !field) {
     return null;
   }
 
@@ -59,13 +63,12 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
     <Popover.Root modal={false} open={state?.type === 'columnSettings'}>
       <Popover.VirtualTrigger virtualRef={modals.trigger} />
       <Popover.Portal>
-        <Popover.Content classNames='md:is-64'>
+        <Popover.Content classNames='md:w-64'>
           <Popover.Viewport>
             <FieldEditor
-              view={model.view!}
               projection={model.projection}
               field={field}
-              registry={space?.db.schemaRegistry}
+              registry={registry}
               onSave={handleSave}
               onCancel={handleCancel}
             />

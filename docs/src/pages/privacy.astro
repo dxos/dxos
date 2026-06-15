@@ -1,0 +1,30 @@
+---
+import { getEntry, render } from 'astro:content';
+
+import WebflowLayout from '../layouts/WebflowLayout.astro';
+import WebflowNav from '../components/WebflowNav.astro';
+import WebflowFooter from '../components/WebflowFooter.astro';
+
+const entry = await getEntry('legal', 'privacy');
+const { Content } = await render(entry);
+---
+
+<WebflowLayout
+  title="Privacy | DXOS"
+  description={entry.data.description}
+  ogImage="/webflow/images/dxos-home-og-image.png"
+  wfPageId="671921152638150d7921d495"
+>
+  <WebflowNav currentPage="home" />
+  <div class="section_legal">
+    <div class="max-width-large">
+      <div class="container-large">
+        <div class="text-rich-text w-richtext">
+          <h1>{entry.data.title}</h1>
+          <Content />
+        </div>
+      </div>
+    </div>
+  </div>
+  <WebflowFooter />
+</WebflowLayout>

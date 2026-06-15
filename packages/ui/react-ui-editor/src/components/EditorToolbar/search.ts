@@ -5,15 +5,21 @@
 import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 
-import { createEditorAction } from './util';
+import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
-const createSearchAction = (getView: () => EditorView) =>
-  createEditorAction('search', () => openSearchPanel(getView()), {
-    testId: 'editor.toolbar.search',
-    icon: 'ph--magnifying-glass--regular',
-  });
+import { translationKey } from '#translations';
 
-export const createSearch = (getView: () => EditorView) => ({
-  nodes: [createSearchAction(getView)],
-  edges: [{ source: 'root', target: 'search' }],
-});
+/** Add search action to the builder. */
+export const addSearch =
+  (getView: () => EditorView): ActionGroupBuilderFn =>
+  (builder) => {
+    builder.action(
+      'search',
+      {
+        label: ['search.label', { ns: translationKey }],
+        testId: 'editor.toolbar.search',
+        icon: 'ph--magnifying-glass--regular',
+      },
+      () => openSearchPanel(getView()),
+    );
+  };

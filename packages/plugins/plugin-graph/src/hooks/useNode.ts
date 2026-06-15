@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useRxValue } from '@effect-rx/rx-react';
-import { Option } from 'effect';
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Option from 'effect/Option';
+import { useMemo } from 'react';
 
-import { type ReadableGraph, type Node, type Relation } from '@dxos/app-graph';
+import { type Graph, type Node } from '@dxos/app-graph';
 
 /**
  * React hook to get a node from the graph.
@@ -16,14 +17,39 @@ import { type ReadableGraph, type Node, type Relation } from '@dxos/app-graph';
  * @returns Node if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out to @dxos/app-graph/react.
-export const useNode = <T = any>(graph: ReadableGraph, id?: string): Node<T> | undefined => {
-  return Option.getOrElse(useRxValue(graph.node(id ?? '')), () => undefined);
+export const useNode = <T = any>(graph: Graph.ReadableGraph, id?: string): Node.Node<T> | undefined => {
+  const atom = useMemo(() => graph.node(id ?? ''), [graph, id]);
+  return Option.getOrElse(useAtomValue(atom), () => undefined);
 };
 
-export const useConnections = (graph: ReadableGraph, id?: string, relation?: Relation): Node[] => {
-  return useRxValue(graph.connections(id ?? '', relation));
+export const useConnections = (
+  graph: Graph.ReadableGraph,
+  id: string | undefined,
+  relation: Node.RelationInput,
+): Node.Node[] => {
+  return useAtomValue(graph.connections(id ?? '', relation));
 };
 
-export const useActions = (graph: ReadableGraph, id?: string): Node[] => {
-  return useRxValue(graph.actions(id ?? ''));
+/**
+ * React hook to get actions available for a node.
+ *
+ * @param graph Graph containing the node.
+ * @param id Id of the node.
+ * @returns Actions available for the node.
+ */
+export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[] => {
+  const atom = useMemo(() => graph.actions(id ?? ''), [graph, id]);
+  return useAtomValue(atom);
+};
+
+/**
+ * Subscribe to just the edge topology (inbound/outbound IDs) of a node without subscribing to node content.
+ *
+ * @param graph Graph containing the node.
+ * @param id Id of the node.
+ * @returns Edge topology for the node.
+ */
+export const useEdges = (graph: Graph.ReadableGraph, id?: string): Graph.Edges => {
+  const atom = useMemo(() => graph.edges(id ?? ''), [graph, id]);
+  return useAtomValue(atom);
 };

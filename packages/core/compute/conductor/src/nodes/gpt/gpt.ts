@@ -1,0 +1,211 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Response from '@effect/ai/Response';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as PubSub from 'effect/PubSub';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
+import * as Struct from 'effect/Struct';
+
+import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
+import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { Operation, Trace } from '@dxos/compute';
+import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
+import { assertArgument } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { Message } from '@dxos/types';
+
+import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
+import { StreamSchema } from '../../util';
+
+export const GptMessage = Schema.Struct({
+  role: Schema.Union(Schema.Literal('system'), Schema.Literal('user')),
+  message: Schema.String,
+});
+
+export type GptMessage = Schema.Schema.Type<typeof GptMessage>;
+
+export const GptInput = Schema.Struct({
+  /**
+   * System instruction.
+   */
+  systemPrompt: Schema.optional(Schema.String),
+
+  /**
+   * User prompt.
+   */
+  prompt: Schema.String,
+
+  /**
+   * Additional context to pass before the user prompt.
+   */
+  context: Schema.optional(Schema.Any),
+
+  /**
+   * Model to use.
+   */
+  model: Schema.optional(Schema.String),
+
+  /**
+   * Conversation queue.
+   * If specified, node will read the history, and write the new messages to the queue.
+   */
+  conversation: Schema.optional(Ref.Ref(Feed.Feed)),
+
+  /**
+   * History messages.
+   * Cannot be used together with `conversation`.
+   */
+  history: Schema.optional(Schema.Array(Type.getSchema(Message.Message))),
+
+  /**
+   * Tools to use.
+   */
+  tools: Schema.optional(Schema.Array(ToolId)),
+});
+
+export type GptInput = Schema.Schema.Type<typeof GptInput>;
+
+export const GptOutput = Schema.Struct({
+  /**
+   * Messages emitted by the model.
+   */
+  messages: Schema.Array(Type.getSchema(Message.Message)),
+
+  /**
+   * Artifact emitted by the model.
+   */
+  artifact: Schema.optional(Schema.Any),
+
+  /**
+   * AI response as text.
+   */
+  text: Schema.String,
+
+  /**
+   * Model's reasoning.
+   */
+  cot: Schema.optional(Schema.String),
+
+  /**
+   * Stream of tokens emitted by the model.
+   */
+  tokenStream: StreamSchema(Response.StreamPart(Toolkit.empty)),
+
+  /**
+   * Number of tokens emitted by the model.
+   */
+  tokenCount: Schema.Number,
+
+  /**
+   * Conversation queue containing the history and model's response.
+   * Present if the conversation was passed as an input.
+   */
+  conversation: Schema.optional(Ref.Ref(Feed.Feed)),
+});
+
+export type GptOutput = Schema.Schema.Type<typeof GptOutput>;
+
+export const gptNode = defineComputeNode({
+  input: GptInput,
+  output: GptOutput,
+  exec: Effect.fnUntraced(function* (input) {
+    const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
+    assertArgument(
+      history === undefined || conversation === undefined,
+      'history|conversation',
+      'Cannot use both history and conversation',
+    );
+
+    const conversationFeed = conversation
+      ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
+      : undefined;
+    const historyMessages = conversationFeed
+      ? yield* Feed.runQuery(conversationFeed, Filter.type(Message.Message))
+      : (history ?? []);
+
+    log.info('generating', { systemPrompt, prompt, historyMessages, tools });
+
+    const tokenPubSub = yield* PubSub.unbounded<Response.StreamPart<any>>();
+    const { nodeId } = yield* ComputeNodeContext;
+    const traceWriter = yield* Trace.TraceService;
+    const observer = GenerationObserver.make({
+      onPart: (event) =>
+        Effect.gen(function* () {
+          yield* Trace.write(ComputeCustomEvent, { nodeId, event });
+          yield* PubSub.publish(tokenPubSub, event);
+        }).pipe(Effect.provideService(Trace.TraceService, traceWriter)),
+    });
+
+    const request = new AiRequest.Request({ observer });
+    const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
+
+    const trace = yield* Trace.TraceService;
+
+    // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
+    const runDeps = Layer.mergeAll(
+      AiService.model(DEFAULT_EDGE_MODEL).pipe(
+        Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
+      ),
+      // TODO(dmaretskyi): Move them out.
+      ToolResolverService.layerEmpty,
+      ToolExecutionService.layerEmpty,
+      Layer.succeed(Trace.TraceService, trace),
+      Layer.succeed(Database.Service, yield* Database.Service),
+      Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
+      Layer.succeed(Operation.Service, yield* Operation.Service),
+      Layer.succeed(Registry.Service, yield* Registry.Service),
+    );
+
+    // TODO(dmaretskyi): Should this use conversation instead?
+    // TODO(dmaretskyi): Tools.
+    const resultEffect = Effect.gen(function* () {
+      const messages = yield* request
+        .run({
+          system: systemPrompt,
+          prompt: fullPrompt,
+          history: [...historyMessages],
+        })
+        .pipe(Effect.provide(runDeps));
+      log.info('messages', { messages });
+
+      if (conversationFeed) {
+        yield* Feed.append(conversationFeed, [...messages]).pipe(Effect.provide(runDeps));
+      }
+
+      const text = messages
+        .map((message) =>
+          message.sender.role === 'assistant'
+            ? message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+            : [],
+        )
+        .join('\n');
+
+      const cot = messages
+        .map((message) =>
+          message.sender.role === 'assistant'
+            ? message.blocks.flatMap((block) =>
+                block._tag === 'text' && block.disposition === 'cot' ? [block.text] : [],
+              )
+            : [],
+        )
+        .join('\n');
+
+      return { messages, text, cot, artifact: undefined, tokenCount: 0 };
+    });
+
+    return ValueBag.make<GptOutput>({
+      tokenStream: Stream.fromPubSub(tokenPubSub) as Stream.Stream<Response.StreamPart<{}>, never, never>,
+      messages: resultEffect.pipe(Effect.map(Struct.get('messages'))),
+      tokenCount: resultEffect.pipe(Effect.map(Struct.get('tokenCount'))),
+      text: resultEffect.pipe(Effect.map(Struct.get('text'))),
+      cot: resultEffect.pipe(Effect.map(Struct.get('cot'))),
+      artifact: resultEffect.pipe(Effect.map(Struct.get('artifact'))),
+      conversation: resultEffect.pipe(Effect.andThen(() => Effect.succeed(conversation))),
+    });
+  }),
+});

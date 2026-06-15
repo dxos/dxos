@@ -2,13 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
-export const DebugApp = lazy(() => import('./DebugApp'));
-export const DevtoolsOverviewContainer = lazy(() => import('./DevtoolsOverviewContainer'));
-export const SpaceGenerator = lazy(() => import('./SpaceGenerator'));
+export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings'));
 
-export * from './DebugObjectPanel';
-export * from './DebugSettings';
-export * from './DebugStatus';
-export * from './Wireframe';
+export * from './SchemaTable';
+export * from './SpaceGenerator';

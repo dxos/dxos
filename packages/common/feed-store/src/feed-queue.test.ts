@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { latch, asyncTimeout, sleep, untilError, untilPromise } from '@dxos/async';
+import { asyncTimeout, latch, sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 

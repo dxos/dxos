@@ -5,7 +5,7 @@
 // Based on https://github.com/DefinitelyTyped/DefinitelyTyped/blob/708214e/types/zen-push/index.d.ts
 // but using esm type defs.
 declare module 'zen-push' {
-  import { Observable } from 'zen-observable/esm';
+  import { type Observable } from 'zen-observable/esm';
 
   declare class PushStream<T> {
     readonly observable: Observable<T>;

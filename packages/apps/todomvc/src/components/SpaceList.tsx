@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import React, { useCallback } from 'react';
-import { useNavigate, Link, generatePath } from 'react-router-dom';
+import { Link, generatePath, useNavigate } from 'react-router-dom';
 
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaces } from '@dxos/react-client/echo';

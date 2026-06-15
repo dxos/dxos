@@ -1,0 +1,134 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof ...Schema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { ViewAnnotation } from '@dxos/schema';
+
+/**
+ * Per-column entry: ordered card ids plus an optional `hidden` flag that
+ * removes the column from the rendered board (and from the model's column
+ * list). Today only the uncategorized column is exposed in settings, but
+ * the data structure supports per-column hiding generally.
+ */
+const ArrangementColumnEntry = Schema.Struct({
+  ids: Schema.Array(Obj.ID),
+  hidden: Schema.Boolean.pipe(Schema.optional),
+});
+
+/** Keyed by columnValue. */
+const ArrangementColumns = Schema.Record({
+  key: Schema.String,
+  value: ArrangementColumnEntry,
+}).pipe(FormInputAnnotation.set(false));
+
+/** Column order and per-column card ids. */
+export const Arrangement = Schema.Struct({
+  order: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
+  columns: ArrangementColumns,
+}).pipe(FormInputAnnotation.set(false));
+
+export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
+
+//
+// Mirrors the canonical DXOS pattern (see `Trigger.Spec` in
+// `@dxos/functions/src/types/Trigger.ts` and `Sequence.Source` in
+// `@dxos/plugin-zen`): the `Type.makeObject` schema is a flat `Schema.Struct`,
+// and the discriminated union lives one level down as a single field whose
+// variants are tagged with a `kind` literal.
+//
+
+/** View-variant: items come from running the View's query (the original behaviour). */
+export const KanbanViewSpec = Schema.Struct({
+  kind: Schema.Literal('view').pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+});
+export type KanbanViewSpec = Schema.Schema.Type<typeof KanbanViewSpec>;
+
+/** Items-variant: kanban owns its items as an explicit ref array (used by externally-synced kanbans). */
+export const KanbanItemsSpec = Schema.Struct({
+  kind: Schema.Literal('items').pipe(FormInputAnnotation.set(false)),
+  /** Property path on each item that drives column membership (e.g. `'listName'`). */
+  pivotField: Schema.String,
+  /** Items owned directly by the kanban. */
+  items: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
+});
+export type KanbanItemsSpec = Schema.Schema.Type<typeof KanbanItemsSpec>;
+
+/** Discriminated union of source specs. Distinguished by `kind`. */
+export const KanbanSpec = Schema.Union(KanbanViewSpec, KanbanItemsSpec);
+export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
+
+export const Kanban = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
+  arrangement: Arrangement,
+  /** How this kanban sources its items. Discriminated by `spec.kind`. */
+  spec: KanbanSpec,
+}).pipe(
+  LabelAnnotation.set(['name']),
+  ViewAnnotation.set(['spec', 'view']),
+  Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
+  Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
+);
+
+/**
+ * Instance type; narrow on `kanban.spec.kind` (or use the guards below).
+ */
+export interface Kanban extends Type.InstanceType<typeof Kanban> {}
+
+/** Narrowed view-variant kanban. */
+export type KanbanView = Kanban & { spec: KanbanViewSpec };
+
+/** Narrowed items-variant kanban. */
+export type KanbanItems = Kanban & { spec: KanbanItemsSpec };
+
+export const isKanbanView = (kanban: Kanban): kanban is KanbanView => kanban.spec.kind === 'view';
+export const isKanbanItems = (kanban: Kanban): kanban is KanbanItems => kanban.spec.kind === 'items';
+
+type MakeViewProps = {
+  name?: string;
+  view: View.View;
+  arrangement?: Arrangement;
+};
+
+/**
+ * Make a view-variant kanban (items sourced via the View's query).
+ */
+export const make = (props: MakeViewProps): Kanban => {
+  const { name, view, arrangement } = props;
+  const order = arrangement?.order ?? [];
+  const columns = arrangement?.columns ?? {};
+  return Obj.make(Kanban, {
+    name,
+    arrangement: { order, columns },
+    spec: { kind: 'view' as const, view: Ref.make(view) },
+  });
+};
+
+type MakeItemsProps = {
+  name?: string;
+  arrangement?: Arrangement;
+  pivotField: string;
+  items?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+};
+
+/**
+ * Make an items-variant kanban (items list owned by the kanban itself, e.g. populated by a sync integration).
+ */
+export const makeItems = (props: MakeItemsProps): Kanban => {
+  const { name, arrangement, pivotField, items = [] } = props;
+  const order = arrangement?.order ?? [];
+  const columns = arrangement?.columns ?? {};
+  return Obj.make(Kanban, {
+    name,
+    arrangement: { order, columns },
+    spec: { kind: 'items' as const, pivotField, items },
+  });
+};

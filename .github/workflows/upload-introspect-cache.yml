@@ -1,0 +1,70 @@
+# Builds the @dxos/introspect core.json (symbol cache) and plugins.json
+# (plugin metadata sidecar) and uploads both to R2 so the
+# @dxos/introspect-service edge worker can read them. Triggers on push to the
+# `labs` branch; manual dispatch is also supported for ad-hoc reruns.
+#
+# Secrets required:
+#   CLOUDFLARE_API_TOKEN     — R2 write on the `dxos-introspect-cache` bucket.
+#   CLOUDFLARE_ACCOUNT_ID    — 950816f3f59b079880a1ae33fb0ec320
+
+name: Upload Introspect Cache to R2
+
+on:
+  push:
+    branches:
+      - labs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Full history so the cache's tree-SHA computation has the commit's
+          # tree object available (`git ls-tree -r -d HEAD`).
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build introspect
+        run: moon run introspect:build
+
+      - name: Build symbol cache
+        run: moon run introspect:index
+
+      # Use the workspace-pinned wrangler from the pnpm catalog (root devDep) —
+      # global `npm install -g` fails with EACCES inside the gh-actions container.
+      - name: Upload to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          ls -lh \
+            node_modules/.cache/dxos-introspect/core.json \
+            node_modules/.cache/dxos-introspect/plugins.json
+          pnpm exec wrangler r2 object put \
+            dxos-introspect-cache/dxos/labs/core.json \
+            --file=node_modules/.cache/dxos-introspect/core.json \
+            --content-type=application/json \
+            --remote
+          pnpm exec wrangler r2 object put \
+            dxos-introspect-cache/dxos/labs/plugins.json \
+            --file=node_modules/.cache/dxos-introspect/plugins.json \
+            --content-type=application/json \
+            --remote

@@ -3,32 +3,20 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { QueryFn } from '@dxos/echo-db';
+import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { AuthenticatingInvitation } from './invitations';
-import type { PropertiesTypeProps } from './schema';
 import type { Space } from './space';
+import type { SpaceProperties } from './types';
 
 /**
- * TODO(burdon): Public API (move comments here).
+ * Public database API.
  */
-// TODO(wittjosiah): Rename?
-//   https://ts.dev/style/#naming-style
-//   ClientApi? ClientProtocol?
-export interface Echo extends MulticastObservable<Space[]> {
-  /**
-   * Resolves when the default space is available.
-   */
-  waitUntilReady(): Promise<void>;
-
-  /**
-   * Observable which indicates when the default space is available.
-   */
-  // TODO(wittjosiah): Remove. Ensure default space is always available.
-  get isReady(): MulticastObservable<boolean>;
-
+// TODO(wittjosiah): Rename Database (not product name).
+export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Returns the list of spaces.
    */
@@ -46,19 +34,17 @@ export interface Echo extends MulticastObservable<Space[]> {
   get(spaceKey: PublicKey): Space | undefined;
 
   /**
-   * Returns the default space.
-   */
-  get default(): Space;
-
-  /**
    * Creates a new space.
    */
-  create(meta?: PropertiesTypeProps): Promise<Space>;
+  create(
+    props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceFeed'>,
+    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+  ): Promise<Space>;
 
   /**
    * Creates a space from the given archive.
    */
-  import(archive: SpaceArchive): Promise<Space>;
+  import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space>;
 
   /**
    * Joins an existing space using the given invitation.
@@ -66,11 +52,4 @@ export interface Echo extends MulticastObservable<Space[]> {
   join(invitation: Invitation | string): AuthenticatingInvitation;
 
   joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
-
-  /**
-   * Query all spaces.
-   * @param filter
-   * @param options
-   */
-  query: QueryFn;
 }

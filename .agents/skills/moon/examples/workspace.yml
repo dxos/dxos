@@ -1,0 +1,67 @@
+# .moon/workspace.yml - Complete example (v2 format)
+$schema: 'https://moonrepo.dev/schemas/workspace.json'
+
+# Project discovery
+projects:
+  - 'apps/*'
+  - 'packages/*'
+  - 'tools/*'
+
+# Version control
+vcs:
+  client: 'git' # v2: 'manager' renamed to 'client'
+  provider: 'github'
+  defaultBranch: 'main'
+  remoteCandidates:
+    - 'origin'
+    - 'upstream'
+  hooks:
+    pre-commit:
+      - 'moon run :lint --affected --status staged'
+    pre-push:
+      - 'moon run :test --affected'
+
+# Task pipeline (v2: 'runner' renamed to 'pipeline')
+pipeline:
+  archivableTargets:
+    - ':build'
+    - ':test'
+  cacheLifetime: '7 days'
+  inheritColorsForPipedTasks: true
+  logRunningCommand: true
+  autoCleanCache: true
+
+# Hashing
+hasher:
+  optimization: 'performance'
+  walkStrategy: 'vcs'
+
+# Code ownership
+codeowners:
+  globalPaths:
+    '/*': ['@platform-team']
+  orderBy: 'project-source'
+  sync: true # v2: 'syncOnRun' renamed to 'sync'
+
+# Constraints
+constraints:
+  enforceProjectTypeRelationships: true
+  tagRelationships:
+    frontend:
+      requires: ['shared']
+    backend:
+      requires: ['shared']
+
+# Code generation
+generator:
+  templates:
+    - './templates'
+
+# Remote caching (optional)
+# remote:  # v2: 'unstable_remote' renamed to 'remote'
+#   host: 'grpcs://cache.example.com'
+#   auth:
+#     token: 'CACHE_TOKEN'
+
+# Telemetry
+telemetry: true

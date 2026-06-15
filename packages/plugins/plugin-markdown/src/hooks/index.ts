@@ -2,4 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './useSelectCurrentThread';
+export * from './useEditorMenuOptions';
+export * from './useExtensions';
+export * from './useLinkQuery';

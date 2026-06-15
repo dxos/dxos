@@ -19,37 +19,40 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
     },
     {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../core/functions"
     },
     {
       "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
@@ -64,16 +67,19 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
-      "path": "../../ui/react-ui-stack"
+      "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../plugin-automation"
     },
     {
       "path": "../plugin-client"
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

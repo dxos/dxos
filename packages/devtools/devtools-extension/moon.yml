@@ -1,0 +1,5 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+  - vite

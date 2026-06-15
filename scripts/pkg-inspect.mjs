@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
-// Import required packages
 import 'zx/globals';
+
+import { highlight } from 'cli-highlight';
+import semver from 'semver';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { highlight } from 'cli-highlight';
 import { fetch } from 'zx';
-import semver from 'semver';
 
-// Parse command line arguments
 const argv = yargs(hideBin(process.argv))
   .usage('Usage: $0 <packageName[@version]> [options]')
   .example('$0 effect', 'List all versions with details')

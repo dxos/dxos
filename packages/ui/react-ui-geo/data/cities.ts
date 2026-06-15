@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FeatureCollection } from 'geojson';
+import { type FeatureCollection } from 'geojson';
 
 export default {
   type: 'FeatureCollection',

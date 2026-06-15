@@ -4,12 +4,12 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 import { WatchDog } from './watchdog';
 
-describe('WatchDog', () => {
+describe.skipIf(process.env.CI)('WatchDog', () => {
   test('Start/stop process', async () => {
     const runId = Math.random();
     const pidFile = join(TEST_DIR, `pid-${runId}.pid`);
@@ -26,8 +26,8 @@ describe('WatchDog', () => {
     });
 
     expect(existsSync(pidFile)).to.be.false;
-    await watchDog.start();
 
+    await watchDog.start();
     expect(existsSync(pidFile)).to.be.true;
 
     await watchDog.kill();

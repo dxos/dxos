@@ -3,7 +3,7 @@
 //
 
 import fetchMock from 'fetch-mock';
-import { afterEach, test, expect, describe } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 
 import { createIceProvider } from './ice';
 

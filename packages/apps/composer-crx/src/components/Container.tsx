@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
-import React, { useEffect, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import translations from '../translations';
+import { translations } from '../translations';
 
 export const Container = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => {
   // Monitor system theme.

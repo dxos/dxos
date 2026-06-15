@@ -8,8 +8,8 @@ import { NotificationCenter } from 'node-notifier';
 import process from 'process';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { WorkflowTable } from './WorkflowTable';
 import { useOctokit } from '../hooks';
+import { WorkflowTable } from './WorkflowTable';
 
 // TODO(burdon): Call on state change.
 const _notifier = new NotificationCenter({});

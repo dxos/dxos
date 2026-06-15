@@ -21,13 +21,19 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/effect"
+      "path": "../../common/context"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -48,13 +54,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-generator"
-    },
-    {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"
@@ -84,10 +84,16 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }

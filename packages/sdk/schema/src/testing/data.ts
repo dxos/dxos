@@ -2,18 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { type Live, Type } from '@dxos/echo';
-import { create, StoredSchema, TypedObject } from '@dxos/echo-schema';
+import { DXN, Filter, Format, JsonSchema, Query, Type, type View } from '@dxos/echo';
 
-import { createView, type ViewType } from '../view';
+import { ViewModel } from '../types';
 
-export class TestSchema extends TypedObject({
-  typename: 'example.com/type/Test',
-  version: '0.1.0',
-})({
-  id: Type.ObjectId,
+/**
+ * @deprecated Use (@dxos/echo/testing)
+ */
+// TODO(burdon): REMOVE
+export const Example = Schema.Struct({
   name: Schema.optional(
     Schema.String.pipe(
       Schema.annotations({
@@ -21,7 +20,7 @@ export class TestSchema extends TypedObject({
       }),
     ),
   ),
-  email: Type.Format.Email.pipe(Schema.optional),
+  email: Format.Email.pipe(Schema.optional),
   // TODO(burdon): Define transforms for objects?
   // address: Schema.optional(
   //   Schema.Struct({
@@ -38,27 +37,18 @@ export class TestSchema extends TypedObject({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}) {}
+}).pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
 
-export type TestType = Schema.Schema.Type<typeof TestSchema>;
+export type Example = Type.InstanceType<typeof Example>;
 
-export const testSchema: Live<StoredSchema> = create(StoredSchema, {
-  typename: 'example.com/type/Test',
+export const testSchema = Type.makeObjectFromJsonSchema({
+  typename: 'com.example.type.test',
   version: '0.1.0',
-  jsonSchema: Type.toJsonSchema(TestSchema),
+  jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(Example)),
 });
 
-export const testView: Live<ViewType> = createView({
+export const testView: View.View = ViewModel.make({
   name: 'Test',
-  typename: testSchema.typename,
-  jsonSchema: Type.toJsonSchema(TestSchema),
+  query: Query.select(Filter.type(Example)),
+  jsonSchema: JsonSchema.toJsonSchema(Example),
 });
-
-export const testData: TestType = {
-  id: Type.ObjectId.random(),
-  name: 'Tester',
-  email: 'test@example.com',
-  // address: {
-  //   zip: '11205',
-  // },
-};

@@ -1,0 +1,146 @@
+/**
+ * Main theme.
+ */
+
+/**
+ * Establish CSS cascade layer order before Tailwind sets its own.
+ * First mention of a layer name wins its position in the order.
+ *
+ * NOTE: `utilities` must be last so it overrides all base and component layers.
+ * NOTE: This must be in sync with the `transformIndexHtml` function in `packages/ui/ui-theme/src/plugins/plugin.ts`.
+ */
+@layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
+
+/**
+ * `source(none)` disables Tailwind 4's automatic content discovery (which
+ * scans the project root, including `publicDir`). With auto-detection on,
+ * every write to `public/icons.svg` from `vite-plugin-icons` triggers a
+ * Tailwind CSS regeneration, which invalidates `main.css` through its
+ * import graph and produces a 3–5-ping HMR storm per icon-sprite write
+ * during cold-start (icons land in tight bursts as plugin chunks stream
+ * in). Explicit `@source` directives below replace the auto-scan with a
+ * stable, source-only set.
+ */
+@import 'tailwindcss' source(none);
+
+/* @theme extensions */
+@import './css/theme/animation.css';
+@import './css/theme/border.css';
+@import './css/theme/palette.css';
+@import './css/theme/semantic.css';
+@import './css/theme/spacing.css';
+@import './css/theme/styles.css';
+@import './css/theme/text.css';
+
+/* @layer dx-base, dx-tokens */
+@import './css/base/base.css';
+@import './css/base/typography.css';
+
+/* @layer dx-components (components) */
+@import './css/components/button.css';
+@import './css/components/card.css';
+@import './css/components/checkbox.css';
+@import './css/components/dialog.css';
+@import './css/components/focus.css';
+@import './css/components/icon.css';
+@import './css/components/panel.css';
+@import './css/components/link.css';
+@import './css/components/scrollbar.css';
+@import './css/components/state.css';
+@import './css/components/surface.css';
+@import './css/components/tag.css';
+@import './css/components/text.css';
+
+/* @layer dx-components (layout) */
+@import './css/layout/main.css';
+@import './css/layout/native.css';
+@import './css/layout/positioning.css';
+@import './css/layout/size.css';
+
+/* @layer dx-utilities */
+@import './css/utilities.css';
+
+/* Third-party integrations */
+@import './css/integrations/codemirror.css';
+@import './css/integrations/tldraw.css';
+
+/**
+ * With `source(none)` on the Tailwind import above, these are the *only*
+ * paths Tailwind scans for utility classes. Cover every workspace source
+ * directory so lazy-loaded plugin / UI / SDK chunks don't surface new
+ * utilities mid-session, and root-level HTML entrypoints (index.html,
+ * internal.html, …) are visible too.
+ *
+ * Paths are relative to this file (`packages/ui/ui-theme/src/main.css`):
+ *   ../../../          → `packages/`
+ *   ../../../../tools/ → `tools/`
+ *
+ * Tailwind ignores `node_modules` and common build/output dirs by default,
+ * so a broad workspace glob is safe *for scanning*.
+ *
+ * NOTE: Tailwind's scanner respects `.gitignore` (so `dist/` is never
+ * scanned), but it hands Vite a coarse `dir-dependency` glob and Vite
+ * re-expands that itself, ignoring only `node_modules`. That re-expansion
+ * sweeps `dist/**` `.d.ts` files into the watch set and causes a `main.css`
+ * HMR storm on every package rebuild. Build outputs are excluded from the
+ * dev watcher in `plugins/ThemePlugin.ts` (`server.watch.ignored`) rather
+ * than here, because `@source not` does NOT propagate to the glob Vite
+ * re-expands.
+ */
+@source '../../../**/*.{ts,tsx,html}';
+@source '../../../../tools/**/*.{ts,tsx,html}';
+
+/**
+ * Exclude generated/static data files that have no Tailwind classes but are
+ * large enough to dominate scan time. The oxide scanner tokenizes every byte;
+ * a single 5MB geo-data file can pin Vite at 100% CPU for tens of seconds on
+ * a cold start.
+ */
+@source not '../../../ui/react-ui-geo/data/**';
+@source not '../../../ui/solid-ui-geo/data/**';
+@source not '../../../apps/composer-app/src/plugins/welcome/components/Welcome/hero-image.ts';
+
+/**
+ * Force-emit CSS variables for the full color palette for all:
+ * --color-{hue}-{shade}
+ * --color-{hue}-{style}
+ */
+@source inline('bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}');
+@source inline('bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{bg,bg-hover,fg,surface,text,border}');
+@source inline('bg-{primary,secondary}-{50,100,200,300,400,500,600,700,800,900,950}');
+@source inline('border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border');
+@source inline('bg-{info,success,warning,error}-{bg,surface,fg,text,border}');
+@source inline('border-{info,success,warning,error}-border');
+
+/**
+ * Force-emit tokens consumed by web components / .pcss files outside the
+ * Tailwind source-scan graph (e.g. lit-grid's dx-grid.pcss uses var(--color-grid-line)).
+ */
+@source inline('bg-grid-{surface,fg,line,highlight,comment,comment-active,selection-surface,selection-fg}');
+/* 
+ * Sidebar surfaces alias each other (e.g. header-surface -> l0-surface); force-emit so the vars
+ * exist in apps that use the alias but not the underlying utility (e.g. devtools). 
+ */
+@source inline('bg-{l0,r0,l1,r1}-surface');
+
+/**
+ * Plugins must come after all imports.
+ */
+@plugin '@tailwindcss/forms';
+@plugin 'tailwind-scrollbar';
+@plugin 'tailwindcss-radix';
+
+/**
+ * Class-based dark mode.
+ * The `.dark` class on an ancestor toggles `dark:` utilities.
+ */
+@variant dark (&:where(.dark, .dark *));
+
+/** Mobile */
+@custom-variant pointer-coarse (@media (pointer: coarse));
+/** Web */
+@custom-variant pointer-fine (@media (pointer: fine));
+/** Supports mouse/trackpad (Web) */
+@custom-variant hover-hover (@media (hover: hover));
+/** Active navigation */
+@custom-variant is-current (&[aria-current]:not([aria-current='false']));

@@ -2,36 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import type { Meta, StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextBox, type TextBoxProps } from './TextBox';
 
 const DefaultStory = (props: TextBoxProps) => {
   return (
-    <div className='flex w-[300px] rounded border border-primary-500'>
+    <div className='flex w-[300px] rounded-xs border border-primary-500'>
       <TextBox {...props} onEnter={console.log} />
     </div>
   );
 };
 
-const meta: Meta<TextBoxProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/TextBox',
   component: TextBox,
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof TextBox>;
 
 export default meta;
 
-type Story = StoryObj<TextBoxProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Wrapping: Story = {
   args: {

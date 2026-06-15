@@ -5,7 +5,7 @@
 const REGEX = /Copyright [0-9]+ DXOS.org/;
 const TEMPLATE = ['//', `// Copyright ${new Date().getFullYear()} DXOS.org`, '//', ''].join('\n') + '\n';
 
-module.exports = {
+export default {
   pattern: REGEX,
   meta: {
     type: 'layout',
@@ -19,7 +19,7 @@ module.exports = {
   create: (context) => {
     return {
       Program: (node) => {
-        if (!context.getSource().match(REGEX)) {
+        if (!context.sourceCode.getText().match(REGEX)) {
           context.report({
             node,
             message: 'Missing copyright header',

@@ -2,75 +2,45 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
-import { RefArray } from '@dxos/react-client/echo';
+import { Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
-import { CanvasType, DiagramType, SketchAction } from './types';
-import { serializer } from './util';
+import {
+  AppGraphBuilder,
+  AppGraphSerializer,
+  NavigationResolver,
+  CommentConfig,
+  CreateObject,
+  OperationHandler,
+  ReactSurface,
+  SketchSettings,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { Sketch } from '#types';
 
-export const SketchPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: SketchSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: DiagramType.typename,
-          metadata: {
-            icon: 'ph--compass-tool--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
-            serializer,
-            comments: 'unanchored',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: DiagramType,
-            getIntent: () => createIntent(SketchAction.Create),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [CanvasType]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.AppGraphReady,
-      activate: AppGraphSerializer,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const SketchPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [Sketch.Canvas, Sketch.Sketch] }),
+  AppPlugin.addSettingsModule({ activate: SketchSettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'app-graph-serializer',
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: AppGraphSerializer,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default SketchPlugin;

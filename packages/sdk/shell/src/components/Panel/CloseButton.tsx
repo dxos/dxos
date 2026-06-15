@@ -2,23 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
+import { translationKey } from '../../translations';
+
+/**
+ * @deprecated use IconButton directly
+ */
 export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   return (
-    <Button
+    <IconButton
+      icon='ph--x--bold'
+      size={4}
+      label={t('exit.label')}
+      iconOnly
       variant='ghost'
-      classNames={mx('plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]')}
+      classNames='py-0 px-2 absolute top-0 right-0 z-[1]'
       onClick={() => onDone?.()}
       {...props}
-    >
-      <X weight='bold' className={getSize(4)} />
-      <span className='sr-only'>{t('exit label')}</span>
-    </Button>
+    />
   );
 };

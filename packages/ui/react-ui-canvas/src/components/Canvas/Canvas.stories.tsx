@@ -2,18 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Canvas } from './Canvas';
-import { useCanvasContext, useWheel } from '../../hooks';
+import { useCanvasContext, useDrag, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
+import { Canvas } from './Canvas';
 
 const size = 128;
 
@@ -33,7 +31,7 @@ const DefaultStory = (props: GridProps) => {
 
 const TwoCanvases = (props: GridProps) => {
   return (
-    <div className='grid grid-cols-2 gap-2 w-full h-full'>
+    <div className='grid grid-cols-2 gap-2 h-full w-full'>
       <div className='h-full relative'>
         <Canvas>
           <Grid {...props} />
@@ -52,6 +50,7 @@ const TwoCanvases = (props: GridProps) => {
 
 const Content = () => {
   useWheel();
+  useDrag();
   return (
     <div>
       {points.map(({ x, y }, i) => (
@@ -88,22 +87,25 @@ const Item = (p: Point) => {
   );
 };
 
-const meta: Meta<GridProps> = {
+const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof Grid>;
 
 export default meta;
 
-type Story = StoryObj<GridProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { size: 16 },
 };
 
 export const SideBySide: Story = {
-  args: { size: 16 },
   render: TwoCanvases,
+  args: { size: 16 },
 };

@@ -2,101 +2,94 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { type AiServiceClient } from '@dxos/ai';
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
-import { Filter, type Obj, Query, Type } from '@dxos/echo';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
+import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
-import { type ChannelType } from '@dxos/plugin-thread/types';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { getSpace, type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { type Space } from '@dxos/react-client/echo';
+import { type Channel, type Message } from '@dxos/types';
 
-import { MeetingCapabilities } from './capabilities';
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, MeetingType, type MeetingSettingsProps } from '../types';
+import { MeetingOperation } from '#types';
+import { Meeting, MeetingCapabilities } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default (context: PluginContext) => {
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  const client = context.getCapability(ClientCapabilities.Client);
-  const aiClient = context.getCapability(AssistantCapabilities.AiClient);
-  const state = context.getCapability(MeetingCapabilities.State);
-  const settings = context
-    .getCapability(Capabilities.SettingsStore)
-    .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
 
-  return contributes(ThreadCapabilities.CallExtension, {
-    onJoin: async ({ channel }: { channel?: ChannelType }) => {
-      const identity = client.halo.identity.get();
-      invariant(identity);
-      const space = getSpace(channel);
-      invariant(space);
+    const store = capabilities.get(MeetingCapabilities.State);
 
-      let messageEnricher;
-      if (aiClient && settings.entityExtraction) {
-        messageEnricher = createEntityExtractionEnricher({
-          aiClient: aiClient.value,
-          // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
-          //  This forced me to add a dependency on markdown plugin.
-          //  This will be replaced with a vector search index anyway, so its not a big deal.
-          contextTypes: [DocumentType, DataType.Person, DataType.Organization],
-          space,
-        });
-      }
+    return Capability.contributes(CallsCapabilities.EventHandler, {
+      onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
+        const client = capabilities.get(ClientCapabilities.Client);
+        const identity = client.halo.identity.get();
+        invariant(identity);
 
-      // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      state.transcriptionManager = await context
-        .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
-        .open();
-    },
-    onLeave: async () => {
-      await state.transcriptionManager?.close();
-      state.transcriptionManager = undefined;
-      state.activeMeeting = undefined;
-    },
-    onCallStateUpdated: async (callState: CallState) => {
-      const typename = Type.getTypename(MeetingType);
-      const activity = typename ? callState.activities?.[typename] : undefined;
-      if (!activity?.payload) {
-        return;
-      }
+        // let messageEnricher;
+        // if (aiClient && settings.entityExtraction) {
+        //   messageEnricher = createEntityExtractionEnricher({
+        //     aiClient: aiClient.value,
+        //     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
+        //     //  This forced me to add a dependency on markdown plugin.
+        //     //  This will be replaced with a vector search index anyway, so its not a big deal.
+        //     contextTypes: [DocumentType, Person.Person, Organization.Organization],
+        //     space,
+        //   });
+        // }
 
-      const payload: MeetingPayload = activity.payload;
-      await dispatch(createIntent(MeetingAction.HandlePayload, payload));
-    },
-    onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
-      void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
-      void state.transcriptionManager?.setRecording(isSpeaking);
-    },
-  });
-};
+        // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
+        const transcriptionManager = await capabilities
+          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
+          .open();
+        store.updateState((current) => ({ ...current, transcriptionManager }));
+      },
+      onLeave: async () => {
+        const { transcriptionManager } = store.state;
+        await transcriptionManager?.close();
+        store.updateState(() => ({}));
+      },
+      onCallStateUpdated: async (callState: CallState) => {
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        const typename = Type.getTypename(Meeting.Meeting);
+        const activity = typename ? callState.activities?.[typename] : undefined;
+        if (!activity?.payload) {
+          return;
+        }
+
+        const payload: MeetingPayload = activity.payload;
+        await invokePromise(MeetingOperation.HandlePayload, payload);
+      },
+      onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+        const { transcriptionManager } = store.state;
+        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        void transcriptionManager?.setRecording(isSpeaking);
+      },
+    });
+  }),
+);
 
 type EntityExtractionEnricherFactoryOptions = {
-  aiClient: AiServiceClient;
-  contextTypes: Schema.Schema.AnyNoContext[];
+  contextTypes: (Type.AnyObj | Type.AnyRelation)[];
   space: Space;
 };
 
-const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
-  const executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: aiClient } }));
-
-  return async (message: DataType.Message) => {
-    const { objects } = await space.db
-      .query(Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Any>)))))
+const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
+  return async (message: Message.Message) => {
+    const objects = await space.db
+      .query(Query.select(Filter.or(...contextTypes.map((type) => Filter.type(type)))))
       .run();
 
     log.info('context', { objects });
@@ -104,10 +97,9 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
       input: {
         message,
-        objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
+        objects: await Promise.all(objects.filter(Obj.isObject).map((obj) => processContextObject(obj))),
       },
-      function: extractionAnthropicFn,
-      executor,
+      function: extractionAnthropicFunction,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });
 
@@ -117,7 +109,7 @@ const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: Entit
 };
 
 // TODO(dmaretskyi): Use Type.Any
-const processContextObject = async (object: Obj.Any): Promise<any> => {
+const processContextObject = async (object: Obj.Unknown): Promise<any> => {
   // TODO(dmaretskyi): Documents need special processing is the content is behind a ref.
   // TODO(dmaretskyi): Think about a way to handle this serialization with a decorator.
   // if (Obj.instanceOf(DocumentType, object)) {

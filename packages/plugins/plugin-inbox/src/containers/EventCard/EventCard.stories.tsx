@@ -1,0 +1,69 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useMemo } from 'react';
+
+import { Obj } from '@dxos/echo';
+import { random } from '@dxos/random';
+import { Card } from '@dxos/react-ui';
+import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
+import { withTheme } from '@dxos/react-ui/testing';
+import { Event } from '@dxos/types';
+
+import { EventCard } from './EventCard';
+
+random.seed(1234);
+
+const createMockEvent = (): Event.Event =>
+  Event.make({
+    startDate: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
+    endDate: new Date(Date.now() + 24 * 60 * 60 * 2_000).toISOString(),
+    title: random.lorem.sentence(3),
+    description: random.lorem.sentences(2),
+    attendees: [
+      {
+        name: random.person.fullName(),
+        email: random.internet.email(),
+      },
+      {
+        name: random.person.fullName(),
+        email: random.internet.email(),
+      },
+    ],
+    owner: {
+      name: random.person.fullName(),
+      email: random.internet.email(),
+    },
+  });
+
+const EventCardStory = () => {
+  const subject = useMemo(() => createMockEvent(), []);
+  return (
+    <IntrinsicCardContainer>
+      <Card.Root>
+        <Card.Header>
+          <Card.DragHandle />
+          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+        </Card.Header>
+        <EventCard role='card--content' subject={subject} />
+      </Card.Root>
+    </IntrinsicCardContainer>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-inbox/containers/EventCard',
+  component: EventCardStory,
+  decorators: [withTheme()],
+  parameters: {
+    layout: 'centered',
+  },
+} satisfies Meta<typeof EventCardStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -20,8 +20,9 @@ test.describe('Collection tests', () => {
 
   test('create collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await expect(host.getObject(2)).toContainText('New collection');
+    await host.toggleSection('spacePlugin.collectionsSection');
+    await host.createObject({ type: 'Collection' });
+    await expect(host.getObject()).toContainText('New collection');
   });
 
   test('re-order collections', async ({ browserName }) => {
@@ -29,17 +30,18 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.renameObject('Collection 1', 2);
-    await host.renameObject('Collection 2', 3);
+    await host.toggleSection('spacePlugin.collectionsSection');
+    await host.createObject({ type: 'Collection' });
+    await host.createObject({ type: 'Collection' });
+    await host.renameObject('Collection 1', 0);
+    await host.renameObject('Collection 2', 1);
 
     // Items are 32px tall.
     await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 0, y: -15 });
 
     // Folders are now in reverse order.
-    await expect(host.getObject(2)).toContainText('Collection 2');
-    await expect(host.getObject(3)).toContainText('Collection 1');
+    await expect(host.getObject(0)).toContainText('Collection 2');
+    await expect(host.getObject(1)).toContainText('Collection 1');
   });
 
   test('drag object into collection', async ({ browserName }) => {
@@ -47,46 +49,52 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.toggleCollectionCollapsed(3);
-    await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 0, y: 0 });
-    // Document is now inside the collection.
-    const docId = await host.getObjectByName('New document').getAttribute('id');
-    expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
+    await host.toggleSection('spacePlugin.collectionsSection');
+    await host.createObject({ type: 'Collection' });
+    await host.createObject({ type: 'Collection' });
+    await host.renameObject('Collection 1', 0);
+    await host.renameObject('Collection 2', 1);
+
+    await host.toggleCollectionCollapsed(1);
+    await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), { x: 0, y: 0 });
+    // Collection 1 is now inside the Collection 2.
+    const collection1 = await host.getObjectByName('Collection 1').getAttribute('id');
+    expect(await host.getObjectByName('Collection 2').getAttribute('aria-owns')).toEqual(collection1);
   });
 
   test('delete a collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.toggleCollectionCollapsed(2);
+    await host.toggleSection('spacePlugin.collectionsSection');
+    await host.createObject({ type: 'Collection' });
+    await host.toggleCollectionCollapsed(0);
     // Create an item inside the collection.
-    await host.createObject({ type: 'Document', nth: 3 });
-    await expect(host.getObjectLinks()).toHaveCount(4);
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await expect(host.getObjectLinks()).toHaveCount(2);
 
     // Delete the containing collection.
-    await host.deleteObject(2);
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await host.deleteObject(0);
+    await expect(host.getObjectLinks()).toHaveCount(0);
   });
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 0 });
-    await host.toggleCollectionCollapsed(2);
+    await host.toggleSection('spacePlugin.collectionsSection');
+    await host.createObject({ type: 'Collection' });
+    await host.toggleCollectionCollapsed(0);
     // Create a collection inside the collection.
-    await host.createObject({ type: 'Collection', nth: 3 });
-    await host.toggleCollectionCollapsed(3);
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.toggleCollectionCollapsed(1);
     // Create an item inside the contained collection.
-    await host.createObject({ type: 'Document', nth: 4 });
-    await expect(host.getObjectLinks()).toHaveCount(5);
+    await host.createObject({ type: 'Collection', nth: 1 });
+    await expect(host.getObjectLinks()).toHaveCount(3);
 
     // Delete the containing collection.
-    await host.deleteObject(2);
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await host.deleteObject(0);
+    await expect(host.getObjectLinks()).toHaveCount(0);
 
     // Undo the deletion.
     await host.toastAction(0);
 
-    await expect(host.getObjectLinks()).toHaveCount(5);
+    await expect(host.getObjectLinks()).toHaveCount(3);
   });
 });

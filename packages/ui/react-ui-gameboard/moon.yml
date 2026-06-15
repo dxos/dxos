@@ -1,0 +1,20 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+    deps:
+      - gen-pieces
+  gen-pieces:
+    command: pnpm run --silent gen:pieces
+    inputs:
+      - assets/*.*
+    outputs:
+      - src/gen

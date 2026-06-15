@@ -21,19 +21,25 @@
       "path": "../../common/keyboard"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../common/keys"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../plugin-graph"
     }
   ]
 }

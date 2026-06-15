@@ -2,15 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createEditorAction } from './util';
+import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
-const createImageUploadAction = (onImageUpload: () => void) =>
-  createEditorAction('image', onImageUpload, {
-    testId: 'editor.toolbar.image',
-    icon: 'ph--image-square--regular',
-  });
+import { translationKey } from '#translations';
 
-export const createImageUpload = (onImageUpload: () => void) => ({
-  nodes: [createImageUploadAction(onImageUpload)],
-  edges: [{ source: 'root', target: 'image' }],
-});
+/** Add image upload action to the builder. */
+export const addImageUpload =
+  (onImageUpload: () => void): ActionGroupBuilderFn =>
+  (builder) => {
+    builder.action(
+      'image',
+      {
+        label: ['image.label', { ns: translationKey }],
+        testId: 'editor.toolbar.image',
+        icon: 'ph--image-square--regular',
+      },
+      onImageUpload,
+    );
+  };

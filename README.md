@@ -1,4 +1,4 @@
-   ![DXOS](./assets/images/github-repo-banner.png)
+![DXOS](./assets/images/github-repo-banner.png)
 
 # DXOS
 
@@ -21,10 +21,10 @@ DXOS is also the home of [Composer](https://composer.space) — an extensible ID
 
 ## Documentation
 
-- [⚡️ Quick Start](https://docs.dxos.org/guide/getting-started.html)
-- [📖 Developer Guide](https://docs.dxos.org/guide)
-- [📚 API Reference](https://docs.dxos.org/api)
-- [🔧 Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
+- [🔩 SDK Intro](https://docs.dxos.org/)
+- [🔧 Composer Intro](https://docs.dxos.org/composer/introduction/)
+- [📚 API Reference](https://docs.dxos.org/additional-resources/api-reference/)
+- [💻 Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
 
 ## DXOS Resources
 
@@ -36,4 +36,4 @@ DXOS is also the home of [Composer](https://composer.space) — an extensible ID
 
 Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs). To learn about how to set up for development and contribution to DXOS, see the [Repository Guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md)
 
-License: [MIT](./LICENSE) Copyright 2022 © DXOS
+License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2022 © DXOS

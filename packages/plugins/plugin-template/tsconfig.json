@@ -18,40 +18,40 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-space"
     },
     {
-      "path": "../plugin-space"
+      "path": "../plugin-testing"
     }
   ]
 }

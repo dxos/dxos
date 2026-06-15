@@ -2,52 +2,49 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
+import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { type DebugPluginOptions } from '#types';
 
-// TODO(wittjosiah): Rename to DevtoolsPlugin?
-export const DebugPlugin = () => {
-  setupDevtools();
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
-  return definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: DebugSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-  ]);
-};
+// TODO(wittjosiah): Factor out DevtoolsPlugin?
+
+export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addReactContextModule({ activate: ReactContext }),
+  AppPlugin.addSettingsModule({ activate: DebugSettings }),
+  Plugin.addModule(({ logStore }) => ({
+    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
+    activatesOn: ActivationEvents.SetupReactSurface,
+    activate: () => ReactSurface({ logStore }),
+  })),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'setup-devtools',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.sync(() => setupDevtools()),
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
 
 const setupDevtools = () => {
   (globalThis as any).composer ??= {};
 
   // Used to test how composer handles breaking protocol changes.
   (globalThis as any).composer.changeStorageVersionInMetadata = async (version: number) => {
-    const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
+    const { changeStorageVersionInMetadata } = await import('@dxos/echo-host/testing');
     const { createStorageObjects } = await import('@dxos/client-services');
     const client: Client = (window as any).dxos.client;
     const config = client.config;
@@ -57,3 +54,5 @@ const setupDevtools = () => {
     location.pathname = '/';
   };
 };
+
+export default DebugPlugin;

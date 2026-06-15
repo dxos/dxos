@@ -1,84 +1,163 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/neutral/capabilities/node.mjs",
+      "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#capabilities/node": {
+      "source": "./src/capabilities/node.ts",
+      "types": "./dist/types/src/capabilities/node.d.ts",
+      "default": "./dist/lib/neutral/capabilities/node.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
+    "#plugin": {
+      "source": {
+        "workerd": "./src/ClientPlugin.workerd.ts",
+        "node": "./src/ClientPlugin.node.ts",
+        "default": "./src/ClientPlugin.ts"
+      },
+      "types": "./dist/types/src/ClientPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ClientPlugin.workerd.mjs",
+      "node": "./dist/lib/neutral/ClientPlugin.node.mjs",
+      "default": "./dist/lib/neutral/ClientPlugin.mjs"
+    },
+    "#testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
+    }
+  },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/neutral/index.mjs"
     },
-    "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node-esm/types.mjs"
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/client-services": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
-    "effect": "3.14.21",
-    "react-qr-rounded": "^1.0.0"
+    "@effect/cli": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react-qr-rounded": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
-    "@dxos/live-object": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "@phosphor-icons/react": "^2.1.5",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.14.21",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/printer": "catalog:",
+    "@effect/printer-ansi": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "@phosphor-icons/react": "^2.1.5",
-    "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

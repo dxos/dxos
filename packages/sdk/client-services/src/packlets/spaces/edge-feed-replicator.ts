@@ -15,14 +15,14 @@ import { log, logInfo } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
-  MessageSchema as RouterMessageSchema,
   type Message as RouterMessage,
+  MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
-export type EdgeFeedReplicatorParams = {
+export type EdgeFeedReplicatorProps = {
   messenger: EdgeConnection;
   spaceId: SpaceId;
 };
@@ -47,7 +47,7 @@ export class EdgeFeedReplicator extends Resource {
    */
   private _pushMutex = new ComplexMap<PublicKey, Mutex>(PublicKey.hash);
 
-  constructor({ messenger, spaceId }: EdgeFeedReplicatorParams) {
+  constructor({ messenger, spaceId }: EdgeFeedReplicatorProps) {
     super();
     this._messenger = messenger;
     this._spaceId = spaceId;
@@ -87,7 +87,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _handleReconnect(): Promise<void> {
     await this._resetConnection();
-    if (this._messenger.status === EdgeStatus.CONNECTED) {
+    if (this._messenger.status.state === EdgeStatus.ConnectionState.CONNECTED) {
       this._startReplication();
     }
   }
@@ -132,7 +132,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _replicateFeed(ctx: Context, feed: FeedWrapper<any>): Promise<void> {
     log('replicateFeed', { key: feed.key });
-    await this._sendMessage({
+    await this._sendMessage(ctx, {
       type: 'get-metadata',
       feedKey: feed.key.toHex(),
     });
@@ -142,7 +142,7 @@ export class EdgeFeedReplicator extends Resource {
     });
   }
 
-  private async _sendMessage(message: ProtocolMessage): Promise<void> {
+  private async _sendMessage(ctx: Context, message: ProtocolMessage): Promise<void> {
     if (!this._connectionCtx) {
       log('message dropped because connection was disposed');
       return;
@@ -160,6 +160,7 @@ export class EdgeFeedReplicator extends Resource {
 
     log('send', { type: message.type });
     await this._messenger.send(
+      ctx,
       buf.create(RouterMessageSchema, {
         source: {
           identityKey: this._messenger.identityKey,
@@ -194,7 +195,7 @@ export class EdgeFeedReplicator extends Resource {
           if (message.length > feed.length) {
             log('requesting missing blocks', logMeta);
 
-            await this._sendMessage({
+            await this._sendMessage(this._connectionCtx!, {
               type: 'request',
               feedKey: feedKey.toHex(),
               range: { from: feed.length, to: message.length },
@@ -202,7 +203,7 @@ export class EdgeFeedReplicator extends Resource {
           } else if (message.length < feed.length) {
             log('pushing blocks to remote', logMeta);
 
-            await this._pushBlocks(feed, message.length, feed.length);
+            await this._pushBlocks(this._connectionCtx!, feed, message.length, feed.length);
           }
 
           break;
@@ -229,7 +230,7 @@ export class EdgeFeedReplicator extends Resource {
     });
   }
 
-  private async _pushBlocks(feed: FeedWrapper<any>, from: number, to: number): Promise<void> {
+  private async _pushBlocks(ctx: Context, feed: FeedWrapper<any>, from: number, to: number): Promise<void> {
     log('pushing blocks', { feed: feed.key.toHex(), from, to });
 
     const blocks: FeedBlock[] = await Promise.all(
@@ -247,7 +248,7 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    await this._sendMessage({
+    await this._sendMessage(ctx, {
       type: 'data',
       feedKey: feed.key.toHex(),
       blocks,
@@ -283,12 +284,13 @@ export class EdgeFeedReplicator extends Resource {
 
     const remoteLength = this._remoteLength.get(feed.key)!;
     if (remoteLength < feed.length) {
-      await this._pushBlocks(feed, remoteLength, feed.length);
+      await this._pushBlocks(this._connectionCtx!, feed, remoteLength, feed.length);
     }
   }
 
   private _createConnectionContext(): Context {
     const connectionCtx = new Context({
+      parent: this._ctx,
       onError: async (err: any) => {
         if (connectionCtx !== this._connectionCtx) {
           return;

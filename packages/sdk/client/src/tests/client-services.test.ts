@@ -2,19 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 import { Client } from '../client';
-import { syncItemsAutomerge, TestBuilder } from '../testing';
+import { TestBuilder, syncItemsAutomerge } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -40,7 +40,7 @@ describe('Client services', () => {
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
-    onTestFinished(() => peer.close());
+    onTestFinished(() => peer.close(Context.default()));
 
     const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
@@ -53,13 +53,12 @@ describe('Client services', () => {
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.level = () => createTestLevel();
     onTestFinished(() => testBuilder.destroy());
 
     {
       const peer1 = testBuilder.createClientServicesHost();
       await peer1.open(new Context());
-      onTestFinished(() => peer1.close());
+      onTestFinished(() => peer1.close(Context.default()));
 
       {
         const [client1a, server1a] = testBuilder.createClientServer(peer1);
@@ -90,7 +89,7 @@ describe('Client services', () => {
     {
       const peer2 = testBuilder.createClientServicesHost();
       await peer2.open(new Context());
-      onTestFinished(() => peer2.close());
+      onTestFinished(() => peer2.close(Context.default()));
 
       {
         const [client2a, server2a] = testBuilder.createClientServer(peer2);
@@ -171,7 +170,7 @@ describe('Client services', () => {
     // Ensure peer2 shows up as offline to peer1.
     await client2.destroy();
     await server2.close();
-    await peer2.close();
+    await peer2.close(Context.default());
 
     await expect
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
@@ -200,6 +199,7 @@ describe('Client services', () => {
 
       await client1.initialize();
       await client2.initialize();
+      await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
       await client1.halo.createIdentity({ displayName: 'Peer 1' });
       await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
@@ -208,12 +208,12 @@ describe('Client services', () => {
     onTestFinished(async () => {
       await client1.destroy();
       await server1.close();
-      await peer1.close();
+      await peer1.close(Context.default());
     });
     onTestFinished(async () => {
       await client2.destroy();
       await server2.close();
-      await peer2.close();
+      await peer2.close(Context.default());
     });
 
     const hostSpace = await client1.spaces.create();

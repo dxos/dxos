@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { lazy } from 'react';
-
-export const StackMain = lazy(() => import('./StackMain'));
-
+export * from './StackContext';
+export * from './StackSection';
 export * from './StackSettings';

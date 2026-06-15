@@ -6,20 +6,19 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
-import { styles } from '../styles';
 
 export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className='flex is-full bs-full overflow-hidden'>
+    <div className='dx-container flex'>
       <Sidebar />
-      <div className={mx('flex flex-col grow overflow-hidden', styles.bgPanel)}>
-        <ErrorBoundary key={pathname}>
+      <div className='flex flex-col grow overflow-hidden'>
+        <ErrorBoundary key={pathname} name='devtools.root'>
           <Suspense>
             <Outlet />
           </Suspense>
@@ -33,28 +32,15 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <div
-      className={mx(
-        'flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto border-r',
-        styles.border,
-        styles.bgPanel,
-      )}
-    >
-      <div className={mx('flex flex-col gap-4 divide-y', styles.border)}>
+    <ScrollArea.Root orientation='vertical' classNames='w-[180px] border-e border-separator'>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
-            <div className='flex text-sm pis-4 py-1'>{section.title}</div>
+            <div className='flex text-sm ps-4 py-1'>{section.title}</div>
             <div>
-              {section.items?.map(({ id, title, Icon }) => (
-                <div
-                  key={id}
-                  className={mx(
-                    'flex items-center pis-4 gap-2',
-                    styles.sidebarItem,
-                    id === pathname && styles.selected,
-                  )}
-                >
-                  <Icon className={getSize(4)} />
+              {section.items?.map(({ id, title, icon }) => (
+                <div key={id} className={mx('flex items-center ps-4 gap-2', id === pathname && 'bg-current-surface')}>
+                  <Icon icon={icon} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
                   </Link>
@@ -63,10 +49,10 @@ const Sidebar = () => {
             </div>
           </div>
         ))}
-      </div>
-      <div className='grow' />
-      <Footer />
-    </div>
+        <div className='grow' />
+        <Footer />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

@@ -2,41 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { faker } from '@dxos/random';
+import { random } from '@dxos/random';
 
-import { Tooltip } from './Tooltip';
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
+import { Tooltip } from './Tooltip';
 
-type StoryProps = {
+type DefaultStoryProps = {
   tooltips: { label: string; content: string }[];
   defaultOpen?: boolean;
 };
 
-const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
-  <Tooltip.Provider defaultOpen={defaultOpen}>
-    <div role='none' className='is-32'>
-      {tooltips.map(({ label, content }, i) => (
-        <Tooltip.Trigger asChild key={i} content={content} side='right'>
-          <Button classNames='block is-full'>{label}</Button>
-        </Tooltip.Trigger>
-      ))}
-    </div>
-  </Tooltip.Provider>
-);
+const DefaultStory = ({ tooltips, defaultOpen }: DefaultStoryProps) => {
+  return (
+    <Tooltip.Provider defaultOpen={defaultOpen}>
+      <div className='w-32'>
+        {tooltips.map(({ label, content }, i) => (
+          <Tooltip.Trigger asChild key={i} content={content} side='right'>
+            <Button classNames='block w-full'>{label}</Button>
+          </Tooltip.Trigger>
+        ))}
+      </div>
+    </Tooltip.Provider>
+  );
+};
 
-export default {
-  title: 'ui/react-ui-core/Tooltip',
-  component: Tooltip,
+const meta = {
+  title: 'ui/react-ui-core/components/Tooltip',
+  component: Tooltip as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     tooltips: [
       {
@@ -45,14 +50,11 @@ export const Default = {
       },
     ],
   },
-  parameters: {
-    chromatic: { delay: 500 },
-  },
 };
 
-export const DefaultOpen = {
+export const DefaultOpen: Story = {
   args: {
-    defaultOption: true,
+    defaultOpen: true,
     tooltips: [
       {
         label: 'Tooltip trigger',
@@ -60,23 +62,17 @@ export const DefaultOpen = {
       },
     ],
   },
-  parameters: {
-    chromatic: { delay: 500 },
-  },
 };
 
-export const StressTest = {
+export const StressTest: Story = {
   args: {
-    defaultOption: true,
-    tooltips: faker.helpers.multiple(
+    defaultOpen: true,
+    tooltips: random.helpers.multiple(
       () => ({
-        label: faker.lorem.words(2),
-        content: faker.lorem.words(5),
+        label: random.lorem.words(2),
+        content: random.lorem.words(5),
       }),
       { count: 32 },
     ),
-  },
-  parameters: {
-    chromatic: { disableSnapshot: true },
   },
 };

@@ -7,7 +7,7 @@ import { test } from 'vitest';
 import { range } from '@dxos/util';
 
 import type { ActorID } from './common';
-import { initLWWTreeSyncState, LWWTree, type LWWTreeSyncMessage } from './lww-tree';
+import { LWWTree, type LWWTreeSyncMessage, initLWWTreeSyncState } from './lww-tree';
 import { randomKey } from './testing';
 
 test('basic', async ({ expect }) => {

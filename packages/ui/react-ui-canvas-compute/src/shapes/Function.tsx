@@ -2,25 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
+import { Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { getSnapshot, isInstanceOf, Ref } from '@dxos/echo-schema';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { Filter, Ref } from '@dxos/echo';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
+import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
-import { Filter, makeRef, parseId } from '@dxos/react-client/echo';
 import {
+  type ShapeComponentProps,
+  type ShapeDef,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
-  type ShapeComponentProps,
-  type ShapeDef,
 } from '@dxos/react-ui-canvas-editor';
 
-import { Box, createFunctionAnchors } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { Box, createFunctionAnchors } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 export const FunctionShape = Schema.extend(
   ComputeShape,
@@ -34,7 +36,11 @@ export type FunctionShape = Schema.Schema.Type<typeof FunctionShape>;
 export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 
 export const createFunction = (props: CreateFunctionProps) =>
-  createShape<FunctionShape>({ type: 'function', size: { width: 256, height: 192 }, ...props });
+  createShape<FunctionShape>({
+    type: 'function',
+    size: { width: 256, height: 192 },
+    ...props,
+  });
 
 //
 // Component
@@ -56,22 +62,20 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       }
 
       const space = client.spaces.get(spaceId);
-      const object = space?.db.getObjectById(objectId);
-      if (!space || !isInstanceOf(ScriptType, object)) {
+      const object = space?.db.query(Filter.id(objectId)).runSync()[0];
+      if (!space || !isInstanceOf(Script.Script, object)) {
         return;
       }
 
-      const {
-        objects: [fn],
-      } = await space.db.query(Filter.type(FunctionType, { source: Ref.make(object) })).run();
+      const [fn] = await space.db.query(Filter.type(Operation.PersistentOperation, { source: Ref.make(object) })).run();
       if (!fn) {
         return;
       }
 
       node.value = value;
-      node.function = makeRef(fn);
-      node.inputSchema = getSnapshot(fn.inputSchema);
-      node.outputSchema = getSnapshot(fn.outputSchema);
+      node.function = Ref.make(fn);
+      node.inputSchema = fn.inputSchema;
+      node.outputSchema = fn.outputSchema;
     },
     [client, node],
   );

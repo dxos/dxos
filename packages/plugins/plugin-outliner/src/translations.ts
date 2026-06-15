@@ -3,41 +3,57 @@
 //
 
 import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { OUTLINER_PLUGIN } from './meta';
-import { JournalType, OutlineType } from './types';
+import { meta } from '#meta';
+import { Journal, Outline } from '#types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(JournalType)]: {
-        'typename label': 'Journal',
-        'typename label_zero': 'Journals',
-        'typename label_one': 'Journal',
-        'typename label_other': 'Journals',
-        'object name placeholder': 'New journal',
+      [Type.getTypename(Journal.Journal)]: {
+        'typename.label': 'Journal',
+        'typename.label_zero': 'Journals',
+        'typename.label_one': 'Journal',
+        'typename.label_other': 'Journals',
+        'object-name.placeholder': 'New journal',
+        'add-object.label': 'Add journal',
+        'rename-object.label': 'Rename journal',
+        'delete-object.label': 'Delete journal',
+        'object-deleted.label': 'Journal deleted',
       },
-      [Type.getTypename(OutlineType)]: {
-        'typename label': 'Outline',
-        'typename label_zero': 'Outlines',
-        'typename label_one': 'Outline',
-        'typename label_other': 'Outlines',
-        'object name placeholder': 'New outline',
+      [Type.getTypename(Outline.Outline)]: {
+        'typename.label': 'Outline',
+        'typename.label_zero': 'Outlines',
+        'typename.label_one': 'Outline',
+        'typename.label_other': 'Outlines',
+        'object-name.placeholder': 'New outline',
+        'add-object.label': 'Add outline',
+        'rename-object.label': 'Rename outline',
+        'delete-object.label': 'Delete outline',
+        'object-deleted.label': 'Outline deleted',
       },
-      [OUTLINER_PLUGIN]: {
-        'plugin name': 'Outliner',
-        'delete object label': 'Delete item',
-        'create entry label': 'Create entry',
-        'text placeholder': 'Enter text...',
-        'menu label': 'Menu',
+      [meta.id]: {
+        'plugin.name': 'Outliner',
+        'delete-object.label': 'Delete object',
+        'create-outline.label': 'Create outline',
+        'text.placeholder': 'Enter text...',
+        'menu.label': 'Menu',
 
-        'meeting notes label': 'Notes',
-        'today label': 'Today',
+        'meeting-notes.label': 'Notes',
+        'today.label': 'Today',
+        'start-today.label': "Start today's entry",
+        'toggle-calendar.label': 'Toggle calendar',
 
-        // TODO(burdon): Move to plugin-task.
-        'task action': 'Convert to task',
-        'delete row': 'Delete row',
+        'quick-entry.label': 'Add journal entry',
+        'quick-entry-dialog.title': 'Quick Journal Entry',
+        'quick-entry.placeholder': 'Write something...',
+        'quick-entry-cancel.label': 'Cancel',
+        'quick-entry-save.label': 'Save',
+        'quick-entry-save-and-continue.label': 'Save & Add Another',
+
+        'delete-row.menu': 'Delete row',
       },
     },
   },
-];
+] as const satisfies Resource[];

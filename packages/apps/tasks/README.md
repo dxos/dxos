@@ -3,5 +3,5 @@
 ## Development
 
 ```bash
-pnpm -w nx run tasks:serve
+moon run tasks:serve
 ```

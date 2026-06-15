@@ -1,0 +1,178 @@
+# moon.yml - Complete project configuration example
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+# Project classification
+language: 'typescript'
+layer: 'application'
+stack: 'frontend'
+
+# Metadata
+project:
+  name: 'Web Application'
+  description: 'Main customer-facing web application'
+  owner: 'frontend-team'
+  maintainers:
+    - 'alice'
+    - 'bob'
+  channel: '#web-app'
+  metadata:
+    tier: 1
+    public: true
+
+# Tags for querying and constraints
+tags:
+  - 'react'
+  - 'next'
+  - 'customer-facing'
+
+# Explicit project dependencies
+dependsOn:
+  - 'ui-components'
+  - 'shared-utils'
+  - id: 'api-client'
+    scope: 'production'
+  - id: 'test-fixtures'
+    scope: 'development'
+
+# Environment variables for all tasks
+env:
+  NEXT_PUBLIC_API_URL: 'https://api.example.com'
+  NODE_ENV: 'production'
+
+# Per-project toolchain overrides
+toolchain:
+  default: 'node'
+  node:
+    version: '20.10.0'
+  typescript:
+    includeProjectReferenceSources: true
+    routeOutDirToCache: true
+
+# File groups for reuse in tasks
+fileGroups:
+  sources:
+    - 'src/**/*'
+    - 'app/**/*'
+    - 'components/**/*'
+  tests:
+    - 'tests/**/*'
+    - '**/*.test.{ts,tsx}'
+    - '**/__tests__/**/*'
+  configs:
+    - 'next.config.js'
+    - 'tailwind.config.js'
+    - 'tsconfig.json'
+    - 'postcss.config.js'
+  assets:
+    - 'public/**/*'
+
+# Control task inheritance
+workspace:
+  inheritedTasks:
+    exclude:
+      - 'deploy-staging'
+    rename:
+      buildApp: 'build'
+
+# Task definitions
+tasks:
+  build:
+    command: 'next build'
+    inputs:
+      - '@group(sources)'
+      - '@group(configs)'
+      - '@group(assets)'
+    outputs:
+      - '.next'
+    deps:
+      - 'ui-components:build'
+      - 'api-client:build'
+    env:
+      NODE_ENV: 'production'
+    options:
+      cache: true
+      priority: 'high'
+
+  dev:
+    command: 'next dev'
+    preset: 'server'
+    deps:
+      - '~:codegen'
+    env:
+      NODE_ENV: 'development'
+
+  start:
+    command: 'next start'
+    preset: 'server'
+    deps:
+      - '~:build'
+
+  test:
+    command: 'vitest run'
+    inputs:
+      - '@group(sources)'
+      - '@group(tests)'
+    deps:
+      - '^:build'
+    options:
+      retryCount: 2
+      runInCI: 'affected'
+
+  test-watch:
+    command: 'vitest'
+    preset: 'watcher'
+
+  lint:
+    command: 'eslint'
+    args:
+      - '.'
+      - '--ext'
+      - '.ts,.tsx'
+    inputs:
+      - '@group(sources)'
+      - '.eslintrc.js'
+
+  lint-fix:
+    extends: 'lint'
+    args: '--fix'
+    options:
+      runInCI: false
+
+  typecheck:
+    command: 'tsc --noEmit'
+    inputs:
+      - '@group(sources)'
+      - '@group(configs)'
+
+  codegen:
+    command: 'graphql-codegen'
+    outputs:
+      - 'src/generated/'
+    options:
+      internal: true
+      cache: 'local'
+
+  e2e:
+    command: 'playwright test'
+    inputs:
+      - 'e2e/**/*'
+      - 'playwright.config.ts'
+    deps:
+      - target: '~:build'
+        env:
+          NODE_ENV: 'test'
+    options:
+      interactive: true
+      runInCI: 'always'
+      timeout: 600
+      retryCount: 2
+
+  deploy:
+    command: './scripts/deploy.sh'
+    deps:
+      - '~:build'
+      - '~:test'
+      - '~:e2e'
+    options:
+      runInCI: 'only'
+      mutex: 'deployment'

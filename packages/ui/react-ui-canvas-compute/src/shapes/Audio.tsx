@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const AudioShape = Schema.extend(
   ComputeShape,
@@ -37,7 +37,7 @@ export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon={active ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
-        classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-red-500']}
+        classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-error-text']}
         size={8}
         onClick={() => setActive(!active)}
       />

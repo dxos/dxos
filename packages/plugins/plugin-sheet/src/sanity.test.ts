@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { FunctionType } from '@dxos/functions';
 
 // Part 2.
 // TODO(burdon): Cannot test outside of browser.
@@ -23,7 +23,7 @@ import { FunctionType } from '@dxos/functions';
 describe('test', () => {
   test('test', async () => {
     const client = new Client();
-    client.addTypes([FunctionType]);
+    await client.addTypes([Operation.PersistentOperation]);
     await client.initialize();
     await client.halo.createIdentity();
 
@@ -34,7 +34,13 @@ describe('test', () => {
     //  - ERROR "process.nextTick is not a function"
     //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
-    const fn = space.db.add(Obj.make(FunctionType, { name: 'test', version: '0.0.1', binding: 'HELLO' }));
+    const fn = space.db.add(
+      Obj.make(Operation.PersistentOperation, {
+        [Obj.Meta]: { key: 'com.example.function.test', version: '0.0.1' },
+        name: 'test',
+        binding: 'HELLO',
+      }),
+    );
     expect(fn).to.exist;
   });
 });

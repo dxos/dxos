@@ -4,21 +4,39 @@ Instructions and documentation for developer workflows in this DXOS repository.
 
 ## Prerequisites
 
-- Node v20.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
-- Native libraries: 
+- Native libraries:
 
 ```bash
-brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools
+brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+```
+
+- Install [proto](https://moonrepo.dev/docs/proto/install):
+
+```bash
+bash <(curl -fsSL https://moonrepo.dev/install/proto.sh)
+```
+
+Setup proto for shell activation:
+
+```bash
+eval "$(proto activate zsh --config-mode all)"
 ```
 
 ## Monorepo workspace
 
-This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`nx`](https://nx.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
+This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
 
-Get `pnpm`
+Setup:
 
 ```bash
-npm i -g pnpm
+proto install
+```
+
+To update moon:
+
+```bash
+proto install moon latest
+proto pin moon latest
 ```
 
 Install at the repo root:
@@ -54,30 +72,29 @@ pnpm watch
 Examples of ways to start up different workloads in dev mode:
 | Command | Description |
 | :-- | :-- |
-| `pnpm nx serve halo-app` | Runs the `halo` app in dev mode |
-| `pnpm nx serve tasks-app` | Runs the `tasks-app` in dev mode pointing to a `halo-app` in dev mode next to it |
-| `pnpm nx serve composer-app` | Runs the `composer-app` in dev mode pointing to a `halo-app` in dev mode next to it |
-| `pnpm nx serve docs` | Runs the `docs` vuepress app in dev mode |
+| `moon run tasks-app:serve` | Runs the `tasks-app` in dev mode |
+| `moon run composer-app:serve` | Runs the `composer-app` in dev mode |
+| `moon run docs:serve` | Runs the `docs` astro app in dev mode |
+
+Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
+Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
 
 ## Test commands
 
 Examples of ways to run different test workloads:
 | Command | Description |
 | :-- | :-- |
-| `pnpm nx test client-services` | Runs the unit tests for `client-services` |
-| `pnpm nx test network-manager --tags flaky` | Runs the tests for `network-manager` which were tagged as flaky |
-| `pnpm nx test echo-db --watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
-| `pnpm nx test echo-db --environments nodejs,webkit` | Runs the tests for `echo-db` in `nodejs` and `webkit` environments |
-| `pnpm nx test echo-db --inspect` | Attach to the VSCode debugger |
-| `pnpm nx e2e halo-app` | Runs the playwright tests for `halo-app` |
-| `pnpm nx e2e halo-app --inspect` | Runs tests with playwright inspector |
+| `moon run client-services:test` | Runs the unit tests for `client-services` |
+| `moon run echo-db:test-watch` | Runs the unit tests for `echo-db` whenever any of the source files in the package change |
+| `moon run todomvc:e2e` | Runs the playwright tests for `halo-app` |
+| `moon run todomvc --debug` | Runs tests with playwright inspector |
 
 ## Storybooks
 
 The following command generates storybooks across the individual packages:
 
 ```bash
-pnpm nx storybook stories
+moon run storybook:serve
 ```
 
 ### Playwright
@@ -86,43 +103,26 @@ Playwright tests are written using these [guidelines](./tools/executors/test/PLA
 
 ## Adding new dependencies
 
-Currently, you must manually edit the individual `package.json` files to add packages.
-When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
+All dependency versions are managed in the catalog. To add a new dependency, use the following command:
 
-Once the required changes have been made, re-run `pnpm i`.
+```bash
+pnpm add --filter "<project>" --save-catalog "<package>"
+```
+
+See the [pnpm catalog docs](https://pnpm.io/catalogs) for more information.
+
+> TODO: Introduce a separate catalog for peer dependencies.
 
 ## Updating dependencies
 
 Use `npm-check-updates` to update dependencies from the root directory. For example:
 
 ```bash
-npx npm-check-updates -u --deep effect "@effect/*"
+npx npm-check-updates -u --deep "@codemirror/*"
 pnpm i
 ```
 
 NOTE: Do not use `pnpm up` since it will update more than the targeted dependencies.
-
-## Tasks in `nx` targets
-
-Each package has a `project.json` which describes the "targets" or runnable actions/scripts that package can perform.
-There are also dependencies and caching information expressed such that performing any action will appropriately perform actions it depends on in the right order, cache-reading where possible.
-
-For example, to run a particular app in dev mode, the target (action) is typically called `serve`:
-
-```bash
-pnpm nx serve halo-app
-```
-
-`nx` executes the target, and is aliased as an npm script `pnpm nx` (to avoid an unexpressed global dependency on an `nx` version). See [`nx run`](https://nx.dev/packages/nx/documents/run) for more syntax.
-
-> NOTE: Most `nx` incantations assume you're at the root of the repository.
-> They may not work if `cwd` is a nested folder.
-> To force execution from the root while deeper in the repo, you can use `pnpm -w ...` such as `pnpm -w nx build tasks-app`.
-
-## Tasks in `scripts`
-
-Packages may also declare scripts in their `package.json` `scripts` field as is traditional for an npm package.
-This is appropriate when `nx` caching is not suitable or necessary for the task, and when that script does not partake in the `nx` task dependency tree.
 
 ## Folders
 
@@ -139,13 +139,8 @@ This is appropriate when `nx` caching is not suitable or necessary for the task,
 | `packages/deprecated`   | deprecated things                                                                              |
 | `tools`                 | workflow, automation, tooling code that supports the repo, but isn't part of the main platform |
 | `scripts`               | shell scripts for automation                                                                   |
-| `patches`               | pnpm applied patches via `npm-patch`                                                           |
-| `docs`                  | a `vuepress` docs site behind `docs.dxos.org`                                                  |
-| `docs/content`          | markdown documentation content                                                                 |
-| `docs/content/guide`    | developer guide as found on `docs.dxos.org/guide`                                              |
-| `docs/content/api`      | API documentation generated from JSDoc comments in source                                      |
-| `docs/content/design`   | Design documents for future features in research and development                               |
-| `docs/content/specs`    | Descriptions of features currently being built                                                 |
+| `patches`               | pnpm applied patches via `pnpm patch`                                                          |
+| `docs`                  | a `astro` docs site behind `docs.dxos.org`                                                     |
 
 ## Logging
 
@@ -175,46 +170,26 @@ The filter consists of a series of filename pattern/level tuples separated by co
 
 ## Publishing
 
-- All merges to `main` automatically publish apps to dev.kube.dxos.org and publish npm packages under the `main` tag.
-- All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
-- All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
+- All merges to `main` automatically publish apps to dev environment and publish npm packages under the `main` tag.
+- All merges to `staging` automatically publish apps to staging environment and publish npm packages under the `next` tag.
+- All merges to `production` automatically publish apps to production environment and publish npm packages under the `latest` tag.
 
 ### Apps
 
-The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.circleci/scripts/publish.sh).
-In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
+The apps published are defined in [`.github/workflows/scripts/apps.sh`](https://github.com/dxos/dxos/blob/main/.github/workflows/scripts/apps.sh).
+In order to include a new app in the publish loop it needs to be added to the `APPS` list in this file.
 
 ## Dependencies
 
 Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
 
 Examples:
+
 - `"@types/node": "22.5.5"` (required by Cloudflare Workers).
 
 ## CI
 
-### CircleCI
-
-- The main CI engine for the repo is CircleCI
-- The config for CircleCI can be found at `.circleci/config.yml`
-
-#### Running jobs locally
-
-- CircleCI has a cli which can be used to validate the config as well as to run jobs locally
-- Install instructions can be found here: https://circleci.com/docs/local-cli/
-- Here is a relevant tutorial about local execution: https://circleci.com/blog/local-pipeline-development/
-
-The `check` job can be run as such:
-
-```bash
-circleci local execute check
-```
-
-### Github Actions
-
-- Github Actions are used for compatibility purposes
-- Release Please publishes a Github action, plus releases are published to Github, so release creation is done as an action
-- Likewise PR title validation is an existing Github action
+See [CI docs](./.github/workflows/README.md).
 
 ## Branch Diagram
 
@@ -236,6 +211,39 @@ Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branc
 | `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
 | `rc-*`       | release branches created from main and to merge with `production` or `stating`        |
 | `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
+
+## Patching third-party repos
+
+1. Clone and fork the third-party repo then maked edits and build
+
+```bash
+cd ~/Code/Effect-TS
+git clone https://github.com/Effect-TS/effect.git
+git remote add upstream https://github.com/Effect-TS/effect.git
+pnpm build
+pnpm ellint
+```
+
+2. Create and commit a patch.
+
+```bash
+cd ~/Code/dxos/dxos
+pnpm patch @effect/ai-anthropic
+cp -r ~/Code/Effect-TS/effect/packages/ai/anthropic/dist/* ~/Code/dxos/dxos/node_modules/.pnpm_patches/@effect/ai-anthropic@0.16.1/
+pnpm patch-commit
+```
+
+This will create a patch file in the `patches` directory and update the `patchDependencies` of the root `package.json`.
+
+3. Submit a PR to the third-party repo.
+
+Create a changeset, command and push.
+
+```bash
+pnpm changeset
+```
+
+Commit and push the changes to the third-party repo.
 
 ## Formatting and linting
 
@@ -259,14 +267,6 @@ Alternatively to autofix all lint errors on save add the following config:
   "editor.codeActionsOnSave": {"source.fixAll": true}
 ```
 
-## Helpful aliases
-
-```bash
-alias px="pnpm -w nx"
-```
-
-More custom shell aliases can be included in your shell config by utilizing the [oh-my-zsh](https://ohmyz.sh) [plugin](./tools/zsh)/
-
 ## Mobile development
 
 Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough.
@@ -289,8 +289,8 @@ What follows are instructions on how to setup the certificate for your devices t
     {
       server: {
         https: process.env.HTTPS === 'true' ? {
-          key: './key.pem',
-          cert: './cert.pem'
+          key: '../../../key.pem',
+          cert: '../../../cert.pem'
         } : false,
         ...
       },
@@ -299,20 +299,6 @@ What follows are instructions on how to setup the certificate for your devices t
 
 Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there.
 Alternatively, a copy of them could be kept in each app directory if `serve` is run from the app directory as well.
-
-## Proxying using https://srv.us
-
-`srv.us` is easier to setup but will lead to longer loading times.
-
-```bash
-pnpm -w nx serve kai
-ssh srv.us -R 1:localhost:5173
-```
-
-TODO(burdon): This doesn't work if the vault is served from a different port.
-
-> NOTE: The amount of files that are needed to be loaded (more than 800 in dev mode) is causing srv.us to bottleneck.
-> On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
 
 ## Service Workers
 

@@ -3,42 +3,38 @@
 //
 
 import { Type } from '@dxos/echo';
-import { TableType } from '@dxos/react-ui-table';
+import { type Resource } from '@dxos/react-ui';
+import { Table } from '@dxos/react-ui-table/types';
 
-import { TABLE_PLUGIN } from './meta';
+import { meta } from '#meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(TableType)]: {
-        'typename label': 'Table',
-        'typename label_zero': 'Tables',
-        'typename label_one': 'Table',
-        'typename label_other': 'Tables',
-        'object name placeholder': 'New table',
+      [Type.getTypename(Table.Table)]: {
+        'typename.label': 'Table',
+        'typename.label_zero': 'Tables',
+        'typename.label_one': 'Table',
+        'typename.label_other': 'Tables',
+        'object-name.placeholder': 'New table',
+        'add-object.label': 'Add table',
+        'rename-object.label': 'Rename table',
+        'delete-object.label': 'Delete table',
+        'object-deleted.label': 'Table deleted',
       },
-      [TABLE_PLUGIN]: {
-        'plugin name': 'Tables',
-        'table name placeholder': 'Table name',
-        'settings title': 'Table settings',
-        'table schema label': 'Schema',
-        'companion schema label': 'Schema',
-        'new schema': 'New schema',
-        'continue label': 'Continue',
-        'add row label': 'Add row',
-        'save view label': 'Save view',
-        'create comment': 'Create thread',
-        'column action sort descending': 'Sort Descending',
-        'column action sort ascending': 'Sort Ascending',
-        'column action clear sorting': 'Clear Sorting',
-        'column action settings': 'Column Settings',
-        'column action delete': 'Delete Column',
-        'delete row label': 'Delete row',
-        'column deleted label': 'Column deleted',
-        'new column button label': 'Create column',
-        'row details no selection label': 'No objects selected',
-        'companion selected objects label': 'Selected',
+      [meta.id]: {
+        'plugin.name': 'Tables',
+        'table-name.placeholder': 'Table name',
+        'settings.title': 'Table settings',
+        'table-schema.label': 'Type',
+        'companion-schema.label': 'Type',
+        'continue.label': 'Continue',
+        'add-row.label': 'Add row',
+        'save-view.label': 'Save view',
+        'delete-row.label': 'Delete row',
+        'new-column-button.label': 'Create column',
+        'open-object.label': 'Open object',
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -9,20 +9,20 @@ import type { Device, Identity } from '@dxos/react-client/halo';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 import type { ConnectionState } from '@dxos/react-client/mesh';
 
-import type { IdentityEvent } from './identityMachine';
 import type { AgentFormProps } from '../../components';
 import type { InvitationManagerProps } from '../../steps';
+import type { IdentityEvent } from './identityMachine';
 
 export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation';
 
 export type IdentityPanelImplProps = {
   titleId: string;
   activeView:
-    | 'device invitation manager'
-    | 'identity action chooser'
-    | 'confirm join new identity'
-    | 'confirm recover'
-    | 'confirm reset storage';
+    | 'device-invitation-manager'
+    | 'identity-action-chooser'
+    | 'confirm-join-new-identity'
+    | 'confirm-recover'
+    | 'confirm-reset-storage';
   initialDisposition?: IdentityPanelInitialDisposition;
   identity: Identity;
   devices: Device[];

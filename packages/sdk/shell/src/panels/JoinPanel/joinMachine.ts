@@ -5,22 +5,22 @@
 import { useMachine } from '@xstate/react';
 import { useCallback } from 'react';
 import {
-  assign,
-  createMachine,
   type InterpreterFrom,
   type StateFrom,
   type StateNodeConfig,
   type Subscribable,
   type Subscription,
+  assign,
+  createMachine,
 } from 'xstate';
 
 import { log } from '@dxos/log';
-import { type Client, AlreadyJoinedError } from '@dxos/react-client';
+import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
 import { type FailReason } from '../../types';
+import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
 
 type InvitationKindContext = Partial<{
   failReason: FailReason | null;
@@ -440,12 +440,12 @@ type JoinSend = InterpreterFrom<JoinMachine>['send'] | JoinSendVoid;
 
 export const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
   try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    const searchProps = new URLSearchParams(text.substring(text.lastIndexOf('?')));
     return (
-      searchParams.get(`${invitationType}InvitationCode`) ??
-      searchParams.get(`${invitationType}Invitation`) ??
-      searchParams.get('invitationCode') ??
-      searchParams.get('invitation') ??
+      searchProps.get(`${invitationType}InvitationCode`) ??
+      searchProps.get(`${invitationType}Invitation`) ??
+      searchProps.get('invitationCode') ??
+      searchProps.get('invitation') ??
       text
     );
   } catch (err) {

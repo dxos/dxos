@@ -2,40 +2,43 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
+import React, { useContext, useMemo } from 'react';
 
-import { type Meta, type StoryObj } from '@storybook/react';
-import { Schema } from 'effect';
-import React from 'react';
-
-import { live } from '@dxos/live-object';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
-import { createList, TestItemSchema, type TestItemType } from './testing';
+import { TestItemSchema, type TestItemType, type TestList, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
+const grid = 'grid grid-cols-[32px_1fr_32px] min-h-[2rem] rounded-sm';
 
-const meta: Meta = {
-  title: 'ui/react-ui-list/List',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
+  const registry = useContext(RegistryContext);
+  const listAtom = useMemo(() => Atom.make<TestList>(createList(100)).pipe(Atom.keepAlive), []);
+  const list = useAtomValue(listAtom);
+  const items = list.items;
 
-export default meta;
-
-const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   const handleSelect = (item: TestItemType) => {
     console.log('select', item);
   };
   const handleDelete = (item: TestItemType) => {
-    const idx = items.findIndex((i) => i.id === item.id);
-    items.splice(idx, 1);
+    const prev = registry.get(listAtom);
+    registry.set(listAtom, {
+      ...prev,
+      items: prev.items.filter((i) => i.id !== item.id),
+    });
   };
   const handleMove = (from: number, to: number) => {
-    arrayMove(items, from, to);
+    const prev = registry.get(listAtom);
+    const newItems = [...prev.items];
+    arrayMove(newItems, from, to);
+    registry.set(listAtom, { ...prev, items: newItems });
   };
 
   return (
@@ -43,14 +46,14 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
       {({ items }) => (
         <>
           <div className='flex flex-col w-full'>
-            <div role='none' className={grid}>
+            <div className={grid}>
               <div />
               <div className='flex items-center text-sm'>Items</div>
             </div>
 
-            <div role='list' className='w-full h-full overflow-auto'>
+            <div role='list' className='h-full w-full overflow-auto'>
               {items?.map((item) => (
-                <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+                <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid)}>
                   <List.ItemDragHandle />
                   <List.ItemTitle onClick={() => handleSelect(item)}>{item.name}</List.ItemTitle>
                   <List.ItemDeleteButton onClick={() => handleDelete(item)} />
@@ -58,7 +61,7 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
               ))}
             </div>
 
-            <div role='none' className={grid}>
+            <div className={grid}>
               <div />
               <div className='flex items-center text-sm'>{items?.length} Items</div>
             </div>
@@ -66,7 +69,7 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
 
           <List.ItemDragPreview<TestItemType>>
             {({ item }) => (
-              <List.ItemWrapper classNames={mx(grid, 'bg-modalSurface border border-separator')}>
+              <List.ItemWrapper classNames={mx(grid, 'bg-modal-surface border border-separator')}>
                 <List.ItemDragHandle />
                 <div className='flex items-center'>{item.name}</div>
               </List.ItemWrapper>
@@ -78,13 +81,17 @@ const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => 
   );
 };
 
-const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
+const SimpleStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
+  const listAtom = useMemo(() => Atom.make<TestList>(createList(100)).pipe(Atom.keepAlive), []);
+  const list = useAtomValue(listAtom);
+  const items = list.items;
+
   return (
     <List.Root<TestItemType> dragPreview items={items} {...props}>
       {({ items }) => (
-        <div role='list' className='w-full h-full overflow-auto'>
+        <div role='list' className='h-full w-full overflow-auto'>
           {items?.map((item) => (
-            <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid, ghostHover)}>
+            <List.Item<TestItemType> key={item.id} item={item} classNames={mx(grid)}>
               <List.ItemDragHandle />
               <List.ItemTitle>{item.name}</List.ItemTitle>
               <List.ItemDeleteButton />
@@ -96,20 +103,27 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   );
 };
 
-const list = live(createList(100));
+const meta = {
+  title: 'ui/react-ui-list/List',
+  component: List.Root,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof List.Root>;
 
-export const Default: StoryObj<ListRootProps<TestItemType>> = {
+export default meta;
+
+export const Default: StoryObj<typeof DefaultStory> = {
   render: DefaultStory,
   args: {
-    items: list.items,
     isItem: Schema.is(TestItemSchema),
   },
 };
 
-export const Simple: StoryObj<ListRootProps<TestItemType>> = {
+export const Simple: StoryObj<typeof SimpleStory> = {
   render: SimpleStory,
   args: {
-    items: list.items,
     isItem: Schema.is(TestItemSchema),
   },
 };

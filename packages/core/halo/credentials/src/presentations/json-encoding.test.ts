@@ -11,8 +11,8 @@ import { buf } from '@dxos/protocols/buf';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { schema } from '@dxos/protocols/proto';
 
-import { signPresentation } from './presentation';
 import { createCredential } from '../credentials';
+import { signPresentation } from './presentation';
 
 describe('json encoding', () => {
   test.skip('service access exercise by a device', async () => {

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
@@ -9,33 +10,27 @@ import {
 } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  AlreadyJoinedError,
-  type ApiError,
-  AuthorizationError,
-  InvalidInvitationError,
-  SpaceNotFoundError,
-} from '@dxos/protocols';
+import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
+import { type DataSpaceManager, type SigningContext } from '../spaces';
 import { type InvitationProtocol } from './invitation-protocol';
 import { computeExpirationTime } from './utils';
-import { type DataSpaceManager, type SigningContext } from '../spaces';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
     private readonly _spaceManager: DataSpaceManager,
     private readonly _signingContext: SigningContext,
-    private readonly _keyring: Keyring,
+    private readonly _keyring: KeyringApi,
     private readonly _spaceKey?: PublicKey,
   ) {}
 
@@ -47,16 +42,16 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkCanInviteNewMembers(): ApiError | undefined {
+  checkCanInviteNewMembers(): Error | undefined {
     if (this._spaceKey == null) {
-      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+      return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
     const space = this._spaceManager.spaces.get(this._spaceKey);
     if (space == null) {
       return new SpaceNotFoundError(this._spaceKey);
     }
     if (!space?.inner.spaceState.hasMembershipManagementPermission(this._signingContext.identityKey)) {
-      return new AuthorizationError('No member management permission.');
+      return new AuthorizationError({ message: 'No member management permission.' });
     }
     return undefined;
   }
@@ -147,10 +142,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   checkInvitation(invitation: Partial<Invitation>): InvalidInvitationError | AlreadyJoinedError | undefined {
     if (invitation.spaceKey == null) {
-      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+      return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
     if (this._spaceManager.spaces.has(invitation.spaceKey)) {
-      return new AlreadyJoinedError('Already joined space.');
+      return new AlreadyJoinedError({ message: 'Already joined space.' });
     }
   }
 
@@ -175,7 +170,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(response: AdmissionResponse): Promise<Partial<Invitation>> {
+  async accept(ctx: Context, response: AdmissionResponse): Promise<Partial<Invitation>> {
     invariant(response.space);
     const { credential, controlTimeframe, dataTimeframe } = response.space;
     const assertion = getCredentialAssertion(credential);
@@ -183,15 +178,16 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(credential.subject.id.equals(this._signingContext.identityKey));
 
     if (this._spaceManager.spaces.has(assertion.spaceKey)) {
-      throw new AlreadyJoinedError('Already joined space.');
+      throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
     // Create local space.
-    await this._spaceManager.acceptSpace({
+    await this._spaceManager.acceptSpace(ctx, {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,
       dataTimeframe,
+      tags: assertion.tags,
     });
 
     await this._signingContext.recordCredential(credential);

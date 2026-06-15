@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { TextBox, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps, type ShapeDef, TextBox } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { Box, type BoxActionHandler } from './common';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const TextShape = Schema.extend(
   ComputeShape,

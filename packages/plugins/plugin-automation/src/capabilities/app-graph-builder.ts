@@ -2,85 +2,89 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
-import { SPACE_PLUGIN } from '@dxos/plugin-space';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode, LayoutOperation, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { isSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { meta } from '../meta';
+import { meta } from '#meta';
+import { Automation, AutomationOperation } from '#types';
 
-export default (context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: `${meta.id}/space-settings-automation`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.type === `${SPACE_PLUGIN}/settings` ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: `automation-${node.id}`,
-                type: `${meta.id}/space-settings-automation`,
-                data: `${meta.id}/space-settings-automation`,
-                properties: {
-                  label: ['automation panel label', { ns: meta.id }],
-                  icon: 'ph--lightning--regular',
-                },
+import { blank } from '../templates';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
+      createTypeSectionExtension(Automation.Automation),
+      GraphBuilder.createExtension({
+        id: 'automationsSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === Type.getTypename(Automation.Automation) && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-automation',
+              data: () =>
+                Effect.gen(function* () {
+                  const { subject } = yield* Operation.invoke(
+                    AutomationOperation.CreateAutomation,
+                    { db: space.db, templateId: blank.id },
+                    { spaceId: space.db.spaceId },
+                  );
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [...subject] },
+                    { spaceId: space.db.spaceId },
+                  );
+                }),
+              properties: {
+                label: ['add-object.label', { ns: Type.getTypename(Automation.Automation) }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
               },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-    createExtension({
-      id: `${meta.id}/space-settings-functions`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.type === `${SPACE_PLUGIN}/settings` ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: `functions-${node.id}`,
-                type: `${meta.id}/space-settings-functions`,
-                data: `${meta.id}/space-settings-functions`,
-                properties: {
-                  label: ['functions panel label', { ns: meta.id }],
-                  icon: 'ph--function--regular',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-    createExtension({
-      id: `${meta.id}/script-companion`,
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ScriptType, node.data) ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: [node.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
-                type: PLANK_COMPANION_TYPE,
-                data: 'automation',
-                properties: {
-                  label: ['script automation label', { ns: meta.id }],
-                  icon: 'ph--lightning--regular',
-                  disposition: 'hidden',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-  ]);
+            }),
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'spaceSettingsAutomation',
+        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeSettingsPanel({
+              id: 'automations',
+              type: `${meta.id}.space-settings-automation`,
+              label: ['automation-panel.label', { ns: meta.id }],
+              icon: 'ph--lightning--regular',
+              iconHue: 'indigo',
+              position: 'last',
+            }),
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'automationCompanion',
+        match: NodeMatcher.whenEchoObjectMatches,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('automation'),
+              label: ['automation-companion.label', { ns: meta.id }],
+              icon: 'ph--lightning--regular',
+              data: 'automation',
+              position: 'last',
+            }),
+          ]),
+      }),
+    ]);
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+  }),
+);

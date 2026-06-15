@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { easeCubic, timer, type Timer } from 'd3';
+import { type Timer, easeCubic, timer } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 import { type Point } from '../../util';
 import { type GraphLayoutNode } from '../types';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 
 export type GraphRadialProjectorOptions = GraphProjectorOptions & {
   radius?: number;
@@ -27,13 +27,20 @@ export class GraphRadialProjector<
     return undefined;
   }
 
-  protected override onUpdate(graph?: Graph) {
+  protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
+    // Bind enter/exit once before the tween starts; subsequent animate frames emit 'positions'.
+    this.emitUpdate('topology');
     this.doRadialLayout();
   }
 
   protected animate() {
+    // Cancel any in-flight tween so a fresh onUpdate doesn't race against the
+    // previous timer (both would be mutating x/y at different rates).
+    this._timer?.stop();
+    this._timer = undefined;
+
     const start = Date.now();
     if (this.options.duration) {
       this._timer = timer(() => {
@@ -46,16 +53,37 @@ export class GraphRadialProjector<
           node.r = node.sr + (node.tr - node.sr) * d;
         });
 
-        this.emitUpdate();
+        // Subclass hook: derived projectors (e.g. cluster) can mutate edge.path
+        // here so curves track moving endpoints during the tween. The renderer's
+        // applyPositions reads edge.path fresh each frame.
+        this.onTickFrame(d);
+
+        // Tween frames only mutate `x/y/r`; emit 'positions' so the renderer can fast-path.
+        this.emitUpdate('positions');
         if (t >= 1) {
           this._timer.stop();
           this._timer = undefined;
         }
       });
     } else {
-      this.emitUpdate();
+      // No duration: snap nodes to their target. Without this the layout would
+      // sit at `sx/sy/sr` (= previous positions) and never reach the new target.
+      this.layout.graph.nodes.forEach((node: any) => {
+        node.x = node.tx;
+        node.y = node.ty;
+        node.r = node.tr;
+      });
+      this.onTickFrame(1);
+      this.emitUpdate('positions');
     }
   }
+
+  /**
+   * Per-frame hook called after node x/y/r are interpolated and before the
+   * 'positions' emit. Subclasses override to update edge geometry (`edge.path`)
+   * so curves stay glued to moving endpoints. `t` is the eased progress in [0, 1].
+   */
+  protected onTickFrame(t: number): void {}
 
   protected override async onStop() {
     this._timer?.stop();

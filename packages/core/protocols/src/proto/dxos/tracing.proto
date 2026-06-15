@@ -30,42 +30,6 @@ message ResourceLink {
   google.protobuf.Struct attributes = 4;
 }
 
-message Span {
-  int32 id = 1;
-  optional int32 parent_id = 2;
-  optional int32 resource_id = 3;
-  string method_name = 4;
-
-  // TODO(dmaretskyi): Figure out proper sub-millisecond timestamp type.
-  string start_ts = 5;
-  optional string end_ts = 6;
-
-  optional dxos.error.Error error = 11;
-}
-
-message StreamTraceEvent {
-  message ResourceAdded {
-    Resource resource = 1;
-  }
-
-  message ResourceRemoved {
-    int32 id = 1;
-  }
-
-  message SpanAdded {
-    Span span = 1;
-  }
-
-  message LogAdded {
-    dxos.client.services.LogEntry log = 1;
-  }
-
-  repeated ResourceAdded resource_added = 1;
-  repeated ResourceRemoved resource_removed = 2;
-  repeated SpanAdded span_added = 3;
-  repeated LogAdded log_added = 4;
-}
-
 message Metric {
   message Counter {
     double value = 1;
@@ -109,8 +73,4 @@ message Metric {
     MultiCounter multi_counter = 102;
     Custom custom = 199;
   }
-}
-
-service TracingService {
-  rpc StreamTrace(google.protobuf.Empty) returns (stream StreamTraceEvent);
 }

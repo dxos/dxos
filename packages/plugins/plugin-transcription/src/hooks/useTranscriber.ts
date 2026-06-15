@@ -4,9 +4,10 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework';
+import { useCapabilities } from '@dxos/app-framework/ui';
 
-import { TranscriptionCapabilities } from '../capabilities';
+import { TranscriptionCapabilities } from '#types';
+
 import { type Transcriber } from '../transcriber';
 
 /**
@@ -14,20 +15,27 @@ import { type Transcriber } from '../transcriber';
  */
 export const useTranscriber = ({
   audioStreamTrack,
-  onSegments,
-  transcriberConfig,
   recorderConfig,
-}: Partial<TranscriptionCapabilities.GetTranscriberProps>) => {
-  const [getTranscriber] = useCapabilities(TranscriptionCapabilities.Transcriber);
+  transcriberConfig,
+  onSegments,
+  transcribe,
+}: Partial<TranscriptionCapabilities.TranscriberProviderProps>) => {
+  const [transcriberProvider] = useCapabilities(TranscriptionCapabilities.TranscriberProvider);
 
   // Initialize audio transcription.
   const transcriber = useMemo<Transcriber | undefined>(() => {
-    if (!onSegments || !audioStreamTrack || !getTranscriber) {
+    if (!transcriberProvider || !audioStreamTrack || !onSegments) {
       return undefined;
     }
 
-    return getTranscriber({ audioStreamTrack, onSegments, transcriberConfig, recorderConfig });
-  }, [audioStreamTrack, onSegments, getTranscriber, transcriberConfig, recorderConfig]);
+    return transcriberProvider({
+      audioStreamTrack,
+      recorderConfig,
+      transcriberConfig,
+      onSegments,
+      transcribe,
+    });
+  }, [transcriberProvider, audioStreamTrack, recorderConfig, transcriberConfig, onSegments, transcribe]);
 
   useEffect(() => {
     return () => {

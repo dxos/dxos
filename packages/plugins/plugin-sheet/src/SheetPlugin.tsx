@@ -2,75 +2,62 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities } from '@dxos/plugin-space';
-import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AnchorSort, Markdown, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
-import { meta } from './meta';
-import { serializer } from './serializer';
-import translations from './translations';
-import { SheetAction, SheetType } from './types';
+import {
+  AnchorSort,
+  AppGraphBuilder,
+  NavigationResolver,
+  CommentConfig,
+  ComputeGraphRegistry,
+  CreateObject,
+  Markdown,
+  OperationHandler,
+  UndoMappings,
+  ReactSurface,
+  SheetState,
+} from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { Sheet } from '#types';
 
-export const SheetPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/compute-graph-registry`,
-      activatesOn: ClientEvents.ClientReady,
-      activate: ComputeGraphRegistry,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: SheetType.typename,
-          metadata: {
-            label: (object: SheetType) => object.name,
-            icon: 'ph--grid-nine--regular',
-            serializer,
-            comments: 'anchored',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: SheetType,
-            getIntent: (props, options) => createIntent(SheetAction.Create, { ...props, space: options.space }),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/markdown`,
-      activatesOn: MarkdownEvents.SetupExtensions,
-      activate: Markdown,
-    }),
-    defineModule({
-      id: `${meta.id}/module/anchor-sort`,
-      // TODO(wittjosiah): More relevant event?
-      activatesOn: Events.AppGraphReady,
-      activate: AnchorSort,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-  ]);
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export const SheetPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
+  AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: SheetState,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
+    activate: ComputeGraphRegistry,
+  }),
+  Plugin.addModule({
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: Markdown,
+  }),
+  Plugin.addModule({
+    // TODO(wittjosiah): More relevant event?
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: AnchorSort,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default SheetPlugin;

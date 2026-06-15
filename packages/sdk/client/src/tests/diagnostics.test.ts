@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { DiagnosticsCollector } from '@dxos/client-services';
 import { Context } from '@dxos/context';

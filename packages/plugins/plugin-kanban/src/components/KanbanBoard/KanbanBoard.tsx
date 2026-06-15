@@ -1,0 +1,164 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+
+import { Obj } from '@dxos/echo';
+import { useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { Board, useBoard } from '@dxos/react-ui-mosaic';
+import type { ProjectionModel } from '@dxos/schema';
+
+import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
+import { meta } from '#meta';
+import { type Kanban, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
+
+import {
+  KanbanBoardContext,
+  type KanbanBoardContextValue,
+  type KanbanCardProps,
+  type KanbanColumnProps,
+  useKanbanBoard,
+} from './context';
+import { KanbanCard } from './KanbanCard';
+import { KanbanColumn } from './KanbanColumn';
+
+// TODO(burdon): Rename Kanban.
+
+//
+// Root
+//
+
+const KANBAN_BOARD_ROOT = 'KanbanBoard.Root';
+
+type KanbanBoardRootProps = PropsWithChildren<
+  {
+    kanban: Kanban.Kanban;
+    /** Required when providing context; Root derives columnFieldPath, pivotFieldId, getPivotAttributes from kanban + projection. */
+    projection: ProjectionModel;
+    /** Atom of items (e.g. from AtomQuery for DB, or Atom.make([]) for in-memory). */
+    items: Atom.Atom<Obj.Unknown[]>;
+    onCardAdd?: (columnValue: string | undefined) => string | undefined;
+    onCardRemove?: (card: Obj.Unknown) => void;
+  } & Pick<KanbanBoardContextValue, 'change' | 'itemTile'> &
+    ComponentPropsWithoutRef<'div'>
+>;
+
+export const KanbanBoardRoot = ({
+  children,
+  kanban,
+  projection,
+  items,
+  change,
+  itemTile = KanbanCard,
+  onCardAdd,
+  onCardRemove,
+}: KanbanBoardRootProps) => {
+  const registry = useContext(RegistryContext);
+  const { t } = useTranslation(meta.id);
+  const model = useKanbanBoardModel(kanban, projection, items, registry);
+  const columns = model?.getColumns?.() ?? [];
+  const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;
+  const pivotFieldId = view?.projection?.pivotFieldId;
+  const columnFieldPath = useMemo(() => {
+    // Items-variant kanbans use the property name itself as the pivot field
+    // (no view/projection translation layer).
+    if (kanban?.spec.kind === 'items') {
+      return kanban.spec.pivotField;
+    }
+    if (pivotFieldId === undefined || !projection) {
+      return undefined;
+    }
+
+    return projection.tryGetFieldProjection(pivotFieldId)?.props.property;
+  }, [kanban?.spec, projection, pivotFieldId]);
+
+  const getPivotAttributes = useCallback<KanbanBoardContextValue['getPivotAttributes']>(
+    (columnValue) => {
+      if (columnValue === UNCATEGORIZED_VALUE) {
+        return UNCATEGORIZED_ATTRIBUTES;
+      }
+
+      const options = projection?.tryGetFieldProjection(pivotFieldId ?? '')?.props.options ?? [];
+      const option = options.find((option) => option.id === columnValue);
+      return option ?? ({ title: columnValue, color: 'neutral' } as const);
+    },
+    [projection, pivotFieldId],
+  );
+
+  if (columns.length === 0) {
+    return (
+      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+        {t('select-pivot.placeholder')}
+      </div>
+    );
+  }
+
+  return (
+    <KanbanBoardContext
+      kanbanId={Obj.getURI(kanban)}
+      projection={projection}
+      columnFieldPath={columnFieldPath}
+      pivotFieldId={pivotFieldId}
+      getPivotAttributes={getPivotAttributes}
+      itemTile={itemTile}
+      change={change}
+      onCardAdd={onCardAdd}
+      onCardRemove={onCardRemove}
+    >
+      <Board.Root model={model}>{children}</Board.Root>
+    </KanbanBoardContext>
+  );
+};
+
+KanbanBoardRoot.displayName = KANBAN_BOARD_ROOT;
+
+//
+// KanbanBoardContent
+//
+
+const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
+
+type KanbanBoardContentProps = {};
+
+export const KanbanBoardContent = composable<HTMLDivElement, KanbanBoardContentProps>((props, forwardedRef) => {
+  const { model } = useBoard(KANBAN_BOARD_CONTENT);
+  const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
+
+  const columnEventHandler = useKanbanColumnEventHandler({
+    id: `${kanbanId}-columns`,
+    model,
+    projection: projection ?? undefined,
+    pivotFieldId: pivotFieldId ?? undefined,
+    change,
+  });
+
+  return (
+    <Board.Content
+      {...composableProps(props)}
+      ref={forwardedRef}
+      id={kanbanId}
+      eventHandler={columnEventHandler}
+      Tile={KanbanColumn}
+    />
+  );
+});
+
+KanbanBoardContent.displayName = KANBAN_BOARD_CONTENT;
+
+//
+// KanbanBoard
+//
+
+export const KanbanBoard = {
+  Root: KanbanBoardRoot,
+  Content: KanbanBoardContent,
+  Column: KanbanColumn,
+  Card: KanbanCard,
+};
+
+export { useKanbanBoard };
+
+export type { KanbanBoardRootProps as KanbanBoardProps, KanbanCardProps, KanbanColumnProps };

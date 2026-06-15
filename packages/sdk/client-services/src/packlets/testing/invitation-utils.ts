@@ -3,7 +3,8 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { InvitationEncoder, type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
+import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -36,15 +37,15 @@ export type PerformInvitationCallbacks<T> = {
   onError?: (value: T) => boolean | void;
 };
 
-export type PerformInvitationParams = {
+export type PerformInvitationProps = {
   host: ServiceContext | InvitationHost;
   guest: ServiceContext | InvitationGuest;
+  guestDeviceProfile?: DeviceProfileDocument;
   options?: Partial<Invitation>;
   hooks?: {
     host?: PerformInvitationCallbacks<CancellableInvitation>;
     guest?: PerformInvitationCallbacks<AuthenticatingInvitation>;
   };
-  guestDeviceProfile?: DeviceProfileDocument;
   codeInputDelay?: number;
 };
 
@@ -52,14 +53,17 @@ export type Result = { invitation?: Invitation; error?: Error };
 
 // TODO(burdon): Make async.
 // TODO(burdon): Rename startInvitation.
+/**
+ *
+ */
 export const performInvitation = ({
   host,
   guest,
+  guestDeviceProfile,
   options,
   hooks,
-  guestDeviceProfile,
   codeInputDelay,
-}: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
+}: PerformInvitationProps): [Promise<Result>, Promise<Result>] => {
   let guestError = false;
   let guestConnected = false;
   let wereConnected = false;
@@ -226,7 +230,7 @@ export const createInvitation = async (
   };
 
   if (host instanceof ServiceContext) {
-    return host.invitationsManager.createInvitation({
+    return host.invitationsManager.createInvitation(new Context(), {
       kind: Invitation.Kind.SPACE,
       ...options,
     });
@@ -243,7 +247,7 @@ export const acceptInvitation = (
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
-    return guest.invitationsManager.acceptInvitation({
+    return guest.invitationsManager.acceptInvitation(new Context(), {
       invitation,
       deviceProfile: guestDeviceProfile,
     });

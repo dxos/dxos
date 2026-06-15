@@ -18,22 +18,31 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/observability"
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

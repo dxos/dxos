@@ -2,21 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SEARCH_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
+import { translations as searchTranslations } from '@dxos/react-ui-search/translations';
 
-export default [
+import { meta } from '#meta';
+
+export const translations = [
+  ...searchTranslations,
   {
     'en-US': {
-      [SEARCH_PLUGIN]: {
-        'plugin name': 'Search',
-        'search action label': 'Search spaces',
-        'search placeholder': 'Search…',
-        'search dialog title': 'Open',
-        'recently closed heading': 'Recently closed',
-        'pending results message': 'Searching…',
-        'empty results message': 'No matching items in your spaces',
-        'search label': 'Search',
+      [meta.id]: {
+        'plugin.name': 'Search',
+        'search-action.label': 'Search spaces',
+        'search.placeholder': 'Search…',
+        'search-dialog.title': 'Search',
+        'recently-closed.heading': 'Recently closed',
+        'pending-results.message': 'Searching…',
+        'search.label': 'Search',
       },
     },
   },
-];
+] as const satisfies Resource[];

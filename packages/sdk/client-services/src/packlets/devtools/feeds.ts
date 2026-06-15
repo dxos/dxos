@@ -4,15 +4,15 @@
 
 import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type SpaceManager } from '@dxos/echo-pipeline';
+import { type SpaceManager } from '@dxos/echo-host';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type SubscribeToFeedsRequest,
-  type SubscribeToFeedsResponse,
   type SubscribeToFeedBlocksRequest,
   type SubscribeToFeedBlocksResponse,
+  type SubscribeToFeedsRequest,
+  type SubscribeToFeedsResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';

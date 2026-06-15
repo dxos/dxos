@@ -2,36 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
-import React, { cloneElement, type ForwardedRef, forwardRef } from 'react';
+import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
-import { Button, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { type JoinPanelMode } from './JoinPanelProps';
 import { Heading } from '../../components';
+import { translationKey } from '../../translations';
+import { type JoinPanelMode } from './JoinPanelProps';
 
-export interface JoinSpaceHeadingProps {
+export type JoinSpaceHeadingProps = {
   mode?: JoinPanelMode;
   titleId: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];
   onExit?: () => void;
-}
+};
 
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
   ({ mode, titleId, exitActionParent, onExit }: JoinSpaceHeadingProps, forwardedRef: ForwardedRef<HTMLDivElement>) => {
-    const { t } = useTranslation('os');
+    const { t } = useTranslation(translationKey);
 
     const exitButton = (
       <Button
         variant='ghost'
         {...(onExit && { onClick: onExit })}
-        classNames={mx(descriptionText, 'plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]')}
+        classNames={mx('text-description', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
         data-testid='join-exit'
       >
-        <X weight='bold' className={getSize(4)} />
-        <span className='sr-only'>{t('exit label')}</span>
+        <Icon icon='ph--x--bold' size={4} />
+        <span className='sr-only'>{t('exit.label')}</span>
       </Button>
     );
 
@@ -39,11 +39,11 @@ export const JoinHeading = forwardRef(
       <Heading
         ref={forwardedRef}
         titleId={titleId}
-        title={t(mode === 'halo-only' ? 'selecting identity heading' : 'joining space heading')}
+        title={t(mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
         {...(mode === 'halo-only'
-          ? { titleSrOnly: true }
+          ? { ssrOnly: true }
           : { corner: exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton })}
-        titleSrOnly={mode === 'halo-only'}
+        ssrOnly={mode === 'halo-only'}
       />
     );
   },

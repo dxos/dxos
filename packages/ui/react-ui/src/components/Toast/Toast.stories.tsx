@@ -2,70 +2,93 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
-import { Toast } from './Toast';
 import { withTheme } from '../../testing';
-import { Button } from '../Buttons';
+import { Button } from '../Button';
+import { Toast } from './Toast';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 
 type StorybookToastProps = Partial<{
+  icon: string;
   title: string;
   description: string;
+  duration: number;
   actionTriggers: ActionTriggerProps[];
   openTrigger: string;
-  closeTrigger: ReactNode;
+  defaultOpen: boolean;
 }>;
 
-const DefaultStory = ({ title, description, actionTriggers, openTrigger, closeTrigger }: StorybookToastProps) => {
-  const [open, setOpen] = useState(true);
+const DefaultStory = ({
+  icon,
+  title,
+  description,
+  duration,
+  actionTriggers,
+  openTrigger,
+  defaultOpen = true,
+}: StorybookToastProps) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <Toast.Provider>
       <Button onClick={() => setOpen(true)}>{openTrigger}</Button>
       <Toast.Viewport />
-      <Toast.Root open={open} onOpenChange={setOpen}>
-        <Toast.Body>
-          <Toast.Title>{title}</Toast.Title>
-          <Toast.Description>{description}</Toast.Description>
-        </Toast.Body>
-        <Toast.Actions>
-          <Toast.Close asChild={typeof closeTrigger !== 'string'}>{closeTrigger}</Toast.Close>
-          {(actionTriggers || []).map(({ altText, trigger }: ActionTriggerProps, index: number) => (
-            <Toast.Action key={index} altText={altText} asChild={typeof trigger !== 'string'}>
-              {trigger}
-            </Toast.Action>
-          ))}
-        </Toast.Actions>
+      <Toast.Root open={open} onOpenChange={setOpen} defaultOpen={defaultOpen} duration={duration}>
+        <Toast.Title icon={icon} onClose={() => setOpen(false)}>
+          {title}
+        </Toast.Title>
+        <Toast.Description>{description}</Toast.Description>
+        {actionTriggers && actionTriggers.length > 0 && (
+          <Toast.Actions>
+            {actionTriggers.map(({ altText, trigger }: ActionTriggerProps, index: number) => (
+              <Toast.Action key={index} altText={altText} asChild={typeof trigger !== 'string'}>
+                {trigger}
+              </Toast.Action>
+            ))}
+          </Toast.Actions>
+        )}
       </Toast.Root>
     </Toast.Provider>
   );
 };
 
-export default {
-  title: 'ui/react-ui-core/Toast',
-  component: Toast,
+const meta = {
+  title: 'ui/react-ui-core/components/Toast',
+  component: Toast as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  decorators: [withTheme()],
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
+    defaultOpen: true,
     openTrigger: 'Open toast',
+    icon: 'ph--sparkle--regular',
     title: 'This is a toast',
     description: 'This goes away on its own with a timer.',
+    duration: 100_000,
+  },
+};
+
+export const WithAction: Story = {
+  args: {
+    defaultOpen: true,
+    openTrigger: 'Open toast',
+    icon: 'ph--sparkle--regular',
+    title: 'This is a toast',
+    description: 'This goes away on its own with a timer.',
+    duration: 100_000,
     actionTriggers: [
       {
         altText: 'Press F5 to reload the page',
         trigger: <Button variant='primary'>Reload</Button>,
       },
     ],
-    closeTrigger: <Button>Close</Button>,
-  },
-  parameters: {
-    chromatic: { delay: 800 },
   },
 };

@@ -5,9 +5,9 @@
 import { bindAll } from 'bind-event-listener';
 import { useEffect } from 'react';
 
+import { getRelativePoint } from '../util';
 import { getZoomTransform } from './projection';
 import { useCanvasContext } from './useCanvasContext';
-import { getRelativePoint } from '../util';
 
 export type WheelOptions = {
   zoom?: boolean;
@@ -33,9 +33,6 @@ export const useWheel = (options: WheelOptions = defaultOptions) => {
         options: { capture: true, passive: false },
         listener: (ev: WheelEvent) => {
           const zooming = isWheelZooming(ev);
-          if (!hasFocus(root) && !zooming) {
-            return;
-          }
 
           ev.preventDefault();
           if (zooming && !options.zoom) {
@@ -77,30 +74,6 @@ const isWheelZooming = (ev: WheelEvent): boolean => {
   if (ev.ctrlKey || ev.metaKey) {
     // Some browsers use deltaY, others deltaZ for zoom.
     return Math.abs(ev.deltaY) > 0 || Math.abs(ev.deltaZ) > 0;
-  }
-
-  return false;
-};
-
-const hasFocus = (element: HTMLElement): boolean => {
-  const activeElement = document.activeElement;
-  if (!activeElement) {
-    return false;
-  }
-
-  // Handle shadow DOM.
-  let shadowActive = activeElement;
-  while (shadowActive?.shadowRoot?.activeElement) {
-    shadowActive = shadowActive.shadowRoot.activeElement;
-  }
-
-  // Check if element or any parent has focus.
-  let current: HTMLElement | null = element;
-  while (current) {
-    if (current === activeElement || current === shadowActive) {
-      return true;
-    }
-    current = current.parentElement;
   }
 
   return false;

@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
 import './dx-grid.ts';
 import './dx-grid.pcss';
-
 import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';
+
+import { random } from '@dxos/random';
 
 import { defaultRowSize } from './defs.js';
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
@@ -35,7 +37,7 @@ const initialLabels = {
     '0,0': { value: '', resizeHandle: 'col' },
   },
   frozenColsStart: [...Array(64)].reduce((acc, _, i) => {
-    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end pie-1', resizeHandle: 'row' };
+    acc[`0,${i}`] = { value: rowToA1Notation(i), className: 'text-end pe-1', resizeHandle: 'row' };
     return acc;
   }, {}),
   frozenRowsStart: [...Array(12)].reduce((acc, _, i) => {
@@ -49,7 +51,7 @@ Basic.args = {
     grid: {
       '1,1': {
         // end: '8,1',
-        value: 'Waffle production',
+        value: random.lorem.paragraphs(5),
       },
       '2,2': {
         value: '',
@@ -81,7 +83,7 @@ Basic.args = {
   columns: JSON.stringify({
     grid: {
       0: { size: 64 },
-      1: { size: 512 },
+      1: { size: 128 },
       2: { size: 64 },
       3: { size: 512 },
       4: { size: 64 },

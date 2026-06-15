@@ -2,19 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type ComponentType, lazy } from 'react';
+
 export * from './AwaitingObject';
-export * from './CreateDialog';
-export * from './CollectionMain';
-export * from './CollectionSection';
-export * from './JoinDialog';
-export * from './MembersContainer';
-export * from './MenuFooter';
-export * from './ObjectSettings';
-export * from './PersistenceStatus';
-export * from './PopoverRenameObject';
-export * from './PopoverRenameSpace';
-export * from './SchemaContainer';
-export * from './SpacePresence';
-export * from './SpacePluginSettings';
-export * from './SpaceSettings';
+export * from './CreateObjectPanel';
+export * from './ForeignKeys';
 export * from './SyncStatus';
+
+export const SpaceSettings: ComponentType<any> = lazy(() => import('./SpaceSettings'));

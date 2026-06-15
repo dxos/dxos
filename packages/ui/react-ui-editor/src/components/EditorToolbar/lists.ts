@@ -4,11 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type NodeArg } from '@dxos/app-graph';
-import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { List, addList, removeList } from '@dxos/ui-editor';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
-import { addList, List, removeList } from '../../extensions';
+import { translationKey } from '#translations';
+
+import { type EditorToolbarState } from './types';
 
 const listStyles = {
   bullet: 'ph--list-bullets--regular',
@@ -16,44 +17,42 @@ const listStyles = {
   task: 'ph--list-checks--regular',
 };
 
-const createListGroupAction = (value: string) =>
-  createEditorActionGroup('list', {
-    variant: 'toggleGroup',
-    selectCardinality: 'single',
-    value,
-  } as ToolbarMenuActionGroupProperties);
+/** Add list actions to the builder. */
+export const addLists =
+  (state: EditorToolbarState, getView: () => EditorView): ActionGroupBuilderFn =>
+  (builder) => {
+    const value = state.listStyle ?? '';
+    builder.group(
+      'list',
+      {
+        label: ['list.label', { ns: translationKey }],
+        iconOnly: true,
+        variant: 'toggleGroup',
+        selectCardinality: 'single',
+        value,
+      } as ToolbarMenuActionGroupProperties,
+      (group) => {
+        for (const [listStyle, icon] of Object.entries(listStyles)) {
+          const checked = value === listStyle;
+          group.action(
+            `list-${listStyle}`,
+            { label: [`list.${listStyle}.label`, { ns: translationKey }], checked, icon },
+            () => {
+              const view = getView();
+              if (!view) {
+                return;
+              }
 
-const createListActions = (value: string, getView: () => EditorView) =>
-  Object.entries(listStyles).map(([listStyle, icon]) => {
-    const checked = value === listStyle;
-    return createEditorAction(
-      `list-${listStyle}`,
-      () => {
-        const view = getView();
-        if (!view) {
-          return;
-        }
-
-        const listType = listStyle === 'ordered' ? List.Ordered : listStyle === 'bullet' ? List.Bullet : List.Task;
-        if (checked) {
-          removeList(listType)(view);
-        } else {
-          addList(listType)(view);
+              const listType =
+                listStyle === 'ordered' ? List.Ordered : listStyle === 'bullet' ? List.Bullet : List.Task;
+              if (checked) {
+                removeList(listType)(view);
+              } else {
+                addList(listType)(view);
+              }
+            },
+          );
         }
       },
-      { checked, icon },
     );
-  });
-
-export const createLists = (state: EditorToolbarState, getView: () => EditorView) => {
-  const value = state.listStyle ?? '';
-  const listGroupAction = createListGroupAction(value);
-  const listActionsMap = createListActions(value, getView);
-  return {
-    nodes: [listGroupAction as NodeArg<any>, ...listActionsMap],
-    edges: [
-      { source: 'root', target: 'list' },
-      ...listActionsMap.map(({ id }) => ({ source: listGroupAction.id, target: id })),
-    ],
   };
-};

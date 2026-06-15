@@ -5,30 +5,29 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createCredentialSignerWithKey, createDidFromIdentityKey, CredentialGenerator } from '@dxos/credentials';
-import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
+import { type IMetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-host';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   AdmittedFeed,
+  type Credential,
   type DeviceProfileDocument,
   DeviceType,
   type ProfileDocument,
-  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { isNode, deferFunction } from '@dxos/util';
+import { deferFunction, isNode, isTauri } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';
@@ -36,14 +35,14 @@ import { Identity } from './identity';
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;
 
-interface ConstructSpaceParams {
+interface ConstructSpaceProps {
   spaceRecord: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   identityKey: PublicKey;
   gossip: Gossip;
 }
 
-export type JoinIdentityParams = {
+export type JoinIdentityProps = {
   identityKey: PublicKey;
   deviceKey: PublicKey;
   haloSpaceKey: PublicKey;
@@ -67,9 +66,9 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
-export type IdentityManagerParams = {
-  metadataStore: MetadataStore;
-  keyring: Keyring;
+export type IdentityManagerProps = {
+  metadataStore: IMetadataStore;
+  keyring: KeyringApi;
   feedStore: FeedStore<FeedMessage>;
   spaceManager: SpaceManager;
   edgeConnection?: EdgeConnection;
@@ -83,8 +82,8 @@ export type IdentityManagerParams = {
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
-  private readonly _metadataStore: MetadataStore;
-  private readonly _keyring: Keyring;
+  private readonly _metadataStore: IMetadataStore;
+  private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _spaceManager: SpaceManager;
   private readonly _devicePresenceAnnounceInterval: number;
@@ -95,7 +94,7 @@ export class IdentityManager {
   private _identity?: Identity;
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
-  constructor(params: IdentityManagerParams) {
+  constructor(params: IdentityManagerProps) {
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
     this._feedStore = params.feedStore;
@@ -112,8 +111,7 @@ export class IdentityManager {
 
   @Trace.span({ showInBrowserTimeline: true })
   async open(ctx: Context): Promise<void> {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.halo.identity-manager.open', trace.begin({ id: traceId }));
+    log('opening identity manager');
 
     const identityRecord = this._metadataStore.getIdentityRecord();
     log('identity record', { identityRecord });
@@ -128,15 +126,14 @@ export class IdentityManager {
 
       this.stateUpdate.emit();
     }
-    log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
+    log('opened identity manager');
   }
 
-  async close(): Promise<void> {
-    await this._identity?.close(new Context());
+  async close(ctx: Context): Promise<void> {
+    await this._identity?.close(ctx);
   }
 
-  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
-    // TODO(nf): populate using context from ServiceContext?
+  async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}, ctx?: Context): Promise<Identity> {
     invariant(!this._identity, 'Identity already exists.');
     log('creating identity...');
 
@@ -153,7 +150,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx ?? Context.default());
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -211,28 +208,32 @@ export class IdentityManager {
     return identity;
   }
 
-  // TODO(nf): receive platform info rather than generating it here.
   createDefaultDeviceProfile(): DeviceProfileDocument {
+    // See TODOs in credentials.proto.
     let type: DeviceType;
-    // TODO(nf): call Platform service instead?
     if (isNode()) {
       type = DeviceType.AGENT;
     } else {
       if (platform.name?.startsWith('iOS') || platform.name?.startsWith('Android')) {
         type = DeviceType.MOBILE;
-      } else if ((globalThis as any).__args) {
+      } else if (isTauri() || !platform.name) {
+        // Tauri's __TAURI__ global isn't available in web workers. Fallback: WKWebView
+        // (Tauri on macOS) reports null for platform.name; all standard browsers don't.
         type = DeviceType.NATIVE;
       } else {
         type = DeviceType.BROWSER;
       }
     }
 
+    const os = platform.os?.family === 'OS X' ? 'macOS' : platform.os?.family;
+    const name = type === DeviceType.NATIVE || type === DeviceType.MOBILE ? 'App' : platform.name;
+
     return {
       type,
-      platform: platform.name,
+      platform: name,
       platformVersion: platform.version,
       architecture: typeof platform.os?.architecture === 'number' ? String(platform.os.architecture) : undefined,
-      os: platform.os?.family,
+      os,
       osVersion: platform.os?.version,
     };
   }
@@ -240,7 +241,7 @@ export class IdentityManager {
   /**
    * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async prepareIdentity(params: JoinIdentityParams) {
+  async prepareIdentity(params: JoinIdentityProps, ctx?: Context) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -256,7 +257,7 @@ export class IdentityManager {
       },
     };
     const identity = await this._constructIdentity(identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx ?? Context.default());
     return { identity, identityRecord };
   }
 
@@ -395,7 +396,7 @@ export class IdentityManager {
     return identity;
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceParams) {
+  private async _constructSpace({ spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps) {
     return this._spaceManager.constructSpace({
       metadata: {
         key: spaceRecord.key,

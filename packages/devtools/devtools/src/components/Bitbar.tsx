@@ -5,10 +5,10 @@
 import React, { type FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { BitField, range } from '@dxos/util';
 
-export type BitbarParams = {
+export type BitbarProps = {
   value: Uint8Array;
   length?: number;
   size?: number;
@@ -17,7 +17,7 @@ export type BitbarParams = {
   className?: string;
 };
 
-export const Bitbar: FC<BitbarParams> = ({
+export const Bitbar: FC<BitbarProps> = ({
   value,
   length = value.length * 8,
   size = 16,

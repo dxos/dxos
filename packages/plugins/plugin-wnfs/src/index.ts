@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export { WnfsCapabilities } from './capabilities';
+export * from './annotations';
+export * from './helpers';
 export * from './meta';
-export * from './WnfsPlugin';
+export * from './types';

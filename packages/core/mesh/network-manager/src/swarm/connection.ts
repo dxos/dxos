@@ -2,21 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized, Trigger } from '@dxos/async';
-import { Context, cancelWithContext, ContextDisposedError } from '@dxos/context';
+import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
-import {
-  CancelledError,
-  ProtocolError,
-  ConnectionResetError,
-  ConnectivityError,
-  TimeoutError,
-  trace,
-} from '@dxos/protocols';
+import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError, TimeoutError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
@@ -113,12 +106,10 @@ export class Connection {
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
-  public _instanceId = PublicKey.random().toHex();
-
   public readonly transportStats = new Event<TransportStats>();
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
-    await this._flushSignalBuffer();
+    await this._flushSignalBuffer(this._ctx);
   });
 
   private _signallingDelay = STARTING_SIGNALLING_DELAY;
@@ -165,7 +156,7 @@ export class Connection {
    */
   async openConnection(): Promise<void> {
     invariant(this._state === ConnectionState.INITIAL, 'Invalid state.');
-    log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
+    log('opening connection');
     log.trace('dxos.mesh.connection.open', {
       sessionId: this.sessionId,
       topic: this.topic,
@@ -185,16 +176,18 @@ export class Connection {
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
       this._protocolClosed.wake();
-      this.close({ error: new ProtocolError('protocol stream closed') }).catch((err) => this.errors.raise(err));
+      this.close({ error: new ProtocolError({ message: 'protocol stream closed' }) }).catch((err) =>
+        this.errors.raise(err),
+      );
     });
 
     scheduleTask(
       this.connectedTimeoutContext,
       async () => {
         log.info(`timeout waiting ${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect, aborting`);
-        await this.abort(new TimeoutError(`${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect`)).catch(
-          (err) => this.errors.raise(err),
-        );
+        await this.abort(
+          new TimeoutError({ message: `${TRANSPORT_CONNECTION_TIMEOUT / 1000}s for transport to connect` }),
+        ).catch((err) => this.errors.raise(err));
       },
       TRANSPORT_CONNECTION_TIMEOUT,
     );
@@ -255,7 +248,7 @@ export class Connection {
 
     this._incomingSignalBuffer = [];
 
-    log.trace('dxos.mesh.connection.open-connection', trace.end({ id: this._instanceId }));
+    log('opened connection');
   }
 
   @synchronized
@@ -364,21 +357,21 @@ export class Connection {
     this._signalSendTask.schedule();
   }
 
-  private async _flushSignalBuffer(): Promise<void> {
+  private async _flushSignalBuffer(ctx: Context): Promise<void> {
     if (this._outgoingSignalBuffer.length === 0) {
       return;
     }
 
     try {
       if (process.env.NODE_ENV !== 'test') {
-        await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+        await cancelWithContext(ctx, sleep(this._signallingDelay));
         this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
       }
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;
 
-      await this._signalMessaging.signal({
+      await this._signalMessaging.signal(ctx, {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
@@ -397,14 +390,14 @@ export class Connection {
 
       // If signal fails treat connection as failed
       log.info('signal message failed to deliver', { err });
-      await this.close({ error: new ConnectivityError('signal message failed to deliver', err) });
+      await this.close({ error: new ConnectivityError({ message: 'signal message failed to deliver', cause: err }) });
     }
   }
 
   /**
    * Receive a signal from the remote peer.
    */
-  async signal(msg: SignalMessage): Promise<void> {
+  async signal(_ctx: Context, msg: SignalMessage): Promise<void> {
     invariant(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');
@@ -414,7 +407,7 @@ export class Connection {
     invariant(msg.author.peerKey === this.remoteInfo.peerKey);
     invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
-    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
+    const signals = msg.data.signalBatch ? (msg.data.signalBatch.signals ?? []) : [msg.data.signal];
     for (const signal of signals) {
       if (!signal) {
         continue;

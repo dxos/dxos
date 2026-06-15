@@ -14,11 +14,9 @@ Plugins are identified by a list of properties stored in `plugin.meta`:
 import { definePlugin } from '@dxos/app-framework';
 
 export default definePlugin({
-  meta: {
-    id: 'org.example.my-plugin',
-    name: 'My Plugin'
-  }
-})
+  id: 'org.example.my-plugin',
+  name: 'My Plugin',
+});
 ```
 
 ## Provides
@@ -32,19 +30,17 @@ For example, the [Surface](surface.md) plugin defines a `provides.surface.compon
 ```tsx
 import { definePlugin, SurfaceProvides } from '@dxos/app-framework';
 
-export default definePlugin<SurfaceProvides>(
-  {
-    meta: {
-      id: 'my-plugin',
+export default definePlugin<SurfaceProvides>({
+  meta: {
+    id: 'my-plugin',
+  },
+  provides: {
+    /* things the plugin provides */
+    surface: {
+      component: ({ data }) => <div>Your {data} component here</div>,
     },
-    provides: {
-      /* things the plugin provides */
-      surface: {
-        component: ({ data }) => <div>Your {data} component here</div>
-      }
-    }
-  }
-)
+  },
+});
 ```
 
 ## Context
@@ -59,20 +55,16 @@ The order in which contexts are nested depends on the order in which the plugins
 import { PropsWithChildren } from 'react';
 import { Plugin } from '@composer/core';
 
-export default definePlugin(
-  {
-    meta: {
-      id: 'my-plugin',
-    },
-    provides: {
-      context: ({ children }: PropsWithChildren) => (
-        <div className="wrap-with-anything">
-          {children}
-        </div>
-      )
-    }
-  }
-)
+export default definePlugin({
+  id: 'my-plugin',
+  () => [
+    defineModule({
+      id: 'my-plugin/context',
+      activatesOn: Events.Startup,
+      activate: () => [],
+    }),
+  ]
+});
 ```
 
 ## Root
@@ -84,16 +76,16 @@ If multiple plugins provide a `root` component, they will render as a list of si
 ```tsx
 import { definePlugin } from '@dxos/app-framework';
 
-export default definePlugin(
-  {
-    meta: {
-      id: 'my-plugin',
-    },
-    provides: {
-      root: () => <div>My root component here</div>
-    }
-  }
-)
+export default definePlugin({
+  id: 'my-plugin',
+  () => [
+    defineModule({
+      id: 'my-plugin/root',
+      activatesOn: Events.Startup,
+      activate: () => [],
+    }),
+  ],
+});
 ```
 
 The entire application can be thought of as a set of composed contexts that wrap one or more `root` elements.
@@ -104,12 +96,12 @@ const App = () => (
   <ContextFromPluginOne>
     <ContextFromPluginTwo>
       {/* more contexts nest here ... */}
-        <RootFromPluginOne/>
-        <RootFromPluginTwo/>
-        { /* more roots append here ... */ }
+      <RootFromPluginOne />
+      <RootFromPluginTwo />
+      {/* more roots append here ... */}
     </ContextFromPluginTwo>
   </ContextFromPluginOne>
-)
+);
 ```
 
 ::: note Under Development

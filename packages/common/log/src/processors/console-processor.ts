@@ -7,9 +7,8 @@ import { inspect } from 'node:util';
 
 import { getPrototypeSpecificInstanceId, pickBy } from '@dxos/util';
 
-import { getRelativeFilename } from './common';
 import { type LogConfig, LogLevel, shortLevelName } from '../config';
-import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',
@@ -21,7 +20,7 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
 };
 
 export const truncate = (text?: string, length = 0, right = false) => {
-  const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
+  const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : (text ?? '');
   return right ? str.padStart(length, ' ') : str.padEnd(length, ' ');
 };
 
@@ -32,7 +31,7 @@ export type FormatParts = {
   line?: number;
   timestamp?: string;
   level: LogLevel;
-  message: string;
+  message?: string;
   context?: any;
   error?: Error;
   scope?: any;
@@ -50,8 +49,10 @@ export const DEFAULT_FORMATTER: Formatter = (
   let instance;
   if (scope) {
     const prototype = Object.getPrototypeOf(scope);
-    const id = getPrototypeSpecificInstanceId(scope);
-    instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+    if (prototype !== null) {
+      const id = getPrototypeSpecificInstanceId(scope);
+      instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+    }
   }
 
   const formattedTimestamp = config.options?.formatter?.timestamp ? new Date().toISOString() : undefined;
@@ -91,21 +92,16 @@ export const CONSOLE_PROCESSOR: LogProcessor = (config, entry) => {
     return;
   }
 
+  const { filename, line: lineNumber } = entry.computedMeta;
   const parts: FormatParts = {
     level,
     message,
     error,
-    path: undefined,
-    line: undefined,
-    scope: undefined,
+    path: filename,
+    line: lineNumber,
+    scope: meta?.S,
     context: undefined,
   };
-
-  if (meta) {
-    parts.path = getRelativeFilename(meta.F);
-    parts.line = meta.L;
-    parts.scope = meta.S;
-  }
 
   const context = getContextFromEntry(entry);
   if (context) {

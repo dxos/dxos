@@ -3,23 +3,23 @@
 //
 
 import fuzzy from 'fuzzy';
-import { render, Text, Box, useStdout, useInput } from 'ink';
+import { Box, Text, render, useInput, useStdout } from 'ink';
 import { resolve } from 'node:path';
-import React, { useState, useEffect, type ReactNode } from 'react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { entries, keys } from '@dxos/util';
 
-import { DependentList, PackageList, StatusBar, Input } from './components';
+import { DependentList, Input, PackageList, StatusBar } from './components';
 import {
-  findLockfile,
-  loadLockfile,
-  setAllToVersion,
   type LockfileResult,
   type PackageId,
   type PackageName,
   type PackagePath,
   type VersionId,
   type VersionSpecifier,
+  findLockfile,
+  loadLockfile,
+  setAllToVersion,
 } from './lockfile';
 
 const App = () => {

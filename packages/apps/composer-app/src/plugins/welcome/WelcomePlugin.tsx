@@ -2,40 +2,47 @@
 // Copyright 2025 DXOS.org
 //
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
-import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
-import { WELCOME_PLUGIN, meta } from './meta';
-import translations from './translations';
+import {
+  AppGraphBuilder,
+  DefaultContent,
+  OAuthRecoveryRedirect,
+  Onboarding,
+  OperationHandler,
+  ReactSurface,
+  type WelcomeOptions,
+} from './capabilities';
+import { meta } from './meta';
+import { translations } from './translations';
 
-export const WelcomePlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/onboarding`,
-      activatesOn: allOf(
-        Events.DispatcherReady,
-        Events.AppGraphReady,
-        Events.SettingsReady,
-        Events.LayoutReady,
-        ClientEvents.ClientReady,
-      ),
-      activate: Onboarding,
-    }),
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/default-content`,
-      activatesOn: SpaceEvents.DefaultSpaceReady,
-      activate: DefaultContent,
-    }),
-  ]);
+export const WelcomePlugin = Plugin.define<WelcomeOptions>(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'oauth-recovery-redirect',
+    activatesOn: ActivationEvents.Startup,
+    activate: OAuthRecoveryRedirect,
+  }),
+  Plugin.addModule((options) => ({
+    id: 'default-content',
+    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activate: () => DefaultContent(options),
+  })),
+  Plugin.addModule({
+    id: 'onboarding',
+    activatesOn: ActivationEvent.allOf(
+      AppActivationEvents.AppGraphReady,
+      ActivationEvents.ProcessManagerReady,
+      AppActivationEvents.LayoutReady,
+      ClientEvents.ClientReady,
+    ),
+    activate: Onboarding,
+  }),
+  Plugin.make,
+);

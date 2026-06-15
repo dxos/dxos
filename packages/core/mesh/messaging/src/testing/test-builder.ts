@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TestPeer } from './test-peer';
-import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from '../signal-manager';
+import { type Context } from '@dxos/context';
+
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '../signal-manager';
 import { type Message } from '../signal-methods';
+import { TestPeer } from './test-peer';
 
 export type TestBuilderOptions = {
   signalManagerFactory?: (peer: TestPeer) => Promise<SignalManager>;
@@ -24,9 +26,9 @@ export class TestBuilder {
     if (this.options.messageDisruption) {
       // Imitates signal network disruptions (e. g. message doubling, ).
       const trueSend = signalManager.sendMessage.bind(signalManager);
-      signalManager.sendMessage = async (message: Message) => {
+      signalManager.sendMessage = async (ctx: Context, message: Message) => {
         for (const msg of this.options.messageDisruption!(message)) {
-          await trueSend(msg);
+          await trueSend(ctx, msg);
         }
       };
     }

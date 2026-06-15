@@ -1,0 +1,22 @@
+id: vendor-hyperformula
+layer: library
+language: typescript
+tags:
+  - vendor
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
+
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/hyperformula.js'
+      - '--platform=neutral'
+      - '--mainFields=browser,module,main'
+      - '--bundlePackage=hyperformula'
+      - '--bundlePackage=chevrotain'
+      - '--bundlePackage=unorm'
+      - '--bundlePackage=tiny-emitter'
+      - '--bundlePackage=regexp-to-ast'

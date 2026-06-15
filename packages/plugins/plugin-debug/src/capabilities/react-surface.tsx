@@ -2,20 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  chain,
-  contributes,
-  createIntent,
-  createSurface,
-  LayoutAction,
-  useCapability,
-  useIntentDispatcher,
-  type PluginContext,
-} from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation, RootCollectionAnnotation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -37,34 +31,37 @@ import {
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
+  SqlitePanel,
   StoragePanel,
   SwarmPanel,
   TestingPanel,
-  TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Obj, Type } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
+import { Annotation, Collection, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Graph } from '@dxos/plugin-graph';
-import { ScriptAction } from '@dxos/plugin-script/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { SpaceState, isSpace, type Space, parseId } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { type IdbLogStore } from '@dxos/log-store-idb';
+import { type Graph } from '@dxos/plugin-graph';
+import { ScriptOperation } from '@dxos/plugin-script';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
+import { DebugSettings } from '#components';
 import {
-  DebugApp,
+  DebugGraph,
   DebugObjectPanel,
-  DebugSettings,
+  DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
+  RegistryPanel,
   SpaceGenerator,
   Wireframe,
-} from '../components';
-import { DEBUG_PLUGIN } from '../meta';
-import { type DebugSettingsProps, Devtools } from '../types';
+} from '#containers';
+import { meta } from '#meta';
+import { DebugCapabilities, type Settings, Devtools } from '#types';
+
+// TODO(burdon): Move to config.
+const MCP_SERVER_URL = 'https://introspect-service-labs.dxos.workers.dev/mcp';
 
 type SpaceDebug = {
   type: string;
@@ -72,326 +69,384 @@ type SpaceDebug = {
 };
 
 type GraphDebug = {
-  graph: Graph;
+  graph: Graph.Graph;
+  root: string;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
-const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph;
-
-// TODO(wittjosiah): Factor out?
-const useCurrentSpace = () => {
-  const layout = useCapability(Capabilities.Layout);
-  const client = useCapability(ClientCapabilities.Client);
-  const { spaceId } = parseId(layout.workspace);
-  const space = spaceId ? client.spaces.get(spaceId) : undefined;
-  return space;
+const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}.space` && isSpace(data.space);
+const isGraphDebug = (data: any): data is GraphDebug => {
+  const graph = data?.graph;
+  return (
+    graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
+  );
 };
 
-export default (context: PluginContext) =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${DEBUG_PLUGIN}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === DEBUG_PLUGIN,
-      component: ({ data: { subject } }) => <DebugSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/space`,
-      role: 'article',
-      filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
-      component: ({ data }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
+type ReactSurfaceOptions = {
+  logStore?: IdbLogStore;
+};
 
-        const handleCreateObject = useCallback(
-          (objects: Obj.Any[]) => {
-            if (!isSpace(data.subject.space)) {
-              return;
-            }
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
+    const capabilities = yield* Capability.Service;
+    const registry = capabilities.get(Capabilities.AtomRegistry);
+    const settingsAtom = capabilities.get(DebugCapabilities.Settings);
+    const fileUploader = capabilities.getAll(AppCapabilities.FileUploader)[0];
 
-            const collection =
-              data.subject.space.state.get() === SpaceState.SPACE_READY &&
-              data.subject.space.properties[Type.getTypename(DataType.Collection)]?.target;
-            if (!Obj.instanceOf(DataType.Collection, collection)) {
-              return;
-            }
+    return Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return (
+            <DebugSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              logStore={logStore}
+              onUpload={fileUploader}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'space',
+        role: 'article',
+        filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
+        component: ({ role, data }) => {
+          const { invokePromise } = useOperationInvoker();
 
-            objects.forEach((object) => {
-              void dispatch(createIntent(SpaceAction.AddObject, { target: collection, object }));
-            });
-          },
-          [data.subject.space],
-        );
+          const handleCreateObject = useCallback(
+            (objects: Obj.Unknown[]) => {
+              if (!isSpace(data.subject.space)) {
+                return;
+              }
 
-        return (
-          <StackItem.Content>
-            <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-          </StackItem.Content>
-        );
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/graph`,
-      role: 'article',
-      filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
-      component: ({ data }) => <DebugApp graph={data.subject.graph} />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/wireframe`,
-      role: ['article', 'section'],
-      position: 'hoist',
-      filter: (data): data is { subject: Obj.Any } => {
-        const settings = context
-          .getCapability(Capabilities.SettingsStore)
-          .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
-        return Obj.isObject(data.subject) && !!settings.wireframe;
-      },
-      component: ({ data, role }) => (
-        <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
-      ),
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/object-debug`,
-      role: 'article',
-      filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && Obj.isObject(data.companionTo),
-      component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/devtools-overview`,
-      role: 'deck-companion--devtools',
-      component: () => <DevtoolsOverviewContainer />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/status`,
-      role: 'status',
-      component: () => <DebugStatus />,
-    }),
+              const collection =
+                data.subject.space.state.get() === SpaceState.SPACE_READY &&
+                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)
+                  ?.target;
+              if (!Obj.instanceOf(Collection.Collection, collection)) {
+                return;
+              }
 
-    //
-    // Devtools
-    //
+              objects.forEach((object) => {
+                void invokePromise(SpaceOperation.AddObject, {
+                  target: collection,
+                  object,
+                });
+              });
+            },
+            [data.subject.space, invokePromise],
+          );
 
-    createSurface({
-      id: `${DEBUG_PLUGIN}/client/config`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Client.Config,
-      component: () => <ConfigPanel vaultSelector={false} />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/client/storage`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Client.Storage,
-      component: () => <StoragePanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/client/logs`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Client.Logs,
-      component: () => <LoggingPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/client/diagnostics`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Client.Diagnostics,
-      component: () => <DiagnosticsPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/client/tracing`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Client.Tracing,
-      component: () => <TracingPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/halo/identity`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Halo.Identity,
-      component: () => <IdentityPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/halo/devices`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Halo.Devices,
-      component: () => <DeviceListPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/halo/keyring`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Halo.Keyring,
-      component: () => <KeyringPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/halo/credentials`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
-      component: () => {
-        const space = useCurrentSpace();
-        return <CredentialsPanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/spaces`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
-      component: () => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const handleSelect = useCallback(
-          () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Space] })),
-          [dispatch],
-        );
-        return <SpaceListPanel onSelect={handleSelect} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/space`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Space,
-      component: () => {
-        const space = useCurrentSpace();
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const handleSelect = useCallback(
-          () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
-          [dispatch],
-        );
-        return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/feeds`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
-      component: () => {
-        const space = useCurrentSpace();
-        return <FeedsPanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/objects`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Objects,
-      component: () => {
-        const space = useCurrentSpace();
-        return <ObjectsPanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/schema`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Schema,
-      component: () => {
-        const space = useCurrentSpace();
-        return <SchemaPanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/automerge`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
-      component: () => {
-        const space = useCurrentSpace();
-        return <AutomergePanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/queues`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Queues,
-      component: () => <QueuesPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/members`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Members,
-      component: () => {
-        const space = useCurrentSpace();
-        return <MembersPanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/echo/metadata`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Echo.Metadata,
-      component: () => <MetadataPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/mesh/signal`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Mesh.Signal,
-      component: () => <SignalPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/mesh/swarm`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Mesh.Swarm,
-      component: () => <SwarmPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/mesh/network`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Mesh.Network,
-      component: () => {
-        const space = useCurrentSpace();
-        return <NetworkPanel space={space} />;
-      },
-    }),
-    // TODO(wittjosiah): Remove?
-    // createSurface({
-    //   id: `${DEBUG_PLUGIN}/agent/dashboard`,
-    //   role: 'article',
-    //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
-    //   component: () => <DashboardPanel />,
-    // }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/edge/dashboard`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Edge.Dashboard,
-      component: () => <EdgeDashboardPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/edge/workflows`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
-      component: () => {
-        const space = useCurrentSpace();
-        return <WorkflowPanel space={space} />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/edge/traces`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Edge.Traces,
-      component: () => {
-        const space = useCurrentSpace();
-        return <InvocationTraceContainer space={space} detailAxis='block' />;
-      },
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/edge/testing`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Edge.Testing,
-      component: () => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const onSpaceCreate = useCallback(
-          async (space: Space) => {
-            await space.waitUntilReady();
-            await dispatch(createIntent(SpaceAction.Migrate, { space }));
-            await space.db.flush();
-          },
-          [dispatch],
-        );
-        const onScriptPluginOpen = useCallback(
-          async (space: Space) => {
-            await space.waitUntilReady();
-            const result = await dispatch(
-              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target: space })),
-            );
-            log.info('script created', { result });
-            await dispatch(
-              createIntent(LayoutAction.Open, { part: 'main', subject: [`${space.id}:${result.data?.object.id}`] }),
-            );
-          },
-          [dispatch],
-        );
-        return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
-      },
-    }),
-  ]);
+          return <SpaceGenerator role={role} space={data.subject.space} onCreateObjects={handleCreateObject} />;
+        },
+      }),
+      Surface.create({
+        id: 'appGraph',
+        role: 'article',
+        filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+        component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
+      }),
+      Surface.create({
+        id: 'toolsExplorer',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
+        component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
+      }),
+      Surface.create({
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Registry),
+        component: () => <RegistryPanel />,
+      }),
+      Surface.create({
+        id: 'wireframe',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        role: ['article', 'section'],
+        position: 'first',
+        filter: (data): data is { subject: Obj.Unknown } => {
+          const settings = registry.get(settingsAtom);
+          return Obj.isObject(data.subject) && !!settings.wireframe;
+        },
+        component: ({ data, role, name }) => (
+          <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
+        ),
+      }),
+      Surface.create({
+        id: 'objectDebug',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'debug'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
+      }),
+      Surface.create({
+        id: 'devtoolsOverview',
+        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
+        component: () => <DevtoolsOverviewContainer />,
+      }),
+      Surface.create({
+        id: 'spaceObjects',
+        filter: AppSurface.literal(
+          Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
+          'space-objects',
+        ),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <DebugSpaceObjectsPanel space={space} />;
+        },
+      }),
+
+      Surface.create({
+        id: 'debugStatus',
+        role: 'status-indicator',
+        position: 'first',
+        component: () => <DebugStatus />,
+      }),
+
+      //
+      // Devtools
+      //
+
+      Surface.create({
+        id: 'client.config',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Config),
+        component: () => <ConfigPanel vaultSelector={false} />,
+      }),
+      Surface.create({
+        id: 'client.storage',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Storage),
+        component: () => <StoragePanel />,
+      }),
+      Surface.create({
+        id: 'client.sqlite',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Sqlite),
+        component: () => <SqlitePanel />,
+      }),
+      Surface.create({
+        id: 'client.logs',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Logs),
+        component: () => <LoggingPanel />,
+      }),
+      Surface.create({
+        id: 'client.diagnostics',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Diagnostics),
+        component: () => <DiagnosticsPanel />,
+      }),
+      Surface.create({
+        id: 'halo.identity',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Identity),
+        component: () => <IdentityPanel />,
+      }),
+      Surface.create({
+        id: 'halo.devices',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Devices),
+        component: () => <DeviceListPanel />,
+      }),
+      Surface.create({
+        id: 'halo.keyring',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Keyring),
+        component: () => <KeyringPanel />,
+      }),
+      Surface.create({
+        id: 'halo.credentials',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Credentials),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <CredentialsPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.spaces',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Spaces),
+        component: () => {
+          const { invokePromise } = useOperationInvoker();
+          const handleSelect = useCallback(
+            () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
+            [invokePromise],
+          );
+          return <SpaceListPanel onSelect={handleSelect} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.space',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Space),
+        component: () => {
+          const space = useActiveSpace();
+          const { invokePromise } = useOperationInvoker();
+          const handleSelect = useCallback(
+            () => invokePromise(LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
+            [invokePromise],
+          );
+          if (!space) {
+            return null;
+          }
+
+          return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.feeds',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Feeds),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <FeedsPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.objects',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Objects),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <ObjectsPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.schema',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Schema),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <SchemaPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.automerge',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Automerge),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <AutomergePanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.queues',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Queues),
+        component: () => <QueuesPanel />,
+      }),
+      Surface.create({
+        id: 'echo.members',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Members),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <MembersPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'echo.metadata',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Metadata),
+        component: () => <MetadataPanel />,
+      }),
+      Surface.create({
+        id: 'mesh.signal',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Signal),
+        component: () => <SignalPanel />,
+      }),
+      Surface.create({
+        id: 'mesh.swarm',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Swarm),
+        component: () => <SwarmPanel />,
+      }),
+      Surface.create({
+        id: 'mesh.network',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Network),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <NetworkPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'edge.dashboard',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Dashboard),
+        component: () => <EdgeDashboardPanel />,
+      }),
+      Surface.create({
+        id: 'edge.workflows',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Workflows),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <WorkflowPanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'edge.traces',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Traces),
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          const feed = space.properties.invocationTraceFeed?.target;
+          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
+        },
+      }),
+      Surface.create({
+        id: 'edge.testing',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Testing),
+        component: () => {
+          const { invokePromise } = useOperationInvoker();
+          const onSpaceCreate = useCallback(
+            async (space: Space) => {
+              await space.waitUntilReady();
+              await invokePromise(SpaceOperation.Migrate, { space });
+              await space.db.flush();
+            },
+            [invokePromise],
+          );
+          const onScriptPluginOpen = useCallback(
+            async (space: Space) => {
+              await space.waitUntilReady();
+              const createResult = await invokePromise(ScriptOperation.CreateScript, { db: space.db });
+              if (createResult.data?.object) {
+                await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
+              }
+              log.info('script created', { result: createResult });
+              if (createResult.data?.object) {
+                await invokePromise(LayoutOperation.Open, {
+                  subject: [getObjectPathFromObject(createResult.data.object)],
+                });
+              }
+            },
+            [invokePromise],
+          );
+          return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
+        },
+      }),
+    ]);
+  }),
+);

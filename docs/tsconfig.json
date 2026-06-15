@@ -5,15 +5,15 @@
     "legacy"
   ],
   "include": [
-    "**/*",
-    ".astro/types.d.ts"
+    ".astro/types.d.ts",
+    "src"
   ],
   "references": [
     {
-      "path": "../packages/core/echo/echo"
+      "path": "../packages/common/keys"
     },
     {
-      "path": "../packages/core/echo/echo-signals"
+      "path": "../packages/core/echo/echo"
     },
     {
       "path": "../packages/sdk/app-framework"
@@ -29,6 +29,9 @@
     },
     {
       "path": "../packages/sdk/react-client"
+    },
+    {
+      "path": "../packages/sdk/schema"
     }
   ]
 }

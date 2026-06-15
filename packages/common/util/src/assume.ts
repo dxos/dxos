@@ -16,7 +16,6 @@
  * ```
  */
 // NOTE: Keep as `function` to avoid type inference issues.
-// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
 export function assumeType<T>(value: unknown): asserts value is T {
   // No-op.
 }

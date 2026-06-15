@@ -1,0 +1,818 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
+
+/**
+ * HTTP header sent on every Edge request to classify traffic for metering.
+ */
+export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
+
+/**
+ * HTTP header sent on every Edge request to provide a BYOK (Bring Your Own Key) for AI services.
+ */
+export const BYOK_HEADER = 'X-BYOK';
+
+// TODO(burdon): Rename EdgerRouterEndpoint.
+// If we would rename it, we need to be careful to not break composer production.
+export enum EdgeService {
+  AUTOMERGE_REPLICATOR = 'automerge-replicator',
+  SUBDUCTION_REPLICATOR = 'subduction-replicator',
+  /**
+   * Control feed replicator (hypercore append only logs) for the space.
+   */
+  // TODO(mykola): Remove once we migrate to keyhive for access control.
+  FEED_REPLICATOR = 'feed-replicator',
+  /**
+   * Feed replicator (ordered data list) for the space.
+   */
+  // TODO(mykola): Rename to FEED_REPLICATOR when we migrate to keyhive for access control.
+  QUEUE_REPLICATOR = 'queue-replicator',
+  SWARM = 'swarm',
+  SIGNAL = 'signal',
+  STATUS = 'status',
+}
+
+export type EdgeSuccess<T> = {
+  success: true;
+  data: T;
+};
+
+const _SerializedError = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  message: Schema.optional(Schema.String),
+  context: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  stack: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.suspend(() => SerializedError)),
+});
+export interface SerializedError extends Schema.Schema.Type<typeof _SerializedError> {}
+export const SerializedError: Schema.Schema<SerializedError, SerializedError, never> = _SerializedError;
+
+export type EdgeErrorData = { type: string } & Record<string, any>;
+
+/**
+ * This is the shape of the error response from the Edge service,
+ * when the error is gracefully handled, the Response will be an object with this shape and have status code 200.
+ */
+export type EdgeFailure = {
+  /**
+   * Branded Type.
+   */
+  success: false;
+  /**
+   * An explanation of why the call failed. Used mostly for logging and monitoring.
+   */
+  message: string;
+  /**
+   * Cause Error captured on the EDGE service to aid debugging on the client.
+   */
+  error?: SerializedError;
+  /**
+   * Information that can be used to retry the request such that it will succeed, for example:
+   * 1. { type: 'auth_required', challenge: string }
+   *    Requires retrying the request with challenge signature included.
+   * 2. { type: 'user_confirmation_required', dialog: { title: string, message: string, confirmation_payload: string } }
+   *    Requires showing a confirmation dialog to a user and retrying the request with confirmation_payload included
+   *    if the user confirms.
+   * When data is returned simply retrying the request won't have any effect.
+   * EdgeHttpClient should parse well-known data into Error types and throw.
+   */
+  data?: EdgeErrorData;
+};
+
+/**
+ * Represents a body response from the Edge service.
+ */
+export type EdgeEnvelope<T> = EdgeSuccess<T> | EdgeFailure;
+
+/**
+ * Use this to create a response from the Edge service.
+ */
+export const EdgeResponse = Object.freeze({
+  success: <T>(data: T, status: number = 200): Response => {
+    invariant(status >= 200 && status < 300, 'Status code must be in the 2xx range');
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data,
+      } satisfies EdgeSuccess<T>),
+      {
+        status,
+        headers,
+      },
+    );
+  },
+  failure: ({
+    message,
+    error,
+    errorEncoded,
+    data,
+    shouldRetryAfter,
+    status = 500,
+  }: {
+    /**
+     * An explanation of why the call failed. Used mostly for logging and monitoring.
+     */
+    message: string;
+    /**
+     * Error that caused the failure.
+     * Useful for debugging.
+     *
+     * Use only one of the fields `error` or `errorEncoded`.s
+     */
+    error?: Error;
+    /**
+     * Encoded Error that caused the failure.
+     * Useful for debugging.
+     *
+     * Use only one of the fields `error` or `errorEncoded`.
+     */
+    errorEncoded?: SerializedError;
+
+    /**
+     * Information that can be used to retry the request such that it will succeed, for example:
+     * 1. { type: 'auth_required', challenge: string }
+     *    Requires retrying the request with challenge signature included.
+     * 2. { type: 'user_confirmation_required', dialog: { title: string, message: string, confirmation_payload: string } }
+     *    Requires showing a confirmation dialog to a user and retrying the request with confirmation_payload included
+     *    if the user confirms.
+     * When data is returned simply retrying the request won't have any effect.
+     * EdgeHttpClient should parse well-known data into Error types and throw.
+     */
+    data?: EdgeErrorData;
+    /**
+     * If provided, this request will be marked as retryable and the client will wait for the specified number of milliseconds before retrying.
+     * If not provided, the client will not retry the request.
+     */
+    shouldRetryAfter?: number;
+
+    /**
+     * Status code of the response.
+     * @default 500
+     */
+    status?: number;
+  }): Response => {
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    if (shouldRetryAfter) {
+      headers.set('Retry-After', String(shouldRetryAfter));
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message,
+        data,
+        error: error ? ErrorCodec.encode(error) : errorEncoded,
+      } satisfies EdgeFailure),
+      {
+        status,
+        headers,
+      },
+    );
+  },
+});
+
+export type GetNotarizationResponseBody = {
+  awaitingNotarization: { credentials: string[] };
+};
+
+export type ExecuteWorkflowResponseBody = {
+  success: boolean;
+  reason?: string;
+  output?: any;
+};
+
+export type PostNotarizationRequestBody = {
+  credentials: string[];
+};
+
+export type JoinSpaceRequest = {
+  invitationId: string;
+  identityKey: string;
+  /**
+   * Base64 encoded signed challenge.
+   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY`
+   */
+  signature?: string;
+};
+
+export type JoinSpaceResponseBody = {
+  spaceMemberCredential: string;
+  spaceGenesisFeedKey: string;
+};
+
+export type RecoverIdentitySignature =
+  | string
+  // This is the format of the signature from the WebAuthn authenticator.
+  | {
+      signature: string;
+      clientDataJson: string;
+      authenticatorData: string;
+    };
+
+export type RecoverIdentityRequest = {
+  deviceKey: string;
+  controlFeedKey: string;
+  lookupKey?: string;
+  signature?: RecoverIdentitySignature;
+  token?: string;
+  /**
+   * One-time proof minted by kms-service after a successful OAuth recovery flow.
+   * When provided, db-service redeems the proof to obtain the bound identityKey directly
+   * and `lookupKey`/`signature` are not required.
+   */
+  recoveryProof?: string;
+};
+
+export type RecoverIdentityResponseBody = {
+  identityKey: string;
+  haloSpaceKey: string;
+  genesisFeedKey: string;
+  deviceAuthCredential: string;
+};
+
+export type CreateAgentRequestBody = {
+  identityKey: string;
+  haloSpaceId: SpaceId;
+  haloSpaceKey: string;
+};
+
+export type CreateAgentResponseBody = {
+  deviceKey: string;
+  feedKey: string;
+};
+
+export type GetAgentStatusResponseBody = {
+  agent: {
+    deviceKey?: string;
+    status: EdgeAgentStatus;
+  };
+};
+
+export type UploadFunctionRequest = {
+  name?: string;
+  version: string;
+  ownerPublicKey: string;
+  entryPoint: string;
+  assets: Record<string, Uint8Array>;
+  /**
+   * Runtime in Edge that will be used to run the function.
+   * Runtime cannot be changed once the function was deployed.
+   * @default Runtime.WORKERS_FOR_PLATFORMS
+   */
+  runtime?: FunctionRuntimeKind;
+};
+
+/**
+ * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
+ */
+export const FunctionRuntimeKind = Schema.Enums({
+  // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
+  WORKERS_FOR_PLATFORMS: 'WORKERS_FOR_PLATFORMS',
+  // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
+  WORKER_LOADER: 'WORKER_LOADER',
+});
+export type FunctionRuntimeKind = Schema.Schema.Type<typeof FunctionRuntimeKind>;
+
+export type UploadFunctionResponseBody = {
+  functionId: string;
+  version: string;
+  meta: {
+    key?: string;
+    name?: string;
+    description?: string;
+    /**
+     * JSON Schema for the input of the function.
+     */
+    inputSchema?: object;
+    /**
+     * JSON Schema for the output of the function.
+     */
+    outputSchema?: object;
+  };
+};
+
+export type CreateSpaceRequest = {
+  /**
+   * HEX encoded public key of the agent.
+   */
+  agentKey: string;
+};
+
+export type CreateSpaceResponseBody = {
+  /**
+   * HEX encoded public key of the space.
+   */
+  spaceKey: string;
+  spaceId: SpaceId;
+  automergeRoot: string;
+};
+
+export enum EdgeAgentStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  NOT_FOUND = 'not_found',
+}
+
+export type EdgeAuthChallenge = {
+  type: 'auth_challenge';
+  challenge: string;
+};
+
+export enum OAuthProvider {
+  ATLASSIAN = 'atlassian',
+  ATPROTO = 'atproto',
+  /** @deprecated Use ATPROTO instead. */
+  BLUESKY = 'bluesky',
+  DISCORD = 'discord',
+  GITHUB = 'github',
+  GOOGLE = 'google',
+  LINEAR = 'linear',
+  NOTION = 'notion',
+  SLACK = 'slack',
+  TRELLO = 'trello',
+}
+
+export const InitiateOAuthFlowRequestSchema = Schema.Struct({
+  provider: Schema.Enums(OAuthProvider),
+  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
+  accessTokenId: Schema.String,
+  scopes: Schema.mutable(Schema.Array(Schema.String)),
+  // Set to true if we don't want periodic token refreshes in background, for cases like account connect
+  noRefresh: Schema.optional(Schema.Boolean),
+  // Provider-specific (user handle or did for atproto) hint for auth server resolution
+  loginHint: Schema.optional(Schema.String),
+  // Return a 302 redirect to composer://oauth/callback instead of HTML.
+  // Required for ASWebAuthenticationSession (iOS) which blocks JavaScript redirects.
+  nativeAppRedirect: Schema.optional(Schema.Boolean),
+  // OAuth-based account recovery: when purpose === 'register', kms-service writes a
+  // recovery binding for `identityKey` after the OAuth flow completes; when 'recovery',
+  // kms-service mints a one-time `recoveryProof` the client forwards to db-service.
+  registerRecovery: Schema.optional(Schema.Boolean),
+  identityKey: Schema.optional(Schema.String),
+  purpose: Schema.optional(Schema.Literal('register', 'recovery')),
+});
+export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
+
+export type InitiateOAuthFlowResponse = {
+  authUrl: string;
+};
+
+export type OAuthFlowResult =
+  | { success: true; accessToken: string; accessTokenId: string; recoveryProof?: string }
+  | { success: false; reason: string };
+
+/**
+ * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
+ * into the personal space and writes the recovery binding.
+ */
+export type CompleteOAuthRegistrationRequest = {
+  registrationToken: string;
+  identityKey: string;
+  spaceKey: string;
+};
+
+export type CompleteOAuthRegistrationResponse = {
+  email?: string;
+  provider: OAuthProvider;
+  accessTokenId: string;
+  accessToken: string;
+  expiresInSeconds: number;
+  scopes: string[];
+  identifier: string;
+};
+
+export enum EdgeWebsocketProtocol {
+  V0 = 'edge-ws-v0',
+  /**
+   * Enables message framing and muxing by service-id.
+   */
+  V1 = 'edge-ws-v1',
+}
+
+// TODO(mykola): Reconcile with type in EDGE repo.
+export type EdgeStatus = {
+  problems: string[];
+  agent: {
+    agentStatus?: string;
+    agentKey?: string;
+    haloSpaceId?: SpaceId;
+    fetchError?: string;
+  };
+  router: {
+    connectedDevices?: {
+      peerKey: string;
+      topics: string[];
+    }[];
+    metrics?: {
+      sentMessages: number;
+      receivedMessages: number;
+      sentBytes: number;
+      receivedBytes: number;
+      failedMessages: number;
+      failedBytes: number;
+    };
+    fetchError?: string;
+  };
+  spaces: {
+    data: Record<SpaceId, { diagnostics?: any & { redFlags: string[] }; fetchError?: string }>;
+    fetchError?: string;
+  };
+};
+
+//
+// Space import/export.
+//
+
+export type ImportBundleRequest = {
+  bundle: {
+    /**
+     * DocumentId.
+     */
+    documentId: string;
+    /**
+     * Encoded mutation.
+     */
+    mutation: string;
+    /**
+     * Heads of the document.
+     */
+    heads: string[];
+  }[];
+};
+
+export type ExportBundleRequest = {
+  /**
+   * DocumentId -> Heads (decoded heads since which we want to export).
+   */
+  docHeads: Record<string, string[]>;
+};
+
+export type ExportBundleResponse = {
+  bundle: {
+    /**
+     * DocumentId.
+     */
+    documentId: string;
+    /**
+     * Encoded mutation.
+     */
+    mutation: string;
+  }[];
+};
+
+export const DocumentCodec = Object.freeze({
+  encode: (doc: Uint8Array) => Buffer.from(doc).toString('base64'),
+  decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
+});
+
+const MAX_ERROR_DEPTH = 3;
+
+/**
+ * Codec for serializing and deserializing Edge Errors.
+ */
+export const ErrorCodec = Object.freeze({
+  encode: (err: Error, depth: number = 0): SerializedError => ({
+    name: 'name' in err ? err.name : (err as any).code || 'Error',
+    message: err.message,
+    stack: err.stack,
+    cause: err.cause instanceof Error && depth < MAX_ERROR_DEPTH ? ErrorCodec.encode(err.cause, depth + 1) : undefined,
+  }),
+  decode: (serializedError: SerializedError, depth: number = 0): Error => {
+    let err: Error;
+    if (typeof serializedError.name === 'string') {
+      err = new BaseError(serializedError.name, {
+        message: serializedError.message ?? 'Unknown error',
+        cause:
+          serializedError.cause && depth < MAX_ERROR_DEPTH
+            ? ErrorCodec.decode(serializedError.cause, depth + 1)
+            : undefined,
+        context: serializedError.context,
+      });
+
+      if (serializedError.stack) {
+        Object.defineProperty(err, 'stack', {
+          value: serializedError.stack,
+        });
+      }
+    } else {
+      err = new Error(serializedError.message ?? 'Unknown error', {
+        cause:
+          serializedError.cause && depth < MAX_ERROR_DEPTH
+            ? ErrorCodec.decode(serializedError.cause, depth + 1)
+            : undefined,
+      });
+
+      if (serializedError.stack) {
+        Object.defineProperty(err, 'stack', {
+          value: serializedError.stack,
+        });
+      }
+    }
+
+    return err;
+  },
+});
+
+/**
+ * Codec for serializing and deserializing Edge unhandled HTTP errors.
+ */
+export const EdgeHttpErrorCodec = Object.freeze({
+  encode: (err: Error): Response =>
+    new Response(
+      JSON.stringify({
+        error: ErrorCodec.encode(err),
+      }),
+      { status: 500 },
+    ),
+
+  decode: async (response: Response): Promise<Error | undefined> => {
+    if (response.headers.get('Content-Type') !== 'application/json') {
+      const body = await response.clone().text();
+      return new Error(body.slice(0, 256));
+    }
+
+    const body = await response.clone().json();
+    if (!('error' in body)) {
+      return undefined;
+    }
+
+    return ErrorCodec.decode(body.error);
+  },
+});
+
+//
+// Data management.
+//
+
+export type ListSpacesRequest = { limit?: number; cursor?: string; order?: 'asc' | 'desc' };
+export type ListSpacesResponse = {
+  spaces: SpaceActivityEntry[];
+  cursor?: string;
+  limit: number;
+};
+
+export type ListActiveIdentitiesRequest = { cursor?: string; limit?: number };
+export type ListActiveIdentitiesResponse = {
+  identities: {
+    identityKey: string;
+    haloSpaceId: string | null;
+    createdAt: string | null;
+    agentKey: string | null;
+    hasRecovery: boolean;
+  }[];
+  cursor?: string;
+  complete: boolean;
+  totalCount: number;
+};
+
+export type InspectSpaceRequest = { spaceId: string };
+export type InspectSpaceResponse = {
+  spaceId: string;
+  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+  members: {
+    count: number;
+    list: { identityKey: string; role?: string; agentKey?: string }[];
+  };
+  controlFeeds: {
+    replicationProgress: { [feedKey: string]: { replicated: number; processed: number } };
+  };
+  echo: {
+    dataFeeds: {
+      count: number;
+      totalBlocks: number;
+      byNamespace: { namespace: string; feeds: { feedId: string; blockCount: number }[] }[];
+    };
+    documentCount: number;
+    objectCount: number;
+    deletedObjectCount: number;
+    indexedDocumentCount: number;
+    objectsByType: { typeURI: string; count: number }[];
+    indexerStatus: {
+      indexingInProgress: boolean;
+      cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];
+      totalChanges: number;
+    };
+  };
+  usageInLast30Days: {
+    lastActivity: string | null;
+    wsEvents: number;
+    httpEvents: number;
+    totalEvents: number;
+  } | null;
+  durableObjects: { type: string; doId: string }[];
+};
+
+export type InspectIdentityRequest = { identityKey: string };
+export type InspectIdentityResponse = {
+  identityKey: string;
+  agentKey: string | null;
+  haloSpaceId: string | null;
+  hasRecovery: boolean;
+  routerDoId: string;
+  agentDoId: string | null;
+  ownedFunctions: { id: string; name: string; versionCount: number }[];
+  spaces: InspectSpaceResponse[];
+};
+
+/** Matches the SerializedSpace format from @dxos/echo-client, extended with spaceId. */
+export type SpaceExportPayload = {
+  version: number;
+  timestamp: string;
+  spaceId: string;
+  objects: Record<string, unknown>[];
+};
+
+export type SpaceActivityEntry = {
+  spaceId: string;
+  lastActivity: string;
+  totalEvents: number;
+  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+};
+
+export type SpaceExportResult = {
+  spaceId: string;
+  downloadPath: string;
+  downloadUrl: string;
+  expiresAt: string;
+  objectCount: number;
+  sizeBytes: number;
+};
+
+export type ExportSpaceRequest = { spaceId: string; origin: string };
+
+export type DeleteSpaceRequest = { spaceId: string };
+export type DeleteSpaceResponse = { status: string; spaceId: string };
+
+export type DeleteIdentityRequest = { identityKey: string };
+export type DeleteIdentityResponse = { status: string; identityKey: string };
+
+//
+// Account / Invitation
+//
+
+export const INVITATION_CODE_LENGTH = 8;
+export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
+
+/** Crockford base32 alphabet (no I, L, O, U). Case-insensitive on the wire. */
+export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+export const InvitationCodeSchema = Schema.String.pipe(
+  Schema.pattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`)),
+);
+
+export const CheckEmailExistsRequestSchema = Schema.Struct({
+  email: Schema.String,
+});
+export type CheckEmailExistsRequest = Schema.Schema.Type<typeof CheckEmailExistsRequestSchema>;
+export type CheckEmailExistsResponse = { exists: boolean };
+
+export const ValidateInvitationCodeRequestSchema = Schema.Struct({
+  code: InvitationCodeSchema,
+});
+export type ValidateInvitationCodeRequest = Schema.Schema.Type<typeof ValidateInvitationCodeRequestSchema>;
+export type ValidateInvitationCodeResponse = { valid: boolean };
+
+/**
+ * Body of `POST /account/login`. Existing-account email recovery only --
+ * unlike `/account/signup`, this never creates new identities or waitlist rows.
+ */
+export const LoginRequestSchema = Schema.Struct({
+  email: Schema.String,
+  identityDid: Schema.optional(Schema.String),
+  identityKey: Schema.optional(Schema.String),
+});
+export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
+
+/**
+ * Response from `POST /account/login`. The shape is identical regardless of
+ * whether the email is registered, so the endpoint is safe against enumeration.
+ * Regular emails are delivered out-of-band and the response is `{}`.
+ */
+export const LoginResponseSchema = Schema.Struct({
+  token: Schema.optional(Schema.String),
+  needsIdentity: Schema.optional(Schema.Boolean),
+  admitted: Schema.optional(Schema.Boolean),
+});
+export type LoginResponse = Schema.Schema.Type<typeof LoginResponseSchema>;
+
+// Two-step signup: invitation code + identity DID + email.
+export const RedeemInvitationCodeRequestSchema = Schema.Struct({
+  code: Schema.optional(InvitationCodeSchema),
+  identityDid: Schema.optional(Schema.String),
+  /** Raw hex public key, stored alongside the DID for the magic-link recovery flow. */
+  identityKey: Schema.optional(Schema.String),
+  email: Schema.String,
+});
+export type RedeemInvitationCodeRequest = Schema.Schema.Type<typeof RedeemInvitationCodeRequestSchema>;
+export type RedeemInvitationCodeResponse =
+  | { accountId: string; emailVerificationSent: boolean }
+  | { needsIdentity: true };
+
+export const GetAccountResponseSchema = Schema.Struct({
+  identityDid: Schema.String,
+  email: Schema.String,
+  emailVerified: Schema.Boolean,
+  /** ISO timestamp. */
+  createdAt: Schema.String,
+  invitationsRemaining: Schema.Number,
+});
+export type GetAccountResponse = Schema.Schema.Type<typeof GetAccountResponseSchema>;
+
+export const AccountInvitationSchema = Schema.Struct({
+  code: Schema.String,
+  /** ISO timestamp. */
+  createdAt: Schema.String,
+  redeemedByIdentityDid: Schema.optional(Schema.String),
+  /** ISO timestamp. */
+  redeemedAt: Schema.optional(Schema.String),
+});
+export type AccountInvitation = Schema.Schema.Type<typeof AccountInvitationSchema>;
+
+export const ListAccountInvitationsResponseSchema = Schema.Struct({
+  invitations: Schema.Array(AccountInvitationSchema),
+});
+export type ListAccountInvitationsResponse = Schema.Schema.Type<typeof ListAccountInvitationsResponseSchema>;
+
+export type IssueInvitationResponse = { code: string };
+
+export type ResendVerificationEmailResponse = {
+  sent: boolean;
+  cooldownSecondsRemaining?: number;
+};
+
+/**
+ * Submitted by users without an Account who want to request access. Captured
+ * by Hub for admin follow-up (e.g. mailing list, Discord notification).
+ */
+export const RequestAccessRequestSchema = Schema.Struct({
+  email: Schema.String,
+  /** Optional: identity DID the user is currently signed in as. */
+  identityDid: Schema.optional(Schema.String),
+  /** Optional free-form message from the requester. */
+  message: Schema.optional(Schema.String),
+});
+export type RequestAccessRequest = Schema.Schema.Type<typeof RequestAccessRequestSchema>;
+export type RequestAccessResponse = { received: boolean };
+
+//
+// Admin (X-API-KEY)
+//
+
+export type AdminListAccountsResponse = {
+  accounts: GetAccountResponse[];
+};
+
+export const AdminGrantInvitationsRequestSchema = Schema.Struct({
+  identityDid: Schema.String,
+  count: Schema.Number,
+});
+export type AdminGrantInvitationsRequest = Schema.Schema.Type<typeof AdminGrantInvitationsRequestSchema>;
+
+export const AdminCreateInvitationCodesRequestSchema = Schema.Struct({
+  count: Schema.Number,
+  note: Schema.optional(Schema.String),
+});
+export type AdminCreateInvitationCodesRequest = Schema.Schema.Type<typeof AdminCreateInvitationCodesRequestSchema>;
+export type AdminCreateInvitationCodesResponse = { codes: string[] };
+
+export type AdminListInvitationCodesResponse = {
+  codes: Array<{
+    code: string;
+    /** ISO timestamp. */
+    createdAt: string;
+    note?: string;
+    issuedByIdentityDid?: string;
+    redeemedByIdentityDid?: string;
+    /** ISO timestamp. */
+    redeemedAt?: string;
+    /** ISO timestamp. Set when revoked. */
+    revokedAt?: string;
+  }>;
+};
+
+export const AdminRevokeInvitationCodeRequestSchema = Schema.Struct({
+  code: InvitationCodeSchema,
+});
+export type AdminRevokeInvitationCodeRequest = Schema.Schema.Type<typeof AdminRevokeInvitationCodeRequestSchema>;
+
+/**
+ * Account/invitation-related variants placed in `EdgeFailure.data.type`.
+ * EdgeErrorData is open-ended; these are documentation for known values.
+ */
+export type AccountErrorType =
+  | 'invitation_code_invalid'
+  | 'invitation_code_already_redeemed'
+  | 'invitation_code_revoked'
+  | 'email_already_registered'
+  | 'identity_already_associated'
+  | 'no_invitations_remaining'
+  | 'identity_not_associated_with_account'
+  | 'no_account'
+  | 'rate_limited';

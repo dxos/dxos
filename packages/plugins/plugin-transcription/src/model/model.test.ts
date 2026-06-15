@@ -6,19 +6,19 @@ import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import type { ObjectId } from '@dxos/keys';
-import { DataType } from '@dxos/schema';
+import type { EntityId } from '@dxos/keys';
+import { Message } from '@dxos/types';
 
-import { SerializationModel, DocumentAdapter, type ChunkRenderer } from './model';
+import { type ChunkRenderer, DocumentAdapter, SerializationModel } from './model';
 
-const blockToMarkdown: ChunkRenderer<DataType.Message> = (
-  message: DataType.Message,
+const blockToMarkdown: ChunkRenderer<Message.Message> = (
+  message: Message.Message,
   index: number,
   debug = true,
 ): string[] => {
   return [
     `###### ${message.sender.name}`,
-    ...message.blocks.filter((block) => block.type === 'transcription').map((block) => block.text),
+    ...message.blocks.filter((block) => block._tag === 'transcript').map((block) => block.text),
     '',
   ];
 };
@@ -27,17 +27,17 @@ const createDate = () => new Date().toISOString();
 
 describe('SerializationModel', () => {
   test('basic', ({ expect }) => {
-    const model = new SerializationModel<DataType.Message>(blockToMarkdown);
+    const model = new SerializationModel<Message.Message>(blockToMarkdown);
     expect(model.chunks.length).to.eq(0);
     expect(model.doc.toString()).to.eq('');
 
     // Create message.
-    const message = Obj.make(DataType.Message, {
+    const message = Obj.make(Message.Message, {
       created: createDate(),
       sender: { name: 'Alice' },
       blocks: [
         {
-          type: 'transcription',
+          _tag: 'transcript',
           started: createDate(),
           text: 'Hello world!',
         },
@@ -51,7 +51,9 @@ describe('SerializationModel', () => {
     }
 
     // Update message.
-    message.blocks.push({ type: 'transcription', started: createDate(), text: 'Hello again!' });
+    Obj.update(message, (message) => {
+      message.blocks.push({ _tag: 'transcript', started: createDate(), text: 'Hello again!' });
+    });
     model.updateChunk(message);
     {
       const text = model.doc.toString();
@@ -62,19 +64,19 @@ describe('SerializationModel', () => {
 
   test('sync - append', ({ expect }) => {
     const view = new EditorView({ extensions: [], doc: '' });
-    const model = new SerializationModel<DataType.Message>(blockToMarkdown);
+    const model = new SerializationModel<Message.Message>(blockToMarkdown);
     const adapter = new DocumentAdapter(view);
     expect(adapter.lineCount()).to.eq(0);
     expect(view.state.doc.toString()).to.eq('');
 
     // Append message.
     {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: createDate(),
         sender: { name: 'Alice' },
         blocks: [
           {
-            type: 'transcription',
+            _tag: 'transcript',
             started: createDate(),
             text: 'Hello world!',
           },
@@ -87,12 +89,12 @@ describe('SerializationModel', () => {
 
     // Append message.
     {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: createDate(),
         sender: { name: 'Bob' },
         blocks: [
           {
-            type: 'transcription',
+            _tag: 'transcript',
             started: createDate(),
             text: 'Hello world!',
           },
@@ -106,20 +108,20 @@ describe('SerializationModel', () => {
 
   test('sync - append, update, delete', ({ expect }) => {
     const view = new EditorView({ extensions: [], doc: '' });
-    const model = new SerializationModel<DataType.Message>(blockToMarkdown);
+    const model = new SerializationModel<Message.Message>(blockToMarkdown);
     const adapter = new DocumentAdapter(view);
     expect(adapter.lineCount()).to.eq(0);
 
-    let msgId: ObjectId;
+    let msgId: EntityId;
 
     // Append message.
     {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: createDate(),
         sender: { name: 'Alice' },
         blocks: [
           {
-            type: 'transcription',
+            _tag: 'transcript',
             started: createDate(),
             text: 'Hello world!',
           },
@@ -131,13 +133,17 @@ describe('SerializationModel', () => {
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
 
       // Update message (add block).
-      message.blocks.push({ type: 'transcription', started: createDate(), text: 'Hello again!' });
+      Obj.update(message, (message) => {
+        message.blocks.push({ _tag: 'transcript', started: createDate(), text: 'Hello again!' });
+      });
       model.updateChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\nHello again!\n\n');
 
       // Update message (remove block).
-      message.blocks.splice(0, 1);
+      Obj.update(message, (message) => {
+        message.blocks.splice(0, 1);
+      });
       model.updateChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello again!\n\n');
@@ -147,10 +153,10 @@ describe('SerializationModel', () => {
 
     // Append message.
     {
-      const message = Obj.make(DataType.Message, {
+      const message = Obj.make(Message.Message, {
         created: createDate(),
         sender: { name: 'Bob' },
-        blocks: [{ type: 'transcription', started: createDate(), text: 'Hello again!' }],
+        blocks: [{ _tag: 'transcript', started: createDate(), text: 'Hello again!' }],
       });
       model.appendChunk(message);
       model.sync(adapter);

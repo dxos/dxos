@@ -2,32 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
+import { type Anchor, type ShapeLayout, defaultAnchorSize } from '../components';
+import { createNormalsFromRectangles, findClosestIntersection, getDistance, getRect, pointAdd } from '../layout';
+import { createAnchorId, createPath, parseAnchorId } from '../shapes';
+import { type CanvasBoard, type CanvasGraphModel, type PathShape, type Polygon, isPolygon } from '../types';
 import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
-import { type Anchor, defaultAnchorSize, type ShapeLayout } from '../components';
-import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
-import { createAnchorId, parseAnchorId, createPath } from '../shapes';
-import {
-  type CanvasGraphModel,
-  type Connection,
-  isPolygon,
-  type Layout,
-  type PathShape,
-  type Polygon,
-  type Shape,
-} from '../types';
 
 /**
  * Generate layout from graph (including linking).
  */
-export const useLayout = (): Layout => {
+export const useLayout = (): CanvasBoard.Layout => {
   const { dragMonitor, graph, layout } = useEditorContext();
 
-  // TODO(burdon): Use to trigger state update.
-  const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'resize' || type === 'anchor').value;
+  // Subscribe to dragging state changes for layout updates.
+  const dragging = useAtomValue(dragMonitor.state);
   const getShape = (shape: Polygon) =>
     (dragging.type === 'frame' || dragging.type === 'resize') && dragging.shape.id === shape.id
       ? dragging.shape
@@ -39,7 +33,7 @@ export const useLayout = (): Layout => {
     target: targetId,
     output,
     input,
-  }: Connection): PathShape | undefined => {
+  }: CanvasBoard.Connection): PathShape | undefined => {
     const sourceNode = graph.getNode(sourceId);
     const targetNode = graph.getNode(targetId);
     if (!sourceNode || !targetNode || !isPolygon(sourceNode) || !isPolygon(targetNode)) {
@@ -68,7 +62,7 @@ export const useLayout = (): Layout => {
   };
 
   // TODO(burdon): Cache with useMemo? Can we determine what changed?
-  const shapes: Shape[] = [];
+  const shapes: CanvasBoard.Shape[] = [];
 
   //
   // Edges.

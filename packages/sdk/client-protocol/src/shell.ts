@@ -5,8 +5,8 @@
 import { type Event } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import {
-  type InvitationUrlRequest,
   type AppContextRequest,
+  type InvitationUrlRequest,
   type LayoutRequest,
   type ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';

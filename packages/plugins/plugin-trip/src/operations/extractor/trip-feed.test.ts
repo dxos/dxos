@@ -1,0 +1,192 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import { Filter, Obj, Relation } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
+import { mockAiService } from '@dxos/extractor/testing';
+import { ExtractedFrom } from '@dxos/plugin-inbox';
+import { ContentBlock, Message } from '@dxos/types';
+
+import { Booking, Segment, Trip } from '../../types';
+import { TripMessageExtractor } from './trip-extractor';
+
+// Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
+const noResolver = fromResolvers({});
+
+// Provenance relation the dispatcher attaches from each top-level extracted object to the source.
+const provenance = ({
+  source,
+  object,
+  extractorId,
+  extractedAt,
+  confidence,
+}: {
+  source: Obj.Any;
+  object: Obj.Any;
+  extractorId: string;
+  extractedAt: string;
+  confidence?: number;
+}) =>
+  ExtractedFrom.make({
+    [Relation.Source]: object,
+    [Relation.Target]: source,
+    extractorId,
+    extractedAt,
+    confidence,
+  });
+
+const makeMessage = (props: { from: string; subject: string; body: string }): Message.Message =>
+  Obj.make(Message.Message, {
+    created: new Date('2026-05-25T00:00:00.000Z').toISOString(),
+    sender: { email: props.from },
+    properties: { subject: props.subject },
+    blocks: [ContentBlock.Text.make({ text: props.body })],
+  });
+
+// One booking (PNR ABC123) with two legs, plus a gate change for the first leg.
+const FIRST_LEG = {
+  confirmationCode: 'ABC123',
+  segments: [
+    {
+      number: 'AF-1',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-01T15:30:00.000Z',
+      arriveAt: '2026-06-02T09:30:00.000Z',
+      provider: { name: 'Air France', domain: 'airfrance.com' },
+    },
+  ],
+};
+
+const SECOND_LEG = {
+  confirmationCode: 'ABC123',
+  segments: [
+    {
+      number: 'AF-2',
+      origin: { code: 'CDG', name: 'Paris' },
+      destination: { code: 'BCN', name: 'Barcelona' },
+      departAt: '2026-06-05T11:00:00.000Z',
+      arriveAt: '2026-06-05T13:15:00.000Z',
+      provider: { name: 'Air France', domain: 'airfrance.com' },
+    },
+  ],
+};
+
+const GATE_CHANGE = {
+  segments: [
+    {
+      number: 'AF-1',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-01T15:30:00.000Z',
+      arriveAt: '2026-06-02T09:30:00.000Z',
+      gateFrom: '21B',
+      terminalFrom: '3',
+    },
+  ],
+};
+
+describe('trip extraction over a message feed', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('processing a feed yields one Trip with multiple Segments and Message→Trip relations', async ({ expect }) => {
+    await using peer = await builder.createPeer({
+      types: [Booking.Booking, Segment.Segment, Trip.Trip, Message.Message, ExtractedFrom.ExtractedFrom],
+    });
+    const db = await peer.createDatabase();
+
+    // The source is an actual ECHO Queue (a Feed) of immutable Message items — not objects in
+    // the database. Each message is paired with the structured payload a cheap LLM would extract:
+    // two flight legs under one PNR, a gate change for the first leg, and an unrelated message.
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const feed = queues.create();
+
+    const payloads: Array<unknown | undefined> = [FIRST_LEG, SECOND_LEG, GATE_CHANGE, undefined];
+    await feed.append([
+      makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
+      makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
+      makeMessage({ from: 'no-reply@airfrance.com', subject: 'Gate change', body: 'Gate update' }),
+      // Unrelated message — no travel sender/subject, so `match()` rejects it.
+      makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
+    ]);
+
+    const messages = feed.objects as Message.Message[];
+
+    // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
+    // with NoMatchingExtractorError, which we tolerate via Effect.either.
+    for (let index = 0; index < messages.length; index++) {
+      const message = messages[index];
+      const payload = payloads[index];
+      await dispatch({ db, source: message }, { provenance })
+        .pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              fromExtractors([TripMessageExtractor]),
+              noResolver,
+              mockAiService({ object: payload ?? {} }),
+            ),
+          ),
+        )
+        .pipe(Effect.either)
+        .pipe(EffectEx.runAndForwardErrors);
+      await db.flush();
+    }
+
+    // Exactly one Trip, one Booking, two Segments.
+    const trips = await db.query(Filter.type(Trip.Trip)).run();
+    expect(trips).toHaveLength(1);
+    const trip = trips[0];
+    expect(trip.segments).toHaveLength(2);
+
+    const bookings = await db.query(Filter.type(Booking.Booking)).run();
+    expect(bookings).toHaveLength(1);
+    expect(bookings[0].confirmationCode).toBe('ABC123');
+
+    const segments = await db.query(Filter.type(Segment.Segment)).run();
+    expect(segments).toHaveLength(2);
+    const numbers = segments
+      .map((segment) => (segment.details._tag === 'flight' ? segment.details.number : undefined))
+      .sort();
+    expect(numbers).toEqual(['AF-1', 'AF-2']);
+
+    // The gate change updated the first leg in place (no duplicate segment).
+    const firstLeg = segments.find(
+      (segment) => segment.details._tag === 'flight' && segment.details.number === 'AF-1',
+    )!;
+    expect(firstLeg.details._tag).toBe('flight');
+    if (firstLeg.details._tag !== 'flight') {
+      throw new Error('expected flight details');
+    }
+    expect(firstLeg.details.gateFrom).toBe('21B');
+    expect(firstLeg.details.terminalFrom).toBe('3');
+
+    // Every contributing message (legs + gate change) has an ExtractedFrom relation to the Trip;
+    // the unrelated message does not. The targets are Queue items (not in the database), so we
+    // compare against the target URIs rather than resolving them.
+    const relations = await db.query(Filter.type(ExtractedFrom.ExtractedFrom)).run();
+    for (const relation of relations) {
+      expect(Relation.getSource(relation).id).toBe(trip.id);
+    }
+    const targetUris = relations.map((relation) => String(Relation.getTargetURI(relation)));
+    const targetsMessage = (message: Message.Message) => targetUris.some((uri) => uri.includes(message.id));
+    expect(targetsMessage(messages[0])).toBe(true);
+    expect(targetsMessage(messages[1])).toBe(true);
+    expect(targetsMessage(messages[2])).toBe(true);
+    expect(targetsMessage(messages[3])).toBe(false);
+  });
+});

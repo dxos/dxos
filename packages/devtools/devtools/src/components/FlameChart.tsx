@@ -6,13 +6,13 @@ import {
   FlameChart as FlameChartJs,
   type FlameChartNodes,
   type FlameChartSettings,
+  type FlatTreeNode,
+  type Mark,
   type Marks,
+  type Timeseries,
+  type UIPlugin,
   type Waterfall,
   type WaterfallItem,
-  type Mark,
-  type UIPlugin,
-  type FlatTreeNode,
-  type Timeseries,
 } from 'flame-chart-js';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';

@@ -1,0 +1,30 @@
+<script>
+  window.global = window;
+</script>
+<style>
+  /* NOTE: Must be in sync with theme.css */
+  @layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
+</style>
+<style>
+  /**
+   * Minimizes white flash when story reloads.
+   * NOTE: This doesn't override the white flash on hard reload.
+   * https://github.com/storybookjs/storybook/discussions/32392
+   *
+   * Uses hardcoded oklch values instead of CSS custom properties because
+   * during Vite HMR the old style tag is removed before the new one is
+   * inserted, briefly leaving all --color-* vars undefined.
+   * Values match neutral-50 / neutral-950 from the theme palette
+   * (kept in sync with ThemePlugin criticalTag).
+   */
+  @media (prefers-color-scheme: dark) {
+    html,
+    body,
+    .sb-preparing-story,
+    .sb-preparing-docs,
+    .sb-previewBlock {
+      background: oklch(0.145 0 0) !important;
+      color: oklch(0.985 0 0) !important;
+    }
+  }
+</style>

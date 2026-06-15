@@ -2,22 +2,56 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
-import { type AnyIntentChain } from '@dxos/app-framework';
-import { Type, type Obj } from '@dxos/echo';
-import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/react-client';
-// TODO(wittjosiah): This pulls in full client.
-import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
-import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { Capability } from '@dxos/app-framework';
+import { AppNodeMatcher } from '@dxos/app-toolkit';
+import { type PublicKey } from '@dxos/client';
+import { Operation } from '@dxos/compute';
+import { Collection, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '#meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
-export const SPACE_TYPE = 'dxos.org/type/Space';
+export * as Settings from './Settings';
+
+export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
+
+export const SPACE_TYPE = 'org.dxos.type.space';
+
+/** Type for the per-space virtual "Settings" section. Single source of truth is `AppNodeMatcher.SETTINGS_SECTION_TYPE`. */
+export const SETTINGS_SECTION_TYPE = AppNodeMatcher.SETTINGS_SECTION_TYPE;
+
+/** Node id (local segment) for the per-space virtual "Settings" section. */
+export const SETTINGS_SECTION_ID = 'settings';
+
+/** Key for the Expando that stores cross-space ordering (must stay stable for persisted data). */
+export const SHARED = 'shared-spaces';
+
+export type SpacePluginOptions = {
+  /**
+   * Origin used for shareable links (object copy-link and invitation base).
+   * Defaults to window.location.origin.
+   */
+  shareableLinkOrigin?: string;
+
+  /**
+   * Path appended to shareableLinkOrigin to form the invitation base URL.
+   * Defaults to '/'.
+   */
+  invitationPath?: string;
+
+  /**
+   * Query parameter name for the invitation code.
+   */
+  invitationProp?: string;
+
+  /**
+   * Whether to send observability events.
+   */
+  observability?: boolean;
+};
 
 export type ObjectViewerProps = {
   lastSeen: number;
@@ -66,22 +100,11 @@ export type PluginState = {
   enabledEdgeReplication: boolean;
 };
 
-export const SpaceSettingsSchema = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Show closed spaces.
-     */
-    showHidden: Schema.Boolean,
-  }),
-);
-
-export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
-
 // TODO(wittjosiah): Reconcile with graph export serializers.
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
+export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
   serialize(params: { object: T }): Promise<string>;
 
   /**
@@ -89,240 +112,39 @@ export interface TypedObjectSerializer<T extends Obj.Any = Type.Expando> {
    * @param params.space Space to use for deserializing schema references.
    * @param params.newId Generate new ID for deserialized object.
    */
-  deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
+  deserialize(params: { content: string; db: Database.Database; newId?: boolean }): Promise<T>;
 }
+
+/**
+ * Result of creating and adding an object.
+ */
+export type CreateObjectResult = {
+  id: string;
+  subject: readonly string[];
+  object: Obj.Unknown;
+};
+
+/**
+ * Factory function that creates an object and adds it to a target (database or collection).
+ * Returns an Effect that resolves to the created object result with navigation subject.
+ */
+export type CreateObject = (
+  props: any,
+  options: {
+    db: Database.Database;
+    target: Database.Database | Collection.Collection;
+    targetNodeId?: string;
+  },
+) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
 export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
 
+// TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   icon: Schema.optional(Schema.String.annotations({ title: 'Icon', [IconAnnotationId]: true })),
   hue: Schema.optional(Schema.String.annotations({ title: 'Color', [HueAnnotationId]: true })),
-  // TODO(wittjosiah): Make optional with default value.
-  edgeReplication: Schema.Boolean.annotations({ title: 'Enable EDGE Replication' }),
+  edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
 });
-
-export type ObjectForm<T extends BaseObject = BaseObject> = {
-  // TODO(dmaretskyi): Change to Schema.Schema.AnyNoContext
-  objectSchema: TypedObject;
-  formSchema?: Schema.Schema<T, any>;
-  hidden?: boolean;
-  getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
-};
-
-export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
-
-export const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
-
-export namespace SpaceAction {
-  export class OpenCreateSpace extends Schema.TaggedClass<OpenCreateSpace>()(`${SPACE_ACTION}/open-create-space`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
-
-  export class Create extends Schema.TaggedClass<Create>()(`${SPACE_ACTION}/create`, {
-    input: SpaceForm,
-    output: Schema.Struct({
-      id: Schema.String,
-      subject: Schema.Array(Schema.String),
-      space: SpaceSchema,
-    }),
-  }) {}
-
-  export class Join extends Schema.TaggedClass<Join>()(`${SPACE_ACTION}/join`, {
-    input: Schema.Struct({
-      invitationCode: Schema.optional(Schema.String),
-      onDone: Schema.optional(Schema.Any),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class OpenMembers extends Schema.TaggedClass<OpenMembers>()(`${SPACE_ACTION}/open-members`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Share extends Schema.TaggedClass<Share>()(`${SPACE_ACTION}/share`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      type: Schema.Enums(Invitation.Type),
-      authMethod: Schema.Enums(Invitation.AuthMethod),
-      multiUse: Schema.Boolean,
-      target: Schema.optional(Schema.String),
-    }),
-    output: Schema.instanceOf(CancellableInvitationObservable),
-  }) {}
-
-  export class GetShareLink extends Schema.TaggedClass<GetShareLink>()(`${SPACE_ACTION}/get-share-link`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      target: Schema.optional(Schema.String),
-      copyToClipboard: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.String,
-  }) {}
-
-  export class Lock extends Schema.TaggedClass<Lock>()(`${SPACE_ACTION}/lock`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Unlock extends Schema.TaggedClass<Unlock>()(`${SPACE_ACTION}/unlock`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Rename extends Schema.TaggedClass<Rename>()(`${SPACE_ACTION}/rename`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      caller: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  // TODO(wittjosiah): Handle scrolling to section.
-  //   This maybe motivates making the space settings its own deck?
-  export class OpenSettings extends Schema.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
-    input: Schema.Struct({ space: SpaceSchema }),
-    output: Schema.Void,
-  }) {}
-
-  export class Open extends Schema.TaggedClass<Open>()(`${SPACE_ACTION}/open`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Close extends Schema.TaggedClass<Close>()(`${SPACE_ACTION}/close`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Migrate extends Schema.TaggedClass<Migrate>()(`${SPACE_ACTION}/migrate`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      version: Schema.optional(Schema.String),
-    }),
-    output: Schema.Boolean,
-  }) {}
-
-  export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
-    input: Schema.Struct({
-      target: Schema.Union(SpaceSchema, DataType.Collection),
-      typename: Schema.optional(Schema.String),
-      navigable: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class AddObject extends Schema.TaggedClass<AddObject>()(`${SPACE_ACTION}/add-object`, {
-    input: Schema.Struct({
-      object: ReactiveObjectSchema,
-      target: Schema.Union(SpaceSchema, DataType.Collection),
-      hidden: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Struct({
-      id: Schema.String,
-      subject: Schema.Array(Schema.String),
-      object: EchoObjectSchema,
-    }),
-  }) {}
-
-  export class AddRelation extends Schema.TaggedClass<AddRelation>()(`${SPACE_ACTION}/add-relation`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      // TODO(wittjosiah): Relation schema.
-      schema: Schema.Any,
-      source: Type.Expando,
-      target: Type.Expando,
-      // TODO(wittjosiah): Type based on relation schema.
-      fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-    }),
-    output: Schema.Struct({
-      relation: Schema.Any,
-    }),
-  }) {}
-
-  export const DeletionData = Schema.Struct({
-    objects: Schema.Array(EchoObjectSchema),
-    parentCollection: DataType.Collection,
-    indices: Schema.Array(Schema.Number),
-    nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)),
-    wasActive: Schema.Array(Schema.String),
-  });
-
-  export type DeletionData = Schema.Schema.Type<typeof DeletionData>;
-
-  export class RemoveObjects extends Schema.TaggedClass<RemoveObjects>()(`${SPACE_ACTION}/remove-objects`, {
-    input: Schema.Struct({
-      objects: Schema.Array(EchoObjectSchema),
-      target: Schema.optional(DataType.Collection),
-      deletionData: Schema.optional(DeletionData),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class RenameObject extends Schema.TaggedClass<RenameObject>()(`${SPACE_ACTION}/rename-object`, {
-    input: Schema.Struct({
-      object: EchoObjectSchema,
-      caller: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class DuplicateObject extends Schema.TaggedClass<DuplicateObject>()(`${SPACE_ACTION}/duplicate-object`, {
-    input: Schema.Struct({
-      object: EchoObjectSchema,
-      target: Schema.Union(SpaceSchema, DataType.Collection),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class WaitForObject extends Schema.TaggedClass<WaitForObject>()(`${SPACE_ACTION}/wait-for-object`, {
-    input: Schema.Struct({
-      id: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
-}
-
-export namespace CollectionAction {
-  export class Create extends Schema.TaggedClass<Create>()('dxos.org/plugin/collection/action/create', {
-    input: Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: DataType.Collection,
-    }),
-  }) {}
-
-  export const QueryCollectionForm = Schema.Struct({
-    name: Schema.optional(Schema.String),
-    typename: Schema.optional(
-      Schema.String.annotations({
-        [TypenameAnnotationId]: ['object-form'],
-      }),
-    ),
-  });
-
-  export class CreateQueryCollection extends Schema.TaggedClass<CreateQueryCollection>()(
-    'dxos.org/plugin/collection/action/create-query-collection',
-    {
-      input: QueryCollectionForm,
-      output: Schema.Struct({
-        object: DataType.QueryCollection,
-      }),
-    },
-  ) {}
-}

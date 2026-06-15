@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
-  QueryAgentStatusResponse,
-  EdgeStatus,
-  type QueryEdgeStatusResponse,
   type EdgeAgentService,
+  EdgeStatus,
+  QueryAgentStatusResponse,
+  type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
@@ -25,7 +27,17 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
   queryEdgeStatus(): Stream<QueryEdgeStatusResponse> {
     return new Stream(({ ctx, next }) => {
       const update = () => {
-        next({ status: this._edgeConnection?.status ?? EdgeStatus.NOT_CONNECTED });
+        next({
+          status: this._edgeConnection?.status ?? {
+            state: EdgeStatus.ConnectionState.NOT_CONNECTED,
+            rtt: 0,
+            uptime: 0,
+            rateBytesUp: 0,
+            rateBytesDown: 0,
+            messagesSent: 0,
+            messagesReceived: 0,
+          },
+        });
       };
 
       this._edgeConnection?.statusChanged.on(ctx, update);
@@ -33,8 +45,8 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
     });
   }
 
-  async createAgent(): Promise<void> {
-    return (await this._agentManagerProvider()).createAgent();
+  async createAgent(_request: void, options?: RequestOptions): Promise<void> {
+    return (await this._agentManagerProvider()).createAgent(options?.ctx ?? Context.default());
   }
 
   queryAgentStatus(): Stream<QueryAgentStatusResponse> {

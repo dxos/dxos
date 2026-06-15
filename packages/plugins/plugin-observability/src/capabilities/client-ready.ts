@@ -2,96 +2,65 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  LayoutAction,
-  SettingsAction,
-  type PluginContext,
-} from '@dxos/app-framework';
-import { setupTelemetryListeners, type Observability } from '@dxos/observability';
+import * as Effect from 'effect/Effect';
 
-import { ClientCapability, ObservabilityCapabilities } from './capabilities';
-import { OBSERVABILITY_PLUGIN } from '../meta';
-import { ObservabilityAction } from '../types';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { log } from '@dxos/log';
+import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
-type ClientReadyOptions = {
-  context: PluginContext;
+import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
+
+export type ClientReadyOptions = {
   namespace: string;
-  observability: Observability;
+  observability: Observability.Observability;
 };
 
-export default async ({ context, namespace, observability }: ClientReadyOptions) => {
-  const manager = context.getCapability(Capabilities.PluginManager);
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  const state = context.getCapability(ObservabilityCapabilities.State);
-  const client = context.getCapability(ClientCapability);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({ observability }: ClientReadyOptions) {
+    const manager = yield* Capability.get(Capabilities.PluginManager);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const client = yield* Capability.get(ObservabilityCapabilities.ClientCapability);
 
-  const sendPrivacyNotice = async () => {
-    const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
-    const notify =
-      environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
-    if (!state.notified && notify) {
-      await dispatch(
-        createIntent(LayoutAction.AddToast, {
-          part: 'toast',
-          subject: {
-            id: `${OBSERVABILITY_PLUGIN}/notice`,
-            title: ['observability toast label', { ns: OBSERVABILITY_PLUGIN }],
-            description: ['observability toast description', { ns: OBSERVABILITY_PLUGIN }],
-            duration: Infinity,
-            icon: 'ph--info--regular',
-            actionLabel: ['observability toast action label', { ns: OBSERVABILITY_PLUGIN }],
-            actionAlt: ['observability toast action alt', { ns: OBSERVABILITY_PLUGIN }],
-            closeLabel: ['observability toast close label', { ns: OBSERVABILITY_PLUGIN }],
-            onAction: () => dispatch(createIntent(SettingsAction.Open, { plugin: OBSERVABILITY_PLUGIN })),
-          },
-        }),
-      );
-
-      state.notified = true;
+    // Ensure errors are tagged with enabled plugins to help with reproductions.
+    const enabledPlugins = manager.getEnabled();
+    log('client-ready: tagging enabled plugins', { count: enabledPlugins.length });
+    for (const plugin of enabledPlugins) {
+      observability.setTags({ [`pluginEnabled-${plugin}`]: 'true' }, 'errors');
     }
-  };
 
-  // Ensure errors are tagged with enabled plugins to help with reproductions.
-  manager.enabled.map((plugin) => observability?.setTag(`pluginEnabled-${plugin}`, 'true', 'errors'));
+    log('client-ready: sending page.load event');
+    yield* Effect.tryPromise(() =>
+      invokePromise(ObservabilityOperation.SendEvent, {
+        name: 'page.load',
+        properties: {
+          // TODO(wittjosiah): These apis are deprecated. Is there a better way to find this information?
+          loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+        },
+      }),
+    );
+    log('client-ready: page.load event sent');
 
-  await dispatch(
-    createIntent(ObservabilityAction.SendEvent, {
-      name: 'page.load',
-      properties: {
-        // TODO(wittjosiah): These apis are deprecated. Is there a better way to find this information?
-        loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
-      },
-    }),
-  );
+    // Each provider is logged individually because some provider setups perform
+    // RPC calls (e.g. runtimeMetricsProvider awaits SystemService.getPlatform());
+    // a hung worker pipe surfaces as a missing "added" log, so the last
+    // "adding ..." line points to the stall.
+    log('client-ready: adding identity data provider');
+    yield* observability.addDataProvider(ObservabilityProvider.Client.identityProvider(client.services.services));
+    log('client-ready: identity data provider added');
 
-  // Start client observability (i.e. not running as shared worker)
-  // TODO(nf): how to prevent multiple instances for single shared worker?
-  const cleanup = setupTelemetryListeners(namespace, client, observability);
+    log('client-ready: adding network metrics data provider');
+    yield* observability.addDataProvider(ObservabilityProvider.Client.networkMetricsProvider(client.services.services));
+    log('client-ready: network metrics data provider added');
 
-  await Promise.all([
-    observability.setIdentityTags(client.services.services),
-    observability.startRuntimeMetrics(client),
-    observability.startNetworkMetrics(client.services.services),
-    observability.startSpacesMetrics(client, namespace),
-  ]);
+    log('client-ready: adding runtime metrics data provider');
+    yield* observability.addDataProvider(ObservabilityProvider.Client.runtimeMetricsProvider(client.services.services));
+    log('client-ready: runtime metrics data provider added');
 
-  if (client.halo.identity.get()) {
-    await sendPrivacyNotice();
-  } else {
-    const subscription = client.halo.identity.subscribe(async (identity) => {
-      if (identity && observability) {
-        await sendPrivacyNotice();
-        await observability.setIdentityTags(client.services.services);
-        subscription.unsubscribe();
-      }
-    });
-  }
+    log('client-ready: adding space metrics data provider');
+    yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
+    log('client-ready: space metrics data provider added');
 
-  return contributes(ObservabilityCapabilities.Observability, observability, async () => {
-    cleanup();
-    await observability.close();
-  });
-};
+    log('client-ready: contributing observability capability');
+    return Capability.contributes(ObservabilityCapabilities.Observability, observability, () => observability.close());
+  }),
+);

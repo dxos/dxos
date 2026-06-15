@@ -2,89 +2,50 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
 
-import React, { useMemo, useRef, useState } from 'react';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Message as MessageType } from '@dxos/types';
 
-import { PublicKey } from '@dxos/keys';
-import { faker } from '@dxos/random';
-import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { translations } from '#translations';
 
-import { Thread, ThreadFooter } from './Thread';
-import { MessageRoot, MessageTextbox } from '../Message';
-import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
-import translations from '../translations';
+import { createMessages, getStoryMetadata } from '../testing';
+import { Thread } from './Thread';
 
-faker.seed(1);
+const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
 
 const DefaultStory = () => {
-  const [pending, setPending] = useState(false);
-  const [identityKey1] = useState(PublicKey.random());
-  const [identityKey2] = useState(PublicKey.random());
-  const [messages, setMessages] = useState<MessageEntity<{ id: string; text: string }>[]>(
-    Array.from({ length: 8 }, (_, i) => ({
-      id: `m${i + 1}`,
-      timestamp: new Date().toISOString(),
-      authorId: [identityKey1.toHex(), identityKey2.toHex()][i % 2],
-      text: faker.lorem.paragraph(),
-    })),
-  );
+  const [messages, setMessages] = useState(() => createMessages(12));
 
-  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
-  const [_count, _setCount] = useState(3);
-  const rerenderEditor = () => _setCount((count) => count + 1);
-  const messageRef = useRef('');
-  const extensions = useMemo(() => [createBasicExtensions(), createThemeExtensions()], []);
-
-  // TODO(thure): Why does pressing Enter clear the text content?
-  //  Something to do with the in-memory text model perhaps?
-  const handleSend = () => {
-    setPending(true);
-    setTimeout(() => {
-      setMessages((messages) => [
-        ...messages,
-        {
-          id: `m${_count}`,
-          timestamp: new Date().toISOString(),
-          authorId: identityKey1.toHex(),
-          text: messageRef.current,
-        },
-      ]);
-      messageRef.current = '';
-      setPending(false);
-      rerenderEditor();
-    }, 2_000);
+  const handleSend = (text: string) => {
+    setMessages((prev) => [...prev, MessageType.make({ sender: IDENTITY, blocks: [{ _tag: 'text', text }] })]);
+    return true;
   };
 
   return (
-    <ThreadStoryContainer>
-      <Thread id='t1'>
-        {messages.map((message) => (
-          <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
-            <MessageStoryText {...message} text={message.text} onDelete={() => console.log('delete')} />
-          </MessageRoot>
-        ))}
-        <MessageTextbox
-          id={String(_count)}
-          authorId={identityKey1.toHex()}
-          disabled={pending}
-          extensions={extensions}
-          onSend={handleSend}
-        />
-        <ThreadFooter activity>Processing...</ThreadFooter>
-      </Thread>
-    </ThreadStoryContainer>
+    <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable onMessageDelete={() => {}}>
+      <Thread.Content classNames='grow min-h-0'>
+        <Thread.Messages messages={messages} />
+        <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
+        <Thread.Status />
+      </Thread.Content>
+    </Thread.Root>
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-thread/Thread',
-  component: Thread,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations },
-};
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

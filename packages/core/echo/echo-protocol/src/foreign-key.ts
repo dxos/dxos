@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 const ForeignKey_ = Schema.Struct({
   /**
@@ -15,8 +16,8 @@ const ForeignKey_ = Schema.Struct({
    * Id within the foreign database.
    */
   // TODO(wittjosiah): This annotation is currently used to ensure id field shows up in forms.
-  // TODO(dmaretskyi): `false` is not a valid value for the annotation.
-  id: Schema.String.annotations({ [SchemaAST.IdentifierAnnotationId]: false }),
+  // TODO(dmaretskyi): `false` is not a valid value for the annotation. Use a different annotation.
+  id: Schema.String.annotations({ [SchemaAST.IdentifierAnnotationId]: 'false' }),
 });
 
 export type ForeignKey = Schema.Schema.Type<typeof ForeignKey_>;

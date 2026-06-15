@@ -2,112 +2,127 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import * as Effect from 'effect/Effect';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import {
+  Surface,
+  useAtomCapability,
+  useAtomCapabilityState,
+  useCapabilities,
+  useCapability,
+  useSettingsState,
+} from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { Text } from '@dxos/schema';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { MarkdownCapabilities } from './capabilities';
-import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../components';
-import { MARKDOWN_PLUGIN } from '../meta';
-import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
+import { MarkdownSettings } from '#components';
+import { MarkdownCard, EditableMarkdownCard, MarkdownArticle, type MarkdownArticleProps } from '#containers';
+import { meta } from '#meta';
+import { Markdown, MarkdownCapabilities } from '#types';
 
-export default () =>
-  contributes(Capabilities.ReactSurface, [
-    createSurface({
-      id: `${MARKDOWN_PLUGIN}/document`,
-      role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { subject: DocumentType; variant: undefined } =>
-        Obj.instanceOf(DocumentType, data.subject) && !data.variant,
-      component: ({ data, role }) => {
-        const selectionManager = useCapability(AttentionCapabilities.Selection);
-        const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
-        const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
-        const viewMode = getViewMode(fullyQualifiedId(data.subject));
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'surface.document',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        role: ['article', 'section', 'tabpanel'],
+        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        component: ({ data, role, ref }) => {
+          return (
+            <Container
+              id={Obj.getURI(data.subject)}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'surface.text',
+        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
+        // TODO(burdon): Why is attendableId required? See EventArticle.tsx
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Text.Text),
+          AppSurface.object(AppSurface.Section, Text.Text),
+          AppSurface.object(AppSurface.Tabpanel, Text.Text),
+        ),
+        component: ({ data, role, ref }) => {
+          return (
+            <Container
+              id={Obj.getURI(data.subject)}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'surface.pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+          return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
+      Surface.create({
+        id: 'surface.editable',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
+        component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
+      }),
+      Surface.create({
+        id: 'surface.preview',
+        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable !== true),
+        component: ({ data }) => <MarkdownCard {...data} />,
+      }),
+    ]),
+  ),
+);
 
-        return (
-          <MarkdownContainer
-            id={fullyQualifiedId(data.subject)}
-            object={data.subject}
-            role={role}
-            settings={settings}
-            selectionManager={selectionManager}
-            extensionProviders={state.extensionProviders}
-            viewMode={viewMode}
-            editorStateStore={editorState}
-            onViewModeChange={setViewMode}
-          />
-        );
-      },
-    }),
-    createSurface({
-      id: `${MARKDOWN_PLUGIN}/text`,
-      role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { id: string; subject: DataType.Text } =>
-        typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
-      component: ({ data, role }) => {
-        const selectionManager = useCapability(AttentionCapabilities.Selection);
-        const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
-        const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+/**
+ * Common wrapper.
+ */
+const Container = forwardRef<
+  HTMLDivElement,
+  AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
+>(({ id, attendableId, subject, role }, forwardedRef) => {
+  const selectionManager = useCapability(AttentionCapabilities.Selection);
+  const settings = useAtomCapability(MarkdownCapabilities.Settings);
+  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
+  const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
-        return (
-          <MarkdownContainer
-            id={data.id}
-            object={data.subject}
-            role={role}
-            settings={settings}
-            selectionManager={selectionManager}
-            extensionProviders={state.extensionProviders}
-            viewMode={getViewMode(data.id)}
-            editorStateStore={editorState}
-            onViewModeChange={setViewMode}
-          />
-        );
-      },
-    }),
-    createSurface({
-      id: `${MARKDOWN_PLUGIN}/editor`,
-      role: ['article', 'section'],
-      filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
-      component: ({ data, role }) => {
-        const selectionManager = useCapability(AttentionCapabilities.Selection);
-        const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
-        const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+  const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
+    (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+    [id, setState],
+  );
 
-        return (
-          <MarkdownContainer
-            id={data.subject.id}
-            object={data.subject}
-            role={role}
-            settings={settings}
-            selectionManager={selectionManager}
-            extensionProviders={state.extensionProviders}
-            viewMode={getViewMode(data.subject.id)}
-            editorStateStore={editorState}
-            onViewModeChange={setViewMode}
-          />
-        );
-      },
-    }),
-    createSurface({
-      id: `${MARKDOWN_PLUGIN}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<MarkdownSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === MARKDOWN_PLUGIN,
-      component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: `${MARKDOWN_PLUGIN}/preview`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
-      filter: (data): data is { subject: DocumentType | DataType.Text } =>
-        Obj.instanceOf(DocumentType, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
-      component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
-    }),
-  ]);
+  return (
+    <MarkdownArticle
+      role={role}
+      subject={subject}
+      id={id}
+      attendableId={attendableId}
+      settings={settings}
+      selectionManager={selectionManager}
+      extensionProviders={extensionProviders}
+      editorStateStore={editorState}
+      viewMode={viewMode}
+      onViewModeChange={handleViewModeChange}
+      ref={forwardedRef}
+    />
+  );
+});

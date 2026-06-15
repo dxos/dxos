@@ -1,0 +1,59 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "app": {
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": {
+        "child-src": "'none'",
+        "connect-src": "tauri: https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434 dxos-plugin:",
+        "frame-src": "tauri: https: http://localhost:* composer: blob:",
+        "img-src": "tauri: https: data: file: socket://* http://localhost:* blob: dxos-plugin:",
+        "object-src": "'none'",
+        "script-src": "'unsafe-eval' 'unsafe-inline' tauri: https: http://localhost:* dxos-plugin:",
+        "style-src": "'unsafe-inline' tauri: https: http://localhost:* dxos-plugin:",
+        "worker-src": "tauri: https: http://localhost:* blob: dxos-plugin:"
+      },
+      "dangerousDisableAssetCspModification": true
+    },
+    "withGlobalTauri": true
+  },
+  "build": {
+    "beforeBuildCommand": "moon run composer-app:bundle",
+    "beforeDevCommand": "vite dev",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../out/composer"
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": true,
+    "externalBin": ["sidecar/ollama"],
+    "iOS": {
+      "developmentTeam": "9428WC5MR8",
+      "minimumSystemVersion": "16.0"
+    },
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "macOS": {
+      "entitlements": "./Entitlements.plist",
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "15.0",
+      "files": {
+        "embedded.provisionprofile": "./embedded.provisionprofile"
+      }
+    },
+    "targets": "all"
+  },
+  "identifier": "org.dxos.composer",
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["composer"]
+      }
+    },
+    "updater": {
+      "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK"
+    }
+  },
+  "productName": "Composer",
+  "version": "0.9.0"
+}

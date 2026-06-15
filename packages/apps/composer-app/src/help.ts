@@ -2,32 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, createIntent } from '@dxos/app-framework';
+import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { sleep } from '@dxos/async';
-import { type Step } from '@dxos/plugin-help';
+import { type Tour } from '@dxos/plugin-support';
 
-const ensureSidebar: Step['before'] = async (context: PluginContext) => {
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  await dispatch(
-    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: 'expanded' } }),
-  );
+const ensureSidebar: Tour.Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
+  const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+  await invokePromise(LayoutOperation.UpdateSidebar, { state: 'expanded' });
   return await sleep(200);
 };
 
-const base: Partial<Step> = {
+const base: Partial<Tour.Step> = {
   disableBeacon: true,
   disableOverlay: true,
+  offset: 0,
   styles: {
     options: {
-      arrowColor: 'var(--dx-accentSurface)',
+      arrowColor: 'var(--color-accent-bg)',
     },
   },
-  offset: 0,
 };
 
 // TODO(burdon): Move text to translation object.
 // TODO(burdon): Prefer `data-joyride` over `data-testid`.
-export const steps: Step[] = [
+export const steps: Tour.Step[] = [
   {
     ...base,
     before: ensureSidebar,
@@ -39,7 +38,7 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createObject"]',
+    target: '[data-testid="navtree.workspace.visible"] [data-testid="spacePlugin.createObject"]',
     title: 'Creating content',
     content: 'Press (+) to add new content.',
     placement: 'bottom',
@@ -63,7 +62,15 @@ export const steps: Step[] = [
     before: ensureSidebar,
     target: '[data-testid="treeView.pluginRegistry"]',
     title: 'Plugins',
-    content: 'Add plugins.',
+    content: 'Enable plugins.',
+  },
+  // TODO(burdon): Open companion.
+  {
+    ...base,
+    before: ensureSidebar,
+    target: '[data-testid="plankHeading.companion"]',
+    title: 'Companions',
+    content: 'View companion surfaces.',
   },
   {
     ...base,

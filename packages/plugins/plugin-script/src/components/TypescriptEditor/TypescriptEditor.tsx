@@ -2,103 +2,116 @@
 // Copyright 2024 DXOS.org
 //
 
+import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
-import { defaultHighlightStyle } from '@codemirror/language';
+import { HighlightStyle } from '@codemirror/language';
 import { lintKeymap } from '@codemirror/lint';
 import { Prec } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
-import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
+import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 import {
-  type EditorInputMode,
+  type BasicExtensionsOptions,
   InputModeExtensions,
-  type UseTextEditorProps,
-  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  folding,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+  defaultStyles,
+} from '@dxos/ui-editor';
+import { type EditorInputMode } from '@dxos/ui-editor/types';
 import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = ThemedClassName<
   {
     id: string;
+    role?: string;
     inputMode?: EditorInputMode;
     toolbar?: boolean;
     env?: VirtualTypeScriptEnvironment;
+    options?: BasicExtensionsOptions;
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
-export const TypescriptEditor = ({
-  classNames,
-  id,
-  inputMode = 'vscode',
-  toolbar,
-  env,
-  initialValue,
-  extensions,
-  scrollTo,
-  selection,
-}: TypescriptEditorProps) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
+export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps>(
+  (
+    {
+      classNames,
       id,
+      role = 'article',
+      inputMode = 'vscode',
+      env,
+      options,
       initialValue,
-      selection,
+      extensions,
       scrollTo,
-      extensions: [
-        extensions,
-        createBasicExtensions({
-          highlightActiveLine: true,
-          indentWithTab: true,
-          lineNumbers: true,
-          lineWrapping: false,
-          monospace: true,
-          scrollPastEnd: true,
-        }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        InputModeExtensions[inputMode],
-        folding(),
-        // Continues block comments when pressing Enter.
-        Prec.high(keymap.of(continueKeymap)),
+      selection,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const { themeMode } = useThemeContext();
+    const { parentRef, focusAttributes } = useTextEditor(
+      () => ({
+        id,
+        initialValue,
+        selection,
+        scrollTo,
+        extensions: [
+          extensions,
+          createBasicExtensions({
+            highlightActiveLine: true,
+            indentWithTab: true,
+            lineNumbers: true,
+            lineWrapping: false,
+            scrollPastEnd: role !== 'section',
+            search: true,
+            ...options,
+          }),
+          createThemeExtensions({
+            monospace: true,
+            themeMode,
+            syntaxHighlighting: true,
+          }),
 
-        // TODO(burdon): Factor out.
-        javascript({ typescript: true }),
-        // https://github.com/val-town/codemirror-ts
-        autocomplete({ override: env ? [tsAutocomplete()] : undefined }),
-        keymap.of(lintKeymap),
-        env && [
-          tsFacet.of({ env, path: `/src/${id}.ts` }),
-          tsSync(),
-          tsLinter(),
-          tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
-        ],
-      ].filter(isNonNullable),
-    }),
-    [id, extensions, themeMode, inputMode, selection, scrollTo],
-  );
+          InputModeExtensions[inputMode],
+          javascript({ typescript: true }),
+          autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
 
-  return (
-    <div
-      ref={parentRef}
-      data-toolbar={toolbar ? 'enabled' : 'disabled'}
-      className={mx(classNames)}
-      {...focusAttributes}
-    />
-  );
-};
+          // Continues block comments when pressing Enter.
+          Prec.high(keymap.of(continueKeymap)),
+          keymap.of(completionKeymap),
+          keymap.of(lintKeymap),
 
+          // https://github.com/val-town/codemirror-ts
+          env && [
+            // TODO(burdon): Fix type.
+            tsFacet.of({ env: env as any, path: `./src/${id}.ts` }),
+            tsSync(),
+            tsLinter(),
+            tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
+          ],
+        ].filter(isNonNullable),
+      }),
+      [themeMode, id, extensions, inputMode, selection, scrollTo, env],
+    );
+
+    return (
+      <div {...composableProps(props, { classNames, ...focusAttributes })} ref={composeRefs(parentRef, forwardedRef)} />
+    );
+  },
+);
+
+// TODO(burdon): Factor out (react-ui-editor).
 const createTooltipRenderer = (themeMode: ThemeMode) => {
-  const theme = themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle;
+  const theme = HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light);
 
   const classFromKind = (_kind: string) => {
     // E.g., localName, methodName, parameterName, etc.
@@ -117,18 +130,15 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   };
 
   return (info: HoverInfo) => {
-    const div = document.createElement('div');
-    div.className = 'p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg';
-
-    if (info.quickInfo?.displayParts) {
-      for (const part of info.quickInfo.displayParts) {
-        const span = div.appendChild(document.createElement('span'));
-        span.className = classFromKind(part.kind);
-        span.innerText = part.text;
-      }
-    }
-
-    return { dom: div };
+    const children =
+      info.quickInfo?.displayParts?.map(({ kind, text }) =>
+        Domino.of('span').classNames(classFromKind(kind)).text(text),
+      ) ?? [];
+    return {
+      dom: Domino.of('div')
+        .classNames('xs:max-w-80 max-w-lg p-1 bg-base-surface rounded-sm border border-separator')
+        .append(...children).root,
+    };
   };
 };
 

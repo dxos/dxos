@@ -2,32 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
+import React, { type PropsWithChildren, useRef, useState } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
-import { Schema } from 'effect';
-import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
-
-import { Filter } from '@dxos/echo';
-import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
-import { type Live } from '@dxos/live-object';
-import { faker } from '@dxos/random';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { random } from '@dxos/random';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form, TupleInput } from '@dxos/react-ui-form';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Form, TupleField } from '@dxos/react-ui-form';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createGraph } from '@dxos/schema';
-import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { doLayout } from '../../layout';
-import { useSelection, Container, DragTest } from '../../testing';
+import { Container, DragTest, useSelection } from '../../testing';
 import { type CanvasGraphModel, RectangleShape } from '../../types';
+import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
-const generator: ValueGenerator = faker as any;
+const generator: ValueGenerator = random as any;
 
-const types = [Testing.Organization, Testing.Project, Testing.Contact];
+const types = [TestSchema.Organization, TestSchema.Project, TestSchema.Person];
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = Schema.omit<any, any, ['object']>('object')(RectangleShape);
@@ -41,33 +39,32 @@ type RenderProps = EditorRootProps &
 
 const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!space || !init) {
       return;
     }
 
     // Load objects.
-    const t = setTimeout(async () => {
-      const { objects } = await space.db.query(Filter.everything()).run();
-
-      const model = await doLayout(
-        createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))),
-      );
-      setGraph(model);
-    });
-
-    return () => clearTimeout(t);
+    const objects = await space.db.query(Filter.everything()).run();
+    const model = await doLayout(
+      createGraph(
+        objects.filter((object: Obj.Unknown) =>
+          types.some((type) => Type.getTypename(type) === Obj.getTypename(object)),
+        ),
+      ),
+    );
+    setGraph(model);
   }, [space, init]);
 
   // Selection.
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr,360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -79,72 +76,83 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
       {sidebar && (
         <Container id='sidebar' classNames='flex grow overflow-hidden'>
           {sidebar === 'selected' && selected && (
-            <Form
+            <Form.Root
               schema={RectangleShapeWithoutRef}
               values={selected}
-              Custom={{
+              fieldMap={{
                 // TODO(burdon): Replace by type.
-                ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
-                ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+                center: (props) => <TupleField {...props} binding={['x', 'y']} />,
+                size: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
-            />
+            >
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.FieldSet />
+                  <Form.Actions />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
           )}
 
-          {sidebar === 'json' && (
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify({ graph: graph?.graph }, null, 2)}
-            </SyntaxHighlighter>
-          )}
+          {sidebar === 'json' && <JsonHighlighter data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>
       )}
     </div>
   );
 };
 
-const meta: Meta<EditorRootProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/Editor',
-  component: Editor.Root,
+  component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
+    withRegistry,
+    withTheme(),
+    withLayout(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }, { args: { spec, registerSchema } }) => {
+      onCreateSpace: async ({ space }, { args: { spec, registerSchema } }) => {
         if (spec) {
+          const resolveType = (t: any) => (typeof t === 'function' ? t() : t);
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
-            const registeredSchema = await space.db.schemaRegistry.register([
-              ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Schema.Schema.AnyNoContext[]);
+            const registeredTypes = await Promise.all(
+              [...new Set(spec.map((schema: any) => resolveType(schema.type)))].map((type) =>
+                space.db.addType(type as Type.AnyEntity),
+              ),
+            );
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find((s) => getSchemaTypename(s) === getSchemaTypename(schema.type)),
+              type: registeredTypes.find((s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type))),
             }));
           } else {
-            space.db.graph.schemaRegistry.addSchema(types);
+            space.db.graph.registry.add(types);
           }
 
           const createObjects = createObjectFactory(space.db, generator);
-          await createObjects(spec as TypeSpec[]);
+          const resolvedSpec: TypeSpec[] = spec.map((s: any) => ({ ...s, type: resolveType(s.type) }));
+          await createObjects(resolvedSpec);
           await space.db.flush({ indexes: true });
         }
       },
     }),
-    withTheme,
-    withAttention,
-    withLayout({ fullscreen: true }),
+    withAttention(),
   ],
-};
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolean }>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: Testing.Organization, count: 1 }],
+    spec: [{ type: () => TestSchema.Organization, count: 1 }],
   },
 };
 
@@ -162,9 +170,9 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: Testing.Organization, count: 4 },
-      { type: Testing.Project, count: 0 },
-      { type: Testing.Contact, count: 16 },
+      { type: () => TestSchema.Organization, count: 4 },
+      { type: () => TestSchema.Project, count: 0 },
+      { type: () => TestSchema.Person, count: 16 },
     ],
   },
 };

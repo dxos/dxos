@@ -1,0 +1,24 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--entryPoint=src/transport/tcp/index.ts'
+      - '--entryPoint=src/transport/tcp/tcp-transport.ts'
+      - '--entryPoint=src/transport/tcp/tcp-transport.browser.ts'
+      - '--injectGlobals'
+  # network-manager's `package.json` `imports` field maps `#tcp-transport`
+  # (and `#tcp-transport-impl`) to `./dist/lib/node-esm/transport/tcp/...mjs`
+  # under the `node` condition. Tests import `#tcp-transport` via
+  # `src/testing/test-builder.ts`, so the package's own dist must exist
+  # before tests run. The inherited `:test` task only depends on upstream
+  # compile (`^:compile`), not on the package's own compile.
+  test:
+    deps:
+      - ~:compile

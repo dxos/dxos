@@ -1,0 +1,66 @@
+{
+  "name": "@dxos/react-ui-search",
+  "version": "0.9.0",
+  "description": "Search-domain components: SearchList, SearchPanel, SearchResult, fuzzy filter hook. Composes the Picker primitive from @dxos/react-ui-list.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "command-score": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

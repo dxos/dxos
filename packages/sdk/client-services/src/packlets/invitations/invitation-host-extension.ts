@@ -3,12 +3,12 @@
 //
 
 import { type Mutex, type MutexGuard, Trigger, scheduleTask } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { randomBytes, verify } from '@dxos/crypto';
-import { invariant, InvariantViolation } from '@dxos/invariant';
+import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
+import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -110,8 +110,7 @@ export class InvitationHostExtension
 
         introduce: async (request) => {
           const { profile, invitationId } = request;
-          const traceId = PublicKey.random().toHex();
-          log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
+          log('introducing host invitation');
 
           const invitation = this._requireActiveInvitation();
           this._assertInvitationState(Invitation.State.CONNECTED);
@@ -131,7 +130,7 @@ export class InvitationHostExtension
           this._challenge =
             invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
-          log.trace('dxos.sdk.invitation-handler.host.introduce', trace.end({ id: traceId }));
+          log('introduced host invitation');
           return {
             authMethod: invitation.authMethod,
             challenge: this._challenge,
@@ -139,8 +138,7 @@ export class InvitationHostExtension
         },
 
         authenticate: async ({ authCode: code, signedChallenge }) => {
-          const traceId = PublicKey.random().toHex();
-          log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
+          log('authenticating host invitation');
 
           const invitation = this._requireActiveInvitation();
           log.verbose('received authentication request', { authCode: code });
@@ -201,13 +199,12 @@ export class InvitationHostExtension
             return { status };
           }
 
-          log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.end({ id: traceId, data: { status } }));
+          log('authenticated host invitation', { status });
           return { status };
         },
 
         admit: async (request) => {
-          const traceId = PublicKey.random().toHex();
-          log.trace('dxos.sdk.invitation-handler.host.admit', trace.begin({ id: traceId }));
+          log('admitting guest');
           const invitation = this._requireActiveInvitation();
 
           try {
@@ -221,7 +218,7 @@ export class InvitationHostExtension
 
             const response = await this._callbacks.admit(request);
 
-            log.trace('dxos.sdk.invitation-handler.host.admit', trace.end({ id: traceId }));
+            log('admitted guest');
             return response;
           } catch (err: any) {
             this._callbacks.onError(err);
@@ -245,10 +242,12 @@ export class InvitationHostExtension
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.GUEST) {
-        throw new InvalidInvitationExtensionRoleError(undefined, {
-          expected: InvitationOptions.Role.GUEST,
-          remoteOptions: this._remoteOptions,
-          remotePeerId: context.remotePeerId,
+        throw new InvalidInvitationExtensionRoleError({
+          context: {
+            expected: InvitationOptions.Role.GUEST,
+            remoteOptions: this._remoteOptions,
+            remotePeerId: context.remotePeerId,
+          },
         });
       }
       this._callbacks.onStateUpdate(Invitation.State.CONNECTED);

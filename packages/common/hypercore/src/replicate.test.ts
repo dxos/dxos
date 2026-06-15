@@ -4,17 +4,17 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { latch, sleep, Trigger } from '@dxos/async';
+import { Trigger, latch, sleep } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { random } from '@dxos/random';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { range, sum } from '@dxos/util';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
-import { batch, createDataItem, type TestDataItem } from './testing';
+import { type TestDataItem, batch, createDataItem } from './testing';
 
 const noop = () => {};
 
@@ -166,7 +166,7 @@ describe('Replication', () => {
 
       // Write batch of messages with delay.
       batch((next, i, remaining) => {
-        const size = faker.number.int({
+        const size = random.number.int({
           min: 1,
           max: Math.min(10, remaining),
         });
@@ -179,7 +179,7 @@ describe('Replication', () => {
           () => {
             next(size);
           },
-          faker.number.int({ min: 0, max: 100 }),
+          random.number.int({ min: 0, max: 100 }),
         );
       }, numBlocks);
 
@@ -250,7 +250,7 @@ describe('Replication', () => {
       setTimeout(async () => {
         for (const _ of Array.from(Array(numBlocks))) {
           const block = {
-            text: faker.lorem.sentence(),
+            text: random.lorem.sentence(),
           };
 
           core1.append(JSON.stringify(block), noop);

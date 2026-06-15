@@ -2,26 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TYPE_PROPERTIES } from '@dxos/client-protocol';
-import type { EchoDatabase, SerializedSpace } from '@dxos/echo-db';
-import { decodeReferenceJSON, Filter, Serializer } from '@dxos/echo-db';
+import { SpaceProperties } from '@dxos/client-protocol';
+import { DXN, Filter, Type } from '@dxos/echo';
+import { type EchoDatabase, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-client';
 
-export const importSpace = async (database: EchoDatabase, data: SerializedSpace) => {
-  const {
-    objects: [properties],
-  } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
+export type ImportSpaceOptions = {
+  /** Type names to filter out during import (e.g., SpaceProperties typename). */
+  ignoreTypes?: string[];
+};
 
-  await new Serializer().import(database, data, {
+export const importSpace = async (db: EchoDatabase, data: SerializedSpace, options?: ImportSpaceOptions) => {
+  const [properties] = await db.query(Filter.type(SpaceProperties)).run();
+
+  await new Serializer().import(db, data, {
     onObject: async (object) => {
-      const { '@type': typeEncoded, ...data } = object;
-      const type = decodeReferenceJSON(typeEncoded);
-      // Handle Space Properties
-      if (properties && type?.objectId === TYPE_PROPERTIES) {
-        Object.entries(data).forEach(([name, value]) => {
-          if (!name.startsWith('@')) {
-            properties[name] = value;
-          }
-        });
+      const typeURI = decodeDXNFromJSON(object['@type']);
+      const typename = typeURI && DXN.isDXN(typeURI) ? DXN.getName(typeURI) : undefined;
+      if (typename && options?.ignoreTypes?.includes(typename)) {
+        return false;
+      }
+
+      // Skip SpaceProperties when the target space already has them.
+      if (properties && typename === Type.getTypename(SpaceProperties)) {
         return false;
       }
       return true;

@@ -1,21 +1,18 @@
 //
 // Copyright 2023 DXOS.org
 //
+// TODO(wittjosiah): Factor components out of plugin-assistant into a standalone package.
 
-import { lazy } from 'react';
+import { type ComponentType, lazy } from 'react';
 
-export * from './AmbientDialog';
-export * from './AssistantSettings';
-export * from './Prompt';
-export * from './PromptSettings';
+export * from './AgentProperties';
+export * from './Chat';
+export * from './ProcessTree';
+export * from './TaskList';
 export * from './TemplateEditor';
-export * from './Thread';
 export * from './Toolbox';
 
-// TODO(burdon): Lazy loading causes issues with Tabster.
-//  Repro: open assistant dialog then close.
-//  https://github.com/microsoft/fluentui/issues/34020
-export const AssistantDialog = lazy(() => import('./AssistantDialog'));
-export const BlueprintContainer = lazy(() => import('./BlueprintContainer'));
-export const ChatContainer = lazy(() => import('./ChatContainer'));
-export const TemplateContainer = lazy(() => import('./TemplateContainer'));
+export const AssistantSettings: ComponentType<any> = lazy(() => import('./AssistantSettings'));
+export const RoutineProperties: ComponentType<any> = lazy(() => import('./RoutineProperties'));
+
+export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt';

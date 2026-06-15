@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>The Register - AI + ML</title>
+    <link>https://www.theregister.com/software/ai_ml/</link>
+    <description>Biting the hand that feeds IT — AI and machine learning coverage.</description>
+    <language>en-us</language>
+    <item>
+      <title>Sovereign AI push has nations racing to build domestic compute</title>
+      <link>https://www.theregister.com/2026/05/28/sovereign_ai_compute/</link>
+      <dc:creator>Tobias Mann</dc:creator>
+      <pubDate>Wed, 28 May 2026 09:30:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.theregister.com/2026/05/28/sovereign_ai_compute/</guid>
+      <description><![CDATA[<p>Governments from the EU to the Gulf are pouring billions into <strong>sovereign AI</strong> infrastructure, determined to keep models, data, and GPUs within national borders.</p>]]></description>
+      <content:encoded><![CDATA[<p>Governments from the EU to the Gulf are pouring billions into <strong>sovereign AI</strong> infrastructure, determined to keep models, data, and GPUs within national borders. Analysts say the trend marks a decisive break from the cloud-centric assumptions of the last decade.</p><p>The shift is reshaping procurement, with state-backed clouds demanding on-shore training runs and audited supply chains.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Open-weights model claims parity with frontier labs at a fraction of the cost</title>
+      <link>https://www.theregister.com/2026/05/27/open_weights_frontier/</link>
+      <dc:creator>Katyanna Quach</dc:creator>
+      <pubDate>Tue, 27 May 2026 14:05:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.theregister.com/2026/05/27/open_weights_frontier/</guid>
+      <description><![CDATA[<p>A new open-weights release is the latest to argue that smaller, cheaper models can match the big labs on reasoning benchmarks.</p>]]></description>
+      <content:encoded><![CDATA[<p>A new open-weights release is the latest to argue that smaller, cheaper models can match the big labs on reasoning benchmarks — and it ships under a permissive licence.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Datacenter power demand from AI training forces grid rethink</title>
+      <link>https://www.theregister.com/2026/05/26/ai_datacenter_power/</link>
+      <dc:creator>Dan Robinson</dc:creator>
+      <pubDate>Mon, 26 May 2026 11:20:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.theregister.com/2026/05/26/ai_datacenter_power/</guid>
+      <description><![CDATA[<p>Utilities warn that the appetite of AI training clusters is outpacing new generation capacity in several regions.</p>]]></description>
+      <content:encoded><![CDATA[<p>Utilities warn that the appetite of AI training clusters is outpacing new generation capacity, pushing operators toward on-site generation and long-term nuclear deals.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Regulators circle AI agents as autonomous tooling spreads</title>
+      <link>https://www.theregister.com/2026/05/25/ai_agent_regulation/</link>
+      <dc:creator>Brandon Vigliarolo</dc:creator>
+      <pubDate>Sun, 25 May 2026 08:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://www.theregister.com/2026/05/25/ai_agent_regulation/</guid>
+      <description><![CDATA[<p>As agentic systems take actions on users' behalf, lawmakers are weighing liability and audit requirements.</p>]]></description>
+      <content:encoded><![CDATA[<p>As agentic systems take actions on users' behalf, lawmakers are weighing liability and audit requirements for the software that decides and acts.</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

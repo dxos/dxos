@@ -7,7 +7,7 @@ package:
       type: dxos:type/app
       displayName: DXOS Demo
       build:
-        command: pnpm -w nx bundle examples
+        command: moon run examples:bundle
 
 runtime:
   services:

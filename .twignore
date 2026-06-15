@@ -1,0 +1,4 @@
+# .twignore
+
+**/data/**
+**/scripts/**

@@ -1,15 +1,20 @@
 {
   "name": "@dxos/env-tests",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Testing that our code compiles in different environments.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -22,25 +27,27 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {
-    "effect": "3.14.21",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "restricted"

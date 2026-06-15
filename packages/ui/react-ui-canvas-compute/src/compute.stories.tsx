@@ -2,53 +2,54 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import type { Meta, StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { createTestOllamaClient } from '@dxos/ai/testing';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities, localServiceEndpoints } from '@dxos/artifact-testing';
+import { capabilities } from '@dxos/assistant-toolkit/testing';
+import { Operation } from '@dxos/compute';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { AiService, ServiceContainer } from '@dxos/functions';
+import { Feed } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
+import { configuredCredentialsLayer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import {
-  CanvasGraphModel,
-  Editor,
-  type EditorController,
-  type EditorRootProps,
-  ShapeRegistry,
-} from '@dxos/react-ui-canvas-editor';
+import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Form } from '@dxos/react-ui-form';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
-import { type ComputeGraphController } from './graph';
+import { type ComputeGraphController, createComputeGraphController } from './graph';
 import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
-  createControlCircuit,
-  createGPTRealtimeCircuit,
-  createLogicCircuit,
-  createComputeGraphController,
-  createBasicCircuit,
-  createGptCircuit,
-  createAudioCircuit,
-  createTransformCircuit,
-  createTemplateCircuit,
   createArtifactCircuit,
+  createAudioCircuit,
+  createBasicCircuit,
+  createControlCircuit,
+  createEmptyCircuit,
+  createGPTRealtimeCircuit,
+  createGptCircuit,
+  createLogicCircuit,
+  createTemplateCircuit,
+  createTransformCircuit,
 } from './testing';
 
-// const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+// TODO(burdon): Replace ServiceContainer.
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
+
+const hiddenArg = { table: { disable: true } };
 
 type RenderProps = EditorRootProps<ComputeShape> &
   PropsWithChildren<{
@@ -63,9 +64,10 @@ const DefaultStory = ({
   children,
   graph,
   controller = null,
-  init,
-  sidebar: _sidebar,
+  sidebar: sidebarProp,
   registry,
+  showGrid = true,
+  snapToGrid = true,
   ...props
 }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
@@ -83,7 +85,7 @@ const DefaultStory = ({
   };
 
   // Sidebar.
-  const [sidebar, setSidebar] = useState(_sidebar);
+  const [sidebar, setSidebar] = useState<RenderProps['sidebar']>(sidebarProp);
   const json = useMemo(() => {
     switch (sidebar) {
       case 'canvas':
@@ -123,7 +125,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr,360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
@@ -135,6 +137,8 @@ const DefaultStory = ({
             registry={registry}
             selection={selection}
             autoZoom
+            showGrid={showGrid}
+            snapToGrid={snapToGrid}
             {...props}
           >
             <Editor.Canvas>{children}</Editor.Canvas>
@@ -146,9 +150,9 @@ const DefaultStory = ({
 
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
-          <Toolbar.Root classNames='p-1'>
+          <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
+              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
@@ -158,18 +162,32 @@ const DefaultStory = ({
                       </Select.Item>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
           </Toolbar.Root>
 
           <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
+            {/* TODO(burdon): Provide schema. */}
             {sidebar === 'selected' && selected && (
-              <div>Form</div>
-              // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />
+              <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.FieldSet />
+                    <Form.Actions />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
             )}
-
-            <JsonFilter data={json} />
+            <Syntax.Root data={json}>
+              <Syntax.Content>
+                <Syntax.Filter />
+                <Syntax.Viewport>
+                  <Syntax.Code />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
           </div>
         </Container>
       )}
@@ -177,196 +195,143 @@ const DefaultStory = ({
   );
 };
 
-const meta: Meta<RenderProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-compute/compute',
-  component: Editor.Root,
+  component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withAttention(),
     withClientProvider({ createIdentity: true, createSpace: true }),
-    withTheme,
-    withAttention,
-    withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
-};
+  parameters: {
+    layout: 'fullscreen',
+  },
+  argTypes: {
+    controller: hiddenArg,
+    graph: hiddenArg,
+    registry: hiddenArg,
+    sidebar: {
+      control: 'select',
+      options: [...sidebarTypes, null],
+    },
+  },
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RenderProps>;
+type Story = StoryObj<typeof meta>;
+
+const ServiceLayer = Layer.empty.pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      Layer.succeed(Operation.Service, {
+        invoke: () => Effect.die('Operation.Service not available in test.'),
+        schedule: () => Effect.die('Operation.Service not available in test.'),
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as any),
+      registryLayerNoop,
+    ),
+  ),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      AiServiceTestingPreset('direct'),
+      TestDatabaseLayer(),
+      configuredCredentialsLayer([]),
+      Feed.notAvailable,
+    ),
+  ),
+  Layer.orDie,
+);
 
 export const Default: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(CanvasGraphModel.create<ComputeShape>(), new ServiceContainer()),
+    ...createComputeGraphController(createEmptyCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Beacon: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createBasicCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createBasicCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Transform: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTransformCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createTransformCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Logic: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createLogicCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createLogicCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Control: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createControlCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createControlCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
-// export const Ollama: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createComputeGraphController(createTest3(), createEdgeServices()),
-//   },
-// };
-
 export const Template: Story = {
   args: {
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createTemplateCircuit(),
-      new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createTemplateCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const GPT: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGptCircuit({ history: true }),
-      new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createGptCircuit({ history: true }), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Plugins: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
-      new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
+      ManagedRuntime.make(ServiceLayer),
     ),
   },
 };
 
 export const Artifact: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createArtifactCircuit(),
-      new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createArtifactCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const ImageGen: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
-      new ServiceContainer().setServices({
-        ai: AiService.make(createTestOllamaClient()),
-      }),
+      ManagedRuntime.make(ServiceLayer),
     ),
   },
 };
 
 export const Audio: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createAudioCircuit(),
-      new ServiceContainer().setServices({
-        ai: AiService.make(createTestOllamaClient()),
-      }),
-    ),
+    ...createComputeGraphController(createAudioCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Voice: Story = {
   args: {
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGPTRealtimeCircuit(),
-      new ServiceContainer().setServices({
-        ai: AiService.make(createTestOllamaClient()),
-      }),
-    ),
+    ...createComputeGraphController(createGPTRealtimeCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };

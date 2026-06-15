@@ -2,80 +2,90 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+// ISSUE(burdon): tools
+// @ts-nocheck
 
-import { createTool, ToolResult } from '@dxos/ai';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
 import {
-  contributes,
-  createIntent,
   Capabilities,
+  Capability,
   LayoutAction,
   type PromiseIntentDispatcher,
+  createIntent,
 } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
+import { type OperationInvoker } from '@dxos/operation';
+import { trim } from '@dxos/util';
 
-import { meta } from '../meta';
-import { DeckAction } from '../types';
+import { meta } from '#meta';
 
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
     dispatch?: PromiseIntentDispatcher;
     pivotId?: string;
-    part?: 'deck' | 'dialog';
+    part?: 'multi' | 'dialog';
   }
 }
 
-export default () =>
-  contributes(Capabilities.Tools, [
-    createTool(meta.id, {
-      name: 'show',
-      description: `
-        Show an item as a companion to an existing plank. This will make the item appear alongside the primary content.
-        When supplying IDs, they must be fully qualified like space:object.
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Capabilities.Tools, [
+      createTool(meta.id, {
+        name: 'show',
+        description: trim`
+        Show an item as a companion to an existing plank. 
+        When supplying IDs, they must be fully qualified like this: space-key:object-id
       `,
-      caption: 'Showing item...',
-      // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
-      schema: Schema.Struct({
-        id: Schema.String.annotations({
-          description: 'The ID of the item to show.',
+        caption: 'Showing item...',
+        // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
+        schema: Schema.Struct({
+          id: Schema.String.annotations({
+            description: 'The ID of the item to show.',
+          }),
         }),
+        execute: async ({ id }, { extensions }) => {
+          invariant(extensions);
+          const { pivotId, dispatch, invokePromise, part } = extensions as {
+            pivotId: string;
+            dispatch: PromiseIntentDispatcher;
+            invokePromise: OperationInvoker['invokePromise'];
+            part: string;
+          };
+          invariant(pivotId, 'No pivot ID');
+          invariant(invokePromise, 'No operation invoker');
+
+          if (part === 'multi') {
+            const { error } = await invokePromise(LayoutOperation.UpdateCompanion, {
+              subject: id,
+            });
+            if (error) {
+              return ToolResult.Error(error.message);
+            }
+
+            return ToolResult.Success({});
+          } else {
+            const { data, error } = await dispatch(
+              createIntent(LayoutAction.Open, {
+                subject: [id],
+                part: 'main',
+                options: {
+                  pivotId,
+                  positioning: 'end',
+                },
+              }),
+            );
+            if (error) {
+              return ToolResult.Error(error.message);
+            }
+
+            return ToolResult.Success(data);
+          }
+        },
       }),
-      execute: async ({ id }, { extensions }) => {
-        invariant(extensions);
-        const { pivotId, dispatch, part } = extensions;
-        invariant(pivotId, 'No pivot ID');
-        invariant(dispatch, 'No intent dispatcher');
-
-        if (part === 'deck') {
-          const { data, error } = await dispatch(
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: pivotId,
-              companion: id,
-            }),
-          );
-          if (error) {
-            return ToolResult.Error(error.message);
-          }
-
-          return ToolResult.Success(data);
-        } else {
-          const { data, error } = await dispatch(
-            createIntent(LayoutAction.Open, {
-              subject: [id],
-              part: 'main',
-              options: {
-                pivotId,
-                positioning: 'end',
-              },
-            }),
-          );
-          if (error) {
-            return ToolResult.Error(error.message);
-          }
-
-          return ToolResult.Success(data);
-        }
-      },
-    }),
-  ]);
+    ]),
+  ),
+);

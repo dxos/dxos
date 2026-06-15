@@ -4,7 +4,7 @@
 // https://github.com/Fil/d3-inertia
 //
 
-import { select, drag, timer } from 'd3';
+import { drag, select, timer } from 'd3';
 import versor from 'versor';
 
 export const restrictAxis =
@@ -28,14 +28,20 @@ export const geoInertiaDrag = (target, render, projection, options) => {
   }
   target = select(target);
 
-  // Complete params: (projection, render, startDrag, dragging, endDrag).
-  const inertia = geoInertiaDragHelper({
+  // `linear` (default) constrains rotation so that mouse Δx maps to lambda
+  // (polar spin) and Δy maps to phi (tilt); gamma is held at 0.
+  // `versor` lets the dragged point follow the cursor exactly, at the cost of
+  // inducing some roll. In linear mode `lockTilt` keeps phi pinned but still
+  // allows lambda from Δx.
+  const linear = (options.mode ?? 'linear') === 'linear';
+  const axis = restrictAxis(options.lockTilt ? [true, false, false] : [true, true, true]);
+  const sharedHandlers = {
     projection,
     render: (rotation) => {
       projection.rotate(rotation);
       render && render();
     },
-    axis: restrictAxis(options.xAxis ? [true, false, false] : [true, true, true]),
+    axis,
     start: options.start,
     move: options.move,
     end: options.end,
@@ -43,7 +49,16 @@ export const geoInertiaDrag = (target, render, projection, options) => {
     finish: options.finish,
     time: options.time,
     hold: options.hold,
-  });
+  };
+
+  // Complete params: (projection, render, startDrag, dragging, endDrag).
+  const inertia = linear
+    ? geoInertiaDragLinearHelper({
+        ...sharedHandlers,
+        sensitivity: options.sensitivity,
+        getZoom: options.getZoom,
+      })
+    : geoInertiaDragHelper(sharedHandlers);
 
   target.call(drag().on('start', inertia.start).on('drag', inertia.move).on('end', inertia.end));
   return inertia;
@@ -103,6 +118,74 @@ const geoInertiaDragHelper = (opt) => {
     render: (t) => {
       const r1 = versor.rotation(versor.multiply(q10, versor.delta(v10, v11, t * 1_000)));
       const r2 = opt.axis(r0, r1);
+      opt.render && opt.render(r2);
+    },
+
+    time: opt.time,
+  });
+
+  return inertia;
+};
+
+/**
+ * Linear pixel-to-Euler drag: Δx → lambda, Δy → phi, gamma fixed at 0.
+ * Inertia spin-down reuses the same shared decay curve as the versor path.
+ */
+const DEFAULT_LINEAR_SENSITIVITY = 0.25;
+
+const geoInertiaDragLinearHelper = (opt) => {
+  const projection = opt.projection;
+  const sensitivity = opt.sensitivity ?? DEFAULT_LINEAR_SENSITIVITY;
+  // Scale degrees-per-pixel by 1/zoom so the drag feels consistent at any zoom
+  // level (mirrors useWheel — a more zoomed-in globe needs smaller angular
+  // rotation per pixel of cursor travel). Clamped to a floor so very small
+  // zoom values don't blow up the gain.
+  const gain = () => sensitivity / Math.max(opt.getZoom?.() ?? 1, 0.1);
+
+  let r0; // Projection rotation as Euler angles at start of drag.
+  let p0; // Pointer pixel position at start of drag.
+  let kStart; // Gain captured at start of drag (held for the gesture + inertia).
+  let rEnd; // Projection rotation at end of drag.
+  let vEnd; // Pointer velocity (px/s) at end of drag.
+
+  const inertia = inertiaHelper({
+    axis: opt.axis,
+
+    start: () => {
+      r0 = projection.rotate();
+      p0 = [inertia.position[0], inertia.position[1]];
+      // Lock the gain at gesture start so a zoom change mid-gesture doesn't
+      // teleport the globe; inertia continues at the same gain.
+      kStart = gain();
+      opt.start && opt.start();
+    },
+
+    move: () => {
+      const dx = inertia.position[0] - p0[0];
+      const dy = inertia.position[1] - p0[1];
+      // Screen y grows downward; negate so dragging down rotates the globe to
+      // match the cursor (matches the feel of the versor-based path).
+      const r1 = [r0[0] + dx * kStart, r0[1] - dy * kStart, 0];
+      const r2 = opt.axis(r0, r1);
+      opt.render(r2);
+      opt.move && opt.move();
+    },
+
+    end: () => {
+      rEnd = projection.rotate();
+      vEnd = [inertia.velocity[0], inertia.velocity[1]];
+      opt.end && opt.end();
+    },
+
+    stop: opt.stop,
+
+    finish: opt.finish,
+
+    render: (t) => {
+      // t goes 0→1 along the decay curve; at t=1 we've added ~1s of velocity.
+      // dy sign flipped to match the move handler.
+      const r1 = [rEnd[0] + vEnd[0] * kStart * t, rEnd[1] - vEnd[1] * kStart * t, 0];
+      const r2 = opt.axis(rEnd, r1);
       opt.render && opt.render(r2);
     },
 

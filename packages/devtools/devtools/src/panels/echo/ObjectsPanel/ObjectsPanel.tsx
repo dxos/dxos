@@ -5,19 +5,17 @@
 import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
-import { FormatEnum, getObjectDXN, getSchema, getSchemaVersion, getTypename } from '@dxos/echo-schema';
-import { type DXN } from '@dxos/keys';
-import { getType, isDeleted } from '@dxos/live-object';
-import { useQuery, type Space } from '@dxos/react-client/echo';
+import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
+import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
+import { EID, type URI } from '@dxos/keys';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -26,9 +24,9 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: AnyLiveObject<any>) => {
+  return (item: Obj.Any) => {
     let match = false;
-    match ||= !!getType(item)?.toString().match(matcher);
+    match ||= !!Obj.getTypename(item)?.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
     return match;
   };
@@ -54,16 +52,17 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
   // TODO(burdon): Sort by type?
-  const items = useQuery(space, Query.select(Filter.everything()).options({ deleted: 'include' }));
+  const items = useQuery(space?.db, Query.select(Filter.everything()).options({ deleted: 'include' }));
   const [filter, setFilter] = useState('');
-  const [selected, setSelected] = useState<AnyLiveObject<any>>();
+  const [selected, setSelected] = useState<Obj.Any>();
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
-  const onNavigate = (dxn: DXN) => {
-    if (dxn.isLocalObjectId()) {
-      const [, id] = dxn.parts;
-      const object = items.find((item) => item.id === id);
+  const onNavigate = (dxn: URI.URI) => {
+    const echoUri = EID.tryParse(dxn);
+    if (echoUri && EID.isLocal(echoUri)) {
+      const id = EID.getEntityId(echoUri);
+      const object = id ? items.find((item) => item.id === id) : undefined;
       if (object) {
         setSelectedVersionObject(null);
         setSelected(object);
@@ -71,7 +70,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }
   };
 
-  const objectSelect = (object: AnyLiveObject<any>) => {
+  const objectSelect = (object: Obj.Any) => {
     setSelectedVersionObject(null);
     setSelected(object);
   };
@@ -83,12 +82,12 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const dataProperties = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.DID },
-      { name: 'type', format: FormatEnum.String },
-      { name: 'version', format: FormatEnum.String, size: 100 },
+      { name: 'id', format: Format.TypeFormat.DID },
+      { name: 'type', format: Format.TypeFormat.String },
+      { name: 'version', format: Format.TypeFormat.String, size: 100 },
       {
         name: 'deleted',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 100,
         config: {
           options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
@@ -96,7 +95,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       },
       {
         name: 'schemaAvailable',
-        format: FormatEnum.SingleSelect,
+        format: Format.TypeFormat.SingleSelect,
         size: 180,
         config: {
           options: [
@@ -112,10 +111,10 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const dataRows = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
-      type: getTypename(item),
-      version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
-      deleted: isDeleted(item) ? 'DELETED' : ' ',
-      schemaAvailable: getSchema(item) ? 'YES' : 'NO',
+      type: Obj.getTypename(item),
+      version: Obj.getType(item) ? Type.getVersion(Obj.getType(item)!) : undefined,
+      deleted: Obj.isDeleted(item) ? 'DELETED' : ' ',
+      schemaAvailable: Obj.getType(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
@@ -133,11 +132,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const historyProperties = useMemo(
     () => [
-      { name: 'hash', format: FormatEnum.JSON },
-      { name: 'actor', format: FormatEnum.JSON, size: 380 },
+      { name: 'hash', format: Format.TypeFormat.JSON },
+      { name: 'actor', format: Format.TypeFormat.JSON, size: 380 },
       // Uncomment when time and message are used
-      // { name: 'time', format: FormatEnum.Number },
-      // { name: 'message', format: FormatEnum.String },
+      // { name: 'time', format: Format.TypeFormat.Number },
+      // { name: 'message', format: Format.TypeFormat.String },
     ],
     [],
   );
@@ -186,7 +185,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
+      <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
         <div className='flex flex-col w-full overflow-hidden'>
           <DynamicTable
             properties={dataProperties}
@@ -196,28 +195,28 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           />
           <div
             className={mx(
-              'bs-[--statusbar-size]',
+              'h-(--dx-statusbar-size)',
               'flex shrink-0 justify-end items-center gap-2',
-              'bg-baseSurface text-description',
+              'bg-base-surface text-description',
             )}
           >
-            <div className='text-sm pie-2'>Objects: {items.length}</div>
+            <div className='text-sm pe-2'>Objects: {items.length}</div>
           </div>
         </div>
 
-        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
-          <div className={mx('p-1 min-bs-0 overflow-auto')}>
+        <div className='dx-container grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
+          <div className='p-1 min-h-0 overflow-auto'>
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
-                id={getObjectDXN(selected)?.toString()}
+                id={Obj.getURI(selected)}
                 onNavigate={onNavigate}
               />
             ) : (
               <Placeholder label='Data' />
             )}
           </div>
-          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-t border-separator')}>
             {selected ? (
               <DynamicTable properties={historyProperties} rows={historyRows} onRowClick={handleHistoryRowClicked} />
             ) : (

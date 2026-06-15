@@ -2,8 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist/esm",
-    "target": "ESNext"
+    "outDir": "dist"
   },
   "include": [
     "src"
@@ -16,16 +15,19 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/timeframe"
+      "path": "../../common/protobuf-compiler"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/timeframe"
     }
   ]
 }

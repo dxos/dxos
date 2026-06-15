@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
+import { type Transport, type TransportOptions, type TransportStats } from '../transport';
 import { type RtcPeerConnection } from './rtc-peer-connection';
 import { createRtcTransportStats, describeSelectedRemoteCandidate } from './rtc-transport-stats';
-import { type Transport, type TransportOptions, type TransportStats } from '../transport';
 
 // https://viblast.com/blog/2015/2/5/webrtc-data-channel-message-size
 const MAX_MESSAGE_SIZE = 64 * 1024;
@@ -70,7 +70,7 @@ export class RtcTransportChannel extends Resource implements Transport {
           const error =
             err instanceof Error
               ? err
-              : new ConnectivityError(`Failed to create a channel: ${JSON.stringify(err?.message)}`);
+              : new ConnectivityError({ message: `Failed to create a channel: ${JSON.stringify(err?.message)}` });
           this.errors.raise(error);
         } else {
           log.verbose('connection establishment failed after transport was closed', { err });

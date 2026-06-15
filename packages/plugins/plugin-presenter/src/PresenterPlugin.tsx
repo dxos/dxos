@@ -2,35 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, PresenterSettings, ReactSurface } from './capabilities';
-import { meta } from './meta';
-import translations from './translations';
+import { AppGraphBuilder, PresenterSettings, ReactSurface } from '#capabilities';
+import { meta } from '#meta';
+import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
 
-export const PresenterPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: PresenterSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-  ]);
+export const PresenterPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addSettingsModule({ activate: PresenterSettings }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.make,
+);
+
+export default PresenterPlugin;

@@ -3,11 +3,12 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { createDocAccessor, type Space } from '@dxos/client/echo';
-import { EchoObject, Ref } from '@dxos/echo-schema';
-import { faker } from '@dxos/random';
+import { type Space } from '@dxos/client/echo';
+import { DXN, Ref, Type } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-client';
+import { random } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types';
@@ -24,10 +25,10 @@ export const Priority = [1, 2, 3, 4, 5];
  * @deprecated
  */
 export enum TestSchemaType {
-  document = 'example.com/type/Document',
-  organization = 'example.com/type/Organization',
-  contact = 'example.com/type/Contact',
-  project = 'example.com/type/Project',
+  document = 'com.example.type.document',
+  organization = 'com.example.type.organization',
+  contact = 'com.example.type.person',
+  project = 'com.example.type.project',
 }
 
 /**
@@ -37,21 +38,21 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = Schema.Struct({
     title: Schema.String.annotations({ description: 'title of the document' }),
     content: Schema.String,
-  }).pipe(EchoObject({ typename: TestSchemaType.document, version: '0.1.0' }));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.document, '0.1.0')));
 
   const organization = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the company or organization' }),
     website: Schema.optional(Schema.String.annotations({ description: 'public website URL' })),
     description: Schema.String.annotations({ description: 'short summary of the company' }),
-  }).pipe(EchoObject({ typename: TestSchemaType.organization, version: '0.1.0' }));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.organization, '0.1.0')));
 
   const contact = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the person' }),
     email: Schema.optional(Schema.String),
-    org: Schema.optional(Ref(organization)),
+    org: Schema.optional(Ref.Ref(organization)),
     lat: Schema.optional(Schema.Number),
     lng: Schema.optional(Schema.Number),
-  }).pipe(EchoObject({ typename: TestSchemaType.contact, version: '0.1.0' }));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.contact, '0.1.0')));
 
   const project = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the project' }),
@@ -61,8 +62,8 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     status: Schema.String,
     priority: Schema.Number,
     active: Schema.Boolean,
-    org: Schema.optional(Ref(organization)),
-  }).pipe(EchoObject({ typename: TestSchemaType.project, version: '0.1.0' }));
+    org: Schema.optional(Ref.Ref(organization)),
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.project, '0.1.0')));
 
   return {
     [TestSchemaType.document]: document,
@@ -74,39 +75,39 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
 
 const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
   [TestSchemaType.document]: async () => ({
-    title: faker.lorem.sentence(3),
-    content: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
+    title: random.lorem.sentence(3),
+    content: random.lorem.sentences({ min: 1, max: random.number.int({ min: 1, max: 3 }) }),
   }),
 
   [TestSchemaType.organization]: async () => ({
-    name: faker.company.name(),
-    website: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
-    description: faker.lorem.sentences(),
+    name: random.company.name(),
+    website: random.datatype.boolean({ probability: 0.3 }) ? random.internet.url() : undefined,
+    description: random.lorem.sentences(),
   }),
 
   [TestSchemaType.contact]: async (provider) => {
     const organizations = await provider?.(TestSchemaType.organization);
-    const location = faker.datatype.boolean() ? faker.geo.airport() : {};
+    const location = random.datatype.boolean() ? random.geo.airport() : {};
 
     return {
-      name: faker.person.fullName(),
-      email: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.email() : undefined,
+      name: random.person.fullName(),
+      email: random.datatype.boolean({ probability: 0.5 }) ? random.internet.email() : undefined,
       org:
-        organizations?.length && faker.datatype.boolean({ probability: 0.8 })
-          ? Ref.make(faker.helpers.arrayElement(organizations))
+        organizations?.length && random.datatype.boolean({ probability: 0.8 })
+          ? Ref.make(random.helpers.arrayElement(organizations))
           : undefined,
       ...location,
     };
   },
 
   [TestSchemaType.project]: async () => ({
-    name: faker.commerce.productName(),
-    repo: faker.internet.url(),
-    status: faker.helpers.arrayElement(Status),
-    description: faker.lorem.sentences(),
-    website: faker.internet.url(),
-    priority: faker.helpers.arrayElement(Priority),
-    active: faker.datatype.boolean(),
+    name: random.commerce.productName(),
+    repo: random.internet.url(),
+    status: random.helpers.arrayElement(Status),
+    description: random.lorem.sentences(),
+    website: random.internet.url(),
+    priority: random.helpers.arrayElement(Priority),
+    active: random.datatype.boolean(),
   }),
 };
 

@@ -2,20 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos/lit-grid/dx-grid.pcss';
-
-import { createComponent, type EventName } from '@lit/react';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type EventName, createComponent } from '@lit/react';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,
-  forwardRef,
   type PropsWithChildren,
+  forwardRef,
   useCallback,
   useEffect,
   useState,
 } from 'react';
 
+import '@dxos/lit-grid/dx-grid.pcss';
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
 type DxGridElement = NaturalDxGrid;
@@ -63,20 +62,23 @@ const [createGridContext, createGridScope] = createContextScope(GRID_NAME, []);
 const [GridProvider, useGridContext] = createGridContext<GridContextValue>(GRID_NAME);
 
 type GridRootProps = PropsWithChildren<
-  { id: string } & Partial<{
+  {
+    id: string;
+  } & Partial<{
     editing: GridEditing;
     defaultEditing: GridEditing;
     onEditingChange: (nextEditing: GridEditing) => void;
   }>
 >;
 
+// TODO(burdon): Make headless.
 const GridRoot = ({
+  __gridScope,
+  children,
   id,
   editing: propsEditing,
   defaultEditing,
   onEditingChange,
-  children,
-  __gridScope,
 }: GridScopedProps<GridRootProps>) => {
   const [editing = null, setEditing] = useControllableState({
     prop: propsEditing,
@@ -102,12 +104,12 @@ const GridRoot = ({
 
 GridRoot.displayName = GRID_NAME;
 
+const GRID_CONTENT_NAME = 'GridContent';
+
 type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
   getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
 };
-
-const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
@@ -150,12 +152,12 @@ GridContent.displayName = GRID_CONTENT_NAME;
 // Fragments
 //
 
-// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
+// NOTE(Zan): These fragments add border to w-end and h-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
 const gridSeparatorInlineEnd =
-  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-subduedSeparator';
+  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-y-0 [&>.dx-grid]:after:-right-px [&>.dx-grid]:after:w-px [&>.dx-grid]:after:bg-subdued-separator';
 const gridSeparatorBlockEnd =
-  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-subduedSeparator';
+  '[&>.dx-grid]:relative [&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-x-0 [&>.dx-grid]:before:-bottom-px [&>.dx-grid]:before:h-px [&>.dx-grid]:before:bg-subdued-separator';
 
 //
 // Exports
@@ -166,7 +168,7 @@ export const Grid = {
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, useGridContext, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd };
+export { GridRoot, GridContent, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd, useGridContext };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
@@ -178,6 +180,7 @@ export {
   toPlaneCellIndex,
   parseCellIndex,
   cellQuery,
+  DxEditRequest,
 } from '@dxos/lit-grid';
 
 export type {

@@ -2,24 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
-import React, { useRef, useMemo, useCallback } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import type * as Types from 'effect/Types';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonSchema, type Type } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { type ProjectionModel } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
-import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
-import { getBaseSchema, makeDynamicTable, type TablePropertyDefinition } from '../../util';
+import { type Table as TableType } from '../../types';
+import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
+import { Table, type TableController } from './Table';
 
-type DynamicTableProps = ThemedClassName<{
+export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
+  type?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchemaType;
-  schema?: Schema.Schema.AnyNoContext;
+  jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
   onRowClick?: (row: any) => void;
@@ -31,23 +34,30 @@ type DynamicTableProps = ThemedClassName<{
  */
 // TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
-export const DynamicTable = ({
+export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
-  name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
+  type: typeProp,
+  name = 'com.example.dynamicTable', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
-  jsonSchema,
-  schema,
+  jsonSchema: jsonSchemaProp,
   rowActions,
   onRowClick,
   onRowAction,
   ...props
-}: DynamicTableProps) => {
-  const { table, projection } = useMemo(() => {
-    // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
-    const props = getBaseSchema({ typename: name, properties, jsonSchema, schema });
-    return makeDynamicTable({ ...props, properties });
-  }, [name, properties, schema, jsonSchema]);
+}: DynamicTableProps<T>) => {
+  const registry = useContext(RegistryContext);
+  const [dynamicTable, setDynamicTable] = useState<{ object: TableType.Table; projection: ProjectionModel }>();
+
+  // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
+  const { type } = useMemo(
+    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, type: typeProp }),
+    [name, properties, jsonSchemaProp, typeProp],
+  );
+
+  useEffect(() => {
+    setDynamicTable(makeDynamicTable({ registry, type, properties }));
+  }, [registry, type, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -68,9 +78,9 @@ export const DynamicTable = ({
   );
 
   const model = useTableModel({
-    table,
     rows,
-    projection,
+    object: dynamicTable?.object,
+    projection: dynamicTable?.projection,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,
@@ -80,22 +90,15 @@ export const DynamicTable = ({
 
   const presentation = useMemo(() => {
     if (model) {
-      return new TablePresentation(model);
+      return new TablePresentation(registry, model);
     }
-  }, [model]);
+  }, [registry, model]);
 
-  // TODO(burdon): Do we need the outer divs?
   return (
-    <div role='none' className={mx('is-full bs-full grow grid', classNames)}>
-      <div role='none' className='grid min-bs-0 overflow-hidden'>
-        <Table.Root>
-          <Table.Main
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            ignoreAttention
-            onRowClick={onRowClick}
-          />
+    <div className={mx('dx-expander grid', classNames)}>
+      <div className='grid min-h-0 overflow-hidden'>
+        <Table.Root ref={tableRef}>
+          <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
         </Table.Root>
       </div>
     </div>

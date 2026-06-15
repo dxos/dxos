@@ -1,0 +1,27 @@
+{
+  "name": "@dxos/{{ name | kebab_case }}",
+  "version": "0.8.3",
+  "description": "{{ description }}",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/default/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "beast": {}
+}
