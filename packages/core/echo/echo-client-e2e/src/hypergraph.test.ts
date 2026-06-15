@@ -5,12 +5,10 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
+import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
-
-import { getObjectCore } from './echo-handler';
-import { EchoTestBuilder } from './testing';
 
 describe('HyperGraph', () => {
   test('cross-space references', async () => {

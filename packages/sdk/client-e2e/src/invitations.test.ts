@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, chain, sleep, waitForCondition } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import {
   type DataSpace,
@@ -20,6 +21,8 @@ import {
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
+import { InvitationsProxy } from '@dxos/client/invitations';
+import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { MetadataStore } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
@@ -27,10 +30,6 @@ import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-
-import { Client } from '../client';
-import { InvitationsProxy } from '../invitations';
-import { TestBuilder } from '../testing';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   onTestFinished(async () => {

@@ -5,8 +5,19 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { SpaceState, getSpace, importSpace } from '@dxos/client/echo';
+import { CreateEpochRequest } from '@dxos/client/halo';
+import {
+  type CreateInitializedClientsOptions,
+  TestBuilder,
+  TestSchema,
+  createInitializedClientsWithContext,
+  testSpaceAutomerge,
+  waitForSpace,
+} from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-client';
@@ -17,18 +28,6 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
-
-import { Client } from '../client';
-import { SpaceState, getSpace, importSpace } from '../echo';
-import { CreateEpochRequest } from '../halo';
-import { TestSchema } from '../testing';
-import {
-  type CreateInitializedClientsOptions,
-  TestBuilder,
-  createInitializedClientsWithContext,
-  testSpaceAutomerge,
-  waitForSpace,
-} from '../testing';
 
 describe('Spaces', () => {
   test('no default space after identity creation', async () => {

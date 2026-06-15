@@ -5,11 +5,10 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
+import { Client } from '@dxos/client';
+import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
-
-import { Client } from '../client';
-import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('reopens with persistent storage', async () => {

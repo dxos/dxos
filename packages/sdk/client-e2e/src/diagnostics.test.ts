@@ -4,12 +4,11 @@
 
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
+import { Client } from '@dxos/client';
 import { DiagnosticsCollector } from '@dxos/client-services';
+import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-
-import { Client } from '../client';
-import { TestBuilder } from '../testing';
 
 describe.skip('DiagnosticsCollector', () => {
   beforeEach(() => {

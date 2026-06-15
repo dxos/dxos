@@ -5,14 +5,13 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
+import { Client } from '@dxos/client';
 import type { Space } from '@dxos/client-protocol';
+import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '@dxos/client/testing';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
-
-import { Client } from '../client';
-import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '../testing';
 
 describe('ContactBook', () => {
   describe('joinBySpaceKey', () => {

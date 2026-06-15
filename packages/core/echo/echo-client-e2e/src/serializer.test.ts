@@ -7,14 +7,11 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type EchoDatabase, type SerializedSpace, Serializer } from '@dxos/echo-client';
+import { EchoTestBuilder, createTmpPath } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
-
-import { type EchoDatabase } from './proxy-db';
-import { type SerializedSpace } from './serialized-space';
-import { Serializer } from './serializer';
-import { EchoTestBuilder, createTmpPath } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;

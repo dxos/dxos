@@ -5,14 +5,12 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { Client, ClientServicesProxy, SharedWorkerConnection } from '@dxos/client';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import { type MaybePromise, type Provider } from '@dxos/util';
-
-import { Client } from '../client';
-import { ClientServicesProxy, SharedWorkerConnection } from '../services';
 
 const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   const workerRuntime = new WorkerRuntime({

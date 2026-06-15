@@ -5,13 +5,12 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { Client } from '@dxos/client';
+import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-
-import { Client } from '../client';
-import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('presentation', async () => {

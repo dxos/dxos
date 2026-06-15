@@ -455,6 +455,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mesh/teleport-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/teleport-extension-automerge-replicator/package.json",
           "jsonpath": "$.version"
         },
@@ -986,6 +991,11 @@
         {
           "type": "json",
           "path": "packages/sdk/client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/client-e2e/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -5,16 +5,15 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { TestBuilder, syncItemsAutomerge } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-
-import { Client } from '../client';
-import { TestBuilder, syncItemsAutomerge } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.

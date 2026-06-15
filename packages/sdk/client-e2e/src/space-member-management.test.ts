@@ -5,15 +5,14 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
+import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
 import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-
-import { type Client } from '../client';
-import { createInitializedClientsWithContext } from '../testing';
 
 describe('Spaces/member-management', () => {
   test('admins can remove members', async () => {

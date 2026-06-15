@@ -6,9 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 import { log } from '@dxos/log';
-
-import { TestBuilder, TestPeer } from './testing';
-import { TestExtension } from './testing/test-extension';
+import { TestBuilder, TestExtension, TestPeer } from '@dxos/teleport/testing';
 
 describe('Teleport', () => {
   test('sends rpc via TestExtension', async () => {

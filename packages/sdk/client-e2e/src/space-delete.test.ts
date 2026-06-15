@@ -5,11 +5,10 @@
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
+import { TestBuilder, waitForSpace } from '@dxos/client/testing';
 import { type PublicKey } from '@dxos/keys';
-
-import { Client } from '../client';
-import { TestBuilder, waitForSpace } from '../testing';
 
 describe('Space deletion', () => {
   // Acceptance test: deleting a space on one device removes it on another device of the same identity.

@@ -151,9 +151,7 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequalwith": "catalog:",
-    "fast-check": "catalog:",
     "typedoc": "catalog:"
   },
   "peerDependencies": {

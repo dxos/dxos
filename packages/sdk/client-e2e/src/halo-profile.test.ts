@@ -5,12 +5,11 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { Client } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
+import { TestBuilder } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
 import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
-
-import { Client } from '../client';
-import { TestBuilder } from '../testing';
 
 describe('Halo', () => {
   test('creates a identity', async () => {

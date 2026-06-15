@@ -6,12 +6,11 @@ import { rmSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { Client } from '@dxos/client';
+import { TestBuilder, TestSchema, performInvitation } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { isNode } from '@dxos/util';
-
-import { Client } from '../client';
-import { TestBuilder, TestSchema, performInvitation } from '../testing';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';

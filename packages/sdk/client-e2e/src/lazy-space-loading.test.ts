@@ -5,7 +5,10 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
+import { SpaceState } from '@dxos/client/echo';
+import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -13,10 +16,6 @@ import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-
-import { type Client } from '../client';
-import { SpaceState } from '../echo';
-import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '../testing';
 
 describe('Lazy Space Loading', () => {
   test('explicitly created space is closed after reload', async () => {
