@@ -2198,9 +2198,7 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
-              Scope.feed(Feed.getQueueUri(feed)!),
-            ]),
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
           )
           .run();
         expect(objects).toHaveLength(1);
@@ -2210,11 +2208,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(
-            Query.select(Filter.text('React', { type: 'full-text' })).from([
-              Scope.feed(Feed.getQueueUri(feed)!),
-            ]),
-          )
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -2224,9 +2218,7 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([
-              Scope.feed(Feed.getQueueUri(feed)!),
-            ]),
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
           )
           .run();
         expect(objects).toHaveLength(0);
@@ -2276,9 +2268,7 @@ describe('Query', () => {
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
-            Scope.feed(Feed.getQueueUri(feed)!),
-          ]),
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
         )
         .first();
       expect(obj).toBeDefined();
@@ -3019,7 +3009,10 @@ describe('Query', () => {
       }
       await db.flush();
 
-      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'A' }), Obj.make(TestSchema.Task, { title: 'B' })]);
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Task, { title: 'A' }),
+        Obj.make(TestSchema.Task, { title: 'B' }),
+      ]);
       await db.flush();
 
       const objects = await db

@@ -20,12 +20,7 @@ import {
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import {
-  createFeedServiceLayer,
-  EchoClient,
-  type DatabaseImpl,
-  makeRegistry,
-} from '@dxos/echo-client';
+import { createFeedServiceLayer, EchoClient, type DatabaseImpl, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';

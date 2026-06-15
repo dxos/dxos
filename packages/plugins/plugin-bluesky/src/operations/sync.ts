@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { Operation } from '@dxos/compute';
 import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';

@@ -183,11 +183,7 @@ describe('feeds', () => {
       const localObject = Obj.make(TestSchema.Person, { name: 'local-only' });
       await db.appendToFeed(feed, [localObject]);
 
-      const localFeedObjects = await queryFeed(
-        db,
-        feed,
-        Filter.type(TestSchema.Person, { name: 'local-only' }),
-      ).run();
+      const localFeedObjects = await queryFeed(db, feed, Filter.type(TestSchema.Person, { name: 'local-only' })).run();
 
       expect(localFeedObjects).toHaveLength(1);
       expect(localFeedObjects[0].id).toEqual(localObject.id);

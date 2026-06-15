@@ -36,9 +36,7 @@ describe('Mailbox tags', () => {
 
     const { messages } = new Builder().createMessages(1).build();
     const [message] = messages;
-    await EffectEx.runAndForwardErrors(
-      Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(db))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(db))));
 
     // Applying a tag creates a Tag object and indexes the message under its uri.
     const tagUri = await Mailbox.applyTag(mailbox, { label: 'Urgent' }, message, db);

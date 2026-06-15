@@ -93,8 +93,7 @@ export class FeedHandle {
 
       changed = objectSetChanged(this._objects, decodedObjects);
 
-      TRACE_FEED_LOAD &&
-        log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
+      TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects;
     } catch (err) {
       // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.

@@ -34,12 +34,7 @@ import {
   warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
-import {
-  type EchoClient,
-  type EchoDatabase,
-  type DatabaseImpl,
-  type SpaceSyncState,
-} from '@dxos/echo-client';
+import { type EchoClient, type EchoDatabase, type DatabaseImpl, type SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';

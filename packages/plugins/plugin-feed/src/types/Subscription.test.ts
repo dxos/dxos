@@ -39,9 +39,7 @@ describe('per-Post state keyed by entity id', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
       Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
@@ -103,9 +101,7 @@ describe('PostContent reverse-ref lookup', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
       Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
@@ -146,9 +142,7 @@ describe('PostContent reverse-ref lookup', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
       Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
     );

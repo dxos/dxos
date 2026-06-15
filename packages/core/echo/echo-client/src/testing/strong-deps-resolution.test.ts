@@ -302,7 +302,9 @@ describe('strong dependency resolution', () => {
       await db.flush();
       await db.appendToFeed(feed, [org, relation]);
 
-      const [, surfaced] = await db.query(Query.select(Filter.everything()).from(Scope.feed(Feed.getQueueUri(feed)!))).run();
+      const [, surfaced] = await db
+        .query(Query.select(Filter.everything()).from(Scope.feed(Feed.getQueueUri(feed)!)))
+        .run();
       assert(Relation.isRelation(surfaced), 'feed relation must surface');
       expect(Relation.getSource(surfaced as TestSchema.EmployedBy).name).toEqual('Alice');
       expect(Relation.getTarget(surfaced as TestSchema.EmployedBy).name).toEqual('DXOS');
@@ -342,7 +344,9 @@ describe('strong dependency resolution', () => {
         assert(feedObj != null, 'feed object must survive reload');
 
         // Re-fetch from disk: order is [org, relation]; the relation's source lives in the database.
-        const [, surfaced] = await db.query(Query.select(Filter.everything()).from(Scope.feed(Feed.getQueueUri(feedObj as Feed.Feed)!))).run();
+        const [, surfaced] = await db
+          .query(Query.select(Filter.everything()).from(Scope.feed(Feed.getQueueUri(feedObj as Feed.Feed)!)))
+          .run();
         assert(Relation.isRelation(surfaced), 'reloaded feed relation must surface');
         expect(Relation.getSource(surfaced as TestSchema.EmployedBy).name).toEqual('Alice');
         expect(Relation.getTarget(surfaced as TestSchema.EmployedBy).name).toEqual('DXOS');

@@ -203,9 +203,7 @@ const meta = {
                 );
               }
             }).pipe(
-              Effect.provide(
-                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db)),
-              ),
+              Effect.provide(Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db))),
             );
           }),
         }),

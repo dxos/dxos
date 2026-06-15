@@ -601,7 +601,10 @@ describe('Spaces', () => {
 
     const feedObj = space.db.add(Feed.make({}));
     await space.db.flush();
-    await space.db.appendToFeed(feedObj, [createObject({ name: 'queue-item-1' }), createObject({ name: 'queue-item-2' })]);
+    await space.db.appendToFeed(feedObj, [
+      createObject({ name: 'queue-item-1' }),
+      createObject({ name: 'queue-item-2' }),
+    ]);
 
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
@@ -664,7 +667,10 @@ describe('Spaces', () => {
     await space.db.flush();
     const feedDXN = Feed.getQueueUri(feedObj);
     expect(feedDXN).toBeDefined();
-    await space.db.appendToFeed(feedObj, [createObject({ name: 'queue-item-1' }), createObject({ name: 'queue-item-2' })]);
+    await space.db.appendToFeed(feedObj, [
+      createObject({ name: 'queue-item-1' }),
+      createObject({ name: 'queue-item-2' }),
+    ]);
 
     const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
     const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
@@ -808,7 +814,9 @@ describe('Spaces', () => {
     expect(importedObj.name).toEqual('doc-in-source');
 
     // Verify Feed object imported.
-    const importedFeed = await targetSpace.internal.db.query(Filter.and(Filter.type(Feed.Feed), Filter.id(feedObj.id))).first();
+    const importedFeed = await targetSpace.internal.db
+      .query(Filter.and(Filter.type(Feed.Feed), Filter.id(feedObj.id)))
+      .first();
     expect(importedFeed).toBeDefined();
 
     // Import feed messages.

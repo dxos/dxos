@@ -324,9 +324,9 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  * @see {@link Database.appendToFeed}
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.appendToFeed(feed, entities)))).pipe(
-    Effect.withSpan('Database.appendToFeed'),
-  );
+  Service.pipe(
+    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.appendToFeed(feed, entities))),
+  ).pipe(Effect.withSpan('Database.appendToFeed'));
 
 /**
  * Removes entities from a feed.

@@ -129,9 +129,7 @@ const meta = {
               const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
             }).pipe(
-              Effect.provide(
-                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db)),
-              ),
+              Effect.provide(Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db))),
             );
           }),
         }),
