@@ -28,7 +28,7 @@ import {
   type EntityStructure,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { batchEvents } from '@dxos/echo/internal';
+import { batchEvents, type RefResolver, type RefResolverRequest } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,7 +36,7 @@ import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues, defaultMap, getDeep } from '@dxos/util';
+import { chunkArray, deepMapValues, getDeep } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
@@ -106,13 +106,6 @@ export class CoreDatabase {
   private readonly _branchStore?: BranchStore;
 
   /**
-   * DXN string -> EntityId.
-   * Stores the targets of strong dependencies to the objects that depend on them.
-   * When we load an object that doesn't have it's strong deps resolved, we wait for the deps to be loaded first.
-   */
-  private readonly _strongDepsIndex = new Map<string, EntityId[]>();
-
-  /**
    * Object ids whose backing document was determined to be not on local disk
    * via a `diskOnly` load probe. Used by `loadObjectCoreById` to bail out
    * of the wait without resolving when the doc would otherwise require
@@ -120,6 +113,15 @@ export class CoreDatabase {
    * `undefined` return.
    */
   private readonly _unavailableObjects = new Set<EntityId>();
+
+  /**
+   * Per-entity closure-aware satisfaction requests. Strong-dependency satisfaction is delegated to
+   * the {@link RefResolver}: each surfaced entity holds a disk-bound request whose `ready` state is
+   * the surface gate, spanning same-space db, cross-space db, feed queues, and the registry.
+   */
+  private readonly _satisfactionRequests = new Map<EntityId, RefResolverRequest>();
+
+  private _refResolver: RefResolver | undefined;
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -201,6 +203,12 @@ export class CoreDatabase {
 
     await this._repoProxy.open();
     this._ctx.onDispose(() => this._unsubscribeFromHandles());
+    this._ctx.onDispose(() => {
+      for (const request of this._satisfactionRequests.values()) {
+        request.abort();
+      }
+      this._satisfactionRequests.clear();
+    });
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
     this._automergeDocLoader.onObjectUnavailable.on(this._ctx, this._onObjectUnavailable.bind(this));
 
@@ -1276,10 +1284,8 @@ export class CoreDatabase {
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
 
-    // The dep was previously marked unavailable but its bytes have now
-    // arrived (e.g. a peer eventually delivered them); clear the mark so
-    // any new `loadObjectCoreById` waiters for this object — or for its
-    // dependents — see a fresh resolution.
+    // The body was previously marked unavailable but its bytes have now arrived (e.g. a peer
+    // eventually delivered them); clear the mark so any in-flight body load resolves afresh.
     this._markObjectAvailable(objectId);
 
     // Skip objects that were already materialized locally.
@@ -1287,45 +1293,11 @@ export class CoreDatabase {
       return;
     }
 
-    const core = this._createObjectInDocument(handle, objectId);
-    const depsSatisfied = this._areDepsSatisfied(core);
-    if (depsSatisfied) {
-      this._scheduleThrottledUpdate([objectId]);
-    } else {
-      // Recursive strong-dep loads always use `diskOnly: true`. Deps are
-      // a system-internal hydration step, not a user-driven request: we
-      // surface a clear "unavailable" signal instead of blocking on the
-      // network. Callers that explicitly want network-backed dep loading
-      // can issue per-dep requests themselves.
-      for (const dep of core.getStrongDependencies()) {
-        if (!EID.isLocal(dep)) {
-          continue;
-        }
-        const id = EID.getEntityId(dep);
-        if (id) {
-          this._automergeDocLoader.loadObjectDocument(id, { diskOnly: true });
-        }
-      }
-    }
-    const queue = [objectId],
-      seen = new Set<string>();
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      if (seen.has(id)) {
-        continue;
-      }
-      seen.add(id);
-
-      if (this._objects.has(id)) {
-        for (const dep of this._strongDepsIndex.get(id) ?? []) {
-          queue.push(dep);
-          const core = this._objects.get(dep);
-          if (core && this._areDepsSatisfied(core)) {
-            this._scheduleThrottledUpdate([core.id]);
-          }
-        }
-      }
-    }
+    this._createObjectInDocument(handle, objectId);
+    // Surface the new body. The query pipeline re-evaluates strong-dep satisfaction through the
+    // resolver; dependents whose closure includes this entity are woken by their satisfaction
+    // request's load op transitioning to ready.
+    this._scheduleThrottledUpdate([objectId]);
   }
 
   /**
@@ -1353,96 +1325,57 @@ export class CoreDatabase {
       assignFromLocalState: false,
     });
 
-    const deps = core.getStrongDependencies();
-    for (const dep of deps) {
-      if (!EID.isLocal(dep)) {
-        continue;
-      }
-      const depObjectId = EID.getEntityId(dep);
-      if (!depObjectId || this._objects.has(depObjectId)) {
-        continue;
-      }
-
-      defaultMap(this._strongDepsIndex, depObjectId, []).push(core.id);
-    }
-
     return core;
   }
 
   /**
-   * Whether every local strong dependency is loaded and satisfied.
-   * Query paths require this before surfacing an object.
+   * Whether the entity's full strong-dependency closure is loaded and satisfied.
+   * Query paths require this before surfacing an object. Delegated to the resolver, so it spans
+   * same-space / cross-space db objects, feed-queue objects, and registry types uniformly.
    */
   areStrongDepsSatisfied(core: ObjectCore): boolean {
     return this._areDepsSatisfied(core);
   }
 
-  private _areDepsSatisfied(core: ObjectCore, seen?: Set<EntityId>): boolean {
-    seen ??= new Set<EntityId>();
-    const deps = core.getStrongDependencies();
-
-    seen.add(core.id);
-    return deps.every((dep) => {
-      if (!EID.isLocal(dep)) {
-        return true;
-      }
-      const depObjectId = EID.getEntityId(dep);
-      if (!depObjectId) {
-        return true;
-      }
-      const depCore = this._objects.get(depObjectId);
-      if (!depCore) {
-        return false;
-      }
-      if (seen.has(depCore.id)) {
-        return true;
-      }
-      return this._areDepsSatisfied(depCore, seen);
-    });
+  private _areDepsSatisfied(core: ObjectCore): boolean {
+    return this._ensureSatisfactionRequest(core).state === 'ready';
   }
 
   /**
-   * Returns true when every strong dep is either loaded (== `_areDepsSatisfied`)
-   * OR has been determined unavailable on disk. Used by `loadObjectCoreById`
-   * so it can resolve (with `undefined`) instead of waiting forever when a
-   * recursive dep doc is unreachable. Recursive strong-dep loads always
-   * use `diskOnly: true`, so deps surface as unavailable promptly even for
-   * non-`diskOnly` top-level callers.
+   * Returns true when the strong-dep closure is either satisfied OR settled `unavailable` at the
+   * disk ceiling. Used by `loadObjectCoreById` so it resolves (with `undefined`) instead of waiting
+   * forever when a dependency is unreachable on disk.
    */
-  private _areDepsResolved(core: ObjectCore, seen?: Set<EntityId>): boolean {
-    seen ??= new Set<EntityId>();
-    const deps = core.getStrongDependencies();
-
-    seen.add(core.id);
-    return deps.every((dep) => {
-      if (!EID.isLocal(dep)) {
-        return true;
-      }
-      const depObjectId = EID.getEntityId(dep);
-      if (!depObjectId || this._unavailableObjects.has(depObjectId)) {
-        return true;
-      }
-      const depCore = this._objects.get(depObjectId);
-      if (!depCore) {
-        return false;
-      }
-      if (seen.has(depCore.id)) {
-        return true;
-      }
-      return this._areDepsResolved(depCore, seen);
-    });
+  private _areDepsResolved(core: ObjectCore): boolean {
+    const state = this._ensureSatisfactionRequest(core).state;
+    return state === 'ready' || state === 'unavailable';
   }
 
   /**
-   * Clears a stale `_unavailableObjects` mark once an object becomes available and wakes its
-   * dependents so any `loadObjectCoreById` waiter — or query hydration that dropped the object —
-   * re-evaluates. The mark is set when an id is probed (`diskOnly`) while absent from the space
-   * directory; an object later materialized locally (added) or whose document arrives must clear
-   * it, otherwise `diskOnly` loads keep short-circuiting to `undefined` until the database is rebuilt.
+   * Returns (creating on first use) the closure-aware satisfaction request for an entity. Surfacing
+   * subscribes to its state changes so the query pipeline re-evaluates as the closure loads.
+   */
+  private _ensureSatisfactionRequest(core: ObjectCore): RefResolverRequest {
+    let request = this._satisfactionRequests.get(core.id);
+    if (request == null) {
+      this._refResolver ??= this._hypergraph.createRefResolver({ context: { space: this._spaceId } });
+      const uri = EID.make({ spaceId: this._spaceId, entityId: core.id });
+      request = this._refResolver.resolve(uri, { source: 'disk' });
+      this._satisfactionRequests.set(core.id, request);
+      request.stateChanged.on(this._ctx, () => this._scheduleThrottledUpdate([core.id]));
+    }
+    return request;
+  }
+
+  /**
+   * Clears a stale `_unavailableObjects` mark once an object's body becomes available, waking any
+   * in-flight body load. The mark is set when an id is probed (`diskOnly`) while absent from the
+   * space directory; an object later materialized locally (added) or whose document arrives must
+   * clear it, otherwise `diskOnly` loads keep short-circuiting to `undefined`.
    */
   private _markObjectAvailable(objectId: string): void {
     if (this._unavailableObjects.delete(objectId)) {
-      this._scheduleThrottledUpdate([objectId, ...(this._strongDepsIndex.get(objectId) ?? [])]);
+      this._scheduleThrottledUpdate([objectId]);
     }
   }
 
@@ -1451,22 +1384,9 @@ export class CoreDatabase {
       return;
     }
     this._unavailableObjects.add(objectId);
-    // Walk transitive dependents (`A → B → C`, C unavailable wakes B
-    // and A) so any `loadObjectCoreById` waiter higher up in the chain
-    // re-evaluates `_areDepsResolved` and resolves with `undefined`
-    // instead of hanging. Mirrors the BFS in `_onObjectDocumentLoaded`.
-    const toWake = new Set<EntityId>([objectId]);
-    const queue: EntityId[] = [objectId];
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      for (const dep of this._strongDepsIndex.get(id) ?? []) {
-        if (!toWake.has(dep)) {
-          toWake.add(dep);
-          queue.push(dep);
-        }
-      }
-    }
-    this._scheduleThrottledUpdate([...toWake]);
+    // Wake any in-flight body load so it settles `unavailable` instead of hanging; satisfaction
+    // requests whose closure includes this body re-evaluate via their load op transitioning.
+    this._scheduleThrottledUpdate([objectId]);
   }
 
   private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {

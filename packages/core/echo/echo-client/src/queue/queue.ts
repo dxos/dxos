@@ -363,6 +363,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return this._objects;
   }
 
+  getCachedObjectById(id: EntityId): T | undefined {
+    return this._objectCache.get(id);
+  }
+
   /**
    * @deprecated Use `query` method instead.
    */

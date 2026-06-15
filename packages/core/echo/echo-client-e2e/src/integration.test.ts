@@ -8,6 +8,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
+import { EchoTestBuilder, createDataAssertion } from '@dxos/echo-client/testing';
 import { MeshEchoReplicator } from '@dxos/echo-host';
 import {
   TestReplicationNetwork,
@@ -19,8 +20,6 @@ import { TestSchema } from '@dxos/echo/testing';
 import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
-
-import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;

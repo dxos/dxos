@@ -6,11 +6,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Entity, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-
-import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;
@@ -65,9 +64,10 @@ describe('queues', () => {
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId, feed: queue.uri } })
-        .resolve(EID.make({ entityId: obj.id }));
+        .resolve(EID.make({ entityId: obj.id }), { source: 'network' })
+        .wait();
       expect(resolved?.id).toEqual(obj.id);
-      expect(resolved?.name).toEqual('john');
+      expect((resolved as TestSchema.Person | undefined)?.name).toEqual('john');
       expect(Obj.getType(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
     }
   });
