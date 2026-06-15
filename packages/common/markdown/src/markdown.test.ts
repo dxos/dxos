@@ -93,6 +93,58 @@ describe('markdown', () => {
     expect(normalizeText('aaa\nbbb')).to.equal('aaa\nbbb');
   });
 
+  describe('anchors', () => {
+    test('keeps a normal inline link', ({ expect }) => {
+      expect(normalizeText('<p>see <a href="https://example.com/docs">the docs</a> now</p>')).to.equal(
+        'see [the docs](https://example.com/docs) now',
+      );
+    });
+
+    test('keeps a single-line anchor as a link even when the href is an opaque redirect', ({ expect }) => {
+      // CTA buttons (e.g. "Go to Notion →") link through ESP tracking redirects; the link must be
+      // preserved — the opaque URL is hidden in rendered Markdown.
+      const html = '<p><a href="https://mg.mail.notion.so/c/eJxMj01uwyAQ_DROUS">Go to Notion</a></p>';
+      expect(normalizeText(html)).to.equal('[Go to Notion](https://mg.mail.notion.so/c/eJxMj01uwyAQ_DROUS)');
+    });
+
+    test('unwraps an anchor that wraps block-level content', ({ expect }) => {
+      // Notion wraps each "card" in an <a> containing block divs; an inline link cannot represent
+      // multi-paragraph content, so the wrapper is dropped and the content preserved.
+      const html = '<a href="https://example.com/x"><div><p>First line.</p><p>Second line.</p></div></a>';
+      expect(normalizeText(html)).to.equal('First line.\n\nSecond line.');
+    });
+
+    test('unwraps an empty anchor', ({ expect }) => {
+      expect(normalizeText('<p>a<a href="https://example.com/x"></a>b</p>')).to.equal('ab');
+    });
+
+    test('unwraps an anchor with no href', ({ expect }) => {
+      expect(normalizeText('<p><a>bare text</a></p>')).to.equal('bare text');
+    });
+
+    test('puts adjacent display:block anchors on their own lines', ({ expect }) => {
+      // Stacked email CTA rows are inline <a> with display:block; without forced line breaks turndown
+      // concatenates them into one run.
+      const html =
+        '<a href="https://example.com/1" style="display: block">First</a>' +
+        '<a href="https://example.com/2" style="display: block">Second</a>';
+      expect(normalizeText(html)).to.equal('[First](https://example.com/1)\n\n[Second](https://example.com/2)');
+    });
+  });
+
+  describe('images', () => {
+    test('keeps a content image', ({ expect }) => {
+      expect(normalizeText('<p><img src="https://example.com/a.png" alt="logo"/></p>')).to.equal(
+        '![logo](https://example.com/a.png)',
+      );
+    });
+
+    test('drops a 1x1 tracking beacon', ({ expect }) => {
+      const html = '<p>body</p><img width="1" height="1" alt="" src="https://mg.mail.notion.so/o/eJxMz0tqwz"/>';
+      expect(normalizeText(html)).to.equal('body');
+    });
+  });
+
   describe('residual tags', () => {
     test('strips MS Office namespaced tags', ({ expect }) => {
       // <o:p>...</o:p> is the most common turndown leftover from Outlook emails.

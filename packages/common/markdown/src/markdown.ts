@@ -5,6 +5,12 @@
 import { parseHTML } from 'linkedom';
 import TurndownService from 'turndown';
 
+/** Narrow a turndown DOM node to Element — rules filtered by tag name always receive one. */
+const isElement = (node: Node): node is Element => node.nodeType === 1;
+
+/** Read an attribute from a turndown node, returning '' when absent (or the node is not an element). */
+const getAttr = (node: Node, name: string): string => (isElement(node) ? (node.getAttribute(name) ?? '') : '');
+
 /**
  * https://www.npmjs.com/package/turndown
  */
@@ -13,6 +19,36 @@ const turndown = new TurndownService({
 })
   .remove('script')
   .remove('style')
+  .addRule('unwrapAnchors', {
+    filter: 'a',
+    replacement: (content, node) => {
+      const href = getAttr(node, 'href').trim();
+      const text = content.trim();
+      // An anchor wrapping block-level content (multi-line) cannot be a valid inline link — turndown
+      // would emit stranded `](url)[` fragments — and an anchor with no href or no text has nothing
+      // to link. In those cases unwrap to the inner content rather than forming a link.
+      if (!href || !text || /\n/.test(text)) {
+        return content;
+      }
+      const link = `[${text}](${href})`;
+      // `display:block` anchors (e.g. stacked email CTA rows) must each occupy their own line;
+      // turndown treats <a> as inline and would otherwise concatenate adjacent ones.
+      return /display:\s*block/i.test(getAttr(node, 'style')) ? `\n\n${link}\n\n` : link;
+    },
+  })
+  .addRule('dropTrackingBeacons', {
+    filter: 'img',
+    replacement: (content, node) => {
+      // 1x1 (or 0x0) images are open-tracking beacons, not content — drop them.
+      const width = getAttr(node, 'width');
+      const height = getAttr(node, 'height');
+      if ((width === '0' || width === '1') && (height === '0' || height === '1')) {
+        return '';
+      }
+      const src = getAttr(node, 'src').trim();
+      return src ? `![${getAttr(node, 'alt')}](${src})` : '';
+    },
+  })
   .addRule('cleanListSpacing', {
     filter: 'li',
     replacement: (content, node, options) => {
