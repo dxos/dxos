@@ -1,4 +1,4 @@
-Delivered-To: rich@braneframe.com
+Delivered-To: user@example.com
 Received: by 2002:a05:6a10:e28a:b0:705:ae8b:273d with SMTP id i10csp261385pxy;
         Thu, 11 Jun 2026 04:14:44 -0700 (PDT)
 X-Received: by 2002:a05:622a:28b:b0:517:8069:8b07 with SMTP id d75a77b69052e-517ee23d766mr31969021cf.29.1781176483925;
@@ -25,18 +25,18 @@ ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc
         dara=google.com
 ARC-Authentication-Results: i=1; mx.google.com;
        dkim=pass header.i=@mail.notion.so header.s=pic header.b="p+ig7H/b";
-       spf=pass (google.com: domain of bounce+395b43.074921-rich=braneframe.com@mail.notion.so designates 143.55.229.27 as permitted sender) smtp.mailfrom="bounce+395b43.074921-rich=braneframe.com@mail.notion.so";
+       spf=pass (google.com: domain of bounce+395b43.074921-user=example.com@mail.notion.so designates 143.55.229.27 as permitted sender) smtp.mailfrom="bounce+395b43.074921-user=example.com@mail.notion.so";
        dmarc=pass (p=QUARANTINE sp=QUARANTINE dis=NONE) header.from=mail.notion.so
-Return-Path: <bounce+395b43.074921-rich=braneframe.com@mail.notion.so>
+Return-Path: <bounce+395b43.074921-user=example.com@mail.notion.so>
 Received: from outgoing1.mail.notion.so (outgoing1.mail.notion.so. [143.55.229.27])
         by mx.google.com with UTF8SMTPS id d75a77b69052e-517ef9a6592si13850131cf.362.2026.06.11.04.14.43
-        for <rich@braneframe.com>
+        for <user@example.com>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
         Thu, 11 Jun 2026 04:14:43 -0700 (PDT)
-Received-SPF: pass (google.com: domain of bounce+395b43.074921-rich=braneframe.com@mail.notion.so designates 143.55.229.27 as permitted sender) client-ip=143.55.229.27;
+Received-SPF: pass (google.com: domain of bounce+395b43.074921-user=example.com@mail.notion.so designates 143.55.229.27 as permitted sender) client-ip=143.55.229.27;
 Authentication-Results: mx.google.com;
        dkim=pass header.i=@mail.notion.so header.s=pic header.b="p+ig7H/b";
-       spf=pass (google.com: domain of bounce+395b43.074921-rich=braneframe.com@mail.notion.so designates 143.55.229.27 as permitted sender) smtp.mailfrom="bounce+395b43.074921-rich=braneframe.com@mail.notion.so";
+       spf=pass (google.com: domain of bounce+395b43.074921-user=example.com@mail.notion.so designates 143.55.229.27 as permitted sender) smtp.mailfrom="bounce+395b43.074921-user=example.com@mail.notion.so";
        dmarc=pass (p=QUARANTINE sp=QUARANTINE dis=NONE) header.from=mail.notion.so
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mail.notion.so; q=dns/txt; s=pic; t=1781176483; x=1781183683;
  h=Content-Transfer-Encoding: Content-Type: Message-Id: To: To: From: From: Subject: Subject: Mime-Version: Date: Sender: Sender: List-Unsubscribe: List-Unsubscribe-Post;
@@ -49,9 +49,9 @@ Received: by 9d525f7cacdfa1a8cbc30402d77d9265e1670ec61ef880d50914d3df1749fc55 wi
 Sender: notify@mail.notion.so
 Date: Thu, 11 Jun 2026 11:14:43 +0000
 Mime-Version: 1.0
-Subject: Graham Suttie made updates in Graham Suttie's Notion
+Subject: Casey Morgan made updates in Casey Morgan's Notion
 From: Notion Team <notify@mail.notion.so>
-To: rich@braneframe.com
+To: user@example.com
 Message-Id: <20260611111443.4b68395ca0ac3921@mail.notion.so>
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -60,7 +60,7 @@ Content-Transfer-Encoding: quoted-printable
       <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.=
 w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
       <html
-       =20
+        
         dir=3D"ltr"
         xmlns=3D"http://www.w3.org/1999/xhtml"
         xmlns:v=3D"urn:schemas-microsoft-com:vml"
@@ -120,257 +120,166 @@ height: 0px; max-width: 0px; opacity: 0; overflow: hidden">=CD=8F =E2=80=8C=
  =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
 =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =
 =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =
-=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=
-=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=
-=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=
-=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F=
- =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD=
- =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87=
- =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
+=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =
-=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=
-=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=
-=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=
-=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=
-=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0=
- =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C=
- =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
+=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
 =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =
 =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =
-=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=
-=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=
-=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=
-=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F=
- =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD=
- =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87=
- =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
+=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =
-=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=
-=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=
-=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD</div><div style=3D"color: #333333; fo=
-nt-size: 12px"><div style=3D"margin-top: 38px"><table style=3D"border-colla=
-pse: collapse"><tbody><tr><td><img src=3D"https://app.notion.com/image/http=
-s&#37;3A&#37;2F%2Flh3.googleusercontent.com&#37;2Fa-&#37;2FAOh14GixQ7UVDxv0=
-oJb2v5bLOFGHsBO5LdVT_NgLFejVTAA%3Ds100?width=3D50&amp;userId=3D&amp;cache=
-=3Dv2&amp;imgBuildSrc=3DemailAttachedImages" alt=3D"icon" style=3D"vertical=
--align: top; width: 28px; height: 28px; object-fit: contain"/></td><td styl=
-e=3D"text-align: left; padding-top: 0; padding-right: 20px; padding-bottom:=
- 0; padding-left: 12px; width: 150px; white-space: nowrap; display: block">=
-<div style=3D"color: #787774; padding-top: 3px; overflow: hidden; text-over=
-flow: ellipsis; font-size: 16px; font-weight: 590">Graham Suttie&#x27;s Not=
-ion</div></td></tr></tbody></table></div></div><h1 style=3D"color: #333; fo=
-nt-size: 20px">New updates in Graham Suttie&#x27;s Notion</h1><div style=3D=
-"color: #787774; font-size: 14px; line-height: 20px">Review changes to 1 pa=
-ge in your workspace.</div><div style=3D"margin-top: 16px"><table style=3D"=
-width: 100%; border-collapse: collapse"><tbody><tr><td style=3D"vertical-al=
-ign: top"><a style=3D"background-color: #2383E2; border-radius: 8px; color:=
- #fff; text-decoration: none; padding: 6px; text-align: center; border: 1px=
- solid #308bbf; display: inline-block; width: 124px; margin-bottom: 20px" h=
-ref=3D"https://mg.mail.notion.so/c/eJxMj01uwyAQhU8DywgGjGHBIpWbE3QfjWGcIMU_=
-Ahw1t69I0qrsmPfpzTfRi147kJy87K2UvdFWcZox3c77nqJn_QfrB371xqpIYCROIAxOKIwKIMF=
-JoYM0DnnyIMAII9vTWh30aKxyXUCBQTmQTIvWe1jWmtblUFZ-89dat8LUkcGJwQm37TcN69xm6r=
-QwNbx8YrpQqQzMdi9MDRIEn6lixIpPTYCyYaBzigzg2QluCl3QnZFWCC2ltdD1ykkXnKU4GtPAf=
-uDZ5xSuTIsx40JTxpmaAK_-tbk-NmJq2Jc0JYrD0-OzJX9E2cc3hKGme6qPF9WA7w2XSPH4Dr5y=
-ulwotxMeVPi-lH0sIaeRPIPu3_e85xuDjt89_AQAAP__IA-E1g"><div class=3D"contextua=
-l-invite-email-cta" style=3D"font-size: 14px">Go to Notion =E2=86=92</div><=
-/a></td></tr></tbody></table></div><a href=3D"https://mg.mail.notion.so/c/e=
-JxMj7uu3CAQQL8GuruCAfMoKG7iuE2RFOksDONdpLWNAK-yfx95H9GlQ-doZk50TEsLnKLj2nCu=
-lTSC4uLTddz3FB3R34ju6cVFb3G2cdYdi3JmUqhZT8bH2czeGK1ocsBAMcWPJ6U4yUkZYbvgmQ_=
-CAieSHXNP69bStp7qRq_u0lquRHwSGAgMPuc3DdtCYMgEhv7Pz18f37clbxXLh1CoOuvj1EVjWN=
-SW6YgiSCG0NkIIIoZ8q0T0HBgBtRLR-9DSLbX7GNMZaxuzP-P4hs_UJ6ELNh99849qgJp9wDFFA=
-vA4EewcuiA7xQ1jknNjoNPCchuswTgpdYi6p8WVFC5Esqn4FefiFzx6aHPPbe2ekYh-X9OcMPaP=
-3T8O8t-o-_SS3sc_rUP4m_0aMX6-wO-SzmcsR_IdK93Xuk81lDShI9B9-Y57uRLo6M3BvwAAAP_=
-_qzqemg" style=3D"display: block; color: inherit; text-decoration: none; cu=
-rsor: pointer; padding: 12px 0; width: 100%" class=3D"notion-email-button-h=
-over"><table style=3D"width: 100%"><tbody><tr><td style=3D"width: 30px; min=
--width: 30px; vertical-align: top; padding-top: 2px"><span aria-label=3D"ic=
-on" style=3D"vertical-align: middle; display: inline-block; width: 24px; te=
-xt-align: center; font-size: 16px">=F0=9F=8E=A8</span></td><td><span style=
-=3D"display: inline-block; font-size: 17px; line-height: 24px; font-weight:=
- 600; color: #333333; vertical-align: middle; margin-right: 8px">DXOS - Com=
-poser</span></td></tr></tbody></table></a><table style=3D"padding-top: 2px;=
- padding-bottom: 0; border-spacing: 0; width: 100%; border-collapse: separa=
-te"><tr><td style=3D"vertical-align: top; width: 30px; min-width: 30px; pad=
-ding-top: 2px; padding-left: 4px"><div style=3D"border-radius: 100%; overfl=
-ow: hidden; width: 20px; height: 20px; max-width: 100%; max-height: 100%; b=
-ackground: white; display: flex; align-items: center; justify-content: cent=
-er; user-select: none; -webkit-user-select: none; color: rgba(44, 44, 43, 1=
-)"><img src=3D"https://lh3.googleusercontent.com/a-/AOh14GixQ7UVDxv0oJb2v5b=
-LOFGHsBO5LdVT_NgLFejVTAA=3Ds100" style=3D"display: block; width: 100%; heig=
-ht: 100%; object-fit: cover"/></div></td><td><a href=3D"https://mg.mail.not=
-ion.so/c/eJyEkE2v2ywQhX8N7BLBgPlYsLjv62bbRbvozsIwTlD9gQyOmn9fOb65alVVZXd0nm=
-HOnOiYlhY4Rce14VwraQTFyaex27YUHdH_Ed3Sm4MwSC6iZYyLXlkLRumg5GCkAfQ-0uSAgWKK7=
-09KcZa9MsI2wTMfhAVOJNv_Pc9LTct8Lgsd3a3WXIh4I3AhcPE5v9ywTAQumcCl_fb5y-n_ZcpL=
-wfUkFKrG-tg30RgWtWU6oghSCK2NEIKIS74XIloOjICaiWh9qOme6qOL6YqldtlfsXuZx6mH8xf=
--Q_fjEr6fMKaK8V_sH8ufw91vw7s40tRUR6QTVh999c_SAUr2AbsUCcCzIbBDaIJsFDeMSc6NgU=
-YLy22wBmOv1A7qlq5uTeFGJOtXP-Ow-gn3Oml1x7H1kZGIdpvTkDC2z-CfdueDKFv_Dr3iH9QO_=
-Mh-jhjf3o2va7pecd0bf2Ch21y2voQ19egINL_IbltHAg29O_gZAAD__0PPzHs" style=3D"di=
-splay: block; color: inherit; text-decoration: none; cursor: pointer; font-=
-size: 14px; line-height: 1.4; padding: 2px" class=3D"notion-email-button-ho=
-ver"><span><span><span style=3D"font-weight: 600">Graham Suttie</span></spa=
-n> edited <span>this page</span></span></a></td></tr><tr><td></td><td style=
-=3D"max-width: 400px"><div><a href=3D"https://mg.mail.notion.so/c/eJyEkb-O2=
-zAMh59G3hJIpKw_g4dr3awd2qGbIYl0IjSxDVsOmrcvnFyuVxTFaaO-jxJ-JDXSag-q4kZZp5Q1=
-2mHFl5DP3bpmaoT9JGxbnRpXWwayKKXXrqYeSPY2YuqVJY-gq9yABCON2o7WuNfROPR1CjIk9KC=
-Eltu7-2EseRz2y1idm1Mp0yLwRcBBwCFM05Om8SLgMAk4tD--ftt9Hi_TuPC8Q8Om9oFiTc5Jsl=
-5aYkwa0VqHiAIP03UR2CqQAswgsA2p5Gsut47ykZfSTeHI3RM-oj7If_y3Op7H9HPHlAvTR-4_n=
-9-bu7-a_1wJQLTxXTD0gYLqJTmrjQomUnXhEiiUcF8JwDKFxF0mAXCfH_g-1UnXRjkptVLOQW3R=
-K5-8Y4rGbKJtq7mZczoJLeMcBu7ncOFt2FVpHqMot4kFtuuQ-8zU3mN92cibsazxVXqGe1ib8Gs=
-KAzG9vILvcz4eed72ceOlWodljUuac-RGQP2u7Nb5LKCurg38DgAA__8ni9Pp" style=3D"dis=
-play: block; color: inherit; text-decoration: none; cursor: pointer; paddin=
-g: 2px; margin-bottom: 0" class=3D"notion-email-button-hover"></a><a href=
-=3D"https://mg.mail.notion.so/c/eJyEkT2P2zAMhn-NvCWQSH1Yg4dr3awd2qGbIYlMIjT=
--gC0Hzb8vnFyuVxTFaaOehxJekhrptAdVcaNcrZSzusaK-5Av3bpmaoT7JFxbnZukyQeriII7ah=
-uMSsp5oyRZq13wtsoNSLDSqu1ojXsdbY3epCBDQg9KaLm9ux_Gksdhv4zVpTmXMi0CXwQcBBzCN=
-D1pGnsBh0nAof3x9dvu89hP48LzDi1b4wNFQ3UtyXnpiDFpROdqRBR4mK6LwFaBFGAHgW1IJV9z=
-uXWUT7yUbgon7p7wEfVB_uO_1fEypp87plyYPnL_-fze3P3V_OdKAKKL74JFHbV3hNZaitYbDFX=
-PJVAo4b4SgGUKibtMAuA-P_DHZJI2VtVSaqXqGoxDr3zyNVO0dhNdW83NnNNZaBnnMPBxDj1vw6=
-5K8xhFuU0ssF2HfMxM7T3Wl428GcsaX6VnuIe1Cb-mMBDTyyv4PufTiedtHzdeqnVY1rikOUduB=
-Jh3ZbfOFwGmujbwOwAA__9NTdPE" style=3D"display: block; color: inherit; text-=
+=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
+=E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =
+=CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =
+=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
+=E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =
+=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
+=E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =
+=CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =
+=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
+=E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =
+=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
+=E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =
+=CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =
+=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
+=E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =
+=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =
+=E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =
+=CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =
+=C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =
+=E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =
+=C2=A0 =E2=80=87 =C2=AD =CD=8F =E2=80=8C =C2=A0 =E2=80=87 =C2=AD</div><div =
+style=3D"color: #333333; font-size: 12px"><div style=3D"margin-top: 38px"><=
+table style=3D"border-collapse: collapse"><tbody><tr><td><img src=3D"https:=
+//app.notion.com/image/https&#37;3A&#37;2F%2Fcdn.example.com&#37;2Fa-&#37;2=
+FAVATAR_PLACEHOLDER%3Ds100?width=3D50&amp;userId=3D&amp;cache=3Dv2&amp;imgB=
+uildSrc=3DemailAttachedImages" alt=3D"icon" style=3D"vertical-align: top; w=
+idth: 28px; height: 28px; object-fit: contain"/></td><td style=3D"text-alig=
+n: left; padding-top: 0; padding-right: 20px; padding-bottom: 0; padding-le=
+ft: 12px; width: 150px; white-space: nowrap; display: block"><div style=3D"=
+color: #787774; padding-top: 3px; overflow: hidden; text-overflow: ellipsis=
+; font-size: 16px; font-weight: 590">Casey Morgan&#x27;s Notion</div></td><=
+/tr></tbody></table></div></div><h1 style=3D"color: #333; font-size: 20px">=
+New updates in Casey Morgan&#x27;s Notion</h1><div style=3D"color: #787774;=
+ font-size: 14px; line-height: 20px">Review changes to 1 page in your works=
+pace.</div><div style=3D"margin-top: 16px"><table style=3D"width: 100%; bor=
+der-collapse: collapse"><tbody><tr><td style=3D"vertical-align: top"><a sty=
+le=3D"background-color: #2383E2; border-radius: 8px; color: #fff; text-deco=
+ration: none; padding: 6px; text-align: center; border: 1px solid #308bbf; =
+display: inline-block; width: 124px; margin-bottom: 20px" href=3D"https://m=
+g.mail.notion.so/c/syntheticTrackingToken001"><div class=3D"contextual-invi=
+te-email-cta" style=3D"font-size: 14px">Go to Notion =E2=86=92</div></a></t=
+d></tr></tbody></table></div><a href=3D"https://mg.mail.notion.so/c/synthet=
+icTrackingToken002" style=3D"display: block; color: inherit; text-decoratio=
+n: none; cursor: pointer; padding: 12px 0; width: 100%" class=3D"notion-ema=
+il-button-hover"><table style=3D"width: 100%"><tbody><tr><td style=3D"width=
+: 30px; min-width: 30px; vertical-align: top; padding-top: 2px"><span aria-=
+label=3D"icon" style=3D"vertical-align: middle; display: inline-block; widt=
+h: 24px; text-align: center; font-size: 16px">=F0=9F=8E=A8</span></td><td><=
+span style=3D"display: inline-block; font-size: 17px; line-height: 24px; fo=
+nt-weight: 600; color: #333333; vertical-align: middle; margin-right: 8px">=
+Project Workspace</span></td></tr></tbody></table></a><table style=3D"paddi=
+ng-top: 2px; padding-bottom: 0; border-spacing: 0; width: 100%; border-coll=
+apse: separate"><tr><td style=3D"vertical-align: top; width: 30px; min-widt=
+h: 30px; padding-top: 2px; padding-left: 4px"><div style=3D"border-radius: =
+100%; overflow: hidden; width: 20px; height: 20px; max-width: 100%; max-hei=
+ght: 100%; background: white; display: flex; align-items: center; justify-c=
+ontent: center; user-select: none; -webkit-user-select: none; color: rgba(4=
+4, 44, 43, 1)"><img src=3D"https://cdn.example.com/a-/AVATAR_PLACEHOLDER=3D=
+s100" style=3D"display: block; width: 100%; height: 100%; object-fit: cover=
+"/></div></td><td><a href=3D"https://mg.mail.notion.so/c/syntheticTrackingT=
+oken003" style=3D"display: block; color: inherit; text-decoration: none; cu=
+rsor: pointer; font-size: 14px; line-height: 1.4; padding: 2px" class=3D"no=
+tion-email-button-hover"><span><span><span style=3D"font-weight: 600">Casey=
+ Morgan</span></span> edited <span>this page</span></span></a></td></tr><tr=
+><td></td><td style=3D"max-width: 400px"><div><a href=3D"https://mg.mail.no=
+tion.so/c/syntheticTrackingToken004" style=3D"display: block; color: inheri=
+t; text-decoration: none; cursor: pointer; padding: 2px; margin-bottom: 0" =
+class=3D"notion-email-button-hover"></a><a href=3D"https://mg.mail.notion.s=
+o/c/syntheticTrackingToken005" style=3D"display: block; color: inherit; tex=
+t-decoration: none; cursor: pointer; padding: 2px; margin-bottom: 0" class=
+=3D"notion-email-button-hover"><div style=3D"overflow: hidden; font-size: 1=
+4px; color: rgba(39, 131, 222, 1); background-color: rgba(35, 131, 226, 0.1=
+)"><div><div style=3D"padding-top: 4px; padding-bottom: 4px"><span style=3D=
+"white-space: pre-wrap; word-break: break-word">Here is a summary of the la=
+test project notes. Read through the findings and the proposed plan. This i=
+s a work in progress and I=E2=80=99d love your feedback. </span></div></div=
+></div></a><a href=3D"https://mg.mail.notion.so/c/syntheticTrackingToken006=
+" style=3D"display: block; color: inherit; text-decoration: none; cursor: p=
+ointer; padding: 2px; margin-bottom: 0" class=3D"notion-email-button-hover"=
+><div style=3D"overflow: hidden; font-size: 14px; color: rgba(39, 131, 222,=
+ 1); background-color: rgba(35, 131, 226, 0.1)"><div><div style=3D"padding-=
+top: 4px; padding-bottom: 4px"><span style=3D"white-space: pre-wrap; word-b=
+reak: break-word">If you want to dive deeper - see the pages below</span></=
+div></div></div></a><a href=3D"https://mg.mail.notion.so/c/syntheticTrackin=
+gToken007" style=3D"display: block; color: inherit; text-decoration: none; =
+cursor: pointer; padding: 2px; margin-bottom: 12px" class=3D"notion-email-b=
+utton-hover"><div style=3D"overflow: hidden; font-size: 14px; color: #78777=
+4">View full edit</div></a></div></td></tr></table><table style=3D"padding-=
+top: 2px; padding-bottom: 0; border-spacing: 0; width: 100%; border-collaps=
+e: separate"><tr><td style=3D"vertical-align: top; width: 30px; min-width: =
+30px; padding-top: 2px; padding-left: 4px"><div style=3D"border-radius: 100=
+%; overflow: hidden; width: 20px; height: 20px; max-width: 100%; max-height=
+: 100%; background: white; display: flex; align-items: center; justify-cont=
+ent: center; user-select: none; -webkit-user-select: none; color: rgba(44, =
+44, 43, 1)"><img src=3D"https://cdn.example.com/a-/AVATAR_PLACEHOLDER=3Ds10=
+0" style=3D"display: block; width: 100%; height: 100%; object-fit: cover"/>=
+</div></td><td><a href=3D"https://mg.mail.notion.so/c/syntheticTrackingToke=
+n008" style=3D"display: block; color: inherit; text-decoration: none; curso=
+r: pointer; font-size: 14px; line-height: 1.4; padding: 2px" class=3D"notio=
+n-email-button-hover"><span><span><span style=3D"font-weight: 600">Casey Mo=
+rgan</span></span> edited <span>this page</span></span></a></td></tr><tr><t=
+d></td><td style=3D"max-width: 400px"><div><a href=3D"https://mg.mail.notio=
+n.so/c/syntheticTrackingToken009" style=3D"display: block; color: inherit; =
+text-decoration: none; cursor: pointer; padding: 2px; margin-bottom: 0" cla=
+ss=3D"notion-email-button-hover"><div style=3D"overflow: hidden; font-size:=
+ 14px"><div><div style=3D"padding-top: 4px; padding-bottom: 4px"><span styl=
+e=3D"white-space: pre-wrap; word-break: break-word">Style<span style=3D"col=
+or: rgba(39, 131, 222, 1); background-color: rgba(35, 131, 226, 0.1)" data-=
+token-index=3D"1" class=3D""> Sample</span> Doc </span></div></div></div></=
+a><a href=3D"https://mg.mail.notion.so/c/syntheticTrackingToken010" style=
+=3D"display: block; color: inherit; text-decoration: none; cursor: pointer;=
+ padding: 2px; margin-bottom: 0" class=3D"notion-email-button-hover"><div s=
+tyle=3D"overflow: hidden; font-size: 14px; color: rgba(39, 131, 222, 1); ba=
+ckground-color: rgba(35, 131, 226, 0.1)"><div><div style=3D"padding-top: 4p=
+x; padding-bottom: 4px"><span style=3D"white-space: pre-wrap; word-break: b=
+reak-word">The first page is my current <span style=3D"text-decoration: und=
+erline; text-decoration-thickness: 0.05em; text-decoration-color: inherit; =
+text-underline-offset: 10%; color: inherit; word-wrap: break-word" data-tok=
+en-index=3D"1" class=3D"">style-guide.md</span> this can be plugged into th=
+e assistant which then drafts the posts for the scheduler - all in the righ=
+t style. </span></div></div></div></a><a href=3D"https://mg.mail.notion.so/=
+c/syntheticTrackingToken011" style=3D"display: block; color: inherit; text-=
 decoration: none; cursor: pointer; padding: 2px; margin-bottom: 0" class=3D=
 "notion-email-button-hover"><div style=3D"overflow: hidden; font-size: 14px=
 ; color: rgba(39, 131, 222, 1); background-color: rgba(35, 131, 226, 0.1)">=
 <div><div style=3D"padding-top: 4px; padding-bottom: 4px"><span style=3D"wh=
-ite-space: pre-wrap; word-break: break-word">Below I have summarised the re=
-search on UK University Students. Read through the findings and the propose=
-d campaign plans. This is a work in progress and I=E2=80=99d love your feed=
-back. </span></div></div></div></a><a href=3D"https://mg.mail.notion.so/c/e=
-JyEkb-O2zAMh59G3hJIpP558HCtm7VDO3QzJJFOhCa2YctB8_aFk8v1iqI4bdT3UcKPpEY6XYOq=
-uFHOK-Ws9ljxJeRzt66ZGuE-CddWp0aqQCSlNNERYm-DMS5q6aNUMhD1VW5AgpVWbUdr3OtoPdY=
-mBRkS1qCEltu7-2EseRz2y1idm1Mp0yLwRcBBwCFM05Om8SLgMAk4tD--ftt9Hi_TuPC8Q8vW1I=
-GiIe8luVo6Ykwa0TmPiAIP03UR2CqQAuwgsA2p5Gsut47ykZfSTeHI3RM-oj7If_y3Op7H9HPHl=
-AvTR-4_n9-bu7-a_1wJQHTxXTCXQk-SLRMZk6RiU124BAol3FcCsEwhcZdJANznB3WfTNLGKi-l=
-Vsp7MA5rVafaM0VrN9G11dzMOZ2ElnEOA_dzuPA27Ko0j1GU28QC23XIfWZq77G-bOTNWNb4Kj3=
-DPaxN-DWFgZheXsH3OR-PPG_7uPFSrcOyxiXNOXIjwLwru3U-CzDVtYHfAQAA__9vTtSu" styl=
-e=3D"display: block; color: inherit; text-decoration: none; cursor: pointer=
-; padding: 2px; margin-bottom: 0" class=3D"notion-email-button-hover"><div =
-style=3D"overflow: hidden; font-size: 14px; color: rgba(39, 131, 222, 1); b=
-ackground-color: rgba(35, 131, 226, 0.1)"><div><div style=3D"padding-top: 4=
-px; padding-bottom: 4px"><span style=3D"white-space: pre-wrap; word-break: =
-break-word">If you want to dive deeper into the research - see pages below<=
-/span></div></div></div></a><a href=3D"https://mg.mail.notion.so/c/eJyEkb-O=
-2zAMh59G3hJIpKw_g4dr3awd2qGbIYl0IjSxDVsOmrcvnFyuVxTFaaO-jxJ-JDXSag-q4kZZp5Q=
-12mHFl5DP3bpmaoT9JGxbnRpXWwayKKXXrqYeSPY2YuqVJY-gq9yABCON2o7WuNfROPR1CjIk9K=
-CEltu7-2EseRz2y1idm1Mp0yLwRcBBwCFM05Om8SLgMAk4tD--ftt9Hi_TuPC8Q8Om9oFiTc5Js=
-l5aYkwa0VqHiAIP03UR2CqQAswgsA2p5Gsut47ykZfSTeHI3RM-oj7If_y3Op7H9HPHlAvTR-4_=
-n9-bu7-a_1wJQLTxXTD0gYLqJTmrjQomUnXhEiiUcF8JwDKFxF0mAXCfH_g-1UnXRjkptVLOQW3=
-RK5-8Y4rGbKJtq7mZczoJLeMcBu7ncOFt2FVpHqMot4kFtuuQ-8zU3mN92cibsazxVXqGe1ib8G=
-sKAzG9vILvcz4eed72ceOlWodljUuac-RGQP2u7Nb5LKCurg38DgAA__8ni9Pp" style=3D"di=
-splay: block; color: inherit; text-decoration: none; cursor: pointer; paddi=
-ng: 2px; margin-bottom: 12px" class=3D"notion-email-button-hover"><div styl=
-e=3D"overflow: hidden; font-size: 14px; color: #787774">View full edit</div=
-></a></div></td></tr></table><table style=3D"padding-top: 2px; padding-bott=
-om: 0; border-spacing: 0; width: 100%; border-collapse: separate"><tr><td s=
-tyle=3D"vertical-align: top; width: 30px; min-width: 30px; padding-top: 2px=
-; padding-left: 4px"><div style=3D"border-radius: 100%; overflow: hidden; w=
-idth: 20px; height: 20px; max-width: 100%; max-height: 100%; background: wh=
-ite; display: flex; align-items: center; justify-content: center; user-sele=
-ct: none; -webkit-user-select: none; color: rgba(44, 44, 43, 1)"><img src=
-=3D"https://lh3.googleusercontent.com/a-/AOh14GixQ7UVDxv0oJb2v5bLOFGHsBO5Ld=
-VT_NgLFejVTAA=3Ds100" style=3D"display: block; width: 100%; height: 100%; o=
-bject-fit: cover"/></div></td><td><a href=3D"https://mg.mail.notion.so/c/eJ=
-yEkLuu2zoQRb-G6myQM3ypYHHuVdymSIp0Ah9jm4gtESJlxH8fyD4-SAIEYTdYa4g9OzluZA-iI=
-yeMFcJoabGjq8-XcV1zcsz8x8zQnZ0wSYagMGoFIaRAEoMUVmmMZED2XXbAQXMtticl7mXQFnsV=
-PfcRexBM8u3f_TS3PE_7OncXd26tVIZvDA4MDr6UF43zlcGhMDgM3z5_2f0_X8tcadmhJq16n4J=
-K1vJkem4SYZSIxlhEZHgot8pwEMAZ6Inh4GPLt9zuY8onqm0s_kTjCz5PfZK_-B9zuMzx-45Sbp=
-T-5Yo_hcfy-NvyNjzTtNwu1F2p-eSbf5QOUIuPNObEAB4NQX-MKkqlheVcCmEtKIO96GNvKQWtN=
-9EM3eKWHM9M8rD4iY6Lv9JWZ9fc89h2L8RwWKd8zJSGR_BPG_kw6hrepVf8p7UJP4qfEqW3d_B1=
-yacTLVvjd6rdOtU11LjkQI6B-mUc1-XCQHU3Bz8DAAD__woQzNA" style=3D"display: bloc=
-k; color: inherit; text-decoration: none; cursor: pointer; font-size: 14px;=
- line-height: 1.4; padding: 2px" class=3D"notion-email-button-hover"><span>=
-<span><span style=3D"font-weight: 600">Graham Suttie</span></span> edited <=
-span>this page</span></span></a></td></tr><tr><td></td><td style=3D"max-wid=
-th: 400px"><div><a href=3D"https://mg.mail.notion.so/c/eJyEkU2PmzAQhn-NuSWy=
-Z_x54LAtzbWH9tAbMp4hsZoAAhM1_74i2Wy3larlNjzPWHrfoVo6HUBVXCvnlXJWe6z4EvO5Xdd=
-MtXCfhGuqUx0QdU-oLVN0jrQ0ZHvF2hA605u-yjVIsNKq7dMa97qzHoNJUcaEAZTQcnt3P4wlj8=
-N-GatzfSplWgS-CDgIOMRpetI0XgQcJgGH5sfXb7vP42UaF553aNmaEKkz5L0kF6QjxqQRnfOIK=
-PAwXReBjQIpwA4Cm5hKvuZyaykfeSntFI_cPuEj6oP8x3-bu_OYfu6YcmH6yFX_Cvfl9q_lP78E=
-ILruXTAMkaLqJXmnrYq2o-rCJVIs8X4SgGWKidtMAuDeH4Q-maSNVV5KrZT3YBwGFVLwTJ21m-i=
-aaq7nnE5Cy26OA_dzvPBWdlXqRxXlNrHAZh1yn5mae6wvG3kzlrV7lZ7hHtYm_JriQEwvr-D7nI=
-9Hnrd73Hip1mFZuyXNueNagHk3tut8FmCqaw2_AwAA__8YMNRQ" style=3D"display: block=
-; color: inherit; text-decoration: none; cursor: pointer; padding: 2px; mar=
-gin-bottom: 0" class=3D"notion-email-button-hover"><div style=3D"overflow: =
-hidden; font-size: 14px"><div><div style=3D"padding-top: 4px; padding-botto=
-m: 4px"><span style=3D"white-space: pre-wrap; word-break: break-word">Brand=
-<span style=3D"color: rgba(39, 131, 222, 1); background-color: rgba(35, 131=
-, 226, 0.1)" data-token-index=3D"1" class=3D""> Voice</span> Book </span></=
-div></div></div></a><a href=3D"https://mg.mail.notion.so/c/eJyEkbuO2zAQRb-G=
-6myQMxQfhYpNFLcpkiKdwMfIJmJLhEgZ8d8HstebTYBg1Y3OGQL3Tuy4lhZEQ53QRgitpMGGLi6=
-dh3VNsWP6E9N9c-oCWmON4lyAcdxGo5QwozEQdIswqiZ1wEFxJbZPStxLrwzaNjjuAloQTPLt3f=
-001zRP-zI35-5Uay4MXxgcGBxczk8a5guDQ2Zw6H98_bb7PF_yXGjZoSLVWhd9G43hUVuuI2GQi=
-FobRGR4yNfCsBfAGaiJYe9CTddUb0NMRyp1yO5IwxM-oj7If_y32Z_n8HNHMVWKH7niX-G-PPy1=
-_OcXA0Tt3wUDaxXZUSuQ2is0wjYXqi666u4nASjZBRpSZAD3_sCOoQ2yVcJwLoUwBlqNVthgDUW=
-v1Cbqvlm6JYUTk9wvbqJxcRfaym5q96ii3jIx7NcpjYlif4_1ZSNvRln9q_QM97A24Vd2U6T48g=
-q-L-l4pGW7x41Ks05l9SUsyVPHoH03DutyZtA21w5-BwAA___IX9Jr" style=3D"display: b=
-lock; color: inherit; text-decoration: none; cursor: pointer; padding: 2px;=
- margin-bottom: 0" class=3D"notion-email-button-hover"><div style=3D"overfl=
-ow: hidden; font-size: 14px; color: rgba(39, 131, 222, 1); background-color=
-: rgba(35, 131, 226, 0.1)"><div><div style=3D"padding-top: 4px; padding-bot=
-tom: 4px"><span style=3D"white-space: pre-wrap; word-break: break-word">The=
- first page is my current <span style=3D"text-decoration: underline; text-d=
-ecoration-thickness: 0.05em; text-decoration-color: inherit; text-underline=
--offset: 10%; color: inherit; word-wrap: break-word" data-token-index=3D"1"=
- class=3D"">brand-voice.md</span> this can be plugged into Claude who then =
-writes the posts for Typefully - all in brand voice. </span></div></div></d=
-iv></a><a href=3D"https://mg.mail.notion.so/c/eJyEkcGOmzAQhp_G3BLZM8Y2Bw7b0=
-lx7aA-9IeOZJFYDWNhEzdtXJJvttlK13IbvG0v_P9RKqxtQFbfKOqWs0Q4rHn289OsaqRX2k7Bd=
-dW4lBwmkB2cUSSOBQDslmX2tnNVYV7EFCUYatX1a414PxmFTBy99wAaU0HJ7dz_NJc7TPs_VpT2=
-XkrLAFwEHAQef0pOGeRRwSAIO3Y-v33af5zHNmZcdGjZ142moyTlJtpGWGINGtNYhosBDumaBnQ=
-IpwEwCOx9KvMZy6ymeOJc--RP3T_iI-iD_8d_m4TKHnzumWJg-ctW_wn25_2v5zy8BiHZ4F8wGb=
-y2QM8HZ4BweqRq5ePLF308CkJMP3EcSAPf-oDmGOujaKCelVso5qC02qgmNYxqM2UTbVUu7xHAW=
-Wg6Ln_i4-JG3sqvSPqoot8QCu3WKx8jU3WN92cibkdfhVXqGe1ib8Cv5iZheXsH3JZ5OvGz3uHG=
-u1imvQw5LHLgVUL8b-3W5CKirawu_AwAA__9j6tOH" style=3D"display: block; color: =
-inherit; text-decoration: none; cursor: pointer; padding: 2px; margin-botto=
-m: 0" class=3D"notion-email-button-hover"><div style=3D"overflow: hidden; f=
-ont-size: 14px; color: rgba(39, 131, 222, 1); background-color: rgba(35, 13=
-1, 226, 0.1)"><div><div style=3D"padding-top: 4px; padding-bottom: 4px"><sp=
-an style=3D"white-space: pre-wrap; word-break: break-word">Here are some qu=
-estions I would like you to answer - to create a better brand voice .md </s=
-pan></div></div></div></a><a href=3D"https://mg.mail.notion.so/c/eJyEkU2Pmz=
-AQhn-NuSWyZ_x54LAtzbWH9tAbMp4hsZoAAhM1_74i2Wy3larlNjzPWHrfoVo6HUBVXCvnlXJWe=
-6z4EvO5XddMtXCfhGuqUx0QdU-oLVN0jrQ0ZHvF2hA605u-yjVIsNKq7dMa97qzHoNJUcaEAZTQ=
-cnt3P4wlj8N-GatzfSplWgS-CDgIOMRpetI0XgQcJgGH5sfXb7vP42UaF553aNmaEKkz5L0kF6Q=
-jxqQRnfOIKPAwXReBjQIpwA4Cm5hKvuZyaykfeSntFI_cPuEj6oP8x3-bu_OYfu6YcmH6yFX_Cv=
-fl9q_lP78EILruXTAMkaLqJXmnrYq2o-rCJVIs8X4SgGWKidtMAuDeH4Q-maSNVV5KrZT3YBwGF=
-VLwTJ21m-iaaq7nnE5Cy26OA_dzvPBWdlXqRxXlNrHAZh1yn5mae6wvG3kzlrV7lZ7hHtYm_Jri=
-QEwvr-D7nI9Hnrd73Hip1mFZuyXNueNagHk3tut8FmCqaw2_AwAA__8YMNRQ" style=3D"disp=
-lay: block; color: inherit; text-decoration: none; cursor: pointer; padding=
-: 2px; margin-bottom: 12px" class=3D"notion-email-button-hover"><div style=
-=3D"overflow: hidden; font-size: 14px; color: #787774">View full edit</div>=
-</a></div></td></tr></table><div style=3D"height: 1px; width: 100%; backgro=
-und-color: rgba(240, 239, 237, 1); margin: 12px 0"></div><div style=3D"font=
--size: 12px; margin-top: 26px; margin-bottom: 42px; color: #888; text-align=
-: left"><div style=3D"display: flex; margin-bottom: 16px"><img alt=3D"Notio=
-n logo" height=3D"40" width=3D"40" class=3D"notion-email-logo" src=3D"https=
-://www.notion.so/images/logo-for-slack-integration.png" style=3D"display: b=
-lock; margin-bottom: 8px"/><div style=3D"padding-left: 16px"><div style=3D"=
-font-style: normal; font-weight: 590; font-size: 14px; line-height: 18px; l=
-etter-spacing: -0.154px; color: black">Notion</div><div style=3D"font-style=
-: normal; font-weight: 400; font-size: 12px; line-height: 15px; color: #ACA=
-BA9; padding-top: 3px"><a href=3D"https://mg.mail.notion.so/c/eJxMj8uOKiEUR=
-b8GhgYOFI8BA2_q-gU9NxQclMR6BCjT_n0HtR_M2HuFvYiOaWmBU3RcG861kkZQnH2-nfc9R0f0=
-P6JHenWC2WStSp5ZqS3GOCSPgfEk0BtUjGYHDBRTvB8pxUFOygg7BM98EBY4kay_e1jWltflUFd=
-6c9fWtkrEkcCJwMlv23cb1rln4rQQMb58Yr5gbQTUb5TWtWEhoLZ7JWLkwOiMzUff_NMcoG4-4D=
-lHAvCcAZvCEOSguGFMcm4MDFpYboM1GCelOqhHWlzJ4Uokm4pfMBU_Y3eizb2W22NDIsZ9ySljH=
-J9q_3vzQ9R9ekM-tHzP7fGiOvC5-SViPL6Lj5IvFyz9Cw-sdF_qPtVQ8oSOwPDnet7LjcBA7w6-=
-AgAA__-1x4xI" style=3D"color: inherit">Notion.so</a>, the connected workspa=
-ce<br/>for docs, projects, and wikis.</div></div></div><div><div style=3D"m=
-argin-top: 12px"><a href=3D"https://mg.mail.notion.so/c/eJyEkMGu2yAURL_msoz=
-ggjEsWLzK9Rd0b2G4dqgS2wIcNX9fkbxW7eqxgxlGZyY63iuLgpETvRGi18pIRnefbtN5puig_w=
-b9wK7Oh8A70iaQl0IpPqMlwzURojbWLiw55Ki5Fu0oJS9q1kbaLnjug7QoQPGWe9n2mvbtUnZ2c=
-9dajwLyA3AEHP1x_FHDfgccy-EDAY52CV1QnRaGcyWEMdj10gobrKE4aw1yrD6vVEEOLWBJwbeY=
-Aqg3kMO7UEwrlfrf07LvlfLk48-z1KlQrWlb26_jUUAOAjm7U_XRV_-aAvGFNKUIiC9u_JINsS2=
-YXU7hCorP2W-0ZH-nVpJV9yapz4NADueWlkRxeKF-b8pfRznnT5MPNT1Sfb5dzfDr8Fuk-PEp_M=
-hpXSm3Ck8q7NzKOZeQ00wOsPvnOp35Btixh8PfAQAA__8v_aZS" style=3D"color: #C4C4C4=
-">Update your email settings</a></div></div></div></div>
+ite-space: pre-wrap; word-break: break-word">Here are some questions I woul=
+d like you to answer - to create a better style guide .md </span></div></di=
+v></div></a><a href=3D"https://mg.mail.notion.so/c/syntheticTrackingToken01=
+2" style=3D"display: block; color: inherit; text-decoration: none; cursor: =
+pointer; padding: 2px; margin-bottom: 12px" class=3D"notion-email-button-ho=
+ver"><div style=3D"overflow: hidden; font-size: 14px; color: #787774">View =
+full edit</div></a></div></td></tr></table><div style=3D"height: 1px; width=
+: 100%; background-color: rgba(240, 239, 237, 1); margin: 12px 0"></div><di=
+v style=3D"font-size: 12px; margin-top: 26px; margin-bottom: 42px; color: #=
+888; text-align: left"><div style=3D"display: flex; margin-bottom: 16px"><i=
+mg alt=3D"Notion logo" height=3D"40" width=3D"40" class=3D"notion-email-log=
+o" src=3D"https://www.notion.so/images/logo-for-slack-integration.png" styl=
+e=3D"display: block; margin-bottom: 8px"/><div style=3D"padding-left: 16px"=
+><div style=3D"font-style: normal; font-weight: 590; font-size: 14px; line-=
+height: 18px; letter-spacing: -0.154px; color: black">Notion</div><div styl=
+e=3D"font-style: normal; font-weight: 400; font-size: 12px; line-height: 15=
+px; color: #ACABA9; padding-top: 3px"><a href=3D"https://mg.mail.notion.so/=
+c/syntheticTrackingToken013" style=3D"color: inherit">Notion.so</a>, the co=
+nnected workspace<br/>for docs, projects, and wikis.</div></div></div><div>=
+<div style=3D"margin-top: 12px"><a href=3D"https://mg.mail.notion.so/c/synt=
+heticTrackingToken014" style=3D"color: #C4C4C4">Update your email settings<=
+/a></div></div></div></div>
               </td>
             </tr>
           </table>
         <img width=3D"1" height=3D"1" alt=3D"" src=3D"https://mg.mail.notio=
-n.so/o/eJxMz0tqwzAQBuDTSEsjjcaWtNAixb1B90GPcSKI7aBHaG5f3ITS2Q3_x_xMckKjBcnJ=
-SW2k1BMaxWn1-XbuPSfH9AfTM7-6BIRxwYgYMHjQRB4MpWAWhQmV5dmBgElM8hhENWCYjLJj9MJ=
-HZUEyFMfdYdtb3reh7nyl5pNv_rcFoN59pHNODICpEwOwSxwjjpM0QqCUxsColZU22qN5mg6oZ1=
-5cyfHKUITiN1qKX2mI-8qbez3Snndiau5bXjKlOV-ots8j-RO1hzfyseVHbs-XOsD33W-J0ukdf=
-JV8uVCpTM1PqrxvtYcaSw7kGIz_1nMvNwYjfzj4CQAA__-x_nGC"></body>
+n.so/o/syntheticTrackingToken015"></body>
       </html>
-   =20
+    
+

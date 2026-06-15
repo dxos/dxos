@@ -107,6 +107,12 @@ describe('markdown', () => {
       expect(normalizeText(html)).to.equal('[Go to Notion](https://mg.mail.notion.so/c/eJxMj01uwyAQ_DROUS)');
     });
 
+    test('escapes link-breaking characters in text and href', ({ expect }) => {
+      // `]` in the label and `)` in the URL would otherwise terminate the link syntax early.
+      const html = '<p><a href="https://example.com/a(b)c">label [x]</a></p>';
+      expect(normalizeText(html)).to.equal('[label \\[x\\]](https://example.com/a\\(b\\)c)');
+    });
+
     test('unwraps an anchor that wraps block-level content', ({ expect }) => {
       // Notion wraps each "card" in an <a> containing block divs; an inline link cannot represent
       // multi-paragraph content, so the wrapper is dropped and the content preserved.

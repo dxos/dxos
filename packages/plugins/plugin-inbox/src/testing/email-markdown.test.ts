@@ -31,6 +31,9 @@ const decodeQuotedPrintable = (input: string): string => {
 /** Extract and decode the HTML body of a raw RFC 822 `.eml` message (quoted-printable transfer encoding). */
 const extractHtmlBody = (raw: string): string => {
   const boundary = raw.search(/\r?\n\r?\n/);
+  if (boundary < 0) {
+    throw new Error('Invalid .eml fixture: missing header/body separator.');
+  }
   const body = raw.slice(boundary).replace(/^\r?\n\r?\n/, '');
   return decodeQuotedPrintable(body);
 };

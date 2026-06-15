@@ -12,6 +12,13 @@ const isElement = (node: Node): node is Element => node.nodeType === 1;
 const getAttr = (node: Node, name: string): string => (isElement(node) ? (node.getAttribute(name) ?? '') : '');
 
 /**
+ * Escape parentheses that would prematurely close the `(url)` of a manually built Markdown link.
+ * Turndown already escapes markdown-special characters in text-node content, so only the href —
+ * which it copies verbatim from the attribute — needs escaping here.
+ */
+const escapeLinkHref = (href: string): string => href.replace(/[()]/g, '\\$&');
+
+/**
  * https://www.npmjs.com/package/turndown
  */
 const turndown = new TurndownService({
@@ -34,7 +41,7 @@ const turndown = new TurndownService({
       if (!href || !text || /\n/.test(text)) {
         return content;
       }
-      const link = `[${text}](${href})`;
+      const link = `[${text}](${escapeLinkHref(href)})`;
       // `display:block` anchors (e.g. stacked email CTA rows) must each occupy their own line;
       // turndown treats <a> as inline and would otherwise concatenate adjacent ones.
       return /display:\s*block/i.test(getAttr(node, 'style')) ? `\n\n${link}\n\n` : link;

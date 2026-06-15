@@ -1,44 +1,44 @@
 See what’s changed
 
-![icon](https://app.notion.com/image/https%3A%2F%2Flh3.googleusercontent.com%2Fa-%2FAOh14GixQ7UVDxv0oJb2v5bLOFGHsBO5LdVT_NgLFejVTAA%3Ds100?width=50&userId=&cache=v2&imgBuildSrc=emailAttachedImages)
+![icon](https://app.notion.com/image/https%3A%2F%2Fcdn.example.com%2Fa-%2FAVATAR_PLACEHOLDER%3Ds100?width=50&userId=&cache=v2&imgBuildSrc=emailAttachedImages)
 
-Graham Suttie's Notion
+Casey Morgan's Notion
 
-# New updates in Graham Suttie's Notion
+# New updates in Casey Morgan's Notion
 
 Review changes to 1 page in your workspace.
 
-[Go to Notion →](https://mg.mail.notion.so/c/eJxMj01uwyAQhU8DywgGjGHBIpWbE3QfjWGcIMU_Ahw1t69I0qrsmPfpzTfRi147kJy87K2UvdFWcZox3c77nqJn_QfrB371xqpIYCROIAxOKIwKIMFJoYM0DnnyIMAII9vTWh30aKxyXUCBQTmQTIvWe1jWmtblUFZ-89dat8LUkcGJwQm37TcN69xm6rQwNbx8YrpQqQzMdi9MDRIEn6lixIpPTYCyYaBzigzg2QluCl3QnZFWCC2ltdD1ykkXnKU4GtPAfuDZ5xSuTIsx40JTxpmaAK_-tbk-NmJq2Jc0JYrD0-OzJX9E2cc3hKGme6qPF9WA7w2XSPH4Dr5yulwotxMeVPi-lH0sIaeRPIPu3_e85xuDjt89_AQAAP__IA-E1g)
+[Go to Notion →](https://mg.mail.notion.so/c/syntheticTrackingToken001)
 
-DXOS - Composer
+Project Workspace
 
-![](https://lh3.googleusercontent.com/a-/AOh14GixQ7UVDxv0oJb2v5bLOFGHsBO5LdVT_NgLFejVTAA=s100)
+![](https://cdn.example.com/a-/AVATAR_PLACEHOLDER=s100)
 
-[Graham Suttie edited this page](https://mg.mail.notion.so/c/eJyEkE2v2ywQhX8N7BLBgPlYsLjv62bbRbvozsIwTlD9gQyOmn9fOb65alVVZXd0nmHOnOiYlhY4Rce14VwraQTFyaex27YUHdH_Ed3Sm4MwSC6iZYyLXlkLRumg5GCkAfQ-0uSAgWKK709KcZa9MsI2wTMfhAVOJNv_Pc9LTct8Lgsd3a3WXIh4I3AhcPE5v9ywTAQumcCl_fb5y-n_ZcpLwfUkFKrG-tg30RgWtWU6oghSCK2NEIKIS74XIloOjICaiWh9qOme6qOL6YqldtlfsXuZx6mH8xf-Q_fjEr6fMKaK8V_sH8ufw91vw7s40tRUR6QTVh999c_SAUr2AbsUCcCzIbBDaIJsFDeMSc6NgUYLy22wBmOv1A7qlq5uTeFGJOtXP-Ow-gn3Oml1x7H1kZGIdpvTkDC2z-CfdueDKFv_Dr3iH9QO_Mh-jhjf3o2va7pecd0bf2Ch21y2voQ19egINL_IbltHAg29O_gZAAD__0PPzHs)
+[Casey Morgan edited this page](https://mg.mail.notion.so/c/syntheticTrackingToken003)
 
-[Below I have summarised the research on UK University Students. Read through the findings and the proposed campaign plans. This is a work in progress and I’d love your feedback.](https://mg.mail.notion.so/c/eJyEkT2P2zAMhn-NvCWQSH1Yg4dr3awd2qGbIYlMIjT-gC0Hzb8vnFyuVxTFaaOehxJekhrptAdVcaNcrZSzusaK-5Av3bpmaoT7JFxbnZukyQeriII7ahuMSsp5oyRZq13wtsoNSLDSqu1ojXsdbY3epCBDQg9KaLm9ux_Gksdhv4zVpTmXMi0CXwQcBBzCND1pGnsBh0nAof3x9dvu89hP48LzDi1b4wNFQ3UtyXnpiDFpROdqRBR4mK6LwFaBFGAHgW1IJV9zuXWUT7yUbgon7p7wEfVB_uO_1fEypp87plyYPnL_-fze3P3V_OdKAKKL74JFHbV3hNZaitYbDFXPJVAo4b4SgGUKibtMAuA-P_DHZJI2VtVSaqXqGoxDr3zyNVO0dhNdW83NnNNZaBnnMPBxDj1vw65K8xhFuU0ssF2HfMxM7T3Wl428GcsaX6VnuIe1Cb-mMBDTyyv4PufTiedtHzdeqnVY1rikOUduBJh3ZbfOFwGmujbwOwAA__9NTdPE)
+[Here is a summary of the latest project notes. Read through the findings and the proposed plan. This is a work in progress and I’d love your feedback.](https://mg.mail.notion.so/c/syntheticTrackingToken005)
 
-[If you want to dive deeper into the research - see pages below](https://mg.mail.notion.so/c/eJyEkb-O2zAMh59G3hJIpP558HCtm7VDO3QzJJFOhCa2YctB8_aFk8v1iqI4bdT3UcKPpEY6XYOquFHOK-Ws9ljxJeRzt66ZGuE-CddWp0aqQCSlNNERYm-DMS5q6aNUMhD1VW5AgpVWbUdr3OtoPdYmBRkS1qCEltu7-2EseRz2y1idm1Mp0yLwRcBBwCFM05Om8SLgMAk4tD--ftt9Hi_TuPC8Q8vW1IGiIe8luVo6Ykwa0TmPiAIP03UR2CqQAuwgsA2p5Gsut47ykZfSTeHI3RM-oj7If_y3Op7H9HPHlAvTR-4_n9-bu7-a_1wJQHTxXTCXQk-SLRMZk6RiU124BAol3FcCsEwhcZdJANznB3WfTNLGKi-lVsp7MA5rVafaM0VrN9G11dzMOZ2ElnEOA_dzuPA27Ko0j1GU28QC23XIfWZq77G-bOTNWNb4Kj3DPaxN-DWFgZheXsH3OR-PPG_7uPFSrcOyxiXNOXIjwLwru3U-CzDVtYHfAQAA__9vTtSu)
+[If you want to dive deeper - see the pages below](https://mg.mail.notion.so/c/syntheticTrackingToken006)
 
-[View full edit](https://mg.mail.notion.so/c/eJyEkb-O2zAMh59G3hJIpKw_g4dr3awd2qGbIYl0IjSxDVsOmrcvnFyuVxTFaaO-jxJ-JDXSag-q4kZZp5Q12mHFl5DP3bpmaoT9JGxbnRpXWwayKKXXrqYeSPY2YuqVJY-gq9yABCON2o7WuNfROPR1CjIk9KCEltu7-2EseRz2y1idm1Mp0yLwRcBBwCFM05Om8SLgMAk4tD--ftt9Hi_TuPC8Q8Om9oFiTc5Jsl5aYkwa0VqHiAIP03UR2CqQAswgsA2p5Gsut47ykZfSTeHI3RM-oj7If_y3Op7H9HPHlAvTR-4_n9-bu7-a_1wJQLTxXTD0gYLqJTmrjQomUnXhEiiUcF8JwDKFxF0mAXCfH_g-1UnXRjkptVLOQW3RK5-8Y4rGbKJtq7mZczoJLeMcBu7ncOFt2FVpHqMot4kFtuuQ-8zU3mN92cibsazxVXqGe1ib8GsKAzG9vILvcz4eed72ceOlWodljUuac-RGQP2u7Nb5LKCurg38DgAA__8ni9Pp)
+[View full edit](https://mg.mail.notion.so/c/syntheticTrackingToken007)
 
-![](https://lh3.googleusercontent.com/a-/AOh14GixQ7UVDxv0oJb2v5bLOFGHsBO5LdVT_NgLFejVTAA=s100)
+![](https://cdn.example.com/a-/AVATAR_PLACEHOLDER=s100)
 
-[Graham Suttie edited this page](https://mg.mail.notion.so/c/eJyEkLuu2zoQRb-G6myQM3ypYHHuVdymSIp0Ah9jm4gtESJlxH8fyD4-SAIEYTdYa4g9OzluZA-iIyeMFcJoabGjq8-XcV1zcsz8x8zQnZ0wSYagMGoFIaRAEoMUVmmMZED2XXbAQXMtticl7mXQFnsVPfcRexBM8u3f_TS3PE_7OncXd26tVIZvDA4MDr6UF43zlcGhMDgM3z5_2f0_X8tcadmhJq16n4JK1vJkem4SYZSIxlhEZHgot8pwEMAZ6Inh4GPLt9zuY8onqm0s_kTjCz5PfZK_-B9zuMzx-45SbpT-5Yo_hcfy-NvyNjzTtNwu1F2p-eSbf5QOUIuPNObEAB4NQX-MKkqlheVcCmEtKIO96GNvKQWtN9EM3eKWHM9M8rD4iY6Lv9JWZ9fc89h2L8RwWKd8zJSGR_BPG_kw6hrepVf8p7UJP4qfEqW3d_B1yacTLVvjd6rdOtU11LjkQI6B-mUc1-XCQHU3Bz8DAAD__woQzNA)
+[Casey Morgan edited this page](https://mg.mail.notion.so/c/syntheticTrackingToken008)
 
-[Brand Voice Book](https://mg.mail.notion.so/c/eJyEkU2PmzAQhn-NuSWyZ_x54LAtzbWH9tAbMp4hsZoAAhM1_74i2Wy3larlNjzPWHrfoVo6HUBVXCvnlXJWe6z4EvO5XddMtXCfhGuqUx0QdU-oLVN0jrQ0ZHvF2hA605u-yjVIsNKq7dMa97qzHoNJUcaEAZTQcnt3P4wlj8N-GatzfSplWgS-CDgIOMRpetI0XgQcJgGH5sfXb7vP42UaF553aNmaEKkz5L0kF6QjxqQRnfOIKPAwXReBjQIpwA4Cm5hKvuZyaykfeSntFI_cPuEj6oP8x3-bu_OYfu6YcmH6yFX_Cvfl9q_lP78EILruXTAMkaLqJXmnrYq2o-rCJVIs8X4SgGWKidtMAuDeH4Q-maSNVV5KrZT3YBwGFVLwTJ21m-iaaq7nnE5Cy26OA_dzvPBWdlXqRxXlNrHAZh1yn5mae6wvG3kzlrV7lZ7hHtYm_JriQEwvr-D7nI9Hnrd73Hip1mFZuyXNueNagHk3tut8FmCqaw2_AwAA__8YMNRQ)
+[Style Sample Doc](https://mg.mail.notion.so/c/syntheticTrackingToken009)
 
-[The first page is my current brand-voice.md this can be plugged into Claude who then writes the posts for Typefully - all in brand voice.](https://mg.mail.notion.so/c/eJyEkbuO2zAQRb-G6myQMxQfhYpNFLcpkiKdwMfIJmJLhEgZ8d8HstebTYBg1Y3OGQL3Tuy4lhZEQ53QRgitpMGGLi6dh3VNsWP6E9N9c-oCWmON4lyAcdxGo5QwozEQdIswqiZ1wEFxJbZPStxLrwzaNjjuAloQTPLt3f001zRP-zI35-5Uay4MXxgcGBxczk8a5guDQ2Zw6H98_bb7PF_yXGjZoSLVWhd9G43hUVuuI2GQiFobRGR4yNfCsBfAGaiJYe9CTddUb0NMRyp1yO5IwxM-oj7If_y32Z_n8HNHMVWKH7niX-G-PPy1_OcXA0Tt3wUDaxXZUSuQ2is0wjYXqi666u4nASjZBRpSZAD3_sCOoQ2yVcJwLoUwBlqNVthgDUWv1Cbqvlm6JYUTk9wvbqJxcRfaym5q96ii3jIx7NcpjYlif4_1ZSNvRln9q_QM97A24Vd2U6T48gq-L-l4pGW7x41Ks05l9SUsyVPHoH03DutyZtA21w5-BwAA___IX9Jr)
+[The first page is my current style-guide.md this can be plugged into the assistant which then drafts the posts for the scheduler - all in the right style.](https://mg.mail.notion.so/c/syntheticTrackingToken010)
 
-[Here are some questions I would like you to answer - to create a better brand voice .md](https://mg.mail.notion.so/c/eJyEkcGOmzAQhp_G3BLZM8Y2Bw7b0lx7aA-9IeOZJFYDWNhEzdtXJJvttlK13IbvG0v_P9RKqxtQFbfKOqWs0Q4rHn289OsaqRX2k7BddW4lBwmkB2cUSSOBQDslmX2tnNVYV7EFCUYatX1a414PxmFTBy99wAaU0HJ7dz_NJc7TPs_VpT2XkrLAFwEHAQef0pOGeRRwSAIO3Y-v33af5zHNmZcdGjZ142moyTlJtpGWGINGtNYhosBDumaBnQIpwEwCOx9KvMZy6ymeOJc--RP3T_iI-iD_8d_m4TKHnzumWJg-ctW_wn25_2v5zy8BiHZ4F8wGby2QM8HZ4BweqRq5ePLF308CkJMP3EcSAPf-oDmGOujaKCelVso5qC02qgmNYxqM2UTbVUu7xHAWWg6Ln_i4-JG3sqvSPqoot8QCu3WKx8jU3WN92cibkdfhVXqGe1ib8Cv5iZheXsH3JZ5OvGz3uHGu1imvQw5LHLgVUL8b-3W5CKirawu_AwAA__9j6tOH)
+[Here are some questions I would like you to answer - to create a better style guide .md](https://mg.mail.notion.so/c/syntheticTrackingToken011)
 
-[View full edit](https://mg.mail.notion.so/c/eJyEkU2PmzAQhn-NuSWyZ_x54LAtzbWH9tAbMp4hsZoAAhM1_74i2Wy3larlNjzPWHrfoVo6HUBVXCvnlXJWe6z4EvO5XddMtXCfhGuqUx0QdU-oLVN0jrQ0ZHvF2hA605u-yjVIsNKq7dMa97qzHoNJUcaEAZTQcnt3P4wlj8N-GatzfSplWgS-CDgIOMRpetI0XgQcJgGH5sfXb7vP42UaF553aNmaEKkz5L0kF6QjxqQRnfOIKPAwXReBjQIpwA4Cm5hKvuZyaykfeSntFI_cPuEj6oP8x3-bu_OYfu6YcmH6yFX_Cvfl9q_lP78EILruXTAMkaLqJXmnrYq2o-rCJVIs8X4SgGWKidtMAuDeH4Q-maSNVV5KrZT3YBwGFVLwTJ21m-iaaq7nnE5Cy26OA_dzvPBWdlXqRxXlNrHAZh1yn5mae6wvG3kzlrV7lZ7hHtYm_JriQEwvr-D7nI9Hnrd73Hip1mFZuyXNueNagHk3tut8FmCqaw2_AwAA__8YMNRQ)
+[View full edit](https://mg.mail.notion.so/c/syntheticTrackingToken012)
 
 ![Notion logo](https://www.notion.so/images/logo-for-slack-integration.png)
 
 Notion
 
-[Notion.so](https://mg.mail.notion.so/c/eJxMj8uOKiEURb8GhgYOFI8BA2_q-gU9NxQclMR6BCjT_n0HtR_M2HuFvYiOaWmBU3RcG861kkZQnH2-nfc9R0f0P6JHenWC2WStSp5ZqS3GOCSPgfEk0BtUjGYHDBRTvB8pxUFOygg7BM98EBY4kay_e1jWltflUFd6c9fWtkrEkcCJwMlv23cb1rln4rQQMb58Yr5gbQTUb5TWtWEhoLZ7JWLkwOiMzUff_NMcoG4-4DlHAvCcAZvCEOSguGFMcm4MDFpYboM1GCelOqhHWlzJ4Uokm4pfMBU_Y3eizb2W22NDIsZ9ySljHJ9q_3vzQ9R9ekM-tHzP7fGiOvC5-SViPL6Lj5IvFyz9Cw-sdF_qPtVQ8oSOwPDnet7LjcBA7w6-AgAA__-1x4xI), the connected workspace
+[Notion.so](https://mg.mail.notion.so/c/syntheticTrackingToken013), the connected workspace
 for docs, projects, and wikis.
 
-[Update your email settings](https://mg.mail.notion.so/c/eJyEkMGu2yAURL_msozggjEsWLzK9Rd0b2G4dqgS2wIcNX9fkbxW7eqxgxlGZyY63iuLgpETvRGi18pIRnefbtN5puig_wb9wK7Oh8A70iaQl0IpPqMlwzURojbWLiw55Ki5Fu0oJS9q1kbaLnjug7QoQPGWe9n2mvbtUnZ2c9dajwLyA3AEHP1x_FHDfgccy-EDAY52CV1QnRaGcyWEMdj10gobrKE4aw1yrD6vVEEOLWBJwbeYAqg3kMO7UEwrlfrf07LvlfLk48-z1KlQrWlb26_jUUAOAjm7U_XRV_-aAvGFNKUIiC9u_JINsS2YXU7hCorP2W-0ZH-nVpJV9yapz4NADueWlkRxeKF-b8pfRznnT5MPNT1Sfb5dzfDr8Fuk-PEp_MhpXSm3Ck8q7NzKOZeQ00wOsPvnOp35Btixh8PfAQAA__8v_aZS)
+[Update your email settings](https://mg.mail.notion.so/c/syntheticTrackingToken014)
