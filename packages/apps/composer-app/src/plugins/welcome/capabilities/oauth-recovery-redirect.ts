@@ -153,7 +153,7 @@ const finalizeRedirect = Effect.fnUntraced(function* (
         : params.error === 'not_registered'
           ? 'This account is not registered for recovery. Please sign up first.'
           : params.error === 'no_email'
-            ? 'Your Bluesky account does not have an email address. Please add one at bsky.app and try signing up again.'
+            ? 'Your Atmosphere account does not have an email address. Please add one and try signing up again.'
             : `Could not complete OAuth recovery: ${params.error}`;
     log.warn('oauth recovery redirect: kms-service reported error', { error: params.error });
     yield* invoker
