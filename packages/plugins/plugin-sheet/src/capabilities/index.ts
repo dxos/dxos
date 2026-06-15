@@ -9,6 +9,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
+export const BranchDiffSupport = Capability.lazy('BranchDiffSupport', () => import('./branch-diff'));
 // The contributed capability type references Operation types from @dxos/compute, so the lazy
 // wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
 export const CommentConfig: Capability.LazyCapability<

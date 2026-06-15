@@ -21,7 +21,9 @@ export default Capability.makeModule(() =>
         id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
+        filter: (
+          data,
+        ): data is { attendableId: string; subject: Sheet.Sheet; mode?: string; compareBranch?: string } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Sheet.Sheet, data.subject) &&
           !!Obj.getDatabase(data.subject),
@@ -33,6 +35,8 @@ export default Capability.makeModule(() =>
               role={role}
               subject={data.subject}
               attendableId={data.attendableId}
+              mode={data.mode}
+              compareBranch={data.compareBranch}
               space={getSpace(data.subject)!}
               registry={computeGraphRegistry}
             />

@@ -5,16 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { branchDiffAtom } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { getCurrentBranch } from '@dxos/echo-client';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
-import { createComment } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
@@ -75,27 +74,34 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
 
-                // Route editor-backed objects through the editor's create-comment command so the
-                // anchor snaps to the largest logical region (the diff hunk under the cursor, else
-                // the word) and the thread is branch-tagged by the editor's comment extension. The
-                // view registry is keyed by attendable id, so look it up by document id (the object
-                // URI) instead. Fall back to the raw selection for objects without a live editor.
-                const view = capabilities.getAll(MarkdownCapabilities.EditorViews)[0]?.getByDocumentId(objectUri)?.view;
-                if (view) {
-                  createComment(view);
+                // Let the type create the comment with its own anchoring UI (e.g. an editor's
+                // hunk/word snap), which branch-tags the thread itself. Type-agnostic: no plugin is
+                // referenced here.
+                if (config.createComment?.(object)) {
                   return;
                 }
 
-                // Fallback (non-editor objects): anchor to the current selection, or create an
-                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
-                // placeholder is not a cursor range and would throw in `getAnchorLabel`.
-                const selection = selectionManager.getSelection(objectUri);
-                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
-                yield* Operation.invoke(CommentOperation.Create, {
-                  anchor: cursorAnchor ?? Date.now().toString(),
-                  name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
-                  subject: object,
-                });
+                // Generic fallback: anchor via the type's own selection (`getAnchor`) if it provides
+                // one (e.g. a sheet's selected cells), else the attention selection, else an unanchored
+                // thread. Branch-tag for review so the comment is scoped to the branch being compared,
+                // else the branch in view. Only derive a label from a real cursor anchor.
+                const cursorAnchor =
+                  config.getAnchor?.(object) ??
+                  (config.comments === 'anchored' ? getAnchor(selectionManager.getSelection(objectUri)) : undefined);
+                const registry = capabilities.get(Capabilities.AtomRegistry);
+                const activeBranch = registry.get(branchDiffAtom(object.id))?.compareTo ?? getCurrentBranch(object);
+                // Invoke via the operation-invoker capability (carries the app runtime) rather than
+                // the ambient `Operation.invoke` service: this action also runs from the sheet's menu
+                // toolbar, whose runner does not provide the operation service.
+                const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+                yield* Effect.promise(() =>
+                  invokePromise(CommentOperation.Create, {
+                    anchor: cursorAnchor ?? Date.now().toString(),
+                    name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
+                    subject: object,
+                    branch: activeBranch === 'main' ? undefined : activeBranch,
+                  }),
+                );
               }),
               properties: {
                 label: ['add-comment.label', { ns: meta.id }],

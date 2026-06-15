@@ -31,6 +31,8 @@ export type CommentThreadProps = {
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
   /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
   onAcceptChange?: (anchor: AnchoredTo.AnchoredTo) => void;
+  /** Whether resolved threads are shown; when false a thread hides itself reactively once resolved. */
+  showResolved?: boolean;
 };
 
 /**
@@ -48,6 +50,7 @@ export const CommentThread = ({
   onThreadDelete,
   onAcceptProposal,
   onAcceptChange,
+  showResolved,
 }: CommentThreadProps) => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
@@ -103,6 +106,12 @@ export const CommentThread = ({
     },
     [anchor, onComment],
   );
+
+  // Hide reactively once resolved (e.g. after accepting a change) when the view shows unresolved only.
+  // The `status` subscription above drives the re-render; the parent list filter is not reactive to it.
+  if (!showResolved && status === 'resolved') {
+    return null;
+  }
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>

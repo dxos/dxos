@@ -135,7 +135,12 @@ export const BranchesCompanion = ({ role, companionTo }: BranchesCompanionProps)
     };
   }, [index, histories, plan, object, latestPointers, scrubbing]);
 
-  const preview = useCallback((eventIndex: number) => setSelectedIndex(eventIndex), []);
+  // Parking at the latest version follows subsequent live edits (the scrubber stays locked to latest)
+  // rather than stranding behind new changes; scrubbing to an earlier point pins it there.
+  const preview = useCallback(
+    (eventIndex: number) => setSelectedIndex(eventIndex >= versions.length - 1 ? undefined : eventIndex),
+    [versions.length],
+  );
 
   const handleSwitch = useCallback(
     async (name: string) => {

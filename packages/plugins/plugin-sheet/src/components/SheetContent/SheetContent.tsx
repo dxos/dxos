@@ -40,9 +40,9 @@ import { SheetOperation } from '#types';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
-import { useSelectThreadOnCellFocus } from '../../integrations';
+import { completeCellRangeToThreadCursor, useSelectThreadOnCellFocus } from '../../integrations';
 import { useSheetContext } from '../SheetRoot';
-import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
+import { colLabelCell, rowLabelCell, useSheetBranchDiff, useSheetModelDxGridProps } from './util';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
@@ -80,6 +80,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
     id,
     attendableId,
     model,
+    compareBranch,
     editing,
     setCursor,
     setRange,
@@ -89,6 +90,14 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
     setActiveRefs,
     ignoreAttention,
   } = useSheetContext();
+
+  // Per-branch diff: when comparing, highlight cells that differ from the compare branch.
+  const diffCells = useSheetBranchDiff(model, compareBranch);
+
+  // Expose the live selection to the grid registry so the comment action can anchor a comment to the
+  // selected cells (a cell-range anchor), read on demand rather than mirrored into attention state.
+  const cursorRangeRef = useRef(cursorFallbackRange);
+  cursorRangeRef.current = cursorFallbackRange;
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -224,11 +233,14 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      // Mutating shortcuts are inert while the model is read-only (e.g. time-traveling); copy and
+      // axis-selection stay available.
+      const { readonly } = model;
       switch (event.key) {
         case 'Backspace':
         case 'Delete':
           event.preventDefault();
-          return cursorFallbackRange && model.clear(cursorFallbackRange);
+          return cursorFallbackRange && !readonly && model.clear(cursorFallbackRange);
         case 'Enter':
         case 'Space':
           if (dxGrid && extraplanarFocus) {
@@ -245,7 +257,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
           case 'x':
           case 'X':
             event.preventDefault();
-            return cursorFallbackRange && model.cut(cursorFallbackRange);
+            return cursorFallbackRange && !readonly && model.cut(cursorFallbackRange);
           case 'c':
           case 'C':
             event.preventDefault();
@@ -253,14 +265,14 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
           case 'v':
           case 'V':
             event.preventDefault();
-            return cursor && model.paste(cursor);
+            return cursor && !readonly && model.paste(cursor);
           case 'z':
             event.preventDefault();
-            return event.shiftKey ? model.redo() : model.undo();
+            return readonly ? undefined : event.shiftKey ? model.redo() : model.undo();
           case 'Z':
           case 'y':
             event.preventDefault();
-            return model.redo();
+            return readonly ? undefined : model.redo();
         }
       }
     },
@@ -301,7 +313,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
     [contextMenuAxis, contextMenuOpen, model, invokePromise],
   );
 
-  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
+  const { columns, rows } = useSheetModelDxGridProps(dxGrid, model, diffCells);
 
   const extensions = useMemo(
     () => [
@@ -333,10 +345,19 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
   const [gridInstances] = useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
-      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      gridInstances.register(attendableId, {
+        grid: dxGrid,
+        setActiveRefs,
+        sheetId: model.sheet.id,
+        // Re-ingest the doc's cells into the engine after an external write (e.g. accept-change) that
+        // the model's incremental updates don't observe.
+        reload: () => model.reset(),
+        // The current selection as a cell-range anchor, read live for comment creation.
+        getAnchor: () => (cursorRangeRef.current ? completeCellRangeToThreadCursor(cursorRangeRef.current) : undefined),
+      });
       return () => gridInstances.unregister(attendableId);
     }
-  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
+  }, [dxGrid, gridInstances, attendableId, setActiveRefs, model]);
 
   useSelectThreadOnCellFocus();
 

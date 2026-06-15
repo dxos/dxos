@@ -5,7 +5,6 @@
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./accept-change'),
   () => import('./create'),
   () => import('./create-markdown'),
   () => import('./open'),

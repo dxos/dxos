@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -146,6 +146,42 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     })
     .concat(drafts ?? [])
     .filter((anchor) => (anchor.branch ?? 'main') === activeBranch);
+
+  // Show the accept-change affordance only on comments that sit on an actual diff. The check is async
+  // (per type, reads the compare branch), so it is resolved into a set of thread URIs that are on a change.
+  const anchorChangeKey = anchors.map((anchor) => `${anchor.anchor ?? ''}|${anchor.branch ?? ''}`).join(',');
+  const [changeThreads, setChangeThreads] = useState<Set<ReturnType<typeof Obj.getURI>>>(() => new Set());
+  useEffect(() => {
+    const compareTo = diffRequest?.compareTo;
+    const config = commentConfigs.find(({ id }) => id === Obj.getTypename(subject));
+    if (!compareTo || !config?.isOnChange) {
+      setChangeThreads(new Set());
+      return;
+    }
+    let cancelled = false;
+    void Promise.all(
+      anchors.map(async (anchor) => {
+        const branch = anchor.branch ?? compareTo;
+        try {
+          if (anchor.anchor && (await config.isOnChange!(subject, anchor.anchor, branch))) {
+            return Obj.getURI(Relation.getSource(anchor));
+          }
+        } catch {
+          // Source may be unresolved during restore; treat as not-on-change.
+        }
+        return undefined;
+      }),
+    ).then((uris) => {
+      if (!cancelled) {
+        setChangeThreads(new Set(uris.filter((uri): uri is ReturnType<typeof Obj.getURI> => uri !== undefined)));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // `anchors` is read live; `anchorChangeKey` is the stable dependency that tracks its membership.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diffRequest?.compareTo, anchorChangeKey, subject, commentConfigs]);
 
   const handleChangeViewState = useCallback(
     (nextValue: string) => {
@@ -316,7 +352,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               onMessageDelete={handleMessageDelete}
               onThreadDelete={handleThreadDelete}
               onAcceptProposal={handleAcceptProposal}
-              onAcceptChange={diffRequest?.compareTo ? handleAcceptChange : undefined}
+              onAcceptChange={diffRequest?.compareTo && changeThreads.has(threadId) ? handleAcceptChange : undefined}
+              showResolved={showResolvedThreads}
             />
           );
         })}
