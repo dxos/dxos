@@ -117,18 +117,18 @@ graph TD
 
 ## What Event and Message have in common (and what differs)
 
-| Concern        | Common                                              | Event-specific                          | Message-specific                                   |
-| -------------- | --------------------------------------------------- | --------------------------------------- | -------------------------------------------------- |
-| Star           | `Row.Star` → `SystemIconButton.Star`                | TagIndex on Calendar                    | TagIndex on Mailbox                                |
-| Tile shell     | `Tile.Root` + `Tile.Header` (star·title·menu)       | body = `EventDetails`                   | body = `Row.Person`/snippet/`Row.Tags`, or convo rows |
-| Header chrome  | `Header.Root` (borderless Card + Card.Body)         | rows = `EventDetails(title='heading')`  | subject/sender/refs/tags rows                      |
-| Body           | `MarkdownViewer`                                     | description; editable draft via editor  | block selection (enriched/markdown/plain)          |
-| Toolbar        | `viewModeGroup`, `openGroup`, `deleteGroup`         | save, more-dropdown wrapping delete     | reply/replyAll/forward, load-images, extract       |
-| Article layout | `ObjectArticle` (Panel scaffold)                    | viewport wraps body in ScrollArea       | body rendered directly in content grid             |
-| People         | `Row.Person` (role: from/to/cc/bcc/attendee, avatar)| attendees (role=attendee)               | sender (role=from); to/cc/bcc pending schema       |
-| Dates          | `Row.Date` (calendar row) / `formatDateTime` util   | start–end range + duration              | `created` inline in `Tile.Header` title slot       |
-| Relations/refs | `Row.Ref` (card-preview anchor)                     | linked Meeting (handshake button)       | extracted objects (Trip/Person/…)                  |
-| Tags           | `Row.Tags`                                           | —                                       | Gmail labels + user tags                           |
+| Concern        | Common                                               | Event-specific                         | Message-specific                                      |
+| -------------- | ---------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| Star           | `Row.Star` → `SystemIconButton.Star`                 | TagIndex on Calendar                   | TagIndex on Mailbox                                   |
+| Tile shell     | `Tile.Root` + `Tile.Header` (star·title·menu)        | body = `EventDetails`                  | body = `Row.Person`/snippet/`Row.Tags`, or convo rows |
+| Header chrome  | `Header.Root` (borderless Card + Card.Body)          | rows = `EventDetails(title='heading')` | subject/sender/refs/tags rows                         |
+| Body           | `MarkdownViewer`                                     | description; editable draft via editor | block selection (enriched/markdown/plain)             |
+| Toolbar        | `viewModeGroup`, `openGroup`, `deleteGroup`          | save, more-dropdown wrapping delete    | reply/replyAll/forward, load-images, extract          |
+| Article layout | `ObjectArticle` (Panel scaffold)                     | viewport wraps body in ScrollArea      | body rendered directly in content grid                |
+| People         | `Row.Person` (role: from/to/cc/bcc/attendee, avatar) | attendees (role=attendee)              | sender (role=from); to/cc/bcc pending schema          |
+| Dates          | `Row.Date` (calendar row) / `formatDateTime` util    | start–end range + duration             | `created` inline in `Tile.Header` title slot          |
+| Relations/refs | `Row.Ref` (card-preview anchor)                      | linked Meeting (handshake button)      | extracted objects (Trip/Person/…)                     |
+| Tags           | `Row.Tags`                                           | —                                      | Gmail labels + user tags                              |
 
 ## Component specs
 
@@ -247,13 +247,13 @@ are reused (no translation churn); the builder fns accept the label tuples as pa
 - Delete `components/InboxSettings/` (component + barrel) and its `#components` export.
 - Remove the `pluginSettings` surface entry and `InboxSettings` import from
   `capabilities/react-surface.tsx`.
-- **Keep** the settings *store* module in `InboxPlugin.tsx` (`SetupSettings` → `activate: InboxSettings`
+- **Keep** the settings _store_ module in `InboxPlugin.tsx` (`SetupSettings` → `activate: InboxSettings`
   store capability contributing `AppCapabilities.Settings` `{ prefix, schema, atom }`). The generic
   settings form surface in `plugin-settings` renders it from the schema automatically (verified pattern;
   see composer-plugins skill 2026-05-31 settings notes).
 - Drop the now-unused `settings.title` translation key; keep `plugin.name` and other keys.
-- Note the name collision: the `InboxSettings` *store* capability (`capabilities/`) is distinct from the
-  deleted `InboxSettings` *component*.
+- Note the name collision: the `InboxSettings` _store_ capability (`capabilities/`) is distinct from the
+  deleted `InboxSettings` _component_.
 
 ### 6. Thread → Conversation rename (UI only)
 
@@ -342,4 +342,7 @@ ECHO factories live in `useMemo([], …)`/`render`, never module-level `args`.
   under `components/` and render in storybook without a PluginManager (composer-plugins rule).
 - No compatibility re-exports for `MessageStackTile`/`InboxSettings` — update all call sites in this change.
 - Keep `data-testid`/`classNames` forwarding through `Header.Root` and `Tile.*` (`composableProps`).
+
+```
+
 ```

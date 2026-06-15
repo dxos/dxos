@@ -9,6 +9,7 @@
 **Tech Stack:** React + TypeScript, `@dxos/react-ui`, `@dxos/react-ui-mosaic`, `@dxos/react-ui-menu`, moon, vitest + storybook.
 
 **Verification per task (unless noted):**
+
 - `moon run plugin-inbox:lint -- --fix`
 - `moon run plugin-inbox:build`
 - Cast audit: `git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'` → justify/remove.
@@ -19,6 +20,7 @@
 ### Task 1: `Row.*` shared Card-row primitives
 
 **Files:**
+
 - Create: `src/components/Row/Row.tsx`, `src/components/Row/index.ts`, `src/components/Row/Row.stories.tsx`
 - Source to move from: `src/components/Header/Header.tsx` (`DateRow`, `ObjectRow`, `PersonRow`, `TagsRow`, `StarButton`, internal `AnchorIconButton`)
 
@@ -38,6 +40,7 @@
 ### Task 2: `Header.Root` chrome
 
 **Files:**
+
 - Modify: `src/components/Header/Header.tsx`, `src/components/Header/index.ts`
 - Create: `src/components/Header/Header.stories.tsx`
 
@@ -48,6 +51,7 @@
 ### Task 3: `Tile.*` shell
 
 **Files:**
+
 - Create: `src/components/Tile/Tile.tsx`, `src/components/Tile/index.ts`, `src/components/Tile/Tile.stories.tsx`
 
 - [ ] **Step 1:** `Tile.Root` (forwardRef) = `Mosaic.Tile asChild classNames={TILE_CLASSNAMES} → Focus.Item asChild → Card.Root fullWidth border={false}`, props `{ id, data, location, current, onCurrentChange, onClick?, classNames?, children }`. Move `TILE_CLASSNAMES` const here (single source).
@@ -58,6 +62,7 @@
 ### Task 4: EventStack/EventTile + EventDetails adopt Row/Tile
 
 **Files:**
+
 - Modify: `src/components/EventStack/EventStack.tsx`, `src/components/Event/EventDetails.tsx`
 
 - [ ] **Step 1:** `EventDetails.tsx` — import `Row` (was `Header`). Replace `Header.StarButton`→`Row.Star`, `Header.DateRow`→`Row.Date`, `Header.PersonRow`→`Row.Person` (attendees `role='attendee'`). On `title='heading'` keep the star; on the tile path callers pass `title={false}` and the star is omitted (it now lives in `Tile.Header`).
@@ -67,6 +72,7 @@
 ### Task 5: MessageStack tiles adopt Row/Tile + Thread→Conversation rename
 
 **Files:**
+
 - Modify: `src/components/MessageStack/MessageStack.tsx`, `src/components/MessageStack/MessageStack.stories.tsx`
 
 - [ ] **Step 1: Rename (UI symbols only)** in `MessageStack.tsx`:
@@ -81,6 +87,7 @@
 ### Task 6: MailboxArticle + Settings rename follow-through
 
 **Files:**
+
 - Modify: `src/containers/MailboxArticle/MailboxArticle.tsx`, `src/types/Settings.ts`, `src/capabilities/settings.ts`, `src/meta.ts`
 
 - [ ] **Step 1:** `MailboxArticle.tsx` — `case 'current-thread'`→`case 'current-conversation'` (read `action.conversationId`); `threads={settings.threads}`→`conversations={settings.conversations}`.
@@ -91,6 +98,7 @@
 ### Task 7: `Event.Header`/`Message.Header` use `Header.Root` + `Row.*`
 
 **Files:**
+
 - Modify: `src/components/Event/Event.tsx`, `src/components/Message/Message.tsx`
 
 - [ ] **Step 1:** `Event.tsx` `EventHeader` — wrap `EventDetails` in `Header.Root` (`classNames={editable && 'gap-y-1'}`) instead of hand-rolled `Card.Root`/`Card.Body`.
@@ -100,6 +108,7 @@
 ### Task 8: `ObjectArticle` scaffold + EventArticle/MessageArticle
 
 **Files:**
+
 - Create: `src/components/ObjectArticle/ObjectArticle.tsx`, `src/components/ObjectArticle/index.ts`, `src/components/ObjectArticle/ObjectArticle.stories.tsx`
 - Modify: `src/containers/EventArticle/EventArticle.tsx`, `src/containers/MessageArticle/MessageArticle.tsx`
 
@@ -112,6 +121,7 @@
 ### Task 9: Shared toolbar groups
 
 **Files:**
+
 - Create: `src/components/Toolbar/toolbar.ts`, `src/components/Toolbar/index.ts`
 - Modify: `src/components/Event/useToolbar.tsx`, `src/components/Message/useToolbar.tsx`
 
@@ -123,18 +133,20 @@
 ### Task 10: Remove `InboxSettings`
 
 **Files:**
+
 - Delete: `src/components/InboxSettings/`
 - Modify: `src/capabilities/react-surface.tsx`, `src/components/index.ts`, `src/translations.ts`, `src/InboxPlugin.tsx` (only if it imports the component — it imports the store; leave the store module)
 
 - [ ] **Step 1:** Verify the inbox settings store contributes `{ schema }` (read `src/capabilities/settings.ts`); confirm plugin-settings' generic surface renders schema-driven settings (`packages/plugins/plugin-settings/src/capabilities/react-surface.tsx`). If the store lacks a schema, add it (the `Settings.Settings` schema) rather than keeping a custom surface.
 - [ ] **Step 2:** Remove the `pluginSettings` surface entry + `InboxSettings` import in `react-surface.tsx`.
-- [ ] **Step 3:** Delete `components/InboxSettings/`; drop its `components/index.ts` export; ensure `InboxPlugin.tsx` still references only the settings *store* capability (named import distinct from the component).
+- [ ] **Step 3:** Delete `components/InboxSettings/`; drop its `components/index.ts` export; ensure `InboxPlugin.tsx` still references only the settings _store_ capability (named import distinct from the component).
 - [ ] **Step 4:** `translations.ts` — drop unused `settings.title`; keep `plugin.name`/field titles.
 - [ ] **Step 5:** Verify lint+build; commit `refactor(plugin-inbox): drop custom InboxSettings; use generic settings surface`.
 
 ### Task 11: barrels, stories, full verification
 
 **Files:**
+
 - Modify: `src/components/index.ts` (export `Row`, `Tile`, `ObjectArticle`, `Toolbar`), `#components` `package.json` imports if needed, and any container/component stories listed in spec.
 
 - [ ] **Step 1:** Update `components/index.ts` exports; confirm `package.json` `#components` + `moon.yml` entrypoints unaffected (no barrel removed; `InboxSettings` was internal to the barrel).
@@ -147,4 +159,7 @@
 - [ ] **Step 1:** Merge `origin/main`, resolve conflicts, `pnpm format`, re-run lint/build/test.
 - [ ] **Step 2:** Push branch; open **draft** PR titled `refactor(plugin-inbox): shared Event/Message components + Thread→Conversation`; body summarizes the change, links the spec, notes the star-ownership move + settings field rename. Do NOT add to merge queue.
 - [ ] **Step 3:** Monitor CI (`gh run list --branch <branch> --workflow "Check"`); fix failures at root cause. Surface Composer preview URL in the summary.
+
+```
+
 ```
