@@ -18,7 +18,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-// TODO(registry-rollout): restore with EdgeRegistryPluginProvider below.
+// TODO(wittjosiah): Restore with EdgeRegistryPluginProvider below once edge ATProto registry is deployed.
 // import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
@@ -449,8 +449,7 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  // TODO(registry-rollout): re-enable (restore EdgeRegistryPluginProvider + EdgeHttpClient imports) once
-  // the edge service is deployed with ATProto v2 registry support.
+  // TODO(wittjosiah): Re-enable once edge ATProto registry is deployed (restore EdgeRegistryPluginProvider + EdgeHttpClient imports).
   // const edgeUrl = config.values.runtime?.services?.edge?.url;
   // const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
   const pluginRegistryProvider = undefined;
