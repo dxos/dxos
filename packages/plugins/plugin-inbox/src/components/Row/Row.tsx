@@ -182,8 +182,7 @@ type RowPersonProps = {
   onClick?: (event: MouseEvent) => void;
 };
 
-const displayName = (actor: Actor.Actor): string =>
-  actor.contact?.target?.fullName ?? actor.name ?? actor.email ?? '';
+const displayName = (actor: Actor.Actor): string => actor.contact?.target?.fullName ?? actor.name ?? actor.email ?? '';
 
 /**
  * Static avatar variant — no contact resolution. Suitable for virtualized list tiles.
@@ -210,7 +209,13 @@ const PersonAvatarRow = ({ actor, onClick }: Pick<RowPersonProps, 'actor' | 'onC
 /**
  * Interactive variant — resolves the contact to a card-preview anchor, with a create-contact fallback.
  */
-const PersonAnchorRow = ({ actor, role, db, onContactCreate, onRemove }: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
+const PersonAnchorRow = ({
+  actor,
+  role,
+  db,
+  onContactCreate,
+  onRemove,
+}: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
   const { t } = useTranslation(meta.id);
   const contactDXN = useActorContact(db, actor);
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);

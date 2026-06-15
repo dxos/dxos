@@ -22,10 +22,7 @@ const SENDER: Actor.Actor = { name: 'Alice Avery', email: 'alice@example.com' };
 const DefaultStory = () => {
   const { space } = useClientStory();
   const db: Database.Database | undefined = space?.db;
-  const object = useMemo(
-    () => (db ? createObject(Person.make({ fullName: 'Casey Contact' })) : undefined),
-    [db],
-  );
+  const object = useMemo(() => (db ? createObject(Person.make({ fullName: 'Casey Contact' })) : undefined), [db]);
 
   return (
     <Card.Root border={false} fullWidth classNames='p-1'>

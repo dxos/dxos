@@ -12,8 +12,8 @@ import { type Actor, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { Header } from './Header';
 import { Row } from '../Row';
+import { Header } from './Header';
 
 const SENDER: Actor.Actor = { name: 'Alice Avery', email: 'alice@example.com' };
 

@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ObjectArticle } from './ObjectArticle';
 import { Header } from '../Header';
+import { ObjectArticle } from './ObjectArticle';
 
 // Stub toolbar / header / body slots to show the shared article scaffold (Panel → toolbar · header · body).
 const DefaultStory = () => (
