@@ -34,7 +34,7 @@ jobs:
               curl -s \
                 "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench/deployments/${DEPLOY_ID}/history/logs" \
                 -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-                | jq -r '.result.data[].line' 2>/dev/null | grep -E "rolldown|binding|skip|Node|pnpm install|ERR_" | head -60 || echo "No structured logs"
+                | jq -r '.result.data[].line' 2>/dev/null | head -100 || echo "No structured logs"
               exit 1
             fi
             sleep 15
