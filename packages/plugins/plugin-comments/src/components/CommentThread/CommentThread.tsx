@@ -31,9 +31,9 @@ export type CommentThreadProps = {
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 };
 
-// TODO(wittjosiah): Factor out to @dxos/echo-react.
-// Returns undefined instead of throwing when the relation source is transiently
-// unavailable (e.g. during a batched delete before the query result updates).
+// TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
+// relation changes. The try/catch should not be necessary — Relation.getSource should
+// return undefined rather than throw when the source is transiently unavailable.
 const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.SourceOf<T> | undefined => {
   try {
     return Relation.getSource(relation);
