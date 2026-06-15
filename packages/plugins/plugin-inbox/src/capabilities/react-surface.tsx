@@ -28,7 +28,6 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
 } from '#containers';
-import { meta } from '#meta';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
 import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
