@@ -7,6 +7,7 @@ import { MenuBuilder, graphActions, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
+import { deleteAction, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
 
 /** Contributed actions opt into the toolbar via `disposition: 'toolbar'` (vs context-menu-only). */
@@ -50,19 +51,7 @@ export const useEventToolbarActions = ({
     (get) =>
       MenuBuilder.make()
         .root({ label: ['event-toolbar.menu', { ns: meta.id }] })
-        .subgraph(
-          onOpen &&
-            ((b) =>
-              b.action(
-                'open',
-                {
-                  label: ['event-toolbar-open.menu', { ns: meta.id }],
-                  icon: 'ph--arrow-square-out--regular',
-                  disabled: editing,
-                },
-                onOpen,
-              )),
-        )
+        .subgraph(onOpen && openGroup({ ns: meta.id, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }))
         .subgraph(
           viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
         )
@@ -94,12 +83,7 @@ export const useEventToolbarActions = ({
                   variant: 'dropdownMenu',
                   caretDown: false,
                 },
-                (group) =>
-                  group.action(
-                    'delete',
-                    { label: ['event-toolbar-delete.menu', { ns: meta.id }], icon: 'ph--trash--regular' },
-                    onDelete,
-                  ),
+                (group) => deleteAction(group, { ns: meta.id, labelKey: 'event-toolbar-delete.menu', onDelete }),
               )),
         )
         .build(),

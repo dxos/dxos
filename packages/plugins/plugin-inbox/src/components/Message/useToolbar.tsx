@@ -8,6 +8,7 @@ import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { deleteGroup, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { useExtractorActions } from './useExtractorActions';
 
@@ -59,18 +60,7 @@ export const useMessageActions = ({
     (get) => {
       let builder = MenuBuilder.make()
         .root({ label: ['message-toolbar.label', { ns: meta.id }] })
-        .subgraph(
-          onOpen &&
-            ((b) =>
-              b.action(
-                'open',
-                {
-                  label: ['message-toolbar-open.menu', { ns: meta.id }],
-                  icon: 'ph--arrow-square-out--regular',
-                },
-                onOpen,
-              )),
-        )
+        .subgraph(onOpen && openGroup({ ns: meta.id, labelKey: 'message-toolbar-open.menu', onOpen }))
         .subgraph(
           viewModeGroup({
             ns: meta.id,
@@ -128,18 +118,7 @@ export const useMessageActions = ({
                 onForward,
               )),
         )
-        .subgraph(
-          onDelete &&
-            ((b) =>
-              b.action(
-                'delete',
-                {
-                  label: ['message-toolbar-delete.menu', { ns: meta.id }],
-                  icon: 'ph--trash--regular',
-                },
-                onDelete,
-              )),
-        )
+        .subgraph(onDelete && deleteGroup({ ns: meta.id, labelKey: 'message-toolbar-delete.menu', onDelete }))
         // Actions other plugins contribute onto the message node.
         .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
 
