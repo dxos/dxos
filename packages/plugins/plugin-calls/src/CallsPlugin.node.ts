@@ -14,7 +14,7 @@ import { Call } from '#types';
  * (CLI, agents) where rendering is unavailable.
  */
 export const CallsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Call.Call] }),
+  AppPlugin.addSchemaModule({ schema: [Call.Call, Call.CloudflareTransportConfig] }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

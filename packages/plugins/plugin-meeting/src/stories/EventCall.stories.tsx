@@ -163,12 +163,14 @@ const meta = {
                 Text.make({ content: '## Summary\n\n- Roadmap reviewed.\n- Owners assigned.\n- Follow-up scheduled.' }),
               );
               // Slim Call (room/transport) the Meeting optionally links to.
-              // The transport config is provider-owned; any object stands in for the story.
-              const transportConfig = personalSpace.db.add(Text.make({ content: 'room-1' }));
+              // The transport config is produced by the Cloudflare transport provider.
+              const transportConfig = personalSpace.db.add(
+                Obj.make(Call.CloudflareTransportConfig, { roomId: 'room-1' }),
+              );
               const call = personalSpace.db.add(
                 Call.make({
                   name: 'Standup',
-                  transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(transportConfig) },
+                  transport: { kind: Call.CLOUDFLARE_TRANSPORT_KIND, config: Ref.make(transportConfig) },
                 }),
               );
               // `event` is a Ref to the feed event (works for queue objects); EventDetails reverse-matches it.
