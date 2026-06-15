@@ -65,9 +65,10 @@ describe('queues', () => {
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId, feed: queue.uri } })
-        .resolve(EID.make({ entityId: obj.id }));
+        .resolve(EID.make({ entityId: obj.id }), { source: 'network' })
+        .wait();
       expect(resolved?.id).toEqual(obj.id);
-      expect(resolved?.name).toEqual('john');
+      expect((resolved as TestSchema.Person | undefined)?.name).toEqual('john');
       expect(Obj.getType(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
     }
   });

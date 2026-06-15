@@ -14,7 +14,7 @@ import {
   type EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EntityKind, type EntityMeta } from '@dxos/echo/internal';
+import { EntityKind, type EntityMeta, getStrongDependencyUris } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, URI } from '@dxos/keys';
@@ -518,49 +518,23 @@ export class ObjectCore {
   }
 
   /**
-   * EIDs of objects that this object strongly depends on.
-   * Strong references are loaded together with the source object — only ECHO-scheme refs
-   * (object refs) qualify; type DXNs are resolved separately via the schema registry.
-   * Currently this is the schema reference (when stored as an object), source/target for
-   * relations, and the parent ref.
+   * URIs of the entities that this entity strongly depends on: the schema reference (when stored as
+   * an object), source/target for relations, and the parent ref. Strong dependencies are loaded
+   * together with the depending entity before it is surfaced. URIs may be cross-space `echo:` EIDs
+   * or queue-item EIDs; the resolver routes each to the appropriate backend.
    */
-  getStrongDependencies(): EID.EID[] {
-    const res: EID.EID[] = [];
-
+  getStrongDependencies(): URI.URI[] {
     const typeRef = this.getType();
-    if (typeRef) {
-      const typeEchoUri = EID.tryParse(EncodedReference.toURI(typeRef));
-      if (typeEchoUri) {
-        res.push(typeEchoUri);
-      }
-    }
-
-    if (this.getKind() === EntityKind.Relation) {
-      const sourceRef = this.getSource();
-      if (sourceRef) {
-        const id = EID.tryParse(EncodedReference.toURI(sourceRef));
-        if (id) {
-          res.push(id);
-        }
-      }
-      const targetRef = this.getTarget();
-      if (targetRef) {
-        const id = EID.tryParse(EncodedReference.toURI(targetRef));
-        if (id) {
-          res.push(id);
-        }
-      }
-    }
-
+    const sourceRef = this.getSource();
+    const targetRef = this.getTarget();
     const parentRef = this.getParent();
-    if (parentRef) {
-      const id = EID.tryParse(EncodedReference.toURI(parentRef));
-      if (id) {
-        res.push(id);
-      }
-    }
-
-    return res;
+    return getStrongDependencyUris({
+      kind: this.getKind(),
+      type: typeRef ? EncodedReference.toURI(typeRef) : undefined,
+      source: sourceRef ? EncodedReference.toURI(sourceRef) : undefined,
+      target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
+      parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
+    });
   }
 }
 
