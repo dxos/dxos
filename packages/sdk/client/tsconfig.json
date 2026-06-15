@@ -47,9 +47,6 @@
       "path": "../../common/sql-sqlite"
     },
     {
-      "path": "../../common/test-utils"
-    },
-    {
       "path": "../../common/timeframe"
     },
     {

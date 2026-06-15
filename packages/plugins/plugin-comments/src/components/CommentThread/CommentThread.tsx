@@ -10,7 +10,7 @@ import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Message as MessageComponent, type ThreadComponents, Thread } from '@dxos/react-ui-thread';
-import { type AnchoredTo, type Message, type Thread as ThreadType } from '@dxos/types';
+import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
 import { useStatus } from '#hooks';
@@ -35,6 +35,17 @@ export type CommentThreadProps = {
   showResolved?: boolean;
 };
 
+// TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
+// relation changes. The try/catch should not be necessary — Relation.getSource should
+// return undefined rather than throw when the source is transiently unavailable.
+const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.SourceOf<T> | undefined => {
+  try {
+    return Relation.getSource(relation);
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
@@ -57,8 +68,9 @@ export const CommentThread = ({
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = Relation.getSource(anchor) as ThreadType.Thread;
-  const threadUri = Obj.getURI(thread);
+  const source = useRelationSource(anchor);
+  const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
+  const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [messages] = useObject(thread, 'messages');
   // Subscribe to `status` so resolving/unresolving the thread re-renders its controls and the
   // accept-change affordance (the `messages` subscription alone does not observe status changes).
@@ -76,7 +88,10 @@ export const CommentThread = ({
     },
     [members],
   );
-  const textboxMetadata = useMemo(() => getMessageMetadata(threadUri, identity ?? undefined), [threadUri, identity]);
+  const textboxMetadata = useMemo(
+    () => getMessageMetadata(threadUri ?? '', identity ?? undefined),
+    [threadUri, identity],
+  );
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
     [messages],
@@ -109,7 +124,7 @@ export const CommentThread = ({
 
   // Hide reactively once resolved (e.g. after accepting a change) when the view shows unresolved only.
   // The `status` subscription above drives the re-render; the parent list filter is not reactive to it.
-  if (!showResolved && status === 'resolved') {
+  if (!thread || !threadUri || (!showResolved && status === 'resolved')) {
     return null;
   }
 

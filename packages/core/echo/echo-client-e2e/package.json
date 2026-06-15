@@ -18,9 +18,13 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-host": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/teleport": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

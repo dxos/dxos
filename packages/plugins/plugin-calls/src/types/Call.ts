@@ -37,6 +37,7 @@ export const Call = Schema.Struct({
   /**
    * User-defined name of the call.
    */
+  // TODO(burdon): Remove.
   name: Schema.String.pipe(Schema.optional),
 
   /**

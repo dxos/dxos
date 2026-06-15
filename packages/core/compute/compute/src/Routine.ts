@@ -25,6 +25,7 @@ export const Routine = Schema.Struct({
     description: 'Output schema',
   }),
   instructions: Ref.Ref(Text.Text).pipe(
+    Annotation.FormInputAnnotation.set(false),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
   ),
