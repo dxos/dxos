@@ -46,10 +46,7 @@ export const createMenuAction = <P extends {} = {}>(
     data: () => Effect.sync(invoke),
   }) satisfies MenuAction;
 
-export const createMenuItemGroup = <P extends MenuItemGroupProperties>(
-  id: string,
-  properties: P,
-) =>
+export const createMenuItemGroup = <P extends MenuItemGroupProperties>(id: string, properties: P) =>
   ({
     id,
     type: Node.ActionGroupType,

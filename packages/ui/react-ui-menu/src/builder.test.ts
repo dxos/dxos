@@ -115,11 +115,15 @@ describe('MenuBuilder', () => {
       .root({ label: 'toolbar' })
       .subgraph((sub) => {
         sub
-          .group('headings', { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' }, (group) => {
-            group
-              .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
-              .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
-          })
+          .group(
+            'headings',
+            { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' },
+            (group) => {
+              group
+                .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
+                .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
+            },
+          )
           .group('formatting', { label: 'Formatting' }, (group) => {
             group.action('bold', { label: 'Bold', icon: 'ph--text-b--regular' }, () => {});
           });
@@ -160,11 +164,15 @@ describe('MenuBuilder', () => {
   test('composable curried subgraph functions', ({ expect }) => {
     // Simulates the curried pattern: addX(args) returns (builder) => void.
     const addHeadingsSection = () => (builder: import('./builder').ActionGroupBuilder) => {
-      builder.group('headings', { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' }, (group) => {
-        group
-          .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
-          .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
-      });
+      builder.group(
+        'headings',
+        { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' },
+        (group) => {
+          group
+            .action('h1', { label: 'H1', icon: 'ph--text-h-one--regular' }, () => {})
+            .action('h2', { label: 'H2', icon: 'ph--text-h-two--regular' }, () => {});
+        },
+      );
     };
 
     const addFormattingSection = () => (builder: import('./builder').ActionGroupBuilder) => {

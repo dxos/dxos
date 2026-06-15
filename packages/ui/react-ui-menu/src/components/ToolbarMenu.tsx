@@ -15,13 +15,7 @@ import {
 
 import { translationKey } from '#translations';
 
-import {
-  type MenuAction,
-  type MenuItem,
-  type MenuItemGroup,
-  isMenuGroup,
-  isSeparator,
-} from '../types';
+import { type MenuAction, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel, actionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
@@ -108,8 +102,15 @@ const DropdownMenuToolbarItem = ({
   const { t } = useTranslation(translationKey);
   const { iconSize } = useMenuScoped('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
-  const { iconOnly, disabled, testId, applyActive, caretDown = true, icon: groupIcon, iconClassNames: groupIconClassNames } =
-    group.properties;
+  const {
+    iconOnly,
+    disabled,
+    testId,
+    applyActive,
+    caretDown = true,
+    icon: groupIcon,
+    iconClassNames: groupIconClassNames,
+  } = group.properties;
   const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked) as MenuAction | undefined;
   const icon =
     (applyActive &&
