@@ -1,11 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "types": [
-      "node",
-      "sharedworker"
-    ]
-  },
+  "compilerOptions": {},
   "include": [
     "src"
   ],
@@ -14,16 +9,13 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/effect"
     },
     {
-      "path": "../../common/effect"
+      "path": "../../common/feed-store"
     },
     {
       "path": "../../common/invariant"
@@ -32,31 +24,19 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/kv-store"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
       "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/sql-sqlite"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/timeframe"
     },
     {
-      "path": "../../common/tracing"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
@@ -65,10 +45,13 @@
       "path": "../../core/echo/echo-host"
     },
     {
-      "path": "../../core/echo/echo-protocol"
+      "path": "../../core/echo/feed"
     },
     {
       "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/keyring"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -80,25 +63,13 @@
       "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/mesh/websocket-rpc"
+      "path": "../../core/mesh/teleport-extension-object-sync"
     },
     {
       "path": "../../core/protocols"
     },
     {
-      "path": "../client-protocol"
-    },
-    {
       "path": "../client-services"
-    },
-    {
-      "path": "../config"
     }
   ]
 }

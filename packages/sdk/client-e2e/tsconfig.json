@@ -2,8 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "types": [
-      "node",
-      "sharedworker"
+      "node"
     ]
   },
   "include": [
@@ -14,16 +13,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
       "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -32,22 +22,13 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/kv-store"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
     },
     {
       "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/sql-sqlite"
-    },
-    {
-      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/tracing"
@@ -71,25 +52,13 @@
       "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/mesh/messaging"
-    },
-    {
-      "path": "../../core/mesh/network-manager"
-    },
-    {
       "path": "../../core/mesh/rpc"
     },
     {
-      "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/mesh/websocket-rpc"
-    },
-    {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../client"
     },
     {
       "path": "../client-protocol"

@@ -1,0 +1,5 @@
+layer: automation
+language: typescript
+tags:
+  - ts-test
+  - typecheck

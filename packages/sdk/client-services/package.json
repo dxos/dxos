@@ -101,8 +101,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/platform": "catalog:",
-    "@types/readable-stream": "catalog:",
-    "get-port-please": "catalog:"
+    "@types/readable-stream": "catalog:"
   },
   "publishConfig": {
     "access": "public"

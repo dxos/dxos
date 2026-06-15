@@ -214,6 +214,9 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-host-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"
     },
     {
@@ -257,6 +260,9 @@
     },
     {
       "path": "packages/core/mesh/teleport/tsconfig.json"
+    },
+    {
+      "path": "packages/core/mesh/teleport-e2e/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/teleport-extension-automerge-replicator/tsconfig.json"
@@ -577,10 +583,16 @@
       "path": "packages/sdk/client/tsconfig.json"
     },
     {
+      "path": "packages/sdk/client-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/client-protocol/tsconfig.json"
     },
     {
       "path": "packages/sdk/client-services/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/client-services-e2e/tsconfig.json"
     },
     {
       "path": "packages/sdk/config/tsconfig.json"
