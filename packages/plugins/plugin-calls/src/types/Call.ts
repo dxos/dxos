@@ -56,3 +56,22 @@ export const make = (props: { name?: string; transport: CallTransport }) =>
     name: props.name,
     transport: props.transport,
   });
+
+/**
+ * Provider id of the built-in Cloudflare transport.
+ */
+export const CLOUDFLARE_TRANSPORT_KIND = 'org.dxos.call.transport.cloudflare';
+
+/**
+ * Persistent reconnection config produced by the built-in Cloudflare transport
+ * provider and stored in `CallTransport.config`. The SFU room id is the only
+ * state required to resume a call.
+ */
+export const CloudflareTransportConfig = Schema.Struct({
+  /**
+   * SFU room id; stable so the call is resumable.
+   */
+  roomId: Schema.String,
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.call.transportCloudflare', '0.1.0')));
+
+export type CloudflareTransportConfig = Type.InstanceType<typeof CloudflareTransportConfig>;

@@ -10,7 +10,6 @@ import { Obj, Ref } from '@dxos/echo';
 import { Call, CallsCapabilities } from '@dxos/plugin-calls/types';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { type Meeting, MeetingOperation } from '#types';
@@ -35,8 +34,11 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
-  // Optional: present only when plugin-calls is registered. No-op gracefully otherwise.
-  const callManager = useCapabilities(CallsCapabilities.Manager)[0];
+  // The built-in Cloudflare transport provider owns the persisted reconnection config and the
+  // live join. Present only when plugin-calls is registered; the call action is hidden otherwise.
+  const transportProvider = useCapabilities(CallsCapabilities.CallTransportProvider).find(
+    (provider) => provider.kind === Call.CLOUDFLARE_TRANSPORT_KIND,
+  );
 
   const notes = meeting.notes?.target;
   const transcript = meeting.transcript?.target;
@@ -48,10 +50,10 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
   }, [invokePromise, meeting]);
 
   // Provision (once) and join the meeting's live call. The room id is derived from the meeting DXN
-  // so it is stable and resumable. The transport config is a placeholder until the real provider
-  // (CallTransportProvider.makeConfig) lands.
+  // so it is stable and resumable. The transport provider owns the persisted reconnection config
+  // and the live join.
   const handleStartCall = useCallback(async () => {
-    if (!callManager) {
+    if (!transportProvider) {
       return;
     }
     const db = Obj.getDatabase(meeting);
@@ -59,21 +61,26 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
       return;
     }
     const roomId = Obj.getURI(meeting);
-    if (!(await meeting.call?.load())) {
-      const config = db.add(Text.make({ content: roomId }));
-      const call = db.add(
-        Call.make({
-          name: meeting.name,
-          transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(config) },
-        }),
-      );
-      Obj.update(meeting, (meeting) => {
-        meeting.call = Ref.make(call);
-      });
+    // Reuse the existing call when present; `Ref.load()` resolves to `AnyEntity`, so narrow it back to
+    // `Call` (rather than casting) before handing it to the transport.
+    const existing = await meeting.call?.load();
+    if (existing && Obj.instanceOf(Call.Call, existing)) {
+      await transportProvider.join(existing);
+      return;
     }
-    callManager.setRoomId(roomId);
-    await callManager.join();
-  }, [callManager, meeting]);
+
+    const config = transportProvider.makeConfig(roomId);
+    db.add(config);
+    const call = Call.make({
+      name: meeting.name,
+      transport: { kind: transportProvider.kind, config: Ref.make(config) },
+    });
+    db.add(call);
+    Obj.update(meeting, (meeting) => {
+      meeting.call = Ref.make(call);
+    });
+    await transportProvider.join(call);
+  }, [transportProvider, meeting]);
 
   // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
   const menuActions = useMenuBuilder(
@@ -103,7 +110,7 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
         )
         .separator()
         .subgraph(
-          !!callManager &&
+          !!transportProvider &&
             ((builder) =>
               builder.action(
                 'start-call',
@@ -120,7 +127,7 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
           handleGenerateSummary,
         )
         .build(),
-    [tab, hasSummary, handleGenerateSummary, callManager, handleStartCall],
+    [tab, hasSummary, handleGenerateSummary, transportProvider, handleStartCall],
   );
 
   const data = useMemo(() => {

@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { type Database, type Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { Card, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
@@ -69,10 +69,12 @@ type EventToolbarProps = Pick<
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
-    const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
+    const { attendableId, event, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
+    // Contributed (graph) actions hang off the event's own node (keyed by its URI), not `attendableId`
+    // — a companion plank's `attendableId` is the primary's id (the calendar), not the event.
     const menuActions = useEventToolbarActions({
       graph,
-      nodeId: attendableId,
+      nodeId: Obj.getURI(event).toString(),
       viewMode,
       setViewMode,
       onOpen,

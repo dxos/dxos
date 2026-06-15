@@ -140,12 +140,14 @@ const meta = {
               const meetingSummary = personalSpace.db.add(Text.make({ content: '' }));
 
               // Slim Call (room/transport) the Meeting links to. The transport config is
-              // provider-owned; any object stands in for the story.
-              const transportConfig = personalSpace.db.add(Text.make({ content: 'room-1' }));
+              // produced by the Cloudflare transport provider.
+              const transportConfig = personalSpace.db.add(
+                Obj.make(Call.CloudflareTransportConfig, { roomId: 'room-1' }),
+              );
               const call = personalSpace.db.add(
                 Call.make({
                   name: 'Standup',
-                  transport: { kind: 'org.dxos.call.transport.cloudflare', config: Ref.make(transportConfig) },
+                  transport: { kind: Call.CLOUDFLARE_TRANSPORT_KIND, config: Ref.make(transportConfig) },
                 }),
               );
               personalSpace.db.add(

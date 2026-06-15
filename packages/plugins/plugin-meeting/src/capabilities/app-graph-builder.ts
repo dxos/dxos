@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
@@ -193,12 +193,16 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: 'createMeetingForEvent',
         type: Event.Event,
-        actions: Effect.fnUntraced(function* (event) {
+        actions: Effect.fnUntraced(function* (event, get) {
           const db = Obj.getDatabase(event);
           if (!db) {
             return [];
           }
-          const meeting = yield* Effect.promise(() => Meeting.getMeetingForEvent(db, event));
+          // Resolve meetings synchronously via the query atom: action callbacks run under
+          // `Effect.runSync`, so an awaited query (e.g. `Meeting.getMeetingForEvent`) would die with
+          // an `AsyncFiberException`. Reading the atom also makes the action reactive to new meetings.
+          const meetings = get(db.query(Query.select(Filter.type(Meeting.Meeting))).atom);
+          const meeting = Meeting.findMeetingForEvent(meetings, event);
           if (meeting) {
             return [
               {
