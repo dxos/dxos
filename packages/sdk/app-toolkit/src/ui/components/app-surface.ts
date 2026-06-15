@@ -568,7 +568,9 @@ export const spyFilter = <TData>(label: string, filter: Surface.Filter<TData>): 
     role: binding.role,
     guard: (data: unknown) => {
       const result = binding.guard(data);
-      log.info(label, { role: binding.role, result, data });
+      // Debug-gated and payload-free: this runs on every guard evaluation (hot path) and `data` may
+      // carry sensitive entity content.
+      log.debug(label, { role: binding.role, result, dataType: data == null ? String(data) : typeof data });
       return result;
     },
   })),

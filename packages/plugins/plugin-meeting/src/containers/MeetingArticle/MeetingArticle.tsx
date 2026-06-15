@@ -32,7 +32,7 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
 
 /**
  * Hub view for a meeting: a toolbar of tabs (notes / transcript / summary) over a single content
- * area that renders the selected component as a section surface.
+ * area that renders the selected component as an article surface.
  */
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
   const { t } = useTranslation(meta.id);
@@ -44,15 +44,11 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
     (provider) => provider.kind === Call.CLOUDFLARE_TRANSPORT_KIND,
   );
 
-  const notes = meeting.notes?.target;
-  const transcript = meeting.transcript?.target;
-  const summary = meeting.summary?.target;
-  const call = meeting.call?.target;
-
-  const [notes2] = useObject<Text.Text>(meeting.notes);
-  const [transcript2] = useObject<Transcript.Transcript>(meeting.transcript);
-  const [summary2] = useObject<Text.Text>(meeting.summary);
-  const [call2] = useObject<Call.Call>(meeting.call);
+  // Resolve refs reactively so tabs populate once targets load (a bare `.target` read can be stale).
+  const [notes] = useObject<Text.Text>(meeting.notes);
+  const [transcript] = useObject<Transcript.Transcript>(meeting.transcript);
+  const [summary] = useObject<Text.Text>(meeting.summary);
+  const [call] = useObject<Call.Call>(meeting.call);
 
   const hasSummary = !!summary && summary.content.length > 0;
 
@@ -123,37 +119,26 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           ),
         )
         .separator()
-        .subgraph((b) =>
-          b.group(
-            'more',
-            // TODO(burdon): Factor out common menu.
+        .menu('more', (group) => [
+          // Only offer start-call when the Cloudflare transport provider is registered.
+          transportProvider &&
+            group.action(
+              'start-call',
+              {
+                label: ['start-call.label', { ns: meta.id }],
+                icon: 'ph--phone-call--regular',
+              },
+              handleStartCall,
+            ),
+          group.action(
+            'generate-summary',
             {
-              label: ['event-toolbar-more.menu', { ns: meta.id }],
-              icon: 'ph--dots-three-vertical--regular',
-              iconOnly: true,
-              variant: 'dropdownMenu',
-              caretDown: false,
+              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
+              icon: 'ph--book-open-text--regular',
             },
-            (group) => [
-              group.action(
-                'start-call',
-                {
-                  label: ['start-call.label', { ns: meta.id }],
-                  icon: 'ph--phone-call--regular',
-                },
-                handleStartCall,
-              ),
-              group.action(
-                'generate-summary',
-                {
-                  label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
-                  icon: 'ph--book-open-text--regular',
-                },
-                handleGenerateSummary,
-              ),
-            ],
+            handleGenerateSummary,
           ),
-        )
+        ])
         .build(),
     [tab, hasSummary, transportProvider, handleGenerateSummary, handleStartCall],
   );
