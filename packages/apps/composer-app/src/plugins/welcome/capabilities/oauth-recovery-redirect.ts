@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
@@ -111,7 +112,13 @@ export default Capability.makeModule(
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
           yield* finalizeRedirect(client, invoker, params).pipe(
-            Effect.catchAll((error) => Effect.sync(() => log.warn('oauth recovery finalize failed', { error }))),
+            Effect.catchAll((error) =>
+              Effect.sync(() =>
+                log.error('oauth recovery finalize failed', {
+                  error: error instanceof Error ? error.message : String(error),
+                }),
+              ),
+            ),
             Effect.ensuring(Effect.sync(() => deleteSnapshot(params.accessTokenId))),
           );
         }),
@@ -179,13 +186,27 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     // Re-derive the verified email server-side from the registrationToken — it is never carried in
     // the redirect URL.
     const email = completeResult?.email;
-    invariant(email, 'OAuth provider did not return a verified email');
+    if (!email) {
+      // The OAuth provider did not return an email (e.g. the PDS session fetch failed).
+      yield* invoker
+        .invoke(LayoutOperation.AddToast, {
+          id: 'oauth-recovery-no-email',
+          title: 'Email address required',
+          description: 'Could not read your email from your Bluesky account. Please add an email to your Bluesky profile and try again.',
+          icon: 'ph--warning-circle--regular',
+          duration: 15_000,
+        })
+        .pipe(Effect.ignore);
+      return;
+    }
 
-    // Redeem the invitation code with the verified email to mint the hub Account.
+    // Redeem the invitation code with the email to mint the hub Account.
+    const identityDid = yield* Effect.tryPromise(() => createDidFromIdentityKey(identity.identityKey));
     const result = yield* Effect.tryPromise(() =>
       redeemAccountInvitation({
         hubUrl: snapshot.hubUrl,
         email,
+        identityDid,
         identityKey: identity.identityKey.toHex(),
         code: snapshot.code.replace(/-/g, '').toUpperCase(),
       }),
