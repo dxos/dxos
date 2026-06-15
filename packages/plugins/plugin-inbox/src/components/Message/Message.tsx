@@ -23,6 +23,7 @@ import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
+import { Row } from '../Row';
 import { type ViewMode } from '../ViewMode';
 import { useMessageActions } from './useToolbar';
 
@@ -239,40 +240,38 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
-      <Card.Body>
-        {/* Subject row. */}
-        <Card.Row>
-          <Card.Block>
-            {mailbox ? (
-              <Header.StarButton starred={starred} onToggle={handleToggleStar} />
-            ) : (
-              <Icon icon='ph--envelope-open--regular' />
-            )}
-          </Card.Block>
-          <div className='flex flex-col gap-1 overflow-hidden'>
-            <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-            {message.created && (
-              <div className='whitespace-nowrap text-sm text-description'>
-                {formatDateTime(new Date(message.created), new Date())}
-              </div>
-            )}
-          </div>
-        </Card.Row>
+    <Header.Root data-testid='message-header'>
+      {/* Subject row. */}
+      <Card.Row>
+        <Card.Block>
+          {mailbox ? (
+            <Row.Star starred={starred} onToggle={handleToggleStar} />
+          ) : (
+            <Icon icon='ph--envelope-open--regular' />
+          )}
+        </Card.Block>
+        <div className='flex flex-col gap-1 overflow-hidden'>
+          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+          {message.created && (
+            <div className='whitespace-nowrap text-sm text-description'>
+              {formatDateTime(new Date(message.created), new Date())}
+            </div>
+          )}
+        </div>
+      </Card.Row>
 
-        {/* Sender row. */}
-        {/* TODO(burdon): List other To/CC/BCC. */}
-        <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
+      {/* Sender row. */}
+      {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
+      <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} />
 
-        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-        {objects.map((object) => (
-          <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
-        ))}
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <Row.Ref key={Obj.getURI(object).toString()} object={object} />
+      ))}
 
-        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-        <Header.TagsRow tags={tags} />
-      </Card.Body>
-    </Card.Root>
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      <Row.Tags tags={tags} />
+    </Header.Root>
   );
 };
 

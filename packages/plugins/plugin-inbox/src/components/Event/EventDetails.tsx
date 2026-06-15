@@ -11,7 +11,7 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Header } from '../Header';
+import { Row } from '../Row';
 import { EventEditor } from './EventEditor';
 
 // The hub `Meeting` type is owned by plugin-meeting; reference its typename by string so plugin-inbox
@@ -82,7 +82,7 @@ export const EventDetails = ({
       {title === 'heading' && (
         <Card.Row>
           <Card.Block>
-            <Header.StarButton starred={starred} onToggle={onToggleStar} />
+            <Row.Star starred={starred} onToggle={onToggleStar} />
           </Card.Block>
           <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
@@ -100,13 +100,13 @@ export const EventDetails = ({
       {title === 'text' && (
         <Card.Row>
           <Card.Block>
-            <Header.StarButton starred={starred} onToggle={onToggleStar} />
+            <Row.Star starred={starred} onToggle={onToggleStar} />
           </Card.Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}
 
-      <Header.DateRow start={new Date(data.startDate)} end={new Date(data.endDate)} />
+      <Row.Date start={new Date(data.startDate)} end={new Date(data.endDate)} />
 
       {description && data.description && (
         <Card.Row>
@@ -115,7 +115,13 @@ export const EventDetails = ({
       )}
 
       {attendees.map((attendee, index) => (
-        <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
+        <Row.Person
+          key={attendee.email ?? index}
+          actor={attendee}
+          role='attendee'
+          db={db}
+          onContactCreate={onContactCreate}
+        />
       ))}
     </>
   );

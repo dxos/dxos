@@ -102,10 +102,10 @@ export const WithMessages: Story = {
   },
 };
 
-export const WithThreads: Story = {
+export const WithConversations: Story = {
   args: {
     id: 'story',
-    threads: true,
+    conversations: true,
     count: 100,
     options: {
       threads: 10,

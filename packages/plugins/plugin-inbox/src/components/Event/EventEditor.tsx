@@ -14,7 +14,7 @@ import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Header } from '../Header';
+import { Row } from '../Row';
 
 export type EventEditorProps = {
   event: EventType.Event;
