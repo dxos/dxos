@@ -84,4 +84,16 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
    */
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;
+
+  /**
+   * Synchronous working-set lookup of a previously-loaded item by id. Does not perform IO.
+   * Used by the reference resolver's working-set probe.
+   */
+  getCachedObjectById(id: EntityId): T | undefined;
+
+  /**
+   * Begin periodically refreshing the queue from the server, emitting {@link subscribe} on change.
+   * @returns Function that stops polling.
+   */
+  beginPolling(): () => void;
 }

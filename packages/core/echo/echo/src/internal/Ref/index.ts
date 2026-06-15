@@ -4,3 +4,4 @@
 
 export * from './ref';
 export * from './ref-array';
+export * from './strong-deps';
