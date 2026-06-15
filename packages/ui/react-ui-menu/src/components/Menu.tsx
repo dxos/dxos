@@ -70,12 +70,7 @@ const MenuDropdownContext = createContext<MenuDropdownContextValue>({
 const DEFAULT_PRIORITY = 100;
 
 const sortMenuItems = (items: MenuItems[]) =>
-  [...items].sort((a, b) => {
-    if (a.priority !== b.priority) {
-      return a.priority - b.priority;
-    }
-    return a.id.localeCompare(b.id);
-  });
+  [...items].sort((a, b) => (a.priority !== b.priority ? a.priority - b.priority : a.id.localeCompare(b.id)));
 
 type MenuProviderProps = PropsWithChildren<Partial<MenuContextValue>>;
 

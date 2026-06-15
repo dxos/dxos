@@ -4,6 +4,7 @@
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -558,3 +559,17 @@ export type DocumentTitleData<Subject = unknown, Props extends {} = {}> = {
 export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = DocumentTitleData<Subject, Props> & {
   role?: 'document-title' | (string & {});
 };
+
+/**
+ * Spy filter: logs the filter's bindings and data to the console.
+ */
+export const spyFilter = <TData>(label: string, filter: Surface.Filter<TData>): Surface.Filter<TData> => ({
+  bindings: filter.bindings.map((binding) => ({
+    role: binding.role,
+    guard: (data: unknown) => {
+      const result = binding.guard(data);
+      log.info(label, { role: binding.role, result, data });
+      return result;
+    },
+  })),
+});

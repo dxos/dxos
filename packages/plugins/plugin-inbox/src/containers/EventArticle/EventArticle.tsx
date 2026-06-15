@@ -94,12 +94,11 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
         role={role}
         toolbar={
           <Event.Toolbar
-            alwaysActive
             graph={graph}
             editing={draft}
+            saveDisabled={!integration}
             onOpen={calendar ? handleOpen : undefined}
             onSave={draft ? handleSave : undefined}
-            saveDisabled={!integration}
             onDelete={calendar ? handleDelete : undefined}
           />
         }

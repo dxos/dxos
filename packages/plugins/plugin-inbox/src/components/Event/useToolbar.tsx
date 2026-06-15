@@ -55,22 +55,7 @@ export const useEventToolbarActions = ({
         .subgraph(
           viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
         )
-        // Actions other plugins contribute onto the event node (e.g. plugin-meeting's create/open meeting).
-        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }))
         .separator()
-        .subgraph(
-          onSave &&
-            ((b) =>
-              b.action(
-                'save',
-                {
-                  label: ['event-toolbar-save.menu', { ns: meta.id }],
-                  icon: 'ph--cloud-arrow-up--regular',
-                  disabled: saveDisabled,
-                },
-                onSave,
-              )),
-        )
         .subgraph(
           onDelete &&
             ((b) =>
@@ -83,7 +68,22 @@ export const useEventToolbarActions = ({
                   variant: 'dropdownMenu',
                   caretDown: false,
                 },
-                (group) => deleteAction(group, { ns: meta.id, labelKey: 'event-toolbar-delete.menu', onDelete }),
+                (group) => [
+                  // Actions other plugins contribute onto the event node (e.g. plugin-meeting's create/open meeting).
+                  graphActions(graph, get, nodeId, { filter: isToolbarAction }),
+                  onSave &&
+                    b.action(
+                      'save',
+                      {
+                        label: ['event-toolbar-save.menu', { ns: meta.id }],
+                        icon: 'ph--cloud-arrow-up--regular',
+                        disabled: saveDisabled,
+                      },
+                      onSave,
+                    ),
+
+                  deleteAction(group, { ns: meta.id, labelKey: 'event-toolbar-delete.menu', onDelete }),
+                ],
               )),
         )
         .build(),

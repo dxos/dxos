@@ -85,13 +85,15 @@ export const EventDetails = ({
           </Card.Block>
           <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
-            <IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--handshake--regular'
-              label={Obj.getLabel(meeting) ?? 'Meeting'}
-              onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
-            />
+            <Card.Block end>
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--handshake--regular'
+                label={Obj.getLabel(meeting) ?? 'Meeting'}
+                onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
+              />
+            </Card.Block>
           )}
         </Card.Row>
       )}
