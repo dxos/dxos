@@ -130,6 +130,26 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       return currentId;
     }, [conversationGroups, currentId]);
 
+    // Tiles are keyed by conversation id in conversation mode, so map selected message ids up to their
+    // enclosing conversation — otherwise controlled `aria-selected`/`dx-selected` never matches.
+    const effectiveSelectedIds = useMemo(() => {
+      if (!conversationGroups || !selectedIds) {
+        return selectedIds;
+      }
+      const mapped = new Set<string>();
+      for (const selectedId of selectedIds) {
+        let resolved = selectedId;
+        for (const [conversationId, conversationMessages] of conversationGroups) {
+          if (conversationId === selectedId || conversationMessages.some((message) => message.id === selectedId)) {
+            resolved = conversationId;
+            break;
+          }
+        }
+        mapped.add(resolved);
+      }
+      return mapped;
+    }, [conversationGroups, selectedIds]);
+
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
         if (id) {
@@ -163,7 +183,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           withFocus
           currentId={effectiveCurrentId}
           onCurrentChange={handleCurrentChange}
-          selectedIds={selectedIds}
+          selectedIds={effectiveSelectedIds}
           onSelectionChange={handleSelectionChange}
         >
           <ScrollArea.Root padding centered thin>

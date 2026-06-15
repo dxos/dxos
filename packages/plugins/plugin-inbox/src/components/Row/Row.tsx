@@ -73,7 +73,7 @@ const AnchorIconButton = ({
         new DxAnchorActivate({
           trigger: buttonRef.current,
           dxn: value.toString(),
-          label: 'never',
+          label,
           kind: 'card',
           title,
         }),
@@ -81,7 +81,7 @@ const AnchorIconButton = ({
     } else {
       onClick?.();
     }
-  }, [value, title, onClick]);
+  }, [value, label, title, onClick]);
 
   return (
     <IconButton
@@ -285,12 +285,16 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
             key={tag.id}
             palette={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onTagClick?.(tag.label ?? tag.id);
-            }}
+            onClick={
+              onTagClick
+                ? (event) => {
+                    event.stopPropagation();
+                    onTagClick(tag.label ?? tag.id);
+                  }
+                : undefined
+            }
           >
-            {tag.label}
+            {tag.label ?? tag.id}
           </Tag>
         ))}
       </div>

@@ -123,21 +123,36 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           ),
         )
         .separator()
-        .action(
-          'start-call',
-          {
-            label: ['start-call.label', { ns: meta.id }],
-            icon: 'ph--phone-call--regular',
-          },
-          handleStartCall,
-        )
-        .action(
-          'generate-summary',
-          {
-            label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
-            icon: 'ph--book-open-text--regular',
-          },
-          handleGenerateSummary,
+        .subgraph((b) =>
+          b.group(
+            'more',
+            // TODO(burdon): Factor out common menu.
+            {
+              label: ['event-toolbar-more.menu', { ns: meta.id }],
+              icon: 'ph--dots-three-vertical--regular',
+              iconOnly: true,
+              variant: 'dropdownMenu',
+              caretDown: false,
+            },
+            (group) => [
+              group.action(
+                'start-call',
+                {
+                  label: ['start-call.label', { ns: meta.id }],
+                  icon: 'ph--phone-call--regular',
+                },
+                handleStartCall,
+              ),
+              group.action(
+                'generate-summary',
+                {
+                  label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
+                  icon: 'ph--book-open-text--regular',
+                },
+                handleGenerateSummary,
+              ),
+            ],
+          ),
         )
         .build(),
     [tab, hasSummary, transportProvider, handleGenerateSummary, handleStartCall],

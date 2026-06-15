@@ -56,35 +56,39 @@ export const useEventToolbarActions = ({
           viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
         )
         .separator()
-        .subgraph(
-          onDelete &&
-            ((b) =>
-              b.group(
-                'more',
-                {
-                  label: ['event-toolbar-more.menu', { ns: meta.id }],
-                  icon: 'ph--dots-three-vertical--regular',
-                  iconOnly: true,
-                  variant: 'dropdownMenu',
-                  caretDown: false,
-                },
-                (group) => [
-                  // Actions other plugins contribute onto the event node (e.g. plugin-meeting's create/open meeting).
-                  graphActions(graph, get, nodeId, { filter: isToolbarAction }),
-                  onSave &&
-                    b.action(
-                      'save',
-                      {
-                        label: ['event-toolbar-save.menu', { ns: meta.id }],
-                        icon: 'ph--cloud-arrow-up--regular',
-                        disabled: saveDisabled,
-                      },
-                      onSave,
-                    ),
-
-                  deleteAction(group, { ns: meta.id, labelKey: 'event-toolbar-delete.menu', onDelete }),
-                ],
-              )),
+        .subgraph((b) =>
+          b.group(
+            'more',
+            // TODO(burdon): Factor out common menu.
+            {
+              label: ['event-toolbar-more.menu', { ns: meta.id }],
+              icon: 'ph--dots-three-vertical--regular',
+              iconOnly: true,
+              variant: 'dropdownMenu',
+              caretDown: false,
+            },
+            (group) => [
+              // Actions other plugins contribute onto the event node (e.g. plugin-meeting's create/open meeting).
+              graphActions(graph, get, nodeId, { filter: isToolbarAction }),
+              // TODO(burdon): Clean-up common actions?
+              onSave &&
+                group.action(
+                  'save',
+                  {
+                    label: ['event-toolbar-save.menu', { ns: meta.id }],
+                    icon: 'ph--cloud-arrow-up--regular',
+                    disabled: saveDisabled,
+                  },
+                  onSave,
+                ),
+              onDelete &&
+                deleteAction(group, {
+                  ns: meta.id,
+                  labelKey: 'event-toolbar-delete.menu',
+                  onDelete,
+                }),
+            ],
+          ),
         )
         .build(),
     [graph, nodeId, viewMode, setViewMode, onOpen, onSave, saveDisabled, onDelete, editing],

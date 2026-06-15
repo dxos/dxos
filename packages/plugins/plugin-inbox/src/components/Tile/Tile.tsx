@@ -51,7 +51,7 @@ TileRoot.displayName = 'Tile.Root';
 type TileHeaderProps = {
   /** Header title content (rendered in a flex row). */
   title: ReactNode;
-  /** Whether the tile is starred; the star toggle renders only when `onToggleStar` is set. */
+  /** Whether the tile is starred. `Row.Star` renders the button only when `onToggleStar` is set. */
   starred?: boolean;
   onToggleStar?: () => void;
   /** Render the trailing `Card.Menu` action slot. */

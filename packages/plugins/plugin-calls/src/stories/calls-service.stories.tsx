@@ -15,14 +15,14 @@ import { Button } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
-const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
-
 import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from '#hooks';
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from '../calls';
 
+const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
+
 // TODO(burdon): Simplify test setup.
-const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
+const usePushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const config = useConfig();
   const callsConfig = {
     iceServers: config.get('runtime.services.ice'),
@@ -36,7 +36,6 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const [pulledTrack, setPulledTrack] = useState<MediaStreamTrack | undefined>(undefined);
   const hadRun = useRef(false);
 
-  const deps: any[] = [];
   // Push/pull video stream track to cloudflare.
   useEffect(() => {
     if (hadRun.current || !mediaStreamTrack || !peerPush || !peerPull) {
@@ -45,7 +44,6 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
     hadRun.current = true;
     const ctx = Context.default();
     log.info('setting up ctx', { ctx, mediaStreamTrack, peerPush, peerPull });
-    deps.push([ctx, mediaStreamTrack, peerPush, peerPull]);
     ctx.onDispose(() => {
       log.info('disposing ctx', {});
     });
@@ -120,7 +118,7 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
     performance.mark('rePullVideo:end');
     const rePullTime = performance.measure('rePullVideo', 'rePullVideo:begin', 'rePullVideo:end').duration;
     setMetrics((prev) => ({ ...prev, 'time to re-pull video [ms]': Math.round(rePullTime) }));
-  }, [peerPull, trackInfo.current, pullCtx.current, pulledTrack]);
+  }, [peerPull, pulledTrack]);
 
   return {
     pulledTrack,
@@ -138,7 +136,7 @@ const DefaultStory = ({ source }: DefaultStoryProps) => {
   const pullVideoElement = useRef<HTMLVideoElement>(null);
   // Get video stream track.
   const videoStreamTrack = useVideoStreamTrack(pushVideoElement, source);
-  const { pulledTrack, rePullTrack, metrics } = pushAndPullTrack(videoStreamTrack);
+  const { pulledTrack, rePullTrack, metrics } = usePushAndPullTrack(videoStreamTrack);
   const hadRun = useRef(false);
 
   // Push/pull video stream track to cloudflare.
@@ -181,7 +179,7 @@ const meta = {
       config: new Config({
         runtime: {
           services: {
-            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+            ice: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
           },
         },
       }),
@@ -205,7 +203,7 @@ export const Default: Story = {
 export const InaudibleAudioStreamTrack = {
   render: () => {
     const audioStreamTrack = useInaudibleAudioStreamTrack();
-    const { rePullTrack, metrics } = pushAndPullTrack(audioStreamTrack);
+    const { rePullTrack, metrics } = usePushAndPullTrack(audioStreamTrack);
 
     return (
       <div className='flex flex-col gap-4 items-center'>
@@ -219,11 +217,11 @@ export const InaudibleAudioStreamTrack = {
 export const BlackVideoStreamTrack = {
   render: () => {
     const videoStreamTrack = useBlackCanvasStreamTrack();
-    const { rePullTrack, metrics } = pushAndPullTrack(videoStreamTrack);
+    const { rePullTrack, metrics } = usePushAndPullTrack(videoStreamTrack);
     return (
       <div className='flex flex-col gap-4 items-center'>
         <JsonHighlighter data={metrics} />
-        <Button onClick={rePullTrack}>Re-pull audio</Button>
+        <Button onClick={rePullTrack}>Re-pull video</Button>
       </div>
     );
   },
