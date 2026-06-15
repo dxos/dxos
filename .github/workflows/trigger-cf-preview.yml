@@ -30,7 +30,13 @@ jobs:
               exit 0
             fi
             if [ "$status" = "failure" ]; then
-              echo "$response" | jq '.result.latest_stage'
+              echo "=== Full deployment response ==="
+              echo "$response" | jq '.result | {url, stages: .stages, build_config: .build_config, deployment_trigger: .deployment_trigger}'
+              echo "=== Fetching build logs ==="
+              curl -s \
+                "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench/deployments/${DEPLOY_ID}/history/logs" \
+                -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+                | jq -r '.result.data[-50:][].line' 2>/dev/null || echo "No structured logs"
               exit 1
             fi
             sleep 15
