@@ -10,6 +10,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, RootCollectionAnnotation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -60,8 +61,7 @@ import {
 import { meta } from '#meta';
 import { DebugCapabilities, type Settings, Devtools } from '#types';
 
-// TODO(burdon): Move to config.
-const MCP_SERVER_URL = 'https://introspect-service-labs.dxos.workers.dev/mcp';
+const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
 
 type SpaceDebug = {
   type: string;

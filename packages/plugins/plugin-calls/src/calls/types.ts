@@ -10,11 +10,6 @@ import {
   UserStateSchema,
 } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
-/**
- * Endpoint to the calls service.
- */
-export const CALLS_URL = 'https://calls-service.dxos.workers.dev';
-
 export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
 
 export type ActivityState = buf.MessageInitShape<typeof ActivitySchema>;

@@ -8,8 +8,6 @@ export const SHORTCUTS_DIALOG = `${meta.id}.ShortcutsDialog`;
 
 export const DXOS_GUILD_ID = '837138313172353095';
 
-export const DISCORD_SERVICE_URL = 'https://discord-service.dxos.workers.dev';
-
 /** GitHub repo the prefilled new-issue URL targets. Matches HelpMenu's GITHUB_URL. */
 export const GITHUB_NEW_ISSUE_URL = 'https://github.com/dxos/dxos/issues/new';
 

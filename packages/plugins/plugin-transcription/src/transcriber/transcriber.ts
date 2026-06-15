@@ -5,6 +5,7 @@
 import { WaveFile } from 'wavefile';
 
 import { DeferredTask, Trigger } from '@dxos/async';
+import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -12,11 +13,6 @@ import { type ContentBlock } from '@dxos/types';
 
 import { mergeFloat64Arrays } from '../util';
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';
-
-/**
- * Endpoint to the calls service.
- */
-const DEFAULT_TRANSCRIPTION_URL = 'https://calls-service.dxos.workers.dev';
 
 export type WhisperWord = {
   word: string;
@@ -221,7 +217,7 @@ export class Transcriber extends Resource {
       segments = await this._transcribeFn(audio);
     } else {
       // TODO(burdon): Create separate endpoint?
-      const endpoint = this._config.endpoint ?? DEFAULT_TRANSCRIPTION_URL;
+      const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
       const response = await fetch(`${endpoint}/transcribe`, {
         method: 'POST',
         body: JSON.stringify({ audio }),

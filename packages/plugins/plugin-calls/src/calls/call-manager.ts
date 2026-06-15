@@ -6,6 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
@@ -13,7 +14,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
-import { type ActivityState, CALLS_URL, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
+import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
 export type GlobalState = {
   call: CallState;
@@ -217,7 +218,7 @@ export class CallManager extends Resource {
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
       iceServers: this._client.config.get('runtime.services.ice'),
-      apiBase: `${CALLS_URL}/api/calls`,
+      apiBase: `${getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls)}/api/calls`,
     });
   }
 
