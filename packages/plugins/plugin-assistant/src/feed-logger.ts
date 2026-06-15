@@ -143,7 +143,9 @@ export class QueueLogger implements SequenceLogger {
 
   private _appendToInvocationFeed(invocationId: EntityId, items: any[]): Promise<void> {
     const invocationFeed = this._invocationFeeds.get(invocationId);
-    invariant(invocationFeed, `No trace feed found for invocationId: ${invocationId}`);
+    if (!invocationFeed) {
+      return Promise.resolve();
+    }
     return this._space.db.appendToFeed(invocationFeed, items);
   }
 }
