@@ -684,6 +684,17 @@ catalog:
   zone.js: ^0.15.0
   zx: ^8.8.5
 
+supportedArchitectures:
+  os:
+    - current
+    - linux
+  cpu:
+    - current
+    - x64
+  libc:
+    - current
+    - glibc
+
 onlyBuiltDependencies:
   - '@bufbuild/buf'
   - '@moonrepo/cli'
