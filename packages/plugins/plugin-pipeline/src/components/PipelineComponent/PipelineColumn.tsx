@@ -8,8 +8,8 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
@@ -125,20 +125,17 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
           <Focus.Item asChild>
             <Card.Root classNames={classNames} ref={composedRef}>
               <Card.Header>
-                <Card.Icon icon={icon} />
+                <Card.Block>
+                  <Icon icon={icon} />
+                </Card.Block>
                 <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.IconBlock>
+                <Card.Block end>
                   <Menu.Trigger asChild>
-                    <Toolbar.IconButton
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--dots-three-vertical--regular'
-                      label='Actions'
-                    />
+                    <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                   </Menu.Trigger>
                   <Menu.Content />
-                </Card.IconBlock>
+                </Card.Block>
               </Card.Header>
               <Card.Body>
                 <Item {...itemProps} />

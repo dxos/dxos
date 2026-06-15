@@ -7,7 +7,7 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, us
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { hues, osTranslations } from '@dxos/ui-theme';
 
@@ -124,63 +124,63 @@ export const SelectOptionField = ({
       <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
       <div>
         {options && (
-          <List.Root
+          <OrderedList.Root<SelectOption>
             items={options}
             isItem={(_item) => true}
+            getId={(option) => option.id}
             onMove={readonly ? undefined : handleMove}
             readonly={!!readonly}
           >
             {({ items }) => (
-              <div role='list' className='w-full overflow-auto'>
+              <OrderedList.Content classNames='w-full overflow-auto'>
                 {items?.map((item) => (
-                  <div key={item.id}>
-                    <List.Item
-                      role='button'
-                      item={item}
-                      classNames='flex flex-col cursor-pointer rounded-xs dx-hover'
-                      aria-expanded={selected === item.id}
-                    >
-                      <div className='flex items-center'>
-                        <List.ItemDragHandle disabled={!!readonly} />
-                        <List.ItemTitle onClick={() => handleClick(item.id)} classNames='flex-1'>
-                          {/* TODO(ZaymonFC): Move spacer into Tag component. */}
-                          <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
-                        </List.ItemTitle>
-                        <ToggleIconButton
-                          iconOnly
-                          variant='ghost'
-                          active={selected === item.id}
-                          icon='ph--caret-right--regular'
-                          label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
-                          onClick={() => handleClick(item.id)}
-                        />
+                  <OrderedList.Item
+                    key={item.id}
+                    id={item.id}
+                    item={item}
+                    canDrag={!readonly}
+                    classNames='flex flex-col cursor-pointer rounded-xs dx-hover'
+                  >
+                    <div className='flex items-center'>
+                      <OrderedList.DragHandle />
+                      {/* TODO(ZaymonFC): Move spacer into Tag component. */}
+                      <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
+                        <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
                       </div>
-                      {selected === item.id && (
-                        <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
-                          <Input.Label classNames='text-sm'>{t('select-option.label')}</Input.Label>
-                          <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
-                            <Input.TextInput
-                              disabled={!!readonly}
-                              placeholder={t('select-option-label.placeholder')}
-                              ref={selected === item.id ? inputRef : undefined}
-                              value={item.title}
-                              onChange={handleTitleChange(item.id)}
-                              onKeyDown={handleKeyDown}
-                              classNames='flex-1'
-                            />
-                            <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
-                            <IconButton
-                              disabled={!!readonly}
-                              icon='ph--trash--fill'
-                              iconOnly
-                              label={t('select-option-delete.button')}
-                              onClick={() => handleDelete(item.id)}
-                            />
-                          </div>
+                      <ToggleIconButton
+                        iconOnly
+                        variant='ghost'
+                        active={selected === item.id}
+                        icon='ph--caret-right--regular'
+                        label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
+                        onClick={() => handleClick(item.id)}
+                      />
+                    </div>
+                    {selected === item.id && (
+                      <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
+                        <Input.Label classNames='text-sm'>{t('select-option.label')}</Input.Label>
+                        <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
+                          <Input.TextInput
+                            disabled={!!readonly}
+                            placeholder={t('select-option-label.placeholder')}
+                            ref={selected === item.id ? inputRef : undefined}
+                            value={item.title}
+                            onChange={handleTitleChange(item.id)}
+                            onKeyDown={handleKeyDown}
+                            classNames='flex-1'
+                          />
+                          <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
+                          <IconButton
+                            disabled={!!readonly}
+                            icon='ph--trash--fill'
+                            iconOnly
+                            label={t('select-option-delete.button')}
+                            onClick={() => handleDelete(item.id)}
+                          />
                         </div>
-                      )}
-                    </List.Item>
-                  </div>
+                      </div>
+                    )}
+                  </OrderedList.Item>
                 ))}
                 <IconButton
                   variant='ghost'
@@ -190,9 +190,9 @@ export const SelectOptionField = ({
                   disabled={!!readonly}
                   classNames='w-full'
                 />
-              </div>
+              </OrderedList.Content>
             )}
-          </List.Root>
+          </OrderedList.Root>
         )}
       </div>
     </Input.Root>

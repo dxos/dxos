@@ -136,7 +136,14 @@ export default Capability.makeModule(() =>
           if (!data?.subject || !data?.companionTo) {
             return null;
           }
-          return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
+          return (
+            <EventArticle
+              role={role}
+              subject={data.subject}
+              attendableId={data.attendableId}
+              companionTo={data.companionTo}
+            />
+          );
         },
       }),
       Surface.create({

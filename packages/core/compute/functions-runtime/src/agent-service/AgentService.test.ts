@@ -12,7 +12,7 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 import { expect } from 'vitest';
 
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -407,6 +407,10 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
     agent: { systemPrompt: ALARM_SYSTEM_PROMPT },
     aiServicePreset: 'edge-remote',
     model: 'ai.claude.model.claude-opus-4-6',
+    // Alarm fire times are derived from the TestClock and vary between generation and replay runs
+    // (the number of TestClock advances before the tool executes differs). Normalizing ISO timestamps
+    // so any stored conversation matches regardless of the exact millisecond value.
+    dynamicValuePatterns: [MemoizedLanguageModel.ISO_TIMESTAMP_PATTERN],
   });
 
   describe('alarms', () => {

@@ -3,19 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Expando } from '@dxos/schema';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import {
   DefaultStory,
   createExpando,
@@ -114,11 +112,25 @@ export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   },
 };
 
+export const _PersonNoImage: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: PersonCard,
+    createObject: createPerson,
+  },
+};
+
 export const _Organization: StoryObj<typeof DefaultStory<Organization.Organization>> = {
   args: {
     Component: OrganizationCard,
     createObject: createOrganization,
     image: true,
+  },
+};
+
+export const _OrganizationNoImage: StoryObj<typeof DefaultStory<Organization.Organization>> = {
+  args: {
+    Component: OrganizationCard,
+    createObject: createOrganization,
   },
 };
 
@@ -142,36 +154,5 @@ export const _Expando: StoryObj<typeof DefaultStory<Expando.Expando>> = {
   args: {
     Component: ExpandoCard,
     createObject: createExpando,
-  },
-};
-
-export const _Json = {
-  render: () => {
-    const data = {
-      subject: {
-        id: random.string.uuid(),
-        name: random.person.fullName(),
-        email: random.internet.email(),
-        tags: [random.lorem.word(), random.lorem.word(), random.lorem.word()],
-        nested: {
-          count: random.number.int({ max: 100 }),
-          active: random.datatype.boolean(),
-        },
-      },
-    };
-
-    return (
-      <div className='flex justify-center p-16'>
-        <div className='dx-card-min-width dx-card-max-width'>
-          <Card.Root>
-            <Card.Header>
-              <Card.IconBlock />
-              <Card.Title>JSON</Card.Title>
-            </Card.Header>
-            <JsonCard data={data} />
-          </Card.Root>
-        </div>
-      </div>
-    );
   },
 };

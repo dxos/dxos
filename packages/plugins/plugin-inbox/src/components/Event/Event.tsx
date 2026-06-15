@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { Card, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
@@ -63,21 +63,25 @@ const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
 type EventToolbarProps = Pick<
   UseEventToolbarActionsProps,
-  'onNoteCreate' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete'
+  'graph' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
 > &
   Pick<MenuRootProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
-  ({ alwaysActive, onNoteCreate, onOpen, onSave, saveDisabled, onDelete, ...props }, forwardedRef) => {
-    const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
+  ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
+    const { attendableId, event, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
+    // Contributed (graph) actions hang off the event's own node (keyed by its URI), not `attendableId`
+    // — a companion plank's `attendableId` is the primary's id (the calendar), not the event.
     const menuActions = useEventToolbarActions({
+      graph,
+      nodeId: Obj.getURI(event).toString(),
       viewMode,
       setViewMode,
-      onNoteCreate,
       onOpen,
       onSave,
       saveDisabled,
       onDelete,
+      editing,
     });
 
     return (
@@ -119,9 +123,12 @@ type EventHeaderProps = {
   /** When true, the title and date range become editable (used for draft events). */
   editable?: boolean;
   onContactCreate?: (actor: Actor.Actor) => void;
+  onOpenObject?: (object: Obj.Unknown) => void;
+  starred?: boolean;
+  onToggleStar?: () => void;
 };
 
-const EventHeader = ({ db, editable, onContactCreate }: EventHeaderProps) => {
+const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onToggleStar }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
@@ -132,7 +139,16 @@ const EventHeader = ({ db, editable, onContactCreate }: EventHeaderProps) => {
       classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-1')}
     >
       <Card.Body>
-        <EventDetails event={event} title='heading' editable={editable} db={db} onContactCreate={onContactCreate} />
+        <EventDetails
+          event={event}
+          title='heading'
+          editable={editable}
+          db={db}
+          onContactCreate={onContactCreate}
+          onOpenObject={onOpenObject}
+          starred={starred}
+          onToggleStar={onToggleStar}
+        />
       </Card.Body>
     </Card.Root>
   );
@@ -158,9 +174,13 @@ const EventBody = ({ classNames, editable }: EventBodyProps) => {
     return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
   }
 
-  return event.description ? (
+  if (!event.description) {
+    return null;
+  }
+
+  return (
     <MarkdownViewer content={event.description} markdown={viewMode !== 'plain'} classNames={mx('p-3', classNames)} />
-  ) : null;
+  );
 };
 
 EventBody.displayName = EVENT_BODY_NAME;

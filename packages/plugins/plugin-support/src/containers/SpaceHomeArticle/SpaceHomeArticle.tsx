@@ -16,7 +16,7 @@ import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Carousel, Icon, IconButton, Panel, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
@@ -361,7 +361,9 @@ const SuggestionCards = ({ space }: SpaceScopedProps) => {
             onClick={() => handleRunPrompt(prompt)}
           >
             <Card.Header>
-              <Toolbar.IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
+              <Card.Block>
+                <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
+              </Card.Block>
               <Card.Title>{prompt}</Card.Title>
             </Card.Header>
           </Card.Root>
@@ -399,7 +401,9 @@ const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Icon icon={icon} classNames={iconStyles?.text} />
+        <Card.Block>
+          <Icon icon={icon} classNames={iconStyles?.text} />
+        </Card.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>
