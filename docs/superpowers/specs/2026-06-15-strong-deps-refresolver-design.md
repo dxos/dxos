@@ -23,8 +23,8 @@ Two layers participate, but only one is general:
   `!EID.isLocal(dep)`.
 
 **Consequence.** Feed/queue objects (resolved via `QueueFactory`, not the Automerge directory),
-cross-space objects, and registry types (DXN-form) can be *read* through the resolver but can never
-be *satisfied* as strong deps. So a relation cannot safely point its `source` / `target` at a feed
+cross-space objects, and registry types (DXN-form) can be _read_ through the resolver but can never
+be _satisfied_ as strong deps. So a relation cannot safely point its `source` / `target` at a feed
 object or an object in another space, because the query layer would surface the relation before the
 endpoint is in the working set, breaking the synchronous `resolveSync(..., false)` assertion.
 
@@ -68,10 +68,10 @@ interface RefResolver {
 
 interface RefResolverRequest {
   readonly state: 'pending' | 'requesting' | 'ready' | 'unavailable';
-  readonly stateChanged: Event<void>;          // @dxos/async Event
-  getResult(): Entity.Unknown | undefined;      // sync snapshot; defined iff state === 'ready'
-  wait(): Promise<Entity.Unknown | undefined>;  // settles when state ∈ {ready, unavailable}
-  abort(): void;                                // refcount-- on the shared op (see Coalescing)
+  readonly stateChanged: Event<void>; // @dxos/async Event
+  getResult(): Entity.Unknown | undefined; // sync snapshot; defined iff state === 'ready'
+  wait(): Promise<Entity.Unknown | undefined>; // settles when state ∈ {ready, unavailable}
+  abort(): void; // refcount-- on the shared op (see Coalescing)
 }
 ```
 
@@ -92,8 +92,8 @@ interface RefResolverRequest {
     escalated);
   - `ready → requesting`/`unavailable` (regression only when a closure member regresses — e.g. a dep
     doc is evicted/deleted; reactive-correctness edge, not the common path).
-  We do **not** claim global monotonicity (a `network` request can depend on an on-disk object whose
-  state moves), only that `pending` is never re-entered.
+    We do **not** claim global monotonicity (a `network` request can depend on an on-disk object whose
+    state moves), only that `pending` is never re-entered.
 - **`ready` means FULLY USABLE** — the entity's own body **and** its strong-dep closure are
   materialized (see §2). The body-vs-closure split is internal; `requesting` transparently covers "a
   dep is still loading." This matches today's async-resolve behavior (it already routes through the
@@ -112,7 +112,7 @@ interface RefResolverRequest {
 `HypergraphImpl` owns a set of resolution backends, selected by URI kind / space:
 
 - **echo-db backend** (per space) — wraps the existing Automerge doc-loader `pending → requesting →
-  ready/unavailable` body machine.
+ready/unavailable` body machine.
 - **queue backend** (per space) — wraps `QueueFactory` / `queue.getObjectsById`, mapping its
   cached / local / remote tiers onto the `source` ceiling.
 - **registry backend** — in-memory; effectively `working-set`.
@@ -136,8 +136,8 @@ To stay cycle-safe (strong deps form cycles: `A.source→B, B.parent→A`; mutua
 self-referential types), the model keeps two distinct notions and **never lets a node's readiness
 depend recursively on another node's readiness**:
 
-- **Load op** (per-URI, in a backend; the `LoadOp` of §6): materialization of *one* entity's bytes, `pending →
-  requesting → ready/unavailable`. Cycle-free by construction; it never inspects deps.
+- **Load op** (per-URI, in a backend; the `LoadOp` of §6): materialization of _one_ entity's bytes, `pending →
+requesting → ready/unavailable`. Cycle-free by construction; it never inspects deps.
 - **Closure satisfaction** (cycle-aware): a BFS over the strong-dep graph, guarded by a `seen` set,
   asserting that **every reachable node's load op** is `ready`. The walker waits on member **bodies**,
   not on their closure-readiness — so `A ↔ B` cannot deadlock: both bodies load independently, and
@@ -151,7 +151,7 @@ changes.
 
 **All graph-walking lives in `HypergraphImpl`, not `ObjectCore`.** The walker (owned by the
 resolver) owns the BFS, the `seen` set, body-op waiting, and the closure-satisfaction predicate.
-`ObjectCore` (via the store-agnostic extractor, §3) only answers "what are *my* direct strong deps?"
+`ObjectCore` (via the store-agnostic extractor, §3) only answers "what are _my_ direct strong deps?"
 — it contributes edges, never traverses. The old `CoreDatabase._areDepsSatisfied` recursion (which
 carried its own `seen`) is removed, not relocated into `ObjectCore`. The walker needs the strong deps
 of an **arbitrary resolved entity**, not just an `ObjectCore`.
@@ -257,8 +257,8 @@ interface RequestImpl {
   - `unavailable` if the root or any member body is `unavailable`;
   - `ready` if the root and all member bodies are `ready`;
   - else `requesting` / `pending`.
-  Emit `stateChanged` only on change, **deferred to a microtask** (avoids re-entrant listener storms
-  mid-walk).
+    Emit `stateChanged` only on change, **deferred to a microtask** (avoids re-entrant listener storms
+    mid-walk).
 - `getResult()` returns `root.result` iff `state === 'ready'`.
 - `wait()` resolves when `state ∈ {ready, unavailable}`.
 - `abort()` unsubscribes every member and decrements each member op's refcount.
@@ -286,7 +286,7 @@ through unchanged.
 
 As part of this work, **remove `middleware`** and move that canonicalization into the resolver's
 **echo-db backend** (or `DatabaseImpl`), so a resolved persisted stored schema is canonicalized at
-resolution time for *all* callers rather than through a caller-supplied hook. `lookupRef` then just
+resolution time for _all_ callers rather than through a caller-supplied hook. `lookupRef` then just
 sets the standard resolver with no per-call middleware, and `RefResolverOptions` collapses to
 `{ context? }`. The `createRefResolver` JSDoc `// TODO(dmaretskyi): Restructure API: Remove
 middleware.` is resolved by this change.
@@ -319,7 +319,7 @@ relation read path, `json-serializer` (`resolveSchema` / `resolveType` / `resolv
 
 ## Risks / open considerations
 
-- **Walker re-entrancy.** Discovery recursion must consult the op-cache + `seen` *before* recursing,
+- **Walker re-entrancy.** Discovery recursion must consult the op-cache + `seen` _before_ recursing,
   and `stateChanged` must be deferred (microtask), or closure discovery can re-enter listeners
   mid-pass.
 - **Strong-dep extraction for non-`ObjectCore` entities.** Queue items and cross-space objects must

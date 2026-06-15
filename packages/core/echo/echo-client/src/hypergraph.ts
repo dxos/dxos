@@ -185,7 +185,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
-        const root = this.#loadOpTable.acquire(uri, source);
+        const root = this.#loadOpTable.acquire(this.#qualifyUri(uri, context), source);
         return new RequestImpl(this.#loadOpTable, root, source);
       },
 
@@ -250,11 +250,39 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
+   * Qualify a context-local `echo:` EID with the resolution context's space so it routes to (and
+   * coalesces in) the owning space. Registry (`dxn:`) and already-qualified URIs pass through.
+   */
+  #qualifyUri(uri: URI.URI, context: Hypergraph.RefResolutionContext): URI.URI {
+    const eid = EID.tryParse(uri);
+    if (!eid || EID.getSpaceId(eid) != null) {
+      return uri;
+    }
+    const entityId = EID.getEntityId(eid);
+    return entityId != null && context.space != null ? EID.make({ spaceId: context.space, entityId }) : uri;
+  }
+
+  /**
+   * Qualify each space-less strong-dep URI with the space the depending entity was found in, so a
+   * same-space relative ref routes to (and coalesces in) that space. Cross-space refs are stored
+   * absolute (by the write path) and pass through unchanged; `dxn:` URIs are left as-is.
+   */
+  #absolutizeDeps(deps: URI.URI[], spaceId: SpaceId): URI.URI[] {
+    return deps.map((dep) => {
+      const eid = EID.tryParse(dep);
+      if (!eid || EID.getSpaceId(eid) != null) {
+        return dep;
+      }
+      const entityId = EID.getEntityId(eid);
+      return entityId != null ? EID.make({ spaceId, entityId }) : dep;
+    });
+  }
+
+  /**
    * Route a URI to its resolution backend: registry for `dxn:`, a single-space backend for a
    * space-qualified `echo:` EID, and a cross-space backend for a space-less (local) `echo:` EID.
    * Entity ids are globally unique, so a local EID is resolvable by searching every registered
-   * space — this is how a relation/parent endpoint stored space-less (created before its holder
-   * joined a db) resolves cross-space.
+   * space — a defensive fallback for any ref not qualified by {@link qualifyUri}/{@link absolutizeDeps}.
    */
   #routeBackend(uri: URI.URI): LoadBackend | undefined {
     if (DXN.isDXN(uri)) {
@@ -325,7 +353,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         if (core != null) {
           const obj = db.getObjectById(entityId, { deleted: true });
           if (obj != null) {
-            return { result: obj as AnyProperties, strongDeps: core.getStrongDependencies() };
+            return {
+              result: obj as AnyProperties,
+              strongDeps: this.#absolutizeDeps(core.getStrongDependencies(), candidateSpaceId),
+            };
           }
         }
       }
@@ -335,7 +366,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         for (const queue of queueFactory.knownQueues()) {
           const item = queue.getCachedObjectById(entityId);
           if (item != null) {
-            return { result: item as AnyProperties, strongDeps: getStrongDependencies(item) };
+            return {
+              result: item as AnyProperties,
+              strongDeps: this.#absolutizeDeps(getStrongDependencies(item), candidateSpaceId),
+            };
           }
         }
       }
@@ -404,7 +438,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
             if (!cancelled && core != null) {
               const obj = db.getObjectById(entityId, { deleted: true });
               if (obj != null) {
-                finishReady(obj as AnyProperties, core.getStrongDependencies());
+                finishReady(obj as AnyProperties, this.#absolutizeDeps(core.getStrongDependencies(), candidateSpaceId));
                 return;
               }
             }
@@ -426,7 +460,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
               return;
             }
             if (item != null) {
-              finishReady(item as AnyProperties, getStrongDependencies(item));
+              finishReady(item as AnyProperties, this.#absolutizeDeps(getStrongDependencies(item), candidateSpaceId));
               return;
             }
             // Poll known queues so replicated items surface without a fresh request.
@@ -439,7 +473,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
                   queue.subscribe(() => {
                     const cached = queue.getCachedObjectById(entityId);
                     if (cached != null) {
-                      finishReady(cached as AnyProperties, getStrongDependencies(cached));
+                      finishReady(
+                        cached as AnyProperties,
+                        this.#absolutizeDeps(getStrongDependencies(cached), candidateSpaceId),
+                      );
                     }
                   }),
                 );
@@ -462,7 +499,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     };
   }
 
-  async #searchQueues(spaceId: SpaceId, entityId: EntityId, queueFactory: QueueFactory): Promise<Entity.Unknown | undefined> {
+  async #searchQueues(
+    spaceId: SpaceId,
+    entityId: EntityId,
+    queueFactory: QueueFactory,
+  ): Promise<Entity.Unknown | undefined> {
     for (const queue of queueFactory.knownQueues()) {
       const cached = queue.getCachedObjectById(entityId);
       if (cached != null) {

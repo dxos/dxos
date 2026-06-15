@@ -462,6 +462,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
+    // Bind relation endpoints with the now-known database before the link cache is flushed: a
+    // same-space endpoint becomes a relative URI, a cross-space endpoint an absolute one.
+    EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
     return obj;

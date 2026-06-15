@@ -68,7 +68,8 @@ export const getStrongDependencies = (entity: unknown): URI.URI[] => {
     return [];
   }
   const props = entity as Record<symbol, unknown>;
-  const kind = props[RelationSourceDXNId] != null || props[RelationTargetDXNId] != null ? EntityKind.Relation : EntityKind.Object;
+  const kind =
+    props[RelationSourceDXNId] != null || props[RelationTargetDXNId] != null ? EntityKind.Relation : EntityKind.Object;
   const parent = props[ParentId];
 
   return getStrongDependencyUris({

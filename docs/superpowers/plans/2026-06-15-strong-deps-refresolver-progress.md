@@ -5,6 +5,7 @@ Branch: `claude/intelligent-darwin-apde4r` (same commit as `dm/strong-deps-refre
 Baseline (before changes): `strong-deps-resolution.test.ts` 5 fail / rest green; whole echo-client suite 619 pass.
 
 Acceptance (drive green):
+
 - relation automerge→feed: in-memory / after reload / multi-peer
 - relation cross-space (automerge→automerge): in-memory
 - parent automerge→feed: in-memory
@@ -17,7 +18,7 @@ Acceptance (drive green):
 - Strong-dep extraction is **store-aware at the backend**: each `LoadOp` carries a `strongDeps()`
   thunk supplied by its backend — echo-db reads the reliable `ObjectCore` encoded refs, queue reads
   the decoded entity via public symbols, registry returns `[]`. This is more correct than a single
-  live-entity extractor (live db proxies don't expose a parent *URI*, only a resolved parent).
+  live-entity extractor (live db proxies don't expose a parent _URI_, only a resolved parent).
 - Type dep semantics unchanged: a type is a strong dep only when persisted (echo-URI). Static /
   registry types (`dxn:`) are always available, so they are not gated (matches current behaviour and
   keeps the stored-schema regression test green).
@@ -40,19 +41,25 @@ Acceptance (drive green):
 
 ## Test state
 
-Acceptance suite `strong-deps-resolution.test.ts`: 10/11 pass.
-- ✅ feed in-memory, feed reload, parent feed, cross-space in-memory, + all regression guards.
-- 🔴 multi-peer feed (from network) — queue items must replicate/fetch to peer 2; the disk-tier
-  queue poll doesn't surface them within the timeout. Open: wire a network pull (`queue.sync`) or
-  raise the queue ceiling. (Flagged as an open item in the handoff.)
+- `echo`: 382 pass / 0 fail.
+- `echo-client`: 623 pass / 1 fail (multi-peer) — up from 619 baseline.
+- Acceptance suite `strong-deps-resolution.test.ts`: 10/11 pass — feed in-memory/reload, parent
+  feed, **cross-space**, all regression guards.
+- 🔴 multi-peer feed (from network) — **blocked on test infrastructure**: the test `EchoHost` is
+  constructed without `syncQueue`, and `host.addReplicator` only replicates Automerge docs, not
+  feeds. So peer 2's local feed store never receives peer 1's queue items; no resolver change can
+  surface them. Needs feed/queue replication wired in the harness (separate work). Flagged in the
+  handoff ("confirm that path is wired").
 
-The 2 transient regressions (deleted-object re-add / deleted-after-reload) were fixed by making
-resolution deleted-agnostic (deletion is the query's filter, not resolution's).
+## Key decision (per @dmaretskyi)
 
-## Key decision
+Cross-space relations are fixed in the **write path**, not resolution: when a relation is bound to a
+db (`DatabaseImpl._addObject`), `rebindRelationEndpoints` re-resolves its endpoints now that the db
+is known — a same-space (or not-yet-persisted, hence added) endpoint gets a relative URI, a
+cross-space endpoint an absolute one; feed-queue endpoints already carry an absolute URI. Resolution
+then routes a relative ref to its owning space (`qualifyUri`/`absolutizeDeps`) and an absolute ref to
+its space; a cross-space backend remains only as a defensive fallback.
 
-Cross-space relations store their endpoint refs **space-less** (a relation created in-memory has no
-db yet, so `createRef` can't know the endpoint's space). Per the spec ("only the load/surface path
-changes"), resolution treats a local `echo:` EID as resolvable across **all** registered spaces
-(entity ids are globally unique) rather than assuming the owning space.
-
+Two transient deleted-object regressions were fixed: resolution is deleted-agnostic (so a deleted
+object still satisfies its own closure / surfaces in deleted-only queries), and the relation
+source/target/parent **read path** drops a deleted result so `getSource` etc. throw as before.

@@ -404,6 +404,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       .resolve(uri, { source: 'working-set' });
     const result = request.getResult();
     request.abort();
+    // Resolution is deleted-agnostic (so a deleted endpoint still satisfies its holder's closure),
+    // but a deleted endpoint must not be returned to a reader — `getSource`/`getTarget`/parent treat
+    // it as unresolvable, matching the prior `getObjectById` (no `{ deleted: true }`) behaviour.
+    if (result != null && isEchoObject(result) && getObjectCore(result).isDeleted()) {
+      return undefined;
+    }
     return result;
   }
 
@@ -989,6 +995,44 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
       target[symbolInternals].linkCache = undefined;
     }
+  }
+
+  /**
+   * Re-resolve a relation's source/target once it is bound to a database. A relation created
+   * in-memory has no database, so {@link createRef} stored each endpoint space-less in the link
+   * cache; now that the database is known each endpoint is bound properly — a same-space (or
+   * not-yet-persisted, hence added here) endpoint gets a relative URI, a cross-space endpoint an
+   * absolute one. Endpoints that already carry an absolute URI (feed-queue items) are left as-is.
+   * Must run before {@link saveRefs} clears the link cache.
+   */
+  rebindRelationEndpoints(target: ProxyTarget): void {
+    const core = target[symbolInternals].core;
+    if (core.getKind() !== EntityKind.Relation) {
+      return;
+    }
+    const linkCache = target[symbolInternals].linkCache;
+    if (linkCache == null) {
+      return;
+    }
+
+    const rebind = (ref: EncodedReference | undefined, set: (next: EncodedReference) => void): void => {
+      if (ref == null) {
+        return;
+      }
+      const eid = EID.tryParse(EncodedReference.toURI(ref));
+      const entityId = eid ? EID.getEntityId(eid) : undefined;
+      if (entityId == null) {
+        return;
+      }
+      const endpoint = linkCache.get(entityId);
+      if (endpoint == null) {
+        return;
+      }
+      set(EncodedReference.fromURI(this.createRef(target, endpoint)));
+    };
+
+    rebind(core.getSource(), (next) => core.setSource(next));
+    rebind(core.getTarget(), (next) => core.setTarget(next));
   }
 
   private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number): void {
