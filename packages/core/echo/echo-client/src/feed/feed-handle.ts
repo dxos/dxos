@@ -347,7 +347,7 @@ export class FeedHandle {
     if (this._pollingHandlers++ === 0) {
       const poll = async () => {
         await this._refreshTask.runBlocking();
-        if (this._pollingHandlers > 0) {
+        if (this._pollingHandlers > 0 && !this._ctx.disposed) {
           this._pollingInterval = setTimeout(poll, POLLING_INTERVAL);
         }
       };
@@ -363,6 +363,11 @@ export class FeedHandle {
   }
 
   async dispose() {
+    this._pollingHandlers = 0;
+    if (this._pollingInterval) {
+      clearTimeout(this._pollingInterval);
+      this._pollingInterval = null;
+    }
     await this._ctx.dispose();
     await this._refreshTask.join();
   }

@@ -77,7 +77,7 @@ describe('feeds', () => {
 
     await db.appendToFeed(feed, [
       // prettier-ignore
-      Obj.make(TestSchema.Person, { name: "john" }),
+      Obj.make(TestSchema.Person, { name: 'john' }),
       Obj.make(TestSchema.Person, { name: 'jane' }),
     ]);
 

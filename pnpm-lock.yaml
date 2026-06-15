@@ -8294,6 +8294,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
