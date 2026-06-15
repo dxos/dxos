@@ -107,7 +107,7 @@ package never carries the `e2e` tag.
 `layer: automation` + `enforceLayerRelationships: true` (moon default). The layer
 hierarchy, highest to lowest, is:
 
-```
+```text
 automation → application → tool → library → scaffolding → configuration
 ```
 
