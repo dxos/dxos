@@ -78,7 +78,10 @@ export const CommentThread = ({
     },
     [members],
   );
-  const textboxMetadata = useMemo(() => getMessageMetadata(threadUri ?? '', identity ?? undefined), [threadUri, identity]);
+  const textboxMetadata = useMemo(
+    () => getMessageMetadata(threadUri ?? '', identity ?? undefined),
+    [threadUri, identity],
+  );
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
     [messages],
