@@ -48,6 +48,7 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
+import { isSimpleSelectionQuery } from '../query';
 import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
@@ -397,8 +398,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
 
+    // Feed-scoped queries the client can evaluate against fetched queue items run on the feed
+    // handle (immediately reflecting appends). Index-only queries (e.g. full-text search) fall
+    // through to the host indexer, which is also where unindexed feed items become visible.
     const feedUri = getFeedScopeUri(query.ast);
-    if (feedUri) {
+    if (feedUri && isClientEvaluableFeedQuery(query.ast)) {
       return this._queryFeed(feedUri, query);
     }
 
@@ -768,6 +772,28 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
     }
   });
   return scoped;
+};
+
+/**
+ * Whether a feed-scoped query can be evaluated client-side against fetched queue items.
+ * Index-only queries (e.g. full-text search) must instead run through the host indexer.
+ */
+const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
+  const simple = isSimpleSelectionQuery(query);
+  return simple != null && !filterContainsTextSearch(simple.filter);
+};
+
+const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {
+  if (filter.type === 'text-search') {
+    return true;
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsTextSearch);
+  }
+  if (filter.type === 'not') {
+    return filterContainsTextSearch(filter.filter);
+  }
+  return false;
 };
 
 /**

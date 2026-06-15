@@ -303,7 +303,7 @@ describe('feeds', () => {
       await peer.reload();
 
       const db2 = await peer.openLastDatabase();
-      const feed2 = db2.getObjectById<Feed.Feed>(feed.id)!;
+      const [feed2] = await db2.query(Filter.type(Feed.Feed)).run();
       const objects2 = await queryFeed(db2, feed2, Filter.everything()).run();
 
       expect(objects2).toHaveLength(1);

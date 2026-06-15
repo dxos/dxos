@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
+import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -92,7 +92,7 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { db } as Space;
+    const space = { db };
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -135,7 +135,7 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { db } as Space;
+    const space = { db };
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();

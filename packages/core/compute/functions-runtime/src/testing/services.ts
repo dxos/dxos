@@ -7,7 +7,7 @@ import type * as Context from 'effect/Context';
 import type { Space } from '@dxos/client/echo';
 import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { makeFeedService } from '@dxos/echo-client';
+import { type EchoDatabase, makeFeedService } from '@dxos/echo-client';
 import { ConfiguredCredentialsService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
@@ -45,7 +45,7 @@ export type TestServiceOptions = {
   /**
    * Database configuration.
    */
-  db?: Database.Database;
+  db?: EchoDatabase;
 
   /**
    * Gets database service from the space.
@@ -74,7 +74,7 @@ export const createTestServices = ({
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && !!db), 'space', 'space can be provided only if db is not');
 
-  const feedDb = space?.db ?? db;
+  const feedDb = space?.internal.db ?? db;
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
