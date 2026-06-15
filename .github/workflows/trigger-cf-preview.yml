@@ -10,46 +10,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Set NODE_VERSION=24.11.1 on all 4 failing CF Pages projects
+      - name: Poll testbench CF Pages build (07714be8)
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          for project in testbench todomvc tasks devtools; do
-            echo "=== Setting NODE_VERSION on $project ==="
-            response=$(curl -s -X PATCH \
-              "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/$project" \
-              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "deployment_configs": {
-                  "preview": {"env_vars": {"NODE_VERSION": {"value": "24.11.1"}}},
-                  "production": {"env_vars": {"NODE_VERSION": {"value": "24.11.1"}}}
-                }
-              }')
-            echo "$response" | jq '{project: .result.name, success: .success, errors: .errors}'
-          done
-
-      - name: Trigger new testbench CF Pages build
-        id: trigger
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          response=$(curl -s -X POST \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/testbench/deployments" \
-            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"branch": "claude/clever-haslett-bb86ef"}')
-          echo "$response" | jq '{success: .success, url: .result.url, id: .result.id}'
-          DEPLOY_ID=$(echo "$response" | jq -r '.result.id')
-          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
-
-      - name: Poll testbench CF Pages build
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          DEPLOY_ID: ${{ steps.trigger.outputs.deploy_id }}
+          DEPLOY_ID: "07714be8-09e5-48ae-a1dc-a4a3582939f1"
         run: |
           echo "Polling deployment $DEPLOY_ID..."
           for i in $(seq 1 40); do
