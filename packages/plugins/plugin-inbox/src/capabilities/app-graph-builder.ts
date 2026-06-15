@@ -24,7 +24,7 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
-import { Message } from '@dxos/types';
+import { Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -365,6 +365,70 @@ export default Capability.makeModule(
             }),
           ]);
         },
+      }),
+
+      // Event object node extension: resolves a hidden, URI-keyed node for a calendar event so that
+      // plugins (e.g. plugin-meeting's "Create meeting") can attach `whenEchoType(Event.Event)` actions
+      // to the Event article. The article's `attendableId` is the event's URI (`Obj.getURI(event)`), so
+      // the node is keyed by that URI directly. Events live in a calendar's feed (Google sync), with a
+      // space-db fallback for locally-created drafts — mirroring the `calendarEvent` companion connector.
+      GraphBuilder.createExtension({
+        id: 'eventObjectNode',
+        match: () => Option.none(),
+        resolver: (qualifiedId, get) =>
+          Effect.gen(function* () {
+            const eid = EID.tryParse(qualifiedId);
+            if (!eid) {
+              return null;
+            }
+            const spaceId = EID.getSpaceId(eid);
+            const entityId = EID.getEntityId(eid);
+            if (!spaceId || !entityId || !Key.EntityId.isValid(entityId)) {
+              return null;
+            }
+
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const space = client.spaces.get(spaceId);
+            if (!space) {
+              return null;
+            }
+
+            const calendars = get(space.db.query(Filter.type(Calendar.Calendar)).atom);
+            let event: Event.Event | undefined;
+            for (const calendar of calendars) {
+              const calendarSnapshot = get(Obj.atom(calendar));
+              const feed = calendarSnapshot.feed
+                ? (get(calendarSnapshot.feed.atom) as Feed.Feed | undefined)
+                : undefined;
+              if (feed) {
+                event = get(space.db.query(Query.select(Filter.id(entityId)).from(feed)).atom)[0];
+              }
+              if (event) {
+                break;
+              }
+            }
+            // Draft events live in the space db (not a feed); fall back to a db lookup.
+            if (!event) {
+              const fromDb = get(space.db.query(Query.select(Filter.id(entityId))).atom)[0];
+              if (Obj.instanceOf(Event.Event, fromDb)) {
+                event = fromDb;
+              }
+            }
+            if (!event) {
+              return null;
+            }
+
+            return {
+              id: qualifiedId,
+              type: Type.getTypename(Event.Event),
+              data: event,
+              properties: {
+                label: event.title ?? ['event.label', { ns: meta.id }],
+                icon: 'ph--calendar-dot--regular',
+                disposition: 'hidden',
+              },
+            };
+          }),
       }),
 
       GraphBuilder.createExtension({
