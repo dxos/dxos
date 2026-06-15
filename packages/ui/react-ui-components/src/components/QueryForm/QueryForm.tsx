@@ -39,7 +39,6 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
     ({ type, tag }: { type: URI.URI | null; tag: string | null }) => {
       const typeFilter = type ? Filter.type(type) : null;
       const tagFilter = tag ? Filter.tag(tag) : null;
-      // Combine into a single select to avoid QueryFilterClause which queue contexts don't support.
       const combined =
         typeFilter && tagFilter ? Filter.and(typeFilter, tagFilter) : (typeFilter ?? tagFilter ?? Filter.nothing());
       onChange?.(Query.select(combined));
