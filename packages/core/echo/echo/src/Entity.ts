@@ -291,11 +291,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSO
  * Subscribe to changes on an entity (object or relation).
  * @returns Unsubscribe function.
  */
-export const subscribe = (
-  entity: Unknown,
-  callback: () => void,
-  opts?: internal.SubscribeOptions,
-): (() => void) => {
+export const subscribe = (entity: Unknown, callback: () => void, opts?: internal.SubscribeOptions): (() => void) => {
   return internal.subscribe(entity, callback, opts);
 };
 

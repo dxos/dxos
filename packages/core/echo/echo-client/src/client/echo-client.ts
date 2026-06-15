@@ -11,8 +11,8 @@ import { type FeedProtocol } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { HypergraphImpl } from '../hypergraph';
 import { type BranchStore } from '../core-db';
+import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
 import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';

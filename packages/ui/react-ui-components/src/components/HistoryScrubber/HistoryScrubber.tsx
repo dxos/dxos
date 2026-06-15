@@ -3,14 +3,7 @@
 //
 
 import { format } from 'date-fns';
-import React, {
-  type KeyboardEvent,
-  type PointerEvent,
-  useCallback,
-  useId,
-  useRef,
-  useState,
-} from 'react';
+import React, { type KeyboardEvent, type PointerEvent, useCallback, useId, useRef, useState } from 'react';
 
 import { type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -184,12 +177,7 @@ export const HistoryScrubber = ({
             const addedPct = (version.added / max) * 100;
             const removedPct = (version.removed / max) * 100;
             return (
-              <Tooltip.Trigger
-                asChild
-                key={segmentIndex}
-                side='top'
-                content={<VersionTooltip version={version} />}
-              >
+              <Tooltip.Trigger asChild key={segmentIndex} side='top' content={<VersionTooltip version={version} />}>
                 <div
                   role='presentation'
                   onPointerEnter={() => dragging.current && setIndex(segmentIndex)}

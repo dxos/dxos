@@ -21,7 +21,10 @@ export type MarkdownEditorToolbarProps = {
 } & Pick<EditorToolbarProps, 'role' | 'customActions' | 'onAction' | 'onViewModeChange' | 'disabled'>;
 
 export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorToolbarProps>(
-  ({ id, role, getView, customActions, onAction, onFileUpload, onViewModeChange, disabled, ...props }, forwardedRef) => {
+  (
+    { id, role, getView, customActions, onAction, onFileUpload, onViewModeChange, disabled, ...props },
+    forwardedRef,
+  ) => {
     const { className, ...rest } = composableProps(props);
     const [upload, setUpload] = useState<FileUploadAction | null>(null);
     const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);

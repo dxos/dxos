@@ -128,12 +128,7 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
   );
 };
 
-const projectCellProps = (
-  model: SheetModel,
-  col: number,
-  row: number,
-  diffCells?: SheetCellDiff,
-): DxGridCellValue => {
+const projectCellProps = (model: SheetModel, col: number, row: number, diffCells?: SheetCellDiff): DxGridCellValue => {
   const address = { col, row };
   const rawValue = model.getValue(address);
   const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));

@@ -9,10 +9,10 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { getObjectOnBranch } from '@dxos/echo-client';
 
-import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges';
-
 import { SheetCapabilities, SheetOperation } from '#types';
 import { Sheet } from '#types';
+
+import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
 const activate: () => Effect.Effect<
@@ -40,7 +40,11 @@ const activate: () => Effect.Effect<
         for (let row = range.from.row; row <= range.to.row; row++) {
           const columnId = subject.columns[col];
           const rowId = subject.rows[row];
-          if (columnId && rowId && subject.cells[`${columnId}@${rowId}`]?.value !== compareCells[`${columnId}@${rowId}`]?.value) {
+          if (
+            columnId &&
+            rowId &&
+            subject.cells[`${columnId}@${rowId}`]?.value !== compareCells[`${columnId}@${rowId}`]?.value
+          ) {
             return true;
           }
         }

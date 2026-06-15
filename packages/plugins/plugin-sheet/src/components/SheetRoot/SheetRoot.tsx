@@ -112,9 +112,7 @@ const SheetProviderImpl = ({
   model,
   onInfo,
 }: GridScopedProps<
-  PropsWithChildren<
-    Pick<SheetContextValue, 'attendableId' | 'compareBranch' | 'ignoreAttention' | 'model' | 'onInfo'>
-  >
+  PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'compareBranch' | 'ignoreAttention' | 'model' | 'onInfo'>>
 >) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 

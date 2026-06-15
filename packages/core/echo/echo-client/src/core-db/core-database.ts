@@ -709,7 +709,10 @@ export class CoreDatabase {
     }
     let handle: DocHandleProxy<DatabaseDirectory>;
     const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
-    const url = branchName !== 'main' && rootId ? this.getBranchRegistry(rootId)?.[branchName]?.members[objectId]?.toString() : undefined;
+    const url =
+      branchName !== 'main' && rootId
+        ? this.getBranchRegistry(rootId)?.[branchName]?.members[objectId]?.toString()
+        : undefined;
     if (url) {
       handle = this._repo.find<DatabaseDirectory>(url as DocumentId);
       await handle.whenReady();

@@ -56,14 +56,15 @@ export const EditorToolbar = memo(
   ({ classNames, role, attendableId, disabled, onAction, ...props }: EditorToolbarProps) => {
     const menuActions = useMarkdownMenuActions({ ...props, disabled });
 
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames} />
-      </Menu.Root>
-    </ElevationProvider>
-  );
-});
+    return (
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
+          <Menu.Toolbar classNames={classNames} />
+        </Menu.Root>
+      </ElevationProvider>
+    );
+  },
+);
 
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
   EditorToolbarFeatureFlags & { disabled?: boolean };

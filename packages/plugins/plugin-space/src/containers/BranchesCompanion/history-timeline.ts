@@ -52,7 +52,12 @@ const buildTimeline = (histories: ObjectHistory[]): Pick<HistoryTimeline, 'versi
   for (const event of events) {
     const group = groups.at(-1);
     const last = group?.at(-1);
-    if (group && last && last.diff.actor === event.diff.actor && event.diff.time - last.diff.time <= COALESCE_WINDOW_MS) {
+    if (
+      group &&
+      last &&
+      last.diff.actor === event.diff.actor &&
+      event.diff.time - last.diff.time <= COALESCE_WINDOW_MS
+    ) {
       group.push(event);
     } else {
       groups.push([event]);

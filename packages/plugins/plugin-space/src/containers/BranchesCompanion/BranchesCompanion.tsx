@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { type AppSurface, branchDiffAtom, clearBranchDiff, setBranchDiff } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
   branchStateAtom,
@@ -17,7 +18,6 @@ import {
   setTimeTravel,
   switchBranch,
 } from '@dxos/echo-client';
-import { type AppSurface, branchDiffAtom, clearBranchDiff, setBranchDiff } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { HistoryScrubber } from '@dxos/react-ui-components';
 

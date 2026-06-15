@@ -399,11 +399,7 @@ export class ObjectCore {
    * reads, writes, indexing, and edit-history always use the latest doc via {@link getDoc}.
    */
   #getReadDoc(path: KeyPath): Doc<unknown> {
-    if (
-      this.#timeTravelHeads &&
-      !isReadingLatest() &&
-      (path[0] === DATA_NAMESPACE || path[0] === META_NAMESPACE)
-    ) {
+    if (this.#timeTravelHeads && !isReadingLatest() && (path[0] === DATA_NAMESPACE || path[0] === META_NAMESPACE)) {
       return this.#getDisplayDoc();
     }
     return this.getDoc();

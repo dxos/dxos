@@ -9,8 +9,8 @@ import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, branchDiffAtom, clearBranchDiff, setBranchDiff } from '@dxos/app-toolkit/ui';
-import { branchStateAtom } from '@dxos/echo-client';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { branchStateAtom } from '@dxos/echo-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import {

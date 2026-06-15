@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
@@ -144,8 +144,7 @@ export const PlankComponent = memo(
     // reactive source of truth: while it is time-traveling, surfaces show historical content in place
     // (the subject reads its own historical values) and the plank renders read-only.
     const timeTravelingAtom = useMemo(
-      () =>
-        node?.data != null && Entity.isEntity(node.data) ? Entity.timeTravelAtom(node.data) : EMPTY_FALSE_ATOM,
+      () => (node?.data != null && Entity.isEntity(node.data) ? Entity.timeTravelAtom(node.data) : EMPTY_FALSE_ATOM),
       [node?.data],
     );
     const timeTraveling = useAtomValue(timeTravelingAtom);

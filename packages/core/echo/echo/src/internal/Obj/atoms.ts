@@ -105,30 +105,32 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
  * `latestOnly` variant of {@link refFamily}: subscribes to the resolved target on the latest channel
  * and reads its latest committed value even while the target is time-traveling.
  */
-const refLatestFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined> => {
-  return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
-    let unsubscribeTarget: (() => void) | undefined;
+const refLatestFamily = Atom.family(
+  <T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Atom<Obj.Snapshot<T> | undefined> => {
+    return Atom.make<Obj.Snapshot<T> | undefined>((get) => {
+      let unsubscribeTarget: (() => void) | undefined;
 
-    const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
-      unsubscribeTarget?.();
-      unsubscribeTarget = subscribe(
-        target,
-        () => {
-          // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-          get.setSelf(withLatestRead(() => getSnapshot(target)) as unknown as Obj.Snapshot<T>);
-        },
-        { latestOnly: true },
-      );
-      return withLatestRead(() => getSnapshot(target)) as unknown as Obj.Snapshot<T>;
-    };
+      const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
+        unsubscribeTarget?.();
+        unsubscribeTarget = subscribe(
+          target,
+          () => {
+            // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
+            get.setSelf(withLatestRead(() => getSnapshot(target)) as unknown as Obj.Snapshot<T>);
+          },
+          { latestOnly: true },
+        );
+        return withLatestRead(() => getSnapshot(target)) as unknown as Obj.Snapshot<T>;
+      };
 
-    get.addFinalizer(() => {
-      unsubscribeTarget?.();
-    });
+      get.addFinalizer(() => {
+        unsubscribeTarget?.();
+      });
 
-    return loadRefTarget(ref, get, setupTargetSubscription);
-  }).pipe(Atom.keepAlive);
-});
+      return loadRefTarget(ref, get, setupTargetSubscription);
+    }).pipe(Atom.keepAlive);
+  },
+);
 
 /**
  * Snapshot a value to create a new reference for comparison and React dependency tracking.
