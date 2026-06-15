@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { type ReactElement, useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -31,12 +31,29 @@ export type CommentThreadProps = {
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
 };
 
+type CommentThreadImplProps = CommentThreadProps & { thread: ThreadType.Thread };
+
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
  * primitives (`Thread.*` / `Message.Tile`).
+ *
+ * Wraps `CommentThreadImpl` with a guard that returns null while the anchor's
+ * source thread is transiently unavailable — e.g. when a batched delete causes
+ * proxy signals to fire before React has a chance to update the query results.
  */
-export const CommentThread = ({
+export const CommentThread = (props: CommentThreadProps): ReactElement | null => {
+  let thread: ThreadType.Thread;
+  try {
+    thread = Relation.getSource(props.anchor) as ThreadType.Thread;
+  } catch {
+    return null;
+  }
+  return <CommentThreadImpl {...props} thread={thread} />;
+};
+
+const CommentThreadImpl = ({
   anchor,
+  thread,
   components,
   current,
   onAttend,
@@ -45,13 +62,12 @@ export const CommentThread = ({
   onMessageDelete,
   onThreadDelete,
   onAcceptProposal,
-}: CommentThreadProps) => {
+}: CommentThreadImplProps) => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = Relation.getSource(anchor) as ThreadType.Thread;
   const threadUri = Obj.getURI(thread);
   const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, threadUri);
