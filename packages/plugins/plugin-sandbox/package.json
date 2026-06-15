@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sandbox",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "DXOS Sandbox plugin for running isolated shell environments",
   "homepage": "https://dxos.org",
