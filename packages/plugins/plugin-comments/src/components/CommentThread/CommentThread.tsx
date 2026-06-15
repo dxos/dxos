@@ -10,7 +10,7 @@ import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Message as MessageComponent, type ThreadComponents, Thread } from '@dxos/react-ui-thread';
-import { type AnchoredTo, type Message, type Thread as ThreadType } from '@dxos/types';
+import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
 import { useStatus } from '#hooks';
@@ -62,7 +62,8 @@ export const CommentThread = ({
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = useRelationSource(anchor) as ThreadType.Thread | undefined;
+  const source = useRelationSource(anchor);
+  const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, threadUri);
