@@ -9,9 +9,9 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { getHashStyles } from '@dxos/ui-theme';
 
-import { GoogleMail } from '../../apis';
+import { useGmailTags } from '#hooks';
+
 import { getMessageProps } from '../../util';
 import { Row } from '../Row';
 import { Tile } from '../Tile';
@@ -226,6 +226,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const { message, tags, starred, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
+  const messageTags = useGmailTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
   // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
@@ -249,14 +250,6 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   );
 
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
-
-  const messageLabels = useMemo(
-    () =>
-      (tags ?? [])
-        .filter((tag) => !GoogleMail.isSystemLabel(tag.id) && tag.label)
-        .map((tag) => ({ id: tag.id, hue: tag.hue ?? getHashStyles(tag.id).hue, label: tag.label })),
-    [tags],
-  );
 
   return (
     <Tile.Root
@@ -287,7 +280,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
           </Card.Row>
         )}
 
-        <Row.Tags tags={messageLabels} onTagClick={handleTagClick} />
+        <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
       </Card.Body>
     </Tile.Root>
   );

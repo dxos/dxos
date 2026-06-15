@@ -4,5 +4,6 @@
 
 export * from './useActorContact';
 export * from './useExtractedObjects';
+export * from './useGmailTags';
 export * from './useShadowObject';
 export * from './useSyncTrigger';

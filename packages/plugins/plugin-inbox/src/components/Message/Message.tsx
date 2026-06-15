@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRedu
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
+import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { type Actor, type Message as MessageType } from '@dxos/types';
 
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
-import { useExtractedObjects } from '../../hooks';
+import { useExtractedObjects, useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
@@ -199,17 +199,12 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [mailboxes]);
 
   // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
-  const tagObjects = useQuery(db, Filter.type(EchoTag.Tag));
-  const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
-  const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
-  const tags = [...new Set(tagUris)].flatMap((uri) => {
-    const tag = tagByUri.get(uri);
-    return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
-  });
+  const tagObjects = useQuery(db, Filter.type(Tag.Tag));
+  const messageTags = useMessageTags(mailboxes, message, tagObjects);
 
   // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
   // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
-  const starredTag = useQuery(db, Filter.foreignKeys(EchoTag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = mailbox?.tags?.target;
   const starredAtom = useMemo(
@@ -270,7 +265,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       ))}
 
       {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-      <Row.Tags tags={tags} />
+      <Row.Tags tags={messageTags} />
     </Header.Root>
   );
 };
