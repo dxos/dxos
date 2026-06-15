@@ -16,7 +16,6 @@ import {
   type MenuContextValue,
   type MenuGroupContext,
   type MenuItem,
-  type MenuItemGroup,
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,

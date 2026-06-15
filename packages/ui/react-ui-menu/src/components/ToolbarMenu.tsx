@@ -7,11 +7,7 @@ import React, { useCallback } from 'react';
 import { Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import {
-  type DropdownMenuItemGroupProperties,
-  type MenuActionProperties,
-  type ToggleGroupMenuItemGroupProperties,
-} from '@dxos/ui-types';
+import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 

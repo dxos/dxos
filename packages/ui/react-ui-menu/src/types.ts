@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Node } from '@dxos/app-graph';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
-import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 export type MenuAction<P extends {} = {}> = Node.Action<P & MenuActionProperties>;
 
