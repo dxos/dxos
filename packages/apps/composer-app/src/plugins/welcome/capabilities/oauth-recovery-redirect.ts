@@ -144,13 +144,17 @@ const finalizeRedirect = Effect.fnUntraced(function* (
         ? 'Already registered'
         : params.error === 'not_registered'
           ? 'Not registered'
-          : 'OAuth recovery failed';
+          : params.error === 'no_email'
+            ? 'Email required'
+            : 'OAuth recovery failed';
     const description =
       params.error === 'already_registered'
         ? 'This account is already registered. Please log in instead.'
         : params.error === 'not_registered'
           ? 'This account is not registered for recovery. Please sign up first.'
-          : `Could not complete OAuth recovery: ${params.error}`;
+          : params.error === 'no_email'
+            ? 'Your Bluesky account does not have an email address. Please add one at bsky.app and try signing up again.'
+            : `Could not complete OAuth recovery: ${params.error}`;
     log.warn('oauth recovery redirect: kms-service reported error', { error: params.error });
     yield* invoker
       .invoke(LayoutOperation.AddToast, {
@@ -184,22 +188,10 @@ const finalizeRedirect = Effect.fnUntraced(function* (
       registrationToken: params.registrationToken,
     });
     // Re-derive the verified email server-side from the registrationToken — it is never carried in
-    // the redirect URL.
+    // the redirect URL. kms-service rejects the flow before issuing a registrationToken when the
+    // provider returns no email, so this invariant should never fire in practice.
     const email = completeResult?.email;
-    if (!email) {
-      // The OAuth provider did not return an email (e.g. the PDS session fetch failed).
-      yield* invoker
-        .invoke(LayoutOperation.AddToast, {
-          id: 'oauth-recovery-no-email',
-          title: 'Email address required',
-          description:
-            'Could not read your email from your Bluesky account. Please add an email to your Bluesky profile and try again.',
-          icon: 'ph--warning-circle--regular',
-          duration: 15_000,
-        })
-        .pipe(Effect.ignore);
-      return;
-    }
+    invariant(email, 'email missing from completeRegistration — kms-service should have rejected no-email flows');
 
     // Redeem the invitation code with the email to mint the hub Account.
     const identityDid = yield* Effect.tryPromise(() => createDidFromIdentityKey(identity.identityKey));
