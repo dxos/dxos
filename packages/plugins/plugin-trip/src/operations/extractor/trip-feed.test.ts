@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Feed, Filter, Obj, Query, Relation, Scope } from '@dxos/echo';
+import { Feed, Filter, Obj, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
@@ -116,17 +116,16 @@ describe('trip extraction over a message feed', () => {
     const feed = db.add(Feed.make({}));
 
     const payloads: Array<unknown | undefined> = [FIRST_LEG, SECOND_LEG, GATE_CHANGE, undefined];
-    await db.appendToFeed(feed, [
+    // `appendToFeed` stamps each item with its feed URI in place, so these instances are the
+    // feed items and can be dispatched directly (matching the prior `feed.objects` read).
+    const messages = [
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Gate change', body: 'Gate update' }),
       // Unrelated message — no travel sender/subject, so `match()` rejects it.
       makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
-    ]);
-
-    const messages = await db
-      .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getQueueUri(feed)!)))
-      .run();
+    ];
+    await db.appendToFeed(feed, messages);
 
     // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
     // with NoMatchingExtractorError, which we tolerate via Effect.either.
