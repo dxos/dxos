@@ -18,7 +18,7 @@ import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { AttendableContainer, useSelected } from '@dxos/react-ui-attention';
+import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
@@ -153,7 +153,7 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   const trips = useQuery(db, Filter.type(Trip.Trip));
   const trip = trips[0];
   // The segment shown in the companion column tracks the article's selection (defaults to the first).
-  const selectedId = useSelected(ATTENDABLE_ID, 'single');
+  const selectedId = useSelection(ATTENDABLE_ID, 'single');
 
   if (!spaceId || !db || !trip) {
     return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;

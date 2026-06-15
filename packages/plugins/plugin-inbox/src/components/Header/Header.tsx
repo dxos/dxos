@@ -7,7 +7,16 @@ import React, { useCallback, useRef } from 'react';
 
 import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { Card, DxAnchorActivate, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import {
+  Card,
+  DxAnchorActivate,
+  Icon,
+  IconButton,
+  type IconButtonProps,
+  SystemIconButton,
+  Tag,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type Actor } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
 
@@ -65,7 +74,7 @@ const AnchorIconButton = ({
 
   return (
     <IconButton
-      classNames={compact && 'min-h-0'}
+      classNames={compact ? 'min-h-0' : 'aspect-square'}
       variant='ghost'
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
@@ -98,7 +107,10 @@ const HeaderDateRow = ({ start, end }: HeaderDateRowProps) => {
   const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
 
   return (
-    <Card.Row icon='ph--calendar--regular'>
+    <Card.Row>
+      <Card.Block>
+        <Icon icon='ph--calendar--regular' />
+      </Card.Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-description'>{format(start, 'PPp')}</div>
         {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
@@ -124,7 +136,10 @@ const HeaderObjectRow = ({ object }: HeaderObjectRowProps) => {
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   return (
-    <Card.Row icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
+    <Card.Row>
+      <Card.Block>
+        <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
+      </Card.Block>
       <h3 className='truncate text-primary-text'>{label}</h3>
     </Card.Row>
   );
@@ -153,10 +168,9 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
 
   // TODO(burdon): Reconcile with Avatar if space member.
   return (
-    <Card.Row
-      icon={
+    <Card.Row>
+      <Card.Block>
         <AnchorIconButton
-          compact
           icon='ph--user--regular'
           fallbackIcon='ph--user-plus--regular'
           label={t('show-contact.label')}
@@ -165,18 +179,18 @@ const HeaderPersonRow = ({ actor, db, onContactCreate, onRemove }: HeaderPersonR
           value={contactDXN}
           onClick={onContactCreate ? handleContactCreate : undefined}
         />
-      }
-    >
-      <h3 className='truncate'>{actor.name || actor.email}</h3>
-      {/* Trailing action column. */}
+      </Card.Block>
+      <Card.Text>{actor.name || actor.email}</Card.Text>
       {onRemove && (
-        <IconButton
-          variant='ghost'
-          iconOnly
-          icon='ph--x--regular'
-          label={t('remove-attendee.label')}
-          onClick={onRemove}
-        />
+        <Card.Block end>
+          <IconButton
+            variant='ghost'
+            iconOnly
+            icon='ph--x--regular'
+            label={t('remove-attendee.label')}
+            onClick={onRemove}
+          />
+        </Card.Block>
       )}
     </Card.Row>
   );
@@ -203,7 +217,10 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) => {
   }
 
   return (
-    <Card.Row icon='ph--tag--regular'>
+    <Card.Row>
+      <Card.Block>
+        <Icon icon='ph--tag--regular' />
+      </Card.Block>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag
@@ -226,6 +243,38 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) => {
 HeaderTagsRow.displayName = 'Header.TagsRow';
 
 //
+// StarButton
+//
+
+type HeaderStarButtonProps = {
+  starred?: boolean;
+  /** Toggle handler; the button renders only when provided. */
+  onToggle?: () => void;
+};
+
+/**
+ * Star toggle for a `Card.Block` leading gutter (shared by event/message tiles and headers). Stops
+ * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
+ */
+const HeaderStarButton = ({ starred, onToggle }: HeaderStarButtonProps) => {
+  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+    (event) => {
+      event.stopPropagation();
+      onToggle?.();
+    },
+    [onToggle],
+  );
+
+  if (!onToggle) {
+    return null;
+  }
+
+  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+};
+
+HeaderStarButton.displayName = 'Header.StarButton';
+
+//
 // Header
 //
 
@@ -234,4 +283,5 @@ export const Header = {
   ObjectRow: HeaderObjectRow,
   PersonRow: HeaderPersonRow,
   TagsRow: HeaderTagsRow,
+  StarButton: HeaderStarButton,
 };

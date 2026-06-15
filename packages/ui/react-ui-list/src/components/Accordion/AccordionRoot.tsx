@@ -9,7 +9,10 @@ import React, { type ReactNode } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ListItemRecord } from '../List';
+// Records flowing through this compound carry caller-defined shapes (any record with an
+// optional `id` is acceptable; `getId` defaults to reading `.id`). Typed as `any` so the
+// generic parameter remains the caller's source of truth.
+type ListItemRecord = any;
 
 type AccordionContext<T extends ListItemRecord> = {
   getId: (item: T) => string;

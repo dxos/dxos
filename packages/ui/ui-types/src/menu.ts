@@ -27,4 +27,9 @@ export type MenuItemGroupProperties = {
   label: Label;
   icon?: string;
   iconOnly?: boolean;
+  /**
+   * Whether the dropdown trigger shows a trailing caret. Defaults to `true`.
+   * Set to `false` when the icon already signals a menu (e.g. an overflow ⋮).
+   */
+  caretDown?: boolean;
 };

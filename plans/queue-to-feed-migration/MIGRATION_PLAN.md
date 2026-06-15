@@ -136,7 +136,7 @@ The Cloudflare `QueuesAPI` (`space.queues.queryQueue(dxn)` / `space.queues.inser
 - `packages/plugins/plugin-assistant/src/containers/AgentArticle/AgentArticle.stories.tsx`
 - `packages/stories/stories-assistant/src/stories/Chat.stories.tsx`
 - `packages/sdk/client/src/tests/spaces.test.ts`
-- `packages/apps/composer-app/test/build-exemplar-space.node.test.ts`
+- `packages/apps/composer-app/scripts/build-exemplar-space.node.test.ts`
 - `packages/core/compute/functions-testing/src/testing/util.ts`
 - `packages/core/echo/echo-db/src/testing/queue.test.ts` (tests the `Queue` class itself; keep until the class is removed)
 - `packages/core/echo/echo-atom/src/query-atom.test.ts` — tests `AtomQuery.make` against a `Queue` directly; migration requires `AtomQuery` to accept a `Feed.Feed` as well.

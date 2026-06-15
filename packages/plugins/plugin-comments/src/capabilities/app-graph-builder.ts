@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { getCurrentBranch } from '@dxos/echo-client';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -66,7 +66,7 @@ export default Capability.makeModule(
         actions: (matched) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
-          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
+          const viewState = capabilities.get(AttentionCapabilities.ViewState);
 
           return Effect.succeed([
             {
@@ -87,7 +87,7 @@ export default Capability.makeModule(
                 // else the branch in view. Only derive a label from a real cursor anchor.
                 const cursorAnchor =
                   config.getAnchor?.(object) ??
-                  (config.comments === 'anchored' ? getAnchor(selectionManager.getSelection(objectUri)) : undefined);
+                  (config.comments === 'anchored' ? getAnchor(viewState.get(selectionAspect, objectUri)) : undefined);
                 const registry = capabilities.get(Capabilities.AtomRegistry);
                 const activeBranch = registry.get(branchDiffAtom(object.id))?.compareTo ?? getCurrentBranch(object);
                 // Invoke via the operation-invoker capability (carries the app runtime) rather than

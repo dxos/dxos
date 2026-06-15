@@ -17,9 +17,9 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
   return (
     <Card.Body>
       <Card.Header>
-        <Card.IconBlock>
+        <Card.Block>
           <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
-        </Card.IconBlock>
+        </Card.Block>
         <div className='flex gap-3 items-center justify-between col-span-2'>
           <span className='grow truncate'>{from}</span>
           <span className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</span>

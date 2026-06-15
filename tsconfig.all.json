@@ -22,6 +22,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "packages/common/av/tsconfig.json"
+    },
+    {
       "path": "packages/common/codec-protobuf/tsconfig.json"
     },
     {

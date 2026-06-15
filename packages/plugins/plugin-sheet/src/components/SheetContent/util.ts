@@ -194,13 +194,13 @@ const gridCellGetter = (model: SheetModel, diffCells?: SheetCellDiff) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: '!bg-toolbar-surface text-subdued text-end pe-1',
+  className: 'bg-axis-surface! text-axis-text text-end pe-1',
   resizeHandle: 'row',
 });
 
 export const colLabelCell = (col: number) => ({
   value: colToA1Notation(col),
-  className: '!bg-toolbar-surface text-subdued',
+  className: 'bg-axis-surface! text-axis-text',
   resizeHandle: 'col',
 });
 
@@ -212,7 +212,7 @@ const cellGetter = (model: SheetModel, diffCells?: SheetCellDiff) => {
         return getGridCells(nextBounds);
       case 'fixedStartStart': {
         return {
-          '0,0': { className: '!bg-toolbar-surface' },
+          '0,0': { className: 'bg-axis-surface!' },
         };
       }
       case 'frozenColsStart':

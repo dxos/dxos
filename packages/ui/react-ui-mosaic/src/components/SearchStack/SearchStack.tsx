@@ -116,7 +116,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth ref={forwardedRef}>
           <Card.Header>
-            <Card.IconBlock />
+            <Card.Block />
             <Card.Title>{result.label}</Card.Title>
           </Card.Header>
           {result.snippet && (

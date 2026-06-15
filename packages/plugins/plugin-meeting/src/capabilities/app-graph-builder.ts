@@ -6,9 +6,9 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Feed, Obj, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
@@ -17,11 +17,10 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { Channel } from '@dxos/types';
+import { Channel, Event } from '@dxos/types';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#types';
-import { Meeting, MeetingCapabilities } from '#types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 /**
  * Atom families to derive meeting state properties.
@@ -91,7 +90,7 @@ export default Capability.makeModule(
             AppNode.makeCompanion({
               id: 'meeting',
               label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
-              icon: 'ph--note--regular',
+              icon: 'ph--handshake--regular',
               data,
               position: 'first',
             }),
@@ -187,6 +186,54 @@ export default Capability.makeModule(
               position: 'first',
             }),
           ]),
+      }),
+
+      // Contribute meeting actions onto Event nodes (plugin-inbox stays meeting-agnostic): "Create meeting"
+      // while the event has no meeting yet, otherwise "Open meeting" (where the call is started/joined).
+      GraphBuilder.createTypeExtension({
+        id: 'createMeetingForEvent',
+        type: Event.Event,
+        actions: Effect.fnUntraced(function* (event, get) {
+          const db = Obj.getDatabase(event);
+          if (!db) {
+            return [];
+          }
+          // Resolve meetings synchronously via the query atom: action callbacks run under
+          // `Effect.runSync`, so an awaited query (e.g. `Meeting.getMeetingForEvent`) would die with
+          // an `AsyncFiberException`. Reading the atom also makes the action reactive to new meetings.
+          const meetings = get(db.query(Query.select(Filter.type(Meeting.Meeting))).atom);
+          const meeting = Meeting.findMeetingForEvent(meetings, event);
+          if (meeting) {
+            return [
+              {
+                id: 'action.openMeetingForEvent',
+                data: Effect.fnUntraced(function* () {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(meeting)] });
+                }),
+                properties: {
+                  label: ['open-meeting-for-event.label', { ns: meta.id }],
+                  icon: 'ph--handshake--regular',
+                  // Surface in the Event article toolbar (not just the node context menu).
+                  disposition: 'toolbar',
+                },
+              },
+            ];
+          }
+          return [
+            {
+              id: 'action.createMeetingForEvent',
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
+              }),
+              properties: {
+                label: ['create-meeting-for-event.label', { ns: meta.id }],
+                icon: 'ph--handshake--regular',
+                // Surface in the Event article toolbar (not just the node context menu).
+                disposition: 'toolbar',
+              },
+            },
+          ];
+        }),
       }),
     ]);
 
