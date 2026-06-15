@@ -466,13 +466,17 @@ message Runtime {
     message Hub { optional string url = 1; }
 
     /// Canonical descriptor for an EDGE (Cloudflare Worker) service.
-    /// Keyed entries in `Services.edge_services` consolidate the per-service URL
+    /// Entries in `Services.edge_services` consolidate the per-service URL
     /// constants previously hard-coded in consuming plugins.
+    /// NOTE: Modeled as a keyed list rather than a proto `map` because the
+    /// effect-proto schema layer does not support map fields.
     message EdgeService {
+      /// Canonical service name (e.g. "ai", "image", "calls"). Unique within `edge_services`.
+      optional string name = 1;
       /// Service endpoint (http(s)/ws(s) URL).
-      optional string endpoint = 1;
+      optional string endpoint = 2;
       /// Optional service-specific properties (e.g. provider path, auth scheme, region).
-      optional google.protobuf.Struct props = 2;
+      optional google.protobuf.Struct props = 3;
     }
 
     /** Deprecated: legacy KUBE deployment descriptor; no runtime readers. */
@@ -503,10 +507,10 @@ message Runtime {
     optional Ai ai = 16;
     optional Hub hub = 17;
 
-    /// Map of EDGE service configurations keyed by canonical service name
-    /// (e.g. "edge", "ai", "image", "calls", "discord", "transcription").
+    /// EDGE service configurations keyed by `EdgeService.name`
+    /// (e.g. "ai", "image", "calls", "discord", "transcription").
     /// Supersedes per-service URL constants; see packages/sdk/config/AUDIT.md.
-    map<string, EdgeService> edge_services = 18;
+    repeated EdgeService edge_services = 18;
   }
 
   message Keys {

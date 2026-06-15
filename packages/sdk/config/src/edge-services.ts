@@ -39,8 +39,9 @@ export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = 
 
 /**
  * Resolve the endpoint for an EDGE service.
- * Prefers the configured `runtime.services.edgeServices[name].endpoint`, falling back to
- * the canonical {@link EDGE_SERVICE_DEFAULTS} entry.
+ * Prefers the matching `runtime.services.edgeServices` entry, falling back to the canonical
+ * {@link EDGE_SERVICE_DEFAULTS} entry.
  */
 export const getEdgeServiceEndpoint = (config: Config, name: EdgeServiceName): string =>
-  config.values.runtime?.services?.edgeServices?.[name]?.endpoint ?? EDGE_SERVICE_DEFAULTS[name];
+  config.values.runtime?.services?.edgeServices?.find((service) => service.name === name)?.endpoint ??
+  EDGE_SERVICE_DEFAULTS[name];

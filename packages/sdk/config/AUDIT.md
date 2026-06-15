@@ -161,61 +161,68 @@ Target end-state:
 
 ---
 
-## 5. Proposed abstraction: a service map
+## 5. Proposed abstraction: a service list
 
 Rather than adding one typed message per new worker (the pattern that produced
-`calls`, `image`, `discord`, … sprawl), introduce a keyed map of service
-descriptors. Each entry has a canonical `endpoint` plus optional
+`calls`, `image`, `discord`, … sprawl), introduce a keyed list of service
+descriptors. Each entry has a canonical `name`, an `endpoint`, plus optional
 service-specific `props`.
+
+> A proto `map<string, EdgeService>` would be the natural shape, but the
+> `@dxos/effect-proto` schema layer rejects map fields
+> (`effect-proto: map fields are not supported`). A `repeated` message keyed by
+> `name` is the supported equivalent.
 
 ```proto
 message Runtime {
   message Services {
     // Canonical descriptor for an EDGE (Cloudflare Worker) service.
     message EdgeService {
+      // Canonical service name (e.g. "ai", "image", "calls"). Unique within edge_services.
+      optional string name = 1;
       // Service endpoint (http(s)/ws(s) URL).
-      optional string endpoint = 1;
+      optional string endpoint = 2;
       // Optional service-specific properties (e.g. provider path, auth scheme, region).
-      optional google.protobuf.Struct props = 2;
+      optional google.protobuf.Struct props = 3;
     }
 
-    // Map of EDGE service configurations keyed by canonical service name
-    // (e.g. "edge", "ai", "image", "calls", "discord", "transcription").
-    map<string, EdgeService> edge_services = 18;
+    // EDGE service configurations keyed by EdgeService.name.
+    repeated EdgeService edge_services = 18;
 
     // ... existing typed fields retained for migration ...
   }
 }
 ```
 
-`@dxos/config` then owns the canonical key set and the test/dev defaults:
+`@dxos/config` then owns the canonical key set and the test/dev defaults
+([`edge-services.ts`](src/edge-services.ts)):
 
 ```ts
 // @dxos/config — canonical service names + dev defaults.
 export const EdgeServiceName = {
-  Edge: 'edge',
-  Ai: 'ai',
-  Image: 'image',
   Calls: 'calls',
-  Discord: 'discord',
+  Image: 'image',
   Transcription: 'transcription',
+  Discord: 'discord',
   CorsProxy: 'cors-proxy',
+  ApiProxy: 'api-proxy',
   Introspect: 'introspect',
+  ChatAgent: 'chat-agent',
 } as const;
 ```
 
 Trade-off considered (recorded for the reviewer):
 
-1. **Map + `Struct` props (recommended).** One additive field; new services need
-   no proto change; `@dxos/config` owns naming. Cost: props are untyped
-   (`Struct`), validated at the reader.
+1. **Keyed `repeated` + `Struct` props (chosen).** One additive field; new
+   services need no proto change; `@dxos/config` owns naming. Cost: props are
+   untyped (`Struct`), validated at the reader; lookup is a `.find` by `name`.
 2. **One typed message per service.** Strong typing, but every new worker is a
    proto change + regen + new accessor — the status quo that caused the sprawl.
 
-Recommendation: **(1)** for the URL-only workers (calls, image, discord,
-transcription, cors-proxy, introspect, api-proxy, chat-agent); keep the existing
-typed messages for the structurally-rich, load-bearing services (`edge`, `ai`,
-`ipfs`, `ice`, `signaling`) since they have non-URL fields and many readers.
+Chosen: **(1)** for the URL-only workers (calls, image, discord, transcription,
+cors-proxy, introspect, api-proxy, chat-agent); keep the existing typed messages
+for the structurally-rich, load-bearing services (`edge`, `ai`, `ipfs`, `ice`,
+`signaling`) since they have non-URL fields and many readers.
 
 ---
 
@@ -224,7 +231,7 @@ typed messages for the structurally-rich, load-bearing services (`edge`, `ai`,
 **Phase 1 (this change) — consolidate definitions, deprecate dead fields.**
 
 - Annotate dead `Services`/`Client` fields with `[deprecated = true]` + comment.
-- Add the `EdgeService` message + `edge_services` map to `config.proto`.
+- Add the `EdgeService` message + keyed `edge_services` list to `config.proto`.
 - Regenerate `@dxos/protocols`; build to verify.
 - Add canonical service-name constants + dev defaults to `@dxos/config`.
 
