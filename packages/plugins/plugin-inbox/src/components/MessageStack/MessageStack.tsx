@@ -168,6 +168,8 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         >
           <ScrollArea.Root padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
+              {/* The two tile components carry different data shapes (message vs conversation), which the
+                  single-typed Mosaic `Tile`/`items` generics can't express — hence the casts at this boundary. */}
               <Mosaic.VirtualStack
                 Tile={conversations ? (ConversationTile as any) : MessageTile}
                 items={items as any}
