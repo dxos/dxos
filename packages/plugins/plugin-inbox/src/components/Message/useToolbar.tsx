@@ -8,7 +8,7 @@ import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { deleteGroup, openGroup } from '../Toolbar';
+import { deleteAction, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { useExtractorActions } from './useExtractorActions';
 
@@ -21,32 +21,32 @@ export type UseMessageToolbarActionsProps = {
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
   message: Message.Message;
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
   /** Whether remote images are currently loaded inline. */
   loadRemoteImages: boolean;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   /** Toggle the remote-image loading setting. */
   onToggleLoadImages: () => void;
   onOpen?: () => void;
+  onDelete?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
-  onDelete?: () => void;
 };
 
 export const useMessageActions = ({
   graph,
   nodeId,
   message,
+  loadRemoteImages,
   viewMode,
   setViewMode,
-  loadRemoteImages,
   onToggleLoadImages,
   onOpen,
+  onDelete,
   onReply,
   onReplyAll,
   onForward,
-  onDelete,
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
 
@@ -57,8 +57,8 @@ export const useMessageActions = ({
   })();
 
   return useMenuBuilder(
-    (get) => {
-      let builder = MenuBuilder.make()
+    (get) =>
+      MenuBuilder.make()
         .root({ label: ['message-toolbar.label', { ns: meta.id }] })
         .subgraph(onOpen && openGroup({ ns: meta.id, labelKey: 'message-toolbar-open.menu', onOpen }))
         .subgraph(
@@ -118,43 +118,48 @@ export const useMessageActions = ({
                 onForward,
               )),
         )
-        .subgraph(onDelete && deleteGroup({ ns: meta.id, labelKey: 'message-toolbar-delete.menu', onDelete }))
-        // Actions other plugins contribute onto the message node.
-        .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
+        .separator()
+        .subgraph((b) => {
+          if (extractorActions.length > 0) {
+            return b.group(
+              'extract',
+              {
+                label: ['message-toolbar-extract.menu', { ns: meta.id }],
+                icon: 'ph--magic-wand--regular',
+                iconOnly: true,
+                variant: 'dropdownMenu',
+              },
+              (group) => {
+                for (const item of extractorActions) {
+                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                }
+              },
+            );
+          }
+        })
+        .menu('more', (b) => {
+          // Actions contributed by other plugins.
+          b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
 
-      if (extractorActions.length > 0) {
-        builder = builder.group(
-          'extract',
-          {
-            label: ['message-toolbar-extract.menu', { ns: meta.id }],
-            icon: 'ph--magic-wand--regular',
-            iconOnly: true,
-            variant: 'dropdownMenu',
-          },
-          (group) => {
-            for (const item of extractorActions) {
-              group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
-            }
-          },
-        );
-      }
-
-      return builder.build();
-    },
+          if (onDelete) {
+            deleteAction(b, { ns: meta.id, labelKey: 'message-toolbar-delete.menu', onDelete });
+          }
+        })
+        .build(),
     [
       graph,
       nodeId,
       viewMode,
       setViewMode,
       loadRemoteImages,
-      onToggleLoadImages,
       enrichedAvailable,
+      extractorActions,
+      onToggleLoadImages,
       onOpen,
       onReply,
       onReplyAll,
       onForward,
       onDelete,
-      extractorActions,
     ],
   );
 };
