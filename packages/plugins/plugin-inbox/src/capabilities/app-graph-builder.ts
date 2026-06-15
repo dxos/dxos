@@ -23,7 +23,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
+import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -45,12 +45,12 @@ const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    // Derive a single-mode selected id per context from the ViewStateManager selection slice.
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const state = get(selectionManager.state);
-        const selection = state.selections[nodeId];
-        return selection?.mode === 'single' ? selection.id : undefined;
+        const selection = get(viewState.atom(selectionAspect, nodeId));
+        return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
 

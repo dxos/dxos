@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -35,7 +35,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   useObject(subject);
 
   const id = attendableId ?? Obj.getURI(search);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
 
   // Result filter: all vs starred-only (ephemeral view state).
   const [view, setView] = useState<'all' | 'starred'>('all');
@@ -65,7 +65,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [search, db, starredUri],
   );
 
-  // Select a result by URI — updates attention context so useSelected returns the new id.
+  // Select a result by URI — updates attention context so useSelection returns the new id.
   const handleSelect = useCallback(
     (resultId: string) => {
       void invokePromise(LayoutOperation.Select, {

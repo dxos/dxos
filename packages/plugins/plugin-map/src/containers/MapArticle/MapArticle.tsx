@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'reac
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
 import { type GeoControlProps, GlobeControl, MapControl } from '#components';
@@ -111,7 +111,7 @@ const MapArticleInner = ({
   // highlights multiple rows by typename); default to single-select against the article.
   const contextId = selection?.contextId ?? attendableId ?? Obj.getURI(subject);
   const mode = selection?.mode ?? 'single';
-  const selectedRaw = useSelected(contextId, mode);
+  const selectedRaw = useSelection(contextId, mode);
   const selected = useMemo(
     () => (Array.isArray(selectedRaw) ? selectedRaw : selectedRaw ? [selectedRaw] : []),
     [selectedRaw],
