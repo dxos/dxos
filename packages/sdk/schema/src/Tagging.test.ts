@@ -51,7 +51,7 @@ describe('Tagging', () => {
   });
 
   test('tags an immutable feed object via a referenced TagIndex', async ({ expect }) => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Item, Host, TagIndex.TagIndex],
     });
     const feed = Feed.make();
@@ -64,9 +64,8 @@ describe('Tagging', () => {
     await db.flush();
     const tagId = Obj.getURI(tag);
 
-    const queueDxn = Feed.getQueueUri(feed)!;
     const message = Obj.make(Item, { text: 'hello' });
-    await queues.get(queueDxn).append([message]);
+    await db.appendToFeed(feed, [message]);
 
     Tagging.set(message, tagId, { index: tagIndex });
     expect(Tagging.get(message, { index: tagIndex })).toEqual([tagId]);

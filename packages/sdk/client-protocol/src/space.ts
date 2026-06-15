@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
 import { type Database, type Obj } from '@dxos/echo';
-import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-client';
+import { type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import {
@@ -92,11 +92,6 @@ export interface Space extends Messenger {
    * Echo database.
    */
   get db(): Database.Database;
-
-  /**
-   * Access to queues.
-   */
-  get queues(): QueueFactory;
 
   // TODO(burdon): Replace with state?
   get isOpen(): boolean;

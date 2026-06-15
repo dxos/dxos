@@ -46,7 +46,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
         created: new Date().toISOString(),
         blocks,
       });
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const feedServiceLayer = createFeedServiceLayer(space.db);
       await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
     },
     [space, feed, identity],

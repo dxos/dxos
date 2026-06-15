@@ -376,7 +376,7 @@ export const appendPostContent = async (
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
   await Feed.append(echoFeed, [content]).pipe(
-    Effect.provide(createFeedServiceLayer(space.queues)),
+    Effect.provide(createFeedServiceLayer(space.db)),
     EffectEx.runAndForwardErrors,
   );
 };

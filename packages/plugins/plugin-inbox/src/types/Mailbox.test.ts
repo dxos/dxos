@@ -27,7 +27,7 @@ describe('Mailbox tags', () => {
   });
 
   test('applyTag creates a Tag object and indexes the immutable message', async ({ expect }) => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
     });
     const mailbox = db.add(Mailbox.make());
@@ -37,7 +37,7 @@ describe('Mailbox tags', () => {
     const { messages } = new Builder().createMessages(1).build();
     const [message] = messages;
     await EffectEx.runAndForwardErrors(
-      Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
 
     // Applying a tag creates a Tag object and indexes the message under its uri.

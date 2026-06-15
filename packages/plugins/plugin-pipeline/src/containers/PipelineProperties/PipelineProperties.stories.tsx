@@ -130,7 +130,7 @@ const meta = {
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
             }).pipe(
               Effect.provide(
-                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.queues)),
+                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db)),
               ),
             );
           }),

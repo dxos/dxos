@@ -204,7 +204,7 @@ const meta = {
               }
             }).pipe(
               Effect.provide(
-                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.queues)),
+                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db)),
               ),
             );
           }),

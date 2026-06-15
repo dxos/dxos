@@ -38,7 +38,6 @@ import {
   type EchoClient,
   type EchoDatabase,
   type DatabaseImpl,
-  type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
@@ -78,7 +77,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  *
  * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
  * helper is retained only for callers that need {@link Space} proxy members
- * (`properties`, `queues`, `members`, `key`, `state`, `listen`, identity).
+ * (`properties`, `members`, `key`, `state`, `listen`, identity).
  */
 // TODO(burdon): Hypergraph.getSpace().
 export const getSpace = (object?: any): Space | undefined => {
@@ -150,8 +149,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  private readonly _queues!: QueueFactory;
-
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: Obj.OfShape<SpaceProperties> = undefined;
@@ -184,7 +181,6 @@ export class SpaceProxy implements Space, CustomInspectable {
       spaceKey: this.key,
       owningObject: this,
     });
-    this._queues = echoClient.constructQueueFactory(this.id);
 
     const self = this;
     this._internal = {
@@ -240,10 +236,6 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get db(): EchoDatabase {
     return this._db;
-  }
-
-  get queues(): QueueFactory {
-    return this._queues;
   }
 
   @trace.info()

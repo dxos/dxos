@@ -13,7 +13,6 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
-import { QueueFactory } from '../queue';
 import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
 
 export type EchoClientProps = {};
@@ -59,7 +58,6 @@ export class EchoClient extends Resource {
 
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
-  private readonly _queues = new Map<SpaceId, QueueFactory>();
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
@@ -119,12 +117,7 @@ export class EchoClient extends Resource {
       this._graph._unregisterDatabase(db.spaceId);
       await db.close();
     }
-    for (const [spaceId, queueFactory] of this._queues.entries()) {
-      this._graph._unregisterQueueFactory(spaceId);
-      await queueFactory.close();
-    }
     this._databases.clear();
-    this._queues.clear();
   }
 
   // TODO(dmaretskyi): Make async?
@@ -140,6 +133,7 @@ export class EchoClient extends Resource {
     const db = new DatabaseImpl({
       dataService: this._dataService!,
       queryService: this._queryService!,
+      queueService: this._queuesService,
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
@@ -149,17 +143,6 @@ export class EchoClient extends Resource {
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
     return db;
-  }
-
-  constructQueueFactory(spaceId: SpaceId): QueueFactory {
-    const queueFactory = new QueueFactory(spaceId, this._graph);
-    this._queues.set(spaceId, queueFactory);
-    this._graph._registerQueueFactory(spaceId, queueFactory);
-    if (this._queuesService) {
-      queueFactory.setService(this._queuesService);
-    }
-
-    return queueFactory;
   }
 
   /**
@@ -195,14 +178,7 @@ export class EchoClient extends Resource {
 
     // Update all databases with new services.
     for (const db of this._databases.values()) {
-      db._updateServices({ dataService, queryService });
-    }
-
-    // Update all queue factories with new service.
-    if (queueService) {
-      for (const queueFactory of this._queues.values()) {
-        queueFactory.setService(queueService);
-      }
+      db._updateServices({ dataService, queryService, queueService });
     }
   }
 

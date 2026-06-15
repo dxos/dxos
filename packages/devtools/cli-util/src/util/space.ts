@@ -99,7 +99,7 @@ export const spaceLayer = (
       if (!space) {
         return Feed.notAvailable;
       }
-      return createFeedServiceLayer(space.queues);
+      return createFeedServiceLayer(space.db);
     }),
   );
 

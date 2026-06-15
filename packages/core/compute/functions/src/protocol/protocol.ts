@@ -25,7 +25,6 @@ import {
   EchoClient,
   type DatabaseImpl,
   makeRegistry,
-  type QueueFactory,
 } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx } from '@dxos/effect';
@@ -158,7 +157,6 @@ class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
-  queues: QueueFactory | undefined;
   readonly opts: FunctionWrappingOptions;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
@@ -188,8 +186,6 @@ class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
-    this.queues =
-      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
   }
 
   override async _close() {
@@ -201,7 +197,7 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
+    const feedLayer = this.db ? createFeedServiceLayer(this.db) : Feed.notAvailable;
     const credentials = dbLayer
       ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
       : configuredCredentialsLayer([]);

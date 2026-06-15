@@ -80,7 +80,7 @@ const meta = {
                   blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
                 }),
               ];
-              yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+              yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.db)));
             }),
         }),
         SpacePlugin({}),

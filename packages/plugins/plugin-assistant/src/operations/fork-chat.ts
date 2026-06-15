@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found.');
 
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const feedServiceLayer = createFeedServiceLayer(space.db);
 
       const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(
         Effect.provide(feedServiceLayer),

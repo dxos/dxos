@@ -175,12 +175,12 @@ const meta = {
                   endDate: new Date(now.getTime() + 3 * hour).toISOString(),
                 }),
               ];
-              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.db)));
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
               // Re-read via the queue query: these objects carry their queue URI, so `Ref.make` produces a
               // ref the Meeting can hold (a plain `db.query(...).from(feed)` snapshot would not).
               const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
-                Effect.provide(createFeedServiceLayer(personalSpace.queues)),
+                Effect.provide(createFeedServiceLayer(personalSpace.db)),
               );
               const event = synced[0];
 

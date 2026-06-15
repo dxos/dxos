@@ -249,9 +249,8 @@ const TARGET_CONCURRENCY = 3;
  * with the next; targets are processed in parallel up to `TARGET_CONCURRENCY`.
  *
  * `Database.Service` and `Feed.FeedService` are provided inside the handler.
- * The integration's `target` ref carries the database; the space (and its
- * `queues`, used to build `Feed.FeedService`) is resolved via the Client
- * capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
+ * The integration's `target` ref carries the database; the space db is resolved
+ * via the Client capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
  */
 const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = SlackOperation.SyncSlackChannel.pipe(
   Operation.withHandler(
@@ -422,7 +421,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           return { pulled };
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.provide(createFeedServiceLayer(space.queues)),
+          Effect.provide(createFeedServiceLayer(space.db)),
           Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration)),
         ),
       );

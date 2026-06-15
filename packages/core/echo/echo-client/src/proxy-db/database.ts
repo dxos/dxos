@@ -9,7 +9,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -27,9 +27,10 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
-import { assertArgument, invariant } from '@dxos/invariant';
+import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type FeedProtocol } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
@@ -45,6 +46,7 @@ import {
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
+import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
 import { type ObjectMigration } from './object-migration';
 
@@ -128,12 +130,31 @@ export interface EchoDatabase extends Database.Database {
    * @deprecated Directly mutate the object.
    */
   update(filter: Filter.Any, operation: unknown): Promise<void>;
+
+  /**
+   * Removes feed entities by id.
+   * @internal Backs {@link Feed.FeedService.remove}.
+   */
+  _deleteFromFeedByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+
+  /**
+   * Syncs a feed with the server.
+   * @internal Backs {@link Feed.FeedService.sync}.
+   */
+  _syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
+
+  /**
+   * Returns the replication backlog for a feed's namespace.
+   * @internal Backs {@link Feed.FeedService.getSyncState}.
+   */
+  _getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 }
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
+  queueService?: FeedProtocol.QueueService;
   spaceId: SpaceId;
 
   /**
@@ -176,11 +197,23 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
 
+  /**
+   * Backend for feed operations. Set on construction and refreshed on reconnect.
+   */
+  #queueService: FeedProtocol.QueueService | undefined;
+
+  /**
+   * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
+   * EDGE queue addressed by the feed object's URI; this map caches the per-feed client handle.
+   */
+  readonly #feeds = new Map<EID.EID, FeedHandle>();
+
   constructor(params: EchoDatabaseProps) {
     super();
 
     this._reactiveSchemaQuery = params.reactiveSchemaQuery ?? true;
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
+    this.#queueService = params.queueService;
 
     this._coreDatabase = new CoreDatabase({
       graph: params.graph,
@@ -252,6 +285,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _close(): Promise<void> {
+    await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
+    this.#feeds.clear();
     await this._coreDatabase.close();
   }
 
@@ -361,6 +396,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
+
+    const feedUri = getFeedScopeUri(query.ast);
+    if (feedUri) {
+      return this._queryFeed(feedUri, query);
+    }
 
     if (!isQueryScoped(query.ast)) {
       // Default to the owning space only. The in-process registry is opt-in:
@@ -475,6 +515,97 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
+  //
+  // Feeds.
+  //
+
+  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+    await this.#getFeedHandle(feed).append(entities);
+  }
+
+  async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+    await this._deleteFromFeedByIds(
+      feed,
+      entities.map((entity) => entity.id),
+    );
+  }
+
+  async _deleteFromFeedByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
+    await this.#getFeedHandle(feed).delete(ids);
+  }
+
+  async _syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {
+    await this.#getFeedHandle(feed).sync(options);
+  }
+
+  async _getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState> {
+    return this.#getFeedHandle(feed).getSyncState();
+  }
+
+  /**
+   * @internal
+   * Sets or refreshes the feed backend service (e.g. after reconnection).
+   */
+  _setQueueService(service: FeedProtocol.QueueService | undefined): void {
+    this.#queueService = service;
+  }
+
+  /**
+   * @internal
+   * Returns the feed handle for a URI, creating it if a backend service is available.
+   * Returns `undefined` only when no service is connected.
+   */
+  _getOrCreateFeedHandle(feedUri: EID.EID, namespace?: string): FeedHandle {
+    assertState(this.#queueService, 'Queue service not connected');
+    const existing = this.#feeds.get(feedUri);
+    if (existing) {
+      return existing;
+    }
+    const handle = new FeedHandle(
+      this.#queueService,
+      this.graph.createRefResolver({ context: { space: this.spaceId, feed: feedUri } }),
+      feedUri,
+      this,
+      namespace,
+    );
+    this.#feeds.set(feedUri, handle);
+    return handle;
+  }
+
+  /**
+   * @internal
+   * Returns an already-instantiated feed handle for a URI, without creating one.
+   */
+  _tryGetFeedHandle(feedUri: EID.EID): FeedHandle | undefined {
+    return this.#feeds.get(feedUri);
+  }
+
+  /**
+   * @internal
+   * Iterates feed handles already instantiated in this database.
+   */
+  _knownFeedHandles(): Iterable<FeedHandle> {
+    return this.#feeds.values();
+  }
+
+  #getFeedHandle(feed: Feed.Feed): FeedHandle {
+    const feedUri = Feed.getQueueUri(feed);
+    invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+    const handle = this._getOrCreateFeedHandle(feedUri, feed.namespace);
+    handle.setParentEntity(feed as Obj.Unknown);
+    return handle;
+  }
+
+  private _queryFeed(feedUri: EID.EID, query: Query.Any) {
+    const feedObjectId = EID.getEntityId(feedUri);
+    const feed = feedObjectId ? this.getObjectById<Feed.Feed>(feedObjectId) : undefined;
+    const handle = this._getOrCreateFeedHandle(feedUri, feed?.namespace);
+    if (feed) {
+      handle.setParentEntity(feed as Obj.Unknown);
+    }
+    return handle.query(query);
+  }
+
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
   }
@@ -555,8 +686,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices({
+    dataService,
+    queryService,
+    queueService,
+  }: {
+    dataService: DataService;
+    queryService: QueryService;
+    queueService?: FeedProtocol.QueueService;
+  }): void {
     this._coreDatabase._updateServices({ dataService, queryService });
+    if (queueService !== undefined) {
+      this.#queueService = queueService;
+    }
   }
 
   /**
@@ -626,6 +768,27 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
     }
   });
   return scoped;
+};
+
+/**
+ * Extracts the feed URI from a query's feed scope (`Scope.feed(...)`), if present.
+ * Feed-scoped queries are dispatched to the feed handle rather than the space query sources.
+ */
+const getFeedScopeUri = (query: QueryAST.Query): EID.EID | undefined => {
+  let feedUri: EID.EID | undefined;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'feed') {
+          const parsed = EID.tryParse(scope.feedUri);
+          if (parsed) {
+            feedUri = parsed;
+          }
+        }
+      }
+    }
+  });
+  return feedUri;
 };
 
 /**

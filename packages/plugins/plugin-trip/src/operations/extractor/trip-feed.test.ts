@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Relation, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
@@ -106,18 +106,17 @@ describe('trip extraction over a message feed', () => {
 
   test('processing a feed yields one Trip with multiple Segments and Message→Trip relations', async ({ expect }) => {
     await using peer = await builder.createPeer({
-      types: [Booking.Booking, Segment.Segment, Trip.Trip, Message.Message, ExtractedFrom.ExtractedFrom],
+      types: [Feed.Feed, Booking.Booking, Segment.Segment, Trip.Trip, Message.Message, ExtractedFrom.ExtractedFrom],
     });
     const db = await peer.createDatabase();
 
-    // The source is an actual ECHO Queue (a Feed) of immutable Message items — not objects in
+    // The source is an actual ECHO feed of immutable Message items — not objects in
     // the database. Each message is paired with the structured payload a cheap LLM would extract:
     // two flight legs under one PNR, a gate change for the first leg, and an unrelated message.
-    const queues = peer.client.constructQueueFactory(db.spaceId);
-    const feed = queues.create();
+    const feed = db.add(Feed.make({}));
 
     const payloads: Array<unknown | undefined> = [FIRST_LEG, SECOND_LEG, GATE_CHANGE, undefined];
-    await feed.append([
+    await db.appendToFeed(feed, [
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
       makeMessage({ from: 'no-reply@airfrance.com', subject: 'Gate change', body: 'Gate update' }),
@@ -125,7 +124,9 @@ describe('trip extraction over a message feed', () => {
       makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
     ]);
 
-    const messages = feed.objects as Message.Message[];
+    const messages = await db
+      .query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getQueueUri(feed)!)))
+      .run();
 
     // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
     // with NoMatchingExtractorError, which we tolerate via Effect.either.

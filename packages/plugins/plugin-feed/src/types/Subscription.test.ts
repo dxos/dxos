@@ -26,7 +26,7 @@ describe('per-Post state keyed by entity id', () => {
   });
 
   const loadQueuePost = async () => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
     });
 
@@ -40,10 +40,10 @@ describe('per-Post state keyed by entity id', () => {
       source: Ref.make(subscription),
     });
     await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
     expect(queuePost).toBeDefined();
     return { db, subscription, queuePost: queuePost! };
@@ -81,7 +81,7 @@ describe('PostContent reverse-ref lookup', () => {
   });
 
   test('findPostContent resolves via post ref and reverse-ref index', async () => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [
         Feed.Feed,
         Subscription.Subscription,
@@ -92,7 +92,7 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { queues } as Space;
+    const space = { db } as Space;
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -104,10 +104,10 @@ describe('PostContent reverse-ref lookup', () => {
       source: Ref.make(subscription),
     });
     await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
     expect(queuePost).toBeDefined();
 
@@ -125,7 +125,7 @@ describe('PostContent reverse-ref lookup', () => {
   });
 
   test('queryPostContentForPost returns newest entry after refresh append', async () => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [
         Feed.Feed,
         Subscription.Subscription,
@@ -135,7 +135,7 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { queues } as Space;
+    const space = { db } as Space;
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -147,10 +147,10 @@ describe('PostContent reverse-ref lookup', () => {
       source: Ref.make(subscription),
     });
     await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
     );
     expect(queuePost).toBeDefined();
 
