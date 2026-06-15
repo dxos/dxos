@@ -16,6 +16,10 @@ const getAttr = (node: Node, name: string): string => (isElement(node) ? (node.g
  */
 const turndown = new TurndownService({
   bulletListMarker: '-',
+  // ATX headings (`# foo`) rather than setext underlines: the `===`/`---` underline of a setext
+  // heading collides with the horizontal-rule normalization below, and ATX is the canonical form
+  // produced by formatters (so fixtures stay stable).
+  headingStyle: 'atx',
 })
   .remove('script')
   .remove('style')
