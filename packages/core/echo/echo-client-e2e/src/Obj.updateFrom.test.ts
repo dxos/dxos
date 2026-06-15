@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { EchoTestBuilder } from './echo-test-builder';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 describe('Obj.updateFrom (database)', () => {
   let builder: EchoTestBuilder;

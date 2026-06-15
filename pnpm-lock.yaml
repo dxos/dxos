@@ -5706,6 +5706,39 @@ importers:
         specifier: workspace:*
         version: link:../../../common/test-utils
 
+  packages/core/echo/echo-client-e2e:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../echo-client
+      '@dxos/echo-host':
+        specifier: workspace:*
+        version: link:../echo-host
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../../mesh/teleport
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.21.3
+        version: 3.21.3
+
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':

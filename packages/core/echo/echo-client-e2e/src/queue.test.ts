@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { EchoTestBuilder } from './echo-test-builder';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;

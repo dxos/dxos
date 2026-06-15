@@ -20,7 +20,7 @@ import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
+import { EchoTestBuilder, createDataAssertion } from '@dxos/echo-client/testing';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
