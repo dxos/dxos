@@ -18,38 +18,28 @@ export const SCREENSHARE_SUFFIX = '_screenshare';
 export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
   const call = useCapability(CallsCapabilities.Manager);
   const self = useAtomValue(call.selfAtom);
-  const media = useAtomValue(call.mediaAtom);
+  const videoEnabled = useAtomValue(call.videoEnabledAtom);
+  const localVideoStream = useAtomValue(call.localVideoStreamAtom);
+  const screenshareVideoStream = useAtomValue(call.screenshareVideoStreamAtom);
   const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
 
-  // Get pulled video stream for non-self users.
-  const pulledVideoStream = useMemo<MediaStream | undefined>(() => {
-    if (isSelf) {
-      return undefined;
-    }
-    const trackName =
-      isScreenshare && user.tracks?.screenshareEnabled
-        ? (user.tracks?.screenshare as EncodedTrackName)
-        : !isScreenshare && user.tracks?.videoEnabled
-          ? (user.tracks?.video as EncodedTrackName)
-          : undefined;
-    return trackName ? media.pulledVideoStreams[trackName]?.stream : undefined;
-  }, [
-    isSelf,
-    isScreenshare,
-    media.pulledVideoStreams,
-    user.tracks?.screenshare,
-    user.tracks?.video,
-    user.tracks?.screenshareEnabled,
-    user.tracks?.videoEnabled,
-  ]);
+  // Track name to display for non-self users; undefined when no video should show.
+  const pulledTrackName = useMemo<EncodedTrackName | undefined>(() => {
+    if (isSelf) {return undefined;}
+    if (isScreenshare && user.tracks?.screenshareEnabled) {return user.tracks?.screenshare as EncodedTrackName;}
+    if (!isScreenshare && user.tracks?.videoEnabled) {return user.tracks?.video as EncodedTrackName;}
+    return undefined;
+  }, [isSelf, isScreenshare, user.tracks?.screenshare, user.tracks?.video, user.tracks?.screenshareEnabled, user.tracks?.videoEnabled]);
+
+  const pulledVideoStream = useAtomValue(call.videoStreamAtom(pulledTrackName));
 
   const videoStream = useMemo<MediaStream | undefined>(() => {
     if (isSelf) {
-      return isScreenshare ? media.screenshareVideoStream : media.videoStream;
+      return isScreenshare ? screenshareVideoStream : localVideoStream;
     }
     return pulledVideoStream;
-  }, [isSelf, isScreenshare, media.videoStream, media.screenshareVideoStream, pulledVideoStream]);
+  }, [isSelf, isScreenshare, localVideoStream, screenshareVideoStream, pulledVideoStream]);
 
   return (
     <ResponsiveGridItem
@@ -57,8 +47,8 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
       item={user}
       name={user.name}
       self={isSelf}
-      screenshare={!!media.screenshareVideoStream}
-      video={media.videoEnabled}
+      screenshare={!!screenshareVideoStream}
+      video={videoEnabled}
       mute={user ? !user.tracks?.audioEnabled : false}
       wave={user.raisedHand}
       speaking={user.speaking}
