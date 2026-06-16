@@ -30,10 +30,11 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * // 2. In app-graph-builder.ts — one call per type:
  * createTypeSectionExtension(Chat.Chat)
  *
- * // 3. In capabilities/create-object.ts — default targetNodeId to the section
- * //    path so BOTH the section "+" button and the space-level create dialog
- * //    navigate to root/<spaceId>/<typename>/<objectId> instead of the database
- * //    subtree root/<spaceId>/types/<typename>/all/<objectId>:
+ * // 3. In capabilities/create-object.ts — the ?? fallback is the critical piece:
+ * //    it ensures navigation lands in the type section (root/<spaceId>/<typename>/<objectId>)
+ * //    regardless of how the object was created — section "+" button, space-level dialog,
+ * //    or programmatically. Without it the space-level dialog still goes to the database
+ * //    subtree (root/<spaceId>/types/<typename>/all/<objectId>).
  * Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
  *   id: Type.getTypename(Chat.Chat),
  *   createObject: (props, options) =>
@@ -48,7 +49,7 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * })
  *
  * // 4. In app-graph-builder.ts — section header "+" action passes targetNodeId
- * //    explicitly (it forwards to the create dialog, which forwards to createObject):
+ * //    so it flows through the create dialog into createObject above:
  * GraphBuilder.createExtension({
  *   id: 'chatsSectionActions',
  *   match: (node) =>
@@ -78,13 +79,9 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * )
  * ```
  *
- * **IMPORTANT**: The canonical fix is in `createObject` (step 3): use
- * `options.targetNodeId ?? getSectionPath(options.db.spaceId)`. This ensures
- * navigation lands in the type section regardless of how the object was created
- * (section button, space-level "+" dialog, or programmatically). The section
- * action (step 4) also passes `targetNodeId` so it flows through correctly, but
- * without the `createObject` fallback the space-level create dialog still
- * navigates to the database subtree.
+ * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files
+ * //   is a high bar. Ideally createTypeSectionExtension would wire up paths, navigation, and
+ * //   the createObject fallback automatically so callers only need the one call in step 2.
  *
  * @idiom org.dxos.app-toolkit.typeSection
  *   applies: Dedicated sidebar sections that list objects of a single ECHO type under a space
