@@ -3,7 +3,8 @@
 //
 
 import { type Obj } from '@dxos/echo';
-import { filterMatchDoc, filterMatchObjectJSON, type QueryPlan } from '@dxos/echo-host';
+import { filterMatchDoc, filterMatchObjectJSON } from '@dxos/echo-host/filter';
+import { type QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
   EntityStructure,

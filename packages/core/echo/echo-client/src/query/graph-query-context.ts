@@ -8,7 +8,7 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { QueryPlanner } from '@dxos/echo-host';
+import { QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -465,9 +465,11 @@ const WORKING_SET_NODE_TYPES = new Set<QueryAST.Query['type']>([
 ]);
 
 /**
- * Returns true when the query contains traversal, relation, union, or set-difference nodes.
- * These query types cannot be satisfied by the SQL index and require the working-set executor.
- * Limit and order nodes alone do not qualify — those are handled entirely by the SQL source.
+ * Returns true when the query contains traversal, relation, union, set-difference, or child-of
+ * filter nodes. These query types cannot be satisfied by the SQL index and require the working-set
+ * executor. Limit and order nodes alone do not qualify — those are handled entirely by the SQL source.
+ * Child-of filters have no traversal AST node — they appear as filter predicates — so they must
+ * be detected by visiting the filter tree directly.
  */
 const requiresWorkingSetExecutor = (query: QueryAST.Query): boolean => {
   let found = false;
@@ -475,6 +477,27 @@ const requiresWorkingSetExecutor = (query: QueryAST.Query): boolean => {
     if (WORKING_SET_NODE_TYPES.has(node.type)) {
       found = true;
     }
+    if ((node.type === 'filter' || node.type === 'select') && _filterContainsChildOf(node.filter)) {
+      found = true;
+    }
   });
   return found;
+};
+
+/**
+ * Returns true if the filter is or composes a child-of predicate.
+ * Child-of filters require in-memory parent-chain traversal which the SQL index cannot handle.
+ */
+const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'child-of':
+      return true;
+    case 'not':
+      return _filterContainsChildOf(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
+  }
 };

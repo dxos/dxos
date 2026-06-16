@@ -5,39 +5,12 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
-import { QueryPlanner } from '@dxos/echo-host';
+import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type DatabaseImpl } from '../proxy-db';
+import { DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 import { WorkingSetQueryExecutor, type WorkingSetDataProvider } from './working-set-executor';
-
-// ── Test layer ─────────────────────────────────────────────────────────────
-
-const makeNoIndexPlanner = () => new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
-
-// The provider reaches the in-memory cores via `coreDatabase`, a getter only the concrete
-// `DatabaseImpl` exposes (not the public `EchoDatabase` interface).
-const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
-  get spaceId() {
-    return db.spaceId;
-  },
-  allCores: () => db.coreDatabase.allObjectCores(),
-  getCoreById: (id, load) => db.coreDatabase.getObjectCoreById(id, { load: load ?? false }),
-  areStrongDepsSatisfied: (core) => db.coreDatabase.areStrongDepsSatisfied(core),
-});
-
-const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-const planAndExecute = (db: DatabaseImpl, query: Query.Query<any>) => {
-  const planner = makeNoIndexPlanner();
-  const executor = makeExecutor(db);
-  // All queries must be scoped; bind to the given database so the planner sees a from() clause.
-  const plan = planner.createPlan(query.from(db).ast);
-  return executor.tryExecute(plan);
-};
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -63,10 +36,8 @@ describe('WorkingSetQueryExecutor', () => {
     db.add(bob);
     await db.flush();
 
-    // Filter.everything() produces a wildcard filter.
     const results = planAndExecute(db, Query.select(Filter.everything()));
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).toContain(bob.id);
   });
@@ -79,8 +50,7 @@ describe('WorkingSetQueryExecutor', () => {
     await db.flush();
 
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Person)));
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).not.toContain(task.id);
   });
@@ -93,8 +63,7 @@ describe('WorkingSetQueryExecutor', () => {
     await db.flush();
 
     const results = planAndExecute(db, Query.select(Filter.id(alice.id)));
-    expect(results).not.toBeNull();
-    expect(results!.map((item) => item.objectId)).toEqual([alice.id]);
+    expect(results.map((item) => item.objectId)).toEqual([alice.id]);
   });
 
   test('property filter matches correct objects', async ({ expect }) => {
@@ -105,8 +74,7 @@ describe('WorkingSetQueryExecutor', () => {
     await db.flush();
 
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })));
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).not.toContain(bob.id);
   });
@@ -140,8 +108,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Task))),
     );
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).toContain(task.id);
   });
@@ -155,8 +122,7 @@ describe('WorkingSetQueryExecutor', () => {
 
     // Find the person that task.assignee points to.
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Task)).reference('assignee'));
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
   });
 
@@ -169,8 +135,7 @@ describe('WorkingSetQueryExecutor', () => {
 
     // Find all objects that reference alice.
     const results = planAndExecute(db, Query.select(Filter.id(alice.id)).referencedBy());
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(task.id);
   });
 
@@ -180,8 +145,7 @@ describe('WorkingSetQueryExecutor', () => {
     await db.flush();
 
     const results = planAndExecute(db, Query.select(Filter.id(parent.id)).children());
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(child.id);
   });
 
@@ -216,8 +180,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')),
     );
-    expect(results).not.toBeNull();
-    const personResults = results!.filter((item) => {
+    const personResults = results.filter((item) => {
       const data = item.core?.getObjectStructure().data;
       const name = data?.['name'];
       return name === 'Alice' || name === 'Bob' || name === 'Charlie';
@@ -233,8 +196,7 @@ describe('WorkingSetQueryExecutor', () => {
     await db.flush();
 
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Person)).limit(3));
-    expect(results).not.toBeNull();
-    expect(results!.length).toBeLessThanOrEqual(3);
+    expect(results).toHaveLength(3);
   });
 
   test('TextSelector causes executor to return null', async ({ expect }) => {
@@ -272,21 +234,54 @@ describe('WorkingSetQueryExecutor', () => {
 
     // Find all relations where alice is the source.
     const results = planAndExecute(db, Query.select(Filter.id(alice.id)).sourceOf());
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
     expect(ids).toContain(manages.id);
   });
 
   test('filter-deleted step filters out deleted objects', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
     db.add(alice);
+    db.add(bob);
     await db.flush();
     db.remove(alice);
     await db.flush();
 
     const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Person)));
-    expect(results).not.toBeNull();
-    const ids = results!.map((item) => item.objectId);
+    const ids = results.map((item) => item.objectId);
+    // Deleted alice must be excluded; non-deleted bob must be present.
     expect(ids).not.toContain(alice.id);
+    expect(ids).toContain(bob.id);
   });
 });
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+const makeNoIndexPlanner = () => new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+
+const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
+  get spaceId() {
+    return db.spaceId;
+  },
+  allCores: () => db.coreDatabase.allObjectCores(),
+  getCoreById: (id, load) => db.coreDatabase.getObjectCoreById(id, { load: load ?? false }),
+  areStrongDepsSatisfied: (core) => db.coreDatabase.areStrongDepsSatisfied(core),
+});
+
+const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));
+
+/**
+ * Plans and executes a query against the given database.
+ * Throws if the executor cannot satisfy the plan (i.e. it returned null).
+ */
+const planAndExecute = (db: DatabaseImpl, query: Query.Query<any>) => {
+  const planner = makeNoIndexPlanner();
+  const executor = makeExecutor(db);
+  // All queries must be scoped; bind to the given database so the planner sees a from() clause.
+  const plan = planner.createPlan(query.from(db).ast);
+  const result = executor.tryExecute(plan);
+  if (result === null) {
+    throw new Error('WorkingSetQueryExecutor returned null — plan requires SQL index');
+  }
+  return result;
+};
