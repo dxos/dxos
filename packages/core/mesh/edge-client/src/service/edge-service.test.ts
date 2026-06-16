@@ -105,6 +105,17 @@ describe('EdgeServiceClient', () => {
     expect(error.message).toContain('schema');
   });
 
+  test('non-serializable body fails with EdgeServiceError, not a synchronous throw', async ({ expect }) => {
+    const { fetch } = stubFetch(() => json({ value: 'ok' }));
+    const client = new EdgeServiceClient({ baseUrl: 'https://edge.test', fetch });
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+
+    const error = await EffectEx.runPromise(Effect.flip(client.postJson('/ping', circular, Echo)));
+    expect(error).toBeInstanceOf(EdgeServiceError);
+    expect(error.message).toContain('serialize');
+  });
+
   test('transport rejection fails with EdgeServiceError', async ({ expect }) => {
     const { fetch } = stubFetch(() => Promise.reject(new Error('ECONNREFUSED')));
     const client = new EdgeServiceClient({ baseUrl: 'https://edge.test', fetch });

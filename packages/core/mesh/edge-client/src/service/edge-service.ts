@@ -71,11 +71,20 @@ export class EdgeServiceClient {
 
   /** POST a JSON body and decode the JSON response. */
   postJson<A>(path: string, body: unknown, schema: Schema.Schema<A>): Effect.Effect<A, EdgeServiceError> {
-    return this.#request(path, schema, {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    // Serialize inside the Effect so a circular/non-serializable body surfaces as
+    // EdgeServiceError rather than throwing synchronously from the call site.
+    return Effect.try({
+      try: () => JSON.stringify(body),
+      catch: (cause) => new EdgeServiceError({ message: 'Failed to serialize JSON request body', cause }),
+    }).pipe(
+      Effect.flatMap((json) =>
+        this.#request(path, schema, {
+          method: 'POST',
+          body: json,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    );
   }
 
   #request<A>(path: string, schema: Schema.Schema<A>, init: RequestInit): Effect.Effect<A, EdgeServiceError> {

@@ -45,7 +45,7 @@ re-introduce the heavy DXOS bundles (`@dxos/protocols` protobufjs).
 
 New subpath export `@dxos/edge-client/service`, source under `src/service/`:
 
-```
+```text
 src/service/
   index.ts                    // export * from './edge-service'; export * as Image from './Image';
   edge-service.ts             // EdgeServiceClient, EdgeServiceError, options

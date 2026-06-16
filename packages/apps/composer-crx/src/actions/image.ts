@@ -6,6 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 import { THUMBNAIL_PROP, getConfig } from '../config';
 
@@ -69,9 +70,22 @@ export const createThumbnail = async (imageUrl: string) => {
   // Post blob to the image service and store the hosted URL for the popup.
   const config = await getConfig();
   const client = new EdgeServiceClient({ baseUrl: config.imageServiceUrl });
-  const { url: resultUrl } = await EffectEx.runPromise(
-    Image.thumbnail(client, blob, { filename: getFilenameFromUrl(imageUrl) }),
-  );
+  let resultUrl: string | undefined;
+  try {
+    ({ url: resultUrl } = await EffectEx.runPromise(
+      Image.thumbnail(client, blob, { filename: getFilenameFromUrl(imageUrl) }),
+    ));
+  } catch (err) {
+    // The caller is a context-menu listener with no error handling; surface
+    // failures via an error badge rather than an unhandled rejection.
+    log.error('thumbnail upload failed', { err });
+    await browser.action.setBadgeText({ text: '!' });
+    await browser.action.setBadgeBackgroundColor({ color: '#cc0000' });
+    setTimeout(() => {
+      void browser.action.setBadgeText({ text: '' });
+    }, 3_000);
+    return;
+  }
   if (resultUrl) {
     await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
   }

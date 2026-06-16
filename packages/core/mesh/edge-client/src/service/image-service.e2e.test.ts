@@ -17,7 +17,8 @@ import * as Image from './Image';
 //
 // Override the target with DX_IMAGE_SERVICE_URL to point at a staging worker.
 
-const ENABLED = !!process.env.DX_RUN_IMAGE_SERVICE_E2E;
+// Require an explicit opt-in value so `DX_RUN_IMAGE_SERVICE_E2E=0` doesn't run live tests.
+const ENABLED = /^(1|true)$/i.test(process.env.DX_RUN_IMAGE_SERVICE_E2E ?? '');
 const SERVICE_URL = process.env.DX_IMAGE_SERVICE_URL ?? Image.DEFAULT_IMAGE_SERVICE_URL;
 
 // 32x32 RGB gradient PNG. The worker decodes + resizes the upload, so it rejects
