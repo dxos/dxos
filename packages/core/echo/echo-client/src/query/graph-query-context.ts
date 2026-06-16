@@ -451,14 +451,28 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
 };
 
 /**
- * Returns true when the query contains traversal, union, or set-difference nodes.
+ * Query node types whose shapes the SQL-backed source does not satisfy locally; the working-set
+ * executor handles them. Plain select/filter/limit/order queries stay on the SQL path.
+ */
+const WORKING_SET_NODE_TYPES = new Set<QueryAST.Query['type']>([
+  'reference-traversal',
+  'relation-traversal',
+  'hierarchy-traversal',
+  'incoming-references',
+  'relation',
+  'union',
+  'set-difference',
+]);
+
+/**
+ * Returns true when the query contains traversal, relation, union, or set-difference nodes.
  * These query types cannot be satisfied by the SQL index and require the working-set executor.
  * Limit and order nodes alone do not qualify — those are handled entirely by the SQL source.
  */
 const requiresWorkingSetExecutor = (query: QueryAST.Query): boolean => {
   let found = false;
   QueryAST.visit(query, (node) => {
-    if (node.type === 'traverse' || node.type === 'union' || node.type === 'set-difference') {
+    if (WORKING_SET_NODE_TYPES.has(node.type)) {
       found = true;
     }
   });

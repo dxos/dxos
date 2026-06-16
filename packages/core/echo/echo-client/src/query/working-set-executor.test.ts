@@ -8,7 +8,7 @@ import { Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type EchoDatabase } from '../proxy-db';
+import { type DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 import { WorkingSetQueryExecutor, type WorkingSetDataProvider } from './working-set-executor';
 
@@ -16,7 +16,9 @@ import { WorkingSetQueryExecutor, type WorkingSetDataProvider } from './working-
 
 const makeNoIndexPlanner = () => new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
 
-const makeProvider = (db: EchoDatabase): WorkingSetDataProvider => ({
+// The provider reaches the in-memory cores via `coreDatabase`, a getter only the concrete
+// `DatabaseImpl` exposes (not the public `EchoDatabase` interface).
+const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   get spaceId() {
     return db.spaceId;
   },
@@ -25,11 +27,11 @@ const makeProvider = (db: EchoDatabase): WorkingSetDataProvider => ({
   areStrongDepsSatisfied: (core) => db.coreDatabase.areStrongDepsSatisfied(core),
 });
 
-const makeExecutor = (db: EchoDatabase) => new WorkingSetQueryExecutor(makeProvider(db));
+const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const planAndExecute = (db: EchoDatabase, query: Query.Query<any>) => {
+const planAndExecute = (db: DatabaseImpl, query: Query.Query<any>) => {
   const planner = makeNoIndexPlanner();
   const executor = makeExecutor(db);
   // All queries must be scoped; bind to the given database so the planner sees a from() clause.
@@ -41,7 +43,7 @@ const planAndExecute = (db: EchoDatabase, query: Query.Query<any>) => {
 
 describe('WorkingSetQueryExecutor', () => {
   let builder: EchoTestBuilder;
-  let db: EchoDatabase;
+  let db: DatabaseImpl;
 
   beforeEach(async () => {
     builder = new EchoTestBuilder();
