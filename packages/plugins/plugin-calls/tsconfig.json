@@ -97,6 +97,9 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

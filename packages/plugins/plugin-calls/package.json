@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-calls",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "DXOS Calls (video / audio conferencing) plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -129,6 +129,7 @@
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",

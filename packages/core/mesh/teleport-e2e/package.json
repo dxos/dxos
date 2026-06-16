@@ -1,0 +1,22 @@
+{
+  "name": "@dxos/teleport-e2e",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Teleport public-API and integration tests.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "type": "module",
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/teleport": "workspace:*"
+  }
+}

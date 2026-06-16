@@ -6,81 +6,50 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { Call, CallsCapabilities } from '@dxos/plugin-calls/types';
+import { Obj } from '@dxos/echo';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { type Meeting, MeetingOperation } from '#types';
 
-type MeetingTab = 'notes' | 'transcript' | 'summary';
+type MeetingTab = 'notes' | 'transcript' | 'summary' | 'call';
 
-const TAB_ORDER: MeetingTab[] = ['notes', 'transcript', 'summary'];
+const TAB_ORDER: MeetingTab[] = ['notes', 'transcript', 'summary', 'call'];
 
 const TAB_ICONS: Record<MeetingTab, string> = {
   notes: 'ph--note--regular',
   transcript: 'ph--subtitles--regular',
   summary: 'ph--list-bullets--regular',
+  call: 'ph--phone-call--regular',
 };
 
 export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>;
 
 /**
  * Hub view for a meeting: a toolbar of tabs (notes / transcript / summary) over a single content
- * area that renders the selected component as a section surface.
+ * area that renders the selected component as an article surface.
  */
-export const MeetingArticle = ({ attendableId, role, subject: meeting }: MeetingArticleProps) => {
+export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
-  // The built-in Cloudflare transport provider owns the persisted reconnection config and the
-  // live join. Present only when plugin-calls is registered; the call action is hidden otherwise.
-  const transportProvider = useCapabilities(CallsCapabilities.CallTransportProvider).find(
-    (provider) => provider.kind === Call.CLOUDFLARE_TRANSPORT_KIND,
-  );
+  // The Call tab is offered only when the calls plugin contributes a transport provider.
+  const callAvailable = useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
+  const tabs = useMemo(() => (callAvailable ? TAB_ORDER : TAB_ORDER.filter((key) => key !== 'call')), [callAvailable]);
 
+  // Read the reactive ref targets directly: these are handed to child surfaces (e.g. MarkdownArticle)
+  // which call `useObject` themselves, so they must receive the live object, not a `useObject` snapshot.
   const notes = meeting.notes?.target;
   const transcript = meeting.transcript?.target;
   const summary = meeting.summary?.target;
+
   const hasSummary = !!summary && summary.content.length > 0;
 
   const handleGenerateSummary = useCallback(async () => {
     await invokePromise(MeetingOperation.Summarize, { meeting });
   }, [invokePromise, meeting]);
-
-  // Provision (once) and join the meeting's live call. The room id is derived from the meeting DXN
-  // so it is stable and resumable. The transport provider owns the persisted reconnection config
-  // and the live join.
-  const handleStartCall = useCallback(async () => {
-    if (!transportProvider) {
-      return;
-    }
-    const db = Obj.getDatabase(meeting);
-    if (!db) {
-      return;
-    }
-    const roomId = Obj.getURI(meeting);
-    // Reuse the existing call when present; `Ref.load()` resolves to `AnyEntity`, so narrow it back to
-    // `Call` (rather than casting) before handing it to the transport.
-    const existing = await meeting.call?.load();
-    if (existing && Obj.instanceOf(Call.Call, existing)) {
-      await transportProvider.join(existing);
-      return;
-    }
-
-    const config = transportProvider.makeConfig(roomId);
-    db.add(config);
-    const call = Call.make({
-      name: meeting.name,
-      transport: { kind: transportProvider.kind, config: Ref.make(config) },
-    });
-    db.add(call);
-    Obj.update(meeting, (meeting) => {
-      meeting.call = Ref.make(call);
-    });
-    await transportProvider.join(call);
-  }, [transportProvider, meeting]);
 
   // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
   const menuActions = useMenuBuilder(
@@ -98,10 +67,14 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
               value: tab,
             },
             (group) => {
-              for (const key of TAB_ORDER) {
+              for (const key of tabs) {
                 group.action(
                   key,
-                  { label: [`${key}.label`, { ns: meta.id }], icon: TAB_ICONS[key], checked: tab === key },
+                  {
+                    label: [`${key}.label`, { ns: meta.id }],
+                    icon: TAB_ICONS[key],
+                    checked: tab === key,
+                  },
                   () => setTab(key),
                 );
               }
@@ -109,46 +82,55 @@ export const MeetingArticle = ({ attendableId, role, subject: meeting }: Meeting
           ),
         )
         .separator()
-        .subgraph(
-          !!transportProvider &&
-            ((builder) =>
-              builder.action(
-                'start-call',
-                { label: ['start-call.label', { ns: meta.id }], icon: 'ph--phone-call--regular' },
-                handleStartCall,
-              )),
-        )
-        .action(
-          'generate-summary',
-          {
-            label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
-            icon: 'ph--book-open-text--regular',
-          },
-          handleGenerateSummary,
-        )
+        .menu('more', (group) => [
+          group.action(
+            'generate-summary',
+            {
+              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
+              icon: 'ph--book-open-text--regular',
+            },
+            handleGenerateSummary,
+          ),
+        ])
         .build(),
-    [tab, hasSummary, handleGenerateSummary, transportProvider, handleStartCall],
+    [tab, tabs, hasSummary, handleGenerateSummary],
   );
 
-  const data = useMemo(() => {
+  const callData = useMemo(
+    () => (callAvailable ? { subject: { roomId: Obj.getURI(meeting) }, attendableId } : undefined),
+    [callAvailable, meeting, attendableId],
+  );
+
+  const articleData = useMemo(() => {
     switch (tab) {
       case 'notes':
-        return notes ? { attendableId, subject: notes } : undefined;
+        return notes ? { subject: notes, attendableId } : undefined;
       case 'transcript':
-        return transcript ? { attendableId, subject: transcript } : undefined;
+        return transcript ? { subject: transcript, attendableId } : undefined;
       case 'summary':
-        return hasSummary ? { attendableId, subject: summary } : undefined;
+        return hasSummary ? { subject: summary, attendableId } : undefined;
+      default:
+        return undefined;
     }
   }, [tab, attendableId, notes, transcript, summary, hasSummary]);
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Panel.Toolbar asChild>
           <Menu.Toolbar />
-        </Menu.Root>
-      </Panel.Toolbar>
-      <Panel.Content>{data && <Surface.Surface type={AppSurface.Section} data={data} />}</Panel.Content>
+        </Panel.Toolbar>
+      </Menu.Root>
+      {tab === 'call' && callData && (
+        <Panel.Content>
+          <Surface.Surface role='article' data={callData} limit={1} />
+        </Panel.Content>
+      )}
+      {tab !== 'call' && articleData && (
+        <Panel.Content>
+          <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
+        </Panel.Content>
+      )}
     </Panel.Root>
   );
 };

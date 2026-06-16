@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
         ),
-        component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} />,
+        component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} chatOnly />,
       }),
       // TODO(burdon): Disambiguate with Channel.
       Surface.create({

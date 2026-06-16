@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-github",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "DXOS plugin that integrates GitHub as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",

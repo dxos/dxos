@@ -150,7 +150,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
 
   return (
     <Form.Section>
-      <FieldHeader label={t('views.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
+      <FieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
       <OrderedList.Root<Pipeline.Column>
         items={columns}
         isItem={Schema.is(Pipeline.Column)}
@@ -166,12 +166,12 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
                 key={column.view.uri}
                 id={column.view.uri}
                 item={column}
-                title={column.name || t('untitled-view.title')}
+                title={column.name || t('untitled-column.title')}
                 trailing={
                   <OrderedList.DeleteButton
-                    label={t('delete-view.label')}
+                    label={t('delete-column.label')}
                     onClick={() => handleDelete(column)}
-                    data-testid='view.delete'
+                    data-testid='column.delete'
                   />
                 }
               >

@@ -202,7 +202,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     });
 
     hook.get = async (dxn) => {
-      return client.graph.createRefResolver({}).resolve(URI.make(dxn));
+      return client.graph.createRefResolver({}).resolveLegacy(URI.make(dxn));
     };
 
     hook.openDevtoolsApp = async () => {

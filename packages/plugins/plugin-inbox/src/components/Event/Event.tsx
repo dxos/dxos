@@ -6,12 +6,13 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { Card, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
+import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode } from '../ViewMode';
 import { EventBodyEditor } from './EventBodyEditor';
@@ -24,6 +25,8 @@ import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useT
 
 type EventContextValue = {
   attendableId?: string;
+  /** Graph node id for toolbar action lookup — differs from `attendableId` in companion mode. */
+  nodeId?: string;
   event: EventType.Event;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -69,19 +72,17 @@ type EventToolbarProps = Pick<
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
-    const { attendableId, event, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
-    // Contributed (graph) actions hang off the event's own node (keyed by its URI), not `attendableId`
-    // — a companion plank's `attendableId` is the primary's id (the calendar), not the event.
+    const { attendableId, nodeId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
     const menuActions = useEventToolbarActions({
       graph,
-      nodeId: Obj.getURI(event).toString(),
+      nodeId,
+      editing,
+      saveDisabled,
       viewMode,
       setViewMode,
       onOpen,
       onSave,
-      saveDisabled,
       onDelete,
-      editing,
     });
 
     return (
@@ -132,25 +133,19 @@ const EventHeader = ({ db, editable, onContactCreate, onOpenObject, starred, onT
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <Card.Root
-      border={false}
-      fullWidth
-      // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
-      classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-1')}
-    >
-      <Card.Body>
-        <EventDetails
-          event={event}
-          title='heading'
-          editable={editable}
-          db={db}
-          onContactCreate={onContactCreate}
-          onOpenObject={onOpenObject}
-          starred={starred}
-          onToggleStar={onToggleStar}
-        />
-      </Card.Body>
-    </Card.Root>
+    // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
+    <Header.Root classNames={editable && 'gap-y-1'}>
+      <EventDetails
+        event={event}
+        title='heading'
+        db={db}
+        editable={editable}
+        starred={starred}
+        onContactCreate={onContactCreate}
+        onOpenObject={onOpenObject}
+        onToggleStar={onToggleStar}
+      />
+    </Header.Root>
   );
 };
 
@@ -169,7 +164,6 @@ type EventBodyProps = ThemedClassName<{
 
 const EventBody = ({ classNames, editable }: EventBodyProps) => {
   const { event, viewMode } = useEventContext(EVENT_BODY_NAME);
-
   if (editable) {
     return <EventBodyEditor event={event} markdown={viewMode !== 'plain'} classNames={classNames} />;
   }

@@ -43,7 +43,7 @@ const DefaultStory = (props: VideoObjectProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/components/VideoObject',
+  title: 'plugins/plugin-calls/components/VideoObject',
   component: VideoObject,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
