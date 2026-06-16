@@ -41,12 +41,20 @@ export const getDraftsId = (): string => Segments.drafts;
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>
   `${getMailboxPath(spaceId, mailboxId)}/${Segments.drafts}`;
 
-/** Segment ID for a feed object message node, linked to its parent for attention propagation via {@link linkedSegment}. */
-export const getMessageSegmentId = (messageId: string): string => linkedSegment(messageId);
+/**
+ * Appends a linked-segment child ID to a parent path for feed-object navigation.
+ * The `~` prefix signals attention propagation to the parent node.
+ */
+export const getFeedObjectPath = (parentPath: string, childId: string): string =>
+  `${parentPath}/${linkedSegment(childId)}`;
 
 /** Canonical qualified path to a message within a mailbox. */
 export const getMailboxMessagePath = (spaceId: string, mailboxId: string, messageId: string): string =>
-  `${getMailboxPath(spaceId, mailboxId)}/${getMessageSegmentId(messageId)}`;
+  getFeedObjectPath(getMailboxPath(spaceId, mailboxId), messageId);
+
+/** Canonical qualified path to an event within a calendar. */
+export const getCalendarEventPath = (spaceId: string, calendarId: string, eventId: string): string =>
+  getFeedObjectPath(getCalendarPath(spaceId, calendarId), eventId);
 
 /**
  * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own

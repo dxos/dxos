@@ -25,6 +25,8 @@ import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useT
 
 type EventContextValue = {
   attendableId?: string;
+  /** Graph node id for toolbar action lookup — differs from `attendableId` in companion mode. */
+  nodeId?: string;
   event: EventType.Event;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -70,12 +72,10 @@ type EventToolbarProps = Pick<
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
-    const { attendableId, event, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
-    // Contributed (graph) actions hang off the event's own node (keyed by its URI), not `attendableId`
-    // — a companion plank's `attendableId` is the primary's id (the calendar), not the event.
+    const { attendableId, nodeId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
     const menuActions = useEventToolbarActions({
       graph,
-      nodeId: Obj.getURI(event).toString(),
+      nodeId,
       editing,
       saveDisabled,
       viewMode,
