@@ -781,6 +781,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent): void {
+    // Heal resolution requests that latched `requesting`/`unavailable` before the object was
+    // materialized locally: re-probe the working set for any cached load op now that the object is
+    // present, so its dependents (e.g. index-query hydration gated on the strong-dep closure)
+    // recompute to `ready` instead of polling/timing out.
+    for (const item of updateEvent.itemsUpdated) {
+      this.#loadOpTable.refreshFromWorkingSet(EID.make({ spaceId: updateEvent.spaceId, entityId: item.id }));
+    }
+
     const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       batchEvents(() => {
