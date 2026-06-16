@@ -173,19 +173,30 @@ export default Capability.makeModule(
         }),
       }),
 
+      // While in this meeting's call, surface the whole meeting article as a companion so the primary
+      // plank can show the call (its Call tab) while notes/transcript/summary stay accessible. Outside
+      // a call the meeting needs no companion (the article itself carries every tab).
       GraphBuilder.createTypeExtension({
-        id: 'meetingTranscriptCompanion',
+        id: 'meetingCallCompanion',
         type: Meeting.Meeting,
-        connector: (meeting, get) =>
-          Effect.succeed([
+        connector: Effect.fnUntraced(function* (meeting, get) {
+          const callManager = yield* Capability.get(CallsCapabilities.Manager);
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== Obj.getURI(meeting)) {
+            return [];
+          }
+
+          return [
             AppNode.makeCompanion({
-              id: 'transcript',
-              label: ['transcript-companion.label', { ns: meta.id }],
-              icon: 'ph--subtitles--regular',
-              data: get(Obj.atom(meeting.transcript)),
+              id: 'meeting',
+              label: ['meeting-companion.label', { ns: meta.id }],
+              icon: 'ph--handshake--regular',
+              data: meeting,
               position: 'first',
             }),
-          ]),
+          ];
+        }),
       }),
 
       // Contribute meeting actions onto Event nodes (plugin-inbox stays meeting-agnostic): "Create meeting"

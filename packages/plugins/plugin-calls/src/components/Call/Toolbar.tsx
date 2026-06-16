@@ -40,6 +40,7 @@ export const Toolbar = ({
   channel,
   participants,
   autoHideControls = true,
+  isInRoom,
   onJoin,
   onLeave,
 }: ToolbarProps) => {
@@ -50,6 +51,10 @@ export const Toolbar = ({
   const media = useAtomValue(call.mediaAtom);
   const joined = useAtomValue(call.joinedAtom);
   const raisedHand = useAtomValue(call.raisedHandAtom);
+  // Membership of *this* toolbar's room, not the global session: when joined to a different room the
+  // toolbar must still offer "join" (and hide in-call controls) for this one. Callers pass `isInRoom`
+  // explicitly (the lobby passes `false`); fall back to the global joined state when unset.
+  const inRoom = isInRoom ?? joined;
 
   // Channel app graph node.
   const node = useNode(graph, channel && Obj.getURI(channel));
@@ -103,7 +108,7 @@ export const Toolbar = ({
           </div>
         )) || <NaturalToolbar.Separator variant='gap' />}
 
-        {joined && (
+        {inRoom && (
           <>
             <ToggleButton
               disabled={!canSharescreen}
@@ -153,7 +158,7 @@ export const Toolbar = ({
             />
           </>
         )}
-        {joined ? (
+        {inRoom ? (
           <IconButton
             variant='destructive'
             icon='ph--phone-x--regular'

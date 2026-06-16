@@ -11,7 +11,14 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
-import { Call, CallsCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
+
+/**
+ * Article-role surface for a call, identified by `roomId` rather than an ECHO object: the live
+ * session is runtime state owned by `CallManager`, so the call panel needs only the room to join.
+ */
+type CallRoomData = { attendableId: string; roomId: string };
+const CallRoom: Surface.RoleToken<CallRoomData> = Surface.makeType('article');
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -32,10 +39,8 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'call',
-        filter: AppSurface.object(AppSurface.Article, Call.Call),
-        component: ({ role, data }) => (
-          <CallArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        filter: AppSurface.predicate(CallRoom, (data) => typeof data.roomId === 'string'),
+        component: ({ data }) => <CallArticle roomId={data.roomId} attendableId={data.attendableId} />,
       }),
     ]),
   ),

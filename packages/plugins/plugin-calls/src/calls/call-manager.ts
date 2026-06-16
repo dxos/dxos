@@ -89,6 +89,11 @@ export class CallManager extends Resource {
     return this._joinedAtom;
   }
 
+  /** Current joined state (synchronous read for imperative callers, e.g. join-after-leave). */
+  get joined(): boolean {
+    return this._registry.get(this._joinedAtom);
+  }
+
   /** Derived atom for self. */
   get selfAtom(): Atom.Atom<UserState> {
     return this._selfAtom;

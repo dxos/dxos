@@ -12,23 +12,23 @@ import { CallsPlugin } from '#plugin';
 import { CallsPlugin as CallsPluginNode } from './CallsPlugin.node';
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
-
 describe('CallsPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  // A call is runtime state keyed by room id (no persistent Call schema), so coverage here is a
+  // load smoke test: `createComposerTestApp` runs activation and rethrows, so a clean construction
+  // proves the plugin's modules wire up without error.
+  test('loads and is enabled', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), CallsPlugin()],
     });
 
-    // The slim Call schema is registered on startup (headless/node variant).
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
+    expect(harness.manager.getEnabled()).toContain(meta.id);
   });
 
-  test('node variant registers schema module', async ({ expect }) => {
+  test('node variant loads and is enabled', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), CallsPluginNode()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
+    expect(harness.manager.getEnabled()).toContain(meta.id);
   });
 });
