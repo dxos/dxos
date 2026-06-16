@@ -112,7 +112,6 @@
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
