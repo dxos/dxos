@@ -45,49 +45,49 @@ const getFilenameFromUrl = (url: string): string => {
  * Use EDGE image-service to store and create thumbnail.
  */
 export const createThumbnail = async (imageUrl: string) => {
-  const res = await fetch(imageUrl);
-  let blob = await res.blob();
-
-  // Ensure blob has correct content-type.
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-  const responseType = res.headers.get('content-type');
-  const inferredType = getContentTypeFromUrl(imageUrl);
-  const contentType =
-    responseType && allowedTypes.includes(responseType.split(';')[0]?.trim())
-      ? responseType.split(';')[0]?.trim()
-      : inferredType;
-
-  // Ensure blob has a valid content-type before posting.
-  if (!contentType) {
-    throw new Error('Unable to determine image content-type');
-  }
-
-  // Create blob with correct content-type if needed.
-  if (!blob.type || blob.type !== contentType) {
-    blob = new Blob([blob], { type: contentType });
-  }
-
-  // Post blob to the image service and store the hosted URL for the popup.
-  const config = await getConfig();
-  const client = new EdgeServiceClient({ baseUrl: config.imageServiceUrl });
-  let resultUrl: string | undefined;
+  // The caller is a context-menu listener with no error handling, so the whole
+  // flow (fetch, decode, upload, persist) is wrapped to surface any failure via
+  // an error badge rather than an unhandled rejection.
   try {
-    ({ url: resultUrl } = await EffectEx.runPromise(
+    const res = await fetch(imageUrl);
+    let blob = await res.blob();
+
+    // Ensure blob has correct content-type.
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    const responseType = res.headers.get('content-type');
+    const inferredType = getContentTypeFromUrl(imageUrl);
+    const contentType =
+      responseType && allowedTypes.includes(responseType.split(';')[0]?.trim())
+        ? responseType.split(';')[0]?.trim()
+        : inferredType;
+
+    // Ensure blob has a valid content-type before posting.
+    if (!contentType) {
+      throw new Error('Unable to determine image content-type');
+    }
+
+    // Create blob with correct content-type if needed.
+    if (!blob.type || blob.type !== contentType) {
+      blob = new Blob([blob], { type: contentType });
+    }
+
+    // Post blob to the image service and store the hosted URL for the popup.
+    const config = await getConfig();
+    const client = new EdgeServiceClient({ baseUrl: config.imageServiceUrl });
+    const { url: resultUrl } = await EffectEx.runPromise(
       Image.thumbnail(client, blob, { filename: getFilenameFromUrl(imageUrl) }),
-    ));
+    );
+    if (resultUrl) {
+      await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
+    }
   } catch (err) {
-    // The caller is a context-menu listener with no error handling; surface
-    // failures via an error badge rather than an unhandled rejection.
-    log.error('thumbnail upload failed', { err });
+    log.error('thumbnail creation failed', { err });
     await browser.action.setBadgeText({ text: '!' });
     await browser.action.setBadgeBackgroundColor({ color: '#cc0000' });
     setTimeout(() => {
       void browser.action.setBadgeText({ text: '' });
     }, 3_000);
     return;
-  }
-  if (resultUrl) {
-    await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
   }
 
   // Open extension popup (only works in response to user action like context menu).
