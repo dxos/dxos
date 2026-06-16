@@ -21,8 +21,7 @@ onconnect = async (event) => {
   const { log } = await import('@dxos/log');
   const { IdbLogStore } = await import('@dxos/log-store-idb');
   const { ObservabilityProvider } = await import('@dxos/observability');
-  const { initializeObservability } = await import('../util/config');
-  const { LOG_STORE_DB_NAME } = await import('../util/constants');
+  const { initializeObservability, LOG_STORE_DB_NAME } = await import('../util');
 
   if (!logStoreInstalled) {
     logStoreInstalled = true;

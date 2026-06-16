@@ -89,8 +89,7 @@ import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
 import { isTruthy } from '@dxos/util';
 
-import { steps } from './util/help';
-import { downloadLogs } from './util/log-download';
+import { downloadLogs, steps } from './util';
 
 const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
 

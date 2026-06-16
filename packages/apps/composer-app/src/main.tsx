@@ -31,15 +31,25 @@ import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dx
 
 import { ResetDialog } from './components';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
-import { initializeObservability, PARAM_PROFILER, setupConfig } from './util/config';
-import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './util/config';
-import { APP_KEY, LOG_STORE_DB_NAME } from './util/constants';
-import { showDevRssBanner } from './util/dev-rss-banner';
-import { downloadLogs } from './util/log-download';
-import { startupProfiler } from './util/profiler';
-import { defaultStorageIsEmpty, runStorageResetMigration, shouldRunStorageResetMigration } from './util/storage';
-import { translations } from './util/translations';
-import { isFalse, isTrue } from './util/url';
+import {
+  APP_KEY,
+  LOG_STORE_DB_NAME,
+  PARAM_LOG_LEVEL,
+  PARAM_PROFILER,
+  PARAM_SAFE_MODE,
+  defaultStorageIsEmpty,
+  downloadLogs,
+  initializeObservability,
+  isFalse,
+  isTrue,
+  runStorageResetMigration,
+  setSafeModeUrl,
+  setupConfig,
+  shouldRunStorageResetMigration,
+  showDevRssBanner,
+  startupProfiler,
+  translations,
+} from './util';
 
 declare global {
   interface ImportMeta {

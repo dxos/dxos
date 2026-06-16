@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../util/translations';
+import { translations } from '../../util';
 import { ResetDialog } from './ResetDialog';
 
 const meta = {

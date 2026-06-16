@@ -22,7 +22,7 @@ onconnect = async (ev) => {
     logStoreInstalled = true;
     const { log } = await import('@dxos/log');
     const { IdbLogStore } = await import('@dxos/log-store-idb');
-    const { LOG_STORE_DB_NAME } = await import('../util/constants');
+    const { LOG_STORE_DB_NAME } = await import('../util');
     const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
     log.addProcessor(logStore.processor);
   }
