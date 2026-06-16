@@ -360,8 +360,6 @@ const CronField = (props: FormFieldRendererProps) => {
   const existingCron = props.getValue() as string | undefined;
   const initialSpec = useMemo(
     () => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily),
-    // Initialise once on mount; CronBuilder owns subsequent state.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
   const [description, setDescription] = useState(() => describeCron(existingCron ?? toCron(initialSpec)));
@@ -371,7 +369,6 @@ const CronField = (props: FormFieldRendererProps) => {
       setDescription(describeCron(cron));
       props.onValueChange(props.type, cron);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [props.type, props.onValueChange],
   );
 
@@ -421,7 +418,6 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
   // Read once per trigger identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralFormValues>>(
     () => ({ name: auto.name, enabled: (trigger?.enabled ?? false) && canEnable }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [automation, trigger],
   );
 
@@ -490,7 +486,6 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
       return { kind: 'operation', operation: auto.runnable };
     }
     return { kind: 'operation' };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [automation, trigger]);
 
   const handleValuesChanged = useCallback(
@@ -553,7 +548,6 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
   // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
   const defaultValues = useMemo<Partial<TriggerFormValues>>(
     () => triggerFormValues(trigger?.spec),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [trigger],
   );
 
