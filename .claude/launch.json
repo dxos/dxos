@@ -109,6 +109,12 @@
       "autoPort": true
     },
     {
+      "name": "plugin-client-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-client", "exec", "storybook", "dev", "--port", "9009", "--no-open"],
+      "port": 9009
+    },
+    {
       "name": "docs",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "docs:serve"],

@@ -1,0 +1,72 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+
+import { type GetProfileUsageResponse } from '@dxos/protocols';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { translations } from '#translations';
+
+import { UsageView } from './UsageView';
+
+// Mock payload shaped like the (not-yet-implemented) `/api/metering/profile/usage` response.
+const usageData: GetProfileUsageResponse = {
+  profileId: 'did:key:z6MkExampleProfileIdentity',
+  usage: [
+    { category: 'ai/claude-opus-4/inputTokens', amount: 1_284_500 },
+    { category: 'ai/claude-opus-4/outputTokens', amount: 238_900 },
+    { category: 'ai/claude-sonnet-4/inputTokens', amount: 92_300 },
+    { category: 'ai/claude-sonnet-4/outputTokens', amount: 18_400 },
+  ],
+  limits: [
+    { categoryPrefix: 'ai/claude-opus-4', amount: 5_000_000, windowHours: 24 * 7 },
+    { categoryPrefix: 'ai/claude-sonnet-4', amount: 10_000_000, windowHours: 24 * 7 },
+    { categoryPrefix: 'ai', amount: 20_000_000, windowHours: 24 * 30 },
+  ],
+};
+
+const meta = {
+  title: 'plugins/plugin-client/containers/UsageView',
+  component: UsageView,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof UsageView>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    state: 'ready',
+    data: usageData,
+    lastUpdated: new Date('2026-06-16T12:00:00Z').getTime(),
+    onRefresh: () => {},
+  },
+};
+
+export const Loading: Story = {
+  args: { state: 'loading' },
+};
+
+export const Error: Story = {
+  args: { state: 'error' },
+};
+
+export const Empty: Story = {
+  args: {
+    state: 'ready',
+    data: { profileId: usageData.profileId, usage: [], limits: [] },
+    lastUpdated: new Date('2026-06-16T12:00:00Z').getTime(),
+    onRefresh: () => {},
+  },
+};
+
+export const Unavailable: Story = {
+  args: { state: 'unavailable' },
+};
