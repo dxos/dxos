@@ -86,7 +86,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       <div className='grid grid-cols-2 gap-2 grow min-bs-0'>
         <div className='dx-expander'>
           <Surface.Surface
-            type={CallsCapabilities.ArticleSurface}
+            role='article'
             data={{ subject: { roomId }, attendableId: roomId }}
             limit={1}
           />

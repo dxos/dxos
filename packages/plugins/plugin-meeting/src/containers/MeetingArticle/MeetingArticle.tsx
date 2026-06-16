@@ -123,7 +123,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
       </Menu.Root>
       {tab === 'call' && callData && (
         <Panel.Content>
-          <Surface.Surface type={CallsCapabilities.ArticleSurface} data={callData} limit={1} />
+          <Surface.Surface role='article' data={callData} limit={1} />
         </Panel.Content>
       )}
       {tab !== 'call' && articleData && (

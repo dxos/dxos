@@ -115,7 +115,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       {showCall ? (
         <Panel.Content>
           <Surface.Surface
-            type={CallsCapabilities.ArticleSurface}
+            role='article'
             data={{ subject: { roomId: id }, attendableId }}
             limit={1}
           />

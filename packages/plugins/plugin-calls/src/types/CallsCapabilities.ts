@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import { Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
 import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -44,9 +43,4 @@ export const CallTransportProvider = Capability.make<CallTransportProvider>(
   `${meta.id}.capability.call-transport-provider`,
 );
 
-/** Minimal subject for the call article surface — identifies the room without an ECHO object. */
 export type Call = { roomId: string };
-
-/** Surface type token for routing data to the call article surface. */
-export const ArticleSurface: Surface.RoleToken<{ subject: Call; attendableId: string | undefined }> =
-  Surface.makeType('article');
