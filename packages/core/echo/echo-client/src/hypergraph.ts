@@ -6,13 +6,22 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
-import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
+import {
+  batchEvents,
+  type AnyProperties,
+  getStrongDependencies,
+  type RefResolverRequest,
+  type RefSource,
+  setRefResolver,
+} from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
+import { type LoadBackend, type LoadResult, LoadOpTable } from './core-db/load-op';
+import { RequestImpl } from './core-db/ref-resolver-request';
 import { type DatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
@@ -53,6 +62,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // Idle (unsubscribed) cached results would not receive those updates and would miss newly
   // registered databases, so we discard them on every topology change.
   #queryResultCache = new QueryResultCache();
+
+  // Coalesced per-URI body loading shared by all resolution requests. Routed to a backend by URI
+  // kind / space; closure satisfaction lives in the per-call `RequestImpl`s.
+  readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
+  readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
 
   constructor() {
     this._registry = makeRegistry();
@@ -169,6 +183,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
 
     return {
+      resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
+        const root = this.#loadOpTable.acquire(this.#qualifyToContext(uri, context), source);
+        return new RequestImpl(this.#loadOpTable, root, source);
+      },
+
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
         if (EID.isEID(uri)) {
@@ -186,7 +205,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return undefined; // Unsupported URI kind.
       },
 
-      resolve: async (uri) => {
+      resolveLegacy: async (uri) => {
         const obj = await this._resolveAsync(uri, context);
         if (obj) {
           return middleware(obj);
@@ -227,6 +246,243 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return this.#resolveRegistryType(uri) ?? (await this._resolveTypeFromDatabase(uri, context));
       },
     } satisfies Ref.Resolver;
+  }
+
+  /**
+   * Qualifies a space-less (relative) `echo:` URI with the resolving context's space. Same-space
+   * references are persisted relative; cross-space references are persisted absolute (stamped at
+   * write time). Routing is by fully-qualified URI, so a relative URI is resolved against the
+   * context that requested it. Non-`echo:` and already-qualified URIs pass through unchanged.
+   */
+  #qualifyToContext(uri: URI.URI, context: Hypergraph.RefResolutionContext): URI.URI {
+    const eid = EID.tryParse(uri);
+    if (eid == null || !EID.isLocal(eid) || context.space == null) {
+      return uri;
+    }
+    const entityId = EID.getEntityId(eid);
+    return entityId != null ? EID.make({ spaceId: context.space, entityId }) : uri;
+  }
+
+  /**
+   * Route a URI to its resolution backend: registry for `dxn:` and a single-space backend for a
+   * space-qualified `echo:` EID. A space-less EID is unroutable here — callers qualify relative URIs
+   * to a space (via {@link #qualifyToContext} for request roots, or the owning space for discovered
+   * strong-dependency edges) before routing.
+   */
+  #routeBackend(uri: URI.URI): LoadBackend | undefined {
+    if (DXN.isDXN(uri)) {
+      return this.#registryBackend;
+    }
+    const eid = EID.tryParse(uri);
+    if (!eid || EID.getEntityId(eid) == null) {
+      return undefined;
+    }
+    const spaceId = EID.getSpaceId(eid);
+    if (spaceId == null) {
+      return undefined;
+    }
+    return this.#entityBackend(spaceId);
+  }
+
+  // Registry backend — fully in-memory; effectively `working-set`.
+  readonly #registryBackend: LoadBackend = {
+    probe: (uri) => {
+      const entity = this._registry.getByURI(uri.toString());
+      return entity ? { result: entity as AnyProperties, strongDeps: [] } : undefined;
+    },
+    load: (_uri, _source, set) => {
+      // Registry entities never load asynchronously; a probe miss is permanent.
+      set('unavailable', undefined);
+      return () => {};
+    },
+  };
+
+  /**
+   * Backend resolving an entity by id within a single space. Cached per space so its identity is
+   * stable for the table.
+   */
+  #entityBackend(spaceId: SpaceId): LoadBackend {
+    return entry(this.#spaceBackends, spaceId).orInsert({
+      probe: (uri) => this.#probeEntity(uri, spaceId),
+      load: (uri, source, set) => this.#loadEntity(uri, source, set, spaceId),
+    }).value;
+  }
+
+  /**
+   * Synchronous working-set probe for an entity within its space: the local db, then its known feed
+   * queues. Resolves regardless of the deleted flag — deletion is filtered by the query pipeline,
+   * not by resolution (gating a deleted object's own satisfaction would hide it from deleted-only
+   * queries and break re-add).
+   */
+  #probeEntity(uri: URI.URI, spaceId: SpaceId): LoadResult | undefined {
+    const eid = EID.tryParse(uri);
+    const entityId = eid ? EID.getEntityId(eid) : undefined;
+    if (entityId == null) {
+      return undefined;
+    }
+
+    for (const candidateSpaceId of [spaceId]) {
+      const db = this._databases.get(candidateSpaceId);
+      if (db) {
+        const core = db.coreDatabase.getObjectCoreById(entityId, { load: false });
+        if (core != null) {
+          const obj = db.getObjectById(entityId, { deleted: true });
+          if (obj != null) {
+            return { result: obj as AnyProperties, strongDeps: core.getStrongDependencies() };
+          }
+        }
+      }
+
+      const queueFactory = this._queueFactories.get(candidateSpaceId);
+      if (queueFactory) {
+        for (const queue of queueFactory.knownQueues()) {
+          const item = queue.getCachedObjectById(entityId);
+          if (item != null) {
+            return { result: item as AnyProperties, strongDeps: getStrongDependencies(item) };
+          }
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Load an entity's body at the given ceiling across candidate spaces: each local db document
+   * (disk-bound unless `network`) and/or its feed queues. Queue items have no definitive "absent"
+   * signal, so when at least one known queue could hold the item the op stays `requesting` and polls
+   * for replication rather than settling `unavailable`.
+   */
+  #loadEntity(
+    uri: URI.URI,
+    source: RefSource,
+    set: (state: 'pending' | 'requesting' | 'ready' | 'unavailable', result: LoadResult | undefined) => void,
+    spaceId: SpaceId,
+  ): () => void {
+    const eid = EID.tryParse(uri);
+    const entityId = eid ? EID.getEntityId(eid) : undefined;
+    if (entityId == null) {
+      set('unavailable', undefined);
+      return () => {};
+    }
+
+    let settled = false;
+    let cancelled = false;
+    const cleanups: Array<() => void> = [];
+    const cleanupAll = () => {
+      for (const cleanup of cleanups.splice(0)) {
+        cleanup();
+      }
+    };
+    const finishReady = (result: AnyProperties, strongDeps: URI.URI[]) => {
+      if (settled || cancelled) {
+        return;
+      }
+      settled = true;
+      cleanupAll();
+      set('ready', { result, strongDeps });
+    };
+
+    const candidateSpaceIds = [spaceId];
+    let pendingDb = 0;
+    let pendingQueue = 0;
+    let queuePolling = false;
+    const maybeUnavailable = () => {
+      if (!settled && !cancelled && pendingDb === 0 && pendingQueue === 0 && !queuePolling) {
+        settled = true;
+        cleanupAll();
+        set('unavailable', undefined);
+      }
+    };
+
+    const diskOnly = source !== 'network';
+    for (const candidateSpaceId of candidateSpaceIds) {
+      const db = this._databases.get(candidateSpaceId);
+      if (db) {
+        pendingDb++;
+        void db.coreDatabase
+          .loadObjectCoreById(entityId, { diskOnly, returnWithUnsatisfiedDeps: true })
+          .then((core) => {
+            pendingDb--;
+            if (!cancelled && core != null) {
+              const obj = db.getObjectById(entityId, { deleted: true });
+              if (obj != null) {
+                finishReady(obj as AnyProperties, core.getStrongDependencies());
+                return;
+              }
+            }
+            maybeUnavailable();
+          })
+          .catch(() => {
+            pendingDb--;
+            maybeUnavailable();
+          });
+      }
+
+      const queueFactory = this._queueFactories.get(candidateSpaceId);
+      if (queueFactory) {
+        pendingQueue++;
+        void this.#searchQueues(candidateSpaceId, entityId, queueFactory)
+          .then((item) => {
+            pendingQueue--;
+            if (cancelled) {
+              return;
+            }
+            if (item != null) {
+              finishReady(item as AnyProperties, getStrongDependencies(item));
+              return;
+            }
+            // Poll known queues so replicated items surface without a fresh request.
+            const queues = [...queueFactory.knownQueues()];
+            if (queues.length > 0) {
+              queuePolling = true;
+              for (const queue of queues) {
+                cleanups.push(queue.beginPolling());
+                cleanups.push(
+                  queue.subscribe(() => {
+                    const cached = queue.getCachedObjectById(entityId);
+                    if (cached != null) {
+                      finishReady(cached as AnyProperties, getStrongDependencies(cached));
+                    }
+                  }),
+                );
+              }
+            }
+            maybeUnavailable();
+          })
+          .catch(() => {
+            pendingQueue--;
+            maybeUnavailable();
+          });
+      }
+    }
+
+    maybeUnavailable();
+
+    return () => {
+      cancelled = true;
+      cleanupAll();
+    };
+  }
+
+  async #searchQueues(
+    spaceId: SpaceId,
+    entityId: EntityId,
+    queueFactory: QueueFactory,
+  ): Promise<Entity.Unknown | undefined> {
+    for (const queue of queueFactory.knownQueues()) {
+      const cached = queue.getCachedObjectById(entityId);
+      if (cached != null) {
+        return cached;
+      }
+    }
+    for (const queue of queueFactory.knownQueues()) {
+      const [item] = await queue.getObjectsById([entityId]);
+      if (item != null) {
+        return item;
+      }
+    }
+    return this._resolveObjectInSpaceFeeds(spaceId, entityId, queueFactory);
   }
 
   /**
@@ -525,6 +781,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent): void {
+    // Heal resolution requests that latched `requesting`/`unavailable` before the object was
+    // materialized locally: re-probe the working set for any cached load op now that the object is
+    // present, so its dependents (e.g. index-query hydration gated on the strong-dep closure)
+    // recompute to `ready` instead of polling/timing out.
+    for (const item of updateEvent.itemsUpdated) {
+      this.#loadOpTable.refreshFromWorkingSet(EID.make({ spaceId: updateEvent.spaceId, entityId: item.id }));
+    }
+
     const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       batchEvents(() => {

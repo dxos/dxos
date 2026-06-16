@@ -38,7 +38,7 @@ export const translations = [
         'trigger-picker.title': 'Trigger',
         'trigger-picker.description': 'When this automation runs.',
         'trigger-kind.placeholder': 'Select trigger type',
-        'trigger-kind.timer.label': 'Schedule (cron)',
+        'trigger-kind.timer.label': 'Schedule',
         'trigger-kind.feed.label': 'Feed',
         'cron.placeholder': '0 0 * * *',
         'feed.placeholder': 'Select a feed',

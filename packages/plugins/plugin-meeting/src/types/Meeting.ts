@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Call } from '@dxos/plugin-calls/types';
 import { Text } from '@dxos/schema';
 import { Event, Transcript } from '@dxos/types';
 
@@ -38,12 +37,6 @@ export const Meeting = Schema.Struct({
    * Generated summary of the meeting.
    */
   summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-
-  /**
-   * Optional live call/room for the meeting (in-person and external meetings have none).
-   * At most one per meeting; provisioned ahead and resumable.
-   */
-  call: Ref.Ref(Call.Call).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   /**
    * The calendar event this meeting is for, if any. A `Ref` (not a relation) so it can point at a

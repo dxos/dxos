@@ -200,9 +200,9 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     (action) => {
       switch (action.type) {
         // 'current' fires when a specific message is clicked;
-        // 'current-thread' fires when the enclosing thread is clicked (with its latest message).
+        // 'current-conversation' fires when the enclosing conversation is clicked (with its latest message).
         case 'current':
-        case 'current-thread': {
+        case 'current-conversation': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
@@ -293,7 +293,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             currentId={currentId}
             tags={messageTagsMap}
             starredIds={starredIds}
-            threads={settings.threads}
+            conversations={settings.conversations}
             onAction={handleAction}
           />
         )}

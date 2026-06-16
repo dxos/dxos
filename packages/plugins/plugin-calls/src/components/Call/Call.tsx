@@ -103,7 +103,7 @@ CallGrid.displayName = 'Call.Grid';
 // Toolbar
 //
 
-type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onLeave'>;
+type CallToolbarProps = Pick<ToolbarProps, 'channel' | 'onJoin' | 'onLeave'>;
 
 const CallToolbar = (props: CallToolbarProps) => (
   <div className='absolute bottom-0 left-0 right-0 flex justify-center'>

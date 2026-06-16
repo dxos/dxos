@@ -86,6 +86,15 @@ export class MemoryQueue<T extends Entity.Unknown> {
     return ids.map((id) => this._objects.find((object) => object.id === id));
   }
 
+  getCachedObjectById(id: EntityId): T | undefined {
+    return this._objects.find((object) => object.id === id);
+  }
+
+  beginPolling(): () => void {
+    // In-memory queues are always fully loaded; nothing to poll.
+    return () => {};
+  }
+
   async delete(ids: EntityId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes(object.id));

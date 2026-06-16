@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRedu
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
+import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
@@ -19,10 +19,11 @@ import { type Actor, type Message as MessageType } from '@dxos/types';
 
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
-import { useExtractedObjects } from '../../hooks';
+import { useExtractedObjects, useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
+import { Row } from '../Row';
 import { type ViewMode } from '../ViewMode';
 import { useMessageActions } from './useToolbar';
 
@@ -123,9 +124,9 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     graph,
     nodeId: attendableId,
     message,
+    loadRemoteImages,
     viewMode,
     setViewMode,
-    loadRemoteImages,
     onToggleLoadImages,
     onOpen,
     onReply,
@@ -198,17 +199,12 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [mailboxes]);
 
   // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
-  const tagObjects = useQuery(db, Filter.type(EchoTag.Tag));
-  const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
-  const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
-  const tags = [...new Set(tagUris)].flatMap((uri) => {
-    const tag = tagByUri.get(uri);
-    return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
-  });
+  const tagObjects = useQuery(db, Filter.type(Tag.Tag));
+  const messageTags = useMessageTags(mailboxes, message, tagObjects);
 
   // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
   // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
-  const starredTag = useQuery(db, Filter.foreignKeys(EchoTag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const tagIndex = mailbox?.tags?.target;
   const starredAtom = useMemo(
@@ -239,40 +235,38 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
-      <Card.Body>
-        {/* Subject row. */}
-        <Card.Row>
-          <Card.Block>
-            {mailbox ? (
-              <Header.StarButton starred={starred} onToggle={handleToggleStar} />
-            ) : (
-              <Icon icon='ph--envelope-open--regular' />
-            )}
-          </Card.Block>
-          <div className='flex flex-col gap-1 overflow-hidden'>
-            <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-            {message.created && (
-              <div className='whitespace-nowrap text-sm text-description'>
-                {formatDateTime(new Date(message.created), new Date())}
-              </div>
-            )}
-          </div>
-        </Card.Row>
+    <Header.Root data-testid='message-header'>
+      {/* Subject row. */}
+      <Card.Row>
+        <Card.Block>
+          {mailbox ? (
+            <Row.Star starred={starred} onToggle={handleToggleStar} />
+          ) : (
+            <Icon icon='ph--envelope-open--regular' />
+          )}
+        </Card.Block>
+        <div className='flex flex-col gap-1 overflow-hidden'>
+          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+          {message.created && (
+            <div className='whitespace-nowrap text-sm text-description'>
+              {formatDateTime(new Date(message.created), new Date())}
+            </div>
+          )}
+        </div>
+      </Card.Row>
 
-        {/* Sender row. */}
-        {/* TODO(burdon): List other To/CC/BCC. */}
-        <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
+      {/* Sender row. */}
+      {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
+      <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} />
 
-        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-        {objects.map((object) => (
-          <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
-        ))}
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <Row.Ref key={Obj.getURI(object).toString()} object={object} />
+      ))}
 
-        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-        <Header.TagsRow tags={tags} />
-      </Card.Body>
-    </Card.Root>
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      <Row.Tags tags={messageTags} />
+    </Header.Root>
   );
 };
 

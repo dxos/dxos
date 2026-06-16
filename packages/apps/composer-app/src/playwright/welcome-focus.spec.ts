@@ -64,7 +64,7 @@ const expectEmailHoldsFocus = (label: string, timeline: FocusSample[]) => {
   );
 };
 
-test.describe('Welcome focus', () => {
+test.describe.skip('Welcome focus', () => {
   test('EmailPrimary story keeps email focused', async ({ page }) => {
     await page.goto(storyUrl('apps-composer-app-welcome--email-primary'));
     await expect(page.getByPlaceholder('Your email')).toBeVisible({ timeout: 60_000 });

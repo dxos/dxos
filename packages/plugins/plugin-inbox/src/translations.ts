@@ -163,8 +163,6 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
-
-        'settings.title': 'Inbox settings',
       },
     },
   },

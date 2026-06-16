@@ -5,10 +5,11 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
+
+import { Row } from '#components';
 
 import { getMessageProps } from '../../util';
 
@@ -32,15 +33,7 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
         <Card.Text variant='description'>{snippet}</Card.Text>
       </Card.Row>
       <Card.Row>
-        {message.properties?.tags && (
-          <div>
-            {message.properties.tags.map(({ label, hue }: Tag.Tag) => (
-              <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
-                {label}
-              </span>
-            ))}
-          </div>
-        )}
+        <Row.Tags tags={message.properties?.tags} />
       </Card.Row>
     </Card.Body>
   );

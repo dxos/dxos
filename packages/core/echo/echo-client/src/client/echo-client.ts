@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -14,7 +15,7 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
-import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
 
 export type EchoClientProps = {};
 
@@ -67,6 +68,10 @@ export class EchoClient extends Resource {
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
+  /** Aggregated local object-update signal across all databases, consumed by index query sources. */
+  private readonly _objectsUpdated = new Event<ObjectUpdate>();
+  private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
+
   constructor(_: EchoClientProps = {}) {
     super();
   }
@@ -105,6 +110,7 @@ export class EchoClient extends Resource {
       service: this._queryService,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
+        updateEvent: this._objectsUpdated,
       },
       graph: this._graph,
     });
@@ -115,6 +121,10 @@ export class EchoClient extends Resource {
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
+    for (const unsubscribe of this._dbUpdateSubscriptions.values()) {
+      unsubscribe();
+    }
+    this._dbUpdateSubscriptions.clear();
     for (const db of this._databases.values()) {
       this._graph._unregisterDatabase(db.spaceId);
       await db.close();
@@ -148,6 +158,16 @@ export class EchoClient extends Resource {
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
+
+    // Forward this database's local object updates to the aggregated signal so reactive index
+    // sources can re-hydrate index hits once their documents become available locally.
+    this._dbUpdateSubscriptions.set(
+      spaceId,
+      db.coreDatabase._updateEvent.on((event) => {
+        this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
+      }),
+    );
+
     return db;
   }
 
@@ -187,6 +207,7 @@ export class EchoClient extends Resource {
         service: this._queryService,
         objectLoader: {
           loadObject: this._loadObjectFromDocument.bind(this),
+          updateEvent: this._objectsUpdated,
         },
         graph: this._graph,
       });
