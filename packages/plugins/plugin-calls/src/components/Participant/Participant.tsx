@@ -25,15 +25,17 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
 
   // Track name to display for non-self users; undefined when no video should show.
+  // Guard on both the enabled flag and track-ID presence — a track may be enabled in state
+  // before the ID has been published to the swarm.
   const pulledTrackName = useMemo<EncodedTrackName | undefined>(() => {
     if (isSelf) {
       return undefined;
     }
-    if (isScreenshare && user.tracks?.screenshareEnabled) {
-      return user.tracks?.screenshare as EncodedTrackName;
+    if (isScreenshare && user.tracks?.screenshareEnabled && user.tracks?.screenshare) {
+      return user.tracks.screenshare as EncodedTrackName;
     }
-    if (!isScreenshare && user.tracks?.videoEnabled) {
-      return user.tracks?.video as EncodedTrackName;
+    if (!isScreenshare && user.tracks?.videoEnabled && user.tracks?.video) {
+      return user.tracks.video as EncodedTrackName;
     }
     return undefined;
   }, [
@@ -54,14 +56,25 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
     return pulledVideoStream;
   }, [isSelf, isScreenshare, localVideoStream, screenshareVideoStream, pulledVideoStream]);
 
+  // For self tiles use local media state; for remote tiles use the participant's swarm-reported state.
+  // Self screenshare tiles gate on screenshareVideoStream, not camera state.
+  // Remote tiles require both the enabled flag and track-ID presence to stay consistent with pulledTrackName.
+  const participantVideo = isSelf
+    ? isScreenshare
+      ? Boolean(screenshareVideoStream)
+      : videoEnabled
+    : isScreenshare
+      ? Boolean(user.tracks?.screenshareEnabled && user.tracks?.screenshare)
+      : Boolean(user.tracks?.videoEnabled && user.tracks?.video);
+
   return (
     <ResponsiveGridItem
       {...props}
       item={user}
       name={user.name}
       self={isSelf}
-      screenshare={!!screenshareVideoStream}
-      video={videoEnabled}
+      screenshare={isScreenshare && participantVideo}
+      video={participantVideo}
       mute={user ? !user.tracks?.audioEnabled : false}
       wave={user.raisedHand}
       speaking={user.speaking}
