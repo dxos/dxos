@@ -79,9 +79,7 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * )
  * ```
  *
- * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files
- * //   is a high bar. Ideally createTypeSectionExtension would wire up paths, navigation, and
- * //   the createObject fallback automatically so callers only need the one call in step 2.
+ * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
  *
  * @idiom org.dxos.app-toolkit.typeSection
  *   applies: Dedicated sidebar sections that list objects of a single ECHO type under a space
