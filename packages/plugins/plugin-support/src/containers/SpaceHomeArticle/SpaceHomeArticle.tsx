@@ -14,9 +14,9 @@ import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/e
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { AssistantCapabilities, AssistantOperation, getChatPath, type ChatType } from '@dxos/plugin-assistant';
-import { Graph } from '@dxos/plugin-graph';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
+import { Graph } from '@dxos/plugin-graph';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { Card, Carousel, Icon, IconButton, Panel, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';

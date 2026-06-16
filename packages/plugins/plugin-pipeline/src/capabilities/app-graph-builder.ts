@@ -15,6 +15,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
+
 import { getPipelinesPath } from '../paths';
 
 export default Capability.makeModule(

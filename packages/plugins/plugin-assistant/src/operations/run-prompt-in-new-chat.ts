@@ -17,6 +17,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
 import { getChatPath } from '../paths';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewChat> =

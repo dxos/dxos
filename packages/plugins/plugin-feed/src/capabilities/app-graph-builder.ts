@@ -19,6 +19,7 @@ import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
+
 import { getMagazinesPath } from '../paths';
 
 const magazineTypename = Type.getTypename(Magazine.Magazine);

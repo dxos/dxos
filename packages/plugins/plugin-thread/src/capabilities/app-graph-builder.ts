@@ -16,6 +16,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
+
 import { getChannelsPath } from '../paths';
 
 const channelTypename = Type.getTypename(Channel.Channel);
