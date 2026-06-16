@@ -1,4 +1,4 @@
-# Bramble Coffee Roasters — Space Tour
+# Space Tour
 
 This is a **sample space**. It is the workspace of _Bramble Coffee Roasters_, a small specialty coffee company in Oakland. The data is fictional — feel free to break, rename, or delete anything. Your own work lives in your **Personal** space (in the sidebar). When you're done exploring, you can delete this space entirely.
 
