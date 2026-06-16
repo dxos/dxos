@@ -16,7 +16,6 @@ import { parse } from 'yaml';
 export type PluginMetaEntry = {
   id: string;
   name: string;
-  author?: string;
   description?: string;
   homePage?: string;
   source?: string;

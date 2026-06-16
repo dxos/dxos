@@ -20,12 +20,13 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
-type PluginConfig = {
-  id: string;
-  name: string;
-  build?: { command?: string; outdir?: string };
-  publish?: { assetBaseUrl?: string };
-};
+const PluginConfigSchema = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  build: Schema.optional(Schema.Struct({ command: Schema.optional(Schema.String), outdir: Schema.optional(Schema.String) })),
+  publish: Schema.optional(Schema.Struct({ assetBaseUrl: Schema.optional(Schema.String) })),
+});
+type PluginConfig = Schema.Schema.Type<typeof PluginConfigSchema>;
 
 /** Manifest emitted by the build (subset consumed here). */
 const ManifestSchema = Schema.Struct({
@@ -48,13 +49,13 @@ const ManifestSchema = Schema.Struct({
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
 
 const PluginsDocSchema = Schema.Struct({
-  package: Schema.optional(Schema.Struct({ plugins: Schema.optional(Schema.Array(Schema.Unknown)) })),
+  package: Schema.optional(Schema.Struct({ plugins: Schema.optional(Schema.Array(PluginConfigSchema)) })),
 });
 
 const ensureTrailingSlash = (url: string): string => (url.endsWith('/') ? url : `${url}/`);
 
 const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes as unknown as BufferSource);
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes as BufferSource);
   return Buffer.from(new Uint8Array(digest)).toString('base64');
 };
 
@@ -113,7 +114,7 @@ export const publish = Command.make(
         }
         const { parse } = yield* Effect.promise(() => import('yaml'));
         const doc = yield* Schema.decodeUnknown(PluginsDocSchema)(parse(yield* fs.readFileString(dxYmlPath)));
-        const plugins = (doc.package?.plugins ?? []) as PluginConfig[];
+        const plugins = doc.package?.plugins ?? [];
         const moduleId = Option.getOrUndefined(options.module);
         const plugin = moduleId ? plugins.find((entry) => entry.id === moduleId) : plugins[0];
         if (!plugin?.id) {
@@ -293,9 +294,8 @@ const uploadBundleDirect = ({
       files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
     }
 
-    const result = (yield* Effect.tryPromise(() =>
+    const { moduleUrl } = yield* Effect.tryPromise(() =>
       http.uploadPluginBundle(Context.default(), { slug, version, files }, { auth: false }),
-    )) as { moduleUrl: string };
-    const moduleUrl = result.moduleUrl;
+    );
     return moduleUrl;
   });

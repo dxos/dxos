@@ -407,7 +407,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
       apply: 'build',
       configResolved(config: ResolvedConfig) {
         base = config.base ?? '/';
-        resolveFrom = path.join(config.root, 'package.json');
+        resolveFrom = config.root;
         const conditionNames = ['source', ...(config.resolve.conditions ?? [])];
         sourceResolver = new ResolverFactory({ conditionNames });
       },

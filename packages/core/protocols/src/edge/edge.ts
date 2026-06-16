@@ -339,6 +339,9 @@ export enum OAuthProvider {
   TRELLO = 'trello',
 }
 
+/** atproto OAuth scopes for the Atmosphere integration and account-recovery flows. */
+export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
+
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enums(OAuthProvider),
   spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.

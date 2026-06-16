@@ -79,7 +79,11 @@ const getPersistedRemotePlugins = (storage: Storage, key: string): RemotePluginV
     }
     return parsed.filter(
       (entry): entry is RemotePluginView =>
-        typeof entry === 'object' && entry !== null && typeof entry.id === 'string' && typeof entry.url === 'string',
+        typeof entry === 'object' &&
+        entry !== null &&
+        typeof entry.id === 'string' &&
+        typeof entry.url === 'string' &&
+        (entry.version === undefined || typeof entry.version === 'string'),
     );
   } catch {
     return [];

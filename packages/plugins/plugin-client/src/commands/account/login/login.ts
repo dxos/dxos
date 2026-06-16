@@ -11,14 +11,13 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { CommandConfig, print } from '@dxos/cli-util';
-import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
+import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { HubHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { OAuthProvider } from '@dxos/protocols';
+import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { printIdentity, waitForState } from '../../halo/util';
 
@@ -26,15 +25,9 @@ type LoginMethod = 'email' | 'atproto' | 'device-invitation' | 'recovery-code';
 
 const LOGIN_METHODS: LoginMethod[] = ['email', 'atproto', 'device-invitation', 'recovery-code'];
 
-/**
- * atproto OAuth scopes for the gate login flow. Mirrors `ATPROTO_OAUTH_SCOPES` in
- * plugin-integration; inlined here to avoid a plugin-client -> plugin-integration dependency cycle.
- */
-const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'];
-
 const METHOD_CHOICES = [
   { title: 'Email', value: 'email' as const },
-  { title: 'Bluesky / atproto', value: 'atproto' as const },
+  { title: 'AT Protocol', value: 'atproto' as const },
   { title: 'Device invitation', value: 'device-invitation' as const },
   { title: 'Recovery code', value: 'recovery-code' as const },
 ];
@@ -133,9 +126,7 @@ const loginWithEmail = (client: Client, email: string) =>
 /**
  * Device-invitation login: joins an existing identity from another authorized device.
  *
- * NOTE: the standalone `halo join` command is currently unregistered "due to p2p networking not
- * working in bun" — this method may not establish under the bun CLI runtime and can hang waiting
- * for the peer. Verify before relying on it.
+ * NOTE: p2p networking does not work in bun — this method will likely hang waiting for the peer.
  */
 const loginWithDeviceInvitation = (client: Client, encoded: string) =>
   Effect.gen(function* () {

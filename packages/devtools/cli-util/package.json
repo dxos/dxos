@@ -22,11 +22,6 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "node": "./dist/lib/node-esm/testing/index.mjs"
-    },
-    "./oauth": {
-      "source": "./src/oauth/index.ts",
-      "types": "./dist/types/src/oauth/index.d.ts",
-      "node": "./dist/lib/node-esm/oauth/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

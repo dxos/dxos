@@ -74,7 +74,12 @@ message Plugin {
   optional string home_page = 11;
   optional string source = 12;
   optional string spec = 13;
-  repeated string screenshots = 14;
+  message Screenshot {
+    optional string url = 1;   // Simple URL (mutually exclusive with light/dark).
+    optional string light = 2; // Light-theme variant URL.
+    optional string dark = 3;  // Dark-theme variant URL.
+  }
+  repeated Screenshot screenshots = 14;
   optional string icon = 15;
   optional string icon_hue = 16;
   repeated string depends_on = 17; // Bare NSIDs of plugins this depends on.
