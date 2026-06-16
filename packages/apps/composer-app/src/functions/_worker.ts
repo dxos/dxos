@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FEEDBACK_LOGS_MAX_SIZE } from '../constants';
+import { FEEDBACK_LOGS_MAX_SIZE } from '../util/constants';
 
 type Env = {
   ASSETS: Fetcher;

@@ -23,8 +23,8 @@ import {
 } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { setSafeModeUrl } from '../../config';
-import { RECOVERY_PATH } from '../../constants';
+import { setSafeModeUrl } from '../../util/config';
+import { RECOVERY_PATH } from '../../util/constants';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {

@@ -30,21 +30,16 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { ResetDialog } from './components';
-import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
-import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
-import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
-import { showDevRssBanner } from './dev-rss-banner';
-import { downloadLogs } from './log-download';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
-import { startupProfiler } from './profiler';
-import { translations } from './translations';
-import {
-  defaultStorageIsEmpty,
-  isFalse,
-  isTrue,
-  runStorageResetMigration,
-  shouldRunStorageResetMigration,
-} from './util';
+import { initializeObservability, PARAM_PROFILER, setupConfig } from './util/config';
+import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './util/config';
+import { APP_KEY, LOG_STORE_DB_NAME } from './util/constants';
+import { showDevRssBanner } from './util/dev-rss-banner';
+import { downloadLogs } from './util/log-download';
+import { startupProfiler } from './util/profiler';
+import { defaultStorageIsEmpty, runStorageResetMigration, shouldRunStorageResetMigration } from './util/storage';
+import { translations } from './util/translations';
+import { isFalse, isTrue } from './util/url';
 
 declare global {
   interface ImportMeta {
@@ -370,17 +365,17 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createWorker: () =>
-      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/shared-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createDedicatedWorker: () =>
-      new Worker(new URL('./dedicated-worker', import.meta.url), {
+      new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createCoordinatorWorker: () =>
-      new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-coordinator-worker',
       }),

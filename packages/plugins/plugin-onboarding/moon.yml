@@ -1,0 +1,25 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/OnboardingPlugin.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--platform=neutral'
+  build-exemplar:
+    script: pnpm run --silent build-exemplar
+    env:
+      BUILD_EXEMPLAR: '1'
+    deps:
+      - ^:compile
+    inputs:
+      - scripts/build-exemplar-space.ts
+      - src/content/welcome.md
+      - src/content/about-bramble.md
+    outputs:
+      - src/content/exemplar-space.dx.json
