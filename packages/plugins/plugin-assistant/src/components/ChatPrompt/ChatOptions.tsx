@@ -64,14 +64,8 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
-              <Tabs.Root
-                classNames='flex'
-                orientation='horizontal'
-                defaultValue='view'
-                defaultActivePart='list'
-                tabIndex={-1}
-              >
-                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
+              <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
+                <Tabs.Viewport classNames={mx('flex grid grid-rows-[1fr_40px] w-full')}>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
@@ -152,12 +146,14 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
 
   return (
     <Listbox.Root value={value} onValueChange={setView} autoFocus>
-      {Assistant.ChatViews.map((view) => (
-        <Listbox.Option key={view} value={view}>
-          <Listbox.OptionLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.OptionLabel>
-          <Listbox.OptionIndicator />
-        </Listbox.Option>
-      ))}
+      <Listbox.Content aria-label={t('chat-view.title')}>
+        {Assistant.ChatViews.map((view) => (
+          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };
@@ -167,16 +163,17 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
+  const { t } = useTranslation(meta.id);
   return (
     <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-      {presets?.map(({ id, label }) => {
-        return (
-          <Listbox.Option key={id} value={id}>
-            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
-            <Listbox.OptionIndicator />
-          </Listbox.Option>
-        );
-      })}
+      <Listbox.Content aria-label={t('options.chat-model.title')}>
+        {presets?.map(({ id, label }) => (
+          <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };

@@ -19,12 +19,12 @@
    */
   .dx-hover {
     @apply cursor-pointer
-      hover:bg-hover-surface! hover:text-hover-fg!
+      hover:bg-hover-surface-subtle! hover:text-hover-fg!
       hover:aria-selected:bg-selected-surface-hover hover:aria-selected:text-selected-fg
       hover:aria-[current=true]:bg-current-surface-hover hover:aria-[current=true]:text-current-fg;
   }
   .dx-hover-row {
-    @apply group-hover/row:bg-hover-surface! group-hover/row:text-hover-fg!
+    @apply group-hover/row:bg-hover-surface-subtle! group-hover/row:text-hover-fg!
       group-hover/row:group-aria-selected/row:bg-selected-surface-hover!
       group-hover/row:group-aria-selected/row:text-selected-fg!
       group-hover/row:group-aria-[current=true]/row:bg-current-surface-hover!
@@ -72,28 +72,5 @@
     @apply data-[highlighted]:bg-current-surface
       data-[highlighted]:text-current-fg
       hover:data-[highlighted]:bg-current-surface-hover;
-  }
-}
-
-@layer dx-tokens {
-  /*
-   * Sidebars sit on a different surface than the main content, so nudge the state highlights to
-   * keep contrast: offset each token off its `*-base` (see semantic.css) — darker in light mode,
-   * lighter in dark. Tune the magnitude via --dx-sidebar-l-shift.
-   */
-  .dx-main-sidebar {
-    --dx-sidebar-l-shift: 0.04;
-    --color-hover-surface: light-dark(
-      oklch(from var(--dx-hover-surface-base) calc(l - var(--dx-sidebar-l-shift)) c h),
-      oklch(from var(--dx-hover-surface-base) calc(l + var(--dx-sidebar-l-shift)) c h)
-    );
-    --color-current-surface: light-dark(
-      oklch(from var(--dx-current-surface-base) calc(l - var(--dx-sidebar-l-shift)) c h),
-      oklch(from var(--dx-current-surface-base) calc(l + var(--dx-sidebar-l-shift)) c h)
-    );
-    --color-current-surface-hover: light-dark(
-      oklch(from var(--dx-current-surface-hover-base) calc(l - var(--dx-sidebar-l-shift)) c h),
-      oklch(from var(--dx-current-surface-hover-base) calc(l + var(--dx-sidebar-l-shift)) c h)
-    );
   }
 }

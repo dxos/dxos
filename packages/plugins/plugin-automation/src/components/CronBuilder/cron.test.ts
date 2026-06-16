@@ -36,7 +36,9 @@ describe('toCron', () => {
   });
 
   test('weekly: Mon, Wed, Fri at 08:00', ({ expect }) => {
-    expect(toCron({ frequency: 'weekly', daysOfWeek: ['mon', 'wed', 'fri'], hour: 8, minute: 0 })).toBe('0 8 * * 1,3,5');
+    expect(toCron({ frequency: 'weekly', daysOfWeek: ['mon', 'wed', 'fri'], hour: 8, minute: 0 })).toBe(
+      '0 8 * * 1,3,5',
+    );
   });
 
   test('weekly: Sunday (DOW=0) at midnight', ({ expect }) => {
@@ -90,7 +92,12 @@ describe('fromCron', () => {
   });
 
   test('weekly multiple days', ({ expect }) => {
-    expect(fromCron('0 8 * * 1,3,5')).toEqual({ frequency: 'weekly', daysOfWeek: ['mon', 'wed', 'fri'], hour: 8, minute: 0 });
+    expect(fromCron('0 8 * * 1,3,5')).toEqual({
+      frequency: 'weekly',
+      daysOfWeek: ['mon', 'wed', 'fri'],
+      hour: 8,
+      minute: 0,
+    });
   });
 
   test('monthly single day', ({ expect }) => {

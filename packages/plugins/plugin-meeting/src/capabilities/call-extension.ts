@@ -18,8 +18,7 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space } from '@dxos/react-client/echo';
 import { type Channel, type Message } from '@dxos/types';
 
-import { MeetingOperation } from '#types';
-import { Meeting, MeetingCapabilities } from '#types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?

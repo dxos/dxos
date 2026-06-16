@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -102,13 +102,17 @@ const Item = ({ data }: { data: any }) => {
     <Menu.Root>
       <Card.Root>
         <Card.Header>
-          <Card.Icon icon={icon} />
+          <Card.Block>
+            <Icon icon={icon} />
+          </Card.Block>
           <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-          </Menu.Trigger>
-          <Menu.Content items={objectMenuItems} />
+          <Card.Block end>
+            <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+              <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            </Menu.Trigger>
+            <Menu.Content items={objectMenuItems} />
+          </Card.Block>
         </Card.Header>
         <Surface.Surface
           type={AppSurface.Card}

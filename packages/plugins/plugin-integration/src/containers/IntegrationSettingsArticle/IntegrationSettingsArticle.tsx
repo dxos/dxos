@@ -12,7 +12,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { Row, RowList } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
@@ -66,9 +66,9 @@ export const IntegrationSettingsArticle = (_props: IntegrationSettingsArticlePro
 
       {integrations.length > 0 && (
         <Settings.Section title={t('integrations.label', { defaultValue: 'Integrations' })}>
-          <RowList.Root>
-            <RowList.Viewport>
-              <RowList.Content>
+          <Listbox.Root>
+            <Listbox.Viewport>
+              <Listbox.Content aria-label={t('integrations.label', { defaultValue: 'Integrations' })}>
                 {integrations.map((integration) => {
                   const accessToken = integration.accessToken?.target;
                   const label =
@@ -77,19 +77,19 @@ export const IntegrationSettingsArticle = (_props: IntegrationSettingsArticlePro
                       ? `${accessToken.source}${accessToken.account ? ` · ${accessToken.account}` : ''}`
                       : (integration.providerId ?? integration.id));
                   return (
-                    <Row
+                    <Listbox.Item
                       key={integration.id}
                       id={integration.id}
                       classNames='cursor-pointer'
                       onClick={() => handleSelect(integration)}
                     >
                       <span className='truncate'>{label}</span>
-                    </Row>
+                    </Listbox.Item>
                   );
                 })}
-              </RowList.Content>
-            </RowList.Viewport>
-          </RowList.Root>
+              </Listbox.Content>
+            </Listbox.Viewport>
+          </Listbox.Root>
         </Settings.Section>
       )}
     </Settings.Viewport>

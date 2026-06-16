@@ -1,6 +1,6 @@
 # @dxos/plugin-meeting
 
-Video calls plugin for DXOS Composer.
+Meeting hub plugin for DXOS Composer.
 
 ## DXOS Resources
 

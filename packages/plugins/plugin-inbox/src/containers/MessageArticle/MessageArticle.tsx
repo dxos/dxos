@@ -8,11 +8,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { Message, type MessageHeaderProps, ObjectArticle, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
 import { InboxOperation } from '#types';
 import { Mailbox } from '#types';
@@ -88,6 +87,7 @@ export const MessageArticle = ({
       attendableId={toolbarAttendableId}
       viewMode={viewMode}
       message={message}
+      mailbox={mailbox}
       sender={sender}
       onOpen={companionTo ? handleOpen : undefined}
       onReply={handleReply}
@@ -95,17 +95,13 @@ export const MessageArticle = ({
       onForward={handleForward}
       onDelete={mailbox ? handleDelete : undefined}
     >
-      <Panel.Root role={role} className='dx-document'>
-        <Panel.Toolbar asChild>
-          <Message.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Message.Viewport role={role}>
-            <Message.Header onContactCreate={handleContactCreate} />
-            <Message.Body />
-          </Message.Viewport>
-        </Panel.Content>
-      </Panel.Root>
+      <ObjectArticle
+        role={role}
+        toolbar={<Message.Toolbar />}
+        header={<Message.Header onContactCreate={handleContactCreate} />}
+      >
+        <Message.Body />
+      </ObjectArticle>
     </Message.Root>
   );
 };

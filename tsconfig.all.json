@@ -22,6 +22,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "packages/common/av/tsconfig.json"
+    },
+    {
       "path": "packages/common/codec-protobuf/tsconfig.json"
     },
     {
@@ -202,6 +205,9 @@
       "path": "packages/core/echo/echo-client/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-client-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-generator/tsconfig.json"
     },
     {
@@ -251,6 +257,9 @@
     },
     {
       "path": "packages/core/mesh/teleport/tsconfig.json"
+    },
+    {
+      "path": "packages/core/mesh/teleport-e2e/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/teleport-extension-automerge-replicator/tsconfig.json"
@@ -571,6 +580,9 @@
       "path": "packages/sdk/client/tsconfig.json"
     },
     {
+      "path": "packages/sdk/client-e2e/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/client-protocol/tsconfig.json"
     },
     {
@@ -725,9 +737,6 @@
     },
     {
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"

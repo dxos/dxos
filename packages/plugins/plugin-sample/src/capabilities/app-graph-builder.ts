@@ -97,7 +97,7 @@ export default Capability.makeModule(
           const items = get(space.db.query(Filter.type(SampleItem.SampleItem)).atom);
           return Effect.succeed(
             items
-              .map((item) => createObjectNode({ db: space.db, object: item }))
+              .map((item) => createObjectNode({ get, db: space.db, object: item }))
               .filter((node): node is NonNullable<typeof node> => node !== null),
           );
         },

@@ -31,6 +31,7 @@ export const get = (object: Obj.Any | Obj.Snapshot<Obj.Any>, { index }: Options 
   if (index) {
     return TagIndex.bind(index).tags(object.id);
   }
+
   return Obj.getMeta(object).tags.map((tag) => tag.uri);
 };
 

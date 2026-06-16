@@ -13,7 +13,7 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import {
   Form,
-  type FormFieldComponentProps,
+  type FormFieldRendererProps,
   type FormFieldMap,
   RefField,
   SelectField,
@@ -23,8 +23,9 @@ import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
-import { CronBuilder } from '../../components/CronBuilder/CronBuilder';
+
 import { describeCron, fromCron, toCron } from '../../components/CronBuilder/cron';
+import { CronBuilder } from '../../components/CronBuilder/CronBuilder';
 import { type CronSpecType, FrequencyDefaults } from '../../components/CronBuilder/schema';
 
 const RUN_ROUTINE_DXN = 'org.dxos.function.prompt';
@@ -107,7 +108,7 @@ const EnabledField = ({
   canEnable,
   messageKey,
   ...props
-}: FormFieldComponentProps & { canEnable: boolean; messageKey?: string }) => {
+}: FormFieldRendererProps & { canEnable: boolean; messageKey?: string }) => {
   const { t } = useTranslation(meta.id);
   return (
     <div className='flex items-center gap-2 pt-form-padding'>
@@ -220,7 +221,7 @@ const ActionInputEditor = ({
 
   return (
     <>
-      <Form.Label label={t('action-input.label')} asChild />
+      <Form.Label label={t('action-input.label')} standalone />
       <Form.Root
         key={operation.id}
         schema={effectSchema}
@@ -352,7 +353,7 @@ export const AutomationInlineForm = ({
 //
 
 /** Renders the CronBuilder with a live cronstrue description below it. */
-const CronField = (props: FormFieldComponentProps) => {
+const CronField = (props: FormFieldRendererProps) => {
   const existingCron = props.getValue() as string | undefined;
   const initialSpec = useMemo(
     () => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily),

@@ -32,11 +32,7 @@ const grid: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('gap-y-1
 
 const header: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-const icon: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-1 grid place-items-center', ...etc);
-
 const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 truncate font-medium', ...etc);
-
-const close: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-3', ...etc);
 
 const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx('col-start-2 overflow-hidden text-description', ...etc);
@@ -48,9 +44,7 @@ export const toastTheme: Theme<ToastStyleProps> = {
   root,
   grid,
   header,
-  icon,
   title,
-  close,
   description,
   actions,
 };

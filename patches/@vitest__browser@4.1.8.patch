@@ -1,0 +1,58 @@
+diff --git a/dist/client/__vitest_browser__/tester-DQAp97S5.js b/dist/client/__vitest_browser__/tester-DQAp97S5.js
+index e879cab476793ae4558a31d21f4b175ab5f3f5bd..773362579a28e0c06d6e993d20b7f48496e87c4e 100644
+--- a/dist/client/__vitest_browser__/tester-DQAp97S5.js
++++ b/dist/client/__vitest_browser__/tester-DQAp97S5.js
+@@ -139,7 +139,24 @@
+ function createSafeRpc(client2) {
+   return new Proxy(client2.rpc, {
+     get(target, p, handler) {
+-      if (p === "then") {
++      // DXOS patch: guard against JS engine introspection (await,
++      // JSON.stringify, console.log, etc.). Symbol-keyed or `toJSON`
++      // accesses must return `undefined` rather than a sendCall, otherwise
++      // they fire phantom RPC requests. Symbols serialize to `undefined`
++      // over the wire (JSON drops them), so the receiver sees a message
++      // with `m: undefined` and reports
++      // `[birpc] function "undefined" not found`.
++      //
++      // Upstream: https://github.com/vitest-dev/vitest/issues/10214
++      // Upstream PRs: https://github.com/vitest-dev/vitest/pull/10231,
++      //               https://github.com/vitest-dev/vitest/pull/10245
++      // Both were auto-closed as "maybe automated"; maintainers themselves
++      // recommended this exact guard in the issue thread but no upstream
++      // fix has landed. Drop this patch when one does.
++      if (typeof p !== "string") {
++        return;
++      }
++      if (p === "then" || p === "toJSON") {
+         return;
+       }
+       const sendCall = get(target, p, handler);
+diff --git a/dist/index.js b/dist/index.js
+index bc9f871cd750f98919315d1ac8296ed67f21baac..5957ac02340f6a3d7b74453ef86804791e694884 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -2895,7 +2895,23 @@
+ 	};
+ 	if (proxify) rpc = new Proxy({}, { get(_, method) {
+ 		if (Object.prototype.hasOwnProperty.call(builtinMethods, method)) return builtinMethods[method];
++		// DXOS patch: guard against JS engine introspection (await,
++		// JSON.stringify, console.log, etc.). Symbol-keyed or `toJSON`
++		// property accesses must return `undefined` instead of a sendCall,
++		// otherwise they fire phantom RPC requests. Symbols serialize to
++		// `undefined` over the wire (JSON drops them), so the receiver sees
++		// a message with `m: undefined` and reports
++		// `[birpc] function "undefined" not found`.
++		//
++		// Upstream: https://github.com/vitest-dev/vitest/issues/10214
++		// Upstream PRs: https://github.com/vitest-dev/vitest/pull/10231,
++		//               https://github.com/vitest-dev/vitest/pull/10245
++		// Both were auto-closed as "maybe automated"; maintainers themselves
++		// recommended this exact guard in the issue thread but no upstream
++		// fix has landed. Drop this patch when one does.
++		if (typeof method !== "string") return void 0;
+ 		if (method === "then" && !eventNames.includes("then") && !("then" in $functions)) return void 0;
++		if (method === "toJSON" && !eventNames.includes("toJSON") && !("toJSON" in $functions)) return void 0;
+ 		const sendEvent = (...args) => _call(method, args, true);
+ 		if (eventNames.includes(method)) {
+ 			sendEvent.asEvent = sendEvent;

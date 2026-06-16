@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
-import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
+import { RootAttentionProvider, ViewStateProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { AttentionCapabilities } from '#types';
@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
       id: meta.id,
       context: (props: PropsWithChildren) => {
         const attention = useCapability(AttentionCapabilities.Attention);
-        const selection = useCapability(AttentionCapabilities.Selection);
+        const viewState = useCapability(AttentionCapabilities.ViewState);
 
         return (
           <RootAttentionProvider
@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
               // }
             }}
           >
-            <SelectionProvider selection={selection}>{props.children}</SelectionProvider>
+            <ViewStateProvider manager={viewState}>{props.children}</ViewStateProvider>
           </RootAttentionProvider>
         );
       },

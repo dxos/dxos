@@ -64,8 +64,8 @@ export const WithTimerTrigger: Story = {
         const trigger = space.db.add(Trigger.make({ enabled: false, spec: { kind: 'timer', cron: '0 9 * * *' } }));
         const automation = space.db.add(Automation.make({ name: 'Daily Digest', triggers: [] }));
         // Wire the trigger into the automation after both are in the db.
-        Obj.update(automation, (auto) => {
-          auto.triggers = [...auto.triggers, Ref.make(trigger)];
+        Obj.update(automation, (automation) => {
+          automation.triggers = [...automation.triggers, Ref.make(trigger)];
         });
       },
     }),

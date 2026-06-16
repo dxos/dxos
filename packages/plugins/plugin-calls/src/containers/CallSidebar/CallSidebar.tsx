@@ -28,14 +28,15 @@ export const CallSidebar = () => {
   }, [call, leaveSound]);
 
   return (
-    <Panel.Root>
-      <Panel.Content>
-        <Call.Root>
-          <Call.Audio />
-          <Call.Grid />
-          <Call.Toolbar onLeave={handleLeave} />
-        </Call.Root>
-      </Panel.Content>
-    </Panel.Root>
+    <Call.Root>
+      <Panel.Root>
+        <Panel.Content asChild>
+          <Call.Viewport>
+            <Call.Grid />
+            <Call.Toolbar onLeave={handleLeave} />
+          </Call.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Call.Root>
   );
 };

@@ -14,9 +14,8 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
   Partial<Pick<IconProps, 'icon' | 'size'>> & {
     label: string;
     noTooltip?: boolean;
-    caretDown?: boolean;
     iconOnly?: boolean;
-    square?: boolean; // TODO(burdon): Handle more uniformly.
+    square?: boolean; // TODO(burdon): Should be automatic in style?
     iconEnd?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipSide?: TooltipSide;
@@ -46,7 +45,7 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
-    { size, icon, iconOnly, square, iconEnd, iconClassNames, label, caretDown, noTooltip: _, classNames, ...props },
+    { size, icon, iconOnly, square, iconEnd, iconClassNames, label, noTooltip: _, classNames, ...props },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
@@ -55,7 +54,6 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         {icon && !iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
         {icon && iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
-        {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}
       </Button>
     );
   },

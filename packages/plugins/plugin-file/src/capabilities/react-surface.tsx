@@ -11,7 +11,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
-import { type FormFieldComponentProps } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { FileInput, FileSettings } from '#components';
 import { FileArticle } from '#containers';
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          const inputProps = { ...props, type: ast } as unknown as FormFieldComponentProps;
+          const inputProps = { ...props, type: ast } as unknown as FormFieldRendererProps;
           const handleChange = useCallback(
             (file: File) => inputProps.onValueChange?.(ast, file),
             [ast, inputProps.onValueChange],

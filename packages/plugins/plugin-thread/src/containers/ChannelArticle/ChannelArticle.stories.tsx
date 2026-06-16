@@ -12,6 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Feed, Query } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
+import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -85,6 +86,7 @@ const meta = {
         }),
         SpacePlugin({}),
         ThreadPlugin(),
+        CallsPlugin(),
       ],
     }),
   ],

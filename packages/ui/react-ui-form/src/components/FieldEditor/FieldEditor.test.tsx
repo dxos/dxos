@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { ProjectionModel } from '@dxos/schema';
 
-import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { FIELD_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './FieldEditor.stories';
 import { type FieldEditorDebugObjects } from './FieldEditor.stories';
 

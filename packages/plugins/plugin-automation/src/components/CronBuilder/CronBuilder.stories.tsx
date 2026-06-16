@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { CronBuilder } from './CronBuilder';
 import { describeCron, toCron } from './cron';
+import { CronBuilder } from './CronBuilder';
 import { FrequencyDefaults, type CronSpecType } from './schema';
 
 const DefaultStory = () => {

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
 import type * as SchemaAST from 'effect/SchemaAST';
+import React, { useCallback, useMemo } from 'react';
 
 import {
   Form,
-  type FormFieldComponentProps,
+  type FormFieldRendererProps,
   type FormFieldMap,
   type FormRootProps,
   SelectField,
@@ -32,10 +32,7 @@ export type CronBuilderProps = {
 export const CronBuilder = ({ value, onChange, readonly }: CronBuilderProps) => {
   const fieldMap = useFrequencyFieldMap();
 
-  const defaultValues = useMemo<CronBuilderSchemaType>(
-    () => ({ spec: value ?? FrequencyDefaults.daily }),
-    [],
-  );
+  const defaultValues = useMemo<CronBuilderSchemaType>(() => ({ spec: value ?? FrequencyDefaults.daily }), []);
 
   const handleValuesChanged = useCallback(
     (values: Partial<CronBuilderSchemaType>) => {
@@ -74,7 +71,7 @@ const useFrequencyFieldMap = (): FormFieldMap => {
   );
 };
 
-const FrequencySelector = (props: FormFieldComponentProps) => {
+const FrequencySelector = (props: FormFieldRendererProps) => {
   // Access the parent `spec` field so switching frequency replaces the entire variant object.
   const specState = useFormFieldState(FrequencySelector.displayName, ['spec']);
 
@@ -89,10 +86,7 @@ const FrequencySelector = (props: FormFieldComponentProps) => {
     [props.type, specState],
   );
 
-  const options = useMemo(
-    () => Frequencies.map((freq) => ({ value: freq, label: FrequencyLabels[freq] })),
-    [],
-  );
+  const options = useMemo(() => Frequencies.map((freq) => ({ value: freq, label: FrequencyLabels[freq] })), []);
 
   return <SelectField {...props} options={options} onValueChange={handleChange} />;
 };

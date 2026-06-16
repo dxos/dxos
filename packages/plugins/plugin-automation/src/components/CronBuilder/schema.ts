@@ -55,9 +55,9 @@ export const WeeklySpec = Schema.Struct({
 
 export const MonthlySpec = Schema.Struct({
   frequency: Schema.Literal('monthly').annotations({ title: 'Frequency' }),
-  daysOfMonth: Schema.Array(
-    Schema.Number.pipe(Schema.between(1, 31)).annotations({ title: 'Day' }),
-  ).annotations({ title: 'Days of month' }),
+  daysOfMonth: Schema.Array(Schema.Number.pipe(Schema.between(1, 31)).annotations({ title: 'Day' })).annotations({
+    title: 'Days of month',
+  }),
   hour: Schema.Number.pipe(Schema.between(0, 23)).annotations({
     title: 'Hour',
     description: '0–23',
@@ -88,7 +88,14 @@ export const CronSpec = Schema.Union(
 export type CronSpecType = Schema.Schema.Type<typeof CronSpec>;
 export type Frequency = CronSpecType['frequency'];
 
-export const Frequencies = ['minutely', 'hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly Frequency[];
+export const Frequencies = [
+  'minutely',
+  'hourly',
+  'daily',
+  'weekly',
+  'monthly',
+  'custom',
+] as const satisfies readonly Frequency[];
 
 export const FrequencyLabels: Record<Frequency, string> = {
   minutely: 'Every N minutes',
