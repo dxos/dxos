@@ -20,64 +20,12 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * typename and annotations — no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
- * Usage:
- * ```ts
- * // 1. In paths.ts — strongly-typed path helpers for the section:
- * const { getSectionPath: getChatsPath, getObjectPath: getChatPath } =
- *   createTypeSectionPaths(Chat.Chat);
- * export { getChatsPath, getChatPath };
- *
- * // 2. In app-graph-builder.ts — one call per type:
- * createTypeSectionExtension(Chat.Chat)
- *
- * // 3. In capabilities/create-object.ts — the ?? fallback is the critical piece:
- * //    it ensures navigation lands in the type section (root/<spaceId>/<typename>/<objectId>)
- * //    regardless of how the object was created — section "+" button, space-level dialog,
- * //    or programmatically. Without it the space-level dialog still goes to the database
- * //    subtree (root/<spaceId>/types/<typename>/all/<objectId>).
- * Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
- *   id: Type.getTypename(Chat.Chat),
- *   createObject: (props, options) =>
- *     Effect.gen(function* () {
- *       const object = Chat.make(props);
- *       return yield* Operation.invoke(SpaceOperation.AddObject, {
- *         object,
- *         target: options.target,
- *         targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId), // <-- required
- *       });
- *     }),
- * })
- *
- * // 4. In app-graph-builder.ts — section header "+" action passes targetNodeId
- * //    so it flows through the create dialog into createObject above:
- * GraphBuilder.createExtension({
- *   id: 'chatsSectionActions',
- *   match: (node) =>
- *     node.type === Type.getTypename(Chat.Chat) && isSpace(node.properties.space)
- *       ? Option.some(node.properties.space)
- *       : Option.none(),
- *   actions: (space) =>
- *     Effect.succeed([
- *       Node.makeAction({
- *         id: 'create-chat',
- *         data: () =>
- *           Operation.invoke(SpaceOperation.OpenCreateObject, {
- *             target: space.db,
- *             typename: Type.getTypename(Chat.Chat),
- *             targetNodeId: getChatsPath(space.db.spaceId),
- *           }),
- *         properties: { ... },
- *       }),
- *     ]),
- * })
- *
- * // 5. In capabilities/navigation-resolver.ts — resolve deep-link paths (bookmarks,
- * //    page reloads) back to the ECHO object before the graph has populated:
- * Capability.contributes(
- *   AppCapabilities.NavigationPathResolver,
- *   createTypeSectionPathResolver(Chat.Chat),
- * )
- * ```
+ * Requires five coordinated pieces: paths.ts ({@link createTypeSectionPaths}), the section
+ * extension (this function), a {@link SpaceCapabilities.CreateObjectEntry} with
+ * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)` (the ?? fallback ensures
+ * both the section "+" button and the space-level create dialog navigate to the section path),
+ * a section action that passes `targetNodeId`, and a {@link createTypeSectionPathResolver}
+ * registered via {@link AppCapabilities.NavigationPathResolver} for deep-link support.
  *
  * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
  *
