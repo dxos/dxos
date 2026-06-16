@@ -23,30 +23,6 @@ export const DependencyMapSchema = Schema.Record({ key: Schema.String, value: Sc
 export type DependencyMap = Schema.Schema.Type<typeof DependencyMapSchema>;
 
 /**
- * Hydrated plugin metadata, mirroring the @dxos/app-framework `Plugin.Meta` shape.
- *
- * Defined locally rather than imported from @dxos/app-framework to keep the protocols
- * package free of UI/runtime dependencies. Consumers can treat decoded values as
- * `Plugin.Meta` directly.
- *
- * @deprecated Used only by the GitHub-backed hydration pipeline (`hydrate.ts`).
- * New code should use {@link PluginProfileSchema} instead.
- */
-export const PluginMetaSchema = Schema.Struct({
-  id: Schema.String.pipe(Schema.nonEmptyString()),
-  name: Schema.String.pipe(Schema.nonEmptyString()),
-  description: Schema.optional(Schema.String),
-  author: Schema.optional(Schema.String),
-  homePage: Schema.optional(Schema.String),
-  source: Schema.optional(Schema.String),
-  screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
-  tags: Schema.optional(Schema.Array(Schema.String)),
-  icon: Schema.optional(Schema.String),
-  iconHue: Schema.optional(Schema.String),
-});
-export type PluginMeta = Schema.Schema.Type<typeof PluginMetaSchema>;
-
-/**
  * Filename of the entry module every plugin must publish at the root of its bundle.
  * The host dynamic-imports `<manifest URL base>/index.mjs` directly — no per-plugin
  * configuration. `composerPlugin` outputs the bundle under this name so plugin authors
@@ -64,7 +40,16 @@ export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
  * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
-  ...PluginMetaSchema.fields,
+  id: Schema.String.pipe(Schema.nonEmptyString()),
+  name: Schema.String.pipe(Schema.nonEmptyString()),
+  description: Schema.optional(Schema.String),
+  author: Schema.optional(Schema.String),
+  homePage: Schema.optional(Schema.String),
+  source: Schema.optional(Schema.String),
+  screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
+  tags: Schema.optional(Schema.Array(Schema.String)),
+  icon: Schema.optional(Schema.String),
+  iconHue: Schema.optional(Schema.String),
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
   version: Schema.String.pipe(Schema.nonEmptyString()),
   /**
@@ -191,26 +176,3 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
 });
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
 
-/**
- * A catalog entry. Two flavours:
- *  - `{ repo }`: the registry service hydrates from the GitHub repo's latest release.
- *  - `{ manifestUrl }`: fetches the manifest directly (used for local dev).
- */
-export const RegistryEntrySchema = Schema.Union(
-  Schema.Struct({ repo: Schema.String.pipe(Schema.nonEmptyString()) }),
-  Schema.Struct({ manifestUrl: Schema.String.pipe(Schema.nonEmptyString()) }),
-);
-export type RegistryEntry = Schema.Schema.Type<typeof RegistryEntrySchema>;
-
-/**
- * Shape of the catalog manifest published in the upstream community-plugins repo.
- * Extra keys (e.g. `$schema`) are permitted.
- */
-export const RegistryManifestSchema = Schema.Struct(
-  {
-    version: Schema.Literal(1),
-    plugins: Schema.Array(RegistryEntrySchema),
-  },
-  Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-);
-export type RegistryManifest = Schema.Schema.Type<typeof RegistryManifestSchema>;

@@ -7,16 +7,25 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+
+import { getPersonalSpace } from '@dxos/app-toolkit';
+import { type Client } from '@dxos/client';
+import { Filter } from '@dxos/echo';
+import { AccessToken } from '@dxos/types';
 
 /**
  * Shared helpers for the `dx registry *` commands.
  *
- * These commands write `org.dxos.experimental.*` records to a publisher's PDS
- * via AT Protocol XRPC. Auth uses an App Password (per-user secret minted at
- * https://bsky.app/settings/app-passwords) — OAuth + DPoP will replace this in
- * a follow-up. Creds come from `--handle` / `--app-password` flags falling
- * back to `ATPROTO_HANDLE` / `ATPROTO_APP_PASSWORD` env vars.
+ * These commands write `org.dxos.experimental.*` records to a publisher's PDS via AT Protocol
+ * XRPC. Auth has two modes (see {@link resolveSession}):
+ *
+ * - **Personal-space (default):** when logged in (`dx account login`), the publisher's atproto
+ *   session lives in their personal space as the "Atmosphere" `AccessToken`. Record writes are
+ *   signed by Edge's DPoP proxy (`/atproto/proxy`) — no app password required.
+ * - **App password (fallback):** explicit `--handle` / `--app-password` (or `$ATPROTO_HANDLE` /
+ *   `$ATPROTO_APP_PASSWORD`) authenticate directly against the PDS with a session token.
  */
 
 // NSIDs the registry indexer cares about. Mirrored from
@@ -29,6 +38,11 @@ export const NSID = {
 } as const;
 
 export const ALL_NSIDS: readonly string[] = Object.values(NSID);
+
+// `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
+// `ATMOSPHERE_SOURCE` in plugin-integration; inlined to avoid a plugin-registry -> plugin-integration
+// dependency.
+const ATMOSPHERE_SOURCE = 'atproto.local';
 
 // Public read-only XRPC base used for identity resolution. Works for any
 // AT Protocol identity regardless of which PDS hosts it.
@@ -73,26 +87,6 @@ const ListRecordsResponseSchema = Schema.Struct({
   records: Schema.Array(ListRecordsEntrySchema),
 });
 export type ListRecordsEntry = Schema.Schema.Type<typeof ListRecordsEntrySchema>;
-
-// ---------------------------------------------------------------------------
-// Credentials
-// ---------------------------------------------------------------------------
-
-export type RegistryAuthOptions = {
-  handle: string | undefined;
-  appPassword: string | undefined;
-};
-
-/**
- * Resolve `(handle, appPassword)` from CLI flags or env. Missing values
- * surface as a typed ConfigError on the effect channel.
- */
-export const resolveCredentials = (options: RegistryAuthOptions) =>
-  Effect.gen(function* () {
-    const handle = options.handle ?? (yield* Config.string('ATPROTO_HANDLE'));
-    const appPassword = options.appPassword ?? (yield* Config.string('ATPROTO_APP_PASSWORD'));
-    return { handle, appPassword };
-  });
 
 // ---------------------------------------------------------------------------
 // XRPC primitives
@@ -166,91 +160,227 @@ export const resolvePds = (did: string) =>
     return endpoint;
   });
 
-/**
- * Authenticated session — call `com.atproto.server.createSession` against the
- * caller's resolved PDS, then return the access JWT, DID, and PDS endpoint
- * needed for subsequent writes.
- */
-export type Session = {
-  did: string;
-  handle: string;
-  accessJwt: string;
-  pdsBaseUrl: string;
+/** Resolve a handle or DID to its `{ did, pdsBaseUrl }`. */
+const resolveRepo = (handleOrDid: string) =>
+  Effect.gen(function* () {
+    const did = handleOrDid.startsWith('did:') ? handleOrDid : yield* resolveHandle(handleOrDid);
+    const pdsBaseUrl = yield* resolvePds(did);
+    return { did, pdsBaseUrl };
+  });
+
+// ---------------------------------------------------------------------------
+// Session — an authenticated writer to a publisher's PDS repo.
+// ---------------------------------------------------------------------------
+
+/** Direct PDS auth via an app-password session token. */
+type AppPasswordSession = {
+  readonly mode: 'app-password';
+  readonly did: string;
+  readonly handle: string;
+  readonly pdsBaseUrl: string;
+  readonly accessJwt: string;
 };
 
+/** Indirect auth: writes are DPoP-signed by Edge's `/atproto/proxy` using a personal-space token. */
+type DpopProxySession = {
+  readonly mode: 'dpop-proxy';
+  readonly did: string;
+  readonly handle: string;
+  readonly pdsBaseUrl: string;
+  readonly edgeBaseUrl: string;
+  readonly spaceId: string;
+  readonly accessTokenId: string;
+  readonly token: string;
+  readonly authHeader: string | undefined;
+};
+
+export type Session = AppPasswordSession | DpopProxySession;
+
+/**
+ * App-password session — call `com.atproto.server.createSession` against the caller's resolved
+ * PDS, then return the access JWT, DID, and PDS endpoint needed for subsequent writes.
+ */
 export const createSession = (handle: string, appPassword: string) =>
   Effect.gen(function* () {
-    const did = yield* resolveHandle(handle);
-    // Issue the session against the resolved PDS — bsky.social's monolithic
-    // host won't accept logins for users that have been migrated to a shard.
-    const pdsBaseUrl = yield* resolvePds(did);
+    // Issue the session against the resolved PDS — bsky.social's monolithic host won't accept
+    // logins for users that have been migrated to a shard.
+    const { did, pdsBaseUrl } = yield* resolveRepo(handle);
     const response = yield* xrpcPost(
       `${pdsBaseUrl}/xrpc/com.atproto.server.createSession`,
       { identifier: handle, password: appPassword },
       CreateSessionResponseSchema,
     );
     return {
+      mode: 'app-password',
       did: response.did,
       handle: response.handle,
       accessJwt: response.accessJwt,
       pdsBaseUrl,
-    } satisfies Session;
+    } satisfies AppPasswordSession;
   });
 
-/** Write a record at `com.atproto.repo.putRecord` (idempotent on rkey). */
-export const putRecord = (
-  session: Session,
-  collection: string,
-  rkey: string,
-  record: Record<string, unknown>,
-) =>
-  xrpcPost(
-    `${session.pdsBaseUrl}/xrpc/com.atproto.repo.putRecord`,
-    {
-      repo: session.did,
-      collection,
-      rkey,
-      record: { $type: collection, ...record },
-    },
-    PutRecordResponseSchema,
-    { Authorization: `Bearer ${session.accessJwt}` },
-  );
-
-/** Delete a record at `com.atproto.repo.deleteRecord`. */
-export const deleteRecord = (session: Session, collection: string, rkey: string) =>
-  xrpcPost(
-    `${session.pdsBaseUrl}/xrpc/com.atproto.repo.deleteRecord`,
-    { repo: session.did, collection, rkey },
-    undefined,
-    { Authorization: `Bearer ${session.accessJwt}` },
-  );
+export type ResolveSessionOptions = {
+  /** `--handle` flag value (if any). */
+  handle: string | undefined;
+  /** `--app-password` flag value (if any). */
+  appPassword: string | undefined;
+  /** The DXOS client, used to read default credentials from the personal space. */
+  client: Client;
+};
 
 /**
- * List records in a single collection on the authenticated repo. Paging is
- * left to the caller (the four registry collections are tiny in practice);
- * the cursor is surfaced on the return.
+ * Resolve an authenticated {@link Session} for the registry commands, in precedence order:
+ *
+ * 1. Explicit `--handle` + `--app-password` (or `$ATPROTO_HANDLE` / `$ATPROTO_APP_PASSWORD`) →
+ *    app-password session (works without a DXOS identity).
+ * 2. The logged-in identity's personal-space "Atmosphere" `AccessToken` → DPoP-proxy session.
+ * 3. A context-specific error guiding the user to log in / connect an integration / pass creds.
  */
-export const listRecords = (
-  session: Session,
-  collection: string,
-  options: { limit?: number; cursor?: string } = {},
-) =>
-  xrpcGet(
-    `${session.pdsBaseUrl}/xrpc/com.atproto.repo.listRecords`,
+export const resolveSession = (options: ResolveSessionOptions) =>
+  Effect.gen(function* () {
+    const handle = options.handle ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_HANDLE')));
+    const appPassword =
+      options.appPassword ?? Option.getOrUndefined(yield* Config.option(Config.string('ATPROTO_APP_PASSWORD')));
+    if (handle && appPassword) {
+      return yield* createSession(handle, appPassword);
+    }
+
+    const fromPersonalSpace = yield* resolvePersonalSpaceSession(options.client);
+    if (fromPersonalSpace) {
+      return fromPersonalSpace;
+    }
+
+    if (options.client.halo.identity.get()) {
+      return yield* Effect.fail(
+        new Error(
+          'No atproto integration connected. Connect one with `dx integration add`, or pass --handle/--app-password. ' +
+            '(`dx account login` cannot add an integration to an existing identity.)',
+        ),
+      );
+    }
+    return yield* Effect.fail(
+      new Error('No DXOS identity. Run `dx account login` first, or pass --handle/--app-password.'),
+    );
+  });
+
+/**
+ * Build a DPoP-proxy session from the personal space's "Atmosphere" `AccessToken`, or `undefined`
+ * if the user isn't logged in or hasn't connected an atproto integration.
+ */
+const resolvePersonalSpaceSession = (client: Client) =>
+  Effect.gen(function* () {
+    const space = getPersonalSpace(client);
+    if (!space) {
+      return undefined;
+    }
+    const tokens = yield* Effect.promise(() => space.db.query(Filter.type(AccessToken.AccessToken)).run());
+    const token = tokens.find(
+      (object) => object.source === ATMOSPHERE_SOURCE && !!object.account && !!object.token,
+    );
+    if (!token?.account) {
+      return undefined;
+    }
+    const { did, pdsBaseUrl } = yield* resolveRepo(token.account);
+    return {
+      mode: 'dpop-proxy',
+      did,
+      handle: token.account,
+      pdsBaseUrl,
+      edgeBaseUrl: client.edge.http.baseUrl,
+      spaceId: space.id,
+      accessTokenId: token.id,
+      token: token.token,
+      // Best-effort VP auth header for the proxy. The `/atproto/proxy` route currently skips auth
+      // in dev; production reads the caller's verifiable presentation when present.
+      authHeader: (client.edge.http as unknown as { _authHeader?: string })._authHeader,
+    } satisfies DpopProxySession;
+  });
+
+// ---------------------------------------------------------------------------
+// Record operations — auth-mode agnostic; branch on the session.
+// ---------------------------------------------------------------------------
+
+/**
+ * Proxy an XRPC call through Edge's `/atproto/proxy`, which attaches the DPoP proof signed with
+ * the key Edge stored at OAuth time. The proxy forwards `request` verbatim and returns the
+ * upstream PDS response body, so callers decode the same schema as the direct path.
+ */
+const proxyCall = <T>(
+  session: DpopProxySession,
+  params: { xrpcMethod: string; method: 'GET' | 'POST'; query?: Record<string, string>; jsonBody?: Record<string, unknown> },
+  schema: Schema.Schema<T> | undefined,
+) => {
+  const query = params.query ? `?${new URLSearchParams(params.query).toString()}` : '';
+  const innerHeaders: Record<string, string> = { Accept: 'application/json', Authorization: `DPoP ${session.token}` };
+  if (params.jsonBody) {
+    innerHeaders['Content-Type'] = 'application/json';
+  }
+  const outerHeaders: Record<string, string> = {};
+  if (session.authHeader) {
+    outerHeaders.Authorization = session.authHeader;
+  }
+  return xrpcPost(
+    `${session.edgeBaseUrl.replace(/\/$/, '')}/atproto/proxy`,
     {
-      repo: session.did,
-      collection,
-      ...(options.limit !== undefined ? { limit: String(options.limit) } : {}),
-      ...(options.cursor !== undefined ? { cursor: options.cursor } : {}),
+      spaceId: session.spaceId,
+      accessTokenId: session.accessTokenId,
+      request: {
+        endpoint: `${session.pdsBaseUrl}/xrpc/${params.xrpcMethod}${query}`,
+        method: params.method,
+        headers: innerHeaders,
+        // Edge's proxy forwards the body to `fetch` as-is, so it must be a pre-serialized string.
+        body: params.jsonBody ? JSON.stringify(params.jsonBody) : null,
+      },
     },
-    ListRecordsResponseSchema,
+    schema,
+    outerHeaders,
   );
+};
+
+/** Write a record at `com.atproto.repo.putRecord` (idempotent on rkey). */
+export const putRecord = (session: Session, collection: string, rkey: string, record: Record<string, unknown>) => {
+  const body = { repo: session.did, collection, rkey, record: { $type: collection, ...record } };
+  return session.mode === 'app-password'
+    ? xrpcPost(`${session.pdsBaseUrl}/xrpc/com.atproto.repo.putRecord`, body, PutRecordResponseSchema, {
+        Authorization: `Bearer ${session.accessJwt}`,
+      })
+    : proxyCall(session, { xrpcMethod: 'com.atproto.repo.putRecord', method: 'POST', jsonBody: body }, PutRecordResponseSchema);
+};
+
+/** Delete a record at `com.atproto.repo.deleteRecord`. */
+export const deleteRecord = (session: Session, collection: string, rkey: string) => {
+  const body = { repo: session.did, collection, rkey };
+  return session.mode === 'app-password'
+    ? xrpcPost(`${session.pdsBaseUrl}/xrpc/com.atproto.repo.deleteRecord`, body, undefined, {
+        Authorization: `Bearer ${session.accessJwt}`,
+      })
+    : proxyCall(session, { xrpcMethod: 'com.atproto.repo.deleteRecord', method: 'POST', jsonBody: body }, undefined);
+};
+
+/**
+ * List records in a single collection on the authenticated repo. Paging is left to the caller (the
+ * four registry collections are tiny in practice); the cursor is surfaced on the return.
+ */
+export const listRecords = (session: Session, collection: string, options: { limit?: number; cursor?: string } = {}) => {
+  const query: Record<string, string> = {
+    repo: session.did,
+    collection,
+    ...(options.limit !== undefined ? { limit: String(options.limit) } : {}),
+    ...(options.cursor !== undefined ? { cursor: options.cursor } : {}),
+  };
+  return session.mode === 'app-password'
+    ? xrpcGet(`${session.pdsBaseUrl}/xrpc/com.atproto.repo.listRecords`, query, ListRecordsResponseSchema)
+    : proxyCall(session, { xrpcMethod: 'com.atproto.repo.listRecords', method: 'GET', query }, ListRecordsResponseSchema);
+};
 
 // ---------------------------------------------------------------------------
 // Shared CLI option fragment for auth flags.
 // ---------------------------------------------------------------------------
 
 export const AUTH_OPTION_DESCRIPTIONS = {
-  handle: 'AT Protocol handle (e.g. alice.bsky.social). Falls back to $ATPROTO_HANDLE.',
-  appPassword: 'AT Protocol app password (https://bsky.app/settings/app-passwords). Falls back to $ATPROTO_APP_PASSWORD.',
+  handle:
+    'AT Protocol handle (e.g. alice.bsky.social). Defaults to the logged-in identity; falls back to $ATPROTO_HANDLE.',
+  appPassword:
+    'AT Protocol app password (https://bsky.app/settings/app-passwords). Falls back to $ATPROTO_APP_PASSWORD. ' +
+    'Not needed when logged in via `dx account login`.',
 } as const;

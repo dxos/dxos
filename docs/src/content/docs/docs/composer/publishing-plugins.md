@@ -5,6 +5,10 @@ sidebar:
   order: 3
 ---
 
+:::caution[Experimental]
+The plugin registry and all `dx registry` commands are experimental. The record format, CLI interface, and bundle hosting are subject to change without notice.
+:::
+
 This guide shows how to publish a community plugin so it appears in Composer's plugin registry. It assumes you already have a working plugin — if you don't, start with the [Plugin Tutorial](/docs/composer/tutorial) and use [`plugin-excalidraw`](https://github.com/dxos/plugin-excalidraw) as a reference implementation.
 
 ## How the registry works
@@ -34,11 +38,11 @@ dx --version
 
 ## 2. Authenticate
 
-Publishing writes records to your AT Protocol repo. There are two ways to authenticate; logging in is the simplest.
+A **Composer account is required** in both cases below — publishing writes to your AT Protocol repo and uploads your bundle to DXOS-hosted storage, both of which are tied to a DXOS identity. The two options differ only in how you supply your AT Protocol credentials.
 
 ### Option A — Log in (recommended)
 
-Log in to your DXOS identity — the same one you use in Composer:
+If your Composer account has a **connected AT Protocol account** (Bluesky), log in:
 
 ```bash
 dx account login
@@ -46,20 +50,21 @@ dx account login
 
 `login` prompts for a method, mirroring Composer's sign-in: `atproto` (Bluesky), `email`, `device-invitation`, or `recovery-code`. You can also pass them directly, e.g. `dx account login --method atproto alice.bsky.social`.
 
-Once logged in, `dx registry` commands sign your PDS writes through DXOS edge using the **AT Protocol account connected to your identity** — no app password needed. This requires your identity to have a connected Bluesky/atproto account: if you signed up for Composer with Bluesky it's already connected; otherwise connect one with `dx integration add` (or from Composer's settings). Log out with `dx account logout`.
+Once logged in, `dx registry` commands sign your PDS writes through DXOS edge using the AT Protocol account connected to your identity — no app password needed. If you signed up for Composer with Bluesky it's already connected; otherwise connect one with `dx integration add` (or from Composer's settings). Log out with `dx account logout`.
 
-> `dx account login` signs in to an **existing** identity — it doesn't create one, and can't add an integration to an identity that lacks one. Create your identity and connect Bluesky in Composer first.
+> `dx account login` signs in to an **existing** identity — it doesn't create one. Create your identity in Composer first.
 
 ### Option B — App password
 
-For headless or CI use, authenticate directly with an AT Protocol handle and an **app password** (not your account password — create one at [bsky.app/settings/app-passwords](https://bsky.app/settings/app-passwords)):
+If your Composer account does **not** have a connected AT Protocol account, supply your AT Protocol credentials directly via an **app password** (not your account password — create one at [bsky.app/settings/app-passwords](https://bsky.app/settings/app-passwords)):
 
 ```bash
+dx account login  # log in to your Composer account first
 export ATPROTO_HANDLE=alice.bsky.social
 export ATPROTO_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
-Every `dx registry` command also accepts `--handle` and `--app-password` explicitly. Explicit credentials take precedence over a logged-in identity.
+Every `dx registry` command also accepts `--handle` and `--app-password` explicitly. Explicit credentials take precedence over the connected AT Protocol account on your identity.
 
 ## 3. Get verified
 

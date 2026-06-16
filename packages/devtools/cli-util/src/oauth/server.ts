@@ -91,6 +91,10 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
       HttpRouter.get(
         callbackPath,
         Effect.gen(function* () {
+          if (Option.isSome(yield* Ref.get(outcome))) {
+            return yield* HttpServerResponse.text('Already received.', { status: 400 });
+          }
+
           const request = yield* HttpServerRequest.HttpServerRequest;
           const params = parseUrl(request.url).searchParams;
           const error = params.get('error');

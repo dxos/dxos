@@ -62,6 +62,12 @@ export type EdgeQueryQueueResponse = {
   prevCursor?: string;
 };
 
+export type UploadPluginBundleRequest = {
+  slug: string;
+  version: string;
+  files: { path: string; content: string }[];
+};
+
 export type TriggersDispatcherStatus = {
   isActive: boolean;
   nextCronTaskRunTimestamp?: number;
@@ -385,7 +391,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    */
   public async uploadPluginBundle(
     ctx: Context,
-    request: { slug: string; version: string; files: { path: string; content: string }[] },
+    request: UploadPluginBundleRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<{ moduleUrl: string }> {
     return this._call(ctx, new URL('/registry/upload', this.baseUrl), {

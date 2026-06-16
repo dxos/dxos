@@ -15,6 +15,7 @@ import {
   Select,
   Tag,
   ThemedClassName,
+  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -130,6 +131,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.id);
+    const { themeMode } = useThemeContext();
     const {
       id,
       name,
@@ -142,6 +144,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       iconHue = 'neutral',
     } = plugin.meta;
     const styles = getStyles(iconHue);
+
+    // A screenshot entry is either a URL string or a `{ light?, dark? }` record of theme variants.
+    // Resolve each to the URL matching the active theme, falling back to the other variant.
+    const resolvedScreenshots = (screenshots ?? [])
+      .map((entry) =>
+        typeof entry === 'string' ? entry : themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark),
+      )
+      .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
@@ -187,14 +197,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               </Section.Root>
             )}
 
-            {screenshots && screenshots.length > 0 && (
+            {resolvedScreenshots.length > 0 && (
               <Section.Root>
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
-                  <Carousel.Root count={screenshots.length}>
+                  <Carousel.Root count={resolvedScreenshots.length}>
                     <Carousel.Content classNames='contents'>
                       <Carousel.Viewport>
-                        {screenshots.map((src, index) => (
+                        {resolvedScreenshots.map((src, index) => (
                           <Carousel.Slide key={src} index={index} src={src} alt={name} />
                         ))}
                       </Carousel.Viewport>

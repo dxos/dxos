@@ -10,14 +10,16 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, createSession, putRecord, resolveCredentials } from './util';
+import { ClientService } from '@dxos/client';
+
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
 /**
  * `dx registry publish-publisher` — publishes the authenticated user's own
  * `org.dxos.experimental.publisher.profile` record (rkey = `self`).
  *
  * This is metadata about the publisher (the human/org), shown alongside their
- * packages once the curator has verified them.
+ * packages once a verifier has attested to their identity.
  */
 export const publishPublisher = Command.make(
   'publish-publisher',
@@ -46,12 +48,12 @@ export const publishPublisher = Command.make(
   (options) =>
     Function.pipe(
       Effect.gen(function* () {
-        const { handle, appPassword } = yield* resolveCredentials({
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
+          client,
         });
-
-        const session = yield* createSession(handle, appPassword);
 
         const record: Record<string, unknown> = {
           displayName: options.displayName,

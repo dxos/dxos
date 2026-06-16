@@ -10,24 +10,18 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import {
-  AUTH_OPTION_DESCRIPTIONS,
-  NSID,
-  createSession,
-  putRecord,
-  resolveCredentials,
-  resolveHandle,
-} from './util';
+import { ClientService } from '@dxos/client';
+
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSession } from './util';
 
 /**
- * `dx registry verify` — curator-only. Publishes a
- * `org.dxos.experimental.publisher.verification` record on the authenticated
- * (curator) repo, with rkey = subject DID. Subject is given as a handle or
- * DID; handles are resolved through the public XRPC.
+ * `dx registry verify` — publishes a `org.dxos.experimental.publisher.verification`
+ * record on the authenticated repo, with rkey = subject DID. Subject is given as a
+ * handle or DID; handles are resolved through the public XRPC.
  *
- * The registry indexer ignores verification records authored by anyone other
- * than the configured `REGISTRY_CURATOR_DID`, so this command only has effect
- * when run with that curator's credentials.
+ * Verification records are public and anyone may author them. The registry indexer only
+ * honors records authored by the configured verifier (`REGISTRY_CURATOR_DID`), so this
+ * command only affects discovery when run with that verifier's credentials.
  */
 export const verify = Command.make(
   'verify',
@@ -56,12 +50,12 @@ export const verify = Command.make(
   (options) =>
     Function.pipe(
       Effect.gen(function* () {
-        const { handle, appPassword } = yield* resolveCredentials({
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
+          client,
         });
-
-        const session = yield* createSession(handle, appPassword);
 
         // Subject may be passed as either a handle or a DID; resolve to a DID so the rkey is stable.
         const subjectDid = options.subject.startsWith('did:')
@@ -72,7 +66,7 @@ export const verify = Command.make(
 
         const record = {
           subject: subjectDid,
-          handle: subjectHandle,
+          ...(subjectHandle ? { handle: subjectHandle } : {}),
           displayName: options.displayName,
           createdAt: new Date().toISOString(),
         };
@@ -84,6 +78,6 @@ export const verify = Command.make(
     ),
 ).pipe(
   Command.withDescription(
-    'Publish a curator-signed publisher.verification record (curator-only — gated by REGISTRY_CURATOR_DID at the indexer).',
+    'Write a publisher.verification record (indexed only if authored by the configured verifier, REGISTRY_CURATOR_DID).',
   ),
 );

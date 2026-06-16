@@ -11,15 +11,9 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { ClientService } from '@dxos/client';
 
-import {
-  ALL_NSIDS,
-  AUTH_OPTION_DESCRIPTIONS,
-  createSession,
-  listRecords,
-  resolveCredentials,
-  type ListRecordsEntry,
-} from './util';
+import { ALL_NSIDS, AUTH_OPTION_DESCRIPTIONS, listRecords, resolveSession, type ListRecordsEntry } from './util';
 
 /**
  * `dx registry records` — lists all `org.dxos.experimental.*` records on the
@@ -42,12 +36,12 @@ export const records = Command.make(
     Function.pipe(
       Effect.gen(function* () {
         const { json } = yield* CommandConfig;
-        const { handle, appPassword } = yield* resolveCredentials({
+        const client = yield* ClientService;
+        const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
+          client,
         });
-
-        const session = yield* createSession(handle, appPassword);
 
         // Issue listRecords against each of the four registry collections in
         // parallel. The repo is tiny so the four-fan-out is fine.

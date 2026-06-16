@@ -81,7 +81,6 @@ export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => 
   };
 };
 
-// Symbol.for ensures cross-bundle identity: two copies of this module share the same symbol.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const RefTypeId: unique symbol = Symbol.for('@dxos/echo/internal/Ref') as any;
 
