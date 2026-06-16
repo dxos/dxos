@@ -213,6 +213,31 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         );
       },
     }),
+
+    // Action on the collections section header to create a new collection.
+    GraphBuilder.createExtension({
+      id: 'collectionsSectionActions',
+      match: (node) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+      },
+      actions: (space) =>
+        Effect.succeed([
+          Node.makeAction({
+            id: 'create-collection',
+            data: () =>
+              Operation.invoke(SpaceOperation.OpenCreateObject, {
+                target: space.db,
+                typename: Type.getTypename(Collection.Collection),
+              }),
+            properties: {
+              label: ['add-object.label', { ns: Type.getTypename(Collection.Collection) }],
+              icon: 'ph--plus--regular',
+              disposition: 'list-item-primary',
+            },
+          }),
+        ]),
+    }),
   ]);
 });
 
