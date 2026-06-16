@@ -103,9 +103,11 @@ export const translations = [
         'event-duration.placeholder': 'Duration',
         'event-duration-custom.label': 'Custom end…',
         'event-toolbar.menu': 'Actions',
-        'event-toolbar-create-note.menu': 'Create note',
         'event-toolbar-open.menu': 'Open',
         'event-toolbar-save.menu': 'Save to calendar',
+        'event-toolbar-more.menu': 'More',
+        'star-event.label': 'Star event',
+        'unstar-event.label': 'Unstar event',
         'event-toolbar-delete.menu': 'Delete event',
 
         'calendar-toolbar.menu': 'Calendar toolbar',
@@ -161,8 +163,6 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
-
-        'settings.title': 'Inbox settings',
       },
     },
   },

@@ -7,7 +7,7 @@ import { type Decorator } from '@storybook/react';
 import { createElement, useMemo } from 'react';
 
 import { AttentionManager } from '../../attention';
-import { RootAttentionProvider, SelectionProvider } from '../../components';
+import { RootAttentionProvider, ViewStateProvider } from '../../components';
 
 /**
  * Storybook decorator that provides attention context.
@@ -24,7 +24,7 @@ export const withAttention = (initialAttendedId?: string): Decorator => {
     return createElement(
       RegistryContext.Provider,
       { value: registry },
-      createElement(RootAttentionProvider, { attention }, createElement(SelectionProvider, {}, createElement(Story))),
+      createElement(RootAttentionProvider, { attention }, createElement(ViewStateProvider, {}, createElement(Story))),
     );
   };
 };

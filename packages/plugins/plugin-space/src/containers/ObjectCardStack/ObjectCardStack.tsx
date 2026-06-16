@@ -7,7 +7,7 @@ import React, { forwardRef, useState } from 'react';
 import { Filter, Obj, type View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { useSelection } from '@dxos/react-ui-attention';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -30,7 +30,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   const type = useType(db, typeUri);
 
   const queriedObjects = useQuery(db, type ? Filter.type(type) : Filter.nothing());
-  const selectedRows = useSelected(objectId, 'multi');
+  const selectedRows = useSelection(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
   const [viewport, setViewport] = useState<HTMLElement | null>(null);

@@ -25,6 +25,8 @@ export type ViewModeGroupOptions = {
   setViewMode: (mode: ViewMode) => void;
   /** Modes offered, in order. Defaults to all three. */
   modes?: ViewMode[];
+  /** Disable the group (e.g. while editing, when the rendered view is irrelevant). */
+  disabled?: boolean;
 };
 
 /**
@@ -37,6 +39,7 @@ export const viewModeGroup =
     viewMode,
     setViewMode,
     modes = ['enriched', 'markdown', 'plain'],
+    disabled,
   }: ViewModeGroupOptions): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
@@ -49,6 +52,7 @@ export const viewModeGroup =
         applyActive: true,
         selectCardinality: 'single',
         value: viewMode,
+        disabled,
       },
       (group) => {
         for (const mode of modes) {
@@ -58,6 +62,7 @@ export const viewModeGroup =
               label: [`view-mode-${mode}.menu`, { ns }],
               icon: VIEW_MODE_ICONS[mode],
               checked: viewMode === mode,
+              disabled,
             },
             () => setViewMode(mode),
           );

@@ -92,15 +92,14 @@ export const PopoverContent = () => {
 
   const handleInteractOutside = useCallback(
     (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
-      if (
-        // TODO(thure): CodeMirror should not focus itself when it updates.
-        event.type === 'dismissableLayer.focusOutside' &&
-        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
-      ) {
+      // Focus leaving the popover (clicking into the card surfaces a portaled menu, or CodeMirror
+      // re-focusing itself) must not dismiss it — only a pointer-down genuinely outside the card, or
+      // Escape, closes. (Clicks inside the card never reach here; Radix scopes them to the content.)
+      if (event.type === 'dismissableLayer.focusOutside') {
         event.preventDefault();
-      } else {
-        handleClose();
+        return;
       }
+      handleClose();
     },
     [handleClose],
   );

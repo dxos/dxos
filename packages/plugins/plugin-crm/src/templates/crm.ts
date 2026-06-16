@@ -11,6 +11,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Automation, type AutomationCapabilities } from '@dxos/plugin-automation';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { trim } from '@dxos/util';
 
 /**
  * Blueprint keys composed into the CRM routine. The CRM blueprint provides CRM-specific tools; the others
@@ -24,12 +25,13 @@ const BLUEPRINT_KEYS = [
 ] as const;
 
 /** Default instructions seeded into the routine; the user edits these by opening the routine. */
-const DEFAULT_INSTRUCTIONS = `\
-A new email message is provided in the <input> block below.
+const DEFAULT_INSTRUCTIONS = trim`
+  A new email message is provided in the <input> block below.
 
-Research the sender and any contacts mentioned in the message.
-Create or update CRM Profiles (Person and/or Organization objects) for those contacts using the CRM tools.
-Attach a profile photo or company logo when you can find one.
+  - Research the sender and any contacts mentioned in the message.
+  - Create and link a summary document for the sender's Organization if one does not already exist.
+  - Create or update CRM Profiles (Person and/or Organization objects) for those contacts using the CRM tools.
+  - Attach a profile photo or company logo if you can find one.
 `;
 
 /** CRM automation template. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`. */

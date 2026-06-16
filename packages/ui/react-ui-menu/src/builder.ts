@@ -3,11 +3,22 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
+import type { DropdownMenuItemGroupProperties, MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
+
+import { translationKey } from '#translations';
 
 import type { ActionGraphProps } from './hooks';
 import { MenuSeparatorType } from './types';
 import { createMenuAction, createMenuItemGroup } from './util';
+
+/** Default trigger for toolbar overflow (⋮) dropdown menus. */
+const overflowMenuProperties = {
+  label: ['toolbar-overflow.menu', { ns: translationKey }],
+  icon: 'ph--dots-three-vertical--regular',
+  iconOnly: true,
+  caretDown: false,
+  variant: 'dropdownMenu',
+} as const satisfies DropdownMenuItemGroupProperties;
 
 /** Callback that populates an action group builder. */
 export type ActionGroupBuilderFn = (builder: ActionGroupBuilder) => void;
@@ -31,7 +42,7 @@ export interface ActionGroupBuilder {
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
 
   /** Add a nested action group. */
-  group<P extends {} = {}>(id: string, props: P & MenuItemGroupProperties, cb: ActionGroupBuilderFn): this;
+  group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this;
 
   /** Merge pre-built nodes and edges, or build a subgraph via callback scoped to the current group. Falsy values are ignored. */
   subgraph(subgraphOrCb: ActionGraphProps | ActionGroupBuilderFn | false | null | undefined): this;
@@ -42,10 +53,19 @@ export interface ActionGroupBuilder {
 
 /** Top-level builder that creates the root group and produces the final action graph. */
 export interface MenuBuilder extends ActionGroupBuilder {
-  /** Set properties on the root menu group. May only be called once. */
+  /**
+   * Set properties on the root menu group. May only be called once.
+   */
   root(props: MenuItemGroupProperties): this;
 
-  /** Return the assembled action graph. */
+  /**
+   * Add a root-level toolbar overflow dropdown (⋮) with built-in trigger styling.
+   */
+  menu(id: string, cb: ActionGroupBuilderFn): this;
+
+  /**
+   * Return the assembled action graph.
+   */
   build(): ActionGraphProps;
 }
 
@@ -74,11 +94,15 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
-  group<P extends {} = {}>(id: string, props: P & MenuItemGroupProperties, cb: ActionGroupBuilderFn): this {
+  group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this {
     this._data.nodes.push(createMenuItemGroup(id, props));
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     cb(new MenuBuilderImpl(this._data, id));
     return this;
+  }
+
+  menu(id: string, cb: ActionGroupBuilderFn): this {
+    return this.group(id, overflowMenuProperties, cb);
   }
 
   subgraph(subgraphOrCb: ActionGraphProps | ActionGroupBuilderFn | false | null | undefined): this {

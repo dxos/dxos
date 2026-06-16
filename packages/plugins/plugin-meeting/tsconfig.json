@@ -15,8 +15,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/*.ts",
-    "typings/*.d.ts"
+    "src/*.ts"
   ],
   "references": [
     {
@@ -30,9 +29,6 @@
     },
     {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
@@ -56,7 +52,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/mesh/edge-client"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"
@@ -83,22 +79,13 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-form"
-    },
-    {
       "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-calls"
@@ -110,7 +97,13 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-inbox"
+    },
+    {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-space"

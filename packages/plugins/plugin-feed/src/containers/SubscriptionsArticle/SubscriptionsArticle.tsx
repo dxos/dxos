@@ -12,8 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
 import { meta } from '#meta';
@@ -28,7 +27,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   const layout = useLayout();
 
   const feeds = useQuery(space.db, Filter.type(Subscription.Subscription));
-  const currentId = useSelected(attendableId, 'single');
+  const currentId = useSelection(attendableId, 'single');
 
   const handleAction = useCallback(
     (action: SubscriptionStackAction) => {

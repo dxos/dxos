@@ -4,6 +4,21 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-15 — plugin-calls (component/container stories, CallManager harness)
+
+### Story harness for capability-backed components (CallsCapabilities.Manager)
+
+- Components reading `useCapability(CallsCapabilities.Manager)` (Call, Toolbar, Lobby, Participant, CallArticle, CallSidebar) need a real `CallManager`. Build a `src/testing/` decorator `withCallManager()` = `withPluginManager({ setupEvents: [AppActivationEvents.SetupSettings], plugins: [...corePlugins(), ClientPlugin({ config, onClientInitialized: initializeIdentity }), CallsPlugin()] })`. `CallManager` reads `runtime.services.edge.url` on construct (throws without it) — supply a dummy edge Config; it is never dialed, only the WS `open()` 401s harmlessly.
+- Seed deterministic state without a swarm: add a testing-only `_setState(state: GlobalState)` seam on `CallManager` (sets `_stateAtom` via the registry — the participant list/tracks normally come from network peers). Stories call `useSeedCallManager(state)` (a `useLayoutEffect` that `_setState`s) to render participants/mute/raised-hand from a mock `GlobalState`.
+- `corePlugins()` (plugin-testing) already provides `ThemePlugin`; CallsPlugin registers its own translations — Manager stories need neither `withTheme()` nor explicit `translations`.
+
+### Gotchas
+
+- Plugin entrypoints (`CallsPlugin` from `@dxos/plugin-calls/plugin`, MeetingPlugin, etc.) are `PluginFactory` — CALL them in the `plugins` array (`CallsPlugin()`); a bare reference widens the array to `Plugin | PluginFactory` and every element fails assignment to `Plugin[]`.
+- Mock protobuf `UserState`: do NOT spread `Partial<UserState>` into a `: UserState` literal — the optional spread yields a union that won't assign to `MessageInit<UserState>` (and spreading over required `id`/`name` makes them `string | undefined`). Take an explicit `{ raisedHand?; tracks? }` options object and build one concrete literal.
+- Storybook required-prop friction: when a `render`/`DefaultStory` injects data internally, type it with an all-optional `StoryProps` (then `satisfies Meta<typeof DefaultStory>` + bare `export const X: Story = {}` works). For args-driven generic components, annotate `const meta: Meta<Props>` / `StoryObj<Props>` explicitly — avoids the `component: X as any` cast the old stories used.
+- ALWAYS run `moon`/storybook/tsc from the assigned WORKTREE, never `cd` to the main checkout. Each worktree builds its own dep `dist`; running from main verifies main's files (without your changes) and the storybook globs main's packages — your new stories won't appear. Start storybook on a non-9009 port.
+
 ## 2026-06-11 — TS2883 codemod (fake imports → annotations), RefEditor
 
 ### TS2883 (d.ts can't name @dxos/compute types): annotate the export, no fake imports

@@ -2,81 +2,135 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Obj } from '@dxos/echo';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import { Panel, useTranslation } from '@dxos/react-ui';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#types';
-import { type Meeting } from '#types';
+import { type Meeting, MeetingOperation } from '#types';
+
+type MeetingTab = 'notes' | 'transcript' | 'summary' | 'call';
+
+const TAB_ORDER: MeetingTab[] = ['notes', 'transcript', 'summary', 'call'];
+
+const TAB_ICONS: Record<MeetingTab, string> = {
+  notes: 'ph--note--regular',
+  transcript: 'ph--subtitles--regular',
+  summary: 'ph--list-bullets--regular',
+  call: 'ph--phone-call--regular',
+};
 
 export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>;
 
-export const MeetingArticle = ({ attendableId, role, subject: meeting }: MeetingArticleProps) => {
+/**
+ * Hub view for a meeting: a toolbar of tabs (notes / transcript / summary) over a single content
+ * area that renders the selected component as an article surface.
+ */
+export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const [tab, setTab] = useState<MeetingTab>('notes');
+  // The Call tab is offered only when the calls plugin contributes a transport provider.
+  const callAvailable = useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
+  const tabs = useMemo(() => (callAvailable ? TAB_ORDER : TAB_ORDER.filter((key) => key !== 'call')), [callAvailable]);
+
+  // Read the reactive ref targets directly: these are handed to child surfaces (e.g. MarkdownArticle)
+  // which call `useObject` themselves, so they must receive the live object, not a `useObject` snapshot.
   const notes = meeting.notes?.target;
+  const transcript = meeting.transcript?.target;
   const summary = meeting.summary?.target;
-  const notesData = useMemo(() => ({ attendableId, subject: notes }), [attendableId, notes]);
-  const summaryData = useMemo(
-    () => summary && summary.content.length > 0 && { attendableId, subject: summary },
-    [attendableId, summary, summary?.content],
-  );
+
+  const hasSummary = !!summary && summary.content.length > 0;
 
   const handleGenerateSummary = useCallback(async () => {
     await invokePromise(MeetingOperation.Summarize, { meeting });
   }, [invokePromise, meeting]);
 
-  if (!notes || !summary) {
-    return null;
-  }
+  // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: ['meeting-toolbar.menu', { ns: meta.id }] })
+        .subgraph((builder) =>
+          builder.group(
+            'tab',
+            {
+              label: ['meeting-tabs.menu', { ns: meta.id }],
+              iconOnly: true,
+              variant: 'toggleGroup',
+              selectCardinality: 'single',
+              value: tab,
+            },
+            (group) => {
+              for (const key of tabs) {
+                group.action(
+                  key,
+                  {
+                    label: [`${key}.label`, { ns: meta.id }],
+                    icon: TAB_ICONS[key],
+                    checked: tab === key,
+                  },
+                  () => setTab(key),
+                );
+              }
+            },
+          ),
+        )
+        .separator()
+        .menu('more', (group) => [
+          group.action(
+            'generate-summary',
+            {
+              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
+              icon: 'ph--book-open-text--regular',
+            },
+            handleGenerateSummary,
+          ),
+        ])
+        .build(),
+    [tab, tabs, hasSummary, handleGenerateSummary],
+  );
+
+  const callData = useMemo(
+    () => (callAvailable ? { subject: { roomId: Obj.getURI(meeting) }, attendableId } : undefined),
+    [callAvailable, meeting, attendableId],
+  );
+
+  const articleData = useMemo(() => {
+    switch (tab) {
+      case 'notes':
+        return notes ? { subject: notes, attendableId } : undefined;
+      case 'transcript':
+        return transcript ? { subject: transcript, attendableId } : undefined;
+      case 'summary':
+        return hasSummary ? { subject: summary, attendableId } : undefined;
+      default:
+        return undefined;
+    }
+  }, [tab, attendableId, notes, transcript, summary, hasSummary]);
 
   return (
-    <Stack orientation='vertical' size='contain' rail>
-      <StackItem.Root item={notes} role='section'>
-        <StackItem.Heading>
-          <StackItem.HeadingStickyContent>
-            <StackItem.Sigil icon='ph--note--regular' triggerLabel={t('notes.label')} />
-          </StackItem.HeadingStickyContent>
-        </StackItem.Heading>
-        <StackItem.Content>
-          <Surface.Surface type={AppSurface.Section} data={notesData} />
-        </StackItem.Content>
-      </StackItem.Root>
-      <StackItem.Root item={summary} role='section'>
-        <StackItem.Heading>
-          <StackItem.HeadingStickyContent>
-            <StackItem.Sigil icon='ph--list-bullets--regular' triggerLabel={t('summary.label')} />
-            {summaryData && (
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--book-open-text--regular'
-                label={t('regenerate-summary.label')}
-                onClick={handleGenerateSummary}
-                tooltipSide='right'
-                classNames='w-full'
-              />
-            )}
-          </StackItem.HeadingStickyContent>
-        </StackItem.Heading>
-        <StackItem.Content>
-          {summaryData ? (
-            <Surface.Surface type={AppSurface.Section} data={summaryData} />
-          ) : (
-            <div className='grid place-items-center min-h-32'>
-              <IconButton
-                icon='ph--book-open-text--regular'
-                label={t('generate-summary.label')}
-                onClick={handleGenerateSummary}
-              />
-            </div>
-          )}
-        </StackItem.Content>
-      </StackItem.Root>
-    </Stack>
+    <Panel.Root role={role}>
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
+      {tab === 'call' && callData && (
+        <Panel.Content>
+          <Surface.Surface role='article' data={callData} limit={1} />
+        </Panel.Content>
+      )}
+      {tab !== 'call' && articleData && (
+        <Panel.Content>
+          <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
+        </Panel.Content>
+      )}
+    </Panel.Root>
   );
 };
