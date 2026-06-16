@@ -37,7 +37,7 @@ import {
   MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_DRAFTS_TYPE,
 } from '../constants';
-import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
+import { getAllMailId, getCalendarsPath, getDraftsId, getMailboxesSectionId, getMailboxesPath } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -347,6 +347,31 @@ export default Capability.makeModule(
         nodeIcon: 'ph--envelope-open--regular',
       }),
 
+      GraphBuilder.createExtension({
+        id: 'mailboxesSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-mailbox',
+              data: () =>
+                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: space.db,
+                  typename: Type.getTypename(Mailbox.Mailbox),
+                  targetNodeId: getMailboxesPath(space.db.spaceId),
+                }),
+              properties: {
+                label: ['add-object.label', { ns: Type.getTypename(Mailbox.Mailbox) }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
+            }),
+          ]),
+      }),
+
       createTypeSectionExtension(Calendar.Calendar),
 
       GraphBuilder.createExtension({
@@ -363,6 +388,7 @@ export default Capability.makeModule(
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: space.db,
                   typename: calendarTypename,
+                  targetNodeId: getCalendarsPath(space.db.spaceId),
                 }),
               properties: {
                 label: ['add-object.label', { ns: calendarTypename }],

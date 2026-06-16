@@ -12,7 +12,7 @@ import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
+import { AssistantCapabilities, AssistantOperation, getChatPath, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
@@ -304,7 +304,7 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
 
       // Persist the in-memory chat, queue the prompt, and open the chat (which submits it).
       space.db.add(chat);
-      const chatPath = getObjectPathFromObject(chat);
+      const chatPath = getChatPath(space.db.spaceId, chat.id);
       atomRegistry.update(stateAtom, (current) => ({
         ...current,
         pendingPrompts: { ...current.pendingPrompts, [chatPath]: text },

@@ -20,6 +20,8 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
+import { getMagazinesPath } from '../paths';
+
 const magazineTypename = Type.getTypename(Magazine.Magazine);
 
 export default Capability.makeModule(
@@ -51,6 +53,7 @@ export default Capability.makeModule(
                   target: space.db,
                   typename: magazineTypename,
                   initialFormValues: { feeds: [undefined] },
+                  targetNodeId: getMagazinesPath(space.db.spaceId),
                 }),
               properties: {
                 label: ['add-object.label', { ns: magazineTypename }],
