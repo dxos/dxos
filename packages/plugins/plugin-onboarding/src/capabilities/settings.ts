@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as S from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -13,7 +13,7 @@ import { meta } from '../meta';
 
 // Empty schema — this plugin has no persisted settings. The contribution is
 // required so the settings plugin creates a nav node for this plugin's settings page.
-const Settings = S.Struct({});
+const Settings = Schema.Struct({});
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
