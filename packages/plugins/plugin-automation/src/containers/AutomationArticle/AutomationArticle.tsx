@@ -373,7 +373,7 @@ const CronField = (props: FormFieldRendererProps) => {
   );
 
   return (
-    <div className='flex flex-col gap-1'>
+    <div className='flex flex-col gap-1 mbs-2'>
       <CronBuilder value={initialSpec} onChange={handleChange} />
       <p className='text-sm text-description pli-1 text-right'>{description}</p>
     </div>
