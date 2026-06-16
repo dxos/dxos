@@ -3,7 +3,8 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "outDir": "dist/types"
+    "outDir": "dist/types",
+    "types": ["node", "vite/client"]
   },
   "exclude": [
     "vitest.config.ts"
