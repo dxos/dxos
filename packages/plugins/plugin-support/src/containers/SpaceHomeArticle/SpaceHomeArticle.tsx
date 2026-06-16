@@ -8,11 +8,13 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
+import { AssistantCapabilities, AssistantOperation, getChatPath, type ChatType } from '@dxos/plugin-assistant';
+import { Graph } from '@dxos/plugin-graph';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
@@ -263,6 +265,7 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
+  const { graph } = useAppGraph();
   const registry = useRegistry();
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const stateAtom = useCapability(AssistantCapabilities.State);
@@ -304,15 +307,19 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
 
       // Persist the in-memory chat, queue the prompt, and open the chat (which submits it).
       space.db.add(chat);
-      const chatPath = getObjectPathFromObject(chat);
+      const chatPath = getChatPath(space.db.spaceId, chat.id);
       atomRegistry.update(stateAtom, (current) => ({
         ...current,
         pendingPrompts: { ...current.pendingPrompts, [chatPath]: text },
       }));
-      void invokePromise(LayoutOperation.Open, { subject: [chatPath] });
+      // Wait for the graph node to exist before navigating so the chat article mounts
+      // at the correct attendableId and picks up the pending prompt.
+      void Graph.waitForPath(graph, { target: chatPath })
+        .catch(() => {})
+        .then(() => invokePromise(LayoutOperation.Open, { subject: [chatPath] }));
       setNonce((current) => current + 1);
     });
-  }, [event, space, chat, atomRegistry, stateAtom, invokePromise]);
+  }, [event, space, chat, atomRegistry, stateAtom, invokePromise, graph]);
 
   if (!processor || !chat || !space) {
     return null;

@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
@@ -63,9 +63,6 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
-      // TODO(wittjosiah): If navigableCollections is false and there's no target,
-      //   should try to navigate to the first object of the space replicates.
-      //   Potentially this could also be done on the inviters side to ensure there's always a target.
       const target = result?.target || (navigableCollections ? space?.id : undefined);
       if (target) {
         // Wait before navigating to the target node.
@@ -75,6 +72,11 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
           invokePromise(LayoutOperation.Open, { subject: [target] }),
           invokePromise(LayoutOperation.Expose, { subject: target }),
         ]);
+      } else {
+        await invokePromise(LayoutOperation.Open, {
+          subject: [getSpaceHomePath(space.id)],
+          workspace: getSpacePath(space.id),
+        });
       }
 
       onDone?.(result);

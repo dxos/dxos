@@ -16,6 +16,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
+import { getChannelsPath } from '../paths';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 
@@ -66,6 +67,7 @@ export default Capability.makeModule(
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: space.db,
                   typename: channelTypename,
+                  targetNodeId: getChannelsPath(space.db.spaceId),
                 }),
               properties: {
                 label: ['add-object.label', { ns: channelTypename }],

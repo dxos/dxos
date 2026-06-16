@@ -54,20 +54,6 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           },
         )
         .action(
-          'rename',
-          {
-            label: ['rename-thread.button', { ns: meta.id }],
-            icon: 'ph--magic-wand--regular',
-            type: 'rename',
-            disabled: !chat,
-          },
-          () =>
-            Effect.gen(function* () {
-              invariant(chat);
-              yield* invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db?.spaceId });
-            }).pipe(EffectEx.runAndForwardErrors),
-        )
-        .action(
           'branch',
           {
             label: ['branch-thread.menu', { ns: meta.id }],
@@ -79,6 +65,20 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
             Effect.gen(function* () {
               invariant(chat);
               yield* invoke(AssistantOperation.ForkChat, { chat, companionTo }, { spaceId: db?.spaceId });
+            }).pipe(EffectEx.runAndForwardErrors),
+        )
+        .action(
+          'rename',
+          {
+            label: ['rename-thread.button', { ns: meta.id }],
+            icon: 'ph--magic-wand--regular',
+            type: 'rename',
+            disabled: !chat,
+          },
+          () =>
+            Effect.gen(function* () {
+              invariant(chat);
+              yield* invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db?.spaceId });
             }).pipe(EffectEx.runAndForwardErrors),
         );
 

@@ -30,7 +30,7 @@ export const meta = Plugin.makeMeta({
     Game write fails, the variant state is rolled back automatically.
   `,
   icon: 'ph--sword--regular',
-  iconHue: 'indigo',
+  iconHue: 'amber',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-game',
   screenshots: [
     'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/2797d56edc9658d018ad75fe48a47f27/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2F2797d56edc9658d018ad75fe48a47f27%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',

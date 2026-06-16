@@ -19,4 +19,5 @@ export const meta = Plugin.makeMeta({
   iconHue: 'red',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-video',
   spec: 'PLUGIN.mdl',
+  tags: ['labs'],
 });

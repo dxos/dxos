@@ -39,7 +39,7 @@ export const meta = Plugin.makeMeta({
     compact view suitable for embedding in dashboards or space overview panels.
   `,
   icon: 'ph--hash-straight--regular',
-  iconHue: 'cyan',
+  iconHue: 'amber',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tictactoe',
   spec: 'PLUGIN.mdl',
   dependsOn: [gameMeta.id],
