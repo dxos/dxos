@@ -358,10 +358,7 @@ export const AutomationInlineForm = ({
 /** Renders the CronBuilder with a live cronstrue description below it. */
 const CronField = (props: FormFieldRendererProps) => {
   const existingCron = props.getValue() as string | undefined;
-  const initialSpec = useMemo(
-    () => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily),
-    [],
-  );
+  const initialSpec = useMemo(() => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily), []);
   const [description, setDescription] = useState(() => describeCron(existingCron ?? toCron(initialSpec)));
 
   const handleChange = useCallback(
@@ -546,10 +543,7 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
     [kindOptions],
   );
   // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
-  const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => triggerFormValues(trigger?.spec),
-    [trigger],
-  );
+  const defaultValues = useMemo<Partial<TriggerFormValues>>(() => triggerFormValues(trigger?.spec), [trigger]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<TriggerFormValues>) => {
