@@ -72,7 +72,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: 'types',
+      id: 'database',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
