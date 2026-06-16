@@ -62,7 +62,7 @@ const __dirname = dirname(__filename);
 
 const OUTPUT_PATH = resolve(__dirname, '../src/content/exemplar-space.dx.json');
 const ABOUT_MD_PATH = resolve(__dirname, '../src/content/about-bramble.md');
-const WELCOME_MD_PATH = resolve(__dirname, '../src/content/welcome.md');
+const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 
 // -----------------------------------------------------------------------------
 // RoastLog — exemplar-specific schema defined entirely in this build script.
@@ -173,7 +173,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   }
 
   // Top-level docs ---------------------------------------------------------
-  const welcomeDoc = Markdown.make({ name: 'Welcome & Tour', content: content.welcomeMd });
+  const welcomeDoc = Markdown.make({ name: 'Space Tour', content: content.welcomeMd });
   space.db.add(welcomeDoc);
   const aboutDoc = Markdown.make({ name: 'About Bramble Coffee Roasters', content: content.aboutMd });
   space.db.add(aboutDoc);

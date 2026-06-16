@@ -17,7 +17,7 @@ tasks:
       - ^:compile
     inputs:
       - scripts/build-exemplar-space.ts
-      - src/content/welcome.md
+      - src/content/space-tour.md
       - src/content/about-bramble.md
     outputs:
       - src/content/exemplar-space.dx.json
