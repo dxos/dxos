@@ -22,6 +22,9 @@ export const ExemplarSettings = () => {
   const [busy, setBusy] = useState(false);
 
   const handleRecreate = useCallback(async () => {
+    if (busy) {
+      return;
+    }
     setBusy(true);
     try {
       const archive: SpaceArchive = {
@@ -37,7 +40,7 @@ export const ExemplarSettings = () => {
     } finally {
       setBusy(false);
     }
-  }, [client]);
+  }, [busy, client]);
 
   return (
     <Settings.Viewport>

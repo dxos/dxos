@@ -21,10 +21,11 @@ export const queryAllCredentials = (client: Client) => {
     spaceKey: identitySpace,
     noTail: true,
   });
+  invariant(stream, 'queryCredentials stream not available');
 
   return new Promise<Credential[]>((resolve, reject) => {
     const credentials: Credential[] = [];
-    stream?.subscribe(
+    stream.subscribe(
       (credential) => {
         credentials.push(credential);
       },

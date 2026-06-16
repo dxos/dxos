@@ -9,9 +9,18 @@ import { type Credential } from '@dxos/react-client/halo';
 export const removeQueryParamByValue = (valueToRemove: string) => {
   const url = new URL(window.location.href);
   const params = Array.from(url.searchParams.entries());
-  const [name] = params.find(([_, value]) => value === valueToRemove) ?? [null, null];
-  if (name) {
-    url.searchParams.delete(name);
+  const match = params.find(([_, value]) => value === valueToRemove);
+  if (match) {
+    const next = new URLSearchParams();
+    let removed = false;
+    for (const [key, value] of params) {
+      if (!removed && key === match[0] && value === valueToRemove) {
+        removed = true;
+        continue;
+      }
+      next.append(key, value);
+    }
+    url.search = next.toString();
     history.replaceState({}, document.title, url.href);
   }
 };
@@ -31,10 +40,11 @@ export const queryAllCredentials = (client: Client) => {
     spaceKey: identitySpace,
     noTail: true,
   });
+  invariant(stream, 'queryCredentials stream not available');
 
   return new Promise<Credential[]>((resolve, reject) => {
     const credentials: Credential[] = [];
-    stream?.subscribe(
+    stream.subscribe(
       (credential) => {
         credentials.push(credential);
       },

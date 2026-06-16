@@ -109,7 +109,8 @@ plugin-foo/
   moon.yml
   PLUGIN.mdl
   src/
-    index.ts                # Root entrypoint; exports only the plugin and meta.
+    index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
+    plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
     meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
     translations.ts         # i18n resources keyed by typename and meta.id.
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
