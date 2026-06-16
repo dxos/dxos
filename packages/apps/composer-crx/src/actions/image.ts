@@ -4,7 +4,8 @@
 
 import browser from 'webextension-polyfill';
 
-import { log } from '@dxos/log';
+import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
+import { EffectEx } from '@dxos/effect';
 
 import { THUMBNAIL_PROP, getConfig } from '../config';
 
@@ -65,39 +66,25 @@ export const createThumbnail = async (imageUrl: string) => {
     blob = new Blob([blob], { type: contentType });
   }
 
-  // Post blob to image service with form data.
-  const formData = new FormData();
-  const filename = getFilenameFromUrl(imageUrl);
-  const field = 'file'; // TODO(burdon): Factor out to protocol def.
-  formData.append(field, blob, filename);
+  // Post blob to the image service and store the hosted URL for the popup.
   const config = await getConfig();
-  // NOTE: Don't set Content-Type header: let browser set multipart/form-data with boundary.
-  const uploadRes = await fetch(new URL('/thumbnail', config.imageServiceUrl).toString(), {
-    method: 'POST',
-    body: formData,
-  });
+  const client = new EdgeServiceClient({ baseUrl: config.imageServiceUrl });
+  const { url: resultUrl } = await EffectEx.runPromise(
+    Image.thumbnail(client, blob, { filename: getFilenameFromUrl(imageUrl) }),
+  );
+  if (resultUrl) {
+    await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
+  }
 
-  // Store result URL and open extension popup.
+  // Open extension popup (only works in response to user action like context menu).
   try {
-    // Store the result URL in storage so popup can access it.
-    const result = await uploadRes.json();
-    const resultUrl = result.url || '';
-    if (resultUrl) {
-      await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
-    }
-
-    // Open extension popup (only works in response to user action like context menu).
-    try {
-      await browser.action.openPopup();
-    } catch {
-      // If openPopup fails (e.g., popup already open), set badge to indicate result.
-      await browser.action.setBadgeText({ text: '✓' });
-      await browser.action.setBadgeBackgroundColor({ color: '#ff5500' });
-      setTimeout(() => {
-        void browser.action.setBadgeText({ text: '' });
-      }, 3_000);
-    }
-  } catch (err) {
-    log.error('Failed to open popup', { err });
+    await browser.action.openPopup();
+  } catch {
+    // If openPopup fails (e.g., popup already open), set badge to indicate result.
+    await browser.action.setBadgeText({ text: '✓' });
+    await browser.action.setBadgeBackgroundColor({ color: '#ff5500' });
+    setTimeout(() => {
+      void browser.action.setBadgeText({ text: '' });
+    }, 3_000);
   }
 };

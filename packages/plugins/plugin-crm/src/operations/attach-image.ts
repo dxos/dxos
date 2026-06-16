@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
+import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
@@ -252,40 +253,11 @@ export default CrmOperation.AttachImage.pipe(
 
       const blob = sourceBlob.type === contentType ? sourceBlob : new Blob([sourceBlob], { type: contentType });
 
-      const formData = new FormData();
-      formData.append('file', blob, filenameFromUrl(validatedSource.toString()));
-
-      const uploadRes = yield* Effect.tryPromise({
-        try: () =>
-          fetch(new URL('/thumbnail', serviceUrl).toString(), {
-            method: 'POST',
-            body: formData,
-            signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-          }),
-        catch: (cause) => new Error(`Image service upload failed: ${String(cause)}`),
-      });
-      if (!uploadRes.ok) {
-        return yield* Effect.fail(
-          new Error(`Image service rejected the upload: ${uploadRes.status} ${uploadRes.statusText}`),
-        );
-      }
-
-      // Derive the canonical hosted URL from the upload response.
-      // JSON-speaking services return { url: "https://..." }; services that return raw image
-      // bytes (like the current default worker) expose the hosted URL as the final response URL
-      // after any redirects (response.url). DX-1002 tracks aligning on a single contract.
-      const responseContentType = uploadRes.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
-      let uploadedUrl: string | undefined;
-      if (responseContentType === 'application/json') {
-        const json = (yield* Effect.tryPromise({
-          try: () => uploadRes.json(),
-          catch: (cause) => new Error(`Failed to parse image service response: ${String(cause)}`),
-        })) as { url?: string };
-        uploadedUrl = json.url;
-      } else {
-        uploadedUrl = uploadRes.url;
-      }
-      if (!uploadedUrl || uploadedUrl.length === 0 || !isAbsoluteHttpUrl(uploadedUrl)) {
+      const client = new EdgeServiceClient({ baseUrl: serviceUrl, timeout: FETCH_TIMEOUT_MS });
+      const { url: uploadedUrl } = yield* Image.thumbnail(client, blob, {
+        filename: filenameFromUrl(validatedSource.toString()),
+      }).pipe(Effect.mapError((cause) => new Error(`Image service upload failed: ${cause.message}`)));
+      if (!isAbsoluteHttpUrl(uploadedUrl)) {
         return yield* Effect.fail(new Error('Image service returned an invalid or non-absolute URL'));
       }
 
@@ -300,7 +272,6 @@ export default CrmOperation.AttachImage.pipe(
       });
 
       log.info('attach-image', { uploadedUrl });
-
       return { imageUrl: uploadedUrl };
     }),
   ),
