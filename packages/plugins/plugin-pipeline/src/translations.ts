@@ -1,9 +1,10 @@
-import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
-import { Pipeline } from '@dxos/types';
 //
 // Copyright 2023 DXOS.org
 //
+
+import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
+import { Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -25,14 +26,14 @@ export const translations = [
         'plugin.name': 'Pipelines',
         'add-column.label': 'Add column',
         'add-card.label': 'Add object',
-        'untitled-view.title': 'New view',
+        'untitled-column.title': 'New column',
         'enumerating-tab.label': 'List',
         'editing-tab.label': 'Edit',
-        'views.label': 'Views',
+        'columns.label': 'Columns',
         'pipeline-invocations.label': 'Invocations',
         'pipeline-automation.label': 'Automations',
         'toggle-expand.label': 'Toggle expand',
-        'delete-view.label': 'Delete view',
+        'delete-column.label': 'Delete column',
       },
     },
   },
