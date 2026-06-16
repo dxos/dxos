@@ -646,16 +646,3 @@ const bindOwningSpaceScopes = (ast: QueryAST.Query, spaceId: SpaceId): QueryAST.
   };
   return transform(ast) as QueryAST.Query;
 };
-
-export {
-  type AddCoreOptions,
-  type AtomicReplaceObjectProps,
-  type DocumentChanges,
-  type GetObjectCoreByIdOptions,
-  type IDatabaseBinding,
-  type ItemsUpdatedEvent,
-  type LoadObjectDocumentOptions,
-  type LoadObjectOptions,
-  META_NAMESPACE,
-  type SpaceDocumentHeads,
-} from '../core-db';
