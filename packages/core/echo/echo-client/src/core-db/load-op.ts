@@ -119,6 +119,27 @@ export class LoadOpTable {
   }
 
   /**
+   * Re-probe the working set for the cached op at `uri` (if any) and promote it to `ready` when the
+   * entity is now materialized. Lets a local materialization (e.g. `db.add`) heal an op that latched
+   * `requesting`/`unavailable` while the entity was absent: the working-set tier is the cheapest and
+   * authoritative, so a hit settles the op regardless of any in-flight higher-ceiling load (whose IO
+   * is cancelled). No-op when no op is cached for the URI — nothing is waiting on it.
+   */
+  refreshFromWorkingSet(uri: URI.URI): void {
+    const op = this.#ops.get(uri);
+    if (op == null || op.state === 'ready') {
+      return;
+    }
+    const probed = this._routeBackend(uri)?.probe(uri);
+    if (probed == null) {
+      return;
+    }
+    op.cancel?.();
+    op.cancel = undefined;
+    this.#set(op, 'ready', probed);
+  }
+
+  /**
    * Decrement the refcount; at zero, cancel IO and drop the op (does not evict the entity from its
    * backing store's working set).
    */

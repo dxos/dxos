@@ -4,7 +4,7 @@
 
 import * as Array from 'effect/Array';
 
-import { Event, TimeoutError, asyncTimeout } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
@@ -31,8 +31,23 @@ export type LoadObjectProps = {
   documentId: string | undefined;
 };
 
+/**
+ * Notification that objects became available (or changed) in the local working set.
+ * Plumbed from `DatabaseImpl` update events so reactive index sources can re-hydrate.
+ */
+export type ObjectUpdate = {
+  spaceId: SpaceId;
+  objectIds: string[];
+};
+
 export interface ObjectLoader {
   loadObject(params: LoadObjectProps): Promise<Entity.Unknown | undefined>;
+
+  /**
+   * Fires when objects are added/updated locally. Lets reactive index results re-hydrate
+   * index hits that previously failed to load (e.g. timed out before their document arrived).
+   */
+  readonly updateEvent: ReadOnlyEvent<ObjectUpdate>;
 }
 
 export type IndexQueryProviderProps = {
@@ -77,15 +92,43 @@ export class IndexQuerySource implements QuerySource {
   private _stream?: Stream<QueryResponse>;
   private _open = false;
 
+  /**
+   * Raw records from the host's last reactive response. Retained so we can re-hydrate when the
+   * objects they reference finish loading locally (see {@link _onObjectsUpdated}).
+   */
+  private _lastRemoteResults?: readonly RemoteQueryResult[] = undefined;
+
+  /** queryId of the active reactive stream, kept for log correlation on update-driven re-hydration. */
+  private _reactiveQueryId?: number = undefined;
+
+  /** Context of the in-flight hydration pass; disposed on close so its results are dropped. */
+  private _hydrationCtx?: Context = undefined;
+
+  /** True while {@link _hydrateLoop} is running, so concurrent triggers coalesce instead of racing. */
+  private _hydrating = false;
+
+  /** Set when a new trigger arrives mid-pass, causing {@link _hydrateLoop} to run one more iteration. */
+  private _hydratePending = false;
+
+  /** Subscription to local object-load updates (plumbed from `DatabaseImpl`). */
+  private _updateSubscription?: CleanupFn = undefined;
+
   constructor(private readonly _params: IndexQuerySourceProps) {}
 
   open(): void {
     this._open = true;
+    this._updateSubscription = this._params.objectLoader.updateEvent.on((event) => this._onObjectsUpdated(event));
   }
 
   close(): void {
     this._open = false;
     this._results = undefined;
+    this._lastRemoteResults = undefined;
+    this._reactiveQueryId = undefined;
+    this._updateSubscription?.();
+    this._updateSubscription = undefined;
+    void this._hydrationCtx?.dispose().catch(() => {});
+    this._hydrationCtx = undefined;
     this._closeStream();
   }
 
@@ -96,7 +139,7 @@ export class IndexQuerySource implements QuerySource {
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
-      this._queryIndex(query, QueryReactivity.ONE_SHOT, resolve, reject);
+      this._runOneShot(query, resolve, reject);
     });
   }
 
@@ -104,6 +147,11 @@ export class IndexQuerySource implements QuerySource {
     this._query = query;
 
     this._closeStream();
+    this._lastRemoteResults = undefined;
+    this._reactiveQueryId = undefined;
+    // Drop any in-flight hydration pass so it doesn't apply results for the previous query.
+    void this._hydrationCtx?.dispose().catch(() => {});
+    this._hydrationCtx = undefined;
     this._results = [];
     this.changed.emit();
 
@@ -113,112 +161,198 @@ export class IndexQuerySource implements QuerySource {
       return;
     }
 
-    this._queryIndex(query, QueryReactivity.REACTIVE, (results) => {
-      this._results = results;
-      this.changed.emit();
-    });
+    this._startReactive(query);
   }
 
-  private _queryIndex(
+  /** Single-use query: resolves with the first host response, then closes the stream. */
+  private _runOneShot(
     query: QueryAST.Query,
-    queryType: QueryReactivity,
-    onResult: (results: QueryResult.EntityEntry[]) => void,
-    onError?: (error: Error) => void,
+    resolve: (results: QueryResult.EntityEntry[]) => void,
+    reject: (error: Error) => void,
   ): void {
     const queryId = nextQueryId++;
-
     log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
     const start = Date.now();
-    let currentCtx: Context;
+    let settled = false;
 
     const stream = this._params.service.execQuery(
-      {
-        query: JSON.stringify(query),
-        queryId: String(queryId),
-        reactivity: queryType,
-      },
+      { query: JSON.stringify(query), queryId: String(queryId), reactivity: QueryReactivity.ONE_SHOT },
       { timeout: QUERY_SERVICE_TIMEOUT },
     );
-
-    if (queryType === QueryReactivity.REACTIVE) {
-      if (this._stream) {
-        log.warn('Query stream already open');
-      }
-      this._stream = stream;
-    }
 
     stream.subscribe(
       async (response) => {
         try {
-          const targetSpaces = getTargetSpacesForQuery(query);
-          if (targetSpaces.length > 0) {
-            invariant(
-              response.results?.every((r) => targetSpaces.includes(SpaceId.make(r.spaceId))),
-              'Result spaceId mismatch',
-            );
+          this._assertResultSpaces(query, response);
+          if (settled) {
+            return;
           }
-
-          if (queryType === QueryReactivity.ONE_SHOT) {
-            if (currentCtx) {
-              return;
-            }
-            void stream.close().catch(() => {});
-          }
-
-          await currentCtx?.dispose();
-          const ctx = new Context();
-          currentCtx = ctx;
-
-          log('queryIndex raw results', {
-            queryId,
-            query: Query.pretty(Query.fromAst(query)),
-            length: response.results?.length ?? 0,
-          });
-
-          const processedResults = await Promise.all(
-            (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
-          );
-          const results = processedResults.filter(isNonNullable);
-          const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getType(_.result));
-          if (resultsWithNoSchema.length > 0) {
-            log.warn('unable to resolve schema for queried objects', {
-              count: resultsWithNoSchema.length,
-              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeURI(_.result)?.toString())),
-            });
-          }
-
-          log('queryIndex processed results', {
-            queryId,
-            query: Query.pretty(Query.fromAst(query)),
-            fetchedFromIndex: response.results?.length ?? 0,
-            loaded: results.length,
-          });
-
-          if (currentCtx === ctx) {
-            onResult(results);
-          } else {
-            log.warn('results from the previous update are ignored', {
-              queryId,
-            });
-          }
+          settled = true;
+          void stream.close().catch(() => {});
+          const results = await this._mapRecords(new Context(), queryId, query, start, response.results ?? []);
+          resolve(results);
         } catch (err: any) {
-          if (onError) {
-            onError(err);
-          } else {
-            log.catch(err);
-          }
+          reject(err);
         }
       },
       (err) => {
         if (err != null) {
-          if (onError) {
-            onError(err);
-          } else if (!(err instanceof RpcClosedError)) {
-            log.catch(err);
-          }
+          reject(err);
         }
       },
     );
+  }
+
+  /** Reactive query: pushes results on every host response and remembers the raw records. */
+  private _startReactive(query: QueryAST.Query): void {
+    const queryId = nextQueryId++;
+    this._reactiveQueryId = queryId;
+    log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
+
+    const stream = this._params.service.execQuery(
+      { query: JSON.stringify(query), queryId: String(queryId), reactivity: QueryReactivity.REACTIVE },
+      { timeout: QUERY_SERVICE_TIMEOUT },
+    );
+
+    if (this._stream) {
+      log.warn('Query stream already open');
+    }
+    this._stream = stream;
+
+    stream.subscribe(
+      async (response) => {
+        try {
+          this._assertResultSpaces(query, response);
+          // Remember the raw host records so a later local object load can re-hydrate them.
+          this._lastRemoteResults = response.results ?? [];
+          this._scheduleHydrate();
+        } catch (err: any) {
+          log.catch(err);
+        }
+      },
+      (err) => {
+        if (err != null && !(err instanceof RpcClosedError)) {
+          log.catch(err);
+        }
+      },
+    );
+  }
+
+  /**
+   * Re-hydrate the remembered host records when a referenced object loads locally. This lets index
+   * hits that previously failed to load (e.g. timed out before their document arrived) appear once
+   * their documents become available, without waiting for a host-side index invalidation.
+   */
+  private _onObjectsUpdated(event: ObjectUpdate): void {
+    // Only reactive queries retain remembered records; one-shot results are not refreshed.
+    if (!this._open || this._query == null || this._reactiveQueryId == null) {
+      return;
+    }
+    const records = this._lastRemoteResults;
+    if (records == null || records.length === 0) {
+      return;
+    }
+
+    // Re-hydrate only when an updated object is among the records the host returned.
+    const updated = new Set(event.objectIds);
+    const affectsResults = records.some((record) => record.spaceId === event.spaceId && updated.has(record.id));
+    if (!affectsResults) {
+      return;
+    }
+
+    log('re-hydrating index results after object update', { queryId: this._reactiveQueryId, spaceId: event.spaceId });
+    this._scheduleHydrate();
+  }
+
+  /**
+   * Coalesce hydration triggers (stream responses and object updates) into a single serialized loop.
+   * Rapid bursts of update events would otherwise launch overlapping passes that supersede each other;
+   * instead we run one pass at a time and re-run once more if new triggers arrived while it was in flight.
+   */
+  private _scheduleHydrate(): void {
+    if (this._hydrating) {
+      this._hydratePending = true;
+      return;
+    }
+    void this._hydrateLoop();
+  }
+
+  /** Hydrate the latest remembered records, set `_results`, and emit — repeating while triggers arrive. */
+  private async _hydrateLoop(): Promise<void> {
+    this._hydrating = true;
+    try {
+      do {
+        this._hydratePending = false;
+
+        const query = this._query;
+        const queryId = this._reactiveQueryId;
+        if (!this._open || query == null || queryId == null) {
+          break;
+        }
+        const records = this._lastRemoteResults ?? [];
+
+        const ctx = new Context();
+        this._hydrationCtx = ctx;
+        const results = await this._mapRecords(ctx, queryId, query, Date.now(), records);
+
+        // Dropped if the source closed (or was re-opened with a new query) during hydration.
+        if (this._hydrationCtx !== ctx) {
+          return;
+        }
+
+        this._results = results;
+        this.changed.emit();
+      } while (this._hydratePending);
+    } catch (err: any) {
+      log.catch(err);
+    } finally {
+      this._hydrating = false;
+    }
+  }
+
+  /** Hydrate raw host records into query entries, dropping objects that fail to load or validate. */
+  private async _mapRecords(
+    ctx: Context,
+    queryId: number,
+    query: QueryAST.Query,
+    start: number,
+    records: readonly RemoteQueryResult[],
+  ): Promise<QueryResult.EntityEntry[]> {
+    log('queryIndex raw results', {
+      queryId,
+      query: Query.pretty(Query.fromAst(query)),
+      length: records.length,
+    });
+
+    const processedResults = await Promise.all(records.map((result) => this._filterMapResult(ctx, start, result)));
+    const results = processedResults.filter(isNonNullable);
+
+    const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getType(_.result));
+    if (resultsWithNoSchema.length > 0) {
+      log.warn('unable to resolve schema for queried objects', {
+        count: resultsWithNoSchema.length,
+        types: Array.dedupe(results.map((_) => _.result && Entity.getTypeURI(_.result)?.toString())),
+      });
+    }
+
+    log('queryIndex processed results', {
+      queryId,
+      query: Query.pretty(Query.fromAst(query)),
+      fetchedFromIndex: records.length,
+      loaded: results.length,
+    });
+
+    return results;
+  }
+
+  private _assertResultSpaces(query: QueryAST.Query, response: QueryResponse): void {
+    const targetSpaces = getTargetSpacesForQuery(query);
+    if (targetSpaces.length > 0) {
+      invariant(
+        response.results?.every((r) => targetSpaces.includes(SpaceId.make(r.spaceId))),
+        'Result spaceId mismatch',
+      );
+    }
   }
 
   private async _filterMapResult(
