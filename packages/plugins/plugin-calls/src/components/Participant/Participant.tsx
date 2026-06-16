@@ -54,14 +54,21 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
     return pulledVideoStream;
   }, [isSelf, isScreenshare, localVideoStream, screenshareVideoStream, pulledVideoStream]);
 
+  // For self tiles use local media state; for remote tiles use the participant's swarm-reported state.
+  const participantVideo = isSelf
+    ? videoEnabled
+    : isScreenshare
+      ? Boolean(user.tracks?.screenshareEnabled)
+      : Boolean(user.tracks?.videoEnabled);
+
   return (
     <ResponsiveGridItem
       {...props}
       item={user}
       name={user.name}
       self={isSelf}
-      screenshare={!!screenshareVideoStream}
-      video={videoEnabled}
+      screenshare={isScreenshare && participantVideo}
+      video={participantVideo}
       mute={user ? !user.tracks?.audioEnabled : false}
       wave={user.raisedHand}
       speaking={user.speaking}
