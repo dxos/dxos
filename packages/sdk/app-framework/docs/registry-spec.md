@@ -263,10 +263,11 @@ caret). The remaining (bundled) deps are recorded for transparency/audit. A rele
 
 **Rollout-decoupling.** Because each release records the SDK it built against, a **stable Composer
 ignores plugin versions built for a newer SDK** — they don't surface as available upgrades. This lets
-plugin authors publish new versions *ahead* of the stable Composer release without breaking users on
+plugin authors publish new versions _ahead_ of the stable Composer release without breaking users on
 the current version; those users pick the new versions up only once their Composer catches up.
 
 **The upgrade train** (operationalized in the plugins monorepo's `RELEASING.md`):
+
 1. **Continuous tracking (never released).** A nightly job points the monorepo's SDK catalog at the
    latest DXOS `main` via `pkg.pr.new` and opens/updates an "SDK upgrade" PR; CI builds all plugins.
    These prerelease pins may land on `main` to keep pace, but a **release guard forbids publishing**

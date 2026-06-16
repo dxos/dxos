@@ -57,7 +57,9 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
       .find((plugin) => plugin.modules.some((module) => module.id === owningModuleId));
     return {
       content: owningPlugin?.meta.description ?? '',
-      screenshots: owningPlugin?.meta.screenshots ?? [],
+      screenshots: (owningPlugin?.meta.screenshots ?? [])
+        .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
+        .filter(Boolean),
     };
   }, [companionTo, manager, schemasByModule]);
 

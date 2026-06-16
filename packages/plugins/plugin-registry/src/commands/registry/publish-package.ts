@@ -27,10 +27,7 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 export const publishPackage = Command.make(
   'publish-package',
   {
-    handle: Options.text('handle').pipe(
-      Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle),
-      Options.optional,
-    ),
+    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
     appPassword: Options.text('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,

@@ -274,9 +274,7 @@ const resolvePersonalSpaceSession = (client: Client) =>
       return undefined;
     }
     const tokens = yield* Effect.promise(() => space.db.query(Filter.type(AccessToken.AccessToken)).run());
-    const token = tokens.find(
-      (object) => object.source === ATMOSPHERE_SOURCE && !!object.account && !!object.token,
-    );
+    const token = tokens.find((object) => object.source === ATMOSPHERE_SOURCE && !!object.account && !!object.token);
     if (!token?.account) {
       return undefined;
     }
@@ -307,7 +305,12 @@ const resolvePersonalSpaceSession = (client: Client) =>
  */
 const proxyCall = <T>(
   session: DpopProxySession,
-  params: { xrpcMethod: string; method: 'GET' | 'POST'; query?: Record<string, string>; jsonBody?: Record<string, unknown> },
+  params: {
+    xrpcMethod: string;
+    method: 'GET' | 'POST';
+    query?: Record<string, string>;
+    jsonBody?: Record<string, unknown>;
+  },
   schema: Schema.Schema<T> | undefined,
 ) => {
   const query = params.query ? `?${new URLSearchParams(params.query).toString()}` : '';
@@ -344,7 +347,11 @@ export const putRecord = (session: Session, collection: string, rkey: string, re
     ? xrpcPost(`${session.pdsBaseUrl}/xrpc/com.atproto.repo.putRecord`, body, PutRecordResponseSchema, {
         Authorization: `Bearer ${session.accessJwt}`,
       })
-    : proxyCall(session, { xrpcMethod: 'com.atproto.repo.putRecord', method: 'POST', jsonBody: body }, PutRecordResponseSchema);
+    : proxyCall(
+        session,
+        { xrpcMethod: 'com.atproto.repo.putRecord', method: 'POST', jsonBody: body },
+        PutRecordResponseSchema,
+      );
 };
 
 /** Delete a record at `com.atproto.repo.deleteRecord`. */
@@ -361,7 +368,11 @@ export const deleteRecord = (session: Session, collection: string, rkey: string)
  * List records in a single collection on the authenticated repo. Paging is left to the caller (the
  * four registry collections are tiny in practice); the cursor is surfaced on the return.
  */
-export const listRecords = (session: Session, collection: string, options: { limit?: number; cursor?: string } = {}) => {
+export const listRecords = (
+  session: Session,
+  collection: string,
+  options: { limit?: number; cursor?: string } = {},
+) => {
   const query: Record<string, string> = {
     repo: session.did,
     collection,
@@ -370,7 +381,11 @@ export const listRecords = (session: Session, collection: string, options: { lim
   };
   return session.mode === 'app-password'
     ? xrpcGet(`${session.pdsBaseUrl}/xrpc/com.atproto.repo.listRecords`, query, ListRecordsResponseSchema)
-    : proxyCall(session, { xrpcMethod: 'com.atproto.repo.listRecords', method: 'GET', query }, ListRecordsResponseSchema);
+    : proxyCall(
+        session,
+        { xrpcMethod: 'com.atproto.repo.listRecords', method: 'GET', query },
+        ListRecordsResponseSchema,
+      );
 };
 
 // ---------------------------------------------------------------------------

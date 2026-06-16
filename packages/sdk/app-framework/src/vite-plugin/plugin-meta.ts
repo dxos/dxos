@@ -4,13 +4,11 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { parse } from 'yaml';
 
 import { DXN } from '@dxos/keys';
 
 import { Plugin } from '../core';
-
 import { type BuildMeta } from './manifest';
 
 /**

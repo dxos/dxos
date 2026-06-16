@@ -100,41 +100,41 @@ version: 1
 
 package:
   plugins:
-    - id: org.dxos.plugin.excalidraw      # required — a reverse-domain NSID; also your plugin id
-      name: Excalidraw                     # required
+    - id: org.dxos.plugin.excalidraw # required — a reverse-domain NSID; also your plugin id
+      name: Excalidraw # required
       description: |-
         Professional diagramming powered by Excalidraw for creating
         hand-drawn style illustrations.
-      icon: ph--compass-tool--regular      # a Phosphor icon name
+      icon: ph--compass-tool--regular # a Phosphor icon name
       iconHue: indigo
       source: https://github.com/your-org/your-plugin
       homepage: https://example.com
       tags:
         - labs
       screenshots:
-        - https://example.com/screenshot.png               # a single URL, or…
-        - light: https://example.com/screenshot-light.png   # …theme-specific variants
+        - https://example.com/screenshot.png # a single URL, or…
+        - light: https://example.com/screenshot-light.png # …theme-specific variants
           dark: https://example.com/screenshot-dark.png
       build:
-        command: vite build                # how to build the bundle
-        outdir: dist                        # where the build emits manifest.json
+        command: vite build # how to build the bundle
+        outdir: dist # where the build emits manifest.json
 ```
 
 Field reference for each `package.plugins[]` entry:
 
-| Field | Required | Notes |
-| --- | --- | --- |
-| `id` | yes | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). This is your plugin's globally-unique id. |
-| `name` | yes | Human-readable name shown in the registry. |
-| `description` | no | Short description shown on the plugin's detail view. |
-| `icon` | no | A [Phosphor](https://phosphoricons.com) icon name, e.g. `ph--compass-tool--regular`. |
-| `iconHue` | no | Display hue, e.g. `indigo`. |
-| `source` | no | Source repository URL. |
-| `homepage` | no | Homepage URL. |
-| `tags` | no | List of tags for categorization/discovery. |
-| `screenshots` | no | Preview images for the plugin's detail view. Each entry is a URL, or a `{ light, dark }` record of theme-specific URLs. |
-| `build.command` | no | Build command run by `dx registry publish` (skipped with `--no-build`). |
-| `build.outdir` | no | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
+| Field           | Required | Notes                                                                                                                   |
+| --------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`            | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). This is your plugin's globally-unique id.                      |
+| `name`          | yes      | Human-readable name shown in the registry.                                                                              |
+| `description`   | no       | Short description shown on the plugin's detail view.                                                                    |
+| `icon`          | no       | A [Phosphor](https://phosphoricons.com) icon name, e.g. `ph--compass-tool--regular`.                                    |
+| `iconHue`       | no       | Display hue, e.g. `indigo`.                                                                                             |
+| `source`        | no       | Source repository URL.                                                                                                  |
+| `homepage`      | no       | Homepage URL.                                                                                                           |
+| `tags`          | no       | List of tags for categorization/discovery.                                                                              |
+| `screenshots`   | no       | Preview images for the plugin's detail view. Each entry is a URL, or a `{ light, dark }` record of theme-specific URLs. |
+| `build.command` | no       | Build command run by `dx registry publish` (skipped with `--no-build`).                                                 |
+| `build.outdir`  | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`.                                      |
 
 The release **version is taken from your `package.json` `version` field**, not from `dx.yml`. Bump it before publishing a new release.
 
@@ -170,13 +170,13 @@ This will:
 
 Useful flags:
 
-| Flag | Purpose |
-| --- | --- |
-| `--dir <path>` | Project directory containing `dx.yml` (defaults to the current directory). |
-| `--module <id>` | Which plugin to publish when `dx.yml` declares several (defaults to the first). |
-| `--no-build` | Skip the build and publish the existing `dist`. |
-| `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself. |
-| `--edge-url <url>` | Override the edge used for upload (mainly for local testing against a dev worker). |
+| Flag                     | Purpose                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `--dir <path>`           | Project directory containing `dx.yml` (defaults to the current directory).         |
+| `--module <id>`          | Which plugin to publish when `dx.yml` declares several (defaults to the first).    |
+| `--no-build`             | Skip the build and publish the existing `dist`.                                    |
+| `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself.               |
+| `--edge-url <url>`       | Override the edge used for upload (mainly for local testing against a dev worker). |
 
 ## 7. Confirm it's published
 
@@ -211,15 +211,15 @@ You don't need to publish to test your plugin against Composer. Run your plugin'
 
 ## Command reference
 
-| Command | Purpose |
-| --- | --- |
-| `dx account login` | Log in to your DXOS identity; registry writes then use its connected AT Protocol account. |
-| `dx account logout` | Log out of the current profile. |
-| `dx registry publish` | Build from `dx.yml`, host the bundle, and write profile + release records. |
-| `dx registry publish-publisher` | Write your `publisher.profile` record. |
-| `dx registry publish-package` | Low-level alternative to `publish`: write profile + release records from flags (no build). |
-| `dx registry unpublish` | Remove a package (profile + all releases) from your repo. |
-| `dx registry records` | List the `org.dxos.experimental.*` records on your repo. |
+| Command                         | Purpose                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `dx account login`              | Log in to your DXOS identity; registry writes then use its connected AT Protocol account.  |
+| `dx account logout`             | Log out of the current profile.                                                            |
+| `dx registry publish`           | Build from `dx.yml`, host the bundle, and write profile + release records.                 |
+| `dx registry publish-publisher` | Write your `publisher.profile` record.                                                     |
+| `dx registry publish-package`   | Low-level alternative to `publish`: write profile + release records from flags (no build). |
+| `dx registry unpublish`         | Remove a package (profile + all releases) from your repo.                                  |
+| `dx registry records`           | List the `org.dxos.experimental.*` records on your repo.                                   |
 
 Run any command with `--help` for its full set of options.
 
@@ -227,9 +227,9 @@ Run any command with `--help` for its full set of options.
 
 The CLI writes these AT Protocol record types under your repo:
 
-| NSID | Purpose |
-| --- | --- |
-| `org.dxos.experimental.publisher.profile` | Your publisher identity (rkey `self`). |
+| NSID                                           | Purpose                                                                              |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `org.dxos.experimental.publisher.profile`      | Your publisher identity (rkey `self`).                                               |
 | `org.dxos.experimental.publisher.verification` | Trust attestation for a publisher DID (written by the configured verifier, not you). |
-| `org.dxos.experimental.package.profile` | A plugin's profile (rkey = the plugin `id`). |
-| `org.dxos.experimental.package.release` | A specific version of a plugin (rkey `<id>:<version>`). |
+| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `id`).                                         |
+| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<id>:<version>`).                              |
