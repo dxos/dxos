@@ -13,9 +13,7 @@ import { CallsPlugin as CallsPluginNode } from './CallsPlugin.node';
 import { meta } from './meta';
 
 describe('CallsPlugin', () => {
-  // A call is runtime state keyed by room id (no persistent Call schema), so coverage here is a
-  // load smoke test: `createComposerTestApp` runs activation and rethrows, so a clean construction
-  // proves the plugin's modules wire up without error.
+  // Calls own no persistent schema, so this is a load smoke test (activation rethrows on error).
   test('loads and is enabled', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), CallsPlugin()],

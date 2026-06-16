@@ -173,9 +173,8 @@ export default Capability.makeModule(
         }),
       }),
 
-      // While in this meeting's call, surface the whole meeting article as a companion so the primary
-      // plank can show the call (its Call tab) while notes/transcript/summary stay accessible. Outside
-      // a call the meeting needs no companion (the article itself carries every tab).
+      // While in this meeting's call, show the whole meeting article as a companion so the primary
+      // plank can hold the call (its Call tab).
       GraphBuilder.createTypeExtension({
         id: 'meetingCallCompanion',
         type: Meeting.Meeting,
@@ -215,10 +214,8 @@ export default Capability.makeModule(
           const meetings = get(db.query(Query.select(Filter.type(Meeting.Meeting))).atom);
           const meeting = Meeting.findMeetingForEvent(meetings, event);
 
-          // graph action data Effects run outside the Effect runtime that provides Operation.Service,
-          // so Operation.invoke (which reads that service from context) is unavailable. Capture the
-          // OperationInvoker capability here and call invoker.invoke() directly in each action — its
-          // implementation provides all necessary services without requiring them from the caller's context.
+          // Graph-action Effects lack `Operation.Service` in context, so `Operation.invoke` fails here;
+          // call the captured `OperationInvoker` capability directly instead.
           const invoker = yield* Capability.get(Capabilities.OperationInvoker);
 
           if (meeting) {

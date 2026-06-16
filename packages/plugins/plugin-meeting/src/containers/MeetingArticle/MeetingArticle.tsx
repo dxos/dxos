@@ -35,8 +35,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
-  // The Call tab is offered only when the calls plugin contributes a transport provider; the call
-  // itself is runtime state (no persisted Call object), so this gates on capability availability.
+  // The Call tab is offered only when the calls plugin contributes a transport provider.
   const callAvailable = useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
   const tabs = useMemo(() => (callAvailable ? TAB_ORDER : TAB_ORDER.filter((key) => key !== 'call')), [callAvailable]);
 
@@ -106,7 +105,6 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
       case 'summary':
         return hasSummary ? { subject: summary, attendableId } : undefined;
       case 'call':
-        // The calls surface renders/joins by room id (the meeting's URI); no persisted Call object.
         return callAvailable ? { roomId: Obj.getURI(meeting), attendableId } : undefined;
     }
   }, [tab, attendableId, notes, transcript, summary, hasSummary, callAvailable, meeting]);

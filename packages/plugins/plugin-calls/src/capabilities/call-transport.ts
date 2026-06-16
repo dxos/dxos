@@ -8,14 +8,9 @@ import { Capability } from '@dxos/app-framework';
 
 import { CallsCapabilities } from '#types';
 
-/** Stable provider id for the built-in Cloudflare transport. */
 const CLOUDFLARE_TRANSPORT_KIND = 'org.dxos.call.transport.cloudflare';
 
-/**
- * Built-in Cloudflare {@link CallsCapabilities.CallTransportProvider}. Wraps the
- * `CallManager` (the Cloudflare SFU runtime): `join`/`leave` drive the live
- * session keyed by the room id passed at join time.
- */
+/** Built-in Cloudflare {@link CallsCapabilities.CallTransportProvider} over `CallManager`. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Resolve the manager lazily in callbacks so this module does not force the

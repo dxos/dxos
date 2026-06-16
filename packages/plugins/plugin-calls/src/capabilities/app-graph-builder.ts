@@ -16,8 +16,6 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      // The active-call panel is integration-agnostic (any call, however started), so it lives here.
-      // Integration-specific surfaces (channel chat, meeting notes) are contributed by their own plugins.
       GraphBuilder.createExtension({
         id: 'activeCall',
         match: NodeMatcher.whenRoot,

@@ -26,9 +26,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       createTypeSectionExtension(Channel.Channel),
 
-      // Channel chat companion: while in this channel's call, offer the chat alongside the call grid.
-      // This is a channel-specific surface, so it lives here (plugin-calls owns only the agnostic
-      // active-call panel); rendered when the live call's room id matches this channel.
+      // Channel chat companion, shown while in this channel's call (room id matches the channel).
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
         type: Channel.Channel,

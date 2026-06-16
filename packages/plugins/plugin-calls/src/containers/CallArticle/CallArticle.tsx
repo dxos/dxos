@@ -22,10 +22,8 @@ export type CallArticleProps = {
 };
 
 /**
- * Video/participant grid for a call room. `roomId` selects the room; live peer/media state is owned
- * by `CallManager`. Joining/leaving goes through the registered `CallTransportProvider`. Shows the
- * live grid only when joined to *this* room; otherwise the lobby (join), even if another call is in
- * progress (joining leaves it first).
+ * Video/participant grid for a call room. Shows the live grid only when joined to *this* `roomId`;
+ * otherwise the lobby (join), even while another call is in progress.
  */
 export const CallArticle = ({ roomId }: CallArticleProps) => {
   const callManager = useCapability(CallsCapabilities.Manager);

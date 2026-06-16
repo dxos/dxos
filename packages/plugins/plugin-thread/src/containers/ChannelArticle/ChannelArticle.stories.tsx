@@ -86,8 +86,6 @@ const meta = {
         }),
         SpacePlugin({}),
         ThreadPlugin(),
-        // Provides the CallTransportProvider/Manager capabilities so the channel article's
-        // "Start video call" toolbar action is offered.
         CallsPlugin(),
       ],
     }),

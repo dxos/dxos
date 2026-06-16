@@ -51,9 +51,8 @@ export const Toolbar = ({
   const media = useAtomValue(call.mediaAtom);
   const joined = useAtomValue(call.joinedAtom);
   const raisedHand = useAtomValue(call.raisedHandAtom);
-  // Membership of *this* toolbar's room, not the global session: when joined to a different room the
-  // toolbar must still offer "join" (and hide in-call controls) for this one. Callers pass `isInRoom`
-  // explicitly (the lobby passes `false`); fall back to the global joined state when unset.
+  // Room-scoped membership, not the global session: when joined to a *different* room this toolbar
+  // must still offer "join". Callers pass `isInRoom`; fall back to global joined when unset.
   const inRoom = isInRoom ?? joined;
 
   // Channel app graph node.

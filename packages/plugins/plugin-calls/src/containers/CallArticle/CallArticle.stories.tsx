@@ -15,7 +15,6 @@ const state = makeCallState(self, [self, makeUser('bob', 'Bob'), makeUser('carol
 
 const DefaultStory = () => {
   useSeedCallManager(state);
-  // CallArticle reads only the CallManager; the room id identifies the call to join.
   return <CallArticle roomId='story-room' />;
 };
 

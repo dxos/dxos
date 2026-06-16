@@ -13,10 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
 
-/**
- * Article-role surface for a call, identified by `roomId` rather than an ECHO object: the live
- * session is runtime state owned by `CallManager`, so the call panel needs only the room to join.
- */
+/** Article-role surface for a call, keyed by `roomId` (no ECHO object; live state is in `CallManager`). */
 type CallRoomData = { attendableId: string; roomId: string };
 const CallRoom: Surface.RoleToken<CallRoomData> = Surface.makeType('article');
 

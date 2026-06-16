@@ -39,11 +39,8 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
  * are read and written through the channel's backend provider (resolved by
  * `channel.backend.kind`), so the container is agnostic to where messages are
  * stored. Read-only state defaults to the provider's policy, or to "channel
- * carries foreign-key `Obj.Meta`" when the provider has none.
- *
- * When plugin-calls is present, a "Start video call" toolbar action joins the channel's call (keyed
- * by the channel URI). While in that call the article switches to the live call surface (contributed
- * by plugin-calls); the channel chat remains available as a companion.
+ * carries foreign-key `Obj.Meta`" when the provider has none. When plugin-calls is present, a
+ * "Start video call" action switches the article to the call surface and the chat moves to a companion.
  */
 export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly }: ChannelArticleProps) => {
   const identity = useIdentity();
@@ -58,13 +55,11 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 
-  // Call integration (optional): present only when plugin-calls contributes a transport provider.
   const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
   const callManager = useCapabilities(CallsCapabilities.Manager)[0];
   const joined = useAtomValue(callManager?.joinedAtom ?? NOT_JOINED);
   const currentRoomId = useAtomValue(callManager?.roomIdAtom ?? NO_ROOM);
-  // While in this channel's call the article renders the call surface; otherwise it offers the action.
-  // `chatOnly` (the in-call chat companion) always shows messages so the call lives only in the primary.
+  // `chatOnly` (the in-call chat companion) keeps showing messages so the call lives only in the primary.
   const inThisCall = !!id && joined && currentRoomId === id;
   const showCall = inThisCall && !chatOnly;
   const canStartCall = !!callProvider && !inThisCall;
@@ -73,8 +68,6 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     if (!callProvider || !id) {
       return;
     }
-    // Joining flips the call state, which switches the article (below) to the call surface; the
-    // channel chat and meeting companions become available on the plank.
     await callProvider.join(id);
   }, [callProvider, id]);
 
@@ -111,8 +104,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   }
 
   return (
-    // `dx-document` is applied only to the chat (not the root or toolbar), so the toolbar spans the
-    // full plank width (like the Markdown editor) while the messages stay document-width.
+    // `dx-document` lives on the chat (not the root), so the toolbar spans the full plank width.
     <Panel.Root role={role}>
       {canStartCall && (
         <Menu.Root {...menuActions} attendableId={attendableId}>
@@ -122,8 +114,6 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
         </Menu.Root>
       )}
       {showCall ? (
-        // In call: the article shows the live call grid (room id = channel URI); the channel chat is
-        // available as a companion. The call surface (with its own leave control) lives in plugin-calls.
         <Panel.Content>
           <Surface.Surface role='article' data={{ roomId: id, attendableId }} limit={1} />
         </Panel.Content>

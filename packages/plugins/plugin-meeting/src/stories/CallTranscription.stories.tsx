@@ -55,17 +55,11 @@ type CallTranscriptionViewProps = {
  * tab reflects the live transcript feed. A story-local toolbar joins the call and toggles recording.
  */
 const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
-  // Optional: present only when plugin-calls is registered. No-op gracefully otherwise.
   const callManager = useCapabilities(CallsCapabilities.Manager)[0];
-  // The meeting's URI is the call room id (no persisted Call object).
   const roomId = Obj.getURI(meeting);
 
-  // Drive the mic -> transcriber -> transcript feed lifecycle. The hook tolerates a missing
-  // mic/Whisper endpoint (clears `recording` on failure), so it is safe headlessly.
   const { recording, toggleRecording } = useTranscriptionRecording(transcript);
 
-  // Join the room. Live peers require the Cloudflare SFU; headless the join fails to connect but
-  // the grid UI still renders.
   const handleStartCall = useCallback(async () => {
     if (!callManager) {
       return;
@@ -136,7 +130,6 @@ const meta = {
               const meetingNotes = personalSpace.db.add(Text.make({ content: '' }));
               const meetingSummary = personalSpace.db.add(Text.make({ content: '' }));
 
-              // The meeting is the call anchor — its URI is the room id; no persisted Call object.
               personalSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
