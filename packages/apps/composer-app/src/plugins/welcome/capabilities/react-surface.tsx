@@ -14,15 +14,22 @@ import { useClient } from '@dxos/react-client';
 import {
   ABOUT_DIALOG,
   AboutDialog,
+  ExemplarSettings,
   NATIVE_REDIRECT_DIALOG,
   NativeRedirectDialog,
   WELCOME_SCREEN,
   WelcomeScreen,
 } from '../components';
+import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'pluginSettings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: () => <ExemplarSettings />,
+      }),
       Surface.create({
         id: 'welcome',
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),

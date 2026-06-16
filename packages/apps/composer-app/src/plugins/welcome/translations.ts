@@ -90,6 +90,11 @@ export const translations = [
         'native-redirect.message': 'Opening in the Composer app...',
         'open-in-browser-button.label': 'Open here instead',
 
+        'settings.section.title': 'Sample space',
+        'settings.recreate-exemplar.label': 'Recreate sample space',
+        'settings.recreate-exemplar.description':
+          'Import a fresh copy of the Bramble Coffee Roasters sample space. Safe to run even if one already exists.',
+
         'open-about.label': 'About Composer',
         'version.label': 'Version {{version}}',
         'published.label': 'Published {{timestamp}}',

@@ -14,6 +14,7 @@ import {
   Onboarding,
   OperationHandler,
   ReactSurface,
+  Settings,
   type WelcomeOptions,
 } from './capabilities';
 import { meta } from './meta';
@@ -24,6 +25,7 @@ export const WelcomePlugin = Plugin.define<WelcomeOptions>(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({ id: 'settings', activatesOn: ActivationEvents.Startup, activate: Settings }),
   Plugin.addModule({
     id: 'oauth-recovery-redirect',
     activatesOn: ActivationEvents.Startup,

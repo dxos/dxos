@@ -9,6 +9,7 @@ import { type WelcomeOptions } from './capabilities';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const DefaultContent = Capability.lazy<WelcomeOptions>('DefaultContent', () => import('./default-content'));
+export const Settings = Capability.lazy('Settings', () => import('./settings'));
 export const OAuthRecoveryRedirect = Capability.lazy(
   'OAuthRecoveryRedirect',
   () => import('./oauth-recovery-redirect'),

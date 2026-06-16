@@ -204,7 +204,9 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
   if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
-    Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+    Obj.update(space.properties, (properties) => {
+      Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+    });
   }
   const rootCollectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
   const rootCollection = rootCollectionRef?.target;
