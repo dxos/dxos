@@ -43,7 +43,7 @@
     "src"
   ],
   "scripts": {
-    "build-exemplar": "vitest run ./scripts/build-exemplar-space.ts"
+    "build-exemplar": "vite-node ./scripts/build-exemplar-space.ts"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

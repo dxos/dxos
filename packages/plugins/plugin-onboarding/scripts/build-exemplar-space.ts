@@ -36,7 +36,6 @@ import * as S from 'effect/Schema';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, test } from 'vitest';
 
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
@@ -154,47 +153,6 @@ const daysFromNow = (days: number, hours = 9): string => daysAgo(-days, hours);
 const textBlock = (text: string): ContentBlock.Text => ({ _tag: 'text', text }) satisfies ContentBlock.Text;
 
 const actor = (name: string, email: string): Actor.Actor => ({ role: 'user', name, email });
-
-// -----------------------------------------------------------------------------
-// Entry point — gated on BUILD_EXEMPLAR so it doesn't run during normal CI.
-// -----------------------------------------------------------------------------
-
-describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
-  test('generate Bramble Coffee Roasters exemplar snapshot', { timeout: 60_000 }, async () => {
-    const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
-    const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');
-
-    console.log('booting client…');
-    const testBuilder = new TestBuilder();
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    try {
-      await client.halo.createIdentity({ displayName: 'Bramble exemplar builder' });
-      await client.addTypes(SCHEMAS);
-
-      console.log('creating space…');
-      const space = await client.spaces.create({ name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' });
-      await space.waitUntilReady();
-
-      await populateSpace(space, { aboutMd, welcomeMd });
-
-      console.log('flushing…');
-      await space.db.flush();
-
-      console.log('exporting…');
-      const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
-
-      // Store as a single line so regenerations produce a 1-line diff rather than
-      // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.
-      const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
-      const minified = JSON.stringify(parsed);
-      await writeFile(OUTPUT_PATH, minified + '\n', 'utf8');
-      console.log(`wrote ${OUTPUT_PATH} (${minified.length} bytes, ${parsed.objects.length} objects)`);
-    } finally {
-      await client.destroy();
-    }
-  });
-});
 
 // -----------------------------------------------------------------------------
 // Space population
@@ -1428,3 +1386,40 @@ const makeSheets = (): Sheet.Sheet[] => {
 
   return [greenInventory, priceList];
 };
+
+// -----------------------------------------------------------------------------
+// Entry point
+// -----------------------------------------------------------------------------
+
+const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
+const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');
+
+console.log('booting client…');
+const testBuilder = new TestBuilder();
+const client = new Client({ services: testBuilder.createLocalClientServices() });
+await client.initialize();
+try {
+  await client.halo.createIdentity({ displayName: 'Bramble exemplar builder' });
+  await client.addTypes(SCHEMAS);
+
+  console.log('creating space…');
+  const space = await client.spaces.create({ name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' });
+  await space.waitUntilReady();
+
+  await populateSpace(space, { aboutMd, welcomeMd });
+
+  console.log('flushing…');
+  await space.db.flush();
+
+  console.log('exporting…');
+  const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+
+  // Store as a single line so regenerations produce a 1-line diff rather than
+  // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.
+  const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
+  const minified = JSON.stringify(parsed);
+  await writeFile(OUTPUT_PATH, minified + '\n', 'utf8');
+  console.log(`wrote ${OUTPUT_PATH} (${minified.length} bytes, ${parsed.objects.length} objects)`);
+} finally {
+  await client.destroy();
+}

@@ -13,8 +13,6 @@ tasks:
       - '--platform=neutral'
   build-exemplar:
     script: pnpm run --silent build-exemplar
-    env:
-      BUILD_EXEMPLAR: '1'
     deps:
       - ^:compile
     inputs:
