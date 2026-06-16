@@ -54,6 +54,17 @@ const DOW_REVERSE: Partial<Record<string, DayOfWeek>> = {
   '4': 'thu',
   '5': 'fri',
   '6': 'sat',
+  // Both 0 and 7 represent Sunday in standard cron.
+  '7': 'sun',
+};
+
+/** Returns a non-negative integer if the token is a valid decimal integer, otherwise undefined. */
+const parseUInt = (token: string): number | undefined => (/^\d+$/.test(token) ? Number(token) : undefined);
+
+/** Returns the parsed integer if it falls within [min, max], otherwise undefined. */
+const parseBoundedUInt = (token: string, min: number, max: number): number | undefined => {
+  const value = parseUInt(token);
+  return value !== undefined && value >= min && value <= max ? value : undefined;
 };
 
 /**
@@ -76,35 +87,31 @@ export const fromCron = (cron: string): CronSpecType => {
 
   // hourly: M */N * * *
   const hourlyMatch = hour.match(/^\*\/(\d+)$/);
-  const minuteNum = parseInt(minute);
-  if (hourlyMatch && dom === '*' && month === '*' && dow === '*' && !isNaN(minuteNum)) {
+  const minuteNum = parseBoundedUInt(minute, 0, 59);
+  if (hourlyMatch && dom === '*' && month === '*' && dow === '*' && minuteNum !== undefined) {
     return { frequency: 'hourly', interval: parseInt(hourlyMatch[1]), minute: minuteNum };
   }
 
-  const hourNum = parseInt(hour);
-  if (isNaN(minuteNum) || isNaN(hourNum)) {
+  const hourNum = parseBoundedUInt(hour, 0, 23);
+  if (minuteNum === undefined || hourNum === undefined) {
     return { frequency: 'custom', cronExpression: cron };
   }
 
-  // weekly: M H * * DOW[,DOW...]  (numeric DOW values only)
+  // weekly: M H * * DOW[,DOW...]  (numeric DOW values only; all tokens must be valid)
   if (dom === '*' && month === '*' && dow !== '*') {
-    const days = dow
-      .split(',')
-      .map((d) => DOW_REVERSE[d])
-      .filter((d): d is DayOfWeek => d != null);
-    if (days.length > 0) {
+    const tokens = dow.split(',');
+    const days = tokens.map((d) => DOW_REVERSE[d]).filter((d): d is DayOfWeek => d != null);
+    if (days.length === tokens.length && days.length > 0) {
       return { frequency: 'weekly', daysOfWeek: days, hour: hourNum, minute: minuteNum };
     }
     return { frequency: 'custom', cronExpression: cron };
   }
 
-  // monthly: M H DOM[,DOM...] * *
+  // monthly: M H DOM[,DOM...] * *  (all tokens must be valid integers in 1-31)
   if (dom !== '*' && month === '*' && dow === '*') {
-    const days = dom
-      .split(',')
-      .map((d) => parseInt(d))
-      .filter((d) => !isNaN(d) && d >= 1 && d <= 31);
-    if (days.length > 0) {
+    const tokens = dom.split(',');
+    const days = tokens.map((d) => parseBoundedUInt(d, 1, 31)).filter((d): d is number => d !== undefined);
+    if (days.length === tokens.length && days.length > 0) {
       return { frequency: 'monthly', daysOfMonth: days, hour: hourNum, minute: minuteNum };
     }
     return { frequency: 'custom', cronExpression: cron };

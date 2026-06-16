@@ -273,11 +273,14 @@ const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput =>
     ? { kind: 'feed', feed: spec.feed }
     : { kind: 'timer', cron: spec?.kind === 'timer' ? spec.cron : '' };
 
+// Fallback cron used when no schedule has been set yet.
+const DEFAULT_TIMER_CRON = toCron(FrequencyDefaults.daily);
+
 // Build a trigger spec from the form's values. Returned as just the two specs we construct (not the full
 // `Trigger.Spec` union) so the subscription spec's deep readonly query AST never enters the type and the
 // result stays assignable to the mutable `trigger.spec`.
 const triggerFormSpec = (values: TriggerFormInput): Trigger.TimerSpec | Trigger.FeedSpec =>
-  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron ?? '');
+  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron || DEFAULT_TIMER_CRON);
 
 export const TriggerSection = ({
   db,
