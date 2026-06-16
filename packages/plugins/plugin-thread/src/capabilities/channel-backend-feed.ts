@@ -45,7 +45,7 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       invariant(space, 'Space not found');
       const feed = Channel.getFeed(channel);
       invariant(feed, 'Channel is not feed-backed');
-      yield* Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+      yield* Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(space.db)));
     }),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,
 };

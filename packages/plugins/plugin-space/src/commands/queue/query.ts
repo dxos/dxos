@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Entity } from '@dxos/echo';
+import { Entity, Filter, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 import { printQueueObject } from './util';
@@ -37,8 +37,9 @@ export const query = Command.make(
       yield* Console.error(`Space not found: ${spaceId}`);
       return;
     }
-    const queue = space.queues.get(echoUri);
-    const objects = yield* Effect.promise(() => queue.queryObjects());
+    const objects = yield* Effect.promise(() =>
+      space.db.query(Query.select(Filter.everything()).from(Scope.feed(echoUri))).run(),
+    );
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));

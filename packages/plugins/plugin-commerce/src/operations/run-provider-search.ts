@@ -84,7 +84,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       const feed = yield* Database.load(search.feed);
       const space = getSpace(search);
       invariant(space, 'Search is not in a space.');
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const feedServiceLayer = createFeedServiceLayer(space.db);
       const existing = yield* Feed.runQuery(feed, Filter.type(Result.Result)).pipe(Effect.provide(feedServiceLayer));
       const seen = new Set(existing.map((result) => result.url));
 

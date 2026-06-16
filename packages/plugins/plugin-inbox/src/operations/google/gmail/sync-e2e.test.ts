@@ -12,7 +12,7 @@ import { type Space } from '@dxos/client/echo';
 import { Trigger, Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Feed, Obj, Query, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Scope, Ref } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
@@ -195,8 +195,7 @@ const checkEmails = async (feed: Feed.Feed, space: Space) => {
     console.log('No feed found for mailbox');
     return [];
   }
-  const queue = space.queues.get<Message.Message>(queueDXN);
-  const messages = await queue.query(Query.type(Message.Message)).run();
+  const messages = await space.db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(queueDXN))).run();
   console.log(`Messages in mailbox: ${messages.length}`);
   return messages;
 };
@@ -217,7 +216,7 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
       const traceFeed = space.properties.invocationTraceFeed?.target;
       const traceQueueDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
       const invocations = traceQueueDXN
-        ? ((await space.queues.get(traceQueueDXN, { subspaceTag: traceFeed!.namespace }).queryObjects()) ?? [])
+        ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceQueueDXN))).run()
         : [];
 
       for (const invocation of invocations) {

@@ -47,7 +47,7 @@ const seedSpace = ({ client }: { client: Client }) =>
     // Results are immutable feed entries.
     const feed = search.feed?.target;
     if (feed) {
-      yield* Feed.append(feed, makeSampleResults(provider)).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+      yield* Feed.append(feed, makeSampleResults(provider)).pipe(Effect.provide(createFeedServiceLayer(space.db)));
     }
   });
 

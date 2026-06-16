@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found.');
-            const feedServiceLayer = createFeedServiceLayer(space.queues);
+            const feedServiceLayer = createFeedServiceLayer(space.db);
             const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
             const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry });
             yield* Effect.promise(() =>

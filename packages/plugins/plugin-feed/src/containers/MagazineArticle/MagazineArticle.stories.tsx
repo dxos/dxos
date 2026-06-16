@@ -130,17 +130,11 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     );
     yield* Effect.promise(() => space.db.flush());
 
-    // Push three Posts into the feed's backing queue. CurateMagazine reads
-    // these via `space.queues.get(feedDXN).queryObjects()`. Loading the ref
-    // is necessary post-`db.add` because the inline `savedTarget` from
-    // `Ref.make(echoFeed)` is dropped when the ref is encoded for persistence.
+    // Push three Posts into the feed's backing queue via db.appendToFeed.
+    // Loading the ref is necessary post-`db.add` because the inline
+    // `savedTarget` from `Ref.make(echoFeed)` is dropped when the ref is
+    // encoded for persistence.
     const echoFeed = yield* Effect.promise(() => subscriptionFeed.feed!.load());
-    const feedDXN = Feed.getQueueUri(echoFeed);
-    if (!feedDXN) {
-      throw new Error('Backing ECHO feed has no queue DXN — story setup is broken.');
-    }
-
-    const queue = space.queues.get(feedDXN);
     const feedRef = Ref.make(subscriptionFeed);
     const posts = [
       Obj.make(Subscription.Post, {
@@ -171,7 +165,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
         link: 'https://example.com/post-c',
       }),
     ];
-    yield* Effect.promise(() => queue.append(posts));
+    yield* Effect.promise(() => space.db.appendToFeed(echoFeed, posts));
 
     const mag = Magazine.make({
       name: 'Curate Flow Test',
@@ -184,19 +178,13 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.db.flush());
   });
 
-// TODO(jdw): Re-enable on jdw/identifiers — the queue identifier refactor
-// (commit e730a97246: `Feed.getQueueDxn` now returns the feed's own EID
-// instead of constructing a separate QUEUE-kind DXN) breaks this story's
-// `space.queues.get(feedUri).append(posts)` seed path even though every
-// `curate-magazine.test.ts` unit case passes. The unit tests drive
-// `curateMagazine` directly against an `EchoTestBuilder` database; the
-// storybook story instead seeds the queue through a fully-wired plugin
-// container, and the wire-up appears to lose queue contents between the
-// seed promise resolving and `magazine.posts` being read inside the
-// `CurateMagazine` operation. Default story is unaffected (it never touches
-// the queue path). Skipping here (rather than reverting the un-skip commit)
-// keeps the file's history of analysis in place; an `agent` tag was the
-// previous quarantine mechanism on this branch.
+// TODO(jdw): Re-enable on jdw/identifiers — the seed path now uses
+// `space.db.appendToFeed(echoFeed, posts)` but the storybook story still loses
+// queue contents between the seed promise resolving and `magazine.posts` being
+// read inside the `CurateMagazine` operation. The unit tests drive
+// `curateMagazine` directly against an `EchoTestBuilder` database and pass;
+// the fully-wired plugin container in this story does not. Default story is
+// unaffected (it never touches the feed path).
 export const CurateFlow: Story = {
   tags: ['!test'],
   decorators: [

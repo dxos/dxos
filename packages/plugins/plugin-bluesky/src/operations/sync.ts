@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
-import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -147,7 +147,7 @@ const syncTarget = ({
       const input = BlueskyApi.toSubscriptionPostInput(item);
       return Subscription.makePost({ source: feedRef, ...input });
     });
-    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(createFeedServiceLayer(space.db)));
 
     if (newestUri) {
       Obj.update(subscriptionFeed, (subscriptionFeed) => {

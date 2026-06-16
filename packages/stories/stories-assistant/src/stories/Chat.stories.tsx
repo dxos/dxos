@@ -393,11 +393,11 @@ export const WithMail: Story = {
     },
     config: config.remote,
     onInit: async ({ space }) => {
-      const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feedDxn = Feed.getQueueUri(feed)!;
-      const queue = space.queues.get<Message.Message>(feedDxn);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      await space.db.flush();
+      const feedObj = await mailbox.feed.load();
       const messages = createTestMailbox();
-      await queue.append(messages);
+      await space.db.appendToFeed(feedObj, messages);
     },
     types: [Feed.Feed, Mailbox.Mailbox],
     onChatCreated: async ({ space, binder }) => {
@@ -687,10 +687,8 @@ export const WithTranscription: Story = {
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const queueDxn = Feed.getQueueUri(feed);
-      invariant(queueDxn);
       const messages = createTestTranscription();
-      await space.queues.get(queueDxn).append(messages);
+      await space.db.appendToFeed(feed, messages);
       space.db.add(Transcript.make(Ref.make(feed)));
     },
     onChatCreated: async ({ space, binder }) => {
@@ -815,9 +813,7 @@ export const WithResearchQueue: Story = {
       const feed = space.db.add(Feed.make());
       const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      const feedQueueDxn = Feed.getQueueUri(feed);
-      invariant(feedQueueDxn);
-      await space.queues.get(feedQueueDxn).append(orgs);
+      await space.db.appendToFeed(feed, orgs);
 
       const researchPrompt = space.db.add(
         Routine.make({
@@ -896,10 +892,10 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const mailboxDxn = Feed.getQueueUri(mailbox)!;
-      const queue = space.queues.get<Message.Message>(mailboxDxn);
+      await space.db.flush();
+      const mailboxFeed = await mailbox.feed.load();
       const messages = createTestMailbox(people);
-      await queue.append(messages);
+      await space.db.appendToFeed(mailboxFeed, messages);
 
       const dxosResearch = space.db.add(
         Markdown.make({

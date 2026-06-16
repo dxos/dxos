@@ -9,10 +9,10 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, Filter, Key, Query, type QueryAST, Scope, Type } from '@dxos/echo';
+import { type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx, SchemaEx } from '@dxos/effect';
-import { DXN, EID } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -141,30 +141,7 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
 // TODO(wittjosiah): Currently assumes from scope is at the top-level of the ast.
 export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
   return Match.value(query).pipe(
-    Match.when({ type: 'from' }, ({ from }) => {
-      if (from._tag !== 'scope') {
-        return space?.db;
-      }
-      const feedScopes = from._tag === 'scope' ? from.scopes.filter((s) => s._tag === 'feed') : [];
-      const result = Option.fromNullable(feedScopes[0]).pipe(
-        Option.map((s) => s.feedUri),
-        Option.flatMap((feedUri) => Option.fromNullable(EID.tryParse(String(feedUri)))),
-        Option.flatMap((echoUri) => {
-          const objectId = EID.getEntityId(echoUri);
-          if (!objectId || !Key.EntityId.isValid(objectId)) {
-            return Option.none();
-          }
-          return Option.fromNullable(space?.queues.get(echoUri));
-        }),
-      );
-      // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN
-      // referencing a feed not present in space.queues, e.g. not yet synced) to avoid 400 errors.
-      // TODO(wittjosiah): Can we handle this upstream?
-      if (feedScopes.length > 0 && Option.isNone(result)) {
-        return undefined;
-      }
-      return Option.getOrElse(result, () => space?.db);
-    }),
+    Match.when({ type: 'from' }, () => space?.db),
     Match.orElse(() => space?.db),
   );
 };
