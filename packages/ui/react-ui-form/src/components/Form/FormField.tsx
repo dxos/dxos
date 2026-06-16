@@ -301,7 +301,15 @@ export const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boo
 /**
  * Get property input component.
  */
-const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldComponent | undefined => {
+const getFormField = ({
+  type,
+  format,
+}: Pick<FormFieldComponentProps, 'type' | 'format'>): FormFieldComponent | undefined => {
+  // Unwrap refinements (e.g. Schema.Number.pipe(Schema.between(...))) to their base type.
+  if (SchemaAST.isRefinement(type)) {
+    return getFormField({ type: type.from, format });
+  }
+
   //
   // Standard formats.
   //

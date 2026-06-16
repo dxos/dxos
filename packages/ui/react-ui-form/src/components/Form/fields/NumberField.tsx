@@ -2,12 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Input, type TextInputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
+
+/**
+ * Extracts numeric `minimum`/`maximum` bounds from a Refinement AST's JSON schema annotation
+ * (e.g. produced by Schema.between). Returns undefined when no bounds are declared.
+ */
+const getRefinementBounds = (ast: SchemaAST.AST): { min?: number; max?: number } => {
+  if (!SchemaAST.isRefinement(ast)) {
+    return {};
+  }
+  const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(ast));
+  if (jsonSchema == null) {
+    return {};
+  }
+  const min = 'minimum' in jsonSchema && typeof jsonSchema.minimum === 'number' ? jsonSchema.minimum : undefined;
+  const max = 'maximum' in jsonSchema && typeof jsonSchema.maximum === 'number' ? jsonSchema.maximum : undefined;
+  return { min, max };
+};
 
 export const NumberField = ({
   type,
@@ -18,6 +37,8 @@ export const NumberField = ({
   onBlur,
   ...props
 }: FormFieldComponentProps<number>) => {
+  const { min, max } = getRefinementBounds(type);
+
   // Track raw string input so the user can clear the field before typing a new number.
   // We only commit to onValueChange when the raw string parses to a valid number.
   const [raw, setRaw] = useState<string>(() => {
@@ -67,6 +88,8 @@ export const NumberField = ({
           disabled={!!readonly}
           placeholder={placeholder}
           value={raw}
+          min={min}
+          max={max}
           onChange={handleChange}
           onBlur={handleBlur}
         />

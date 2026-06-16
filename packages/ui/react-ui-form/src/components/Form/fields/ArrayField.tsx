@@ -162,6 +162,15 @@ export const getDefaultValue = (ast?: SchemaAST.AST): any => {
     case 'Suspend': {
       return getDefaultValue(ast.f());
     }
+    case 'Refinement': {
+      // Use minimum from JSON schema annotation (e.g. Schema.between(1, 31)) as the default
+      // so new array items start within the valid range.
+      const jsonSchema = Option.getOrUndefined(SchemaAST.getJSONSchemaAnnotation(ast));
+      if (jsonSchema != null && 'minimum' in jsonSchema && typeof jsonSchema.minimum === 'number') {
+        return jsonSchema.minimum;
+      }
+      return getDefaultValue(ast.from);
+    }
     default: {
       if (ast && SchemaEx.isNestedType(ast)) {
         return {};
