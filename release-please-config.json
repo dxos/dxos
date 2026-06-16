@@ -485,6 +485,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/service-mesh/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/cli/package.json",
           "jsonpath": "$.version"
         },

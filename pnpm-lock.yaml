@@ -6738,6 +6738,12 @@ importers:
         specifier: 3.21.3
         version: 3.21.3
 
+  packages/core/service-mesh:
+    dependencies:
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
+
   packages/devtools/cli:
     dependencies:
       '@dxos/ai':

@@ -277,6 +277,9 @@
       "path": "packages/core/protocols/tsconfig.json"
     },
     {
+      "path": "packages/core/service-mesh/tsconfig.json"
+    },
+    {
       "path": "packages/devtools/cli/tsconfig.json"
     },
     {
