@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext } from '@dxos/react-ui';
-import { type SelectionManager } from '@dxos/react-ui-attention';
+import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -51,7 +51,7 @@ export type ExtensionsOptions = {
   compact?: boolean;
   viewMode?: EditorViewMode;
   editable?: boolean;
-  selectionManager?: SelectionManager;
+  viewState?: ViewStateManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
   platform?: 'mobile' | 'desktop';
@@ -66,7 +66,7 @@ export const useExtensions = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   editorStateStore,
   previewOptions,
   onSelectObject,
@@ -95,7 +95,7 @@ export const useExtensions = ({
         settings,
         compact,
         viewMode,
-        selectionManager,
+        viewState,
         previewOptions,
         platform,
         onSelectObject,
@@ -105,7 +105,7 @@ export const useExtensions = ({
       object,
       compact,
       viewMode,
-      selectionManager,
+      viewState,
       previewOptions,
       settings,
       settings?.debug,
@@ -155,12 +155,12 @@ const createBaseExtensions = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   previewOptions,
   platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
-    selectionManager && selectionChange(selectionManager),
+    viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings?.folding && !compact && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
@@ -195,7 +195,7 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-const selectionChange = (selectionManager: SelectionManager) => {
+const selectionChange = (viewState: ViewStateManager) => {
   const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
@@ -213,7 +213,7 @@ const selectionChange = (selectionManager: SelectionManager) => {
         to: cursorConverter.toCursor(range.to),
       }));
 
-    selectionManager.updateMultiRange(id, ranges);
+    viewState.set(selectionAspect, id, { mode: 'multi-range', ranges });
   }, 100);
 
   return EditorView.updateListener.of((update: ViewUpdate) => {

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
-import { Card, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
@@ -53,17 +53,21 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     <Menu.Root>
       <Card.Root classNames={classNames}>
         <Card.Header>
-          <Card.Icon icon={icon} />
+          <Card.Block>
+            <Icon icon={icon} />
+          </Card.Block>
           <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-          <Menu.Trigger asChild disabled={!menuItems?.length}>
-            <Toolbar.IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('more-actions.label')}
-            />
-          </Menu.Trigger>
-          <Menu.Content items={menuItems} />
+          <Card.Block end>
+            <Menu.Trigger asChild disabled={!menuItems?.length}>
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                label={t('more-actions.label')}
+              />
+            </Menu.Trigger>
+            <Menu.Content items={menuItems} />
+          </Card.Block>
         </Card.Header>
         <Card.Body>
           <Surface.Surface type={AppSurface.Card} data={data} limit={1} />

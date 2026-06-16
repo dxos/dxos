@@ -51,8 +51,7 @@ export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) =>
                 const status = statusFor(automation.id);
                 return (
                   <Accordion.Item key={automation.id} item={automation}>
-                    <Accordion.ItemHeader>
-                      <Icon icon='ph--lightning--regular' size={4} classNames='mr-2 shrink-0' />
+                    <Accordion.ItemHeader icon='ph--lightning--regular'>
                       <span className='flex-1 truncate'>
                         {Obj.getLabel(automation) ??
                           t('object-name.placeholder', { ns: Type.getTypename(Automation.Automation) })}

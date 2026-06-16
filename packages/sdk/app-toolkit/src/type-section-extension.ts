@@ -105,7 +105,7 @@ export const createTypeSectionExtension = (
             ...(options?.position ? { position: options.position } : {}),
           },
           nodes: objects
-            .map((object) => createObjectNode({ db: space.db, object }))
+            .map((object) => createObjectNode({ get, db: space.db, object }))
             .filter((node): node is NonNullable<typeof node> => node !== null),
         }),
       ]);

@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
-import { Card, Toolbar } from '@dxos/react-ui';
+import { Card, IconButton } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -94,17 +94,14 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
           <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
             <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
               <Card.Header>
-                <Card.IconBlock />
+                <Card.Block />
                 <Card.Title>{result.label ?? (result.object && Entity.getLabel(result.object))}</Card.Title>
-                <Menu.Trigger asChild disabled={!menuItems?.length}>
-                  <Toolbar.IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    label='Actions'
-                  />
-                </Menu.Trigger>
-                <Menu.Content items={menuItems} />
+                <Card.Block end>
+                  <Menu.Trigger asChild disabled={!menuItems?.length}>
+                    <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  </Menu.Trigger>
+                  <Menu.Content items={menuItems} />
+                </Card.Block>
               </Card.Header>
               <Surface.Surface type={AppSurface.Card} data={{ subject: result.object }} limit={1} />
             </Card.Root>

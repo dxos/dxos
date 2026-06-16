@@ -3,14 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ReactNode, useCallback, useMemo } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Operation, Routine, Trigger } from '@dxos/compute';
 import { type Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import {
   Form,
   type FormFieldRendererProps,
@@ -23,6 +23,10 @@ import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
+
+import { describeCron, fromCron, toCron } from '../../components/CronBuilder/cron';
+import { CronBuilder } from '../../components/CronBuilder/CronBuilder';
+import { type CronSpecType, FrequencyDefaults } from '../../components/CronBuilder/schema';
 
 const RUN_ROUTINE_DXN = 'org.dxos.function.prompt';
 
@@ -269,11 +273,14 @@ const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput =>
     ? { kind: 'feed', feed: spec.feed }
     : { kind: 'timer', cron: spec?.kind === 'timer' ? spec.cron : '' };
 
+// Fallback cron used when no schedule has been set yet.
+const DEFAULT_TIMER_CRON = toCron(FrequencyDefaults.daily);
+
 // Build a trigger spec from the form's values. Returned as just the two specs we construct (not the full
 // `Trigger.Spec` union) so the subscription spec's deep readonly query AST never enters the type and the
 // result stays assignable to the mutable `trigger.spec`.
 const triggerFormSpec = (values: TriggerFormInput): Trigger.TimerSpec | Trigger.FeedSpec =>
-  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron ?? '');
+  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron || DEFAULT_TIMER_CRON);
 
 export const TriggerSection = ({
   db,
@@ -284,31 +291,22 @@ export const TriggerSection = ({
   automation: Automation.Automation;
   trigger?: Trigger.Trigger;
 }) => {
-  const { t } = useTranslation(meta.id);
-  const { defaultValues, fieldMap, handleValuesChanged, handleRemove } = useTriggerForm(db, automation, trigger);
+  const { defaultValues, fieldMap, handleValuesChanged } = useTriggerForm(db, automation, trigger);
 
   return (
-    <div className='flex flex-col gap-2'>
-      <Form.Root
-        // Remount when the bound trigger changes so the uncontrolled form picks up its spec.
-        key={trigger?.id ?? 'new'}
-        schema={TriggerForm}
-        defaultValues={defaultValues}
-        db={db}
-        fieldMap={fieldMap}
-        onValuesChanged={handleValuesChanged}
-      >
-        <Form.Content>
-          <Form.FieldSet />
-        </Form.Content>
-      </Form.Root>
-      {trigger && (
-        <Button variant='ghost' classNames='gap-1 self-start' onClick={handleRemove}>
-          <Icon icon='ph--trash--regular' size={4} />
-          <span>{t('remove-trigger.label')}</span>
-        </Button>
-      )}
-    </div>
+    <Form.Root
+      // Remount when the bound trigger changes so the uncontrolled form picks up its spec.
+      key={trigger?.id ?? 'new'}
+      schema={TriggerForm}
+      defaultValues={defaultValues}
+      db={db}
+      fieldMap={fieldMap}
+      onValuesChanged={handleValuesChanged}
+    >
+      <Form.Content>
+        <Form.FieldSet />
+      </Form.Content>
+    </Form.Root>
   );
 };
 
@@ -354,6 +352,34 @@ export const AutomationInlineForm = ({
 };
 
 //
+// Cron field
+//
+
+/** Renders the CronBuilder with a live cronstrue description below it. */
+const CronField = (props: FormFieldRendererProps) => {
+  const existingCron = props.getValue() as string | undefined;
+  const initialSpec = useMemo(() => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily), []);
+  const [description, setDescription] = useState(() => describeCron(existingCron ?? toCron(initialSpec)));
+
+  const handleChange = useCallback(
+    (spec: CronSpecType, cron: string) => {
+      setDescription(describeCron(cron));
+      props.onValueChange(props.type, cron);
+    },
+    [props.type, props.onValueChange],
+  );
+
+  return (
+    <div className='flex flex-col gap-1 mbs-2'>
+      <CronBuilder value={initialSpec} onChange={handleChange} />
+      <p className='text-sm text-description pli-1 text-right'>{description}</p>
+    </div>
+  );
+};
+
+CronField.displayName = 'AutomationArticle.CronField';
+
+//
 // Hooks
 //
 
@@ -389,7 +415,6 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
   // Read once per trigger identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralFormValues>>(
     () => ({ name: auto.name, enabled: (trigger?.enabled ?? false) && canEnable }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [automation, trigger],
   );
 
@@ -458,7 +483,6 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
       return { kind: 'operation', operation: auto.runnable };
     }
     return { kind: 'operation' };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [automation, trigger]);
 
   const handleValuesChanged = useCallback(
@@ -512,15 +536,14 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
     [t],
   );
   const fieldMap = useMemo<FormFieldMap>(
-    () => ({ kind: (props) => <SelectField {...props} options={kindOptions} /> }),
+    () => ({
+      kind: (props) => <SelectField {...props} options={kindOptions} />,
+      cron: (props) => <CronField {...props} />,
+    }),
     [kindOptions],
   );
   // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
-  const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => triggerFormValues(trigger?.spec),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [trigger],
-  );
+  const defaultValues = useMemo<Partial<TriggerFormValues>>(() => triggerFormValues(trigger?.spec), [trigger]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<TriggerFormValues>) => {
@@ -543,17 +566,7 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
     [db, automation, trigger],
   );
 
-  const handleRemove = useCallback(() => {
-    if (!trigger) {
-      return;
-    }
-    Obj.update(automation, (automation) => {
-      automation.triggers = automation.triggers.filter((ref) => ref.target?.id !== trigger.id);
-    });
-    db.remove(trigger);
-  }, [db, automation, trigger]);
-
-  return { defaultValues, fieldMap, handleValuesChanged, handleRemove };
+  return { defaultValues, fieldMap, handleValuesChanged };
 };
 
 //

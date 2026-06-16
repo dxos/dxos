@@ -6,3 +6,4 @@ export * from './attention';
 export * from './components';
 export * from './selection';
 export * from './useArticleKeyboardNavigation';
+export * from './view-state';

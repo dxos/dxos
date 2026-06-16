@@ -188,7 +188,7 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push all pending changes (including any edits that the user may have made in the worktree).
+  - Commit and push ALL unstaged changes (including any edits that the user may have made in the worktree).
   - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch

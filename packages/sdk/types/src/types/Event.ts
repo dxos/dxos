@@ -6,15 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { Text } from '@dxos/schema';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
 import * as Geo from './Geo';
-import * as Thread from './Thread';
-import * as Transcript from './Transcript';
 
 /**
  * https://schema.org/Event
@@ -39,25 +36,7 @@ export const Event = Schema.Struct({
    */
   location: Schema.optional(Geo.PostalAddress),
 
-  /**
-   * Transcript of the meeting.
-   */
-  transcript: Ref.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false), Schema.optional),
-
-  /**
-   * Markdown notes for the meeting.
-   */
-  notes: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
-
-  /**
-   * Generated summary of the meeting.
-   */
-  summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false), Schema.optional),
-
-  /**
-   * Message thread for the meeting.
-   */
-  thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
+  // TODO(burdon): Video link(s).
 }).pipe(
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),

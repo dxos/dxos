@@ -7,7 +7,7 @@ import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = MeetingOperation.SetActive.pipe(
   Operation.withHandler(

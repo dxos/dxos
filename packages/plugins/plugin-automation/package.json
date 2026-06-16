@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-automation",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -139,7 +139,8 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
-    "@effect/printer-ansi": "catalog:"
+    "@effect/printer-ansi": "catalog:",
+    "cronstrue": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

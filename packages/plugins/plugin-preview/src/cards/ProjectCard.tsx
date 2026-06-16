@@ -16,7 +16,11 @@ export const ProjectCard = ({ subject }: AppSurface.ObjectCardProps<Pipeline.Pip
     <Card.Body>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
       {/* <CardHeader label={name} subject={subject} db={db} /> */}
-      {description && <Card.Text variant='description'>{description}</Card.Text>}
+      {description && (
+        <Card.Row>
+          <Card.Text variant='description'>{description}</Card.Text>
+        </Card.Row>
+      )}
     </Card.Body>
   );
 };

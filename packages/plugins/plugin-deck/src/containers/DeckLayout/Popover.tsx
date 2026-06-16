@@ -10,10 +10,11 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
   Card,
+  Icon,
+  IconButton,
   Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
-  Toolbar,
   useTranslation,
 } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -91,15 +92,14 @@ export const PopoverContent = () => {
 
   const handleInteractOutside = useCallback(
     (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
-      if (
-        // TODO(thure): CodeMirror should not focus itself when it updates.
-        event.type === 'dismissableLayer.focusOutside' &&
-        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
-      ) {
+      // Focus leaving the popover (clicking into the card surfaces a portaled menu, or CodeMirror
+      // re-focusing itself) must not dismiss it — only a pointer-down genuinely outside the card, or
+      // Escape, closes. (Clicks inside the card never reach here; Radix scopes them to the content.)
+      if (event.type === 'dismissableLayer.focusOutside') {
         event.preventDefault();
-      } else {
-        handleClose();
+        return;
       }
+      handleClose();
     },
     [handleClose],
   );
@@ -129,12 +129,12 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
-                  <Card.IconBlock>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
+                  <Card.Block>{icon && <Icon icon={icon} />}</Card.Block>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                  <Card.IconBlock>
+                  <Card.Block end>
                     <Menu.Trigger asChild disabled={!objectMenuItems.length}>
-                      <Toolbar.IconButton
+                      <IconButton
                         variant='ghost'
                         density='sm'
                         icon='ph--dots-three-vertical--regular'
@@ -143,7 +143,7 @@ export const PopoverContent = () => {
                       />
                     </Menu.Trigger>
                     <Menu.Content items={objectMenuItems} />
-                  </Card.IconBlock>
+                  </Card.Block>
                 </Card.Header>
 
                 {content && 'subject' in content ? (

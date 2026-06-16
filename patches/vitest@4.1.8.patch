@@ -1,0 +1,28 @@
+diff --git a/dist/chunks/console.3WNpx0tS.js b/dist/chunks/console.3WNpx0tS.js
+index b3e71e4b1cd2cdc7c2e13c73c5e3dab86412eb67..4f64836c199d0609ad18d3e20521c26d6f304df1 100644
+--- a/dist/chunks/console.3WNpx0tS.js
++++ b/dist/chunks/console.3WNpx0tS.js
+@@ -70,6 +70,14 @@ function createCustomConsole(defaultState) {
+ 	function sendLog(type, taskId, content, size, origin) {
+ 		const timer = timers.get(taskId);
+ 		const time = type === "stderr" ? timer.stderrTime : timer.stdoutTime;
++		// DXOS patch: this RPC call is fire-and-forget by design (the
++		// `Console` Writable doesn't await it), and the symmetric
++		// listener-side code in `cli-api.*.js` already wraps the same
++		// method with `.catch?.(noop)`. Without a matching `.catch` here,
++		// any in-flight forward at worker teardown becomes an unhandled
++		// rejection — `EnvironmentTeardownError: [vitest-worker]: Closing
++		// rpc while "onUserConsoleLog" was pending` — turning a green
++		// test run red on console-noisy tests.
+ 		state().rpc.onUserConsoleLog({
+ 			type,
+ 			content: content || "<empty line>",
+@@ -77,7 +85,7 @@ function createCustomConsole(defaultState) {
+ 			time: time || RealDate.now(),
+ 			size,
+ 			origin
+-		});
++		}).catch(() => {});
+ 	}
+ 	return new Console({
+ 		stdout: new Writable({ write(data, encoding, callback) {

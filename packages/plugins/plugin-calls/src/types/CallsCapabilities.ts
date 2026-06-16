@@ -22,3 +22,25 @@ export type CallProperties = {
 };
 
 export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
+
+/**
+ * Pluggable live-transport for a call, keyed by `kind`. A call is identified by
+ * its room id (the anchor object's URI), so join/leave need no persisted state.
+ * The built-in Cloudflare provider wraps `CallManager` + `CallsService`.
+ */
+export type CallTransportProvider = {
+  /** Stable provider id, e.g. `org.dxos.call.transport.cloudflare`. */
+  kind: string;
+  /** Human-readable label. */
+  label: string;
+  /** Establish a live session for the given room id. */
+  join: (roomId: string) => Promise<void>;
+  /** Tear down the current live session. */
+  leave: () => Promise<void>;
+};
+
+export const CallTransportProvider = Capability.make<CallTransportProvider>(
+  `${meta.id}.capability.call-transport-provider`,
+);
+
+export type Call = { roomId: string };

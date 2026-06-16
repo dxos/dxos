@@ -43,6 +43,7 @@ export default Capability.makeModule(
               nodes: providers
                 .map((provider: Provider.Provider) =>
                   createObjectNode({
+                    get,
                     db: space.db,
                     object: provider,
                   }),

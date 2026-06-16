@@ -4,6 +4,7 @@
 
 export * from './Button';
 export * from './IconButton';
+export * from './SystemIconButton';
 export * from './Toggle';
 export * from './ToggleGroup';
 export * from './ToggleIconButton';

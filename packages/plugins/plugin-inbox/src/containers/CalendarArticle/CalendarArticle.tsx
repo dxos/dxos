@@ -3,24 +3,25 @@
 //
 
 import { addHours, isSameDay, startOfHour } from 'date-fns';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
-import { Calendar as NaturalCalendar, type CalendarController } from '@dxos/react-ui-calendar';
+import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Calendar as NaturalCalendar, type CalendarController, type DateMarker } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetIntegration } from '#components';
 import { meta } from '#meta';
-import { type Calendar, InboxOperation, DraftEvent } from '#types';
+import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
-import { getCalendarRangeSelectionId } from '../../paths';
+import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
 
 const byDate =
@@ -37,10 +38,11 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   const [calendar] = useObject(subject);
   const id = attendableId ?? Obj.getURI(calendar);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(calendar);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
+  const eventStackRef = useRef<MosaicScrollController>(null);
   // Syncing drafts to Google Calendar requires an integration targeting this calendar.
   const { integration } = useTargetIntegration(subject);
 
@@ -55,19 +57,41 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     DraftEvent.belongsTo(event, calendar.id),
   );
   const events = useMemo(() => [...syncedEvents, ...draftEvents].toSorted(byDate()), [syncedEvents, draftEvents]);
+  // The currently active event (selected in the stack/deck); its date drives the grid's highlight.
+  const activeEvent = useMemo(() => events.find((event) => event.id === currentId), [events, currentId]);
+
+  // Starred events get a rose marker. The TagIndex mutates in place, which `useQuery` doesn't observe,
+  // so subscribe to it directly and re-derive the set on change (drives both grid markers and tile stars).
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const tagIndex = calendar.tags?.target;
+  const [, bumpTags] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => {
+    return tagIndex ? Obj.subscribe(tagIndex, bumpTags) : undefined;
+  }, [tagIndex]);
+  const starredIds = Starred.getStarredIds(calendar, starredUri);
+  const dates = useMemo<DateMarker[]>(
+    () =>
+      events.map((event) => ({
+        startDate: new Date(event.startDate),
+        endDate: event.endDate ? new Date(event.endDate) : undefined,
+        tag: starredIds.has(event.id) ? 'star' : 'busy',
+      })),
+    // `starredIds` is a fresh Set each render; key the memo on its membership so it stays stable.
+    [events, [...starredIds].sort().join(',')],
+  );
 
   const handleDateSelect = useCallback(
     ({ date }: { date: Date }) => {
       setSelectedDate(date);
+      // Scroll the stack to the first event of the selected day WITHOUT changing the current item
+      // (the grid owns its own date selection; selecting an event is a separate action).
       const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
-        void invokePromise(LayoutOperation.Select, {
-          contextId: id,
-          subject: { mode: 'single', id: match.id },
-        });
+        eventStackRef.current?.scrollToItem(match.id);
       }
     },
-    [events, id, invokePromise],
+    [events],
   );
 
   // Persist a committed multi-day range into the selection manager (as ISO date strings) so actions
@@ -85,20 +109,24 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   const handleNavigate = useCallback(
     (eventId: string) => {
-      const event = events.find((entry) => entry.id === eventId);
-      // Bring the event's date into view on the month grid.
-      if (event) {
-        calendarRef.current?.scrollTo(new Date(event.startDate));
-      }
+      // Setting the current item updates `activeEvent`, which selects + scrolls the grid (effect below).
       void showItem({
         contextId: id,
         selectionId: eventId,
         companion: linkedSegment('event'),
-        path: event ? getObjectPathFromObject(event) : undefined,
+        path: db ? getCalendarEventPath(db.spaceId, calendar.id, eventId) : undefined,
       });
     },
-    [events, id, showItem],
+    [db, id, calendar.id, showItem],
   );
+
+  // The active event drives the grid's selection: set + scroll it once whenever the active event changes
+  // (keyed on id/startDate, not a fresh Date each render, so the grid keeps its own selection between changes).
+  useEffect(() => {
+    if (activeEvent) {
+      calendarRef.current?.select(new Date(activeEvent.startDate));
+    }
+  }, [activeEvent?.id, activeEvent?.startDate]);
 
   const handleAction = useCallback<EventStackActionHandler>(
     (action) => {
@@ -107,9 +135,16 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           handleNavigate(action.eventId);
           break;
         }
+        case 'star': {
+          const event = events.find((entry) => entry.id === action.eventId);
+          if (event && db && Calendar.instanceOf(calendar)) {
+            void Starred.toggleStarred(calendar, event, db);
+          }
+          break;
+        }
       }
     },
-    [handleNavigate],
+    [handleNavigate, events, db, calendar],
   );
 
   // Create a draft event (defaulting to the selected day, else now), rounding the start up to the
@@ -174,11 +209,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid
-                dates={events.map((event) => new Date(event.startDate))}
-                onSelect={handleDateSelect}
-                onSelectRange={handleRangeSelect}
-              />
+              <NaturalCalendar.Grid dates={dates} onSelect={handleDateSelect} onSelectRange={handleRangeSelect} />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
@@ -195,7 +226,14 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />
             ) : (
-              <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
+              <EventStack
+                id={id}
+                events={events}
+                currentId={currentId}
+                starredIds={starredIds}
+                controllerRef={eventStackRef}
+                onAction={handleAction}
+              />
             )}
           </Panel.Content>
         </Panel.Root>

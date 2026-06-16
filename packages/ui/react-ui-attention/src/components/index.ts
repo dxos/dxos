@@ -4,4 +4,4 @@
 
 export * from './AttentionGlyph';
 export * from './AttentionProvider';
-export * from './SelectionProvider';
+export * from './ViewStateProvider';
