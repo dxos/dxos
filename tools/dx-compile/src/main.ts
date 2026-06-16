@@ -20,8 +20,8 @@ import { BabelSolidTransformPlugin } from './babel-solid-transform-plugin.ts';
 import { bundleDepsPlugin } from './bundle-deps-plugin.ts';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin.ts';
 import { fixRequirePlugin } from './fix-require-plugin.ts';
-import { readPluginMeta } from './plugin-meta.ts';
 import { pluginMetaPlugin } from './plugin-meta-esbuild-plugin.ts';
+import { readPluginMeta } from './plugin-meta.ts';
 import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports.ts';
 import { SwcTransformPlugin } from './swc-transform-plugin.ts';
 

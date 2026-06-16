@@ -24,10 +24,7 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 export const publishPublisher = Command.make(
   'publish-publisher',
   {
-    handle: Options.text('handle').pipe(
-      Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle),
-      Options.optional,
-    ),
+    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
     appPassword: Options.text('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
@@ -40,10 +37,7 @@ export const publishPublisher = Command.make(
       Options.withDescription('Publisher homepage URL.'),
       Options.optional,
     ),
-    contact: Options.text('contact').pipe(
-      Options.withDescription('Contact (email, handle, etc.).'),
-      Options.optional,
-    ),
+    contact: Options.text('contact').pipe(Options.withDescription('Contact (email, handle, etc.).'), Options.optional),
   },
   (options) =>
     Function.pipe(

@@ -23,7 +23,9 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 const PluginConfigSchema = Schema.Struct({
   id: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
-  build: Schema.optional(Schema.Struct({ command: Schema.optional(Schema.String), outdir: Schema.optional(Schema.String) })),
+  build: Schema.optional(
+    Schema.Struct({ command: Schema.optional(Schema.String), outdir: Schema.optional(Schema.String) }),
+  ),
   publish: Schema.optional(Schema.Struct({ assetBaseUrl: Schema.optional(Schema.String) })),
 });
 type PluginConfig = Schema.Schema.Type<typeof PluginConfigSchema>;
@@ -41,7 +43,10 @@ const ManifestSchema = Schema.Struct({
   tags: Schema.optional(Schema.Array(Schema.String)),
   screenshots: Schema.optional(
     Schema.Array(
-      Schema.Union(Schema.String, Schema.Struct({ light: Schema.optional(Schema.String), dark: Schema.optional(Schema.String) })),
+      Schema.Union(
+        Schema.String,
+        Schema.Struct({ light: Schema.optional(Schema.String), dark: Schema.optional(Schema.String) }),
+      ),
     ),
   ),
   dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
@@ -118,7 +123,9 @@ export const publish = Command.make(
         const moduleId = Option.getOrUndefined(options.module);
         const plugin = moduleId ? plugins.find((entry) => entry.id === moduleId) : plugins[0];
         if (!plugin?.id) {
-          return yield* Effect.fail(new Error(moduleId ? `No plugin '${moduleId}' in dx.yml.` : 'dx.yml declares no plugins.'));
+          return yield* Effect.fail(
+            new Error(moduleId ? `No plugin '${moduleId}' in dx.yml.` : 'dx.yml declares no plugins.'),
+          );
         }
 
         // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
@@ -127,7 +134,11 @@ export const publish = Command.make(
         if (!options.noBuild && buildCommand) {
           yield* Console.log(`Building: ${buildCommand}`);
           const binDir = path.join(dir, 'node_modules', '.bin');
-          const exitCode = yield* PlatformCommand.make('sh', '-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`).pipe(
+          const exitCode = yield* PlatformCommand.make(
+            'sh',
+            '-c',
+            `export PATH="${binDir}:$PATH"; ${buildCommand}`,
+          ).pipe(
             PlatformCommand.workingDirectory(dir),
             PlatformCommand.stdout('inherit'),
             PlatformCommand.stderr('inherit'),

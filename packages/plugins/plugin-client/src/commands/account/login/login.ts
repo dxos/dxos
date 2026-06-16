@@ -43,7 +43,9 @@ export const login = Command.make(
   'login',
   {
     method: Options.choice('method', LOGIN_METHODS).pipe(
-      Options.withDescription('Login method (email | atproto | device-invitation | recovery-code). Prompted if omitted.'),
+      Options.withDescription(
+        'Login method (email | atproto | device-invitation | recovery-code). Prompted if omitted.',
+      ),
       Options.optional,
     ),
     input: Args.text({ name: 'input' }).pipe(

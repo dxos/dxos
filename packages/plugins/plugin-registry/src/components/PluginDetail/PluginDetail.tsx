@@ -149,7 +149,11 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     // Resolve each to the URL matching the active theme, falling back to the other variant.
     const resolvedScreenshots = (screenshots ?? [])
       .map((entry) =>
-        typeof entry === 'string' ? entry : themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark),
+        typeof entry === 'string'
+          ? entry
+          : themeMode === 'dark'
+            ? (entry.dark ?? entry.light)
+            : (entry.light ?? entry.dark),
       )
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 

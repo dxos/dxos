@@ -3,8 +3,8 @@
 //
 
 import { DXN } from '@dxos/keys';
-import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
+import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 
 import { meta } from './meta';
 

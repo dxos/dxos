@@ -175,4 +175,3 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
   refreshedAt: Schema.Number,
 });
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
-

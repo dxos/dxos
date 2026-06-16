@@ -23,10 +23,7 @@ import { ALL_NSIDS, AUTH_OPTION_DESCRIPTIONS, listRecords, resolveSession, type 
 export const records = Command.make(
   'records',
   {
-    handle: Options.text('handle').pipe(
-      Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle),
-      Options.optional,
-    ),
+    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
     appPassword: Options.text('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,

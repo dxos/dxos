@@ -212,8 +212,9 @@ const WelcomePanel = memo(() => {
     const seen = new Set<string>();
     const result: Array<{ key: string; src: string; description: string }> = [{ key: 'welcome', ...WELCOME_SLIDE }];
     for (const plugin of manager.getPlugins()) {
-      for (const [index, src] of (plugin.meta.screenshots ?? []).entries()) {
-        if (seen.has(src)) {
+      for (const [index, screenshot] of (plugin.meta.screenshots ?? []).entries()) {
+        const src = typeof screenshot === 'string' ? screenshot : (screenshot.light ?? screenshot.dark ?? '');
+        if (!src || seen.has(src)) {
           continue;
         }
         seen.add(src);

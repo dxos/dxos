@@ -26,17 +26,12 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveHandle, resolveSessio
 export const verify = Command.make(
   'verify',
   {
-    handle: Options.text('handle').pipe(
-      Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle),
-      Options.optional,
-    ),
+    handle: Options.text('handle').pipe(Options.withDescription(AUTH_OPTION_DESCRIPTIONS.handle), Options.optional),
     appPassword: Options.text('app-password').pipe(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    subject: Options.text('subject').pipe(
-      Options.withDescription('Handle or DID of the publisher being verified.'),
-    ),
+    subject: Options.text('subject').pipe(Options.withDescription('Handle or DID of the publisher being verified.')),
     subjectHandle: Options.text('subject-handle').pipe(
       Options.withDescription(
         'Optional human-readable handle to record for the verified subject (defaults to --subject if it is a handle).',
@@ -58,9 +53,7 @@ export const verify = Command.make(
         });
 
         // Subject may be passed as either a handle or a DID; resolve to a DID so the rkey is stable.
-        const subjectDid = options.subject.startsWith('did:')
-          ? options.subject
-          : yield* resolveHandle(options.subject);
+        const subjectDid = options.subject.startsWith('did:') ? options.subject : yield* resolveHandle(options.subject);
         const subjectHandle =
           Option.getOrUndefined(options.subjectHandle) ?? (options.subject.startsWith('did:') ? '' : options.subject);
 
