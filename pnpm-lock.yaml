@@ -12671,6 +12671,9 @@ importers:
 
   packages/plugins/plugin-presenter:
     dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.6.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -12710,6 +12713,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
