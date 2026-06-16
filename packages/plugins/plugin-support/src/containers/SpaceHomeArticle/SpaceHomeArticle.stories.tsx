@@ -119,7 +119,10 @@ export const CustomPromptSubmit: Story = {
 
     // Submit navigates to the newly-persisted chat. LayoutOperation.Open is mocked — the navigation
     // is captured but not executed — and its subject is the chat's object path.
-    await waitFor(() => expect(capture.getCalls(LayoutOperation.Open)).toHaveLength(1));
+    // Graph.waitForPath polls up to 5 s for the node to appear; the storybook graph never populates
+    // it (no section extensions), so navigation fires at the 5 s timeout edge. Use a generous
+    // waitFor timeout to cover both the fast-path (node exists) and slow-path (timeout) cases.
+    await waitFor(() => expect(capture.getCalls(LayoutOperation.Open)).toHaveLength(1), { timeout: 10000 });
     const navCalls = capture.getCalls(LayoutOperation.Open);
     await expect(navCalls[0].input.subject).toHaveLength(1);
   },
