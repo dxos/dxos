@@ -25,14 +25,11 @@ export default Capability.makeModule(
           if (!call) {
             return Effect.succeed([]);
           }
-          // Use derived joinedAtom for efficient subscription.
           const joined = get(call.joinedAtom);
           return Effect.succeed(
             joined
               ? [
                   AppNode.makeDeckCompanion({
-                    // Id becomes the companion's variant; the surface registers role
-                    // `deck-companion--activeCall`, so the id must match.
                     id: 'activeCall',
                     label: ['call-panel.label', { ns: meta.id }],
                     icon: 'ph--video-conference--regular',

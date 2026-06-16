@@ -42,3 +42,6 @@ export type CallTransportProvider = {
 export const CallTransportProvider = Capability.make<CallTransportProvider>(
   `${meta.id}.capability.call-transport-provider`,
 );
+
+/** Data passed to the call article surface, keyed by room id rather than an ECHO object. */
+export type CallRoomData = { roomId: string; attendableId?: string };

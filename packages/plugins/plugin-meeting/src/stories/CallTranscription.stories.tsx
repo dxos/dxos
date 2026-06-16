@@ -85,7 +85,6 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       </Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 grow min-bs-0'>
         <div className='dx-expander'>
-          {/* `role` (not `type`) because the call surface is keyed by `roomId`, not an ECHO subject. */}
           <Surface.Surface role='article' data={{ roomId, attendableId: roomId }} limit={1} />
         </div>
         <div className='dx-expander'>

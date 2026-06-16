@@ -13,8 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
 
-/** Article-role surface for a call, keyed by `roomId` (no ECHO object; live state is in `CallManager`). */
-type CallRoomData = { attendableId: string; roomId: string };
+type CallRoomData = CallsCapabilities.CallRoomData;
 const CallRoom: Surface.RoleToken<CallRoomData> = Surface.makeType('article');
 
 export default Capability.makeModule(() =>

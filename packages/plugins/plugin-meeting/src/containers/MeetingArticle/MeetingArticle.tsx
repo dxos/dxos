@@ -118,7 +118,6 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
       </Menu.Root>
       {data && (
         <Panel.Content>
-          {/* `role` (not `type`) because the call tab's data is keyed by `roomId`, not an ECHO subject. */}
           <Surface.Surface role='article' data={data} limit={1} />
         </Panel.Content>
       )}
