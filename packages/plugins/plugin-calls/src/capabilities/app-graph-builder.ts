@@ -34,8 +34,8 @@ export default Capability.makeModule(
               ? [
                   AppNode.makeDeckCompanion({
                     // Id becomes the companion's variant; the surface registers role
-                    // `deck-companion--active-call`, so the id must match (kebab-case).
-                    id: 'active-call',
+                    // `deck-companion--activeCall`, so the id must match.
+                    id: 'activeCall',
                     label: ['call-panel.label', { ns: meta.id }],
                     icon: 'ph--video-conference--regular',
                     data: null,

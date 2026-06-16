@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'activeCallCompanion',
-        role: 'deck-companion--active-call',
+        role: 'deck-companion--activeCall',
         component: () => <CallSidebar />,
       }),
       Surface.create({
