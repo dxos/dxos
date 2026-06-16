@@ -14,7 +14,6 @@ import {
   Onboarding,
   OperationHandler,
   ReactSurface,
-  Settings,
   type OnboardingOptions,
 } from './capabilities';
 import { meta } from './meta';
@@ -25,7 +24,6 @@ export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({ id: 'settings', activatesOn: ActivationEvents.Startup, activate: Settings }),
   Plugin.addModule({
     id: 'oauth-recovery-redirect',
     activatesOn: ActivationEvents.Startup,
