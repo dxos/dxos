@@ -63,7 +63,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
-      const target = result?.target || (navigableCollections ? space?.id : undefined);
+      const target = result?.target;
       if (target) {
         // Wait before navigating to the target node.
         // If the target has not yet replicated, this will trigger a loading toast.
