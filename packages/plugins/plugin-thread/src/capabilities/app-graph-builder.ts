@@ -26,7 +26,6 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       createTypeSectionExtension(Channel.Channel),
 
-      // Channel chat companion, shown while in this channel's call (room id matches the channel).
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
         type: Channel.Channel,

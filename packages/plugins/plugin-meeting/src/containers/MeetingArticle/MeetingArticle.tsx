@@ -96,7 +96,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
     [tab, tabs, hasSummary, handleGenerateSummary],
   );
 
-  const data = useMemo(() => {
+  const callData = useMemo(
+    () => (callAvailable ? { subject: { roomId: Obj.getURI(meeting) }, attendableId } : undefined),
+    [callAvailable, meeting, attendableId],
+  );
+
+  const articleData = useMemo(() => {
     switch (tab) {
       case 'notes':
         return notes ? { subject: notes, attendableId } : undefined;
@@ -104,10 +109,10 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
         return transcript ? { subject: transcript, attendableId } : undefined;
       case 'summary':
         return hasSummary ? { subject: summary, attendableId } : undefined;
-      case 'call':
-        return callAvailable ? { roomId: Obj.getURI(meeting), attendableId } : undefined;
+      default:
+        return undefined;
     }
-  }, [tab, attendableId, notes, transcript, summary, hasSummary, callAvailable, meeting]);
+  }, [tab, attendableId, notes, transcript, summary, hasSummary]);
 
   return (
     <Panel.Root role={role}>
@@ -116,9 +121,14 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           <Menu.Toolbar />
         </Panel.Toolbar>
       </Menu.Root>
-      {data && (
+      {tab === 'call' && callData && (
         <Panel.Content>
-          <Surface.Surface role='article' data={data} limit={1} />
+          <Surface.Surface type={CallsCapabilities.ArticleSurface} data={callData} limit={1} />
+        </Panel.Content>
+      )}
+      {tab !== 'call' && articleData && (
+        <Panel.Content>
+          <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
         </Panel.Content>
       )}
     </Panel.Root>

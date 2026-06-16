@@ -104,7 +104,6 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   }
 
   return (
-    // `dx-document` lives on the chat (not the root), so the toolbar spans the full plank width.
     <Panel.Root role={role}>
       {canStartCall && (
         <Menu.Root {...menuActions} attendableId={attendableId}>
@@ -115,7 +114,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       )}
       {showCall ? (
         <Panel.Content>
-          <Surface.Surface role='article' data={{ roomId: id, attendableId }} limit={1} />
+          <Surface.Surface type={CallsCapabilities.ArticleSurface} data={{ subject: { roomId: id }, attendableId }} limit={1} />
         </Panel.Content>
       ) : (
         <Panel.Content asChild>

@@ -71,9 +71,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     [db, invokePromise],
   );
 
-  // nodeId always points to root/…/calendarId/~<eventId> — the event-specific node that
-  // plugin extensions (e.g. plugin-meeting) attach actions to.
-  // In companion mode attendableId is the calendar path; in primary mode it's already the event path.
+  // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
   const eventSegment = linkedSegment(event.id);
   const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
   const nodeId = isEventNode ? attendableId : attendableId ? `${attendableId}/${eventSegment}` : undefined;

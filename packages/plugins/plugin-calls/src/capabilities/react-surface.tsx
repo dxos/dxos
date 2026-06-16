@@ -13,8 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
 
-type CallRoomData = CallsCapabilities.CallRoomData;
-const CallRoom: Surface.RoleToken<CallRoomData> = Surface.makeType('article');
+const CallRoom = CallsCapabilities.ArticleSurface;
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -35,8 +34,8 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'call',
-        filter: AppSurface.predicate(CallRoom, (data) => typeof data.roomId === 'string'),
-        component: ({ data }) => <CallArticle roomId={data.roomId} attendableId={data.attendableId} />,
+        filter: AppSurface.predicate(CallRoom, (data) => typeof data.subject?.roomId === 'string'),
+        component: ({ data }) => <CallArticle roomId={data.subject.roomId} attendableId={data.attendableId} />,
       }),
     ]),
   ),
