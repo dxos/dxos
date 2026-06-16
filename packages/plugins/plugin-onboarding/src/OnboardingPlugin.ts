@@ -14,6 +14,7 @@ import {
   Onboarding,
   OperationHandler,
   ReactSurface,
+  Settings,
   type OnboardingOptions,
 } from './capabilities';
 import { meta } from './meta';
@@ -22,6 +23,7 @@ import { translations } from './translations';
 export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

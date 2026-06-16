@@ -24,6 +24,7 @@ describe('OnboardingPlugin', () => {
     // GraphPlugin fires SetupAppGraph on Startup (after SetupSettings) → AppGraphBuilder activates.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
+        moduleId('Settings'),
         moduleId('oauth-recovery-redirect'),
         moduleId('ReactSurface'),
         moduleId('AppGraphBuilder'),
