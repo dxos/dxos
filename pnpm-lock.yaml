@@ -1014,6 +1014,9 @@ catalogs:
     crc-32:
       specifier: ^1.2.2
       version: 1.2.2
+    cronstrue:
+      specifier: ^2.56.0
+      version: 2.59.0
     crx:
       specifier: ^5.0.1
       version: 5.0.1
@@ -8275,6 +8278,9 @@ importers:
       '@effect/printer-ansi':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.3))(effect@3.21.3)
+      cronstrue:
+        specifier: 'catalog:'
+        version: 2.59.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -32360,6 +32366,10 @@ packages:
     resolution: {integrity: sha512-BoZaseYGXOo5j5HUwTaegIog3JJbuH4BbrY9A1ArLjXpy+RWb3mV28F/9Gv1dDA7E2L8kngWva4NWisnLTyfgQ==}
     engines: {node: '>=20'}
 
+  cronstrue@2.59.0:
+    resolution: {integrity: sha512-YKGmAy84hKH+hHIIER07VCAHf9u0Ldelx1uU6EBxsRPDXIA1m5fsKmJfyC3xBhw6cVC/1i83VdbL4PvepTrt8A==}
+    hasBin: true
+
   cross-env@7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
     engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
@@ -52682,6 +52692,8 @@ snapshots:
   crelt@1.0.6: {}
 
   cron-schedule@6.0.0: {}
+
+  cronstrue@2.59.0: {}
 
   cross-env@7.0.3:
     dependencies:

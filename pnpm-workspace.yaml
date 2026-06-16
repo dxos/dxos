@@ -377,6 +377,7 @@ catalog:
   copy: ~0.3.2
   cosmiconfig: ^8.0.0
   crc-32: ^1.2.2
+  cronstrue: ^2.56.0
   crx: ^5.0.1
   d3: ^7.9.0
   d3-force: ~3.0.0
