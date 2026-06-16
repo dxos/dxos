@@ -66,7 +66,9 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
             </div>
 
             {related.length > 0 && (
-              <div className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}>
+              <div
+                className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
+              >
                 <Input.Root>
                   <Input.Label>{t('related-objects.label')}</Input.Label>
                 </Input.Root>
