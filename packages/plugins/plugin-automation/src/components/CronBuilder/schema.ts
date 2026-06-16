@@ -103,7 +103,7 @@ export const FrequencyLabels: Record<Frequency, string> = {
   daily: 'Daily',
   weekly: 'Weekly',
   monthly: 'Monthly',
-  custom: 'Custom',
+  custom: 'Custom (cron)',
 };
 
 export const FrequencyDefaults: { [K in Frequency]: Extract<CronSpecType, { frequency: K }> } = {
