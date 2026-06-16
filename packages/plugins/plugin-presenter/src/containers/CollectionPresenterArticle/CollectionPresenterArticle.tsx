@@ -28,13 +28,7 @@ export const CollectionPresenterArticle = ({ role, subject: collection }: Collec
           <PresenterLayout
             bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
             bottomLeft={
-              <Pager
-                index={slide}
-                count={collection.objects.length}
-                keys={running}
-                onChange={setSlide}
-                onExit={handleExit}
-              />
+              <Pager index={slide} count={collection.objects.length} keys={running} onChange={setSlide} />
             }
           >
             <Surface.Surface
