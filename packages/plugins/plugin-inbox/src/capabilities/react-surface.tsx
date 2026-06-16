@@ -140,12 +140,7 @@ export default Capability.makeModule(() =>
             return null;
           }
           return (
-            <EventArticle
-              role={role}
-              subject={data.subject}
-              attendableId={data.attendableId}
-              companionTo={calendar}
-            />
+            <EventArticle role={role} subject={data.subject} attendableId={data.attendableId} companionTo={calendar} />
           );
         },
       }),

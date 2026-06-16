@@ -7,9 +7,9 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
-import { Graph } from '@dxos/plugin-graph';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Graph } from '@dxos/plugin-graph';
 import { useQuery } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { TagIndex } from '@dxos/schema';

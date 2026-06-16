@@ -338,7 +338,7 @@ export default Capability.makeModule(
         // Mailboxes live under a custom 'mailboxes' section segment, not their ECHO typename.
         parentSegmentName: getMailboxesSectionId(),
         childType: Message.Message,
-        getFeed: (mailbox, get) => mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined,
+        getFeed: (mailbox, get) => (mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined),
         // obj is cast to Message.Message because DraftMessage.belongsTo checks message-specific structure;
         // the type guard itself is the runtime proof.
         isDbChild: (mailbox, obj): obj is Message.Message =>
@@ -488,7 +488,7 @@ export default Capability.makeModule(
         id: 'calendarFeedObjectNode',
         parentType: Calendar.Calendar,
         childType: Event.Event,
-        getFeed: (calendar, get) => calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined,
+        getFeed: (calendar, get) => (calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined),
         isDbChild: (_, obj): obj is Event.Event => Obj.instanceOf(Event.Event, obj),
         getNodeLabel: (event) => event.title ?? ['event.label', { ns: meta.id }],
         nodeIcon: 'ph--calendar-dot--regular',
