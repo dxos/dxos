@@ -24,7 +24,10 @@ export const ImportExemplarSpace = Operation.make({
     icon: 'ph--potted-plant--regular',
   },
   services: [Capability.Service],
-  input: Schema.Void,
+  input: Schema.Struct({
+    /** When true, bypasses the idempotency check and always imports a fresh copy. */
+    force: Schema.optional(Schema.Boolean),
+  }),
   output: Schema.Void,
 });
 

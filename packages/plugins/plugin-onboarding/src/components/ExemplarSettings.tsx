@@ -23,7 +23,7 @@ export const ExemplarSettings = () => {
     }
     setBusy(true);
     try {
-      await invokePromise(OnboardingOperation.ImportExemplarSpace, undefined);
+      await invokePromise(OnboardingOperation.ImportExemplarSpace, { force: true });
       log.info('exemplar space recreated');
     } catch (err) {
       log.catch(err);

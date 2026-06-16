@@ -19,15 +19,16 @@ import { ImportExemplarSpace } from './definitions';
 const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';
 
 /**
- * Imports the bundled exemplar space idempotently and stamps it as already migrated.
- * If a space tagged EXEMPLAR_SPACE_TAG already exists, it is returned without re-importing.
+ * Imports the bundled exemplar space and stamps it as already migrated.
+ * Idempotent by default: reuses the existing tagged space unless `force` is set,
+ * in which case a fresh copy is always imported.
  */
 const handler: Operation.WithHandler<typeof ImportExemplarSpace> = ImportExemplarSpace.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* () {
+    Effect.fnUntraced(function* ({ force }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
-      const existing = client.spaces.get().find((space) => space.tags.includes(EXEMPLAR_SPACE_TAG));
+      const existing = force ? undefined : client.spaces.get().find((space) => space.tags.includes(EXEMPLAR_SPACE_TAG));
       const space =
         existing ??
         (yield* Effect.tryPromise(() => {

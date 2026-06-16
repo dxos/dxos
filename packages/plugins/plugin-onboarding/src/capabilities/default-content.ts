@@ -55,7 +55,7 @@ export default Capability.makeModule(
     }
 
     if (generateExemplarSpace) {
-      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportExemplarSpace, undefined));
+      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportExemplarSpace, {}));
 
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
