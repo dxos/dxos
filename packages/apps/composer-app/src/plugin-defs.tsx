@@ -224,6 +224,7 @@ export const getPlugins = ({
     isTauri && !isMobile && !isPopover && NativePlugin(),
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     NavTreePlugin(),
+    OnboardingPlugin({ generateExemplarSpace: !isLocal }),
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
@@ -263,7 +264,6 @@ export const getPlugins = ({
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
-    OnboardingPlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),

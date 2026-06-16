@@ -4,21 +4,17 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { EXEMPLAR_SPACE_TAG } from '@dxos/app-toolkit';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
-import { useClient } from '@dxos/react-client';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
-import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
 import { meta } from '../meta';
-
-const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';
+import { OnboardingOperation } from '../operations';
 
 export const ExemplarSettings = () => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
+  const { invokePromise } = useOperationInvoker();
   const [busy, setBusy] = useState(false);
 
   const handleRecreate = useCallback(async () => {
@@ -27,20 +23,14 @@ export const ExemplarSettings = () => {
     }
     setBusy(true);
     try {
-      const archive: SpaceArchive = {
-        filename: EXEMPLAR_SPACE_ARCHIVE_FILENAME,
-        contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
-        format: SpaceArchive.Format.JSON,
-      };
-      const space = await client.spaces.import(archive, { tags: [EXEMPLAR_SPACE_TAG] });
-      await space.waitUntilReady();
-      log.info('exemplar space imported', { id: space.id });
+      await invokePromise(OnboardingOperation.ImportExemplarSpace, undefined);
+      log.info('exemplar space recreated');
     } catch (err) {
       log.catch(err);
     } finally {
       setBusy(false);
     }
-  }, [busy, client]);
+  }, [busy, invokePromise]);
 
   return (
     <Settings.Viewport>
