@@ -9,13 +9,6 @@ import { type ReactiveHandler } from './proxy-types';
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
 /**
- * Global brand used to identify ProxyHandlerSlot instances across bundle chunks.
- * Using Symbol.for ensures the same symbol is shared even if proxy-utils.ts is
- * evaluated in multiple chunk contexts (e.g. @dxos/echo vs @dxos/echo/internal).
- */
-const PROXY_HANDLER_SLOT_BRAND = Symbol.for('@dxos/schema/ProxyHandlerSlot');
-
-/**
  * Internal api.
  */
 export const isProxy = (value: unknown) => !!(value as any)?.[symbolIsProxy];
@@ -36,10 +29,7 @@ export const isValidProxyTarget = (value: any): value is object => {
  */
 export const getProxySlot = <T extends object>(proxy: any): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
-  // Use brand check instead of instanceof so this works across bundle chunk boundaries
-  // (e.g. when @dxos/echo and @dxos/echo/internal are separate Vite chunks that each
-  // evaluate their own copy of proxy-utils.ts with a distinct ProxyHandlerSlot class).
-  invariant(value != null && (value as any)[PROXY_HANDLER_SLOT_BRAND] === true);
+  invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
 
@@ -95,9 +85,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   constructor(
     readonly target: T,
     private _handler: ReactiveHandler<T>,
-  ) {
-    (this as any)[PROXY_HANDLER_SLOT_BRAND] = true;
-  }
+  ) {}
 
   get handler() {
     invariant(this._handler);
