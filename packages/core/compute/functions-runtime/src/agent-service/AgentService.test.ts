@@ -160,6 +160,9 @@ describe('Agent Service', () => {
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
+  // TODO(before merge): e2e coverage for agent ctx.succeed lifecycle — see agent-process.test.ts.
+  it.todo('agent process succeeds when idle and respawns for a follow-up turn');
+
   it.scoped(
     'tool call',
     Effect.fnUntraced(

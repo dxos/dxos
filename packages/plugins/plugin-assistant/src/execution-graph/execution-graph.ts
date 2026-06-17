@@ -318,6 +318,144 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
   return undefined;
 };
 
+export type CollectProcessActivityOptions = {
+  /**
+   * When set, messages with a `conversationId` that disagrees are excluded.
+   * Messages without `conversationId` still match when their pid is in the subtree.
+   */
+  conversationId?: string;
+  eventLimit?: number;
+};
+
+/**
+ * Collects human-readable activity lines for a process subtree (root pid and descendants).
+ * Used to surface live sub-agent status in the task list.
+ */
+export const collectProcessActivityLines = (
+  messages: readonly Trace.Message[],
+  rootPid: string,
+  options: CollectProcessActivityOptions = {},
+): string[] => {
+  const { conversationId, eventLimit = 50 } = options;
+  const descendantPids = collectDescendantPids(messages, rootPid);
+  const filtered = messages.filter((message) => {
+    const pid = message.meta.pid;
+    if (!pid || !descendantPids.has(pid)) {
+      return false;
+    }
+    if (
+      conversationId &&
+      message.meta.conversationId !== undefined &&
+      message.meta.conversationId !== conversationId
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  const events = filtered
+    .flatMap((message) => Trace.flatten(message))
+    .sort((left, right) => left.timestamp - right.timestamp)
+    .slice(-eventLimit);
+
+  const toolCallContext = buildToolCallContext(filtered);
+  const lines: string[] = [];
+  for (const event of events) {
+    const presentation = presentEvent(event, toolCallContext);
+    if (presentation) {
+      lines.push(presentation.message);
+    }
+  }
+  return lines;
+};
+
+/**
+ * Derives a single in-flight status line from durable trace when ephemeral subscription
+ * is unavailable (e.g. between partial blocks or while a child operation is running).
+ */
+export const deriveInFlightActivityLine = (
+  messages: readonly Trace.Message[],
+  rootPid: string,
+  options: CollectProcessActivityOptions = {},
+): string | undefined => {
+  const { conversationId, eventLimit = 50 } = options;
+  const descendantPids = collectDescendantPids(messages, rootPid);
+  const filtered = messages.filter((message) => {
+    const pid = message.meta.pid;
+    if (!pid || !descendantPids.has(pid)) {
+      return false;
+    }
+    if (
+      conversationId &&
+      message.meta.conversationId !== undefined &&
+      message.meta.conversationId !== conversationId
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  const events = filtered
+    .flatMap((message) => Trace.flatten(message))
+    .sort((left, right) => left.timestamp - right.timestamp)
+    .slice(-eventLimit);
+
+  const openOperations = new Map<string, { name: string; timestamp: number }>();
+  let agentRequestOpen = false;
+  let lastLine: string | undefined;
+
+  for (const event of events) {
+    const pid = event.meta.pid ?? rootPid;
+    if (Trace.isOfType(Trace.OperationStart, event)) {
+      const key = `${pid}:${event.data.key}`;
+      const name = event.data.name ?? event.data.key;
+      openOperations.set(key, { name, timestamp: event.timestamp });
+      lastLine = `${name}...`;
+      continue;
+    }
+    if (Trace.isOfType(Trace.OperationEnd, event)) {
+      openOperations.delete(`${pid}:${event.data.key}`);
+      continue;
+    }
+    if (Trace.isOfType(AgentRequestBegin, event)) {
+      agentRequestOpen = true;
+      lastLine = 'Generating...';
+      continue;
+    }
+    if (Trace.isOfType(AgentRequestEnd, event)) {
+      agentRequestOpen = false;
+    }
+  }
+
+  if (agentRequestOpen) {
+    return 'Generating...';
+  }
+
+  const latestOperation = [...openOperations.values()].sort((left, right) => right.timestamp - left.timestamp)[0];
+  if (latestOperation) {
+    return `${latestOperation.name}...`;
+  }
+
+  return lastLine;
+};
+
+const collectDescendantPids = (messages: readonly Trace.Message[], rootPid: string): Set<string> => {
+  const pids = new Set([rootPid]);
+  let expanded = true;
+  while (expanded) {
+    expanded = false;
+    for (const message of messages) {
+      const pid = message.meta.pid;
+      const parentPid = message.meta.parentPid;
+      if (pid && parentPid && pids.has(parentPid) && !pids.has(pid)) {
+        pids.add(pid);
+        expanded = true;
+      }
+    }
+  }
+  return pids;
+};
+
 /**
  * A span is "collapsible" when it would otherwise render as an empty fork-and-merge:
  * exactly two events that form a begin/end pair and no child sub-spans. In that case

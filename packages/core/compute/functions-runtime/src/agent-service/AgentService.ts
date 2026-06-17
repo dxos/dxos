@@ -12,7 +12,7 @@ import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
-import { type Trace, Blueprint, McpServer } from '@dxos/compute';
+import { type Trace, Blueprint, McpServer, Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -20,7 +20,11 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
+import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
+
+const isTerminalProcess = (state: Process.State): boolean =>
+  state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 
 export interface Service {
   /**
@@ -147,6 +151,11 @@ export interface AgentServiceOptions {
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * When provided, checks agent-attached plan tasks before the process succeeds.
+   */
+  completionGuard?: CompletionGuard;
 }
 
 export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
@@ -169,6 +178,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
+          completionGuard: opts?.completionGuard,
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {
@@ -195,14 +205,16 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const model = options?.model ?? opts?.model;
             const cached = sessionCache.get(feed.id);
             if (cached) {
-              if (cached.model === model) {
+              if (cached.model === model && !isTerminalProcess(cached.handle.status.state)) {
                 return cached.session;
               }
 
-              // Model changed (e.g. the user toggled online/offline): terminate the existing
-              // process so the conversation continues on a fresh process bound to the new model.
-              // Conversation history is preserved via the feed, which the new process replays.
-              yield* cached.handle.terminate();
+              if (!isTerminalProcess(cached.handle.status.state)) {
+                // Model changed (e.g. the user toggled online/offline): terminate the existing
+                // process so the conversation continues on a fresh process bound to the new model.
+                // Conversation history is preserved via the feed, which the new process replays.
+                yield* cached.handle.terminate();
+              }
               sessionCache.delete(feed.id);
             }
 
@@ -214,12 +226,13 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             // Reuse a still-running process for this feed only when there was no cached session
             // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
             // since the process key does not encode the model.
-            const processes = cached ? [] : yield* processManager.list({ target, key: executable.key });
+            const processes = yield* processManager.list({ target, key: executable.key });
+            const activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
 
             let handle: ProcessManager.Handle<string, void>;
-            if (processes.length > 0) {
-              yield* processes[0].hydrate(executable);
-              handle = processes[0];
+            if (activeProcess) {
+              yield* activeProcess.hydrate(executable);
+              handle = activeProcess;
             } else {
               handle = yield* processManager.spawn(executable, {
                 name: 'Agent',

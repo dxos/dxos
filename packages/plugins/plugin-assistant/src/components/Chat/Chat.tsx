@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { getSpace } from '@dxos/client/echo';
 import { Event } from '@dxos/async';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -17,7 +18,7 @@ import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 
 // #region DEBUG
@@ -323,11 +324,23 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: plan
   const parent = chat ? Obj.getParent(chat) : undefined;
   const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
   const plan = planProp ?? agent?.plan.target;
+  const space = chat ? getSpace(chat) : undefined;
+  const traceMessages = useTraceMessages(space);
+  const conversationId = chat?.feed?.target?.id;
   if (!plan) {
     return null;
   }
 
-  return <TaskList {...props} plan={plan} ref={forwardedRef} />;
+  return (
+    <TaskList
+      {...props}
+      plan={plan}
+      space={space}
+      traceMessages={traceMessages}
+      conversationId={conversationId}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;

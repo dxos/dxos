@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Process } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Chat from './Chat';
@@ -33,6 +34,13 @@ export const Task = Schema.Struct({
   delegated: Schema.optional(Schema.Boolean),
 
   /**
+   * Sub-agent process id; set when the supervisor spawns a delegated task.
+   */
+  agentPid: Schema.optional(Process.ID).annotations({
+    description: 'Sub-agent process id for delegated tasks.',
+  }),
+
+  /**
    * Parent task ID.
    */
   parent: Schema.optional(TaskId).annotations({
@@ -46,6 +54,13 @@ export const Task = Schema.Struct({
 });
 
 export type Task = Schema.Schema.Type<typeof Task>;
+
+/**
+ * Short tag label for a delegated sub-agent process id (e.g. `agent-a1b2`).
+ */
+export const formatAgentPidTag = (pid: Process.ID): string =>
+  `agent-${String(pid).replaceAll('-', '').slice(0, 4)}`;
+
 /**
  * Hierarchical collection of tasks for humans and agents to track progress.
  */

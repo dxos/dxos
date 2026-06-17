@@ -59,7 +59,9 @@ export default DelegateTask.pipe(
           return yield* Effect.fail(new Error(`Plan task not found: ${id}`));
         }
         if (existing.status === 'done' || existing.status === 'failed') {
-          return yield* Effect.fail(new Error(`Plan task "${id}" is already ${existing.status} and cannot be delegated.`));
+          return yield* Effect.fail(
+            new Error(`Plan task "${id}" is already ${existing.status} and cannot be delegated.`),
+          );
         }
 
         Obj.update(plan, (plan) => {
