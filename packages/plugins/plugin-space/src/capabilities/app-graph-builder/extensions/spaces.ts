@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -17,7 +17,7 @@ import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SPACE_TYPE, SpaceCapabilities } from '#types';
+import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
 
 import { SHARED, getSpaceDisplayName } from '../../../util';
 import {
@@ -35,11 +35,39 @@ import {
 // Extension Factory
 //
 
-/** Creates space-related extensions: primary actions, space nodes, and space actions. */
+// The label tuple must be a module-level singleton: connectors re-evaluate whenever the matched
+// node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
+// to re-emit the node and remount the Home article on every evaluation.
+const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.id }] as const;
+
+/** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
+    GraphBuilder.createExtension({
+      id: 'spaceHome',
+      position: 'first',
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          {
+            id: Paths.SPACE_HOME_SEGMENT,
+            type: SPACE_HOME_NODE_TYPE,
+            data: SPACE_HOME_NODE_TYPE,
+            properties: {
+              label: SPACE_HOME_NODE_LABEL,
+              icon: 'ph--house--regular',
+              iconHue: 'cyan',
+              position: 'first',
+              draggable: false,
+              droppable: false,
+              space,
+            },
+          } satisfies Node.NodeArg<typeof SPACE_HOME_NODE_TYPE>,
+        ]),
+    }),
+
     GraphBuilder.createExtension({
       id: 'primaryActions',
       position: 'first',

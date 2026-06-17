@@ -38,6 +38,8 @@ import {
   RelatedArticle,
   SchemaContainer,
   SmallPresenceLive,
+  SpaceHomeArticle,
+  SpaceHomeRecent,
   SpacePresence,
   SpaceRenamePopover,
   SpaceSettingsContainer,
@@ -50,6 +52,8 @@ import {
   HueAnnotationId,
   IconAnnotationId,
   SpaceCapabilities,
+  SpaceHomeContent,
+  SPACE_HOME_NODE_TYPE,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -70,6 +74,18 @@ type ReactSurfaceOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'spaceHome',
+        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
+        component: ({ data, role }) => (
+          <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.properties?.space} />
+        ),
+      }),
+      Surface.create({
+        id: 'spaceHomeRecent',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+      }),
       Surface.create({
         id: 'collectionFallback',
         position: 'last',
