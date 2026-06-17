@@ -86,8 +86,8 @@ export default Capability.makeModule(
                   data: settings,
                   properties: {
                     label: meta.name ?? meta.id,
-                    icon: meta.icon ?? 'ph--circle--regular',
-                    iconHue: meta.iconHue,
+                    icon: meta.icon?.key ?? 'ph--circle--regular',
+                    iconHue: meta.icon?.hue,
                   },
                 }),
               ),

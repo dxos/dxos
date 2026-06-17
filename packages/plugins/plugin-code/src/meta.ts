@@ -44,8 +44,7 @@ export const meta = Plugin.makeMeta({
     Remote dispatch to an EDGE build agent is wired as a stub and will be
     activated in a subsequent phase.
   `,
-  icon: 'ph--code--regular',
-  iconHue: 'indigo',
+  icon: { key: 'ph--code--regular', hue: 'indigo' },
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-code',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
