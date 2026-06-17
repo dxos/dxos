@@ -161,13 +161,13 @@ const meta = {
                   endDate: new Date(now.getTime() + 3 * hour).toISOString(),
                 }),
               ];
-              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.db)));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
-              // Re-read via the queue query so the event objects have their full echo URI set (via
+              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(space.db)));
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+              // Re-read via the feed query so the event objects have their full echo URI set (via
               // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
               // space-qualified ref that findMeetingForEvent can match.
               const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
-                Effect.provide(createFeedServiceLayer(personalSpace.db)),
+                Effect.provide(createFeedServiceLayer(space.db)),
               );
               const event = synced[0];
 
@@ -187,27 +187,15 @@ const meta = {
               const meetingSummary = space.db.add(
                 Text.make({ content: '## Summary\n\n- Roadmap reviewed.\n- Owners assigned.\n- Follow-up scheduled.' }),
               );
-              // Slim Call (room/transport) the Meeting optionally links to.
-              // The transport config is produced by the Cloudflare transport provider.
-              const transportConfig = personalSpace.db.add(
-                Obj.make(Call.CloudflareTransportConfig, { roomId: 'room-1' }),
-              );
-              const call = personalSpace.db.add(
-                Call.make({
-                  name: 'Standup',
-                  transport: { kind: Call.CLOUDFLARE_TRANSPORT_KIND, config: Ref.make(transportConfig) },
-                }),
-              );
               // Use Ref.fromURI with the full space-qualified URI so findMeetingForEvent can match
               // the stored ref against Obj.getURI(event) (both return the full echo://SPACEID/ENTITYID form).
-              const meeting = personalSpace.db.add(
+              const meeting = space.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
                   participants: [],
                   transcript: Ref.make(transcript),
                   notes: Ref.make(meetingNotes),
                   summary: Ref.make(meetingSummary),
-                  call: Ref.make(call),
                   ...(event ? { event: Ref.fromURI(Obj.getURI(event)) } : {}),
                 }),
               );
