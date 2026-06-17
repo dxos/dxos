@@ -19,3 +19,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const Transcriber = Capability.lazy('Transcriber', () => import('./transcriber'));
+export const TranscriptionSettings = Capability.lazy('TranscriptionSettings', () => import('./settings'));

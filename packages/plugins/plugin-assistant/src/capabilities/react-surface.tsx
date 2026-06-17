@@ -15,6 +15,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -28,6 +29,8 @@ import {
   PlanArticle,
   RoutineArticle,
   RoutineList,
+  SpaceHomePrompt,
+  SpaceHomeSuggestions,
   TracePanel,
   TriggerStatus,
 } from '#containers';
@@ -44,6 +47,17 @@ export default Capability.makeModule(() =>
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
         },
+      }),
+      Surface.create({
+        id: 'spaceHomePrompt',
+        filter: Surface.makeFilter(SpaceHomePinBottom),
+        component: ({ data }) => <SpaceHomePrompt space={data.space} />,
+      }),
+      Surface.create({
+        id: 'spaceHomeSuggestions',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        position: 'last',
+        component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
       }),
       Surface.create({
         id: 'chat',

@@ -239,7 +239,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   enableBackgrounding: options.enableToolBackgrounding ?? false,
                 }),
                 AsynchronousExectionToolkitLayer,
-                AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
+                AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8'),
               ).pipe(Layer.orDie),
             ),
           ),
