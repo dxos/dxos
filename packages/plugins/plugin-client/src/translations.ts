@@ -45,6 +45,7 @@ const pluginTranslations = [
         'usage-window-months.label_one': '{{count}} month',
         'usage-window-months.label_other': '{{count}} months',
         'usage-percent-used.label': '{{percent}}% used',
+        'usage-all-models.label': 'All models',
         'usage-unlimited.label': 'Unlimited',
         'usage-unlimited.description': '{{used}} used in the last {{window}}',
         'usage-last-updated.label': 'Last updated {{time}}',

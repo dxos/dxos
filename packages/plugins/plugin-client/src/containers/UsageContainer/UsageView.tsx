@@ -53,11 +53,11 @@ const formatValueKey = (valueKey: string): string =>
  * `{ eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'] }` → `All models · output tokens`,
  * `{ eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'] }` → `claude-opus-4 · input tokens`.
  */
-const formatLimitLabel = (limit: MeteringLimit): string => {
+const formatLimitLabel = (limit: MeteringLimit, t: TFunction): string => {
   const metric = formatValueKey(limit.valueKey);
   const subtype = limit.subtypePattern.filter((segment) => segment && segment !== '*').join('/');
   if (limit.eventType === 'ai') {
-    return `${subtype || 'All models'} · ${metric}`;
+    return `${subtype || t('usage-all-models.label')} · ${metric}`;
   }
   return `${subtype ? `${limit.eventType}/${subtype}` : limit.eventType} · ${metric}`;
 };
@@ -102,6 +102,7 @@ const UsageRow = ({
     ) : (
       <div
         role='progressbar'
+        aria-label={label}
         aria-valuenow={percent}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -133,6 +134,10 @@ const UsageSkeleton = () => (
   </div>
 );
 
+/**
+ * Presentational view of profile usage: renders loading/error/unavailable/empty states, or one row
+ * per limit with a usage meter, plus a collapsible raw-response viewer. Pure — all data via props.
+ */
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
   const { t } = useTranslation(meta.id);
   const [rawExpanded, setRawExpanded] = useState(false);
@@ -145,10 +150,10 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     return data.limits
       .map((limit) => {
         const used = sumUsageForLimit(data.usage, limit);
-        const label = formatLimitLabel(limit);
+        const label = formatLimitLabel(limit, t);
         const windowHours = limit.windowDuration / SECONDS_PER_HOUR;
         const window = formatWindow(windowHours, t);
-        const key = `${limit.eventType}/${limit.subtypePattern.join(',')}/${limit.valueKey}`;
+        const key = `${limit.eventType}/${limit.subtypePattern.join(',')}/${limit.valueKey}/${limit.windowDuration}/${limit.limit ?? 'unlimited'}`;
         if (limit.limit === null) {
           return {
             key,

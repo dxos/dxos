@@ -5,6 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { type GetProfileUsageResponse } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -35,7 +36,8 @@ export const UsageContainer = () => {
       setData(result);
       setLastUpdated(Date.now());
       setState('ready');
-    } catch {
+    } catch (err) {
+      log.catch(err);
       setState('error');
     }
   }, [hubHttp, refreshCount]);
