@@ -165,12 +165,14 @@ export type Meta = PluginMeta;
  */
 export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon' | 'screenshots'> & {
   key: DXN.DXN;
+  /** Version string override. If omitted, derived from `key`. */
+  version?: string;
   /** Icon key string (legacy) or canonical `{ key, hue? }` object. */
   icon?: string | PluginMeta['icon'];
   /** @deprecated Pass `icon: { key, hue }` instead. */
   iconHue?: string;
-  /** Screenshot URL strings (legacy) or canonical `{ light?, dark? }` objects. */
-  screenshots?: (string | NonNullable<PluginMeta['screenshots']>[number])[];
+  /** Screenshot URL strings (legacy) or canonical `{ light?, dark? }` objects. Accepts readonly arrays. */
+  screenshots?: ReadonlyArray<string | { readonly light?: string; readonly dark?: string }>;
 };
 
 /**
@@ -185,7 +187,7 @@ export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon' | 'scre
  * });
  */
 export const makeMeta = (options: MakeMetaOptions): Meta => {
-  const { key, iconHue, icon, screenshots, ...rest } = options;
+  const { key, version: versionOverride, iconHue, icon, screenshots, ...rest } = options;
   const iconKey = typeof icon === 'string' ? icon : icon?.key;
   const resolvedHue = iconHue ?? (typeof icon === 'object' && icon !== null ? icon.hue : undefined);
   const iconObj: PluginMeta['icon'] = iconKey !== undefined ? { key: iconKey, hue: resolvedHue } : undefined;
@@ -195,7 +197,7 @@ export const makeMeta = (options: MakeMetaOptions): Meta => {
     ...(iconObj !== undefined ? { icon: iconObj } : {}),
     ...(normalizedScreenshots !== undefined ? { screenshots: normalizedScreenshots } : {}),
     id: DXN.getName(key),
-    version: DXN.getVersion(key),
+    version: versionOverride ?? DXN.getVersion(key),
   };
 };
 
