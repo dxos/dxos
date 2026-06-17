@@ -23,6 +23,40 @@ describe('DXN.isDXN', () => {
   });
 });
 
+describe('DXN.Name', () => {
+  test('accepts valid NSIDs — no type errors', () => {
+    // Three-segment minimum (first + middle + final), all camelCase.
+    DXN.make('a.b.c');
+    // Multi-segment, all camelCase.
+    DXN.make('org.dxos.type.calendar');
+    // Hyphen is allowed in a MIDDLE segment.
+    DXN.make('org.dxos.app-framework.event.startup');
+    // Versioned form.
+    DXN.make('org.dxos.type.calendar', '1.0.0');
+  });
+
+  test('rejects invalid NSIDs — compile-time type errors', () => {
+    // Wrapped in a never-called arrow so the invalid calls are type-checked but
+    // never executed at runtime. If Name unexpectedly starts accepting any
+    // of these, the @ts-expect-error directive itself becomes a build error
+    // ("Unused '@ts-expect-error' directive"), causing the CI check to fail.
+    void (() => {
+      // No dots — single segment.
+      // @ts-expect-error
+      DXN.make('unknown');
+      // Hyphen in the FINAL segment.
+      // @ts-expect-error
+      DXN.make('com.example.type.registry-entry');
+      // Hyphen in the final segment, versioned.
+      // @ts-expect-error
+      DXN.make('com.example.type.registry-entry', '0.1.0');
+      // Common mistake: kebab-case activation event name.
+      // @ts-expect-error
+      DXN.make('org.dxos.app-framework.event.setup-react-surface');
+    });
+  });
+});
+
 describe('DXN.make', () => {
   test('produces unversioned DXN', ({ expect }) => {
     expect(DXN.make('org.dxos.type.calendar')).toBe('dxn:org.dxos.type.calendar');
@@ -32,9 +66,12 @@ describe('DXN.make', () => {
     expect(DXN.make('org.dxos.type.calendar', '1.0.0')).toBe('dxn:org.dxos.type.calendar:1.0.0');
   });
 
-  test('throws on invalid NSID', ({ expect }) => {
+  test('throws on invalid NSID at runtime', ({ expect }) => {
+    // @ts-expect-error intentionally invalid NSIDs — verifying runtime throws
     expect(() => DXN.make('not-a-valid-nsid')).toThrow();
+    // @ts-expect-error
     expect(() => DXN.make('com.example.type.registry-entry')).toThrow();
+    // @ts-expect-error
     expect(() => DXN.make('com.example.type.registry-entry', '0.1.0')).toThrow();
   });
 });

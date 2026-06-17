@@ -35,5 +35,5 @@ export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderP
 export const TranscriberProvider = Capability.make<TranscriberProvider>(`${meta.id}.capability.transcriber`);
 
 export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
-  `${meta.id}.capability.transcription-manager`,
+  `${meta.id}.capability.transcriptionManager`,
 );

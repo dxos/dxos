@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DXN } from '@dxos/keys';
 import { compositeKey } from '@dxos/util';
 
 /**
- * A unique string identifier representing an event.
- * This is expected to be a URI, where initial parts are often the id of the plugin whose package defines the event.
+ * A unique DXN identifier representing an event.
  *
- * @example org.dxos.plugin.example.event.ready
+ * @example dxn:org.dxos.plugin.example.event.ready
  */
 export type ActivationEvent = {
-  id: string;
+  id: DXN.DXN;
   specifier?: string;
 };
 
@@ -24,11 +24,20 @@ export type Events =
   | { type: 'all-of'; events: ActivationEvent[] };
 
 /**
- * Helper to define an activation event.
+ * Helper to define an activation event from an NSID.
+ * Static NSID strings are validated at compile time via {@link DXN.Name}.
  */
-export const make = (id: string, specifier?: string) => {
-  return { id, specifier } as ActivationEvent;
-};
+export const make: {
+  <T extends string>(
+    nsid: [DXN.Name<T>] extends [never]
+      ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)`
+      : T,
+    specifier?: string,
+  ): ActivationEvent;
+} = (nsid: string, specifier?: string): ActivationEvent => ({
+  id: DXN.make(nsid),
+  specifier,
+});
 
 /**
  * Helper to create an activation event key.

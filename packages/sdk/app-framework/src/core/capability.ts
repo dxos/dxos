@@ -7,6 +7,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import type { DXN } from '@dxos/keys';
+
 import type * as CapabilityManager from './capability-manager';
 import type * as Plugin from './plugin';
 
@@ -100,8 +102,15 @@ export namespace InterfaceDef {
 
 /**
  * Helper to define the interface of a capability.
+ * Static NSID strings are validated at compile time via {@link DXN.Name}.
  */
-export const make = <T>(identifier: string) => {
+export const make: {
+  <T, S extends string = string>(
+    identifier: [DXN.Name<S>] extends [never]
+      ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)`
+      : S,
+  ): InterfaceDef<T>;
+} = <T>(identifier: string): InterfaceDef<T> => {
   return { identifier } as InterfaceDef<T>;
 };
 
