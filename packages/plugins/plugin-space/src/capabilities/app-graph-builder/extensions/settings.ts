@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppNode, AppNodeMatcher, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -45,7 +45,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     id: 'settingsSections',
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) => {
-      const personal = isPersonalSpace(space);
+      const personal = AppSpace.isPersonalSpace(space);
       return Effect.succeed([
         Node.make({
           id: 'general',

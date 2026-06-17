@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
@@ -38,7 +38,7 @@ export default Capability.makeModule(
         if (!db) {
           return Effect.succeed([]);
         }
-        const objectPath = getObjectPathFromObject(object);
+        const objectPath = Paths.getObjectPathFromObject(object);
         return Effect.succeed([
           {
             id: SHOW_ACTION_ID,
@@ -54,7 +54,7 @@ export default Capability.makeModule(
               }
               yield* Operation.invoke(LayoutOperation.Open, {
                 subject: [showId],
-                workspace: getSpacePath(db.spaceId),
+                workspace: Paths.getSpacePath(db.spaceId),
               });
             }),
             properties: {

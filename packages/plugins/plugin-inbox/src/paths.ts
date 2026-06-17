@@ -3,12 +3,14 @@
 //
 
 import { Node } from '@dxos/app-graph';
-import { createTypeSectionPaths } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention/types';
 
 import { Calendar } from '#types';
 
-const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = createTypeSectionPaths(Calendar.Calendar);
+const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Paths.createTypeSectionPaths(
+  Calendar.Calendar,
+);
 
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {

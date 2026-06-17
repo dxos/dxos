@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { Graph } from '@dxos/plugin-graph';
@@ -57,7 +57,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
 
   const handleOpenObject = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
+      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
     },
     [invokePromise],
   );

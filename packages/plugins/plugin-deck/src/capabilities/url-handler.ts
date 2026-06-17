@@ -5,15 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  NOT_FOUND_PATH,
-  expandPath,
-  fromUrlPath,
-  getWorkspaceFromPath,
-  toUrlPath,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -91,8 +83,8 @@ export default Capability.makeModule(
         return;
       }
 
-      const qualifiedId = fromUrlPath(pathname);
-      const workspace = getWorkspaceFromPath(qualifiedId);
+      const qualifiedId = Paths.fromUrlPath(pathname);
+      const workspace = Paths.getWorkspaceFromPath(qualifiedId);
       if (workspace !== Node.RootId && workspace !== state.activeDeck) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
       }
@@ -110,10 +102,10 @@ export default Capability.makeModule(
             mode: 'solo',
           });
         }
-      } else if (deck.solo && deck.solo !== NOT_FOUND_PATH) {
+      } else if (deck.solo && deck.solo !== Paths.NOT_FOUND_PATH) {
         // Stay in solo mode; redirect URL to reflect the current solo item.
         // Do not switch to deck mode here — only explicit user action should change layout mode.
-        const path = toUrlPath(deck.solo);
+        const path = Paths.toUrlPath(deck.solo);
         if (window.location.pathname !== path) {
           history.replaceState(null, '', `${path}${stripPlanks(window.location.search)}`);
         }
@@ -122,7 +114,7 @@ export default Capability.makeModule(
         const plankIds = deserializePlanks(resolvedUrl);
         if (plankIds.length > 0) {
           for (const plankId of plankIds) {
-            expandPath(graph, plankId);
+            NotFound.expandPath(graph, plankId);
           }
           updateState((state) => updateActiveDeck(state, { active: plankIds, initialized: true }));
         }
@@ -203,7 +195,7 @@ export default Capability.makeModule(
         lastActiveDeck = activeDeck;
         lastActiveKey = activeKey;
 
-        const path = solo && solo !== NOT_FOUND_PATH ? toUrlPath(solo) : toUrlPath(activeDeck);
+        const path = solo && solo !== Paths.NOT_FOUND_PATH ? Paths.toUrlPath(solo) : Paths.toUrlPath(activeDeck);
         const search = !solo
           ? serializePlanks(deck.active, window.location.search)
           : stripPlanks(window.location.search);

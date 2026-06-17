@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { APP_DOMAIN } from '@dxos/app-toolkit';
+import { NativePasskey } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
@@ -92,7 +92,7 @@ import { steps } from './help';
 import { downloadLogs } from './log-download';
 import { WelcomePlugin } from './plugins';
 
-const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
+const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
 export type State = {
   appKey: string;

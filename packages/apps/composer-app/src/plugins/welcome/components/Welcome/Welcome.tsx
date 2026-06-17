@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import { supportsNativePasskeys } from '@dxos/app-toolkit';
+import { NativePasskey } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -26,7 +26,8 @@ import { meta } from '../../meta';
 import { hero } from './hero-image';
 import { type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
 
-const supportsPasskeys = (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
+const supportsPasskeys =
+  (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
 
 /** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
 const ATMOSPHERE_PROVIDER = 'atproto';

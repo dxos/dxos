@@ -5,14 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNodeMatcher,
-  getActiveSpace,
-  getPersonalSpace,
-  isExemplarSpace,
-  isPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -86,7 +79,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
               }
@@ -101,7 +94,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
               }
@@ -116,7 +109,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
@@ -135,7 +128,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }
@@ -162,7 +155,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
 
         const spaces = get(spacesAtom);
-        const personalSpace = getPersonalSpace(client);
+        const personalSpace = AppSpace.getPersonalSpace(client);
 
         if (!spaces || !personalSpace) {
           return Effect.succeed([]);
@@ -197,12 +190,15 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => spaceStates[idx] !== SpaceState.SPACE_INACTIVE)
-              .filter((space) => space.tags.length === 0 || isPersonalSpace(space) || isExemplarSpace(space))
+              .filter(
+                (space) =>
+                  space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
+              )
               .map((space) =>
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  personal: isPersonalSpace(space),
+                  personal: AppSpace.isPersonalSpace(space),
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,

@@ -9,7 +9,7 @@ import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AppPlugin } from '../../plugin';
+import { AppPlugin } from '../../app-framework';
 import { LogOperation } from './schema';
 
 const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));

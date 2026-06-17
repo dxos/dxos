@@ -20,5 +20,5 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const MapSettings = Capability.lazy('MapSettings', () => import('./settings'));
+export const MapSettings: Capability.LazyCapability = Capability.lazy('MapSettings', () => import('./settings'));
 export const MapState = Capability.lazy('MapState', () => import('./state'));

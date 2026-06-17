@@ -21,4 +21,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 
-export const SampleSettings = Capability.lazy('SampleSettings', () => import('./settings'));
+export const SampleSettings: Capability.LazyCapability = Capability.lazy('SampleSettings', () => import('./settings'));

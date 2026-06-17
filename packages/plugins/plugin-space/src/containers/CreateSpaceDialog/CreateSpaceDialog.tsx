@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -36,8 +36,8 @@ export const CreateSpaceDialog = () => {
         if (result?.space) {
           yield* Effect.promise(() =>
             invokePromise(LayoutOperation.Open, {
-              subject: [getSpaceHomePath(result.space.id)],
-              workspace: getSpacePath(result.space.id),
+              subject: [Paths.getSpaceHomePath(result.space.id)],
+              workspace: Paths.getSpacePath(result.space.id),
               navigation: 'immediate',
             }),
           );

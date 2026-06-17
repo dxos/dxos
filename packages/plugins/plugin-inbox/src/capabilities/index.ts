@@ -15,10 +15,13 @@ export const BlueprintDefinition: Capability.LazyCapability<
 > = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const IntegrationProvider = Capability.lazy('IntegrationProvider', () => import('./integration-provider'));
-export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
+export const NavigationResolver: Capability.LazyCapability = Capability.lazy(
+  'NavigationResolver',
+  () => import('./navigation-resolver'),
+);
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const InboxSettings = Capability.lazy('InboxSettings', () => import('./settings'));
+export const InboxSettings: Capability.LazyCapability = Capability.lazy('InboxSettings', () => import('./settings'));

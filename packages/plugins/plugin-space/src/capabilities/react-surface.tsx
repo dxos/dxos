@@ -10,7 +10,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -376,7 +376,9 @@ export default Capability.makeModule(
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
             ? data.subject.state.get() === SpaceState.SPACE_READY
-              ? space && Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
+              ? space &&
+                Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+                  ?.target
               : undefined
             : data.subject;
 

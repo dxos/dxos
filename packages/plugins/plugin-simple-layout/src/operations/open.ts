@@ -3,12 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  createEdgeExistenceChecker,
-  validateNavigationTarget,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
@@ -47,13 +42,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           }
         : undefined;
       const checkRemoteExistence = client
-        ? createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body))
+        ? NotFound.createEdgeExistenceChecker((spaceId, body) =>
+            client.edge.http.execQuery(new Context(), spaceId, body),
+          )
         : undefined;
 
       const validatedId =
         input.navigation === 'immediate'
           ? id
-          : yield* validateNavigationTarget({
+          : yield* NotFound.validateNavigationTarget({
               graph,
               subjectId: id,
               pathResolvers,

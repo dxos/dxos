@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
@@ -97,7 +97,7 @@ export default Capability.makeModule(
           const items = get(space.db.query(Filter.type(SampleItem.SampleItem)).atom);
           return Effect.succeed(
             items
-              .map((item) => createObjectNode({ get, db: space.db, object: item }))
+              .map((item) => AppNode.makeObject({ get, db: space.db, object: item }))
               .filter((node): node is NonNullable<typeof node> => node !== null),
           );
         },

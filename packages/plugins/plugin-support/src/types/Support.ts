@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
@@ -37,7 +37,7 @@ export const Ticket = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--lifebuoy--regular', hue: 'rose' }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
 );
 

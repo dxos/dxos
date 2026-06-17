@@ -7,7 +7,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
@@ -84,7 +84,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
   const assistantAvailable = assistantCapabilities.length > 0;
 
   const [dismissed, setDismissed] = useWelcomeDismissed(space);
-  const isPersonal = !!space && isPersonalSpace(space);
+  const isPersonal = !!space && AppSpace.isPersonalSpace(space);
   const showWelcome = isPersonal && !dismissed;
 
   const handleStartTour = useCallback(() => {
@@ -394,7 +394,7 @@ const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
     if (!space) {
       return;
     }
-    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
+    void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
   }, [invokePromise, object, space]);
 
   // TODO(wittjosiah): Use AppSurface.Card once card previews are consistently good for all object types.

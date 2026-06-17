@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, TagIndex, Tagging } from '@dxos/schema';
@@ -59,7 +59,7 @@ export const Mailbox = Schema.Struct({
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
   FeedAnnotation.set(true),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),
 );
 

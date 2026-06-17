@@ -7,8 +7,10 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
-export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
+export const NavigationResolver: Capability.LazyCapability = Capability.lazy(
+  'NavigationResolver',
+  () => import('./navigation-resolver'),
+);
 // The contributed capability type references Operation types from @dxos/compute, so the lazy
 // wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
 export const CommentConfig: Capability.LazyCapability<
@@ -21,4 +23,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SketchSettings = Capability.lazy('SketchSettings', () => import('./settings'));
+export const SketchSettings: Capability.LazyCapability = Capability.lazy('SketchSettings', () => import('./settings'));

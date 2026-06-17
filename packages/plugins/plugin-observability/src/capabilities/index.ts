@@ -14,5 +14,10 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const ObservabilitySettings = Capability.lazy('ObservabilitySettings', () => import('./settings'));
+// Explicit annotation prevents TS2883: the module contributes AppCapabilities.Settings whose type
+// traces to an internal source path that TypeScript cannot name in declaration files.
+export const ObservabilitySettings: Capability.LazyCapability = Capability.lazy(
+  'ObservabilitySettings',
+  () => import('./settings'),
+);
 export const ObservabilityState = Capability.lazy('ObservabilityState', () => import('./state'));
