@@ -102,7 +102,7 @@ export default Capability.makeModule(
             mode: 'solo',
           });
         }
-      } else if (deck.solo && deck.solo !== Paths.NOT_FOUND_PATH) {
+      } else if (deck.solo && deck.solo !== NotFound.NOT_FOUND_PATH) {
         // Stay in solo mode; redirect URL to reflect the current solo item.
         // Do not switch to deck mode here — only explicit user action should change layout mode.
         const path = Paths.toUrlPath(deck.solo);
@@ -195,7 +195,7 @@ export default Capability.makeModule(
         lastActiveDeck = activeDeck;
         lastActiveKey = activeKey;
 
-        const path = solo && solo !== Paths.NOT_FOUND_PATH ? Paths.toUrlPath(solo) : Paths.toUrlPath(activeDeck);
+        const path = solo && solo !== NotFound.NOT_FOUND_PATH ? Paths.toUrlPath(solo) : Paths.toUrlPath(activeDeck);
         const search = !solo
           ? serializePlanks(deck.active, window.location.search)
           : stripPlanks(window.location.search);

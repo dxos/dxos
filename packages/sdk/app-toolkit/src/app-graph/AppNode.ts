@@ -17,7 +17,6 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app';
-import { Paths } from '../app';
 import { Translations } from '../app';
 import { AppAnnotation } from '../echo';
 
@@ -394,7 +393,7 @@ export const makeSettingsPanel = ({
 
 /** Build the not-found sentinel node. */
 export const makeNotFound = (): Node.NodeArg<null> => ({
-  id: Paths.NOT_FOUND_NODE_ID,
+  id: NotFound.NOT_FOUND_NODE_ID,
   type: NotFound.NOT_FOUND_NODE_TYPE,
   data: null,
   properties: {

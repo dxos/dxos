@@ -222,10 +222,3 @@ export const getWorkspaceFromPath = (qualifiedId: string): string => {
   return qualifiedId.slice(0, secondSep);
 };
 
-export const NOT_FOUND_NODE_ID = 'not-found';
-
-/**
- * Canonical qualified path for the not-found sentinel node.
- * Navigation resolvers return this when a target does not exist.
- */
-export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;

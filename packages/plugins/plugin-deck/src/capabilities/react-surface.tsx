@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { Paths } from '@dxos/app-toolkit';
+import { NotFound } from '@dxos/app-toolkit';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { DeckSettings } from '#components';
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'notFound',
         role: 'article',
-        filter: (data): data is { attendableId: string } => data.attendableId === Paths.NOT_FOUND_PATH,
+        filter: (data): data is { attendableId: string } => data.attendableId === NotFound.NOT_FOUND_PATH,
         component: () => <NotFoundArticle />,
       }),
     ]),

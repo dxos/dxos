@@ -16,6 +16,14 @@ import { expandAttendableId } from '@dxos/react-ui-attention/types';
 import { AppCapabilities } from '../app-framework';
 import * as Paths from './Paths';
 
+export const NOT_FOUND_NODE_ID = 'not-found';
+
+/**
+ * Canonical qualified path for the not-found sentinel node.
+ * Navigation resolvers return this when a target does not exist.
+ */
+export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
+
 export const NOT_FOUND_NODE_TYPE = 'org.dxos.type.not-found';
 
 /**
@@ -42,7 +50,7 @@ export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): v
 
 /**
  * Validate a navigation target by expanding the graph path and checking existence.
- * Returns the original subjectId if valid, or Paths.NOT_FOUND_PATH if the target doesn't exist.
+ * Returns the original subjectId if valid, or NOT_FOUND_PATH if the target doesn't exist.
  *
  * Resolution is three independent steps: a path resolver parses the path into an EID (structure
  * only — it does not validate the full container path), then existence is checked against that EID
@@ -61,7 +69,7 @@ export const validateNavigationTarget = (params: {
   const { graph, subjectId, pathResolvers, checkLocalExistence, checkRemoteExistence } = params;
 
   // Skip validation for system paths.
-  if (subjectId === Paths.NOT_FOUND_PATH || subjectId === Node.RootId || Paths.isPinnedWorkspace(subjectId)) {
+  if (subjectId === NOT_FOUND_PATH || subjectId === Node.RootId || Paths.isPinnedWorkspace(subjectId)) {
     return Effect.succeed(subjectId);
   }
 
@@ -87,7 +95,7 @@ export const validateNavigationTarget = (params: {
           ),
     );
     if (Option.isNone(id)) {
-      return Paths.NOT_FOUND_PATH;
+      return NOT_FOUND_PATH;
     }
 
     // Check existence cheapest-first: local (fast) then remote (network, only when not local).
@@ -115,7 +123,7 @@ export const validateNavigationTarget = (params: {
       return subjectId;
     }
 
-    return Paths.NOT_FOUND_PATH;
+    return NOT_FOUND_PATH;
   });
 };
 
