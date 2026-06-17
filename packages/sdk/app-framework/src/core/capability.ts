@@ -165,7 +165,8 @@ type NormalizeReturn<R> = R extends readonly (infer A)[]
       ? [R]
       : Any[];
 
-export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type LazyCapability<Props = any, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
   props: Props,
 ) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | never>;
 
@@ -179,8 +180,8 @@ export type LazyCapability<Props = void, Capabilities extends ModuleReturn = Mod
 export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
   name: string,
   c: LoadCapability<T, R> | LoadCapabilities<T, R>,
-): LazyCapability<T, R> => {
-  const lazyFn: LazyCapability<T, R> = (props: T) =>
+): LazyCapability => {
+  const lazyFn = (props: T) =>
     Effect.gen(function* () {
       const { default: getCapability } = yield* Effect.promise(() => c());
       const result = yield* getCapability(props);
