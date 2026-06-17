@@ -46,6 +46,13 @@ export const ObjectDeletedId = Symbol.for('@dxos/echo/Deleted');
 export const ObjectVersionId: unique symbol = Symbol.for('@dxos/echo/Version');
 
 /**
+ * Time-travel state accessor symbol. Resolves to `true` while the entity is in a historical read
+ * mode (see `setTimeTravel`). A virtual root property on live entities, like {@link ObjectVersionId};
+ * lets the reactive layer read the boolean off the proxy without depending on the core.
+ */
+export const TimeTravelingId: unique symbol = Symbol.for('@dxos/echo/TimeTraveling');
+
+/**
  * Object database accessor symbol.
  */
 export const ObjectDatabaseId = Symbol.for('@dxos/echo/Database');

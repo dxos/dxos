@@ -95,7 +95,11 @@ export default Capability.makeModule(
             return;
           }
           const readEnvironment = (): ComputeEnvironment => space.properties.computeEnvironment ?? LOCAL_ENVIRONMENT;
-          tracker.unsubscribe = Obj.subscribe(space.properties, () => apply(tracker, space.id, readEnvironment()));
+          // Side-effecting subscriber (installs/tears down triggers): `latestOnly` so it never fires
+          // on time-travel scrubbing and always reads the latest committed environment.
+          tracker.unsubscribe = Obj.subscribe(space.properties, () => apply(tracker, space.id, readEnvironment()), {
+            latestOnly: true,
+          });
           apply(tracker, space.id, readEnvironment());
         })
         .catch((err) => log.catch(err));

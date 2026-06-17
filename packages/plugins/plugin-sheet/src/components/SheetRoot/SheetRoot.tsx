@@ -28,6 +28,9 @@ export type SheetContextValue = {
   attendableId: string;
   model: SheetModel;
 
+  /** When set, the grid is comparing the current branch against this branch (diff mode). */
+  compareBranch?: string;
+
   // Cursor state.
   // TODO(burdon): Cursor and range should use indices.
   cursor?: CellAddress;
@@ -64,26 +67,36 @@ export type SheetRootProps = {
   sheet: Sheet.Sheet;
   attendableId: string;
   readonly?: boolean;
+  /** The currently viewed branch; recreates the model on branch switch so cells reflect it. */
+  branch?: string;
   ignoreAttention?: boolean;
-} & Pick<SheetContextValue, 'onInfo'>;
+} & Pick<SheetContextValue, 'onInfo' | 'compareBranch'>;
 
 export const SheetRoot = ({
   children,
   graph,
   sheet,
   attendableId,
+  compareBranch,
+  branch,
   readonly,
   ignoreAttention,
   onInfo,
 }: PropsWithChildren<SheetRootProps>) => {
-  const model = useSheetModel(graph, sheet, { readonly });
+  const model = useSheetModel(graph, sheet, { readonly, branch });
   if (!model) {
     return null;
   }
 
   return (
     <Grid.Root id={attendableId}>
-      <SheetProviderImpl model={model} attendableId={attendableId} onInfo={onInfo} ignoreAttention={ignoreAttention}>
+      <SheetProviderImpl
+        model={model}
+        attendableId={attendableId}
+        compareBranch={compareBranch}
+        onInfo={onInfo}
+        ignoreAttention={ignoreAttention}
+      >
         {children}
       </SheetProviderImpl>
     </Grid.Root>
@@ -94,11 +107,12 @@ const SheetProviderImpl = ({
   __gridScope,
   children,
   attendableId,
+  compareBranch,
   ignoreAttention,
   model,
   onInfo,
 }: GridScopedProps<
-  PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>
+  PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'compareBranch' | 'ignoreAttention' | 'model' | 'onInfo'>>
 >) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
@@ -131,6 +145,7 @@ const SheetProviderImpl = ({
       value={{
         id,
         attendableId,
+        compareBranch,
         model,
         editing,
         setEditing,

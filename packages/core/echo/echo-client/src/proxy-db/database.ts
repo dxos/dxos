@@ -36,7 +36,7 @@ import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import { type BranchStore, CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -150,6 +150,9 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 };
 
 /**
@@ -188,6 +191,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       queryService: params.queryService,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
+      branchStore: params.branchStore,
     });
 
     this.saveStateChanged = this._coreDatabase.saveStateChanged;

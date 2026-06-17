@@ -205,6 +205,28 @@ export type CommentConfig = Readonly<{
   selectionMode?: string;
   getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
   scrollToAnchor?: Operation.Definition.Any;
+  /**
+   * Create a comment using the type's own anchoring UI (e.g. an editor's selection/hunk snap),
+   * branch-tagging the thread itself. Return `true` when handled; the comment toolbar action falls
+   * back to the attention-selection anchor (branch-tagged generically) when absent or it returns false.
+   */
+  createComment?: (obj: any) => boolean;
+  /**
+   * The current anchor for a new comment, derived from the type's own selection (e.g. a sheet's
+   * selected cells). Used by the comment toolbar action in preference to the attention selection.
+   */
+  getAnchor?: (obj: any) => string | undefined;
+  /**
+   * Accept an individual change from `branch` at the comment's `anchor` — a partial cherry-pick of
+   * the latest compare-branch content into the subject's current branch (not a snapshot), without
+   * merging the whole branch. Invoked by the generic `AcceptChange` operation, dispatched per type.
+   */
+  acceptChange?: (obj: any, anchor: string, branch: string) => Promise<void>;
+  /**
+   * Whether the comment's `anchor` currently overlaps a change relative to `branch`. Used to show
+   * the accept-change affordance only on comments that sit on an actual diff. Defaults to shown.
+   */
+  isOnChange?: (obj: any, anchor: string, branch: string) => Promise<boolean>;
 }>;
 
 /**

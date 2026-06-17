@@ -16,21 +16,27 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '#components';
 
+// Cell-range anchor: the generic range-selection anchor `"<from>:<to>"`, each endpoint `"col,row"`.
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
-  return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
+  return `${range.from.col},${range.from.row}:${range.to.col},${range.to.row}`;
 };
 
 export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange | null => {
-  const coords = cursor.split(',');
+  // Accept the `"from:to"` form (endpoints separated by ':') and the legacy flat `"a,b,c,d"` form.
+  const coords = cursor.includes(':')
+    ? cursor.split(':').flatMap((endpoint) => endpoint.split(','))
+    : cursor.split(',');
   if (coords.length !== 4) {
     return null;
-  } else {
-    const [fromCol, fromRow, toCol, toRow] = coords;
-    return {
-      from: { col: parseInt(fromCol), row: parseInt(fromRow) },
-      to: { col: parseInt(toCol), row: parseInt(toRow) },
-    };
   }
+  const [fromCol, fromRow, toCol, toRow] = coords.map((value) => parseInt(value, 10));
+  if ([fromCol, fromRow, toCol, toRow].some(Number.isNaN)) {
+    return null;
+  }
+  return {
+    from: { col: fromCol, row: fromRow },
+    to: { col: toCol, row: toRow },
+  };
 };
 
 export const useSelectThreadOnCellFocus = () => {

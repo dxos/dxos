@@ -29,6 +29,10 @@ export type CommentThreadProps = {
   onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
   onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
+  onAcceptChange?: (anchor: AnchoredTo.AnchoredTo) => void;
+  /** Whether resolved threads are shown; when false a thread hides itself reactively once resolved. */
+  showResolved?: boolean;
 };
 
 // TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
@@ -56,6 +60,8 @@ export const CommentThread = ({
   onMessageDelete,
   onThreadDelete,
   onAcceptProposal,
+  onAcceptChange,
+  showResolved,
 }: CommentThreadProps) => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
@@ -66,6 +72,9 @@ export const CommentThread = ({
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [messages] = useObject(thread, 'messages');
+  // Subscribe to `status` so resolving/unresolving the thread re-renders its controls and the
+  // accept-change affordance (the `messages` subscription alone does not observe status changes).
+  const [status] = useObject(thread, 'status');
   const activity = useStatus(space, threadUri);
 
   const getMetadata = useCallback(
@@ -95,6 +104,7 @@ export const CommentThread = ({
     [onMessageDelete, anchor],
   );
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
+  const handleAcceptChange = useCallback(() => onAcceptChange?.(anchor), [onAcceptChange, anchor]);
   const handleAcceptProposal = useCallback(
     (messageId: string) => onAcceptProposal?.(anchor, messageId),
     [onAcceptProposal, anchor],
@@ -112,21 +122,34 @@ export const CommentThread = ({
     [anchor, onComment],
   );
 
-  if (!thread || !threadUri) {
+  // Hide reactively once resolved (e.g. after accepting a change) when the view shows unresolved only.
+  // The `status` subscription above drives the re-render; the parent list filter is not reactive to it.
+  if (!thread || !threadUri || (!showResolved && status === 'resolved')) {
     return null;
   }
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
-      {onResolve && !(thread.status === 'staged') && (
+      {status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
+      {onAcceptChange && !detached && status !== 'resolved' && (
+        <IconButton
+          data-testid='thread.accept-change'
+          variant='ghost'
+          icon='ph--check-circle--regular'
+          iconOnly
+          label={t('accept-change.label')}
+          classNames={['p-1! transition-opacity', hoverableControlItem]}
+          onClick={handleAcceptChange}
+        />
+      )}
+      {onResolve && !(status === 'staged') && (
         <IconButton
           data-testid='thread.resolve'
           variant='ghost'
-          icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
+          icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
           iconOnly
           label={t('resolve-thread.label')}
-          classNames={['p-1! transition-opacity', thread.status !== 'resolved' && hoverableControlItem]}
+          classNames={['p-1! transition-opacity', status !== 'resolved' && hoverableControlItem]}
           onClick={handleResolve}
         />
       )}
@@ -187,7 +210,7 @@ export const CommentThread = ({
         <Thread.Textbox
           {...textboxMetadata}
           placeholder={t('message.placeholder')}
-          autoFocus={thread.status === 'staged'}
+          autoFocus={status === 'staged'}
           onSend={handleComment}
         />
 

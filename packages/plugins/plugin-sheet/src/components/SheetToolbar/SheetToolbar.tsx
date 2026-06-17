@@ -22,6 +22,7 @@ type ToolbarActionsContext = {
   registry: Registry.Registry;
   cursorFallbackRange?: CompleteCellRange;
   customActions?: Atom.Atom<ActionGraphProps>;
+  disabled?: boolean;
 };
 
 const createToolbarActions = ({
@@ -30,6 +31,7 @@ const createToolbarActions = ({
   registry,
   cursorFallbackRange,
   customActions,
+  disabled,
 }: ToolbarActionsContext): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
     const state = get(stateAtom);
@@ -49,13 +51,19 @@ const createToolbarActions = ({
       graph.edges.push(...custom.edges);
     }
 
+    if (disabled) {
+      // Disable every toolbar action while read-only (e.g. time-traveling); the root `disabled` only
+      // styles the toolbar, so each action carries its own `disabled` flag.
+      graph.nodes = graph.nodes.map((node) => ({ ...node, properties: { ...node.properties, disabled: true } }));
+    }
+
     return graph;
   });
 };
 
-export type SheetToolbarProps = {};
+export type SheetToolbarProps = { disabled?: boolean };
 
-export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
+export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>(({ disabled, ...props }, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
@@ -75,14 +83,14 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
   }, [graph, attendableId]);
 
   const actionsCreator = useMemo(
-    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
-    [model, stateAtom, registry, cursorFallbackRange, customActions],
+    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions, disabled }),
+    [model, stateAtom, registry, cursorFallbackRange, customActions, disabled],
   );
   const menuActions = useMenuActions(actionsCreator);
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar disabled={disabled} {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
 });

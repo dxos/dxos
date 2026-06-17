@@ -16,7 +16,8 @@ export default Capability.makeModule(() =>
     const settingsAtom = createKvsStore({
       key: meta.id,
       schema: Settings.Settings,
-      defaultValue: () => ({}),
+      // Branches companion starts enabled while the feature is being tested.
+      defaultValue: () => ({ enableBranches: true }),
     });
 
     return [

@@ -10,6 +10,7 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 import {
   AnchorSort,
   AppGraphBuilder,
+  BranchDiffSupport,
   NavigationResolver,
   CommentConfig,
   ComputeGraphRegistry,
@@ -54,6 +55,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AnchorSort,
   }),
+  Plugin.addModule({ activatesOn: AppActivationEvents.SetupAppGraph, activate: BranchDiffSupport }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

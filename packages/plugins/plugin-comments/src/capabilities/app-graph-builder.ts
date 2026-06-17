@@ -2,48 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { branchDiffAtom } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { getCurrentBranch } from '@dxos/echo-client';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
-import { CommentCapabilities, type CommentState } from '#types';
 
 import { getAnchor } from '../util';
-
-type CommentDisabledParams = {
-  stateAtom: Atom.Atom<Atom.Writable<CommentState>[]>;
-  viewState: ViewStateManager;
-  objectId: string;
-  commentsType: string;
-};
-
-/**
- * Atom family to derive whether the comment button should be disabled.
- * Uses a composite key to ensure proper caching.
- */
-const commentDisabledFamily = Atom.family(({ stateAtom, viewState, objectId, commentsType }: CommentDisabledParams) =>
-  Atom.make((get) => {
-    const stateAtoms = get(stateAtom);
-    const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
-    const toolbar = state?.toolbar ?? {};
-    const selection = get(viewState.atom(selectionAspect, objectId));
-    const anchor = getAnchor(selection);
-    const invalidSelection = !anchor;
-    const overlappingComment = toolbar[objectId];
-    return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
-  }),
-);
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
 const whenCommentableObject = NodeMatcher.whenAll(
@@ -88,42 +63,53 @@ export default Capability.makeModule(
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
           return commentConfig ? Option.some(node) : Option.none();
         },
-        actions: (matched, get) => {
+        actions: (matched) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
-          const stateAtom = capabilities.atom(CommentCapabilities.State);
           const viewState = capabilities.get(AttentionCapabilities.ViewState);
-          const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
-
-          const disabled = get(
-            commentDisabledFamily({
-              stateAtom,
-              viewState,
-              objectId: objectUri,
-              commentsType: commentConfig.comments,
-            }),
-          );
 
           return Effect.succeed([
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
-                const selection = viewState.get(selectionAspect, objectUri);
-                const anchor =
-                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
-                const name = config.getAnchorLabel?.(object, anchor);
-                yield* Operation.invoke(CommentOperation.Create, {
-                  anchor,
-                  name,
-                  subject: object,
-                });
+
+                // Let the type create the comment with its own anchoring UI (e.g. an editor's
+                // hunk/word snap), which branch-tags the thread itself. Type-agnostic: no plugin is
+                // referenced here.
+                if (config.createComment?.(object)) {
+                  return;
+                }
+
+                // Generic fallback: anchor via the type's own selection (`getAnchor`) if it provides
+                // one (e.g. a sheet's selected cells), else the attention selection, else an unanchored
+                // thread. Branch-tag for review so the comment is scoped to the branch being compared,
+                // else the branch in view. Only derive a label from a real cursor anchor.
+                const cursorAnchor =
+                  config.getAnchor?.(object) ??
+                  (config.comments === 'anchored' ? getAnchor(viewState.get(selectionAspect, objectUri)) : undefined);
+                const registry = capabilities.get(Capabilities.AtomRegistry);
+                const activeBranch = registry.get(branchDiffAtom(object.id))?.compareTo ?? getCurrentBranch(object);
+                // Invoke via the operation-invoker capability (carries the app runtime) rather than
+                // the ambient `Operation.invoke` service: this action also runs from the sheet's menu
+                // toolbar, whose runner does not provide the operation service.
+                const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+                yield* Effect.promise(() =>
+                  invokePromise(CommentOperation.Create, {
+                    anchor: cursorAnchor ?? Date.now().toString(),
+                    name: cursorAnchor ? config.getAnchorLabel?.(object, cursorAnchor) : undefined,
+                    subject: object,
+                    branch: activeBranch === 'main' ? undefined : activeBranch,
+                  }),
+                );
               }),
               properties: {
                 label: ['add-comment.label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
-                disabled,
+                // Always enabled: the create-comment command snaps to a sensible region, so a precise
+                // selection is not required. (The toolbar is disabled wholesale in read-only mode.)
+                disabled: false,
                 testId: 'comments.comment.add',
               },
             },

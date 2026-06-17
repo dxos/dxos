@@ -50,12 +50,16 @@ const MarkdownExtensionsPlugin = Plugin.define(
   Plugin.make,
 );
 
-const DefaultStory = () => {
+// `title`/`content` are consumed by the withPluginManager decorator (via context.args); `mode` is
+// read here. All three are declared so Storybook infers the full args shape.
+const DefaultStory = ({ mode }: { title?: string; content?: string; mode?: string }) => {
   const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = doc && Obj.getURI(doc);
-  const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
+  // `mode` mirrors the graph node's rendering mode (e.g. `'readonly'` while time-traveling), which
+  // locks the editor and hides the toolbar.
+  const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story', mode }), [doc, id, mode]);
   const attentionAttrs = useAttentionAttributes(id);
 
   useAsyncEffect(async () => {
@@ -76,7 +80,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<{ title?: string; content?: string }>((context) => ({
+    withPluginManager<{ title?: string; content?: string; mode?: string }>((context) => ({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
@@ -137,5 +141,14 @@ export const Default: Story = {
   args: {
     title: 'Testing',
     content: ['This is a line with **some** formatting.'].join('\n\n'),
+  },
+};
+
+/** `mode: 'readonly'` (as set on a time-traveling node): the editor is locked and the toolbar hidden. */
+export const ReadOnly: Story = {
+  args: {
+    title: 'Testing',
+    content: ['This is a line with **some** formatting.'].join('\n\n'),
+    mode: 'readonly',
   },
 };

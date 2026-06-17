@@ -10,19 +10,32 @@ import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } 
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
 export type SpaceSettingsProps = {
+  settings?: Settings.Settings;
+  onSettingsChange?: (cb: (current: Settings.Settings) => Settings.Settings) => void;
   spaces?: Space[];
   onOpenSpaceSettings?: (space: Space) => void;
 };
 
-export const SpaceSettings = ({ spaces, onOpenSpaceSettings }: SpaceSettingsProps) => {
+export const SpaceSettings = ({ settings, onSettingsChange, spaces, onOpenSpaceSettings }: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
     <SettingsForm.Viewport>
+      {settings && (
+        <SettingsForm.Section title={t('settings-features.label')}>
+          <SettingsForm.FieldSet
+            readonly={!onSettingsChange}
+            schema={Settings.Settings}
+            values={settings}
+            onValuesChanged={(values) => onSettingsChange?.(() => values)}
+          />
+        </SettingsForm.Section>
+      )}
       <SettingsForm.Section title={t('space-settings.label')} description={t('space-settings.description')}>
         <SettingsForm.Panel>
           <Input.Root>

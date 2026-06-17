@@ -26,6 +26,7 @@ import {
   ChangeId,
   EntityKind,
   EventId,
+  LatestEventId,
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -67,8 +68,10 @@ import {
   isInChangeContext,
   isInstanceOf,
   isProxy,
+  queueLatestNotification,
   queueNotification,
   setRefResolver,
+  TimeTravelingId,
   symbolIsProxy,
   toEffectSchema,
 } from '@dxos/echo/internal';
@@ -120,6 +123,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (!(EventId in target)) {
       defineHiddenProperty(target, EventId, new Event());
+    }
+    if (!(LatestEventId in target)) {
+      defineHiddenProperty(target, LatestEventId, new Event());
     }
 
     // Maybe have been set by `create`.
@@ -245,6 +251,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.isDeleted(target);
         case ObjectVersionId:
           return this._getVersion(target);
+        case TimeTravelingId:
+          return target[symbolInternals].core.isTimeTraveling();
         case ObjectDatabaseId:
           return target[symbolInternals].database;
         case SchemaKindId: {
@@ -495,6 +503,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
         defineHiddenProperty(array, EventId, target[EventId]);
+        // Borrow the root's latest channel too so `latestOnly` subscribers on the array are notified.
+        defineHiddenProperty(array, LatestEventId, target[LatestEventId]);
         return array as any as ProxyTarget;
       });
 
@@ -511,6 +521,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolPath]: dataPath,
           [symbolNamespace]: namespace,
           [EventId]: new Event(),
+          [LatestEventId]: new Event(),
         }),
       );
 
@@ -883,6 +894,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolPath]: [],
       [symbolNamespace]: META_NAMESPACE,
       [EventId]: new Event(),
+      [LatestEventId]: new Event(),
     };
 
     return createProxy(metaTarget, this) as any;
@@ -1156,6 +1168,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             [symbolPath]: [],
             [symbolNamespace]: META_NAMESPACE,
             [EventId]: new Event(),
+            [LatestEventId]: new Event(),
           };
           const metaReified = this._getReified(metaTarget);
           const typeURI = this.getTypeURI(target);
@@ -1276,7 +1289,8 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     slot.handler._proxyMap.set(target, obj);
 
     target[symbolInternals].subscriptions.push(
-      core.updates.on(() => {
+      // Display channel: fires on real changes AND time-travel scrubbing.
+      core.displayUpdates.on(() => {
         // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
         // gets recomputed from the (possibly new) `jsonSchema` on next read.
         target[symbolInternals].cachedStaticSlot = undefined;
@@ -1286,6 +1300,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
         } else {
           // Immediate notification for external changes (sync from peers).
           target[EventId]?.emit();
+        }
+      }),
+      // Latest channel: fires on real changes only, never on scrubbing.
+      core.updates.on(() => {
+        if (isInChangeContext(core)) {
+          queueLatestNotification(core);
+        } else {
+          target[LatestEventId]?.emit();
         }
       }),
     );
@@ -1310,11 +1332,13 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
       [EventId]: new Event(),
+      [LatestEventId]: new Event(),
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = type;
     target[symbolInternals].subscriptions.push(
-      core.updates.on(() => {
+      // Display channel: fires on real changes AND time-travel scrubbing.
+      core.displayUpdates.on(() => {
         // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
         // gets recomputed from the (possibly new) `jsonSchema` on next read.
         target[symbolInternals].cachedStaticSlot = undefined;
@@ -1324,6 +1348,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
         } else {
           // Immediate notification for external changes (sync from peers).
           target[EventId]?.emit();
+        }
+      }),
+      // Latest channel: fires on real changes only, never on scrubbing.
+      core.updates.on(() => {
+        if (isInChangeContext(core)) {
+          queueLatestNotification(core);
+        } else {
+          target[LatestEventId]?.emit();
         }
       }),
     );
@@ -1408,16 +1440,26 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
     [EventId]: new Event(),
+    [LatestEventId]: new Event(),
   };
 
   // TODO(dmaretskyi): Does this need to be disposed?
-  core.updates.on(() => {
+  // Display channel: fires on real changes AND time-travel scrubbing.
+  core.displayUpdates.on(() => {
     if (isInChangeContext(core)) {
       // Defer notification until the change context exits.
       queueNotification(core);
     } else {
       // Immediate notification for external changes (sync from peers).
       target[EventId]?.emit();
+    }
+  });
+  // Latest channel: fires on real changes only, never on scrubbing.
+  core.updates.on(() => {
+    if (isInChangeContext(core)) {
+      queueLatestNotification(core);
+    } else {
+      target[LatestEventId]?.emit();
     }
   });
 

@@ -15,7 +15,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { EntityKind, type EntityMeta, getStrongDependencyUris } from '@dxos/echo/internal';
-import { isProxy } from '@dxos/echo/internal';
+import { isProxy, isReadingLatest } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,6 +32,7 @@ const STRING_CRDT_LIMIT = 300_000;
 
 export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
+const DATA_NAMESPACE = 'data';
 
 export type ObjectCoreOptions = {
   type?: EncodedReference;
@@ -75,8 +76,33 @@ export class ObjectCore {
 
   /**
    * Handles link resolution as well as manual changes.
+   * Fires on real data changes (local writes, remote sync) only — never on time-travel scrubbing.
+   * Backs the `latestOnly` subscription channel.
    */
   public readonly updates = new Event();
+
+  /**
+   * Fires when the displayed value changes: on real data changes AND on time-travel transitions
+   * (set/clear/scrub). Backs the default subscription channel so the editor and label reflect the
+   * historical view while scrubbing.
+   */
+  public readonly displayUpdates = new Event();
+
+  /**
+   * Automerge heads at which data/meta reads are pinned while time-traveling; `undefined` when live.
+   */
+  #timeTravelHeads?: Heads = undefined;
+
+  /**
+   * Memoized historical view (`A.view`) for the current {@link #timeTravelHeads}.
+   */
+  #timeTravelView?: Doc<unknown> = undefined;
+
+  /**
+   * Latest doc heads the cached view was derived from. Detects that the underlying doc advanced
+   * (e.g. a remote change mid-scrub) so the view is rebuilt at the same requested historical point.
+   */
+  #timeTravelViewBaseHeads?: Heads = undefined;
 
   toString(): string {
     return `ObjectCore { id: ${this.id} }`;
@@ -151,6 +177,7 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
+    invariant(!this.#timeTravelHeads, 'Cannot mutate a time-traveling object.');
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -174,6 +201,7 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
+    invariant(!this.#timeTravelHeads, 'Cannot mutate a time-traveling object.');
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -205,7 +233,8 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        doc: () => this.getDoc(),
+        // The accessor reads the `data` namespace, so it time-travels with the display doc.
+        doc: () => this.#getReadDoc([DATA_NAMESPACE]),
         change: (callback, options) => {
           this.change(callback, options);
         },
@@ -216,14 +245,15 @@ export class ObjectCore {
           if (event === 'change') {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.docHandle?.on('change', listener);
-            this.updates.on(listener);
+            // Display channel so text editors re-render on time-travel scrubbing, not just real edits.
+            this.displayUpdates.on(listener);
           }
         },
         removeListener: (event, listener) => {
           if (event === 'change') {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.docHandle?.off('change', listener);
-            this.updates.off(listener);
+            this.displayUpdates.off(listener);
           }
         },
       },
@@ -240,7 +270,9 @@ export class ObjectCore {
    */
   public readonly notifyUpdate = () => {
     try {
+      // A real data change fires both channels: latest (`updates`) and display (`displayUpdates`).
       this.updates.emit();
+      this.displayUpdates.emit();
     } catch (err: any) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
@@ -250,6 +282,19 @@ export class ObjectCore {
       // This is important since we don't want to silently swallow errors.
       // Unfortunately, this will only report errors in the next microtask after the current stack has already unwound.
       // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
+      throwUnhandledError(err);
+    }
+  };
+
+  /**
+   * Fire a display-only update — used by time-travel transitions so default subscribers refresh
+   * while `latestOnly` subscribers (on {@link updates}) stay insulated from scrubbing.
+   */
+  public readonly notifyDisplayUpdate = () => {
+    try {
+      this.displayUpdates.emit();
+    } catch (err: any) {
+      log.catch(err);
       throwUnhandledError(err);
     }
   };
@@ -340,12 +385,82 @@ export class ObjectCore {
   private _getRaw(path: KeyPath): Doc<EntityStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
-    let value = this.getDoc();
+    let value = this.#getReadDoc(path);
     for (const key of fullPath) {
       value = (value as any)?.[key];
     }
 
     return value;
+  }
+
+  /**
+   * Doc to use for a decoded read. While time-traveling, `data`/`meta` reads resolve the historical
+   * view (unless an ambient latest-read context is active for a `latestOnly` recompute); `system`
+   * reads, writes, indexing, and edit-history always use the latest doc via {@link getDoc}.
+   */
+  #getReadDoc(path: KeyPath): Doc<unknown> {
+    if (this.#timeTravelHeads && !isReadingLatest() && (path[0] === DATA_NAMESPACE || path[0] === META_NAMESPACE)) {
+      return this.#getDisplayDoc();
+    }
+    return this.getDoc();
+  }
+
+  /**
+   * Memoized `A.view` of the latest doc at {@link #timeTravelHeads}, rebuilt when the latest doc
+   * advances so a remote change mid-scrub re-views at the same requested historical point.
+   */
+  #getDisplayDoc(): Doc<unknown> {
+    invariant(this.#timeTravelHeads);
+    const latest = this.getDoc();
+    const base = A.getHeads(latest as Doc<any>);
+    if (!this.#timeTravelView || !headsEqual(base, this.#timeTravelViewBaseHeads)) {
+      this.#timeTravelView = A.view(latest as Doc<any>, this.#timeTravelHeads);
+      this.#timeTravelViewBaseHeads = base;
+    }
+    return this.#timeTravelView;
+  }
+
+  /**
+   * Pin data/meta reads to the given historical heads. Reads on this object (and its nested
+   * records/arrays, which share this core) resolve the historical value; `displayUpdates` fires so
+   * the editor and label re-render. The full edit history and `system` reads stay on the latest doc.
+   */
+  setTimeTravel(heads: Heads): void {
+    assertArgument(Array.isArray(heads), 'heads', 'expected automerge heads array');
+    const latest = this.getDoc();
+    let view: Doc<unknown>;
+    try {
+      view = A.view(latest as Doc<any>, heads);
+    } catch (err) {
+      // Heads not reachable in the local doc (e.g. a peer's changes not yet synced); leave live.
+      log.warn('ignoring setTimeTravel with unreachable heads', { id: this.id, heads, err });
+      return;
+    }
+    this.#timeTravelHeads = heads;
+    this.#timeTravelView = view;
+    this.#timeTravelViewBaseHeads = A.getHeads(latest as Doc<any>);
+    this.notifyDisplayUpdate();
+  }
+
+  /**
+   * Return to the latest committed value, exiting time-travel mode.
+   */
+  clearTimeTravel(): void {
+    if (!this.#timeTravelHeads) {
+      return;
+    }
+    this.#timeTravelHeads = undefined;
+    this.#timeTravelView = undefined;
+    this.#timeTravelViewBaseHeads = undefined;
+    this.notifyDisplayUpdate();
+  }
+
+  isTimeTraveling(): boolean {
+    return this.#timeTravelHeads !== undefined;
+  }
+
+  getTimeTravelHeads(): Heads | undefined {
+    return this.#timeTravelHeads;
   }
 
   private _setRaw(path: KeyPath, value: any): void {
@@ -550,6 +665,16 @@ export type BindOptions = {
    * Assign the state from the local doc into the shared structure for the database.
    */
   assignFromLocalState?: boolean;
+};
+
+const headsEqual = (left: Heads | undefined, right: Heads | undefined): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (!left || !right || left.length !== right.length) {
+    return false;
+  }
+  return left.every((hash, index) => hash === right[index]);
 };
 
 export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<DatabaseDirectory>) => {

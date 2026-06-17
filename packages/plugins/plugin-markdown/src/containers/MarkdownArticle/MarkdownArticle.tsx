@@ -23,7 +23,7 @@ import {
   type MarkdownEditorContentProps,
   type MarkdownEditorProviderProps,
 } from '#components';
-import { useLinkQuery } from '#hooks';
+import { useBranchDiffExtension, useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '#types';
 
 export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
@@ -39,13 +39,30 @@ export type MarkdownArticleProps = AppSurface.ObjectArticleProps<
 
 export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
   (
-    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, viewMode, ...props },
+    {
+      role,
+      subject: object,
+      id,
+      attendableId,
+      mode,
+      compareBranch,
+      settings,
+      extensionProviders,
+      onSelectObject,
+      viewMode,
+      ...props
+    },
     forwardedRef,
   ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
     const initialValue = docContent ?? textContent;
+
+    // The live Text object holding the editable content (a document's content child, or a bare Text).
+    // Its content is rendered reactively above via `useObject`; here we need the live object handle
+    // (not a snapshot) to read the other branch's content in diff mode.
+    const textObject = Obj.instanceOf(Markdown.Document, object) ? object.content.target : object;
 
     // Extensions from other plugins.
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
@@ -66,6 +83,18 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           return acc;
         }, []);
     }, [extensionProviders, otherExtensionProviders, object, viewMode]);
+
+    // Branch diff overlay: while comparing, the live (editable) editor shows an inline diff against
+    // the other branch's content. It is an extension on the same editor — editing and the toolbar
+    // stay enabled, distinct from the read-only `'readonly'` mode.
+    const diffExtension = useBranchDiffExtension(
+      mode === 'diff' ? textObject : undefined,
+      mode === 'diff' ? compareBranch : undefined,
+    );
+    const allExtensions = useMemo(
+      () => (diffExtension ? [...extensions, diffExtension] : extensions),
+      [extensions, diffExtension],
+    );
 
     // Toolbar actions from app graph.
     const { graph } = useAppGraph();
@@ -116,7 +145,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         attendableId={attendableId}
         object={object}
         compact={role !== 'article'}
-        extensions={extensions}
+        extensions={allExtensions}
         settings={settings}
         viewMode={viewMode}
         onAction={runAction}
@@ -130,7 +159,13 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
                 <Panel.Toolbar classNames='bg-toolbar-surface'>
-                  <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
+                  {/* While the node is locked read-only (e.g. time-traveling) every toolbar action is
+                      disabled, so the controls stay visible but inert rather than disappearing. */}
+                  <MarkdownEditor.Toolbar
+                    classNames='dx-document'
+                    customActions={customActions}
+                    disabled={mode === 'readonly'}
+                  />
                 </Panel.Toolbar>
               )}
               <Panel.Content>

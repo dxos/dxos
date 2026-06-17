@@ -3,6 +3,7 @@
 //
 
 export * from './core-database';
+export { type BranchStore } from './branching';
 export * from './object-core';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.

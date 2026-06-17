@@ -16,6 +16,8 @@ export const translations = [
         'detached-thread.label': 'Referenced content was removed',
         'delete-thread.label': 'Delete thread',
         'resolve-thread.label': 'Resolve thread',
+        'accept-change.label': 'Accept change',
+        'select-branch.placeholder': 'Branch',
         'thread-deleted.label': 'Thread deleted',
         'message-deleted.label': 'Message deleted',
         'draft.button': 'DRAFT',

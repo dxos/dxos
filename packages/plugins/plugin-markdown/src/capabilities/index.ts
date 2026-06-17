@@ -10,6 +10,7 @@ export const NavigationResolver = Capability.lazy('NavigationResolver', () => im
 export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-sort'));
 export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const BranchDiffSupport = Capability.lazy('BranchDiffSupport', () => import('./branch-diff'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

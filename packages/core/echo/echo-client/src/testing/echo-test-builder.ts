@@ -25,6 +25,7 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
+import { type BranchStore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 type OpenDatabaseOptions = {
@@ -86,6 +87,30 @@ export class EchoTestPeer extends Resource {
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
+
+  /**
+   * Device-local current-branch selections per space, held on the peer so they survive `reload()`
+   * (which recreates ECHO but not the peer). Stands in for the host metadata store; non-synced.
+   */
+  private readonly _branchStores = new Map<string, Map<string, string>>();
+
+  private _branchStoreFor(spaceId: string): BranchStore {
+    let map = this._branchStores.get(spaceId);
+    if (!map) {
+      map = new Map<string, string>();
+      this._branchStores.set(spaceId, map);
+    }
+    const store = map;
+    return {
+      load: async () => Object.fromEntries(store),
+      save: async (entries) => {
+        store.clear();
+        for (const [key, value] of Object.entries(entries)) {
+          store.set(key, value);
+        }
+      },
+    };
+  }
 
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<
@@ -241,7 +266,13 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -259,7 +290,13 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
     await this.host.openSpaceRoot(this._ctx, spaceId, rootUrl as AutomergeUrl);
-    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({
+      spaceId,
+      spaceKey,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+      branchStore: this._branchStoreFor(String(spaceId)),
+    });
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;

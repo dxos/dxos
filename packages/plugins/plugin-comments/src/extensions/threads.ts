@@ -6,8 +6,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 
+import { branchDiffAtom } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { createDocAccessor, getTextInRange } from '@dxos/echo-client';
+import { createDocAccessor, getCurrentBranch, getTextInRange } from '@dxos/echo-client';
 import { OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown';
 import { AnchoredTo, Thread } from '@dxos/types';
@@ -48,14 +49,22 @@ export const threads = (
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
-  // Get current anchors by combining query results with store drafts.
-  const getAnchors = () =>
-    query.results
+  // The active review branch (the compared branch in a diff, else the branch in view); `undefined`
+  // tag = main. Read live (not captured): the diff can toggle without rebuilding this comment
+  // extension, so both filtering and new-comment tagging must reflect the current comparison.
+  const getActiveBranch = () => registry.get(branchDiffAtom(doc.id))?.compareTo ?? getCurrentBranch(doc);
+
+  // Get current anchors by combining query results with store drafts, scoped to the active branch.
+  const getAnchors = () => {
+    const activeBranch = getActiveBranch();
+    return query.results
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
-      .concat(registry.get(stateAtom).drafts[objectId] ?? []);
+      .concat(registry.get(stateAtom).drafts[objectId] ?? [])
+      .filter((anchor) => (anchor.branch ?? 'main') === activeBranch);
+  };
 
   return [
     EditorView.domEventHandlers({
@@ -85,12 +94,15 @@ export const threads = (
     createExternalCommentSync(
       objectId,
       (sink) => {
-        // Subscribe to both query changes and store state changes.
+        // Subscribe to query changes, store state changes, and the diff toggle (so inline marks
+        // re-scope to the active review branch when the user starts/stops comparing a branch).
         const unsubQuery = query.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
+        const unsubDiff = registry.subscribe(branchDiffAtom(doc.id), sink);
         return () => {
           unsubQuery();
           unsubStore();
+          unsubDiff();
         };
       },
       () =>
@@ -106,10 +118,13 @@ export const threads = (
       id: objectId,
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
+        const activeBranch = getActiveBranch();
         void invokePromise(CommentOperation.Create, {
           anchor: cursor,
           name,
           subject: doc,
+          // Scope the comment to the branch in view (a branch-review comment); main stays untagged.
+          branch: activeBranch === 'main' ? undefined : activeBranch,
         });
       },
       onDelete: ({ id }) => {

@@ -9,7 +9,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
@@ -22,6 +22,7 @@ import { ViewAnnotation } from '@dxos/schema';
 
 import { SpaceSettings } from '#components';
 import {
+  BranchesCompanion,
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
@@ -51,6 +52,7 @@ import { SpaceOperation } from '#operations';
 import {
   HueAnnotationId,
   IconAnnotationId,
+  Settings,
   SpaceCapabilities,
   SpaceHomeContent,
   SPACE_HOME_NODE_TYPE,
@@ -101,11 +103,14 @@ export default Capability.makeModule(
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: () => {
+        component: ({ data: { subject } }) => {
           const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return (
             <SpaceSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
               spaces={spaces}
               onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
             />
@@ -127,6 +132,14 @@ export default Capability.makeModule(
           AppSurface.companion(AppSurface.Article),
         ),
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
+      }),
+      Surface.create({
+        id: 'companion.branches',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'branches'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data, role }) => <BranchesCompanion role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'spaceSettingsProperties',

@@ -243,6 +243,17 @@ export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = 
   variant?: string;
   path?: string[];
   popoverAnchorId?: string;
+  /**
+   * Rendering mode for the subject. A generic channel of distinct modes that surfaces interpret:
+   * `'readonly'` asks write-capable surfaces to lock editing (e.g. while time-traveling); `'diff'`
+   * asks diff-capable surfaces to render a branch comparison (see {@link compareBranch}); `undefined`
+   * is normal. Each mode is its own case, not a variant of another.
+   */
+  mode?: string;
+  /**
+   * The branch to compare the subject's current branch against, when {@link mode} is `'diff'`.
+   */
+  compareBranch?: string;
 } & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
   Props;
 
