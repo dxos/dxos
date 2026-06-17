@@ -24,8 +24,6 @@ import {
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
   REMOVE_FROM_COLLECTION_LABEL,
-  getCollectionGraphNodePartials,
-  getDynamicLabel,
 } from './shared';
 
 //
@@ -60,7 +58,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
+          ? AppNode.getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
           : undefined;
 
         return Effect.succeed([
@@ -281,7 +279,7 @@ const constructObjectActions = ({
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
-        label: getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
+        label: AppNode.getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
@@ -326,7 +324,7 @@ const constructObjectActions = ({
           target: parentCollection,
         }),
       properties: {
-        label: getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
+        label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

@@ -33,7 +33,6 @@ import {
   TYPE_COLLECTION_TYPE,
   buildViewIndex,
   downloadBlob,
-  getDynamicLabel,
 } from './shared';
 
 //
@@ -279,7 +278,7 @@ const createSchemaNode = ({
       },
     ),
     Match.orElse(() => ({
-      label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
+      label: AppNode.getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
       nodeId: slug,
     })),
   );
@@ -355,7 +354,7 @@ const createSchemaActions = ({
             properties: {
               // Static plugin types carry a per-typename `add-object.label` (e.g. "Add event");
               // database types have no such namespace, so fall back to the plugin's generic label.
-              label: getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
+              label: AppNode.getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -388,7 +387,7 @@ const createSchemaActions = ({
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
-        label: getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
+        label: AppNode.getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
         disabled: Type.getDatabase(type) == null,
         disposition: 'list-item',
@@ -404,7 +403,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
+        label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

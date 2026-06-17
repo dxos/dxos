@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -21,7 +21,6 @@ import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
 
 import { SHARED, getSpaceDisplayName } from '../../../util';
 import {
-  CACHEABLE_PROPS,
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
@@ -315,7 +314,7 @@ const constructSpaceNode = ({
   return Node.make({
     id: space.id,
     type: SPACE_TYPE,
-    cacheable: CACHEABLE_PROPS,
+    cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {
       label: getSpaceDisplayName(space, { personal, namesCache }),
