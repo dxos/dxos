@@ -9,6 +9,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
+// #region DEBUG
+import { log } from '@dxos/log';
+// #endregion DEBUG
+
 import { type ChatEvent } from '../Chat/events';
 
 export type ChatActionsProps = ThemedClassName<
@@ -68,7 +72,12 @@ export const ChatActions = ({
         icon='ph--x--regular'
         iconOnly
         label={t('cancel-processing.button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
+        onClick={() => {
+          // #region DEBUG
+          log('[DEBUG H1] cancel button clicked', { processing });
+          // #endregion DEBUG
+          onEvent?.({ type: 'cancel' });
+        }}
       />
     </div>
   );

@@ -263,6 +263,7 @@ export class AiChatProcessor {
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
         if (Cause.isInterruptedOnly(exit.cause)) {
+          this.#discardStreaming();
           return;
         }
 
@@ -288,19 +289,42 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await EffectEx.runAndForwardErrors(
-      Effect.gen(this, function* () {
-        log.info('cancelling request', { fiber: this.#requestFiber });
-        if (this.#requestFiber) {
-          yield* Fiber.interrupt(this.#requestFiber);
-        }
-        const session = yield* AgentService.getSession(this._feed);
-        yield* session.terminate();
-      }).pipe(Effect.provide(this._spaceLayer)),
-    );
+    // #region DEBUG
+    log('[DEBUG H3] processor cancel entered', { hasRequestFiber: !!this.#requestFiber, active: this.#registry.get(this.active) });
+    // #endregion DEBUG
+    try {
+      await EffectEx.runAndForwardErrors(
+        Effect.gen(this, function* () {
+          log.info('cancelling request', { fiber: this.#requestFiber });
+          if (this.#requestFiber) {
+            yield* Fiber.interrupt(this.#requestFiber);
+            // #region DEBUG
+            log('[DEBUG H4] request fiber interrupted', {});
+            // #endregion DEBUG
+          }
+          const session = yield* AgentService.getSession(this._feed);
+          // #region DEBUG
+          log('[DEBUG H5] got session for terminate', { feed: Obj.getURI(this._feed) });
+          // #endregion DEBUG
+          yield* session.terminate();
+          // #region DEBUG
+          log('[DEBUG H6] session terminate completed', {});
+          // #endregion DEBUG
+        }).pipe(Effect.provide(this._spaceLayer)),
+      );
+    } catch (error) {
+      // #region DEBUG
+      log('[DEBUG H4] cancel effect failed', { error });
+      // #endregion DEBUG
+      throw error;
+    }
 
     this.#requestFiber = undefined;
+    this.#discardStreaming();
     this.#registry.set(this.active, false);
+    // #region DEBUG
+    log('[DEBUG H6] processor cancel finished', {});
+    // #endregion DEBUG
   }
 
   /**
@@ -388,6 +412,14 @@ export class AiChatProcessor {
       }
       return [...errors, event];
     });
+  }
+
+  /**
+   * Drop in-flight streaming messages (cancel/interrupt — partial blocks are discarded).
+   */
+  #discardStreaming() {
+    this.#registry.set(this.#streaming, []);
+    this.#finalizedIds.clear();
   }
 
   /**

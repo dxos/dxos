@@ -17,6 +17,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
+
+// #region DEBUG
+import { log } from '@dxos/log';
+// #endregion DEBUG
 import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
@@ -111,9 +115,14 @@ export const ChatPrompt = ({
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
     (ev) => {
+      // #region DEBUG
+      if (ev.type === 'cancel') {
+        log('[DEBUG H2] chat prompt emitting cancel', { hasDb: !!db, settings });
+      }
+      // #endregion DEBUG
       event.emit(ev);
     },
-    [event],
+    [event, db, settings],
   );
 
   return (
