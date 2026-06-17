@@ -439,6 +439,9 @@
       "path": "packages/plugins/plugin-observability/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-onboarding/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-osrm/tsconfig.json"
     },
     {

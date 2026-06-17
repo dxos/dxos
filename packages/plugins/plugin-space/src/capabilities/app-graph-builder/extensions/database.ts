@@ -71,7 +71,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: 'types',
+      id: 'database',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -176,7 +176,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
           return Option.none();
         }
-        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
+        return Option.some({
+          space: node.data.space as Space,
+          typeUri: node.data.typeUri as URI.URI,
+        });
       },
       connector: ({ space, typeUri }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
