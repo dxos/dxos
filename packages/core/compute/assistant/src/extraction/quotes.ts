@@ -38,8 +38,15 @@ export const findReferences = async (
   db: Database.Database,
   { searchKind = 'full-text' }: FindReferencesOptions = {},
 ): Promise<ReferencedQuotes> => {
+  // Deduplicate and process longer nouns first: `insertReferences` rewrites case-insensitive
+  // substrings, so a repeated or shorter overlapping noun would re-replace already-linked text and
+  // produce nested/broken markdown links.
+  const normalizedNouns = Array.from(new Set(nouns.map((noun) => noun.trim()).filter((noun) => noun.length > 0))).sort(
+    (leftNoun, rightNoun) => rightNoun.length - leftNoun.length,
+  );
+
   const references = await Promise.all(
-    nouns.map(async (noun) => {
+    normalizedNouns.map(async (noun) => {
       const objects = await db.query(Query.select(Filter.text(noun, { type: searchKind }))).run();
       return objects.length > 0 ? [{ id: objects[0].id.toString(), quote: noun }] : [];
     }),

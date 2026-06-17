@@ -27,6 +27,7 @@
 ## Task 1: `findReferences` full-text search
 
 **Files:**
+
 - Modify: `packages/core/compute/assistant/src/extraction/quotes.ts`
 - Test: `packages/core/compute/assistant/src/extraction/quotes.test.ts`
 
@@ -122,6 +123,7 @@ git commit -m "feat(assistant): generalize findQuotes to findReferences with ful
 ## Task 2: `ExtractProperNouns` operation
 
 **Files:**
+
 - Modify: `packages/core/compute/assistant/src/extraction/extraction.ts`
 
 - [ ] **Step 1: Add schema, operation, core effect, handler set**
@@ -204,6 +206,7 @@ git commit -m "feat(assistant): add ExtractProperNouns operation (Haiku)"
 ## Task 3: Memoized test for `ExtractProperNouns`
 
 **Files:**
+
 - Create: `packages/core/compute/assistant/src/extraction/extraction.test.ts`
 
 - [ ] **Step 1: Write the test (memoization ON)**
@@ -262,6 +265,7 @@ git commit -m "test(assistant): memoized ExtractProperNouns test"
 ## Task 4: `processTranscriptMessage` orchestrator
 
 **Files:**
+
 - Modify: `packages/core/compute/assistant/src/extraction/extraction.ts`
 
 - [ ] **Step 1: Replace the no-op `processTranscriptMessage` with an Effect orchestrator**
@@ -308,9 +312,7 @@ const message = this.transcriptMessages[this.currentMessage];
 this.currentMessage = (this.currentMessage + 1) % this.transcriptMessages.length;
 
 return Effect.runPromise(
-  processTranscriptMessage(message, { db: this.space.db }).pipe(
-    Effect.provide(AiServiceTestingPreset('edge-remote')),
-  ),
+  processTranscriptMessage(message, { db: this.space.db }).pipe(Effect.provide(AiServiceTestingPreset('edge-remote'))),
 );
 ```
 
@@ -337,6 +339,7 @@ git commit -m "feat(assistant): restore processTranscriptMessage as reference-en
 ## Task 5: `ProperNounExtraction` story
 
 **Files:**
+
 - Modify: `packages/sdk/types/src/testing/data.ts` (export `createTestData` if not already).
 - Create: `packages/plugins/plugin-transcription/src/stories/ProperNounExtraction.stories.tsx`
 
@@ -437,6 +440,7 @@ git commit -m "feat(plugin-transcription): proper-noun reference extraction stor
 ## Task 6: Index exports & final checks
 
 **Files:**
+
 - Modify (if needed): `packages/core/compute/assistant/src/extraction/index.ts` or the package's extraction entrypoint.
 
 - [ ] **Step 1: Export the new public surface**

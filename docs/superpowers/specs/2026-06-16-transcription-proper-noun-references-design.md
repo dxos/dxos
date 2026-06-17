@@ -29,12 +29,12 @@ This spec restores a **minimal, real** slice of that pipeline as a self-containe
 
 ## Decisions (resolved with the user)
 
-| Decision | Choice |
-| --- | --- |
-| DB search mode | **Full-text** — `Filter.text(noun, { type: 'full-text' })` (production default; the assistant DB-query blueprint uses it). |
-| LLM execution in Storybook | **Live Haiku** — `AiServiceTestingPreset('edge-remote')`. |
-| Code placement | **Reusable operation/functions** in `@dxos/assistant/extraction`. |
-| Seed/fixture | **Reuse `seedTestData`** from `@dxos/types/testing`. |
+| Decision                   | Choice                                                                                                                     |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| DB search mode             | **Full-text** — `Filter.text(noun, { type: 'full-text' })` (production default; the assistant DB-query blueprint uses it). |
+| LLM execution in Storybook | **Live Haiku** — `AiServiceTestingPreset('edge-remote')`.                                                                  |
+| Code placement             | **Reusable operation/functions** in `@dxos/assistant/extraction`.                                                          |
+| Seed/fixture               | **Reuse `seedTestData`** from `@dxos/types/testing`.                                                                       |
 
 ## Architecture
 
@@ -90,9 +90,9 @@ Reuse [`seedTestData`](../../../packages/sdk/types/src/testing/data.ts) verbatim
 
 Expected demo behavior (lines already in the fixture):
 
-- *"I see Sarah and Emma are here from Amco"* → chips on **Sarah Johnson**, **Emma Rodriguez**, **Amco**.
-- *"the new product line at Cyberdyne"* → chip on **Cyberdyne**.
-- *"Peter works at Ink and Switch"* → chips on **Peter van Hardenberg**, **Ink & Switch**.
+- _"I see Sarah and Emma are here from Amco"_ → chips on **Sarah Johnson**, **Emma Rodriguez**, **Amco**.
+- _"the new product line at Cyberdyne"_ → chip on **Cyberdyne**.
+- _"Peter works at Ink and Switch"_ → chips on **Peter van Hardenberg**, **Ink & Switch**.
 - Unmatched proper nouns — **Alex, Jennifer, TechGiant, Singapore** — extracted but **dropped** (no chip).
 
 ## Rendering
@@ -108,7 +108,7 @@ References are inline markdown DXN links produced by `insertReferences` (`[noun]
 ## Dependencies, risks, validation
 
 1. **Edge access:** `edge-remote` makes real network calls and needs the storybook identity to have edge AI access — same requirement as the shipping editor `Assistant.stories.tsx`. The story does not render chips fully offline.
-2. **Full-text tokenization (validate during implementation):** first-name-only mentions (*"Sarah"* → object *"Sarah Johnson"*) and *"Ink and Switch"* vs seeded *"Ink & Switch"*. If tokenization doesn't bridge these, normalize the query (e.g., per-token search like the assistant DB-query blueprint) or accept the misses. Confirm with the `findReferences` unit test before wiring the story.
+2. **Full-text tokenization (validate during implementation):** first-name-only mentions (_"Sarah"_ → object _"Sarah Johnson"_) and _"Ink and Switch"_ vs seeded _"Ink & Switch"_. If tokenization doesn't bridge these, normalize the query (e.g., per-token search like the assistant DB-query blueprint) or accept the misses. Confirm with the `findReferences` unit test before wiring the story.
 3. **Cost/latency:** one Haiku call per transcript block. Acceptable for a demo; per-message batching is a future optimization.
 
 ## Affected files

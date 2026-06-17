@@ -69,6 +69,12 @@ type WhisperSegment
     words: WhisperWord[]
 ```
 
+```mdl
+type Settings
+  fields:
+    entityExtraction: boolean    # default: true — annotate transcript with references to known objects
+```
+
 ## Components
 
 ```mdl
@@ -167,6 +173,19 @@ op summarizeTranscript
     Uses Claude Sonnet. Prompt instructs the model to bold speaker names,
     include verbatim quotes, and emit only tasks that are directly actionable
     and clearly assigned.
+```
+
+```mdl
+op enrichMessage
+  desc: Extracts proper nouns from each transcript block of a Message using a small LLM, full-text-searches the space for matching objects, and rewrites the text with inline `[noun](dxn)` reference links.
+  input:
+    message: Message
+  output: Message
+  effects: [echo:read, ai:inference]
+  requires: [AiService, Database]
+  note: |
+    Uses Claude Haiku. Falls back to the raw message if extraction fails (e.g. the AI
+    service is unavailable). Gated by the entityExtraction setting.
 ```
 
 ```mdl
