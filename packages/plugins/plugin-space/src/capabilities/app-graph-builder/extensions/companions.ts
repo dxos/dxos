@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppNode, TimeTravelAnnotation } from '@dxos/app-toolkit';
+import { AppNode, AppAnnotation } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -103,7 +103,7 @@ export const createCompanionExtensions: () => Effect.Effect<
 
         const type = Obj.getType(node.data);
         const supportsTimeTravel = type
-          ? TimeTravelAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
+          ? AppAnnotation.TimeTravelAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false))
           : false;
 
         return supportsTimeTravel ? Option.some(node) : Option.none();

@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { type Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
@@ -53,7 +53,9 @@ export const add: Command.Command<
       };
 
       const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
-      const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+      const rootCollectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(
+        Option.getOrUndefined,
+      );
       const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
 
       const selectedTypename = yield* Option.match(typename, {

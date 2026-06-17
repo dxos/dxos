@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TimeTravelAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
@@ -66,7 +66,7 @@ export const Sheet = Schema.Struct({
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
   // Opt in to the Branches companion (history scrubber + per-branch diff).
-  TimeTravelAnnotation.set(true),
+  AppAnnotation.TimeTravelAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.sheet', '0.1.0')),
 );
 

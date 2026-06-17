@@ -67,10 +67,16 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-thread"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-calls"
     },
     {
       "path": "../plugin-client"

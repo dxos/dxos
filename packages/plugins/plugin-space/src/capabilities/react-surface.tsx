@@ -10,7 +10,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -39,6 +39,8 @@ import {
   RelatedArticle,
   SchemaContainer,
   SmallPresenceLive,
+  SpaceHomeArticle,
+  SpaceHomeRecent,
   SpacePresence,
   SpaceRenamePopover,
   SpaceSettingsContainer,
@@ -52,6 +54,8 @@ import {
   IconAnnotationId,
   Settings,
   SpaceCapabilities,
+  SpaceHomeContent,
+  SPACE_HOME_NODE_TYPE,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -72,6 +76,18 @@ type ReactSurfaceOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'spaceHome',
+        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
+        component: ({ data, role }) => (
+          <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.properties?.space} />
+        ),
+      }),
+      Surface.create({
+        id: 'spaceHomeRecent',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+      }),
       Surface.create({
         id: 'collectionFallback',
         position: 'last',
@@ -389,7 +405,9 @@ export default Capability.makeModule(
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
             ? data.subject.state.get() === SpaceState.SPACE_READY
-              ? space && Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
+              ? space &&
+                Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+                  ?.target
               : undefined
             : data.subject;
 

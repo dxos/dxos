@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, RootCollectionAnnotation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
@@ -123,8 +123,9 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)
-                  ?.target;
+                Annotation.get(data.subject.space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
@@ -438,7 +439,7 @@ export default Capability.makeModule(
               log.info('script created', { result: createResult });
               if (createResult.data?.object) {
                 await invokePromise(LayoutOperation.Open, {
-                  subject: [getObjectPathFromObject(createResult.data.object)],
+                  subject: [Paths.getObjectPathFromObject(createResult.data.object)],
                 });
               }
             },

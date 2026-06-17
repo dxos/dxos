@@ -12,7 +12,6 @@ import {
   AnchorSort,
   AppGraphBuilder,
   NavigationResolver,
-  AppGraphSerializer,
   BlueprintDefinition,
   BranchDiffSupport,
   CommentConfig,
@@ -50,10 +49,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     // resolves AttentionCapabilities.ViewState to build the editor state store.
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
     activate: MarkdownState,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?

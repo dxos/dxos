@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -19,6 +19,8 @@ import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
+
+import { getMagazinesPath } from '../paths';
 
 const magazineTypename = Type.getTypename(Magazine.Magazine);
 
@@ -33,7 +35,7 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Magazine.Magazine, { position: 'first' }),
+      TypeSection.createTypeSectionExtension(Magazine.Magazine, { position: 'first' }),
 
       // Add-magazine action on the Magazines section header.
       GraphBuilder.createExtension({
@@ -51,6 +53,7 @@ export default Capability.makeModule(
                   target: space.db,
                   typename: magazineTypename,
                   initialFormValues: { feeds: [undefined] },
+                  targetNodeId: getMagazinesPath(space.db.spaceId),
                 }),
               properties: {
                 label: ['add-object.label', { ns: magazineTypename }],

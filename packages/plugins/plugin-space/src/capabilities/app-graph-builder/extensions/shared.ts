@@ -5,7 +5,6 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 
-import { createObjectNode } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
@@ -17,21 +16,6 @@ import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
-
-export {
-  ACCEPT_ECHO_CLASS,
-  CACHEABLE_PROPS,
-  CAN_DROP_OBJECT,
-  blockInstructionCache,
-  buildCollectionPartials,
-  collectionPartialsCache,
-  createFactory,
-  getAcceptPersistenceKey,
-  getCollectionGraphNodePartials,
-  getDynamicLabel,
-  rearrangeCache,
-} from '@dxos/app-toolkit';
-export { createObjectNode };
 
 //
 // Virtual Node Types

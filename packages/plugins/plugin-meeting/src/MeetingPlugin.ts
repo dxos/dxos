@@ -6,23 +6,15 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AnchoredTo } from '@dxos/types';
 
-import {
-  AppGraphBuilder,
-  CallExtension,
-  MeetingSettings,
-  MeetingState,
-  OperationHandler,
-  ReactSurface,
-} from '#capabilities';
+import { AppGraphBuilder, CallExtension, MeetingState, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Meeting, MeetingCapabilities } from '#types';
+import { Meeting } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
-const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -30,11 +22,6 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Meeting.Meeting, AnchoredTo.AnchoredTo] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    firesAfterActivation: [SettingsReady],
-    activate: MeetingSettings,
-  }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
@@ -44,7 +31,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activate: MeetingState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),
+    activatesOn: StateReady,
     activate: CallExtension,
   }),
   AppPlugin.addPluginAssetModule({

@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useState } from 'react';
 
-import { type FileInfo } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
 
@@ -17,7 +17,7 @@ export type MarkdownEditorToolbarProps = {
   // that React 19.2's dev render-logger would walk into a cross-origin frame. See
   // `react-ui-editor/.../controller.ts` for the full rationale.
   getView?: () => EditorView | null;
-  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+  onFileUpload?: (file: File) => Promise<AppCapabilities.FileInfo | undefined>;
 } & Pick<EditorToolbarProps, 'role' | 'customActions' | 'onAction' | 'onViewModeChange' | 'disabled'>;
 
 export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorToolbarProps>(

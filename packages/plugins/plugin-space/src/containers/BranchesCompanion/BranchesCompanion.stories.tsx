@@ -10,7 +10,7 @@ import React from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities, TimeTravelAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities } from '@dxos/app-toolkit';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -28,7 +28,10 @@ import { BranchesCompanion } from './BranchesCompanion';
 const HistoryDoc = Schema.Struct({
   title: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text),
-}).pipe(TimeTravelAnnotation.set(true), Type.makeObject(DXN.make('com.example.type.historyDoc', '0.1.0')));
+}).pipe(
+  AppAnnotation.TimeTravelAnnotation.set(true),
+  Type.makeObject(DXN.make('com.example.type.historyDoc', '0.1.0')),
+);
 type HistoryDoc = Type.InstanceType<typeof HistoryDoc>;
 
 /**

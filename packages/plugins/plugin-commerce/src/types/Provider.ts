@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
@@ -63,7 +63,7 @@ export const Provider = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.commerce.Provider', '0.1.0')),
 );
 export type Provider = Type.InstanceType<typeof Provider>;

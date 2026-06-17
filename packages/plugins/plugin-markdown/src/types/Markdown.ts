@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation, GraphPropsAnnotation, TimeTravelAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
@@ -28,12 +28,12 @@ export const Document = Schema.Struct({
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
   Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  GraphPropsAnnotation.set({ managesAutofocus: true }),
+  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
   // Enables the history-scrubber companion. NOTE: a Document's text is a referenced Text.Text
   // object, so the Document's own history is metadata-only; full text time-travel through the ref
   // is a follow-up (the timeline/swap would need to target the content object).
-  TimeTravelAnnotation.set(true),
+  AppAnnotation.TimeTravelAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),
 );
 

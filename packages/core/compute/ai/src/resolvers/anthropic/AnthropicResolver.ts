@@ -64,10 +64,6 @@ export const make = () =>
             return AnthropicLanguageModel.layer({ model: 'claude-opus-4-6', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case 'ai.claude.model.claude-sonnet-4-0':
-            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-0', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
           case 'ai.claude.model.claude-sonnet-4-5':
             return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-5', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),

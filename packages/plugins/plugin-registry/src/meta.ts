@@ -3,11 +3,11 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { pinnedWorkspaceId } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const REGISTRY_ID = pinnedWorkspaceId('dxos:plugin-registry');
+export const REGISTRY_ID = Paths.pinnedWorkspaceId('dxos:plugin-registry');
 export const REGISTRY_KEY = 'plugin-registry';
 
 // TODO(wittjosiah): Should this be a special separator or use the standard path separator?

@@ -9,7 +9,7 @@ import { ActivationEvent, Capabilities, Capability, Plugin } from '@dxos/app-fra
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
 
-import { AppPlugin } from '../../plugin';
+import { AppPlugin } from '../../app-framework';
 
 export const Number = Capability.make<number>('org.dxos.test.generator.number');
 

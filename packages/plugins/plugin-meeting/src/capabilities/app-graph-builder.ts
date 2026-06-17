@@ -5,8 +5,8 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -173,19 +173,29 @@ export default Capability.makeModule(
         }),
       }),
 
+      // While in this meeting's call, show the whole meeting article as a companion so the primary
+      // plank can hold the call (its Call tab).
       GraphBuilder.createTypeExtension({
-        id: 'meetingTranscriptCompanion',
+        id: 'meetingCallCompanion',
         type: Meeting.Meeting,
-        connector: (meeting, get) =>
-          Effect.succeed([
+        connector: Effect.fnUntraced(function* (meeting, get) {
+          const callManager = yield* Capability.get(CallsCapabilities.Manager);
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== Obj.getURI(meeting)) {
+            return [];
+          }
+
+          return [
             AppNode.makeCompanion({
-              id: 'transcript',
-              label: ['transcript-companion.label', { ns: meta.id }],
-              icon: 'ph--subtitles--regular',
-              data: get(Obj.atom(meeting.transcript)),
+              id: 'meeting',
+              label: ['meeting-companion.label', { ns: meta.id }],
+              icon: 'ph--handshake--regular',
+              data: meeting,
               position: 'first',
             }),
-          ]),
+          ];
+        }),
       }),
 
       // Contribute meeting actions onto Event nodes (plugin-inbox stays meeting-agnostic): "Create meeting"
@@ -203,12 +213,17 @@ export default Capability.makeModule(
           // an `AsyncFiberException`. Reading the atom also makes the action reactive to new meetings.
           const meetings = get(db.query(Query.select(Filter.type(Meeting.Meeting))).atom);
           const meeting = Meeting.findMeetingForEvent(meetings, event);
+
+          // Graph-action Effects lack `Operation.Service` in context, so `Operation.invoke` fails here;
+          // call the captured `OperationInvoker` capability directly instead.
+          const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+
           if (meeting) {
             return [
               {
                 id: 'action.openMeetingForEvent',
                 data: Effect.fnUntraced(function* () {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(meeting)] });
+                  yield* invoker.invoke(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(meeting)] });
                 }),
                 properties: {
                   label: ['open-meeting-for-event.label', { ns: meta.id }],
@@ -223,7 +238,7 @@ export default Capability.makeModule(
             {
               id: 'action.createMeetingForEvent',
               data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
+                yield* invoker.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
               }),
               properties: {
                 label: ['create-meeting-for-event.label', { ns: meta.id }],

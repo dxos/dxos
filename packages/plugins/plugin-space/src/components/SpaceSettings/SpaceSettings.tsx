@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { isPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
@@ -48,7 +48,7 @@ export const SpaceSettings = ({ settings, onSettingsChange, spaces, onOpenSpaceS
                 <ListItem.Heading classNames='grow truncate min-h-0!'>
                   {toLocalizedString(
                     getSpaceDisplayName(space, {
-                      personal: isPersonalSpace(space),
+                      personal: AppSpace.isPersonalSpace(space),
                     }),
                     t,
                   )}

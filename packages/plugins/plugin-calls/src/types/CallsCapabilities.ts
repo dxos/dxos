@@ -5,15 +5,13 @@
 // @import-as-namespace
 
 import { Capability } from '@dxos/app-framework';
-import { type Obj } from '@dxos/echo';
 import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
-import * as Call from './Call';
 
-export const Manager = Capability.make<CallManagerImpl>(`${meta.id}.capability.call-manager`);
+export const Manager = Capability.make<CallManagerImpl>(`${meta.id}.capability.callManager`);
 
 // TODO(wittjosiah): These callbacks could be intents once we support broadcast.
 export type CallProperties = {
@@ -23,27 +21,26 @@ export type CallProperties = {
   onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
 };
 
-export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
+export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.callExtension`);
 
 /**
- * Pluggable live-transport for a {@link Call.Call}, keyed by `kind`. A
- * `Call.transport.kind` selects the provider; `makeConfig` produces the
- * persisted reconnection config. The built-in Cloudflare provider wraps
- * `CallManager` + `CallsService`.
+ * Pluggable live-transport for a call, keyed by `kind`. A call is identified by
+ * its room id (the anchor object's URI), so join/leave need no persisted state.
+ * The built-in Cloudflare provider wraps `CallManager` + `CallsService`.
  */
 export type CallTransportProvider = {
   /** Stable provider id, e.g. `org.dxos.call.transport.cloudflare`. */
   kind: string;
   /** Human-readable label. */
   label: string;
-  /** Produces the config persisted into `Call.transport.config`. */
-  makeConfig: (roomId: string) => Obj.Unknown;
-  /** Establish a live session for the call. */
-  join: (call: Call.Call) => Promise<void>;
-  /** Tear down the live session for the call. */
-  leave: (call: Call.Call) => Promise<void>;
+  /** Establish a live session for the given room id. */
+  join: (roomId: string) => Promise<void>;
+  /** Tear down the current live session. */
+  leave: () => Promise<void>;
 };
 
 export const CallTransportProvider = Capability.make<CallTransportProvider>(
-  `${meta.id}.capability.call-transport-provider`,
+  `${meta.id}.capability.callTransportProvider`,
 );
+
+export type Call = { roomId: string };

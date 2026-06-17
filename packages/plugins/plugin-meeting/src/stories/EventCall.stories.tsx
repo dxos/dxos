@@ -15,7 +15,6 @@ import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
-import { Call } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph } from '@dxos/plugin-graph';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -50,7 +49,6 @@ const DefaultStory = (_: StoryProps) => {
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
   );
   const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
-  const [call] = useQuery(db, Filter.type(Call.Call));
 
   // The selected feed event (first by chronological order from the builder).
   const event = events[0];
@@ -68,7 +66,7 @@ const DefaultStory = (_: StoryProps) => {
   }, [graph, eventUri]);
 
   if (!db || !calendar || !event) {
-    return <Loading data={{ db: !!db, calendar, event, call, meeting }} />;
+    return <Loading data={{ db: !!db, calendar, event, meeting }} />;
   }
 
   return (
@@ -108,9 +106,6 @@ const meta = {
             Calendar.Calendar,
             Event.Event,
             Transcript.Transcript,
-            Call.Call,
-            // The Meeting links a Cloudflare-transport Call; register its config schema so `db.add` succeeds.
-            Call.CloudflareTransportConfig,
             Meeting.Meeting,
             AnchoredTo.AnchoredTo,
             Text.Text,
@@ -192,16 +187,6 @@ const meta = {
                 Text.make({ content: '## Summary\n\n- Roadmap reviewed.\n- Owners assigned.\n- Follow-up scheduled.' }),
               );
 
-              // Slim Call (room/transport) the Meeting optionally links to.
-              // The transport config is produced by the Cloudflare transport provider.
-              const transportConfig = space.db.add(Obj.make(Call.CloudflareTransportConfig, { roomId: 'room-1' }));
-              const call = space.db.add(
-                Call.make({
-                  name: 'Standup',
-                  transport: { kind: Call.CLOUDFLARE_TRANSPORT_KIND, config: Ref.make(transportConfig) },
-                }),
-              );
-
               // `event` is a Ref to the feed event (works for queue objects); EventDetails reverse-matches it.
               const meeting = space.db.add(
                 Obj.make(Meeting.Meeting, {
@@ -210,7 +195,6 @@ const meta = {
                   transcript: Ref.make(transcript),
                   notes: Ref.make(meetingNotes),
                   summary: Ref.make(meetingSummary),
-                  call: Ref.make(call),
                   ...(event ? { event: Ref.make(event) } : {}),
                 }),
               );

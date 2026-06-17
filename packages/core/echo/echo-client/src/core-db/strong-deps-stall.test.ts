@@ -362,4 +362,62 @@ describe('Query pipeline strong-dependency stalls', () => {
     // Well under the per-hit hydration timeout — no stall, no timeout-driven completion.
     expect(performance.now() - begin).toBeLessThan(1500);
   });
+
+  // The strong-dep closure resolves via cached, coalesced load ops that only probe the working set
+  // at acquire time. A dep that was absent (settled `unavailable`, or left `requesting` while a
+  // queue polled for replication) latched its op, so a LATER local materialization of that dep did
+  // not surface the dependent: nothing re-probed the working set. `HypergraphImpl._onUpdate` now
+  // re-probes cached ops on every local db update, healing the dependent without a fresh request.
+  test('a dependent surfaces once its absent strong dep is materialized locally', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const mainObjectId = EntityId.random();
+    const depObjectId = EntityId.random();
+
+    const mainDocHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [mainObjectId]: {
+          meta: { keys: [] },
+          data: { title: 'main' },
+          system: { kind: 'object', type: { '/': EID.make({ entityId: depObjectId }) } },
+        },
+      },
+    });
+
+    // Link only main; the dep is absent from the directory, so its load op settles `unavailable`
+    // and main is omitted. This latches the cached op that the local materialization must heal.
+    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    spaceRootHandle.change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
+    });
+    await sleep(200);
+
+    const before = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
+    expect(before, 'main omitted while its strong dep is absent').toBeUndefined();
+
+    // Materialize the dep locally: plant its document and link it into the space root. The link
+    // change emits a local db update that must re-probe the cached (unavailable) dep op.
+    const depDocHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [depObjectId]: { meta: { keys: [] }, data: { name: 'dep' }, system: { kind: 'object' } },
+      },
+    });
+    spaceRootHandle.change((newDoc: DatabaseDirectory) => {
+      newDoc.links![depObjectId] = new A.RawString(depDocHandle.url);
+    });
+
+    // The local materialization heals the cached resolution, so main now surfaces.
+    await expect
+      .poll(async () => (await db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }))?.id, {
+        timeout: 5_000,
+      })
+      .toEqual(mainObjectId);
+  });
 });
