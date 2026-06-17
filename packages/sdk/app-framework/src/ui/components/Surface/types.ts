@@ -4,6 +4,7 @@
 
 import type { FC, PropsWithChildren, ReactNode, RefCallback } from 'react';
 
+import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
 /**
@@ -74,7 +75,8 @@ export const makeFilter = <TData>(token: RoleToken<TData>, guard?: (data: TData)
       : (data: unknown): boolean => {
           try {
             return guard(data as TData);
-          } catch {
+          } catch (err) {
+            log.catch(err);
             return false;
           }
         };
