@@ -250,6 +250,7 @@ const ProcessTreeContainer = ({
   return (
     <ProcessTree
       processes={processesDeferred}
+      depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
     />
