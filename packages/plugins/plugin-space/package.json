@@ -52,6 +52,11 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
+    "#surface": {
+      "source": "./src/surface.ts",
+      "types": "./dist/types/src/surface.d.ts",
+      "default": "./dist/lib/neutral/surface.mjs"
+    },
     "#plugin": {
       "source": {
         "workerd": "./src/SpacePlugin.workerd.ts",

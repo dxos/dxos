@@ -3,6 +3,7 @@
 //
 
 export * from './meta';
+export * from './surface';
 export * from './types';
 export * from './util';
 

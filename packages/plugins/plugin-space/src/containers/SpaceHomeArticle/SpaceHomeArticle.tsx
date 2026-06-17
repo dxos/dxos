@@ -6,12 +6,12 @@ import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { SPACE_HOME_CONTENT_ROLE, SPACE_HOME_PIN_BOTTOM_ROLE } from '@dxos/app-toolkit';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Column, Panel, ScrollArea } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { SpaceHomeContent, SpaceHomePinBottom } from '#surface';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
@@ -40,12 +40,12 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
               <div className='dx-document flex flex-col gap-4 py-4'>
-                <Surface.Surface role={SPACE_HOME_CONTENT_ROLE} data={{ space }} />
+                <Surface.Surface type={SpaceHomeContent} data={{ space }} />
               </div>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
-            <Surface.Surface role={SPACE_HOME_PIN_BOTTOM_ROLE} data={{ space }} limit={1} />
+            <Surface.Surface type={SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
       </Panel.Content>

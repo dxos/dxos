@@ -10,7 +10,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation, SPACE_HOME_CONTENT_ROLE, SPACE_HOME_MARKER } from '@dxos/app-toolkit';
+import { RootCollectionAnnotation, SPACE_HOME_MARKER } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -48,6 +48,7 @@ import {
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
+import { SpaceHomeContent } from '#surface';
 import {
   HueAnnotationId,
   IconAnnotationId,
@@ -82,9 +83,9 @@ export default Capability.makeModule(
           <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.subject} />
         ),
       }),
-      Surface.create<{ space: Space }>({
+      Surface.create({
         id: 'spaceHomeRecent',
-        role: SPACE_HOME_CONTENT_ROLE,
+        filter: AppSurface.predicate(SpaceHomeContent, () => true),
         component: ({ data }) => <SpaceHomeRecent space={data.space} />,
       }),
       Surface.create({
