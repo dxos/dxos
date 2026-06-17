@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type Label, ScrollArea, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -52,13 +52,17 @@ SettingsViewport.displayName = SETTINGS_VIEWPORT_NAME;
 type SettingsSectionProps = PropsWithChildren<{
   title: Label;
   description?: Label;
+  actions?: ReactNode;
 }>;
 
-const SettingsSection = ({ title, description, children }: SettingsSectionProps) => {
+const SettingsSection = ({ title, description, actions, children }: SettingsSectionProps) => {
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='px-trim-md mt-trim-md text-xl'>{toLocalizedString(title, t)}</h2>
+      <div className='flex items-center justify-between px-trim-md mt-trim-md'>
+        <h2 className='text-xl'>{toLocalizedString(title, t)}</h2>
+        {actions}
+      </div>
       {description && <p className='px-trim-md text-description'>{toLocalizedString(description, t)}</p>}
       <div className='w-full pt-trim-md space-y-trim-md'>{children}</div>
     </>
