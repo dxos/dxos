@@ -120,17 +120,17 @@ export class HubHttpClient extends BaseHttpClient {
 
   /**
    * Rolling-window usage and effective limits for the authenticated identity.
-   * Served from the per-user metering DO; optional `windowHours` defaults to the largest limit window.
+   * Served from the per-user metering DO; optional `windowSeconds` defaults to the largest limit window.
    */
   public async getProfileUsage(
     ctx: Context,
-    query?: { windowHours?: number },
+    query?: { windowSeconds?: number },
     args?: EdgeHttpCallArgs,
   ): Promise<GetProfileUsageResponse> {
     return this._call(
       ctx,
       createUrl(new URL('/api/metering/profile/usage', this.baseUrl), {
-        windowHours: query?.windowHours,
+        windowSeconds: query?.windowSeconds,
       }),
       { ...args, method: 'GET' },
     );

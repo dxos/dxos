@@ -11,7 +11,7 @@ import { translations } from '#translations';
 
 import { UsageView } from './UsageView';
 
-// Mock payload shaped like the (not-yet-implemented) `/api/metering/profile/usage` response.
+// Mock payload shaped like the `/api/metering/profile/usage` response.
 const usageData: GetProfileUsageResponse = {
   profileId: 'did:key:z6MkExampleProfileIdentity',
   usage: [
@@ -21,10 +21,11 @@ const usageData: GetProfileUsageResponse = {
     { category: 'ai/claude-sonnet-4/outputTokens', amount: 18_400 },
   ],
   limits: [
-    { categoryPrefix: 'ai/claude-opus-4', amount: 5_000_000, windowHours: 24 * 7 },
-    { categoryPrefix: 'ai/claude-sonnet-4', amount: 10_000_000, windowHours: 24 * 7 },
-    { categoryPrefix: 'ai', amount: 20_000_000, windowHours: 24 * 30 },
+    { eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'], limit: 5_000_000, windowDuration: 24 * 7 * 60 * 60 },
+    { eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'], limit: 1_000_000, windowDuration: 24 * 30 * 60 * 60 },
+    { eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['*'], limit: 20_000_000, windowDuration: 24 * 30 * 60 * 60 },
   ],
+  buckets: [],
 };
 
 const meta = {
@@ -50,6 +51,21 @@ export const Default: Story = {
   },
 };
 
+// Internal plan: a single unlimited (`limit: null`) `ai` limit — renders without a meter.
+export const Internal: Story = {
+  args: {
+    state: 'ready',
+    data: {
+      profileId: usageData.profileId,
+      usage: usageData.usage,
+      limits: [{ eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'], limit: null, windowDuration: 24 * 30 * 60 * 60 }],
+      buckets: [],
+    },
+    lastUpdated: new Date('2026-06-16T12:00:00Z').getTime(),
+    onRefresh: () => {},
+  },
+};
+
 export const Loading: Story = {
   args: { state: 'loading' },
 };
@@ -61,7 +77,7 @@ export const Error: Story = {
 export const Empty: Story = {
   args: {
     state: 'ready',
-    data: { profileId: usageData.profileId, usage: [], limits: [] },
+    data: { profileId: usageData.profileId, usage: [], limits: [], buckets: [] },
     lastUpdated: new Date('2026-06-16T12:00:00Z').getTime(),
     onRefresh: () => {},
   },

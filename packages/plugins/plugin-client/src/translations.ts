@@ -45,8 +45,11 @@ const pluginTranslations = [
         'usage-window-months.label_one': '{{count}} month',
         'usage-window-months.label_other': '{{count}} months',
         'usage-percent-used.label': '{{percent}}% used',
+        'usage-unlimited.label': 'Unlimited',
+        'usage-unlimited.description': '{{used}} used in the last {{window}}',
         'usage-last-updated.label': 'Last updated {{time}}',
         'usage-refresh.label': 'Refresh',
+        'usage-raw-json.label': 'Raw JSON',
         'account-section.title': 'Account',
         'account-section.description':
           'Your identity on this device is bound to a DXOS account that gates access to edge services like sync, agents, and AI.',

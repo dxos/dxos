@@ -128,6 +128,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",

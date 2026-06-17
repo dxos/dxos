@@ -766,15 +766,35 @@ export type RequestAccessResponse = { received: boolean };
 //
 
 export const MeteringUsageItemSchema = Schema.Struct({
+  /** Opaque category key derived by the engine, e.g. `ai/<model>/inputTokens`. */
   category: Schema.String,
   amount: Schema.Number,
 });
 export type MeteringUsageItem = Schema.Schema.Type<typeof MeteringUsageItemSchema>;
 
-export const MeteringLimitSchema = Schema.Struct({
-  categoryPrefix: Schema.String,
+/** A single raw usage bucket (1h resolution) for a metered category. */
+export const MeteringUsageBucketSchema = Schema.Struct({
+  category: Schema.String,
+  /** Bucket start timestamp (epoch ms, floored to the hour). */
+  bucketStart: Schema.Number,
   amount: Schema.Number,
-  windowHours: Schema.Number,
+});
+export type MeteringUsageBucket = Schema.Schema.Type<typeof MeteringUsageBucketSchema>;
+
+export const MeteringLimitSchema = Schema.Struct({
+  /** Event type the limit applies to (e.g. `ai`). */
+  eventType: Schema.String,
+  /** Value key being limited (e.g. `outputTokens`). */
+  valueKey: Schema.String,
+  /**
+   * Positional match against the event's subtype segments (e.g. model); `*` matches any
+   * segment, and positions beyond the pattern are unconstrained.
+   */
+  subtypePattern: Schema.Array(Schema.String),
+  /** Rolling-window cap; `null` means unlimited. */
+  limit: Schema.NullOr(Schema.Number),
+  /** Window duration in seconds. */
+  windowDuration: Schema.Number,
 });
 export type MeteringLimit = Schema.Schema.Type<typeof MeteringLimitSchema>;
 
@@ -782,6 +802,7 @@ export const GetProfileUsageResponseSchema = Schema.Struct({
   profileId: Schema.String,
   usage: Schema.Array(MeteringUsageItemSchema),
   limits: Schema.Array(MeteringLimitSchema),
+  buckets: Schema.Array(MeteringUsageBucketSchema),
 });
 export type GetProfileUsageResponse = Schema.Schema.Type<typeof GetProfileUsageResponseSchema>;
 

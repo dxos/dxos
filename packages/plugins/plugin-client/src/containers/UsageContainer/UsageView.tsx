@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit } from '@dxos/protocols';
 import { IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
 
@@ -25,32 +26,43 @@ export type UsageViewProps = {
 
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
-/** Sum every usage item whose category falls under the limit's prefix. */
+/**
+ * Whether a usage category falls under a limit. Categories are `eventType/<subtype…>/valueKey`;
+ * the subtype segments are matched positionally against `subtypePattern` where `*` matches any.
+ */
+const usageMatchesLimit = (category: string, limit: MeteringLimit): boolean => {
+  const segments = category.split('/');
+  if (segments[0] !== limit.eventType || segments.at(-1) !== limit.valueKey) {
+    return false;
+  }
+  const subtypeSegments = segments.slice(1, -1);
+  return limit.subtypePattern.every((pattern, index) => pattern === '*' || pattern === subtypeSegments[index]);
+};
+
+/** Sum every usage item that falls under the limit. */
 const sumUsageForLimit = (usage: GetProfileUsageResponse['usage'], limit: MeteringLimit): number =>
-  usage.reduce((total, item) => (item.category.startsWith(limit.categoryPrefix) ? total + item.amount : total), 0);
+  usage.reduce((total, item) => (usageMatchesLimit(item.category, limit) ? total + item.amount : total), 0);
+
+/** Humanize a camelCase value key, e.g. `outputTokens` → `output tokens`. */
+const formatValueKey = (valueKey: string): string => valueKey.replace(/([A-Z])/g, ' $1').trim().toLowerCase();
 
 /**
- * Turn a metering category/prefix into a human label, e.g.
- * `ai` → `All models`, `ai/claude-opus-4` → `claude-opus-4`,
- * `ai/claude-opus-4/inputTokens` → `claude-opus-4 · input tokens`.
+ * Human label for a limit: a scope followed by the value key, e.g.
+ * `{ eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'] }` → `All models · output tokens`,
+ * `{ eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'] }` → `claude-opus-4 · input tokens`.
  */
-const formatCategoryLabel = (categoryPrefix: string): string => {
-  const segments = categoryPrefix.split('/');
-  if (segments[0] === 'ai') {
-    if (segments.length >= 3) {
-      const metric = segments.at(-1) ?? categoryPrefix;
-      const model = segments.slice(1, -1).join('/');
-      return `${model} · ${metric.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}`;
-    }
-    if (segments.length === 2) {
-      return segments[1];
-    }
-    return 'All models';
+const formatLimitLabel = (limit: MeteringLimit): string => {
+  const metric = formatValueKey(limit.valueKey);
+  const subtype = limit.subtypePattern.filter((segment) => segment && segment !== '*').join('/');
+  if (limit.eventType === 'ai') {
+    return `${subtype || 'All models'} · ${metric}`;
   }
-  return categoryPrefix;
+  return `${subtype ? `${limit.eventType}/${subtype}` : limit.eventType} · ${metric}`;
 };
 
 const formatAmount = (amount: number): string => amount.toLocaleString();
+
+const SECONDS_PER_HOUR = 60 * 60;
 
 /** Render `windowHours` as a localized "N months / days / hours" string. */
 const formatWindow = (windowHours: number, t: TFunction): string => {
@@ -63,7 +75,10 @@ const formatWindow = (windowHours: number, t: TFunction): string => {
   return t('usage-window-hours.label', { count: windowHours });
 };
 
-/** A single usage row: label + caption on the left, a thin meter, and a value on the right. */
+/**
+ * A single usage row: label + caption on the left, a thin meter, and a value on the right.
+ * Omitting `percent` (an unlimited limit) renders no meter.
+ */
 const UsageRow = ({
   label,
   caption,
@@ -72,7 +87,7 @@ const UsageRow = ({
 }: {
   label: string;
   caption?: string;
-  percent: number;
+  percent?: number;
   value: string;
 }) => (
   <div className='flex items-center gap-trim-lg py-trim-sm'>
@@ -80,18 +95,22 @@ const UsageRow = ({
       <span className='truncate text-base-fg'>{label}</span>
       {caption && <span className='text-sm text-description'>{caption}</span>}
     </div>
-    <div
-      role='progressbar'
-      aria-valuenow={percent}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      className='h-1.5 flex-1 rounded-full bg-separator overflow-hidden'
-    >
+    {percent === undefined ? (
+      <div className='flex-1' />
+    ) : (
       <div
-        className='h-full rounded-full bg-primary-500 transition-[width] duration-500'
-        style={{ width: `${percent}%` }}
-      />
-    </div>
+        role='progressbar'
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className='h-1.5 flex-1 rounded-full bg-separator overflow-hidden'
+      >
+        <div
+          className='h-full rounded-full bg-primary-500 transition-[width] duration-500'
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    )}
     <span className='shrink-0 w-24 text-end text-sm text-description tabular-nums'>{value}</span>
   </div>
 );
@@ -114,8 +133,9 @@ const UsageSkeleton = () => (
 
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
   const { t } = useTranslation(meta.id);
+  const [rawExpanded, setRawExpanded] = useState(false);
 
-  // Limits, each paired with summed usage and a clamped percentage. Shorter windows first.
+  // One display row per limit, shorter windows first. A `null` amount means unlimited (rendered without a meter).
   const limitRows = useMemo(() => {
     if (!data) {
       return [];
@@ -123,11 +143,32 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     return data.limits
       .map((limit) => {
         const used = sumUsageForLimit(data.usage, limit);
-        const percent = limit.amount > 0 ? Math.min(100, Math.round((used / limit.amount) * 100)) : 0;
-        return { limit, used, percent };
+        const label = formatLimitLabel(limit);
+        const windowHours = limit.windowDuration / SECONDS_PER_HOUR;
+        const window = formatWindow(windowHours, t);
+        const key = `${limit.eventType}/${limit.subtypePattern.join(',')}/${limit.valueKey}`;
+        if (limit.limit === null) {
+          return {
+            key,
+            label,
+            caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
+            percent: undefined,
+            value: t('usage-unlimited.label'),
+            windowHours,
+          };
+        }
+        const percent = limit.limit > 0 ? Math.min(100, Math.round((used / limit.limit) * 100)) : used > 0 ? 100 : 0;
+        return {
+          key,
+          label,
+          caption: t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window }),
+          percent,
+          value: t('usage-percent-used.label', { percent }),
+          windowHours,
+        };
       })
-      .sort((a, b) => a.limit.windowHours - b.limit.windowHours);
-  }, [data]);
+      .sort((a, b) => a.windowHours - b.windowHours);
+  }, [data, t]);
 
   return (
     <Settings.Viewport>
@@ -151,18 +192,8 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
           </Message.Root>
         ) : (
           <div className='flex flex-col'>
-            {limitRows.map(({ limit, used, percent }) => (
-              <UsageRow
-                key={limit.categoryPrefix}
-                label={formatCategoryLabel(limit.categoryPrefix)}
-                caption={t('usage-limit.description', {
-                  used: formatAmount(used),
-                  limit: formatAmount(limit.amount),
-                  window: formatWindow(limit.windowHours, t),
-                })}
-                percent={percent}
-                value={t('usage-percent-used.label', { percent })}
-              />
+            {limitRows.map((row) => (
+              <UsageRow key={row.key} label={row.label} caption={row.caption} percent={row.percent} value={row.value} />
             ))}
 
             <div className='flex items-center gap-1 pt-trim-md text-sm text-description'>
@@ -179,6 +210,19 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                 />
               )}
             </div>
+          </div>
+        )}
+        {state === 'ready' && data && (
+          <div className='flex flex-col pt-trim-md'>
+            <IconButton
+              variant='ghost'
+              icon='ph--caret-right--regular'
+              iconClassNames={rawExpanded ? 'transition-transform rotate-90' : 'transition-transform'}
+              label={t('usage-raw-json.label')}
+              onClick={() => setRawExpanded((value) => !value)}
+              classNames='self-start'
+            />
+            {rawExpanded && <JsonHighlighter data={data} classNames='mt-trim-sm text-xs overflow-auto' />}
           </div>
         )}
       </Settings.Section>
