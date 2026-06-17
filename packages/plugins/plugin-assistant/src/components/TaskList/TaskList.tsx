@@ -86,7 +86,16 @@ const TaskListItem = ({ task, space, traceMessages, conversationId }: TaskListIt
     return deriveInFlightActivityLine(traceMessages, String(task.agentPid), { conversationId });
   }, [ephemeralLine, task.status, task.agentPid, traceMessages, conversationId]);
 
+  // #region DEBUG
+  const activitySource = ephemeralLine ? 'ephemeral' : inFlightLine ? 'inFlight' : 'durable';
+  // #endregion DEBUG
+
   const activityLines = useMemo(() => {
+    // #region DEBUG
+    // Temporarily ephemeral-only to inspect the live stream in isolation.
+    return ephemeralLine ? [ephemeralLine] : [];
+    // #endregion DEBUG
+    // eslint-disable-next-line no-unreachable
     if (ephemeralLine) {
       return [ephemeralLine];
     }
@@ -104,14 +113,26 @@ const TaskListItem = ({ task, space, traceMessages, conversationId }: TaskListIt
     log('[DEBUG H6] task list activity lines', {
       taskId: task.id,
       agentPid: String(task.agentPid),
+      taskStatus: task.status,
       hasSpace: space != null,
-      durableCount: durableLines.length,
-      durableLast: durableLines.at(-1),
+      source: activitySource,
       ephemeralLine,
       inFlightLine,
-      displayLast: activityLines.at(-1),
+      durableLines,
+      activityLines,
     });
-  }, [task.id, task.delegated, task.agentPid, space, durableLines, ephemeralLine, inFlightLine, activityLines]);
+  }, [
+    task.id,
+    task.delegated,
+    task.agentPid,
+    task.status,
+    space,
+    durableLines,
+    ephemeralLine,
+    inFlightLine,
+    activityLines,
+    activitySource,
+  ]);
   // #endregion DEBUG
 
   const showActivity = task.delegated === true && task.agentPid != null && activityLines.length > 0;
@@ -145,16 +166,25 @@ type DelegatedTaskActivityProps = {
   lines: string[];
 };
 
-const DelegatedTaskActivity = ({ agentPid, lines }: DelegatedTaskActivityProps) => (
-  <div className='flex items-center gap-2 ps-6 min-w-0 text-placeholder'>
-    <Icon icon='ph--brain--regular' size={3} classNames='shrink-0 opacity-70' />
-    <TextCrawl
-      key={`${String(agentPid)}:${lines.length}:${lines[lines.length - 1]}`}
-      lines={lines}
-      autoAdvance
-      greedy
-      size='sm'
-      classNames='text-xs text-subdued min-w-0 flex-1'
-    />
-  </div>
-);
+const DelegatedTaskActivity = ({ agentPid, lines }: DelegatedTaskActivityProps) => {
+  // #region DEBUG
+  log('[DEBUG H7] render delegated task activity', {
+    agentPid: String(agentPid),
+    lines,
+    rendered: lines[lines.length - 1],
+  });
+  // #endregion DEBUG
+  return (
+    <div className='flex items-center gap-2 ps-6 min-w-0 text-placeholder'>
+      <Icon icon='ph--brain--regular' size={3} classNames='shrink-0 opacity-70' />
+      <TextCrawl
+        key={`${String(agentPid)}:${lines.length}:${lines[lines.length - 1]}`}
+        lines={lines}
+        autoAdvance
+        greedy
+        size='sm'
+        classNames='text-xs text-subdued min-w-0 flex-1'
+      />
+    </div>
+  );
+};

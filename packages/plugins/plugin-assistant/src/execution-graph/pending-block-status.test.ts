@@ -6,7 +6,11 @@ import { describe, test } from 'vitest';
 
 import { Trace } from '@dxos/compute';
 
-import { formatPendingBlockStatus, pendingStatusFromEphemeralMessage } from './pending-block-status';
+import {
+  formatPendingBlockStatus,
+  pendingStatusFromEphemeralMessage,
+  resolveEphemeralStatusUpdate,
+} from './pending-block-status';
 
 describe('formatPendingBlockStatus', () => {
   test('formats pending text as generating tokens', ({ expect }) => {
@@ -53,5 +57,33 @@ describe('formatPendingBlockStatus', () => {
       ],
     } as Trace.Message);
     expect(status).toBe('Calling Get Agent Context (13 bytes)...');
+  });
+
+  test('clears status when partial block stream completes', ({ expect }) => {
+    expect(
+      resolveEphemeralStatusUpdate({
+        meta: { pid: 'pid-1' },
+        isEphemeral: true,
+        events: [
+          {
+            type: 'assistant.partialBlock',
+            timestamp: Date.now(),
+            data: {
+              messageId: 'msg-1',
+              role: 'assistant',
+              block: {
+                _tag: 'toolCall',
+                toolCallId: 'call-1',
+                name: 'update-tasks',
+                operationName: 'Update tasks',
+                input: '{}',
+                providerExecuted: false,
+                pending: false,
+              },
+            },
+          },
+        ],
+      } as Trace.Message),
+    ).toBe('clear');
   });
 });

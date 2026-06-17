@@ -77,3 +77,19 @@ export const isCompletedPartialBlockMessage = (message: Trace.Message): boolean 
   }
   return false;
 };
+
+export type EphemeralStatusUpdate = 'unchanged' | 'clear' | { readonly line: string };
+
+/**
+ * Maps an ephemeral trace message to a task-status update.
+ */
+export const resolveEphemeralStatusUpdate = (message: Trace.Message): EphemeralStatusUpdate => {
+  if (isCompletedPartialBlockMessage(message)) {
+    return 'clear';
+  }
+  const line = pendingStatusFromEphemeralMessage(message);
+  if (line) {
+    return { line };
+  }
+  return 'unchanged';
+};

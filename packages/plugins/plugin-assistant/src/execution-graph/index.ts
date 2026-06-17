@@ -17,6 +17,8 @@ export {
   formatPendingBlockStatus,
   isCompletedPartialBlockMessage,
   pendingStatusFromEphemeralMessage,
+  resolveEphemeralStatusUpdate,
+  type EphemeralStatusUpdate,
 } from './pending-block-status';
 export {
   BEGIN_EVENT_TYPES,

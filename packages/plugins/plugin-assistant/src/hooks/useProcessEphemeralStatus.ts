@@ -16,8 +16,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { type Space } from '@dxos/react-client/echo';
 
 import {
-  isCompletedPartialBlockMessage,
-  pendingStatusFromEphemeralMessage,
+  resolveEphemeralStatusUpdate,
 } from '#execution-graph';
 
 // #region DEBUG
@@ -135,7 +134,45 @@ export const useProcessEphemeralStatus = (
 
     const pids = subscribePidsKey.split('|').map((pid) => Process.ID.make(pid));
     let disposed = false;
+    let replaying = true;
+    let replayStatus: string | undefined;
+    const endReplay = () => {
+      replaying = false;
+      if (!disposed) {
+        setStatus(replayStatus);
+      }
+    };
+    queueMicrotask(endReplay);
     fibersRef.current = [];
+
+    const handleEphemeralMessage = (message: Trace.Message) => {
+      const update = resolveEphemeralStatusUpdate(message);
+      if (update === 'unchanged') {
+        return;
+      }
+
+      const nextStatus = update === 'clear' ? undefined : update.line;
+
+      if (update === 'clear') {
+        // #region DEBUG
+        log('[DEBUG H5] ephemeral partial completed', { pid: message.meta.pid });
+        // #endregion DEBUG
+      } else {
+        // #region DEBUG
+        log('[DEBUG H4] ephemeral pending status', {
+          pid: message.meta.pid,
+          line: nextStatus,
+          eventTypes: message.events.map((event) => event.type),
+        });
+        // #endregion DEBUG
+      }
+
+      if (replaying) {
+        replayStatus = nextStatus;
+        return;
+      }
+      setStatus(nextStatus);
+    };
 
     // #region DEBUG
     log('[DEBUG H2] ephemeral subscribe start', { agentPid: String(agentPid), pids: subscribePidsKey });
@@ -157,26 +194,7 @@ export const useProcessEphemeralStatus = (
               if (disposed) {
                 return;
               }
-
-              const line = pendingStatusFromEphemeralMessage(message);
-              if (line) {
-                // #region DEBUG
-                log('[DEBUG H4] ephemeral pending status', {
-                  pid: message.meta.pid,
-                  line,
-                  eventTypes: message.events.map((event) => event.type),
-                });
-                // #endregion DEBUG
-                setStatus(line);
-                return;
-              }
-
-              if (isCompletedPartialBlockMessage(message)) {
-                // #region DEBUG
-                log('[DEBUG H5] ephemeral partial completed', { pid: message.meta.pid });
-                // #endregion DEBUG
-                setStatus(undefined);
-              }
+              handleEphemeralMessage(message);
             }),
           ),
           Effect.fork,
