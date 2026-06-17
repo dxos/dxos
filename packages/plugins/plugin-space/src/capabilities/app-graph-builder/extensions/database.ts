@@ -187,8 +187,6 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
 
-        // Objects, the persisted type entity, and the type's views all key off the same URI
-        // (an EID for persisted db types, a DXN for static types), so a single Filter.type matches.
         const objects = get(space.db.query(Filter.type(typeUri)).atom).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
