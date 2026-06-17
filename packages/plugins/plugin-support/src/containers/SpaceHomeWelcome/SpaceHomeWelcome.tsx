@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { isPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { type Space, useObject } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
@@ -30,7 +30,7 @@ type SpaceScopedProps = {
  * every show/hide — that remount froze the UI. Renders nothing on non-personal spaces.
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
-  const isPersonal = !!space && isPersonalSpace(space);
+  const isPersonal = !!space && AppSpace.isPersonalSpace(space);
   const [dismissed] = useWelcomeDismissed(space);
 
   if (!isPersonal) {

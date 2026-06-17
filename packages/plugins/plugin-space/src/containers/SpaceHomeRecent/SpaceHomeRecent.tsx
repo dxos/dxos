@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
@@ -83,7 +83,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
   const handleClick = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] });
+    void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] });
   }, [invokePromise, data]);
 
   return (
