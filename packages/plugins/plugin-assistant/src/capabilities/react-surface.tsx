@@ -52,14 +52,14 @@ export default Capability.makeModule(() =>
       // `limit={1}`, so only this single contributor mounts.
       Surface.create({
         id: 'spaceHomePrompt',
-        filter: AppSurface.predicate(SpaceHomePinBottom, () => true),
+        filter: Surface.makeFilter(SpaceHomePinBottom),
         component: ({ data }) => <SpaceHomePrompt space={data.space} />,
       }),
       // Home article content region: starter-prompt cards. Always rendered below the recent-objects
       // masonry (plugin-space) and welcome panel (plugin-support) via `position: 'last'`.
       Surface.create({
         id: 'spaceHomeSuggestions',
-        filter: AppSurface.predicate(SpaceHomeContent, () => true),
+        filter: Surface.makeFilter(SpaceHomeContent),
         position: 'last',
         component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
       }),

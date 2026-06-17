@@ -48,7 +48,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomeWelcome',
-        filter: AppSurface.predicate(SpaceHomeContent, () => true),
+        filter: Surface.makeFilter(SpaceHomeContent),
         position: 'first',
         component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),

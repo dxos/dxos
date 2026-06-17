@@ -58,6 +58,33 @@ export const isSurfaceFilter = (value: unknown): value is SurfaceFilter<any> =>
 export const makeType = <TData>(role: string): RoleToken<TData> => ({ role });
 
 /**
+ * Creates a {@link SurfaceFilter} from a role token and an optional guard.
+ *
+ * When `guard` is omitted the filter matches any data at the token's role
+ * (role-only dispatch). Pass a guard to add runtime data-shape validation on
+ * top of the role match.
+ *
+ * This is the framework-level primitive; `@dxos/app-toolkit` builds richer
+ * domain-aware helpers (ECHO schema checks, literal matching, etc.) on top of it.
+ */
+export const makeFilter = <TData>(
+  token: RoleToken<TData>,
+  guard?: (data: TData) => boolean,
+): SurfaceFilter<TData> => {
+  const boundGuard =
+    guard == null
+      ? () => true
+      : (data: unknown): boolean => {
+          try {
+            return guard(data as TData);
+          } catch {
+            return false;
+          }
+        };
+  return { bindings: [{ role: token.role, guard: boundGuard }] };
+};
+
+/**
  * Props that are passed to the Surface component.
  *
  * The role can be provided either as a string via `role` or as a typed

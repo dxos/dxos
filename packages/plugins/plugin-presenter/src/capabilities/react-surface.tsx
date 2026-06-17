@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'document',
         position: 'first',
-        filter: AppSurface.predicate(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Markdown.Document }> =>
             !!data.subject &&
@@ -37,7 +37,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'collection',
         position: 'first',
-        filter: AppSurface.predicate(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Collection.Collection }> =>
             !!data.subject &&

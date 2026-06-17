@@ -77,7 +77,7 @@ export default Capability.makeModule(
         id: 'spaceHome',
         filter: AppSurface.allOf(
           AppSurface.subject(AppSurface.Article, isSpace),
-          AppSurface.predicate(AppSurface.Article, (data) => !!data.properties?.[SPACE_HOME_MARKER]),
+          Surface.makeFilter(AppSurface.Article, (data) => !!data.properties?.[SPACE_HOME_MARKER]),
         ),
         component: ({ data, role }) => (
           <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.subject} />
@@ -85,7 +85,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceHomeRecent',
-        filter: AppSurface.predicate(SpaceHomeContent, () => true),
+        filter: Surface.makeFilter(SpaceHomeContent),
         component: ({ data }) => <SpaceHomeRecent space={data.space} />,
       }),
       Surface.create({
