@@ -69,9 +69,6 @@ export const translations = [
         'open-help-tour.message': 'Show welcome tour',
         'open-shortcuts.label': 'Show shortcuts',
         'shortcuts-dialog.title': 'Shortcuts',
-        // Per-space Home Welcome content. The node label, recent heading, suggestions, and prompt
-        // strings live in plugin-space/plugin-assistant; the toolbar actions are contributed as
-        // graph actions (see app-graph-builder) and use the labels below.
         'welcome.title': 'Welcome to Composer',
         'welcome.description':
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',
