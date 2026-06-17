@@ -178,7 +178,7 @@ export const WithPlanning: Story = {
     },
   }),
   args: {
-    modules: [[ChatModule]],
+    modules: [[ChatModule], [TraceModule, ContextModule]],
     blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
   },
 };
