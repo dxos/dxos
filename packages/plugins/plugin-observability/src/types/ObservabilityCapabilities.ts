@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
-import { type Observability as ObservabilityNs } from '@dxos/observability';
+import { type Observability as Observability$ } from '@dxos/observability';
 
 import { meta } from '#meta';
 
@@ -28,7 +28,7 @@ export type State = Schema.Schema.Type<typeof StateSchema>;
 
 export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
 
-export const Observability = Capability.make<ObservabilityNs.Observability>(`${meta.id}.capability.observability`);
+export const Observability = Capability.make<Observability$.Observability>(`${meta.id}.capability.observability`);
 
 /**
  * Optional capability — when contributed, the help/feedback UI exposes a "Download logs" action.

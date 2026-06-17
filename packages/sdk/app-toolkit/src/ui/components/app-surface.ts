@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../capabilities';
+import { AppCapabilities } from '../../app-framework';
 
 //
 // Internal type helpers

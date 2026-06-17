@@ -7,13 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNode,
-  AppNodeMatcher,
-  createTypeSectionExtension,
-  getSpaceIdFromPath,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -82,7 +76,7 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
 
         const segments = qualifiedId.split('/');
         const childId = getLinkedVariant(qualifiedId);
-        const spaceId = getSpaceIdFromPath(qualifiedId);
+        const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
         const segmentName = config.parentSegmentName ?? Type.getTypename(config.parentType);
         const segmentIdx = segments.indexOf(segmentName);
         const parentId = segmentIdx >= 0 ? segments[segmentIdx + 1] : undefined;
@@ -372,7 +366,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      createTypeSectionExtension(Calendar.Calendar),
+      TypeSection.createTypeSectionExtension(Calendar.Calendar),
 
       GraphBuilder.createExtension({
         id: 'calendarsSectionActions',

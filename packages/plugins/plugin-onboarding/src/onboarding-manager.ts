@@ -3,7 +3,7 @@
 //
 
 import { type Capabilities } from '@dxos/app-framework';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
@@ -229,9 +229,9 @@ export class OnboardingManager {
       actionLabel: ['passkey-setup-toast-action.label', { ns: meta.id }],
       actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.id }],
       onAction: async () => {
-        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {
-          subject: [`${getSpacePath(Account.id)}/${Account.Security}`],
+          subject: [`${Paths.getSpacePath(Account.id)}/${Account.Security}`],
         });
       },
     });

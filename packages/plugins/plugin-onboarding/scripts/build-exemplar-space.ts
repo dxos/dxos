@@ -37,7 +37,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -157,12 +157,14 @@ const actor = (name: string, email: string): Actor.Actor => ({ role: 'user', nam
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
-  if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+  if (Option.isNone(Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation))) {
     Obj.update(space.properties, (properties) => {
-      Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+      Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(Collection.make()));
     });
   }
-  const rootCollectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+  const rootCollectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+    Option.getOrUndefined,
+  );
   const rootCollection = rootCollectionRef?.target;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');

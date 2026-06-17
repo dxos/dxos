@@ -6,7 +6,7 @@ import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
 import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
-import { getActiveSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -131,7 +131,7 @@ export const installPageActionListeners = (
       getSettings: () => capabilities.get(Capabilities.AtomRegistry).get(capabilities.get(CrxCapabilities.Settings)),
       getTarget: () => {
         const client = capabilities.get(ClientCapabilities.Client);
-        return getActiveSpace(client, capabilities)?.db;
+        return AppSpace.getActiveSpace(client, capabilities)?.db;
       },
       invoke: (operation, input) => invoker.invokePromise(operation, input),
     };

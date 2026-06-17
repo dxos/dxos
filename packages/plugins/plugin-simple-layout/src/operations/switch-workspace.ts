@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { isPinnedWorkspace, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { layoutStateAccess } from './state-access';
@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
 
       updateState((state) => ({
         ...state,
-        previousWorkspace: !isPinnedWorkspace(state.workspace) ? state.workspace : state.previousWorkspace,
+        previousWorkspace: !Paths.isPinnedWorkspace(state.workspace) ? state.workspace : state.previousWorkspace,
         workspace: input.subject,
         active: undefined,
         history: [],

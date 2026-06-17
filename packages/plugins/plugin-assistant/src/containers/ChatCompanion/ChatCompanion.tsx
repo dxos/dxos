@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
@@ -83,7 +83,7 @@ const useBlueprints = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 
       return [] as string[];
     }
 
-    return Option.getOrElse(() => [] as string[])(BlueprintsAnnotation.get(Type.getSchema(schema)));
+    return Option.getOrElse(() => [] as string[])(AppAnnotation.BlueprintsAnnotation.get(Type.getSchema(schema)));
   }, [companionTo]);
 
   const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));

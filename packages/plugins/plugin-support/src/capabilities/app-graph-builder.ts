@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { isSpace, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
@@ -155,7 +155,7 @@ export default Capability.makeModule(
           const isDismissed = properties
             ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
             : false;
-          const showActions = isPersonalSpace(space) && !isDismissed;
+          const showActions = AppSpace.isPersonalSpace(space) && !isDismissed;
           if (!showActions) {
             return Effect.succeed([]);
           }

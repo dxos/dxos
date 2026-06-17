@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { EXEMPLAR_SPACE_TAG } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -28,7 +28,9 @@ const handler: Operation.WithHandler<typeof ImportExemplarSpace> = ImportExempla
     Effect.fnUntraced(function* ({ force }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
-      const existing = force ? undefined : client.spaces.get().find((space) => space.tags.includes(EXEMPLAR_SPACE_TAG));
+      const existing = force
+        ? undefined
+        : client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
       const space =
         existing ??
         (yield* Effect.tryPromise(() => {
@@ -37,7 +39,7 @@ const handler: Operation.WithHandler<typeof ImportExemplarSpace> = ImportExempla
             contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
             format: SpaceArchive.Format.JSON,
           };
-          return client.spaces.import(archive, { tags: [EXEMPLAR_SPACE_TAG] });
+          return client.spaces.import(archive, { tags: [AppSpace.EXEMPLAR_SPACE_TAG] });
         }));
 
       yield* Effect.tryPromise(() => space.waitUntilReady());

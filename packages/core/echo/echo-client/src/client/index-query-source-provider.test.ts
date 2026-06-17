@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { DXN, EntityId, type SpaceId, SpaceId as SpaceIdNs } from '@dxos/keys';
+import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { type ObjectUpdate } from './index-query-source-provider';
@@ -20,7 +20,7 @@ const mockGraph = {} as Hypergraph.Hypergraph;
 /** No-op update signal for tests that don't exercise re-hydration. */
 const noopUpdateEvent = new Event<ObjectUpdate>();
 
-const makeQuery = (spaceId: SpaceId = SpaceIdNs.random()): QueryAST.Query => ({
+const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query => ({
   type: 'from',
   query: {
     type: 'select',
@@ -114,7 +114,7 @@ describe('IndexQuerySource', () => {
   });
 
   test('re-hydrates reactive results when a previously-unavailable object loads', async () => {
-    const spaceId = SpaceIdNs.random();
+    const spaceId = SpaceId$.random();
     const objectId = EntityId.random();
 
     // First host response references an object that isn't loadable yet (simulating a hydration

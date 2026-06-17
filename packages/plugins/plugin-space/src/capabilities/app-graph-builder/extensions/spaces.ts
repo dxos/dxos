@@ -5,15 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNodeMatcher,
-  SPACE_HOME_SEGMENT,
-  getActiveSpace,
-  getPersonalSpace,
-  isExemplarSpace,
-  isPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -29,7 +21,6 @@ import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
 
 import { SHARED, getSpaceDisplayName } from '../../../util';
 import {
-  CACHEABLE_PROPS,
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
@@ -60,7 +51,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
       connector: (space) =>
         Effect.succeed([
           {
-            id: SPACE_HOME_SEGMENT,
+            id: Paths.SPACE_HOME_SEGMENT,
             type: SPACE_HOME_NODE_TYPE,
             data: SPACE_HOME_NODE_TYPE,
             properties: {
@@ -115,7 +106,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
               }
@@ -130,7 +121,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
               }
@@ -145,7 +136,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
@@ -164,7 +155,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }
@@ -191,7 +182,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
 
         const spaces = get(spacesAtom);
-        const personalSpace = getPersonalSpace(client);
+        const personalSpace = AppSpace.getPersonalSpace(client);
 
         if (!spaces || !personalSpace) {
           return Effect.succeed([]);
@@ -226,12 +217,15 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => spaceStates[idx] !== SpaceState.SPACE_INACTIVE)
-              .filter((space) => space.tags.length === 0 || isPersonalSpace(space) || isExemplarSpace(space))
+              .filter(
+                (space) =>
+                  space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
+              )
               .map((space) =>
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  personal: isPersonalSpace(space),
+                  personal: AppSpace.isPersonalSpace(space),
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,
@@ -320,7 +314,7 @@ const constructSpaceNode = ({
   return Node.make({
     id: space.id,
     type: SPACE_TYPE,
-    cacheable: CACHEABLE_PROPS,
+    cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {
       label: getSpaceDisplayName(space, { personal, namesCache }),

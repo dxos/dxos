@@ -6,7 +6,7 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -97,7 +97,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
             contextId: id,
             selectionId: action.segmentId,
             companion: linkedSegment('segment'),
-            path: getObjectPathFromObject(subject),
+            path: Paths.getObjectPathFromObject(subject),
           });
           break;
         case 'delete':
@@ -131,7 +131,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         contextId: id,
         selectionId: segmentId,
         companion: linkedSegment('segment'),
-        path: getObjectPathFromObject(subject),
+        path: Paths.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, subject],

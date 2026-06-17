@@ -17,21 +17,6 @@ import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 
-export {
-  ACCEPT_ECHO_CLASS,
-  CACHEABLE_PROPS,
-  CAN_DROP_OBJECT,
-  blockInstructionCache,
-  buildCollectionPartials,
-  collectionPartialsCache,
-  createFactory,
-  createObjectNode,
-  getAcceptPersistenceKey,
-  getCollectionGraphNodePartials,
-  getDynamicLabel,
-  rearrangeCache,
-} from '@dxos/app-toolkit';
-
 //
 // Virtual Node Types
 //

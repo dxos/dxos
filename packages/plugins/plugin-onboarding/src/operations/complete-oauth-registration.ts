@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 
       const edgeClient = createEdgeHttpClient(client);
 
-      const personalSpace = getPersonalSpace(client);
+      const personalSpace = AppSpace.getPersonalSpace(client);
       invariant(personalSpace, 'Personal space not found.');
       const spaceKey = personalSpace.key.toHex();
 

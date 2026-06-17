@@ -1,0 +1,360 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import type * as Command$ from '@effect/cli/Command';
+import * as Effect from 'effect/Effect';
+
+import {
+  ActivationEvent as ActivationEvent$,
+  ActivationEvents,
+  Capabilities,
+  Capability as Capability$,
+  Plugin as Plugin$,
+} from '@dxos/app-framework';
+import { type Type } from '@dxos/echo';
+import { assertArgument } from '@dxos/invariant';
+
+import { Translations } from '../app';
+import * as AppActivationEvents from './AppActivationEvents';
+import * as AppCapabilities from './AppCapabilities';
+
+type PluginModuleOptions = Partial<
+  Pick<Plugin$.PluginModuleOptions, 'id' | 'activatesOn' | 'firesBeforeActivation' | 'firesAfterActivation'>
+> &
+  Pick<Plugin$.PluginModuleOptions, 'activate'>;
+
+export type AppGraphModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes app graph builder extensions.
+ */
+export function addAppGraphModule<T = void>(
+  options: AppGraphModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'app-graph-builder',
+    activatesOn:
+      options.activatesOn ??
+      ActivationEvent$.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type TranslationsModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+  translations: Translations.Resource | Translations.Resource[];
+};
+
+/**
+ * Creates a module that contributes translations.
+ */
+export function addTranslationsModule<T = void>(
+  options: TranslationsModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: options?.id ?? 'translations',
+    activatesOn: options?.activatesOn ?? AppActivationEvents.SetupTranslations,
+    firesBeforeActivation: options?.firesBeforeActivation,
+    firesAfterActivation: options?.firesAfterActivation,
+    activate: Effect.fnUntraced(function* () {
+      return Capability$.contributes(
+        AppCapabilities.Translations,
+        Array.isArray(options.translations)
+          ? options.translations
+          : ([options.translations] as Translations.Resource[]),
+      );
+    }),
+  });
+}
+
+export type SettingsModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes settings.
+ */
+export function addSettingsModule<T = void>(
+  options: SettingsModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'settings',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupSettings,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type BlueprintDefinitionModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes blueprint definitions.
+ */
+export function addBlueprintDefinitionModule<T = void>(
+  options: BlueprintDefinitionModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'blueprint-definition',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupArtifactDefinition,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type PluginAssetModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+  asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>;
+};
+
+/**
+ * Creates a module that contributes one or more static plugin assets
+ * (typically the bundled `PLUGIN.mdl` spec).
+ */
+export function addPluginAssetModule<T = void>(
+  options: PluginAssetModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: options.id ?? 'plugin-asset',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupPluginAssets,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: Effect.fnUntraced(function* () {
+      const assets: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(options.asset)
+        ? (options.asset as ReadonlyArray<AppCapabilities.PluginAsset>)
+        : [options.asset as AppCapabilities.PluginAsset];
+      return assets.map((asset) => Capability$.contributes(AppCapabilities.PluginAsset, asset));
+    }),
+  });
+}
+
+export type SchemaModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+  schema: ReadonlyArray<Type.AnyEntity>;
+};
+
+/**
+ * Creates a module that contributes schemas.
+ */
+export function addSchemaModule<T = void>(
+  options: SchemaModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: options.id ?? 'schema',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: Effect.fnUntraced(function* () {
+      return Capability$.contributes(AppCapabilities.Schema, options.schema);
+    }),
+  });
+}
+
+export type CommandModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+  commands: ReadonlyArray<Command$.Command<any, any, any, any>>;
+};
+
+/**
+ * Creates a module that contributes CLI commands.
+ */
+export function addCommandModule<T = void>(
+  options: CommandModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: options.id ?? 'cli-commands',
+    activatesOn: options.activatesOn ?? ActivationEvents.Startup,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: Effect.fnUntraced(function* () {
+      return options.commands.map((cmd) => Capability$.contributes(Capabilities.Command, cmd));
+    }),
+  });
+}
+
+export type OperationHandlerModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes operation handlers.
+ */
+export function addOperationHandlerModule<T = void>(
+  options: OperationHandlerModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
+    activatesOn: options.activatesOn ?? ActivationEvents.SetupProcessManager,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type UndoMappingsModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes undo operation mappings.
+ */
+export function addUndoMappingsModule<T = void>(
+  options: UndoMappingsModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'undo-mappings',
+    activatesOn: options.activatesOn ?? ActivationEvents.SetupProcessManager,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type ReactContextModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes a React context.
+ */
+export function addReactContextModule<T = void>(
+  options: ReactContextModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-context',
+    activatesOn: options.activatesOn ?? ActivationEvents.Startup,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type ReactRootModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes a React root.
+ */
+export function addReactRootModule<T = void>(
+  options: ReactRootModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-root',
+    activatesOn: options.activatesOn ?? ActivationEvents.Startup,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type NavigationResolverModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes navigation target resolvers.
+ */
+export function addNavigationResolverModule<T = void>(
+  options: NavigationResolverModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
+    activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type NavigationHandlerModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes a navigation handler.
+ * Navigation handlers are called by layout plugins on page load, popstate, and deep link events.
+ * Accepts either static options or a function that receives plugin options.
+ */
+export function addNavigationHandlerModule<T = void>(
+  options: NavigationHandlerModuleOptions | ((pluginOptions: T) => NavigationHandlerModuleOptions),
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  if (typeof options === 'function') {
+    return Plugin$.addModule((pluginOptions: T) => {
+      const resolved = options(pluginOptions);
+      return {
+        id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
+        activatesOn: resolved.activatesOn ?? ActivationEvents.ProcessManagerReady,
+        firesBeforeActivation: resolved.firesBeforeActivation,
+        firesAfterActivation: resolved.firesAfterActivation,
+        activate: resolved.activate,
+      };
+    });
+  }
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-handler',
+    activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type SurfaceModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes React surfaces.
+ */
+export function addSurfaceModule<T = void>(
+  options: SurfaceModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'surfaces',
+    activatesOn: options.activatesOn ?? ActivationEvents.SetupReactSurface,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type CreateObjectModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes a create-object capability entry.
+ */
+export function addCreateObjectModule<T = void>(
+  options: CreateObjectModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'create-object',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type CommentConfigModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes a comment configuration.
+ */
+export function addCommentConfigModule<T = void>(
+  options: CommentConfigModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'comment-config',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}
+
+export type TextContentModuleOptions = PluginModuleOptions;
+
+/**
+ * Creates a module that contributes a text content extractor.
+ */
+export function addTextContentModule<T = void>(
+  options: TextContentModuleOptions,
+): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+  return Plugin$.addModule({
+    id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'text-content',
+    activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+    firesBeforeActivation: options.firesBeforeActivation,
+    firesAfterActivation: options.firesAfterActivation,
+    activate: options.activate,
+  });
+}

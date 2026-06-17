@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppNode, AppNodeMatcher, LayoutOperation, Segments, getTypeSlug } from '@dxos/app-toolkit';
+import { AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
@@ -32,9 +32,7 @@ import {
   TYPES_SECTION_TYPE,
   TYPE_COLLECTION_TYPE,
   buildViewIndex,
-  createObjectNode,
   downloadBlob,
-  getDynamicLabel,
 } from './shared';
 
 //
@@ -58,7 +56,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed([
           AppNode.makeSection({
-            id: Segments.types,
+            id: Paths.Segments.types,
             type: TYPES_SECTION_TYPE,
             label: ['types-section.label', { ns: meta.id }],
             icon: 'ph--database--regular',
@@ -130,7 +128,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const slug = getTypeSlug(schema);
+        const slug = Paths.getTypeSlug(schema);
         const typeUri = Type.getURI(schema);
 
         // {All} virtual node.
@@ -157,7 +155,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
           .map((object: Obj.Unknown) =>
-            createObjectNode({
+            AppNode.makeObject({
               get,
               db: space.db,
               object,
@@ -194,7 +192,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           objects
             .map((object: Obj.Unknown) => {
               get(Obj.atom(object));
-              return createObjectNode({
+              return AppNode.makeObject({
                 get,
                 db: space.db,
                 object,
@@ -259,7 +257,7 @@ const createSchemaNode = ({
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
-  const slug = getTypeSlug(schema);
+  const slug = Paths.getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
@@ -280,7 +278,7 @@ const createSchemaNode = ({
       },
     ),
     Match.orElse(() => ({
-      label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
+      label: AppNode.getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
       nodeId: slug,
     })),
   );
@@ -356,7 +354,7 @@ const createSchemaActions = ({
             properties: {
               // Static plugin types carry a per-typename `add-object.label` (e.g. "Add event");
               // database types have no such namespace, so fall back to the plugin's generic label.
-              label: getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
+              label: AppNode.getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -389,7 +387,7 @@ const createSchemaActions = ({
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
-        label: getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
+        label: AppNode.getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
         disabled: Type.getDatabase(type) == null,
         disposition: 'list-item',
@@ -405,7 +403,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
+        label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
