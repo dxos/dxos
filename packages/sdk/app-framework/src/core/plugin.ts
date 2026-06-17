@@ -10,6 +10,7 @@ import * as Pipeable from 'effect/Pipeable';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { type Config2, type PluginMeta } from '@dxos/protocols';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -148,125 +149,62 @@ class PluginModuleImpl implements PluginModule {
   }
 }
 
-export type Meta = {
-  /**
-   * Bare NSID (the name portion of {@link key}, e.g. `org.dxos.plugin.example`).
-   * Stable across versions; used for module-id namespacing, i18n namespaces,
-   * enable/disable, and registry lookups. Derived from `key` by {@link makeMeta} —
-   * do not set directly.
-   */
-  id: string;
+/**
+ * Runtime plugin metadata — exactly {@link PluginMeta} from `@dxos/protocols`, the same schema
+ * used in `dx.config.ts`. `id` and `version` are derived from a canonical DXN by {@link makeMeta};
+ * use {@link getURI} when a typed DXN is needed.
+ */
+export type Meta = PluginMeta;
 
-  /**
-   * Canonical identity DXN, including version when published
-   * (e.g. `dxn:org.dxos.plugin.example:0.8.3`). The validated source of truth
-   * from which {@link id} and {@link version} are derived.
-   *
-   * @example DXN.make('org.dxos.plugin.example', '0.8.3')
-   */
+/**
+ * Options for {@link makeMeta}: {@link PluginMeta} content fields (minus `id` and `version`,
+ * which are derived from `key`) plus the canonical DXN `key`.
+ * Pass a string `icon` with `iconHue` as a legacy convenience — it is merged into `icon: { key, hue }`.
+ */
+export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version'> & {
   key: DXN.DXN;
-
-  /**
-   * Human-readable name.
-   */
-  name: string;
-
-  /**
-   * Semver version string of the plugin, typically the publishing package's
-   * `package.json` version. Derived from the version segment of {@link key} by
-   * {@link makeMeta} — do not set directly.
-   */
-  version?: string;
-
-  /**
-   * Short description of plugin functionality.
-   */
-  description?: string;
-
-  /**
-   * Name of the author or organization that created the plugin.
-   */
-  // TODO(burdon): DID or domain name?
-  author?: string;
-
-  /**
-   * URL of home page.
-   */
-  homePage?: string;
-
-  /**
-   * URL of source code.
-   */
-  source?: string;
-
-  /**
-   * Relative path (inside the published package) to the plugin's bundled MDL
-   * specification file — e.g. `'PLUGIN.mdl'` or `'docs/PLUGIN.mdl'`. The file
-   * is shipped via the package's `files` entry and resolved by registry
-   * surfaces to render an in-app viewer and/or external link.
-   */
-  spec?: string;
-
-  /**
-   * Preview images. Each entry is a URL, or a record of theme-specific URLs `{ light?, dark? }`.
-   */
-  screenshots?: (string | { light?: string; dark?: string })[];
-
-  /**
-   * Tags to help categorize the plugin.
-   */
-  tags?: string[];
-
-  /**
-   * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
-   */
-  icon?: string;
-
-  /**
-   * Icon hue (ChromaticPalette).
-   */
+  /** @deprecated Use `icon: { key, hue }` instead. */
   iconHue?: string;
-
-  /**
-   * IDs of plugins this plugin functionally depends on.
-   *
-   * Treated as a convenience by the default `PluginManager` flow:
-   * - Enabling this plugin auto-enables the transitive closure of `dependsOn`
-   *   (installing missing entries from the plugin registry when possible).
-   * - Disabling a depended-upon plugin surfaces dependents to the caller; the
-   *   `PluginManager.disable` API supports an opt-in cascade.
-   *
-   * Not an invariant: low-level `PluginManager` APIs accept opt-outs
-   * (`resolveDependencies: false`, `ignoreDependents: true`) so a caller may
-   * substitute an alternative implementation that satisfies the dependent's
-   * capability needs in its own way.
-   */
-  dependsOn?: string[];
 };
 
 /**
- * Options for {@link makeMeta}: a {@link Meta} minus the fields derived from `key`.
- * Identity and version are specified solely through the `key` DXN — `id` and
- * `version` cannot be passed directly.
- */
-export type MakeMetaOptions = Omit<Meta, 'id' | 'version'>;
-
-/**
- * Constructs a plugin {@link Meta} from a single canonical DXN. The `key` DXN is
- * the one source of truth; `id` (bare NSID) and `version` (semver) are derived
- * from it so each datum has exactly one home and cannot drift out of sync.
+ * Constructs a plugin {@link Meta} from a single canonical DXN. `id` (bare NSID) and `version`
+ * (semver) are derived from `key` — do not set them directly.
  *
  * @example
  * export const meta = Plugin.makeMeta({
  *   key: DXN.make('org.dxos.plugin.example', '0.8.3'),
  *   name: 'Example',
+ *   icon: { key: 'ph--cube--regular', hue: 'indigo' },
  * });
  */
-export const makeMeta = (options: MakeMetaOptions): Meta => ({
-  ...options,
-  id: DXN.getName(options.key),
-  version: DXN.getVersion(options.key),
-});
+export const makeMeta = (options: MakeMetaOptions): Meta => {
+  const { key, iconHue, icon, ...rest } = options;
+  const mergedIcon: PluginMeta['icon'] =
+    icon === undefined
+      ? undefined
+      : iconHue !== undefined
+        ? { key: typeof icon === 'string' ? icon : icon.key, hue: iconHue }
+        : icon;
+  return {
+    ...rest,
+    ...(mergedIcon !== undefined ? { icon: mergedIcon } : {}),
+    id: DXN.getName(key),
+    version: DXN.getVersion(key),
+  };
+};
+
+/** Returns the plugin's canonical DXN URI, constructed from `meta.id` and `meta.version`. */
+export const getURI = (meta: Meta): DXN.DXN => DXN.make(meta.id, meta.version);
+
+/**
+ * Derives a runtime {@link Meta} from a loaded `dx.config.ts` (the `@dxos/protocols` `Config2`).
+ * `id` and `version` are derived from the canonical DXN; the remaining authored fields map through.
+ */
+export const getMetaFromConfig = ({ plugin }: Config2): Meta => {
+  const { id, ...rest } = plugin;
+  return makeMeta({ key: DXN.make(id), ...rest });
+};
 
 /**
  * Identifier denoting a Plugin.

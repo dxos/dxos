@@ -79,7 +79,9 @@ export const PluginItem = ({
   failure,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
-  const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
+  const { id, name, description, tags, icon: rawIcon } = plugin.meta;
+  const icon = typeof rawIcon === 'string' ? rawIcon : (rawIcon?.key ?? 'ph--circle--regular');
+  const iconHue = typeof rawIcon === 'object' && rawIcon !== null ? (rawIcon.hue ?? 'neutral') : 'neutral';
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];

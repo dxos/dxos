@@ -14,3 +14,4 @@ export type * from './types.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
 export * as FeedProtocol from './FeedProtocol.ts';
 export * as TraceProtocol from './TraceProtocol.ts';
+export * from './config2/index.ts';
