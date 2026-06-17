@@ -180,7 +180,8 @@ op enrichMessage
   desc: Extracts proper nouns from each transcript block of a Message using a small LLM, full-text-searches the space for matching objects, and rewrites the text with inline `[noun](dxn)` reference links.
   input:
     message: Message
-  output: Message
+  output:
+    message: Message
   effects: [echo:read, ai:inference]
   requires: [AiService, Database]
   note: |
