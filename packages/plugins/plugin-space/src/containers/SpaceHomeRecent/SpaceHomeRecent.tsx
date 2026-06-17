@@ -54,12 +54,6 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
   );
   const recent = useQuery(filter && space ? space.db : undefined, query);
 
-  const RecentTile = useMemo(() => {
-    const Tile = ({ data }: { data: Obj.Unknown; index: number }) => <RecentObjectTile space={space} object={data} />;
-    Tile.displayName = 'RecentObjectTile';
-    return Tile;
-  }, [space]);
-
   if (recent.length === 0) {
     return null;
   }
@@ -67,7 +61,7 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
   return (
     <>
       <h2 className='text-sm font-medium text-description'>{t('space-home.recent.heading')}</h2>
-      <Masonry.Root Tile={RecentTile}>
+      <Masonry.Root Tile={RecentObjectTile}>
         <Masonry.Content padding={false}>
           <Masonry.Viewport classNames='py-2' items={recent} getId={(object) => object.id} />
         </Masonry.Content>
@@ -76,29 +70,21 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
   );
 };
 
-type RecentObjectTileProps = {
-  space?: Space;
-  object: Obj.Unknown;
-};
-
-const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
+const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.id);
-  const typename = Obj.getTypename(object);
+  const typename = Obj.getTypename(data);
   const label = toLocalizedString(
-    Obj.getLabel(object) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
+    Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );
-  const iconAnnotation = Obj.getIcon(object);
+  const iconAnnotation = Obj.getIcon(data);
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
   const handleClick = useCallback(() => {
-    if (!space) {
-      return;
-    }
-    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
-  }, [invokePromise, object, space]);
+    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] });
+  }, [invokePromise, data]);
 
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
@@ -111,3 +97,5 @@ const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
     </Card.Root>
   );
 };
+
+RecentObjectTile.displayName = 'RecentObjectTile';
