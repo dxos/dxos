@@ -45,18 +45,17 @@ export type DXN = URI.URI & { readonly __DXN: unique symbol };
  * whose prefix segment is `string` are not rejected — those are validated at
  * runtime by the regex inside `parse`.
  */
-export type Name<T extends string> =
-  [string] extends [T]
-    ? string
-    : T extends `${string}.${infer Rest}`
-      ? Rest extends `${string}.${string}`
-        ? [Name<Rest>] extends [never]
-          ? never
-          : T
-        : Rest extends `${string}-${string}`
-          ? never
-          : T
-      : never;
+export type Name<T extends string> = [string] extends [T]
+  ? string
+  : T extends `${string}.${infer Rest}`
+    ? Rest extends `${string}.${string}`
+      ? [Name<Rest>] extends [never]
+        ? never
+        : T
+      : Rest extends `${string}-${string}`
+        ? never
+        : T
+    : never;
 
 /**
  * Cheap prefix check — does not validate the full DXN grammar.
@@ -77,13 +76,10 @@ export const isDXN = (value: unknown): value is DXN => typeof value === 'string'
  */
 export const make: {
   <T extends string>(
-    nsid: [Name<T>] extends [never]
-      ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)`
-      : T,
+    nsid: [Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
     version?: string,
   ): DXN;
-} = (nsid: string, version?: string): DXN =>
-  parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
+} = (nsid: string, version?: string): DXN => parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
 
 /**
  * Parses a full DXN string. Returns undefined on failure.

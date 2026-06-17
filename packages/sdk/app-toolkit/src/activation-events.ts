@@ -47,9 +47,7 @@ export namespace AppActivationEvents {
   /**
    * Fired to load any newly available artifacts definitions.
    */
-  export const SetupArtifactDefinition = ActivationEvent$.make(
-    'org.dxos.app-framework.event.setupArtifactDefinition',
-  );
+  export const SetupArtifactDefinition = ActivationEvent$.make('org.dxos.app-framework.event.setupArtifactDefinition');
 
   /**
    * Fired when the graph is ready.

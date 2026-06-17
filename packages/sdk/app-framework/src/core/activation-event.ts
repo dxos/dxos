@@ -29,9 +29,7 @@ export type Events =
  */
 export const make: {
   <T extends string>(
-    nsid: [DXN.Name<T>] extends [never]
-      ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)`
-      : T,
+    nsid: [DXN.Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
     specifier?: string,
   ): ActivationEvent;
 } = (nsid: string, specifier?: string): ActivationEvent => ({
