@@ -51,6 +51,6 @@ export type UrlResolver = {
   readonly resolve: (url: string, file: File.File, space?: Space) => Promise<string | undefined>;
 };
 
-export const UrlResolver = Capability.make<UrlResolver>(`${meta.id}.capability.url-resolver`);
+export const UrlResolver = Capability.make<UrlResolver>(`${meta.id}.capability.urlResolver`);
 
 export const SettingsAtom = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);

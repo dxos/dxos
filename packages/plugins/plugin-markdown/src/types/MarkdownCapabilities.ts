@@ -42,10 +42,10 @@ export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${met
 export const State = Capability.make<Atom.Writable<MarkdownState>>(`${meta.id}.capability.state`);
 
 /** Editor state store for cursor positions, scroll state, etc. */
-export const EditorState = Capability.make<EditorStateStore>(`${meta.id}.capability.editor-state`);
+export const EditorState = Capability.make<EditorStateStore>(`${meta.id}.capability.editorState`);
 
 /** Registry of active EditorView instances keyed by attendable ID. */
-export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.id}.capability.editor-views`);
+export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.id}.capability.editorViews`);
 
 // TODO(burdon): Move to ./types (external API)?
 export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}.capability.extensions`);

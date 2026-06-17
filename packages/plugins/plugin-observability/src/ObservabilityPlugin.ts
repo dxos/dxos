@@ -67,7 +67,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.make('org.dxos.plugin.client.event.identity-created'),
+    activatesOn: ActivationEvent.make('org.dxos.plugin.client.event.identityCreated'),
     activate: PrivacyNotice,
   }),
   Plugin.addModule(({ namespace, observability }) => ({
