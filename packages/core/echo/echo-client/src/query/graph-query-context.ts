@@ -178,9 +178,9 @@ export class SpaceQuerySource implements QuerySource {
       get spaceId(): SpaceId {
         return _database.spaceId;
       },
-      allCores: () => _database.coreDatabase.allObjectCores(),
-      getCoreById: (id, load) => _database.coreDatabase.getObjectCoreById(id, { load: load ?? false }),
-      areStrongDepsSatisfied: (core) => _database.coreDatabase.areStrongDepsSatisfied(core),
+      allCores: () => _database.allObjectCores(),
+      getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
+      areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
     };
     this._executor = new WorkingSetQueryExecutor(provider);
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
@@ -222,7 +222,7 @@ export class SpaceQuerySource implements QuerySource {
         // For simple queries, use the lightweight filter check for the newly-updated object.
         const trivial = isSimpleSelectionQuery(this._query!);
         if (trivial && !trivial.hasQueues) {
-          const core = this._database.coreDatabase.getObjectCoreById(objectId, { load: false });
+          const core = this._database._entityManager.getObjectCoreById(objectId, { load: false });
           return core != null && this._filterCore(core, trivial.filter, trivial.options);
         }
 

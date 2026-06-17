@@ -263,9 +263,9 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   get spaceId() {
     return db.spaceId;
   },
-  allCores: () => db.coreDatabase.allObjectCores(),
-  getCoreById: (id, load) => db.coreDatabase.getObjectCoreById(id, { load: load ?? false }),
-  areStrongDepsSatisfied: (core) => db.coreDatabase.areStrongDepsSatisfied(core),
+  allCores: () => db.allObjectCores(),
+  getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
+  areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
 });
 
 const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));

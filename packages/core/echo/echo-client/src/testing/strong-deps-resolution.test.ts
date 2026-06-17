@@ -136,11 +136,11 @@ describe('strong dependency resolution', () => {
         }),
       );
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads();
+      const heads = await db1.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-      await db2.coreDatabase.updateIndexes();
+      await db2.waitUntilHeadsReplicated(heads);
+      await db2.updateIndexes();
       // Peer 2 must fetch the feed endpoints over the network to satisfy the relation's strong deps.
       // Feed is identified by the feed object id replicated through the automerge document.
 
@@ -262,11 +262,11 @@ describe('strong dependency resolution', () => {
         }),
       );
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads();
+      const heads = await db1.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-      await db2.coreDatabase.updateIndexes();
+      await db2.waitUntilHeadsReplicated(heads);
+      await db2.updateIndexes();
       // The db source replicates with the document; the feed target must be fetched over the network.
       // Feed is identified by the feed object id replicated through the automerge document.
 
@@ -406,11 +406,11 @@ describe('strong dependency resolution', () => {
         }),
       );
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads();
+      const heads = await db1.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-      await db2.coreDatabase.updateIndexes();
+      await db2.waitUntilHeadsReplicated(heads);
+      await db2.updateIndexes();
 
       const obj = await waitForRelation(db2, relation.id);
       assert(Relation.isRelation(obj), 'same-db relation must surface on a remote peer');

@@ -308,7 +308,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const candidateSpaceId of [spaceId]) {
       const db = this._databases.get(candidateSpaceId);
       if (db) {
-        const core = db.coreDatabase.getObjectCoreById(entityId, { load: false });
+        const core = db.getObjectCoreById(entityId, { load: false });
         if (core != null) {
           const obj = db.getObjectById(entityId, { deleted: true });
           if (obj != null) {
@@ -383,7 +383,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       const db = this._databases.get(candidateSpaceId);
       if (db) {
         pendingDb++;
-        void db.coreDatabase
+        void db
           .loadObjectCoreById(entityId, { diskOnly, returnWithUnsatisfiedDeps: true })
           .then((core) => {
             pendingDb--;

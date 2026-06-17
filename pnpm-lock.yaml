@@ -5659,6 +5659,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/index-core':
+        specifier: workspace:*
+        version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -8336,6 +8339,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors

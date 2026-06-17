@@ -390,14 +390,14 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     // Link only main; the dep is absent from the directory, so its load op settles `unavailable`
     // and main is omitted. This latches the cached op that the local materialization must heal.
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db._entityManager.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
     });
     await sleep(200);
 
-    const before = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
+    const before = await asyncTimeout(db._entityManager.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
     expect(before, 'main omitted while its strong dep is absent').toBeUndefined();
 
     // Materialize the dep locally: plant its document and link it into the space root. The link
@@ -415,7 +415,7 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     // The local materialization heals the cached resolution, so main now surfaces.
     await expect
-      .poll(async () => (await db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }))?.id, {
+      .poll(async () => (await db._entityManager.loadObjectCoreById(mainObjectId, { diskOnly: true }))?.id, {
         timeout: 5_000,
       })
       .toEqual(mainObjectId);

@@ -601,7 +601,7 @@ export class ObjectCore {
         target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
         parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
       },
-      this.database?.spaceId,
+      this.entityManager?.spaceId,
     );
   }
 }

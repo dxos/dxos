@@ -659,10 +659,6 @@ export class EntityManager implements IDatabaseBinding {
     return () => currentStream?.close();
   }
 
-  areStrongDepsSatisfied(core: ObjectCore): boolean {
-    return this._areDepsSatisfied(core);
-  }
-
   getAllObjectIds(): string[] {
     if (!this._spaceRootDocHandle) {
       return [];

@@ -1000,7 +1000,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * relative) — keeping the relation's strong-dependency endpoints resolvable from the persisted ref alone.
    */
   rebindRelationEndpoints(target: ProxyTarget): void {
-    const core = target[symbolInternals].core;
+    const core = target[symbolInternals];
     if (core.getKind() !== EntityKind.Relation) {
       return;
     }

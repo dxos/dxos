@@ -157,7 +157,7 @@ export class EchoClient extends Resource {
     // sources can re-hydrate index hits once their documents become available locally.
     this._dbUpdateSubscriptions.set(
       spaceId,
-      db.coreDatabase._updateEvent.on((event) => {
+      db._entityManager._updateEvent.on((event) => {
         this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
       }),
     );
