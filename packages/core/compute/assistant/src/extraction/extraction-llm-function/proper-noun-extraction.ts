@@ -67,5 +67,12 @@ export const enrichTranscriptMessage = (message: Message.Message, { db }: { db: 
       }),
     );
 
-    return Obj.make(Message.Message, { sender: message.sender, created: message.created, blocks });
+    // Preserve the message identity and metadata; enrichment only rewrites transcript block text.
+    return Obj.make(Message.Message, {
+      id: message.id,
+      sender: message.sender,
+      created: message.created,
+      properties: message.properties,
+      blocks,
+    });
   });
