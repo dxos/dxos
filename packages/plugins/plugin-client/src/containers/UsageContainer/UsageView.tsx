@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type GetProfileUsageResponse, type MeteringLimit } from '@dxos/protocols';
+import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
 import { IconButton, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -27,24 +27,26 @@ export type UsageViewProps = {
 type TFunction = (key: string, options?: Record<string, unknown>) => string;
 
 /**
- * Whether a usage category falls under a limit. Categories are `eventType/<subtype…>/valueKey`;
- * the subtype segments are matched positionally against `subtypePattern` where `*` matches any.
+ * Whether a usage row falls under a limit. Subtype segments are matched positionally against
+ * `subtypePattern` where `*` matches any segment.
  */
-const usageMatchesLimit = (category: string, limit: MeteringLimit): boolean => {
-  const segments = category.split('/');
-  if (segments[0] !== limit.eventType || segments.at(-1) !== limit.valueKey) {
+const usageMatchesLimit = (item: MeteringUsageItem, limit: MeteringLimit): boolean => {
+  if (item.eventType !== limit.eventType || item.valueKey !== limit.valueKey) {
     return false;
   }
-  const subtypeSegments = segments.slice(1, -1);
-  return limit.subtypePattern.every((pattern, index) => pattern === '*' || pattern === subtypeSegments[index]);
+  return limit.subtypePattern.every((pattern, index) => pattern === '*' || pattern === item.subtypePattern[index]);
 };
 
 /** Sum every usage item that falls under the limit. */
 const sumUsageForLimit = (usage: GetProfileUsageResponse['usage'], limit: MeteringLimit): number =>
-  usage.reduce((total, item) => (usageMatchesLimit(item.category, limit) ? total + item.amount : total), 0);
+  usage.reduce((total, item) => (usageMatchesLimit(item, limit) ? total + item.amount : total), 0);
 
 /** Humanize a camelCase value key, e.g. `outputTokens` → `output tokens`. */
-const formatValueKey = (valueKey: string): string => valueKey.replace(/([A-Z])/g, ' $1').trim().toLowerCase();
+const formatValueKey = (valueKey: string): string =>
+  valueKey
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .toLowerCase();
 
 /**
  * Human label for a limit: a scope followed by the value key, e.g.

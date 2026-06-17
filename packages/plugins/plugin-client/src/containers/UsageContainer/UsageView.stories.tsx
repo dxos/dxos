@@ -15,15 +15,33 @@ import { UsageView } from './UsageView';
 const usageData: GetProfileUsageResponse = {
   profileId: 'did:key:z6MkExampleProfileIdentity',
   usage: [
-    { category: 'ai/claude-opus-4/inputTokens', amount: 1_284_500 },
-    { category: 'ai/claude-opus-4/outputTokens', amount: 238_900 },
-    { category: 'ai/claude-sonnet-4/inputTokens', amount: 92_300 },
-    { category: 'ai/claude-sonnet-4/outputTokens', amount: 18_400 },
+    { eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'], amount: 1_284_500 },
+    { eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['claude-opus-4'], amount: 238_900 },
+    { eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-sonnet-4'], amount: 92_300 },
+    { eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['claude-sonnet-4'], amount: 18_400 },
   ],
   limits: [
-    { eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['claude-opus-4'], limit: 5_000_000, windowDuration: 24 * 7 * 60 * 60 },
-    { eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'], limit: 1_000_000, windowDuration: 24 * 30 * 60 * 60 },
-    { eventType: 'ai', valueKey: 'inputTokens', subtypePattern: ['*'], limit: 20_000_000, windowDuration: 24 * 30 * 60 * 60 },
+    {
+      eventType: 'ai',
+      valueKey: 'inputTokens',
+      subtypePattern: ['claude-opus-4'],
+      limit: 5_000_000,
+      windowDuration: 24 * 7 * 60 * 60,
+    },
+    {
+      eventType: 'ai',
+      valueKey: 'outputTokens',
+      subtypePattern: ['*'],
+      limit: 1_000_000,
+      windowDuration: 24 * 30 * 60 * 60,
+    },
+    {
+      eventType: 'ai',
+      valueKey: 'inputTokens',
+      subtypePattern: ['*'],
+      limit: 20_000_000,
+      windowDuration: 24 * 30 * 60 * 60,
+    },
   ],
   buckets: [],
 };
@@ -58,7 +76,15 @@ export const Internal: Story = {
     data: {
       profileId: usageData.profileId,
       usage: usageData.usage,
-      limits: [{ eventType: 'ai', valueKey: 'outputTokens', subtypePattern: ['*'], limit: null, windowDuration: 24 * 30 * 60 * 60 }],
+      limits: [
+        {
+          eventType: 'ai',
+          valueKey: 'outputTokens',
+          subtypePattern: ['*'],
+          limit: null,
+          windowDuration: 24 * 30 * 60 * 60,
+        },
+      ],
       buckets: [],
     },
     lastUpdated: new Date('2026-06-16T12:00:00Z').getTime(),

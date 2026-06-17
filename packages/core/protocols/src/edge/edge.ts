@@ -765,16 +765,30 @@ export type RequestAccessResponse = { received: boolean };
 // Metering (VP auth)
 //
 
+/** Structured usage key aligned with {@link MeteringLimitSchema} (without cap/window fields). */
+export const MeteringUsageKeySchema = Schema.Struct({
+  /** Event type (e.g. `ai`). */
+  eventType: Schema.String,
+  /** Value key being metered (e.g. `outputTokens`). */
+  valueKey: Schema.String,
+  /**
+   * Positional match against the event's subtype segments (e.g. model); `*` matches any
+   * segment, and positions beyond the pattern are unconstrained.
+   */
+  subtypePattern: Schema.Array(Schema.String),
+});
+export type MeteringUsageKey = Schema.Schema.Type<typeof MeteringUsageKeySchema>;
+
+/** Rolling-window usage total for a structured key. */
 export const MeteringUsageItemSchema = Schema.Struct({
-  /** Opaque category key derived by the engine, e.g. `ai/<model>/inputTokens`. */
-  category: Schema.String,
+  ...MeteringUsageKeySchema.fields,
   amount: Schema.Number,
 });
 export type MeteringUsageItem = Schema.Schema.Type<typeof MeteringUsageItemSchema>;
 
-/** A single raw usage bucket (1h resolution) for a metered category. */
+/** A single raw usage bucket (1h resolution) for a structured key. */
 export const MeteringUsageBucketSchema = Schema.Struct({
-  category: Schema.String,
+  ...MeteringUsageKeySchema.fields,
   /** Bucket start timestamp (epoch ms, floored to the hour). */
   bucketStart: Schema.Number,
   amount: Schema.Number,
