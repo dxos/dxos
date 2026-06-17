@@ -210,6 +210,26 @@ export const WithSubAgents: Story = {
 };
 
 /**
+ * Two surfaces over a shared space: ChatModule (left) and TracePanel (right).
+ * Agent tool invocations populate the execution-graph timeline in the companion panel.
+ */
+export const WithExecutionGraph: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TraceModule]],
+    blueprints: [MarkdownBlueprint.key],
+  },
+};
+
+/**
  * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
  * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
  *
