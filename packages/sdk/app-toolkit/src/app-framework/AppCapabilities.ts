@@ -90,9 +90,7 @@ export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capab
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>(
-  'org.dxos.app-framework.capability.appGraphBuilder',
-);
+export const AppGraphBuilder = Capability$.make<BuilderExtensions>('org.dxos.app-framework.capability.appGraphBuilder');
 
 export type Settings = {
   prefix: string;
