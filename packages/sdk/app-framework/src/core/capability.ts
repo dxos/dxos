@@ -179,7 +179,7 @@ export type LazyCapability<Props = void, Capabilities extends ModuleReturn = Mod
 export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
   name: string,
   c: LoadCapability<T, R> | LoadCapabilities<T, R>,
-): LazyCapability => {
+): LazyCapability<T> => {
   const lazyFn = (props: T) =>
     Effect.gen(function* () {
       const { default: getCapability } = yield* Effect.promise(() => c());
@@ -188,10 +188,11 @@ export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
       return normalized as NormalizeReturn<R>;
     });
 
-  // Widened to the opaque base type so exported `const` declarations produce a portable type in
-  // declaration files. Specific Props/Capabilities types are checked at Capability.contributes.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return Object.assign(lazyFn, { [ModuleTag]: name }) as LazyCapability<any>;
+  // Props (T) are preserved so callers pass correctly-typed options, but the contributed
+  // Capabilities type is widened to the opaque base. The concrete capability type often traces to a
+  // module-internal source path that TypeScript cannot name in declaration files (TS2883); the base
+  // type is portable. The contributed type is checked at Capability.contributes regardless.
+  return Object.assign(lazyFn, { [ModuleTag]: name }) as LazyCapability<T>;
 };
 
 /**
