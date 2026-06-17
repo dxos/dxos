@@ -16,12 +16,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { TranscriptionCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-
-const SettingsReady = AppActivationEvents.createSettingsEvent(TranscriptionCapabilities.Settings.identifier);
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -30,11 +27,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    firesAfterActivation: [SettingsReady],
-    activate: TranscriptionSettings,
-  }),
+  AppPlugin.addSettingsModule({ activate: TranscriptionSettings }),
   Plugin.addModule({
     id: 'transcription',
     activatesOn: AppActivationEvents.SetupAppGraph,

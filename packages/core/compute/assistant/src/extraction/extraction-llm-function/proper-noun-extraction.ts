@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import { type Database, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { findReferences, insertReferences } from './quotes';
+import { findReferences, insertReferences } from '../quotes';
 
 const EXTRACTION_MODEL = 'ai.claude.model.claude-haiku-4-5';
 
