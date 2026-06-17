@@ -318,6 +318,8 @@ export const translations = [
         'qr.label': 'QR Code',
         'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
+        'space-home-node.label': 'Home',
+        'space-home.recent.heading': 'Recent',
       },
     },
   },

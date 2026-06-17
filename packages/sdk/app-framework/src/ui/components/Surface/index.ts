@@ -22,6 +22,7 @@ import {
   create as createSurface,
   createWeb as createWebSurface,
   isSurfaceFilter as isSurfaceFilterFn,
+  makeFilter as makeFilterFn,
   makeType as makeTypeFn,
 } from './types';
 
@@ -42,6 +43,7 @@ export namespace Surface {
   export type TokenData<T> = SurfaceTokenData<T>;
   export type TypedProps<TToken extends SurfaceRoleToken<any>> = SurfaceTypedProps<TToken>;
   export const makeType = makeTypeFn;
+  export const makeFilter = makeFilterFn;
   export const isFilter = isSurfaceFilterFn;
 
   export const ProfilerProvider = SurfaceProfilerProvider;
