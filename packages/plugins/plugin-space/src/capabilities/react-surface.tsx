@@ -10,7 +10,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation, SPACE_HOME_NODE_TYPE } from '@dxos/app-toolkit';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -48,11 +48,12 @@ import {
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceHomeContent } from '#surface';
 import {
   HueAnnotationId,
   IconAnnotationId,
   SpaceCapabilities,
+  SpaceHomeContent,
+  SPACE_HOME_NODE_TYPE,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';

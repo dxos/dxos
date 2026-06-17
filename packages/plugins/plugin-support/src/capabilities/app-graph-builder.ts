@@ -7,23 +7,18 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import {
-  AppCapabilities,
-  AppNode,
-  LayoutOperation,
-  SPACE_HOME_NODE_TYPE,
-  isPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
 import { isSpace, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Obj } from '@dxos/echo';
+import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { SHORTCUTS_DIALOG } from '../constants';
 import { WelcomeDismissedAnnotation } from '../annotations';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple

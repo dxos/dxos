@@ -6,12 +6,19 @@ import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Node, useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { Column, Panel, ScrollArea } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import {
+  type ActionExecutor,
+  type ActionGraphProps,
+  Menu,
+  MenuBuilder,
+  graphActions,
+  useMenuBuilder,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { SpaceHomeContent, SpaceHomePinBottom } from '#surface';
+import { SpaceHomeContent, SpaceHomePinBottom } from '#types';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
@@ -62,7 +69,9 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
  * toolbar via `disposition: 'toolbar'`; the Home shell contributes none itself, so the toolbar
  * is empty unless another plugin (e.g. plugin-support's tour/welcome actions) contributes.
  */
-const useMenuActions = (attendableId?: string): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
+const useMenuActions = (
+  attendableId?: string,
+): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
 
@@ -71,14 +80,10 @@ const useMenuActions = (attendableId?: string): { actions: ReturnType<typeof use
       if (!attendableId) {
         return MenuBuilder.make().build();
       }
-
-      const actions = get(graph.actions(attendableId));
-      const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
       return MenuBuilder.make()
-        .subgraph({
-          nodes: toolbarActions as ActionGraphProps['nodes'],
-          edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-        })
+        .subgraph(
+          graphActions(graph, get, attendableId, { filter: (action) => action.properties.disposition === 'toolbar' }),
+        )
         .build();
     },
     [graph, attendableId],
@@ -86,7 +91,7 @@ const useMenuActions = (attendableId?: string): { actions: ReturnType<typeof use
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action as Node.Action, { caller: meta.id });
+      void runAction(action, { caller: meta.id });
     },
     [runAction],
   );

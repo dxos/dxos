@@ -21,7 +21,6 @@ export * from './paths';
 export * from './plugin';
 export * from './native-passkey';
 export * from './personal-space';
-export * from './space-home';
 export * from './type-options';
 export * from './type-section-extension';
 export * from './type-section-resolver';

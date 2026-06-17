@@ -11,9 +11,9 @@ import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framew
 import { LayoutOperation, getPersonalSpace, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
+import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
-import { SpaceHomeContent } from '@dxos/plugin-space';
 
 import { SupportSettings } from '#components';
 import {

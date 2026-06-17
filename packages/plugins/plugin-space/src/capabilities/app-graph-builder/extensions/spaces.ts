@@ -8,7 +8,6 @@ import { Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
   AppNodeMatcher,
-  SPACE_HOME_NODE_TYPE,
   SPACE_HOME_SEGMENT,
   getActiveSpace,
   getPersonalSpace,
@@ -26,7 +25,7 @@ import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SPACE_TYPE, SpaceCapabilities } from '#types';
+import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
 
 import { SHARED, getSpaceDisplayName } from '../../../util';
 import {

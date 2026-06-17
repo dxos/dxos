@@ -67,10 +67,7 @@ export const makeType = <TData>(role: string): RoleToken<TData> => ({ role });
  * This is the framework-level primitive; `@dxos/app-toolkit` builds richer
  * domain-aware helpers (ECHO schema checks, literal matching, etc.) on top of it.
  */
-export const makeFilter = <TData>(
-  token: RoleToken<TData>,
-  guard?: (data: TData) => boolean,
-): SurfaceFilter<TData> => {
+export const makeFilter = <TData>(token: RoleToken<TData>, guard?: (data: TData) => boolean): SurfaceFilter<TData> => {
   const boundGuard =
     guard == null
       ? () => true

@@ -37,7 +37,11 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
     return null;
   }
 
-  return <div className={dismissed ? 'hidden' : undefined}><WelcomePanel /></div>;
+  return (
+    <div className={dismissed ? 'hidden' : undefined}>
+      <WelcomePanel />
+    </div>
+  );
 };
 
 /**
@@ -46,7 +50,8 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
  * Settings "Show welcome page" action, and other devices all re-render live.
  */
 export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void] => {
-  const [properties, updateProperties] = useObject(space?.properties);
+  const spaceProperties = useMemo(() => space?.properties, [space]);
+  const [properties, updateProperties] = useObject(spaceProperties);
   const dismissed = properties
     ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
     : false;

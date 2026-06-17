@@ -15,8 +15,8 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Panel } from '@dxos/react-ui';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
+import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
 import {
@@ -48,15 +48,11 @@ export default Capability.makeModule(() =>
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
-      // Home article pinned-bottom region: the assistant prompt. The shell renders this role with
-      // `limit={1}`, so only this single contributor mounts.
       Surface.create({
         id: 'spaceHomePrompt',
         filter: Surface.makeFilter(SpaceHomePinBottom),
         component: ({ data }) => <SpaceHomePrompt space={data.space} />,
       }),
-      // Home article content region: starter-prompt cards. Always rendered below the recent-objects
-      // masonry (plugin-space) and welcome panel (plugin-support) via `position: 'last'`.
       Surface.create({
         id: 'spaceHomeSuggestions',
         filter: Surface.makeFilter(SpaceHomeContent),
