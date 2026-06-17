@@ -85,13 +85,13 @@ export type AppGraph = Readonly<{
 /**
  * @category Capability
  */
-export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capability.app-graph');
+export const AppGraph = Capability$.make<AppGraph>('org.dxos.app-framework.capability.appGraph');
 
 /**
  * @category Capability
  */
 export const AppGraphBuilder = Capability$.make<BuilderExtensions>(
-  'org.dxos.app-framework.capability.app-graph-builder',
+  'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
 export type Settings = {
@@ -129,13 +129,13 @@ export type Toolkit = OpaqueToolkit.OpaqueToolkit;
 /**
  * @category Capability
  */
-export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.ai-toolkit');
+export const Toolkit = Capability$.make<Toolkit>('org.dxos.app-framework.capability.aiToolkit');
 
 /**
  * @category Capability
  */
 export const BlueprintDefinition = Capability$.make<Blueprint.Definition>(
-  'org.dxos.app-framework.capability.blueprint-definition',
+  'org.dxos.app-framework.capability.blueprintDefinition',
 );
 
 /**
@@ -161,7 +161,7 @@ export type PluginAsset = Readonly<{
 /**
  * @category Capability
  */
-export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.plugin-asset');
+export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.pluginAsset');
 
 /**
  * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
@@ -170,14 +170,14 @@ export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework
  */
 export const AiModelResolver = Capability$.make<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
->('org.dxos.app-framework.capability.ai-model-resolver');
+>('org.dxos.app-framework.capability.aiModelResolver');
 
 export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
 /**
  * @category Capability
  */
-export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.file-uploader');
+export const FileUploader = Capability$.make<FileUploader>('org.dxos.app-framework.capability.fileUploader');
 
 export type AnchorSort = {
   key: string;
@@ -187,7 +187,7 @@ export type AnchorSort = {
 /**
  * @category Capability
  */
-export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
+export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchorSort');
 
 /** Text content extractor contributed per typename by plugins that support text extraction. */
 export type TextContent = Readonly<{
@@ -198,7 +198,7 @@ export type TextContent = Readonly<{
 /**
  * @category Capability
  */
-export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.text-content');
+export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.textContent');
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
@@ -212,7 +212,7 @@ export type CommentConfig = Readonly<{
 /**
  * @category Capability
  */
-export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.comment-config');
+export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.commentConfig');
 
 export type NavigationTarget = {
   /** Navigation path usable with the Open operation. */
@@ -236,7 +236,7 @@ export type NavigationQuery = {
 export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
 
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
-  'org.dxos.app-framework.capability.navigation-target-resolver',
+  'org.dxos.app-framework.capability.navigationTargetResolver',
 );
 
 /**
@@ -248,7 +248,7 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
 export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
 export const NavigationHandler = Capability$.make<NavigationHandler>(
-  'org.dxos.app-toolkit.capability.navigation-handler',
+  'org.dxos.app-toolkit.capability.navigationHandler',
 );
 
 /**
@@ -261,5 +261,5 @@ export const NavigationHandler = Capability$.make<NavigationHandler>(
 export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
 
 export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
-  'org.dxos.app-framework.capability.navigation-path-resolver',
+  'org.dxos.app-framework.capability.navigationPathResolver',
 );

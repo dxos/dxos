@@ -35,7 +35,7 @@ export const Observability = Capability.make<Observability$.Observability>(`${me
  * The callback is responsible for the entire download (read store, encode, save file).
  */
 export type LogDownloader = () => void | Promise<void>;
-export const LogDownloader = Capability.make<LogDownloader>(`${meta.id}.capability.log-downloader`);
+export const LogDownloader = Capability.make<LogDownloader>(`${meta.id}.capability.logDownloader`);
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
 // TODO(burdon): Figure out how to share defs.

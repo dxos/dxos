@@ -70,4 +70,4 @@ export type MarkerProvider = {
   useMarkers: (subject: any, options: { attendableId?: string }) => MarkerSet;
 };
 
-export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.id}.capability.marker-provider`);
+export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.id}.capability.markerProvider`);
