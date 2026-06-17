@@ -15,10 +15,7 @@ export const BlueprintDefinition: Capability.LazyCapability<
 > = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const IntegrationProvider = Capability.lazy('IntegrationProvider', () => import('./integration-provider'));
-export const NavigationResolver = Capability.lazy(
-  'NavigationResolver',
-  () => import('./navigation-resolver'),
-);
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

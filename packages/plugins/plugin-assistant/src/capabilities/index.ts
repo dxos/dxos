@@ -19,10 +19,7 @@ export const IntegrationProvider = Capability.lazy(
   'AnthropicIntegrationProvider',
   () => import('./integration-provider'),
 );
-export const AppGraphBuilder = Capability.lazy(
-  'AppGraphBuilder',
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 // Explicit annotation: the contributed capability type references `Template` from @dxos/plugin-automation,
 // so the inferred lazy type needs annotating to stay portable (TS2883).
 export const AutomationTemplates: Capability.LazyCapability<

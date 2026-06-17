@@ -12,7 +12,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const PresenterSettings = Capability.lazy(
-  'PresenterSettings',
-  () => import('./settings'),
-);
+export const PresenterSettings = Capability.lazy('PresenterSettings', () => import('./settings'));

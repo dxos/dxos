@@ -12,10 +12,7 @@ export const CreateObject = Capability.lazy('CreateObject', () => import('./crea
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
-export const NavigationResolver = Capability.lazy(
-  'NavigationResolver',
-  () => import('./navigation-resolver'),
-);
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

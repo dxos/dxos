@@ -28,7 +28,9 @@ const handler: Operation.WithHandler<typeof ImportExemplarSpace> = ImportExempla
     Effect.fnUntraced(function* ({ force }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
-      const existing = force ? undefined : client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
+      const existing = force
+        ? undefined
+        : client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
       const space =
         existing ??
         (yield* Effect.tryPromise(() => {

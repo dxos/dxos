@@ -14,8 +14,5 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const ObservabilitySettings = Capability.lazy(
-  'ObservabilitySettings',
-  () => import('./settings'),
-);
+export const ObservabilitySettings = Capability.lazy('ObservabilitySettings', () => import('./settings'));
 export const ObservabilityState = Capability.lazy('ObservabilityState', () => import('./state'));

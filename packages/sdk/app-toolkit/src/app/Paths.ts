@@ -221,4 +221,3 @@ export const getWorkspaceFromPath = (qualifiedId: string): string => {
   }
   return qualifiedId.slice(0, secondSep);
 };
-

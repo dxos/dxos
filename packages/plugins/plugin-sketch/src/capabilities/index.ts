@@ -7,10 +7,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const NavigationResolver = Capability.lazy(
-  'NavigationResolver',
-  () => import('./navigation-resolver'),
-);
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 // The contributed capability type references Operation types from @dxos/compute, so the lazy
 // wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
 export const CommentConfig: Capability.LazyCapability<
