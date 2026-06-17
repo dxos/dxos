@@ -22,6 +22,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/av"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -29,6 +32,9 @@
     },
     {
       "path": "../../common/display-name"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -70,6 +76,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
@@ -95,6 +104,15 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-testing"

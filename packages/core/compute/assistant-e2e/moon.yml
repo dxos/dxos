@@ -1,12 +1,6 @@
-layer: library
+layer: automation
 language: typescript
 tags:
-  - ts-build
   - ts-test
-  - pack
+  - typecheck
   - memoized-llm
-tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
-      - '--platform=neutral'

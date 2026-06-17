@@ -22,6 +22,7 @@ import {
   AiService,
   IntegrationProvider,
   AppGraphBuilder,
+  AutomationTemplates,
   AssistantState,
   BlueprintDefinition,
   CompanionChatProvisioner,
@@ -74,6 +75,11 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       firesBeforeActivation: [AppActivationEvents.SetupArtifactDefinition],
     }),
     AppPlugin.addTranslationsModule({ translations }),
+    Plugin.addModule({
+      id: 'automation-templates',
+      activatesOn: AppActivationEvents.SetupSchema,
+      activate: AutomationTemplates,
+    }),
     Plugin.addModule({
       id: 'markdown',
       activatesOn: MarkdownEvents.SetupExtensions,

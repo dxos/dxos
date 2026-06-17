@@ -72,6 +72,7 @@ export const findOrCreate = async (
       }
       return existing;
     }
+
     return db.add(Obj.make(Tag, { [Obj.Meta]: { keys: [key] }, label, ...withHue }));
   }
 

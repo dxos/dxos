@@ -19,7 +19,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 
 export type TableCardProps = AppSurface.ObjectCardProps<Table.Table>;
 
@@ -28,8 +28,8 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const tableRef = useRef<TableController>(null);
 
   const db = Obj.getDatabase(object);
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
-  const schema = useType(db, typename);
+  const typeUri = object.view.target?.query ? getTypeURIFromQuery(object.view.target?.query.ast) : undefined;
+  const schema = useType(db, typeUri);
   const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 

@@ -71,7 +71,10 @@ export const MagazineToolbar = ({
               );
               group.action(
                 'archived',
-                { label: ['show-archived.label', { ns: meta.id }], icon: 'ph--archive--regular' },
+                {
+                  label: ['show-archived.label', { ns: meta.id }],
+                  icon: 'ph--archive--regular',
+                },
                 () => setView(view === 'archived' ? 'default' : 'archived'),
               );
             },

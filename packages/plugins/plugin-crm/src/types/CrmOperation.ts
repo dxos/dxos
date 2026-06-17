@@ -47,32 +47,3 @@ export const AttachImage = Operation.make({
   }),
   services: [Database.Service, Trace.TraceService],
 });
-
-/**
- * Creates a CRM routine and feed trigger for the given mailbox.
- * On each new message in the mailbox's feed the trigger runs the routine,
- * which researches the sender/contacts and creates/updates CRM Profiles.
- *
- * This is a create-only operation — it does not repair or remove existing
- * partial state. "Configured" is detected separately by the companion hook.
- */
-export const SetupMailboxCrm = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.plugin-crm.setupMailboxCrm'),
-    name: 'Set up CRM routine',
-    icon: 'ph--address-book--regular',
-    description: trim`
-      Creates a Routine and feed Trigger that runs the CRM blueprint for every
-      new message in the mailbox. Call this once to configure a mailbox for
-      automatic CRM profile creation.
-    `,
-  },
-  input: Schema.Struct({
-    mailboxUri: Schema.String.annotations({
-      description: 'URI of the Mailbox to configure.',
-    }),
-  }),
-  // Output is void; the created routine and trigger are discovered via useQuery.
-  output: Schema.Void,
-  services: [Database.Service, Trace.TraceService],
-});

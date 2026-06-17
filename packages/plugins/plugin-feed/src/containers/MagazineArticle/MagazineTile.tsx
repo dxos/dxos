@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Focus, IconButton } from '@dxos/react-ui';
+import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
@@ -50,19 +50,18 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
           <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.IconBlock>
-            <IconButton
+          <Card.Block>
+            <SystemIconButton.Star
               variant='ghost'
               iconOnly
               square
               size={4}
-              label={starred ? 'Unstar' : 'Star'}
-              icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
+              active={starred}
               onClick={handleToggleStar}
             />
-          </Card.IconBlock>
+          </Card.Block>
           {snapshot.title ? <Card.Title classNames='line-clamp-2'>{snapshot.title}</Card.Title> : <div />}
-          <Card.IconBlock />
+          <Card.Block end />
         </Card.Header>
         <Card.Body>
           {snippet && (

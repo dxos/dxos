@@ -333,14 +333,18 @@ jobs:
           verbose: true
 
   e2e:
-    # e2e only runs on pushes/schedules to release branches, never on PRs.
-    # pull_request events have github.ref = refs/pull/N/merge so the startsWith
-    # checks below are already false — no explicit exclusion needed.
+    # e2e runs on pushes/schedules to release branches AND on release-please PRs.
+    # For push events github.ref is refs/heads/<branch>; for pull_request events
+    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source
+    # branch name, set only on pull_request events) to catch release-please PRs.
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/rc-') ||
       startsWith(github.ref, 'refs/heads/hotfix-') ||
       startsWith(github.ref, 'refs/heads/release-please-') ||
+      startsWith(github.head_ref, 'rc-') ||
+      startsWith(github.head_ref, 'hotfix-') ||
+      startsWith(github.head_ref, 'release-please-') ||
       inputs.e2e
     runs-on: depot-ubuntu-24.04-8
     container:

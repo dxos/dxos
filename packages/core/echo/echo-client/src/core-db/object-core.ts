@@ -14,10 +14,10 @@ import {
   type EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EntityKind, type EntityMeta } from '@dxos/echo/internal';
+import { EntityKind, type EntityMeta, getStrongDependencyUris } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -316,11 +316,6 @@ export class ObjectCore {
     if (isEncodedReference(value)) {
       return value;
     }
-    // For some reason references without `@type` are being stored in the document.
-    // Convert legacy proto-format references to EncodedReference.
-    if (maybeReference(value)) {
-      return convertLegacyProtoReference(value);
-    }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
     }
@@ -523,49 +518,26 @@ export class ObjectCore {
   }
 
   /**
-   * EIDs of objects that this object strongly depends on.
-   * Strong references are loaded together with the source object — only ECHO-scheme refs
-   * (object refs) qualify; type DXNs are resolved separately via the schema registry.
-   * Currently this is the schema reference (when stored as an object), source/target for
-   * relations, and the parent ref.
+   * URIs of the entities that this entity strongly depends on: the schema reference (when stored as
+   * an object), source/target for relations, and the parent ref. Strong dependencies are loaded
+   * together with the depending entity before it is surfaced. URIs may be cross-space `echo:` EIDs
+   * or queue-item EIDs; the resolver routes each to the appropriate backend.
    */
-  getStrongDependencies(): EID.EID[] {
-    const res: EID.EID[] = [];
-
+  getStrongDependencies(): URI.URI[] {
     const typeRef = this.getType();
-    if (typeRef) {
-      const typeEchoUri = EID.tryParse(EncodedReference.toURI(typeRef));
-      if (typeEchoUri) {
-        res.push(typeEchoUri);
-      }
-    }
-
-    if (this.getKind() === EntityKind.Relation) {
-      const sourceRef = this.getSource();
-      if (sourceRef) {
-        const id = EID.tryParse(EncodedReference.toURI(sourceRef));
-        if (id) {
-          res.push(id);
-        }
-      }
-      const targetRef = this.getTarget();
-      if (targetRef) {
-        const id = EID.tryParse(EncodedReference.toURI(targetRef));
-        if (id) {
-          res.push(id);
-        }
-      }
-    }
-
+    const sourceRef = this.getSource();
+    const targetRef = this.getTarget();
     const parentRef = this.getParent();
-    if (parentRef) {
-      const id = EID.tryParse(EncodedReference.toURI(parentRef));
-      if (id) {
-        res.push(id);
-      }
-    }
-
-    return res;
+    return getStrongDependencyUris(
+      {
+        kind: this.getKind(),
+        type: typeRef ? EncodedReference.toURI(typeRef) : undefined,
+        source: sourceRef ? EncodedReference.toURI(sourceRef) : undefined,
+        target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
+        parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
+      },
+      this.database?.spaceId,
+    );
   }
 }
 
@@ -589,11 +561,11 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
 
 /**
  * Lazily normalizes `meta` on read so the now-required `tags`/`annotations` fields are always present,
- * and upgrades legacy string entries in `meta.tags` (bare DXN/EID URIs) to {@link EncodedReference}s so
- * they materialize as `Ref<Tag>` like any other reference. Mirrors {@link convertLegacyProtoReference}:
- * the transform happens on read and persists physically only on the next write. This keeps data written
- * before these fields existed (or before tags became refs) readable without an eager migration.
- * Scoped strictly to the `meta` namespace so unrelated values in `data` are untouched.
+ * and upgrades bare string entries in `meta.tags` to {@link EncodedReference}s so they materialize as
+ * `Ref<Tag>` like any other reference. The transform happens on read and persists physically only on the
+ * next write. This keeps data written before these fields existed (or before tags became refs) readable
+ * without an eager migration. Scoped strictly to the `meta` namespace so unrelated values in `data` are
+ * untouched.
  */
 const upgradeMeta = (path: KeyPath, value: unknown): unknown => {
   if (path[0] !== META_NAMESPACE) {
@@ -627,40 +599,7 @@ const upgradeTagRef = (value: unknown): unknown => {
   if (typeof value !== 'string') {
     return value;
   }
-  // Normalize legacy DXN object references (e.g. `dxn:echo:@:<id>`) to the canonical `echo:` EID;
-  // leave non-EID ids (e.g. `dxn:type:…`) untouched.
+  // A bare tag id string materializes as a `Ref<Tag>` like any other reference.
   const uri = EID.tryParse(value) ?? value;
   return EncodedReference.fromURI(URI.make(uri));
-};
-
-// TODO(burdon): Move to echo-protocol.
-const maybeReference = (value: unknown): value is { objectId: string; protocol?: string; host?: string } =>
-  typeof value === 'object' &&
-  value !== null &&
-  Object.keys(value).length === 3 &&
-  'objectId' in value && // TODO(burdon): 'objectId'
-  'protocol' in value &&
-  'host' in value;
-
-/**
- * Convert legacy proto-format reference `{ objectId, protocol, host }` to EncodedReference.
- */
-const convertLegacyProtoReference = (value: {
-  objectId: string;
-  protocol?: string;
-  host?: string;
-}): EncodedReference => {
-  const TYPE_PROTOCOL = 'protobuf';
-  let uri: URI.URI;
-  if (value.protocol === TYPE_PROTOCOL) {
-    uri = DXN.make(value.objectId);
-  } else if (value.host) {
-    invariant(SpaceId.isValid(value.host), 'Invalid space id');
-    invariant(EntityId.isValid(value.objectId), 'Invalid object id');
-    uri = EID.make({ spaceId: value.host, entityId: value.objectId });
-  } else {
-    invariant(EntityId.isValid(value.objectId), 'Invalid object id');
-    uri = EID.make({ entityId: value.objectId });
-  }
-  return EncodedReference.fromURI(uri);
 };

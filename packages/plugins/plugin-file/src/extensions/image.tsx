@@ -26,7 +26,7 @@ export type ImageOptions = {
 };
 
 /**
- * Decorate `![](dxn:echo:...)` references that resolve to File objects with inline image previews.
+ * Decorate `![](echo:...)` references that resolve to File objects with inline image previews.
  */
 export const image = (options: ImageOptions): Extension[] => {
   const blobUrlCache: Record<string, string> = {};

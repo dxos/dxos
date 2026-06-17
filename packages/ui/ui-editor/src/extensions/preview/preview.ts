@@ -113,7 +113,7 @@ const buildDecorations = (
       switch (node.name) {
         //
         // Inline widget.
-        // [Label](dxn:echo:123)
+        // [Label](echo:/123)
         //
         case 'Link': {
           const link = getLinkRef(state, node.node);
@@ -134,7 +134,7 @@ const buildDecorations = (
 
         //
         // Block widget (transclusion).
-        // ![Label](dxn:echo:123)
+        // ![Label](echo:/123)
         //
         case 'Image': {
           if (options.addBlockContainer && options.removeBlockContainer) {
@@ -161,15 +161,15 @@ const buildDecorations = (
 
 /**
  * Link references.
- *  [Label](dxn:echo:123) Inline reference
- * ![Label](dxn:echo:123) Block reference
+ *  [Label](echo:/123) Inline reference
+ * ![Label](echo:/123) Block reference
  */
 export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
   const mark = node.getChildren('LinkMark');
   const urlNode = node.getChild('URL');
   if (mark && urlNode) {
     const dxn = state.sliceDoc(urlNode.from, urlNode.to);
-    if (dxn.startsWith('dxn:')) {
+    if (dxn.startsWith('dxn:') || dxn.startsWith('echo:')) {
       const label = state.sliceDoc(mark[0].to, mark[1].from);
       return {
         block: state.sliceDoc(mark[0].from, mark[0].from + 1) === '!',
@@ -182,7 +182,7 @@ export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef
 
 /**
  * Inline widget.
- *  [Label](dxn:echo:123)
+ *  [Label](echo:/123)
  */
 class PreviewInlineWidget extends WidgetType {
   constructor(
@@ -211,7 +211,7 @@ class PreviewInlineWidget extends WidgetType {
 
 /**
  * Block widget (e.g., for surfaces).
- * ![Label][dxn:echo:123]
+ * ![Label][echo:/123]
  */
 class PreviewBlockWidget extends WidgetType {
   constructor(

@@ -383,13 +383,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(parentDXN, false);
+      return this._resolveStrongDepFromWorkingSet(database, parentDXN);
     } else {
       invariant(target[symbolInternals].linkCache);
       const parentEchoUri = EID.tryParse(parentDXN);
@@ -399,6 +393,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
+  /**
+   * Resolve a strong-dependency endpoint (relation source/target, parent) from the working set. The
+   * endpoint is a strong dep preloaded to `ready` before its holder surfaces, so the synchronous
+   * working-set probe succeeds — including for feed-queue and cross-space endpoints.
+   */
+  private _resolveStrongDepFromWorkingSet(database: EchoDatabase, uri: URI.URI): any {
+    const request = database.graph
+      .createRefResolver({ context: { space: database.spaceId } })
+      .resolve(uri, { source: 'working-set' });
+    const result = request.getResult();
+    request.abort();
+    return result;
+  }
+
   private _getRelationSource(target: ProxyTarget): any {
     const sourceRef = target[symbolInternals].core.getSource();
     invariant(sourceRef);
@@ -406,13 +414,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(sourceDXN, false);
+      return this._resolveStrongDepFromWorkingSet(database, sourceDXN);
     } else {
       invariant(target[symbolInternals].linkCache);
       const sourceEchoId = EID.tryParse(sourceDXN);
@@ -428,13 +430,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const targetDXN = EncodedReference.toURI(targetRef);
     const database = target[symbolInternals].database;
     if (database) {
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(targetDXN, false);
+      return this._resolveStrongDepFromWorkingSet(database, targetDXN);
     } else {
       invariant(target[symbolInternals].linkCache);
       const targetEchoId = EID.tryParse(targetDXN);
@@ -658,31 +654,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const database = target[symbolInternals].database;
 
-    // For dxn:echo:@:objectId references, load the PersistentSchema on demand.
-    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
-    if (echoRefMatch) {
-      const echoId = echoRefMatch[1];
-      if (echoId != null) {
-        const found = registry.getByURI(`dxn:echo:@:${echoId}`);
-        if (found != null && Type.isType(found)) {
-          return found;
-        }
-        const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          return database._getOrRegisterPersistentSchema(schemaObject);
-        }
-      }
-    }
-
-    // Legacy EID form (echo://spaceId/objectId or echo:/<objectId>) — load on demand.
+    // Echo identifier (echo://spaceId/objectId or echo:/<objectId>) — load the
+    // PersistentSchema on demand (handles preloadSchemaOnOpen=false or schema added after open).
     const echoUri = EID.tryParse(typeURI);
     if (echoUri) {
       const echoId = EID.getEntityId(echoUri);
       if (echoId != null) {
-        const found = registry.getByURI(`dxn:echo:@:${echoId}`);
-        if (found != null && Type.isType(found)) {
-          return found;
-        }
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
           return database._getOrRegisterPersistentSchema(schemaObject);
@@ -720,7 +697,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].database;
 
     // Skip protobuf types as they are runtime registered types.
-    if (typeURI.startsWith('dxn:type:protobuf') || typeURI.startsWith('dxn:protobuf')) {
+    if (typeURI.startsWith('dxn:protobuf')) {
       return undefined;
     }
 
@@ -729,21 +706,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return Type.getSchema(fromRegistry);
     }
 
-    // For dxn:echo:@:objectId references, load the PersistentSchema on demand
-    // (handles the case where preloadSchemaOnOpen is false or the schema was added after open).
-    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
-    if (echoRefMatch) {
-      const echoId = echoRefMatch[1];
-      if (echoId != null) {
-        const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject);
-          return Type.getSchema(typeEntity);
-        }
-      }
-    }
-
-    // Legacy EID form (echo://spaceId/objectId) — load the PersistentSchema on demand.
+    // Echo identifier (echo://spaceId/objectId or echo:/<objectId>) — load the
+    // PersistentSchema on demand (handles preloadSchemaOnOpen=false or schema added after open).
     const echoUri = EID.tryParse(typeURI);
     if (echoUri != null) {
       const echoId = EID.getEntityId(echoUri);
@@ -1024,6 +988,29 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
 
       target[symbolInternals].linkCache = undefined;
+    }
+  }
+
+  /**
+   * Re-stamps a relation's source/target references once it joins a database. `setRelationSourceAndTarget`
+   * runs at construction time, before the relation has a database, so it can only emit space-less refs.
+   * With the database known, each endpoint is bound here: a same-space endpoint stays relative, a
+   * cross-space endpoint becomes absolute, and an unpersisted endpoint is added to this database (then
+   * relative) — keeping the relation's strong-dependency endpoints resolvable from the persisted ref alone.
+   */
+  rebindRelationEndpoints(target: ProxyTarget): void {
+    const core = target[symbolInternals].core;
+    if (core.getKind() !== EntityKind.Relation) {
+      return;
+    }
+    // Read the raw endpoint proxies off the target (not via the resolving get-trap on the proxy).
+    const sourceRef = Reflect.get(target, RelationSourceId);
+    const targetRef = Reflect.get(target, RelationTargetId);
+    if (isProxy(sourceRef)) {
+      core.setSource(EncodedReference.fromURI(this.createRef(target, sourceRef)));
+    }
+    if (isProxy(targetRef)) {
+      core.setTarget(EncodedReference.fromURI(this.createRef(target, targetRef)));
     }
   }
 

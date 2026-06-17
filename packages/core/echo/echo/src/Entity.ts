@@ -343,3 +343,5 @@ export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void
 //
 
 export const atom = objInternal.makeEntity;
+export const labelAtom = objInternal.makeLabelAtom;
+export const labelProperty = internal.getLabelProperty;

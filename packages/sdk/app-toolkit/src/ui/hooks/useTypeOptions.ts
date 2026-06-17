@@ -5,6 +5,7 @@
 import { useMemo } from 'react';
 
 import { type Database } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
@@ -21,8 +22,8 @@ export const useTypeOptions = ({ db, annotation }: { db?: Database.Database; ann
   return useMemo(
     () =>
       options
-        .map(({ typename, label }): { value: string; label: string } => ({
-          value: typename,
+        .map(({ typeUri, typename, label }): { value: URI.URI; label: string } => ({
+          value: typeUri,
           // Use the entity's label (e.g. the `name` field on persisted schemas) when available;
           // fall back to i18n with the typename as the namespace key for code-shipped types.
           label: label ?? t('typename.label', { ns: typename, defaultValue: typename }) ?? typename,

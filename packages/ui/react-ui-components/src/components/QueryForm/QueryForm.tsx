@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Obj, Query, type QueryAST, type Tag } from '@dxos/echo';
+import { URI } from '@dxos/keys';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -17,7 +18,7 @@ import { extractTag, extractTypename } from './query';
 
 export type QueryFormProps = ThemedClassName<{
   initialQuery?: QueryAST.Query;
-  types?: { value: string; label: string }[];
+  types?: { value: URI.URI; label: string }[];
   tags?: Tag.Tag[];
   onChange?: (query: Query.Any) => void;
 }>;
@@ -29,32 +30,28 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
   const initialType = initialQuery ? Option.getOrUndefined(extractTypename(initialQuery)) : undefined;
   const initialTag = initialQuery ? Option.getOrUndefined(extractTag(initialQuery)) : undefined;
 
-  const [type, setType] = useState<string | null>(initialType ?? null);
+  const [type, setType] = useState<URI.URI | null>(initialType ?? null);
   const [tag, setTag] = useState<string | null>(initialTag ?? null);
 
   const tagOptions = useMemo(() => tags?.map((tag) => ({ value: Obj.getURI(tag), label: tag.label })), [tags]);
 
   const handleChange = useCallback(
-    ({ type, tag }: { type: string | null; tag: string | null }) => {
+    ({ type, tag }: { type: URI.URI | null; tag: string | null }) => {
       const typeFilter = type ? Filter.type(type) : null;
       const tagFilter = tag ? Filter.tag(tag) : null;
-      const query =
-        typeFilter && tagFilter
-          ? Query.select(typeFilter).select(tagFilter)
-          : typeFilter
-            ? Query.select(typeFilter)
-            : tagFilter
-              ? Query.select(tagFilter)
-              : Query.select(Filter.nothing());
-      onChange?.(query);
+      const combined =
+        typeFilter && tagFilter ? Filter.and(typeFilter, tagFilter) : (typeFilter ?? tagFilter ?? Filter.nothing());
+      onChange?.(Query.select(combined));
     },
     [onChange],
   );
 
   const handleTypeChange = useCallback(
-    (type: string | null) => {
-      setType(type);
-      handleChange({ type, tag });
+    (value: string | null) => {
+      // Select.onValueChange returns bare string; values come from types[].value which are URI.URI.
+      const uri = value as URI.URI | null;
+      setType(uri);
+      handleChange({ type: uri, tag });
     },
     [handleChange, tag],
   );

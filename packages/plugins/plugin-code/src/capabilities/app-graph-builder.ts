@@ -26,15 +26,11 @@ import { makePluginSpecSubject } from '../plugin-spec';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Fire the asset-contribution event so each plugin's `addPluginAssetModule`
-    // has activated by the time the graph queries the registry. The connector
-    // below reads contributions live (via `capabilities.getAll`) so that
-    // plugins enabled later in the session also get spec nodes.
+    // has activated by the time the graph queries the registry.
     yield* Plugin.activate(AppActivationEvents.SetupPluginAssets);
-    const capabilities = yield* Capability.Service;
-    const resolveSpecContent = (pluginId: string, specPath: string): string | undefined =>
-      capabilities
-        .getAll(AppCapabilities.PluginAsset)
-        .find((entry) => entry.pluginId === pluginId && entry.path === specPath)?.content;
+    // Subscribe to the reactive asset atom so the connector re-runs when a
+    // plugin enabled later in the session contributes (or removes) its spec.
+    const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
 
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's
@@ -49,13 +45,13 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'pluginSpec',
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
-        connector: (node) => {
+        connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
           const { id, name, spec } = plugin.meta;
           if (!spec) {
             return Effect.succeed([]);
           }
-          const content = resolveSpecContent(id, spec);
+          const content = get(pluginAssetsAtom).find((entry) => entry.pluginId === id && entry.path === spec)?.content;
           if (!content) {
             return Effect.succeed([]);
           }

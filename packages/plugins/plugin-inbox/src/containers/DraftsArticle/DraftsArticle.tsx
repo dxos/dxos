@@ -10,7 +10,7 @@ import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
@@ -34,7 +34,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const id = attendableId ?? Obj.getURI(mailbox);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
 
   const db = space.db;
   const mailboxUri = Obj.getURI(mailbox);

@@ -10,25 +10,13 @@ import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { translationKey } from '#translations';
+import { type FormFieldMap } from '#types';
 
-import { Form, type FormFieldMap, META_TAGS_KEY, withMetaTags } from '../Form';
+import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectFormProps = {
   type: Type.AnyEntity;
   object: Obj.Unknown;
-};
-
-const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
-    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
-    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-    return (
-      <>
-        {layout !== 'inline' && <Form.Label label={label} />}
-        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
-    );
-  },
 };
 
 export const ObjectForm = ({ object, type }: ObjectFormProps) => {
@@ -108,4 +96,17 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
       </Form.Viewport>
     </Form.Root>
   );
+};
+
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
 };

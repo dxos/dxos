@@ -11,7 +11,7 @@ import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -219,7 +219,9 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        // Legacy `dxn:queue:` URIs identify a feed/queue; everything else is an ECHO container.
+        // TODO(wittjosiah): Dead branch — queues are now plain `echo://space/id` EIDs, indistinguishable
+        // from a view container by scheme. Replace with feed-vs-container detection (try-resolve as
+        // Feed, else container) so feed-append works for canonical EIDs.
         if (typeof id === 'string' && id.startsWith('dxn:queue:')) {
           const mappedItems = items.map((item: any) => ({
             ...item,
@@ -240,11 +242,11 @@ export const registry: Record<NodeType, Executable> = {
 
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
-            const schemaTypename = getTypenameFromQuery(container.query.ast);
+            const schemaTypeUri = getTypeURIFromQuery(container.query.ast);
             const types = yield* Database.query(Filter.type(Type.Type)).run;
-            const type = types.find((t) => Type.getTypename(t) === schemaTypename);
-            invariant(type, `Schema not found: ${schemaTypename}`);
-            invariant(Type.isObject(type), `Schema is not an object schema: ${schemaTypename}`);
+            const type = types.find((t) => Type.getURI(t) === schemaTypeUri);
+            invariant(type, `Schema not found: ${schemaTypeUri}`);
+            invariant(Type.isObject(type), `Schema is not an object schema: ${schemaTypeUri}`);
 
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item as any;

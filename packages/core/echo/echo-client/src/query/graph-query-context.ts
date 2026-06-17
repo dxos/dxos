@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Obj, Query, type QueryResult } from '@dxos/echo';
-import { filterMatchObject } from '@dxos/echo-host/filter';
+import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -348,7 +348,7 @@ export class SpaceQuerySource implements QuerySource {
     return (
       this._database.coreDatabase.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
-      filterMatchObject(filter, {
+      filterMatchDoc(filter, {
         id: core.id,
         doc: core.getObjectStructure(),
         spaceId: this.spaceId,

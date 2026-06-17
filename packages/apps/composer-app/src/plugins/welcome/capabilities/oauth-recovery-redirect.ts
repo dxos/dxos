@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
@@ -111,7 +112,13 @@ export default Capability.makeModule(
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
           yield* finalizeRedirect(client, invoker, params).pipe(
-            Effect.catchAll((error) => Effect.sync(() => log.warn('oauth recovery finalize failed', { error }))),
+            Effect.catchAll((error) =>
+              Effect.sync(() =>
+                log.error('oauth recovery finalize failed', {
+                  error: error instanceof Error ? error.message : String(error),
+                }),
+              ),
+            ),
             Effect.ensuring(Effect.sync(() => deleteSnapshot(params.accessTokenId))),
           );
         }),
@@ -137,13 +144,17 @@ const finalizeRedirect = Effect.fnUntraced(function* (
         ? 'Already registered'
         : params.error === 'not_registered'
           ? 'Not registered'
-          : 'OAuth recovery failed';
+          : params.error === 'no_email'
+            ? 'Email required'
+            : 'OAuth recovery failed';
     const description =
       params.error === 'already_registered'
         ? 'This account is already registered. Please log in instead.'
         : params.error === 'not_registered'
           ? 'This account is not registered for recovery. Please sign up first.'
-          : `Could not complete OAuth recovery: ${params.error}`;
+          : params.error === 'no_email'
+            ? 'Your Atmosphere account does not have an email address. Please add one and try signing up again.'
+            : `Could not complete OAuth recovery: ${params.error}`;
     log.warn('oauth recovery redirect: kms-service reported error', { error: params.error });
     yield* invoker
       .invoke(LayoutOperation.AddToast, {
@@ -177,15 +188,18 @@ const finalizeRedirect = Effect.fnUntraced(function* (
       registrationToken: params.registrationToken,
     });
     // Re-derive the verified email server-side from the registrationToken — it is never carried in
-    // the redirect URL.
+    // the redirect URL. kms-service rejects the flow before issuing a registrationToken when the
+    // provider returns no email, so this invariant should never fire in practice.
     const email = completeResult?.email;
-    invariant(email, 'OAuth provider did not return a verified email');
+    invariant(email, 'email missing from completeRegistration — kms-service should have rejected no-email flows');
 
-    // Redeem the invitation code with the verified email to mint the hub Account.
+    // Redeem the invitation code with the email to mint the hub Account.
+    const identityDid = yield* Effect.tryPromise(() => createDidFromIdentityKey(identity.identityKey));
     const result = yield* Effect.tryPromise(() =>
       redeemAccountInvitation({
         hubUrl: snapshot.hubUrl,
         email,
+        identityDid,
         identityKey: identity.identityKey.toHex(),
         code: snapshot.code.replace(/-/g, '').toUpperCase(),
       }),

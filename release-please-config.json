@@ -60,6 +60,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/av/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/codec-protobuf/package.json",
           "jsonpath": "$.version"
         },
@@ -360,6 +365,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-generator/package.json",
           "jsonpath": "$.version"
         },
@@ -441,6 +451,11 @@
         {
           "type": "json",
           "path": "packages/core/mesh/teleport/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/teleport-e2e/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -980,6 +995,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/client-protocol/package.json",
           "jsonpath": "$.version"
         },
@@ -1236,11 +1256,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-tabs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-text-tooltip/package.json",
           "jsonpath": "$.version"
         },
         {

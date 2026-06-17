@@ -51,11 +51,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       }
 
       const queue = target;
-      const query = queue
-        ? Query.fromAst(newQuery).from([
-            Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
-          ])
-        : Query.fromAst(newQuery);
+      const query = queue ? Query.fromAst(newQuery).from([Scope.feed(queue)]) : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });

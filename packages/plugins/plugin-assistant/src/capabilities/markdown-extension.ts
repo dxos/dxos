@@ -17,7 +17,11 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc }) => {
+      ({ document: doc, viewMode }) => {
+        if (viewMode === 'source') {
+          return undefined;
+        }
+
         if (!doc) {
           return undefined;
         }

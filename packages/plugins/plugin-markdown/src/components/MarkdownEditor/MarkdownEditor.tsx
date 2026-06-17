@@ -74,7 +74,7 @@ export type MarkdownEditorProviderProps = {
   'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 > &
   Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-  Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>;
+  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'onSelectObject'>;
 
 export const MarkdownEditorProvider = ({
   children,
@@ -84,7 +84,7 @@ export const MarkdownEditorProvider = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
@@ -118,7 +118,7 @@ export const MarkdownEditorProvider = ({
     object,
     compact,
     viewMode,
-    selectionManager,
+    viewState,
     editorStateStore,
     previewOptions,
     settings,

@@ -20,26 +20,19 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  * typename and annotations — no manual wiring needed. The section is suppressed
  * when the space has no matching objects.
  *
- * Usage:
- * ```ts
- * // In app-graph-builder.ts — one call per type:
- * createTypeSectionExtension(Chat.Chat)
+ * Requires five coordinated pieces: paths.ts ({@link createTypeSectionPaths}), the section
+ * extension (this function), a {@link SpaceCapabilities.CreateObjectEntry} with
+ * `targetNodeId: options.targetNodeId ?? getSectionPath(spaceId)` (the ?? fallback ensures
+ * both the section "+" button and the space-level create dialog navigate to the section path),
+ * a section action that passes `targetNodeId`, and a {@link createTypeSectionPathResolver}
+ * registered via {@link AppCapabilities.NavigationPathResolver} for deep-link support.
  *
- * // Attach create/action extensions by matching on the typename:
- * GraphBuilder.createExtension({
- *   id: 'chatsSectionActions',
- *   match: (node) =>
- *     node.type === Type.getTypename(Chat.Chat) && isSpace(node.properties.space)
- *       ? Option.some(node.properties.space)
- *       : Option.none(),
- *   actions: (space) => Effect.succeed([...]),
- * })
- * ```
+ * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
  *
  * @idiom org.dxos.app-toolkit.typeSection
  *   applies: Dedicated sidebar sections that list objects of a single ECHO type under a space
  *   instead-of: Only surfacing the type in plugin-space's generic database subtree, which buries it and reduces discoverability for the app user
- *   uses: {@link createTypeSectionExtension}, {@link AppNodeMatcher.whenSpace}, {@link Filter.type}, {@link createObjectNode}
+ *   uses: {@link createTypeSectionExtension}, {@link createTypeSectionPaths}, {@link createTypeSectionPathResolver}, {@link AppNodeMatcher.whenSpace}, {@link Filter.type}, {@link createObjectNode}
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
@@ -105,7 +98,7 @@ export const createTypeSectionExtension = (
             ...(options?.position ? { position: options.position } : {}),
           },
           nodes: objects
-            .map((object) => createObjectNode({ db: space.db, object }))
+            .map((object) => createObjectNode({ get, db: space.db, object }))
             .filter((node): node is NonNullable<typeof node> => node !== null),
         }),
       ]);

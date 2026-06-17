@@ -46,5 +46,5 @@ export const meta = Plugin.makeMeta({
   iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-trip',
   spec: 'PLUGIN.mdl',
-  tags: ['travel'],
+  tags: ['travel', 'labs'],
 });

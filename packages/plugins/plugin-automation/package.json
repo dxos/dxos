@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-automation",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -133,12 +133,14 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
-    "@effect/printer-ansi": "catalog:"
+    "@effect/printer-ansi": "catalog:",
+    "cronstrue": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

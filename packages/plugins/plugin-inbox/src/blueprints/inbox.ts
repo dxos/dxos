@@ -34,7 +34,7 @@ const make = () =>
 
         # References
         - Use references to objects in the form of:
-        @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+        @echo://B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ/01K24XPK464FSCKVQJAB2H662M
         - References are rendered as rich content in the response to the user.
 
         # Tasks

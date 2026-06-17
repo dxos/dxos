@@ -6,12 +6,12 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { type QueryAST } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
-// Helper to extract typename from query AST
-export const extractTypename = (query: QueryAST.Query): Option.Option<string> => {
+// Helper to extract type URI from query AST
+export const extractTypename = (query: QueryAST.Query): Option.Option<URI.URI> => {
   return Match.value(query).pipe(
-    Match.withReturnType<Option.Option<string>>(),
+    Match.withReturnType<Option.Option<URI.URI>>(),
     Match.when({ type: 'select' }, (q) => extractTypenameFromFilter(q.filter)),
     Match.when({ type: 'filter' }, (q) => {
       const selectionTypename = extractTypename(q.selection);
@@ -44,27 +44,23 @@ export const extractTag = (query: QueryAST.Query): Option.Option<string> => {
   );
 };
 
-// Helper to extract typename from filter AST
-const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> => {
+// Helper to extract type URI from filter AST
+const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<URI.URI> => {
   return Match.value(filter).pipe(
-    Match.withReturnType<Option.Option<string>>(),
-    Match.when({ type: 'object' }, (f) =>
-      Option.fromNullable(f.typename).pipe(
-        Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
-      ),
-    ),
+    Match.withReturnType<Option.Option<URI.URI>>(),
+    Match.when({ type: 'object' }, (f) => Option.fromNullable(f.typename)),
     Match.when({ type: 'and' }, (f) =>
       f.filters.reduce(
-        (acc: Option.Option<string>, filterItem: QueryAST.Filter) =>
+        (acc: Option.Option<URI.URI>, filterItem: QueryAST.Filter) =>
           Option.isSome(acc) ? acc : extractTypenameFromFilter(filterItem),
-        Option.none<string>(),
+        Option.none<URI.URI>(),
       ),
     ),
     Match.when({ type: 'or' }, (f) =>
       f.filters.reduce(
-        (acc: Option.Option<string>, filterItem: QueryAST.Filter) =>
+        (acc: Option.Option<URI.URI>, filterItem: QueryAST.Filter) =>
           Option.isSome(acc) ? acc : extractTypenameFromFilter(filterItem),
-        Option.none<string>(),
+        Option.none<URI.URI>(),
       ),
     ),
     Match.orElse(() => Option.none()),

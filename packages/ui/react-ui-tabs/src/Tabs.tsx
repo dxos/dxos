@@ -4,22 +4,26 @@
 
 import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
+import { Slot } from '@radix-ui/react-slot';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithoutRef, type MouseEvent, forwardRef, useCallback, useLayoutEffect } from 'react';
+import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
 import {
   Button,
   type ButtonProps,
   IconButton,
   type IconButtonProps,
+  type SlottableProps,
   type ThemedClassName,
+  composableProps,
+  slottable,
   useForwardedRef,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Move to @dxos/react-ui.
+// TODO(burdon): Rewrite this; there are too many hacks/quirks.
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -45,19 +49,22 @@ const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TA
 // Root
 //
 
-type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
+type TabsRootCustomProps = TabsPrimitive.TabsProps &
   Partial<
     Pick<TabsContextValue, 'activePart' | 'attendableId'> & {
       onActivePartChange: (nextActivePart: TabsActivePart) => void;
       defaultActivePart: TabsActivePart;
+      /** Skip master-detail focus moves (e.g. when a child form owns initial focus). */
+      suppressRegionFocus?: boolean;
     }
   >;
 
-const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
+type TabsRootProps = SlottableProps<TabsRootCustomProps>;
+
+const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
   (
     {
       children,
-      classNames,
       activePart: propsActivePart,
       onActivePartChange,
       defaultActivePart,
@@ -67,6 +74,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
       orientation = 'vertical',
       activationMode = 'manual',
       attendableId,
+      suppressRegionFocus = false,
+      asChild,
       ...props
     },
     forwardedRef,
@@ -74,8 +83,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
     const tabsRoot = useForwardedRef(forwardedRef);
 
     // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
-    const _1 = useArrowNavigationGroup();
-    const _2 = useFocusableGroup();
+    useArrowNavigationGroup();
+    useFocusableGroup();
     const [activePart = 'list', setActivePart] = useControllableState({
       prop: propsActivePart,
       onChange: onActivePartChange,
@@ -96,13 +105,36 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
       [value],
     );
 
-    const { findFirstFocusable } = useFocusFinders();
+    const { findFirstFocusable, findNextFocusable } = useFocusFinders();
 
     useLayoutEffect(() => {
-      if (tabsRoot.current) {
-        findFirstFocusable(tabsRoot.current)?.focus();
+      if (suppressRegionFocus) {
+        return;
       }
-    }, [activePart]);
+
+      const root = tabsRoot.current;
+      if (!root) {
+        return;
+      }
+
+      if (activePart === 'list') {
+        const tablist = root.querySelector<HTMLElement>('[role="tablist"]');
+        findFirstFocusable(tablist)?.focus();
+        return;
+      }
+
+      const panel = root.querySelector<HTMLElement>('[role="tabpanel"][data-state="active"]');
+      if (!panel) {
+        return;
+      }
+
+      // Radix marks the active panel focusable for roving tabindex; skip it so content receives focus.
+      let target = findFirstFocusable(panel);
+      if (target === panel) {
+        target = findNextFocusable(panel, { container: panel }) ?? undefined;
+      }
+      target?.focus();
+    }, [activePart, value, findFirstFocusable, findNextFocusable, suppressRegionFocus]);
 
     return (
       <TabsContextProvider
@@ -113,8 +145,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
         attendableId={attendableId}
       >
         <TabsPrimitive.Root
-          {...props}
-          className={mx('overflow-hidden', classNames)}
+          {...composableProps<HTMLDivElement>(props)}
+          asChild={asChild}
           orientation={orientation}
           activationMode={activationMode}
           data-active={activePart}
@@ -135,16 +167,22 @@ TabsRoot.displayName = 'Tabs.Root';
 // Viewport
 //
 
-type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type TabsViewportProps = SlottableProps<
+  Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
+>;
 
-const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
+const TabsViewport = slottable<
+  HTMLDivElement,
+  Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
+>(({ children, asChild, ...props }, forwardedRef) => {
   const { activePart } = useTabsContext('TabsViewport');
+  const Comp = asChild ? Slot : 'div';
   return (
-    <div {...props} data-active={activePart} className={mx(classNames)}>
+    <Comp {...composableProps<HTMLDivElement>(props)} data-active={activePart} ref={forwardedRef}>
       {children}
-    </div>
+    </Comp>
   );
-};
+});
 
 TabsViewport.displayName = 'Tabs.Viewport';
 

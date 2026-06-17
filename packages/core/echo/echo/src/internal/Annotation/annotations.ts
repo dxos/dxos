@@ -37,7 +37,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
 
 /**
  * ECHO identifier (for a stored schema).
- * Must be a `dxn:echo:` URI.
+ * Must be an `echo:` URI.
  */
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 
@@ -414,6 +414,47 @@ export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormIn
 export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
 
 /**
+ * When set on an array property, the form renders it as an ordered,
+ * drag-to-reorder list (drag handles per row). Element order is meaningful and
+ * user-controllable; reordering rewrites the array.
+ */
+export const FormOrderedAnnotationId = Symbol.for('@dxos/schema/annotation/FormOrdered');
+export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
+
+/**
+ * Annotation carrying one or more named layout DSL templates that control how a
+ * form arranges a schema's fields (consumed by `@dxos/react-ui-form`'s
+ * `Form.Layout` / `Form.FieldSet`). Callers select a variant by name; the
+ * implicit name is `DEFAULT_LAYOUT_NAME` (`'default'`).
+ *
+ * Templates use a minimal XML grammar. Example:
+ *
+ *   FormLayoutAnnotation.set({
+ *     default: `
+ *       <grid cols="2">
+ *         <field name="origin"/>
+ *         <field name="destination"/>
+ *         <field name="provider" span="2"/>
+ *       </grid>
+ *     `,
+ *     card: `
+ *       <grid cols="1">
+ *         <field name="provider"/>
+ *         <field name="number"/>
+ *       </grid>
+ *     `,
+ *   })
+ */
+export const FormLayoutAnnotationId = Symbol.for('@dxos/react-ui-form/annotation/Layout');
+
+export type FormLayoutMap = Record<string, string>;
+
+export const FormLayoutAnnotation = createAnnotationHelper<FormLayoutMap>(FormLayoutAnnotationId);
+
+/** Name used when no explicit form-layout variant is requested. */
+export const DEFAULT_LAYOUT_NAME = 'default';
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
@@ -555,6 +596,21 @@ export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
   if (schema != null) {
     setLabelWithSchema(schema, entity, label);
   }
+};
+
+/**
+ * Returns the primary label property key for an entity.
+ * Reads the first accessor from {@link LabelAnnotation}, defaulting to 'name'.
+ */
+export const getLabelProperty = (entity: AnyProperties): string => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return 'name';
+  }
+  return LabelAnnotation.get(schema).pipe(
+    Option.flatMap((fields) => Option.fromNullable(fields[0])),
+    Option.getOrElse(() => 'name'),
+  );
 };
 
 /**

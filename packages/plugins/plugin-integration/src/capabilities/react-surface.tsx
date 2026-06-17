@@ -11,7 +11,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
 import { CustomTokenDialog, IntegrationArticle, IntegrationSettingsArticle, SyncTargetsDialog } from '#containers';
@@ -83,7 +83,7 @@ export default Capability.makeModule(() =>
           if (!fieldPropertyAst) {
             return null;
           }
-          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldRendererProps;
           return <SelectField {...props} options={options} />;
         },
       }),

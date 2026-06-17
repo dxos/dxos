@@ -12,11 +12,11 @@ import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
+import { AssistantCapabilities, AssistantOperation, getChatPath, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Carousel, Icon, IconButton, Panel, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
@@ -68,7 +68,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
       .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
       .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
       .filter((type) => Type.getTypename(type) !== collectionTypename);
-    return types.length > 0 ? Filter.or(...types.map((type) => Filter.typename(Type.getTypename(type)))) : undefined;
+    return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
   }, [schemas]);
 
   const query = useMemo(
@@ -304,7 +304,7 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
 
       // Persist the in-memory chat, queue the prompt, and open the chat (which submits it).
       space.db.add(chat);
-      const chatPath = getObjectPathFromObject(chat);
+      const chatPath = getChatPath(space.db.spaceId, chat.id);
       atomRegistry.update(stateAtom, (current) => ({
         ...current,
         pendingPrompts: { ...current.pendingPrompts, [chatPath]: text },
@@ -361,7 +361,9 @@ const SuggestionCards = ({ space }: SpaceScopedProps) => {
             onClick={() => handleRunPrompt(prompt)}
           >
             <Card.Header>
-              <Toolbar.IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
+              <Card.Block>
+                <IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
+              </Card.Block>
               <Card.Title>{prompt}</Card.Title>
             </Card.Header>
           </Card.Root>
@@ -399,7 +401,9 @@ const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Icon icon={icon} classNames={iconStyles?.text} />
+        <Card.Block>
+          <Icon icon={icon} classNames={iconStyles?.text} />
+        </Card.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>
