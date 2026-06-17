@@ -138,4 +138,5 @@ export namespace Account {
   export const Security = `${_id}.security`;
   export const Account = `${_id}.account`;
   export const Invitations = `${_id}.invitations`;
+  export const Usage = `${_id}.usage`;
 }

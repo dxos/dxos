@@ -8935,6 +8935,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../../ui/react-ui-pickers
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
