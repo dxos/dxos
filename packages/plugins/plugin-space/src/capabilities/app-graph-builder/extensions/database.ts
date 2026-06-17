@@ -186,7 +186,6 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
-
         const objects = get(space.db.query(Filter.type(typeUri)).atom).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
