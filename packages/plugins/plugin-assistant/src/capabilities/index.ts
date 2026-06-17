@@ -19,7 +19,7 @@ export const IntegrationProvider = Capability.lazy(
   'AnthropicIntegrationProvider',
   () => import('./integration-provider'),
 );
-export const AppGraphBuilder: Capability.LazyCapability = Capability.lazy(
+export const AppGraphBuilder = Capability.lazy(
   'AppGraphBuilder',
   () => import('./app-graph-builder'),
 );
@@ -44,6 +44,6 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const Settings: Capability.LazyCapability = Capability.lazy('Settings', () => import('./settings'));
+export const Settings = Capability.lazy('Settings', () => import('./settings'));
 export const AssistantState = Capability.lazy('AssistantState', () => import('./state'));
-export const Toolkit: Capability.LazyCapability = Capability.lazy('Toolkit', () => import('./toolkit'));
+export const Toolkit = Capability.lazy('Toolkit', () => import('./toolkit'));

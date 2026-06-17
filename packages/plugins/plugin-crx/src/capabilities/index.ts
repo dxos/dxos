@@ -6,7 +6,7 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
 
-export const CrxSettings: Capability.LazyCapability = Capability.lazy('CrxSettings', () => import('./settings'));
+export const CrxSettings = Capability.lazy('CrxSettings', () => import('./settings'));
 export const InstallPageActions = Capability.lazy('InstallPageActions', () => import('./install-page-actions'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

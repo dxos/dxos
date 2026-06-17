@@ -20,4 +20,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const ScriptSettings: Capability.LazyCapability = Capability.lazy('ScriptSettings', () => import('./settings'));
+export const ScriptSettings = Capability.lazy('ScriptSettings', () => import('./settings'));

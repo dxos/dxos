@@ -12,7 +12,7 @@ export const CreateObject = Capability.lazy('CreateObject', () => import('./crea
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
-export const NavigationResolver: Capability.LazyCapability = Capability.lazy(
+export const NavigationResolver = Capability.lazy(
   'NavigationResolver',
   () => import('./navigation-resolver'),
 );
@@ -23,7 +23,7 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const Repair = Capability.lazy('Repair', () => import('./repair'));
-export const SpaceSettings: Capability.LazyCapability = Capability.lazy('SpaceSettings', () => import('./settings'));
+export const SpaceSettings = Capability.lazy('SpaceSettings', () => import('./settings'));
 export const SpacesReady = Capability.lazy('SpacesReady', () => import('./spaces-ready'));
 export const SpaceState = Capability.lazy('SpaceState', () => import('./state'));
 export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

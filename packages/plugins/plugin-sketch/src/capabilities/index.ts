@@ -7,7 +7,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const NavigationResolver: Capability.LazyCapability = Capability.lazy(
+export const NavigationResolver = Capability.lazy(
   'NavigationResolver',
   () => import('./navigation-resolver'),
 );
@@ -23,4 +23,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SketchSettings: Capability.LazyCapability = Capability.lazy('SketchSettings', () => import('./settings'));
+export const SketchSettings = Capability.lazy('SketchSettings', () => import('./settings'));

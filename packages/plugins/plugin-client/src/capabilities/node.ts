@@ -11,7 +11,7 @@ export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('
 export const Client = Capability.lazy('Client', () => import('./client'));
 export const LayerSpecs = Capability.lazy<void, Capability.Any[]>('LayerSpecs', () => import('./layer-specs'));
 export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));
-export const NavigationHandler: Capability.LazyCapability<NavigationHandlerOptions | undefined> = Capability.lazy(
+export const NavigationHandler = Capability.lazy(
   'NavigationHandler',
   () => import('./navigation-handler/navigation-handler'),
 );
