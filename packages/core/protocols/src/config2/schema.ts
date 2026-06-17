@@ -4,21 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ScreenshotSchema } from '../edge/registry.ts';
+import { IconSchema, ScreenshotSchema } from '../edge/registry.ts';
 
-/**
- * Self-declared plugin metadata authored in `dx.config.ts` (the `plugin` section). Mirrors the
- * self-declared subset of the app-framework `Plugin.Meta`: `id` is the bare NSID (the `key` and
- * `version` are derived downstream by `getMetaFromConfig`), and provenance (`author`) is
- * intentionally absent — it is resolved at runtime from the publisher or an app-configured default,
- * not authored here.
- */
-/** Icon reference: bare key string, or key + optional hue. */
-export const IconSchema = Schema.Union(
-  Schema.String,
-  Schema.Struct({ key: Schema.String, hue: Schema.optional(Schema.String) }),
-);
-export type IconSchema = Schema.Schema.Type<typeof IconSchema>;
+export { IconSchema, ScreenshotSchema };
+export type { Icon as IconType, Screenshot } from '../edge/registry.ts';
 
 export const PluginMeta = Schema.Struct({
   id: Schema.String.pipe(Schema.nonEmptyString()),

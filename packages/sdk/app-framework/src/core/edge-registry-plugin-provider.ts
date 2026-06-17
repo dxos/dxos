@@ -37,7 +37,6 @@ const toRegistryPlugin = (entry: PluginView): Registry.Plugin | null => {
     screenshots: entry.profile.screenshots ? [...entry.profile.screenshots] : undefined,
     tags: entry.profile.tags ? [...entry.profile.tags] : undefined,
     icon: entry.profile.icon,
-    iconHue: entry.profile.iconHue,
     moduleUrl: latestRelease.moduleUrl,
     version: latestRelease.version,
   };

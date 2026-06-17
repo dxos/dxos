@@ -33,10 +33,9 @@ export type Plugin = {
   author?: string;
   homePage?: string;
   source?: string;
-  screenshots?: (string | { light?: string; dark?: string })[];
+  screenshots?: { light?: string; dark?: string }[];
   tags?: string[];
-  icon?: string;
-  iconHue?: string;
+  icon?: { key: string; hue?: string };
   /**
    * IDs of plugins this entry declares as runtime dependencies. Mirrors
    * {@link Plugin.Meta.dependsOn}. Surfaced in the catalog so the manager can

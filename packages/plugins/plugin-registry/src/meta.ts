@@ -39,7 +39,7 @@ export const meta = Plugin.makeMeta({
     Plugin management system for discovering, installing, and configuring workspace extensions.
     Browse available plugins and customize your workspace capabilities.
   `,
-  icon: 'ph--squares-four--regular',
+  icon: { key: 'ph--squares-four--regular' },
   tags: ['system'],
 });
 
