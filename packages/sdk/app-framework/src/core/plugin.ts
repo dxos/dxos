@@ -161,13 +161,16 @@ export type Meta = PluginMeta;
  * which are derived from `key`) plus the canonical DXN `key`.
  * `icon` accepts a bare string key as a legacy convenience — it is normalised to `{ key }`.
  * `iconHue` is a legacy convenience for the `icon.hue` field.
+ * `screenshots` accepts bare URL strings as a legacy convenience — normalised to `{ dark: url }`.
  */
-export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon'> & {
+export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon' | 'screenshots'> & {
   key: DXN.DXN;
   /** Icon key string (legacy) or canonical `{ key, hue? }` object. */
   icon?: string | PluginMeta['icon'];
   /** @deprecated Pass `icon: { key, hue }` instead. */
   iconHue?: string;
+  /** Screenshot URL strings (legacy) or canonical `{ light?, dark? }` objects. */
+  screenshots?: (string | NonNullable<PluginMeta['screenshots']>[number])[];
 };
 
 /**
@@ -182,13 +185,15 @@ export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon'> & {
  * });
  */
 export const makeMeta = (options: MakeMetaOptions): Meta => {
-  const { key, iconHue, icon, ...rest } = options;
+  const { key, iconHue, icon, screenshots, ...rest } = options;
   const iconKey = typeof icon === 'string' ? icon : icon?.key;
   const resolvedHue = iconHue ?? (typeof icon === 'object' && icon !== null ? icon.hue : undefined);
   const iconObj: PluginMeta['icon'] = iconKey !== undefined ? { key: iconKey, hue: resolvedHue } : undefined;
+  const normalizedScreenshots = screenshots?.map((s) => (typeof s === 'string' ? { dark: s } : s));
   return {
     ...rest,
     ...(iconObj !== undefined ? { icon: iconObj } : {}),
+    ...(normalizedScreenshots !== undefined ? { screenshots: normalizedScreenshots } : {}),
     id: DXN.getName(key),
     version: DXN.getVersion(key),
   };
