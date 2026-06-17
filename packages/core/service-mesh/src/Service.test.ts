@@ -1,4 +1,4 @@
-import { Rpc, RpcGroup } from '@effect/rpc';
+import { Rpc, RpcGroup, RpcClient } from '@effect/rpc';
 import { Effect, Schema, Scope, Stream } from 'effect';
 
 import * as Event from './Event';
