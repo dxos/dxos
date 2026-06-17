@@ -10,7 +10,6 @@ import { type GetProfileUsageResponse } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useHubHttpClient } from '../../state/use-hub-http';
-
 import { UsageView, type UsageViewState } from './UsageView';
 
 /**
