@@ -188,6 +188,8 @@ export const useProcessEphemeralStatus = (
           return;
         }
 
+        // `forkDaemon` keeps the stream fiber alive after `runPromise(forEach)` returns;
+        // scoped `fork` is interrupted when the subscribe effect's parent scope closes.
         const fiber = yield* handle.subscribeEphemeral().pipe(
           Stream.runForEach((message) =>
             Effect.sync(() => {
@@ -197,7 +199,7 @@ export const useProcessEphemeralStatus = (
               handleEphemeralMessage(message);
             }),
           ),
-          Effect.fork,
+          Effect.forkDaemon,
         );
         fibersRef.current.push(fiber);
       });

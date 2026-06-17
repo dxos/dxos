@@ -252,7 +252,11 @@ export class Request {
             Effect.gen(this, function* () {
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
-                log('emit ephemeral message', { id: currentMessageId, type: block._tag });
+                log.info('emit ephemeral message', {
+                  id: currentMessageId,
+                  type: block._tag,
+                  lenth: JSON.stringify(block).length,
+                });
                 yield* Trace.write(PartialBlock, {
                   messageId: currentMessageId,
                   role: 'assistant',

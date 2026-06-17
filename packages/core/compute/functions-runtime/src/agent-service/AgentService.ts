@@ -78,6 +78,10 @@ export interface Session {
   /**
    * Subscribe to ephemeral trace events (e.g., streaming partial messages).
    * Replays buffered events, then streams new ones until the process ends.
+   *
+   * When forking a collector from a short-lived parent (e.g. `useEffect` +
+   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDaemon} so the
+   * stream survives after the parent scope closes; interrupt it on dispose.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
 }

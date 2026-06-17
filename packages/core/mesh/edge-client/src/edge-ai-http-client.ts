@@ -36,6 +36,60 @@ export class ByokError extends BaseError.extend('ByokError', 'BYOK authenticatio
  */
 export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
 
+type AnthropicMessagesPayload = {
+  tools?: ReadonlyArray<Record<string, unknown>>;
+};
+
+const isUserDefinedAnthropicTool = (tool: Record<string, unknown>): boolean =>
+  tool.input_schema != null && typeof tool.input_schema === 'object';
+
+/**
+ * Enables Anthropic fine-grained tool input streaming for client-defined tools.
+ * Provider tools (bash, web_search, etc.) are left unchanged.
+ */
+export const patchAnthropicMessagesRequestBody = (body: BodyInit | undefined): BodyInit | undefined => {
+  if (body == null) {
+    return body;
+  }
+
+  const decodeBody = (): string | undefined => {
+    if (typeof body === 'string') {
+      return body;
+    }
+    if (body instanceof Uint8Array) {
+      return new TextDecoder().decode(body);
+    }
+    return undefined;
+  };
+
+  const text = decodeBody();
+  if (text == null) {
+    return body;
+  }
+
+  try {
+    const payload = JSON.parse(text) as AnthropicMessagesPayload;
+    if (!Array.isArray(payload.tools)) {
+      return body;
+    }
+
+    payload.tools = payload.tools.map((tool) =>
+      isUserDefinedAnthropicTool(tool) ? { ...tool, eager_input_streaming: true } : tool,
+    );
+
+    const patched = JSON.stringify(payload);
+    return typeof body === 'string' ? patched : new TextEncoder().encode(patched);
+  } catch {
+    return body;
+  }
+};
+
+const readStreamBody = (stream: ReadableStream<Uint8Array>): Effect.Effect<string | undefined> =>
+  Effect.promise(async () => {
+    const response = new Response(stream);
+    return await response.text();
+  });
+
 /**
  * An `@effect/platform` {@link HttpClient.HttpClient} that routes requests through the
  * authenticated EDGE AI endpoint via {@link EdgeHttpClient.anthropicAiRequest}, instead of
@@ -67,7 +121,7 @@ export class EdgeAiHttpClient {
                 ...options,
                 method: request.method,
                 headers,
-                body,
+                body: patchAnthropicMessagesRequestBody(body),
                 signal,
               }),
             ),
@@ -118,7 +172,10 @@ export class EdgeAiHttpClient {
         case 'FormData':
           return send(request.body.formData);
         case 'Stream':
-          return Stream.toReadableStreamEffect(request.body.stream).pipe(Effect.flatMap(send));
+          return Stream.toReadableStreamEffect(request.body.stream).pipe(
+            Effect.flatMap((readable) => readStreamBody(readable)),
+            Effect.flatMap((text) => send(text)),
+          );
       }
 
       return send(undefined);

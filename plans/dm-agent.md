@@ -158,6 +158,29 @@ Captured via `[DEBUG H1]`–`[DEBUG H7]` in `tools/storybook-react/app.log`:
   user's POV) because the stream clears between turns and the ULID noise aside there is
   little sustained descriptive content.
 
+### Root cause — subscribe fiber auto-disposed (fixed)
+
+`AiRequest` `emit ephemeral message` fired regularly, but UI subscribers (`[DEBUG H8]`,
+`useProcessEphemeralStatus`) never received live events.
+
+**Cause:** `useEffect` + `runtime.runPromise(Effect.forEach(subscribe))` pattern forked
+the ephemeral stream with **`Effect.fork`**. When `forEach` finished, the parent effect
+scope closed and **interrupted the stream fibers** before live `pushEphemeral` events
+arrived. Replay-only bursts could still land synchronously on subscribe; live streaming
+never did.
+
+**Fix:** use **`Effect.forkDaemon`** for `subscribeEphemeral` collectors (same rationale as
+`ProcessOperationInvoker.fiberFromProcess`). Explicit `Fiber.interrupt` on hook/module
+dispose still tears down subscriptions.
+
+| File | Change |
+|------|--------|
+| `useProcessEphemeralStatus.ts` | `Effect.fork` → `Effect.forkDaemon` |
+| `EphemeralDebugModule.tsx` | `Effect.fork` → `Effect.forkDaemon` |
+
+**Contrast:** `processor.ts` uses `Effect.fork` safely because the parent effect continues
+through `submitPrompt` + `waitForCompletion` — the scope stays open for the whole turn.
+
 ### Current instrumentation / temporary state (in this commit)
 
 - `TaskList.tsx`: `activityLines` forced **ephemeral-only** inside a `#region DEBUG` block
