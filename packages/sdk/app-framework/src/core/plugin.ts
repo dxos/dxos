@@ -159,11 +159,14 @@ export type Meta = PluginMeta;
 /**
  * Options for {@link makeMeta}: {@link PluginMeta} content fields (minus `id` and `version`,
  * which are derived from `key`) plus the canonical DXN `key`.
- * Pass a string `icon` with `iconHue` as a legacy convenience — it is merged into `icon: { key, hue }`.
+ * `icon` accepts a bare string key as a legacy convenience — it is normalised to `{ key }`.
+ * `iconHue` is a legacy convenience for the `icon.hue` field.
  */
-export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version'> & {
+export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon'> & {
   key: DXN.DXN;
-  /** @deprecated Use `icon: { key, hue }` instead. */
+  /** Icon key string (legacy) or canonical `{ key, hue? }` object. */
+  icon?: string | PluginMeta['icon'];
+  /** @deprecated Pass `icon: { key, hue }` instead. */
   iconHue?: string;
 };
 
@@ -180,15 +183,12 @@ export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version'> & {
  */
 export const makeMeta = (options: MakeMetaOptions): Meta => {
   const { key, iconHue, icon, ...rest } = options;
-  const mergedIcon: PluginMeta['icon'] =
-    icon === undefined
-      ? undefined
-      : iconHue !== undefined
-        ? { key: typeof icon === 'string' ? icon : icon.key, hue: iconHue }
-        : icon;
+  const iconKey = typeof icon === 'string' ? icon : icon?.key;
+  const resolvedHue = iconHue ?? (typeof icon === 'object' && icon !== null ? icon.hue : undefined);
+  const iconObj: PluginMeta['icon'] = iconKey !== undefined ? { key: iconKey, hue: resolvedHue } : undefined;
   return {
     ...rest,
-    ...(mergedIcon !== undefined ? { icon: mergedIcon } : {}),
+    ...(iconObj !== undefined ? { icon: iconObj } : {}),
     id: DXN.getName(key),
     version: DXN.getVersion(key),
   };

@@ -142,20 +142,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       screenshots,
       icon: rawIcon,
     } = plugin.meta;
-    const iconKey = typeof rawIcon === 'string' ? rawIcon : (rawIcon?.key ?? 'ph--circle--regular');
-    const iconHue = typeof rawIcon === 'object' && rawIcon !== null ? (rawIcon.hue ?? 'neutral') : 'neutral';
+    const iconKey = rawIcon?.key ?? 'ph--circle--regular';
+    const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
 
-    // A screenshot entry is either a URL string or a `{ light?, dark? }` record of theme variants.
-    // Resolve each to the URL matching the active theme, falling back to the other variant.
     const resolvedScreenshots = (screenshots ?? [])
-      .map((entry) =>
-        typeof entry === 'string'
-          ? entry
-          : themeMode === 'dark'
-            ? (entry.dark ?? entry.light)
-            : (entry.light ?? entry.dark),
-      )
+      .map((entry) => (themeMode === 'dark' ? (entry.dark ?? entry.light) : (entry.light ?? entry.dark)))
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
