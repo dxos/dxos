@@ -165,8 +165,7 @@ type NormalizeReturn<R> = R extends readonly (infer A)[]
       ? [R]
       : Any[];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type LazyCapability<Props = any, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
+export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
   props: Props,
 ) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | never>;
 
@@ -189,7 +188,10 @@ export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
       return normalized as NormalizeReturn<R>;
     });
 
-  return Object.assign(lazyFn, { [ModuleTag]: name });
+  // Widened to the opaque base type so exported `const` declarations produce a portable type in
+  // declaration files. Specific Props/Capabilities types are checked at Capability.contributes.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return Object.assign(lazyFn, { [ModuleTag]: name }) as LazyCapability<any>;
 };
 
 /**
