@@ -7,16 +7,12 @@ import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
-import { UsageQuotaExceededError } from '@dxos/edge-client';
-import { Account } from '@dxos/plugin-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
@@ -24,7 +20,6 @@ import { Message } from '@dxos/types';
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
-import { findInCause } from '../../util/error-cause';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -221,20 +216,12 @@ type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 't
 
 const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
-  const isQuotaError = toastError ? findInCause(toastError, UsageQuotaExceededError.is) !== undefined : false;
   const debugView = viewType === 'debug';
-
-  const handleOpenUsageSettings = useCallback(() => {
-    void invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
-    void invokePromise(LayoutOperation.Open, { subject: [`${getSpacePath(Account.id)}/${Account.Usage}`] });
-    setToastError(undefined);
-  }, [invokePromise]);
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
   useEffect(() => {
@@ -288,24 +275,10 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
       >
-        <Toast.Title
-          icon={isQuotaError ? 'ph--chart-bar--duotone' : 'ph--warning--regular'}
-          onClose={() => setToastError(undefined)}
-        >
-          {t(isQuotaError ? 'usage-quota-exceeded.label' : 'ai-service-error.label')}
+        <Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
+          {t('ai-service-error.label')}
         </Toast.Title>
-        <Toast.Description>
-          {isQuotaError ? t('usage-quota-exceeded.description') : toastError?.message}
-        </Toast.Description>
-        {isQuotaError && (
-          <Toast.Actions>
-            <Toast.Action altText={t('usage-quota-open-settings.alt')} asChild>
-              <Button variant='primary' onClick={handleOpenUsageSettings}>
-                {t('usage-quota-open-settings.label')}
-              </Button>
-            </Toast.Action>
-          </Toast.Actions>
-        )}
+        <Toast.Description>{toastError?.message}</Toast.Description>
       </Toast.Root>
     </>
   );

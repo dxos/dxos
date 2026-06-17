@@ -156,11 +156,6 @@ export const translations: Resource[] = [
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
         'ai-service-error.label': 'AI service error',
-        'usage-quota-exceeded.label': 'Usage limit reached',
-        'usage-quota-exceeded.description':
-          'You have used your AI quota for this period. Open Usage in Settings to see your limits.',
-        'usage-quota-open-settings.label': 'Open usage settings',
-        'usage-quota-open-settings.alt': 'Open usage settings',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
