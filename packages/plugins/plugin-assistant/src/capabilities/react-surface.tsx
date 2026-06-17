@@ -7,9 +7,10 @@ import React, { type ComponentProps, useEffect } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { SPACE_HOME_CONTENT_ROLE, SPACE_HOME_PIN_BOTTOM_ROLE } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
-import { getSpace } from '@dxos/client/echo';
+import { getSpace, type Space } from '@dxos/client/echo';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
@@ -28,6 +29,8 @@ import {
   PlanArticle,
   RoutineArticle,
   RoutineList,
+  SpaceHomePrompt,
+  SpaceHomeSuggestions,
   TracePanel,
   TriggerStatus,
 } from '#containers';
@@ -44,6 +47,21 @@ export default Capability.makeModule(() =>
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
         },
+      }),
+      // Home article pinned-bottom region: the assistant prompt. The shell renders this role with
+      // `limit={1}`, so only this single contributor mounts.
+      Surface.create<{ space: Space }>({
+        id: 'spaceHomePrompt',
+        role: SPACE_HOME_PIN_BOTTOM_ROLE,
+        component: ({ data }) => <SpaceHomePrompt space={data.space} />,
+      }),
+      // Home article content region: starter-prompt cards. Always rendered below the recent-objects
+      // masonry (plugin-space) and welcome panel (plugin-support) via `position: 'last'`.
+      Surface.create<{ space: Space }>({
+        id: 'spaceHomeSuggestions',
+        role: SPACE_HOME_CONTENT_ROLE,
+        position: 'last',
+        component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
       }),
       Surface.create({
         id: 'chat',

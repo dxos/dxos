@@ -10,7 +10,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { RootCollectionAnnotation, SPACE_HOME_CONTENT_ROLE, SPACE_HOME_MARKER } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -38,6 +38,8 @@ import {
   RelatedArticle,
   SchemaContainer,
   SmallPresenceLive,
+  SpaceHomeArticle,
+  SpaceHomeRecent,
   SpacePresence,
   SpaceRenamePopover,
   SpaceSettingsContainer,
@@ -70,6 +72,21 @@ type ReactSurfaceOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'spaceHome',
+        filter: AppSurface.allOf(
+          AppSurface.subject(AppSurface.Article, isSpace),
+          AppSurface.predicate(AppSurface.Article, (data) => !!data.properties?.[SPACE_HOME_MARKER]),
+        ),
+        component: ({ data, role }) => (
+          <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.subject} />
+        ),
+      }),
+      Surface.create<{ space: Space }>({
+        id: 'spaceHomeRecent',
+        role: SPACE_HOME_CONTENT_ROLE,
+        component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+      }),
       Surface.create({
         id: 'collectionFallback',
         position: 'last',

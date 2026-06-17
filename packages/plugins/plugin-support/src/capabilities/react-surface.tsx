@@ -8,11 +8,11 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { LayoutOperation, getPersonalSpace, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, SPACE_HOME_CONTENT_ROLE, getPersonalSpace, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { useObject } from '@dxos/react-client/echo';
+import { type Space, useObject } from '@dxos/react-client/echo';
 
 import { SupportSettings } from '#components';
 import {
@@ -22,7 +22,7 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
-  SpaceHomeArticle,
+  SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
 } from '#containers';
@@ -30,7 +30,7 @@ import { meta } from '#meta';
 import { Support, type Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -45,13 +45,11 @@ export default Capability.makeModule(() =>
           <SupportArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
-      Surface.create({
-        id: 'spaceHome',
-        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          return <SpaceHomeArticle role={role} attendableId={data.attendableId} space={space} />;
-        },
+      Surface.create<{ space: Space }>({
+        id: 'spaceHomeWelcome',
+        role: SPACE_HOME_CONTENT_ROLE,
+        position: 'first',
+        component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',

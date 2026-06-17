@@ -1,0 +1,95 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { useCallback } from 'react';
+
+import { Surface } from '@dxos/app-framework/ui';
+import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { SPACE_HOME_CONTENT_ROLE, SPACE_HOME_PIN_BOTTOM_ROLE } from '@dxos/app-toolkit';
+import { type Node, useActionRunner } from '@dxos/plugin-graph';
+import { Column, Panel, ScrollArea } from '@dxos/react-ui';
+import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+
+import { meta } from '#meta';
+
+export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
+
+/**
+ * Per-space Home article shell. Owns only the chrome: a toolbar sourced from graph actions
+ * contributed with `disposition: 'toolbar'` (e.g. Start tour / Hide Welcome from plugin-support),
+ * and a Column layout that delegates its body to surface contributors:
+ *
+ * - `space-home-content`: scrollable region (Welcome panel, recent-objects masonry, starter prompts).
+ * - `space-home-pin-bottom`: pinned region (assistant prompt), capped at one contributor.
+ *
+ * The Space is read from `data.subject` (the Home node carries the Space as its data).
+ */
+export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticleProps) => {
+  const { actions, onAction } = useMenuActions(attendableId);
+
+  return (
+    <Panel.Root role={role}>
+      <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
+      <Panel.Content asChild>
+        <Column.Root style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+          <ScrollArea.Root orientation='vertical' centered padding>
+            <ScrollArea.Viewport>
+              <div className='dx-document flex flex-col gap-4 py-4'>
+                <Surface.Surface role={SPACE_HOME_CONTENT_ROLE} data={{ space }} />
+              </div>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+          <Column.Center classNames='dx-document pb-4'>
+            <Surface.Surface role={SPACE_HOME_PIN_BOTTOM_ROLE} data={{ space }} limit={1} />
+          </Column.Center>
+        </Column.Root>
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
+//
+// Hooks
+//
+
+/**
+ * Builds the toolbar from contributed graph actions for the Home node. Actions opt into the
+ * toolbar via `disposition: 'toolbar'`; the Home shell contributes none itself, so the toolbar
+ * is empty unless another plugin (e.g. plugin-support's tour/welcome actions) contributes.
+ */
+const useMenuActions = (attendableId?: string): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
+  const { graph } = useAppGraph();
+  const runAction = useActionRunner();
+
+  const menuActions = useMenuBuilder(
+    (get): ActionGraphProps => {
+      if (!attendableId) {
+        return MenuBuilder.make().build();
+      }
+
+      const actions = get(graph.actions(attendableId));
+      const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return MenuBuilder.make()
+        .subgraph({
+          nodes: toolbarActions as ActionGraphProps['nodes'],
+          edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
+        })
+        .build();
+    },
+    [graph, attendableId],
+  );
+
+  const onAction: ActionExecutor = useCallback(
+    (action) => {
+      void runAction(action as Node.Action, { caller: meta.id });
+    },
+    [runAction],
+  );
+
+  return { actions: menuActions, onAction };
+};
