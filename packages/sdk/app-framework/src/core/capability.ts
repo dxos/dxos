@@ -106,9 +106,7 @@ export namespace InterfaceDef {
  */
 export const make: {
   <T, S extends string = string>(
-    identifier: [DXN.Name<S>] extends [never]
-      ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)`
-      : S,
+    identifier: [DXN.Name<S>] extends [never] ? `Invalid NSID "${S}": final segment must be camelCase (no hyphens)` : S,
   ): InterfaceDef<T>;
 } = <T>(identifier: string): InterfaceDef<T> => {
   return { identifier } as InterfaceDef<T>;
