@@ -110,10 +110,6 @@ const RoastLog = S.Struct({
   Type.makeObject(DXN.make('example.type.roastLog', '0.1.0')),
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type RoastLog = Type.InstanceType<typeof RoastLog>;
-const makeRoastLog = (props: Obj.MakeProps<typeof RoastLog>): RoastLog => Obj.make(RoastLog, props);
-
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.
 const SCHEMAS: Type.AnyEntity[] = [
   Collection.Collection,
@@ -934,129 +930,136 @@ const makeNotes = (
 // Roast Log — custom exemplar schema entries + Table / Kanban views
 // -----------------------------------------------------------------------------
 
-const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => [
-  // --- approved: past batches that cleared QC ---
-  makeRoastLog({
-    title: 'Finca Esperanza Lot #42 — Batch 1',
-    date: daysAgo(28),
-    origin: 'Colombia / Finca Esperanza / Lot #42',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.kai),
-    greenWeightKg: 15,
-    roastWeightKg: 12.6,
-    chargeTemp: 205,
-    firstCrackTime: '9:18',
-    developmentTime: '1:45',
-    dropTemp: 209,
-    roastLevel: 'city',
-    status: 'approved',
-    notes:
-      'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
-  }),
-  makeRoastLog({
-    title: 'Finca Esperanza Lot #42 — Batch 2',
-    date: daysAgo(21),
-    origin: 'Colombia / Finca Esperanza / Lot #42',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.kai),
-    greenWeightKg: 15,
-    roastWeightKg: 12.5,
-    chargeTemp: 205,
-    firstCrackTime: '9:22',
-    developmentTime: '1:50',
-    dropTemp: 210,
-    roastLevel: 'city',
-    status: 'approved',
-    notes: 'Confirmed the curve. Added 5 s to development — slightly more body, stone fruit more pronounced. Approved.',
-  }),
-  makeRoastLog({
-    title: 'Sidamo Coop Natural — Lot 12A',
-    date: daysAgo(14),
-    origin: 'Ethiopia / Sidamo Cooperative / Natural Lot 12A',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.diego),
-    greenWeightKg: 12,
-    roastWeightKg: 10.1,
-    chargeTemp: 200,
-    firstCrackTime: '8:55',
-    developmentTime: '1:30',
-    dropTemp: 207,
-    roastLevel: 'light',
-    status: 'approved',
-    notes:
-      'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
-  }),
-  // --- cupped: awaiting final approval ---
-  makeRoastLog({
-    title: 'Spring Blend — Production Run 1',
-    date: daysAgo(5),
-    origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.kai),
-    greenWeightKg: 30,
-    roastWeightKg: 25.3,
-    chargeTemp: 206,
-    firstCrackTime: '9:25',
-    developmentTime: '1:52',
-    dropTemp: 210,
-    roastLevel: 'city',
-    status: 'cupped',
-    notes:
-      'First full blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
-  }),
-  // --- roasted: cooling / resting, not yet cupped ---
-  makeRoastLog({
-    title: 'Finca Esperanza Lot #42 — Dev Batch',
-    date: daysAgo(2),
-    origin: 'Colombia / Finca Esperanza / Lot #42',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.kai),
-    greenWeightKg: 5,
-    chargeTemp: 203,
-    firstCrackTime: '9:10',
-    developmentTime: '2:05',
-    dropTemp: 211,
-    roastLevel: 'city+',
-    status: 'roasted',
-    notes: 'Longer development trial for espresso use. Resting — cup on day 4.',
-  }),
-  makeRoastLog({
-    title: 'Honduras El Puente — Sample Lot',
-    date: daysAgo(1),
-    origin: 'Honduras / Cooperativa El Puente / Sample',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.diego),
-    greenWeightKg: 3,
-    chargeTemp: 198,
-    firstCrackTime: '8:40',
-    developmentTime: '1:25',
-    dropTemp: 205,
-    roastLevel: 'light',
-    status: 'roasted',
-    notes: 'New origin evaluation. Resting overnight before cupping.',
-  }),
-  // --- planned: upcoming ---
-  makeRoastLog({
-    title: 'Spring Blend — Production Run 2',
-    date: daysFromNow(3),
-    origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.kai),
-    greenWeightKg: 30,
-    status: 'planned',
-    notes: 'Increase charge rate 2 % vs Run 1 to address drum unevenness. Schedule cupping on day 5.',
-  }),
-  makeRoastLog({
-    title: 'Colombia Huila — Pre-production',
-    date: daysFromNow(7),
-    origin: 'Colombia / Huila Region / New lot (TBC)',
-    machine: 'Loring S15',
-    roaster: Ref.make(people.diego),
-    greenWeightKg: 10,
-    status: 'planned',
-    notes: 'Pre-production evaluation for potential Q3 addition. Diego to confirm lot details with supplier.',
-  }),
-];
+const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Person>): Obj.Any[] => {
+  // Stamp objects with the persisted type entity so their `@type` is the space-relative EID,
+  // matching how Composer creates objects of database types and the EID the type's views query by.
+  // Building from the static schema would stamp the typename DXN instead and miss those filters.
+  const make = (props: Obj.MakeProps<typeof RoastLog>): Obj.Any => Obj.make(type, props);
+  return [
+    // --- approved: past batches that cleared QC ---
+    make({
+      title: 'Finca Esperanza Lot #42 — Batch 1',
+      date: daysAgo(28),
+      origin: 'Colombia / Finca Esperanza / Lot #42',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.kai),
+      greenWeightKg: 15,
+      roastWeightKg: 12.6,
+      chargeTemp: 205,
+      firstCrackTime: '9:18',
+      developmentTime: '1:45',
+      dropTemp: 209,
+      roastLevel: 'city',
+      status: 'approved',
+      notes:
+        'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
+    }),
+    make({
+      title: 'Finca Esperanza Lot #42 — Batch 2',
+      date: daysAgo(21),
+      origin: 'Colombia / Finca Esperanza / Lot #42',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.kai),
+      greenWeightKg: 15,
+      roastWeightKg: 12.5,
+      chargeTemp: 205,
+      firstCrackTime: '9:22',
+      developmentTime: '1:50',
+      dropTemp: 210,
+      roastLevel: 'city',
+      status: 'approved',
+      notes:
+        'Confirmed the curve. Added 5 s to development — slightly more body, stone fruit more pronounced. Approved.',
+    }),
+    make({
+      title: 'Sidamo Coop Natural — Lot 12A',
+      date: daysAgo(14),
+      origin: 'Ethiopia / Sidamo Cooperative / Natural Lot 12A',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.diego),
+      greenWeightKg: 12,
+      roastWeightKg: 10.1,
+      chargeTemp: 200,
+      firstCrackTime: '8:55',
+      developmentTime: '1:30',
+      dropTemp: 207,
+      roastLevel: 'light',
+      status: 'approved',
+      notes:
+        'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
+    }),
+    // --- cupped: awaiting final approval ---
+    make({
+      title: 'Spring Blend — Production Run 1',
+      date: daysAgo(5),
+      origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.kai),
+      greenWeightKg: 30,
+      roastWeightKg: 25.3,
+      chargeTemp: 206,
+      firstCrackTime: '9:25',
+      developmentTime: '1:52',
+      dropTemp: 210,
+      roastLevel: 'city',
+      status: 'cupped',
+      notes:
+        'First full blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
+    }),
+    // --- roasted: cooling / resting, not yet cupped ---
+    make({
+      title: 'Finca Esperanza Lot #42 — Dev Batch',
+      date: daysAgo(2),
+      origin: 'Colombia / Finca Esperanza / Lot #42',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.kai),
+      greenWeightKg: 5,
+      chargeTemp: 203,
+      firstCrackTime: '9:10',
+      developmentTime: '2:05',
+      dropTemp: 211,
+      roastLevel: 'city+',
+      status: 'roasted',
+      notes: 'Longer development trial for espresso use. Resting — cup on day 4.',
+    }),
+    make({
+      title: 'Honduras El Puente — Sample Lot',
+      date: daysAgo(1),
+      origin: 'Honduras / Cooperativa El Puente / Sample',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.diego),
+      greenWeightKg: 3,
+      chargeTemp: 198,
+      firstCrackTime: '8:40',
+      developmentTime: '1:25',
+      dropTemp: 205,
+      roastLevel: 'light',
+      status: 'roasted',
+      notes: 'New origin evaluation. Resting overnight before cupping.',
+    }),
+    // --- planned: upcoming ---
+    make({
+      title: 'Spring Blend — Production Run 2',
+      date: daysFromNow(3),
+      origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.kai),
+      greenWeightKg: 30,
+      status: 'planned',
+      notes: 'Increase charge rate 2 % vs Run 1 to address drum unevenness. Schedule cupping on day 5.',
+    }),
+    make({
+      title: 'Colombia Huila — Pre-production',
+      date: daysFromNow(7),
+      origin: 'Colombia / Huila Region / New lot (TBC)',
+      machine: 'Loring S15',
+      roaster: Ref.make(people.diego),
+      greenWeightKg: 10,
+      status: 'planned',
+      notes: 'Pre-production evaluation for potential Q3 addition. Diego to confirm lot details with supplier.',
+    }),
+  ];
+};
 
 /**
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
@@ -1079,7 +1082,7 @@ const addRoastLogCollection = async (
     draft.name = 'Roast Log';
   });
 
-  const entries = makeRoastLogs(people);
+  const entries = makeRoastLogs(Type.assertObject(roastLogType), people);
   entries.forEach((entry) => space.db.add(entry));
 
   const { view: tableView } = await ViewModel.makeFromDatabase({
