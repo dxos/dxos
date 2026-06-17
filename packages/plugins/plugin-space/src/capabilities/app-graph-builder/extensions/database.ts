@@ -131,7 +131,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
         const slug = getTypeSlug(schema);
-        const typeUri = Type.getURI(schema);
+        const typeUri = Type.getURI(schema, { prefer: 'named' });
 
         // {All} virtual node.
         const allNode = Node.make({
@@ -177,12 +177,16 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
           return Option.none();
         }
-        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
+        return Option.some({
+          space: node.data.space as Space,
+          typeUri: node.data.typeUri as URI.URI,
+        });
       },
       connector: ({ space, typeUri }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
+
         const objects = get(space.db.query(Filter.type(typeUri)).atom).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );

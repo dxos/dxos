@@ -375,17 +375,31 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * - Persisted `Type.Type` instance (has `id`) → local `EID` (`echo:/<objectId>`).
  * - In-memory `Type.Type` draft (has `id`, no typename) → local `EID`.
  *
+ * When `options.prefer === 'named'` the result is forced to a DXN — for
+ * persisted type entities the typename + version from meta are used to
+ * construct the DXN; static types already return a DXN by default.
+ *
  * Only accepts `Type.AnyEntity` entities. Raw `Schema.Schema` values and the
  * branded `Obj.Unknown` / `Relation.Unknown` schemas are intentionally not
  * supported — use `internal.getSchemaURI` or the schema's typename annotation
  * directly when working at the schema level.
  */
-export const getURI = (input: AnyEntity): URI.URI => {
+export const getURI = (input: AnyEntity, options?: internal.GetURIOptions): URI.URI => {
   // For Type entities, route through `getTypeURIFromSpecifier` (id → EID,
   // typename/version → DXN). For Obj/Relation entities, unwrap to the source
   // Effect Schema first and read its annotations.
   if (isType(input)) {
-    return internal.getTypeURIFromSpecifier(input);
+    const uri = internal.getTypeURIFromSpecifier(input);
+    if (options?.prefer === 'named' && !DXN.isDXN(uri)) {
+      // Persisted type — the auto-detected URI is an EID, but caller wants a
+      // DXN. Construct from typename + version (both live in EntityMeta).
+      const typename = getTypename(input);
+      const version = getMeta(input).version;
+      if (typename && version) {
+        return DXN.make(typename, version);
+      }
+    }
+    return uri;
   }
   return internal.getSchemaURI(getSchema(input)) ?? raise(new TypeError('Type entity has no URI'));
 };
