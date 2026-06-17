@@ -24,7 +24,7 @@ const CardStory = () => {
     return { game, state };
   }, []);
   return (
-    <CardContainer role='popover' icon={pluginMeta.icon}>
+    <CardContainer role='popover' icon={pluginMeta.icon?.key}>
       <ChessCard role='card--content' game={game} variant={state} />
     </CardContainer>
   );
