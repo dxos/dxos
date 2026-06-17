@@ -10531,6 +10531,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -12983,6 +12986,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form

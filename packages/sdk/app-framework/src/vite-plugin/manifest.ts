@@ -31,6 +31,17 @@ export const ENTRY_FILENAME = PLUGIN_ENTRY_FILENAME;
 export type BuildMeta = Plugin.Meta & { version: string; dependencies?: Record<string, string> };
 
 /**
+ * Augments a runtime {@link Plugin.Meta} with the build-time fields needed to emit a manifest: the
+ * package `version` (from the publishing project's `package.json`) and an optional resolved
+ * `dependencies` snapshot. Produces the {@link BuildMeta} that `composerPlugin` serializes.
+ */
+export const toBuildMeta = (meta: Plugin.Meta, version: string, dependencies?: Record<string, string>): BuildMeta => ({
+  ...meta,
+  version,
+  ...(dependencies ? { dependencies } : {}),
+});
+
+/**
  * Serializes a plugin's public metadata + bundle layout into the format consumed
  * by the host loader (see `UrlLoader.make` and `PluginManifest.parse`).
  *
@@ -49,14 +60,9 @@ export const serializeManifest = (
   meta: BuildMeta,
   { assets, devEntry }: { assets: readonly string[]; devEntry?: string },
 ): string => {
-  // The published manifest is keyed by the bare NSID `id`; the `key` DXN is an
-  // in-process convenience and is intentionally omitted to keep the registry
-  // wire-format stable. `version` is the build-time package version (may be a
-  // non-semver dev tag), carried by `BuildMeta` rather than derived from `key`.
-  const { key: _key, ...rest } = meta;
   return JSON.stringify(
     {
-      ...rest,
+      ...meta,
       assets,
       ...(devEntry !== undefined ? { devEntry } : {}),
     },

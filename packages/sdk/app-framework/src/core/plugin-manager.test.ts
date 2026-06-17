@@ -1695,12 +1695,10 @@ describe('PluginManager', () => {
     // focused on the dependency semantics rather than module wiring.
     // These dependency-graph tests use short opaque ids (`'a'`, `'coreClient'`,
     // `'org.dxos.missing'`) as graph keys rather than real DXNs. `id`/`dependsOn` are
-    // bare strings; only `key` (an unused DXN here) is cast at this test-only boundary.
     const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
       Plugin.make(
         Plugin.define({
           id,
-          key: id as unknown as DXN.DXN,
           name: id,
           dependsOn,
           tags,

@@ -14,48 +14,21 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
+import { PluginMeta } from '@dxos/protocols';
 import { type Client, ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
-const PluginConfigSchema = Schema.Struct({
-  id: Schema.optional(Schema.String),
-  name: Schema.optional(Schema.String),
-  build: Schema.optional(
-    Schema.Struct({ command: Schema.optional(Schema.String), outdir: Schema.optional(Schema.String) }),
-  ),
-  publish: Schema.optional(Schema.Struct({ assetBaseUrl: Schema.optional(Schema.String) })),
-});
-type PluginConfig = Schema.Schema.Type<typeof PluginConfigSchema>;
-
-/** Manifest emitted by the build (subset consumed here). */
+/** Manifest emitted by the build (subset consumed here). Extends `PluginMeta` with build-time fields. */
 const ManifestSchema = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
+  ...PluginMeta.fields,
   version: Schema.String.pipe(Schema.nonEmptyString()),
-  description: Schema.optional(Schema.String),
-  homePage: Schema.optional(Schema.String),
-  source: Schema.optional(Schema.String),
-  icon: Schema.optional(Schema.String),
-  iconHue: Schema.optional(Schema.String),
-  tags: Schema.optional(Schema.Array(Schema.String)),
-  screenshots: Schema.optional(
-    Schema.Array(
-      Schema.Union(
-        Schema.String,
-        Schema.Struct({ light: Schema.optional(Schema.String), dark: Schema.optional(Schema.String) }),
-      ),
-    ),
-  ),
   dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
-
-const PluginsDocSchema = Schema.Struct({
-  package: Schema.optional(Schema.Struct({ plugins: Schema.optional(Schema.Array(PluginConfigSchema)) })),
-});
 
 const ensureTrailingSlash = (url: string): string => (url.endsWith('/') ? url : `${url}/`);
 
@@ -67,7 +40,7 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
 /**
  * `dx registry publish` — config-driven build + publish.
  *
- * Reads the plugin metadata from `dx.yml`, runs the declared build command,
+ * Reads the build/publish orchestration from `dx.config.ts`, runs the declared build command,
  * reads the emitted `manifest.json`, hosts the bundle (default: upload the build
  * output to the DXOS edge registry; override with `publish.assetBaseUrl` to point
  * at your own already-hosted directory), then writes the `package.profile` and
@@ -84,12 +57,8 @@ export const publish = Command.make(
       Options.optional,
     ),
     dir: Options.text('dir').pipe(
-      Options.withDescription('Project directory containing dx.yml. Defaults to the current directory.'),
+      Options.withDescription('Project directory containing dx.config.ts. Defaults to the current directory.'),
       Options.withDefault('.'),
-    ),
-    module: Options.text('module').pipe(
-      Options.withDescription('Plugin id to publish when dx.yml declares several. Defaults to the first.'),
-      Options.optional,
     ),
     noBuild: Options.boolean('no-build').pipe(
       Options.withDescription('Skip running the build command (publish a pre-built dist).'),
@@ -112,25 +81,19 @@ export const publish = Command.make(
         const path = yield* Path.Path;
         const dir = path.resolve(options.dir);
 
-        // Load the target plugin entry from dx.yml.
-        const dxYmlPath = path.join(dir, 'dx.yml');
-        if (!(yield* fs.exists(dxYmlPath))) {
-          return yield* Effect.fail(new Error(`No dx.yml found in ${dir}.`));
+        // Load + validate the build/publish orchestration from dx.config.ts.
+        const configFile = findDxConfigFile(dir);
+        if (!configFile) {
+          return yield* Effect.fail(new Error(`No dx.config.ts found in ${dir}.`));
         }
-        const { parse } = yield* Effect.promise(() => import('yaml'));
-        const doc = yield* Schema.decodeUnknown(PluginsDocSchema)(parse(yield* fs.readFileString(dxYmlPath)));
-        const plugins = doc.package?.plugins ?? [];
-        const moduleId = Option.getOrUndefined(options.module);
-        const plugin = moduleId ? plugins.find((entry) => entry.id === moduleId) : plugins[0];
-        if (!plugin?.id) {
-          return yield* Effect.fail(
-            new Error(moduleId ? `No plugin '${moduleId}' in dx.yml.` : 'dx.yml declares no plugins.'),
-          );
-        }
+        const config = yield* Effect.tryPromise({
+          try: () => loadDxConfig(configFile),
+          catch: (error) => new Error(`Failed to load dx.config.ts in ${dir}: ${error}`),
+        });
 
         // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
         // locally-installed tools (e.g. `vite`) resolve like they do in an npm script.
-        const buildCommand = plugin.build?.command;
+        const buildCommand = config.publish?.buildCommand;
         if (!options.noBuild && buildCommand) {
           yield* Console.log(`Building: ${buildCommand}`);
           const binDir = path.join(dir, 'node_modules', '.bin');
@@ -150,7 +113,7 @@ export const publish = Command.make(
         }
 
         // Read the emitted manifest.
-        const outdir = path.join(dir, plugin.build?.outdir ?? 'dist');
+        const outdir = path.join(dir, config.publish?.outdir ?? 'dist');
         const manifestPath = path.join(outdir, 'manifest.json');
         if (!(yield* fs.exists(manifestPath))) {
           return yield* Effect.fail(new Error(`manifest.json not found in ${outdir}. Did the build run?`));
@@ -162,7 +125,7 @@ export const publish = Command.make(
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
 
         // Resolve hosting → moduleUrl.
-        const assetBaseUrl = Option.getOrUndefined(options.assetBaseUrl) ?? plugin.publish?.assetBaseUrl;
+        const assetBaseUrl = Option.getOrUndefined(options.assetBaseUrl) ?? config.publish?.assetBaseUrl;
         let moduleUrl: string;
         if (assetBaseUrl) {
           moduleUrl = new URL('manifest.json', ensureTrailingSlash(assetBaseUrl)).toString();
@@ -204,9 +167,6 @@ export const publish = Command.make(
         }
         if (manifest.icon !== undefined) {
           profile.icon = manifest.icon;
-        }
-        if (manifest.iconHue !== undefined) {
-          profile.iconHue = manifest.iconHue;
         }
         if (manifest.tags && manifest.tags.length > 0) {
           profile.tags = manifest.tags;

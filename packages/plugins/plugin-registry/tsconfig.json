@@ -51,6 +51,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../devtools/cli-util"
     },
     {
