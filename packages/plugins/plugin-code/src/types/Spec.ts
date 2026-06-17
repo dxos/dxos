@@ -17,7 +17,7 @@ export const Spec = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Annotation.IconAnnotation.set({ icon: meta.icon!, hue: meta.iconHue }),
+  Annotation.IconAnnotation.set({ icon: meta.icon?.key ?? 'ph--code--regular', hue: meta.icon?.hue }),
   Type.makeObject(DXN.make('org.dxos.type.spec', '0.1.0')),
 );
 

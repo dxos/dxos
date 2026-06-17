@@ -189,7 +189,7 @@ export default Capability.makeModule(
               data: plugin,
               properties: {
                 label: plugin.meta.name ?? plugin.meta.id,
-                icon: plugin.meta.icon ?? 'ph--circle--regular',
+                icon: plugin.meta.icon?.key ?? 'ph--circle--regular',
                 disposition: 'hidden',
               },
             }),
@@ -206,7 +206,7 @@ export default Capability.makeModule(
                 data: plugin,
                 properties: {
                   label: plugin.meta.name ?? plugin.meta.id,
-                  icon: plugin.meta.icon ?? 'ph--circle--regular',
+                  icon: plugin.meta.icon?.key ?? 'ph--circle--regular',
                   disposition: 'hidden',
                 },
               });
