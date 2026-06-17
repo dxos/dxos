@@ -16,7 +16,7 @@ import { AssistantCapabilities, AssistantOperation, getChatPath, type ChatType }
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Card, Carousel, Icon, IconButton, Panel, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Card, Carousel, Column, Icon, IconButton, Panel, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
@@ -128,49 +128,42 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>
-        <div className='flex flex-col bs-full min-bs-0'>
-          {/* Keep mounted on the personal space (hidden when dismissed) so the Stream iframe is not
-              torn down and re-created on every show/hide — that remount was freezing the UI. */}
-          {isPersonal && (
-            <div className={showWelcome ? 'dx-document shrink-0 p-4 pb-0' : 'hidden'}>
-              <WelcomePanel />
-            </div>
-          )}
-          {(recent.length > 0 || assistantAvailable) && (
-            <div className='dx-document shrink-0 px-4 py-3'>
-              <h2 className='text-sm font-medium text-description'>
-                {recent.length > 0 ? t('space-home.recent.heading') : t('space-home.suggestions.heading')}
-              </h2>
-            </div>
-          )}
-          {recent.length > 0 ? (
-            // Outer div centers to document width with matching px-4 so tiles align with the heading.
-            // Masonry.Content fills the padded container and owns scroll.
-            <div className='dx-document grow min-bs-0 flex flex-col px-4'>
-              <Masonry.Root Tile={RecentTile}>
-                <Masonry.Content classNames='grow min-bs-0' padding={false}>
-                  <Masonry.Viewport classNames='py-2' items={recent} getId={(obj) => obj.id} />
-                </Masonry.Content>
-              </Masonry.Root>
-            </div>
-          ) : assistantAvailable ? (
-            <ScrollArea.Root classNames='grow min-bs-0' orientation='vertical'>
-              <ScrollArea.Viewport classNames='dx-document flex flex-col gap-2 px-4 pb-4'>
-                <SuggestionCards space={space} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          ) : (
-            // Assistant disabled and no recent objects: show a minimal placeholder.
-            <div className='dx-document grow flex items-center justify-center'>
-              <p className='text-sm text-description'>{t('space-home.empty.label')}</p>
-            </div>
-          )}
+        <Column.Root>
+          <ScrollArea.Root orientation='vertical' centered padding>
+            <ScrollArea.Viewport>
+              <div className='dx-document flex flex-col gap-4 py-4'>
+                {/* Keep mounted on the personal space (hidden when dismissed) so the Stream iframe is not
+                    torn down and re-created on every show/hide — that remount was freezing the UI. */}
+                {isPersonal && (
+                  <div className={showWelcome ? undefined : 'hidden'}>
+                    <WelcomePanel />
+                  </div>
+                )}
+                {(recent.length > 0 || assistantAvailable) && (
+                  <h2 className='text-sm font-medium text-description'>
+                    {recent.length > 0 ? t('space-home.recent.heading') : t('space-home.suggestions.heading')}
+                  </h2>
+                )}
+                {recent.length > 0 ? (
+                  <Masonry.Root Tile={RecentTile}>
+                    <Masonry.Content padding={false}>
+                      <Masonry.Viewport classNames='py-2' items={recent} getId={(obj) => obj.id} />
+                    </Masonry.Content>
+                  </Masonry.Root>
+                ) : assistantAvailable ? (
+                  <SuggestionCards space={space} />
+                ) : (
+                  <p className='text-sm text-description'>{t('space-home.empty.label')}</p>
+                )}
+              </div>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
           {assistantAvailable && (
-            <div className='dx-document px-4 pb-4 shrink-0'>
+            <Column.Center classNames='dx-document pb-4'>
               <SpaceHomePrompt space={space} />
-            </div>
+            </Column.Center>
           )}
-        </div>
+        </Column.Root>
       </Panel.Content>
     </Panel.Root>
   );
