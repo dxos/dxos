@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Effect from 'effect/Effect';
@@ -9,7 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { Settings, MeetingCapabilities } from '#types';
+import { Settings, TranscriptionCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(MeetingCapabilities.Settings, settingsAtom),
+      Capability.contributes(TranscriptionCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
         schema: Settings.Settings,

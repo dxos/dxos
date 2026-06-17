@@ -6,12 +6,22 @@ import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Transcript } from '@dxos/types';
 
-import { BlueprintDefinition, OperationHandler, ReactSurface, TextContent, Transcriber } from '#capabilities';
+import {
+  BlueprintDefinition,
+  OperationHandler,
+  ReactSurface,
+  TextContent,
+  Transcriber,
+  TranscriptionSettings,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { TranscriptionCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+
+const SettingsReady = AppActivationEvents.createSettingsEvent(TranscriptionCapabilities.Settings.identifier);
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -20,6 +30,11 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [SettingsReady],
+    activate: TranscriptionSettings,
+  }),
   Plugin.addModule({
     id: 'transcription',
     activatesOn: AppActivationEvents.SetupAppGraph,

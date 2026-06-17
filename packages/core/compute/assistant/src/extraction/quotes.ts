@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Query } from '@dxos/echo';
 import { EID, EntityId } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 export const ReferencedQuotes = Schema.Struct({
   references: Schema.Array(
@@ -26,12 +25,23 @@ export const ReferencedQuotes = Schema.Struct({
 });
 export type ReferencedQuotes = Schema.Schema.Type<typeof ReferencedQuotes>;
 
-export const findQuotes = async (quotes: string[], db: Database.Database): Promise<ReferencedQuotes> => {
+export type FindReferencesOptions = {
+  /** Search backend. Full-text matches proper nouns precisely; vector matches semantically. */
+  searchKind?: 'full-text' | 'vector';
+};
+
+/**
+ * Finds the best-matching context object for each noun and returns it as a reference.
+ */
+export const findReferences = async (
+  nouns: string[],
+  db: Database.Database,
+  { searchKind = 'full-text' }: FindReferencesOptions = {},
+): Promise<ReferencedQuotes> => {
   const references = await Promise.all(
-    quotes.map(async (quote) => {
-      const objects = await db.query(Query.select(Filter.text(quote, { type: 'vector' }))).run();
-      log.info('found quotes in vector index', { objects, quote });
-      return objects.length > 0 ? [{ id: objects[0].id.toString(), quote }] : [];
+    nouns.map(async (noun) => {
+      const objects = await db.query(Query.select(Filter.text(noun, { type: searchKind }))).run();
+      return objects.length > 0 ? [{ id: objects[0].id.toString(), quote: noun }] : [];
     }),
   );
   return { references: references.flat() };

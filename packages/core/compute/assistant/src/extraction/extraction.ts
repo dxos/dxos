@@ -2,104 +2,70 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
-import { Obj, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { AiService } from '@dxos/ai';
+import { type Database, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-export const ExtractionInput = Schema.Struct({
-  message: Type.getSchema(Message.Message),
-  objects: Schema.optional(Schema.Array(Obj.Unknown)),
-  options: Schema.optional(
-    Schema.Struct({
-      timeout: Schema.optional(Schema.Number),
-      fallbackToRaw: Schema.optional(Schema.Boolean),
-    }),
-  ),
-});
-export type ExtractionInput = Schema.Schema.Type<typeof ExtractionInput>;
-export const ExtractionOutput = Schema.Struct({
-  message: Type.getSchema(Message.Message),
-  timeElapsed: Schema.Number,
-});
-export type ExtractionOutput = Schema.Schema.Type<typeof ExtractionOutput>;
-export type ProcessTranscriptMessageProps = {
-  input: ExtractionInput;
-  function: Operation.Definition<ExtractionInput, ExtractionOutput>;
+import { findReferences, insertReferences } from './quotes';
 
-  options?: {
-    /**
-     * Timeout for the entity extraction.
-     */
-    timeout?: number;
-
-    /**
-     * Fallback to raw text if the entity extraction fails.
-     * Otherwise the function will throw an error.
-     * @default false
-     */
-    fallbackToRaw?: boolean;
-  };
-};
-
-export type ExtractionFunction = Operation.Definition<ExtractionInput, ExtractionOutput>;
+const EXTRACTION_MODEL = 'ai.claude.model.claude-haiku-4-5';
 
 /**
- * Placeholder for Anthropic-based entity extraction.
- * Implementation is currently disabled pending restoration of extraction logic.
+ * Proper nouns extracted from transcript text.
  */
-export const extractionAnthropicFunction = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.extraction.anthropic'),
-    name: 'Entity Extraction (Anthropic)',
-    description: 'Extract entities from transcript using Anthropic LLM.',
-    icon: 'ph--text-t--regular',
-  },
-  input: ExtractionInput,
-  output: ExtractionOutput,
+export const ProperNouns = Schema.Struct({
+  properNouns: Schema.Array(Schema.String).annotations({
+    description: 'Proper nouns (names of people, organizations, places, products) mentioned in the text.',
+  }),
 });
+export type ProperNouns = Schema.Schema.Type<typeof ProperNouns>;
 
 /**
- * Placeholder for NER-based entity extraction.
- * Implementation is currently disabled pending restoration of extraction logic.
+ * Extracts proper nouns from transcript text using a small LLM (Haiku). Provides the LanguageModel
+ * internally so the residual requirement is just {@link AiService.AiService}.
  */
-export const extractionNerFunction = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.extraction.ner'),
-    name: 'Entity Extraction (NER)',
-    description: 'Extract entities from transcript using Named Entity Recognition.',
-    icon: 'ph--text-t--regular',
-  },
-  input: ExtractionInput,
-  output: ExtractionOutput,
-});
+export const extractProperNouns = (text: string) =>
+  Effect.gen(function* () {
+    const { value } = yield* Effect.scoped(
+      LanguageModel.generateObject({
+        schema: ProperNouns,
+        prompt: [
+          'Extract every proper noun (people, organizations, places, products) mentioned in the transcript text below.',
+          'Return only the surface strings exactly as they appear. Exclude common nouns and pronouns.',
+          '',
+          'Transcript:',
+          text,
+        ].join('\n'),
+      }),
+    );
+
+    // Drop short tokens (e.g. "IT"): insertReferences replaces case-insensitive substrings, so a
+    // short noun would match inside unrelated words ("secur[IT]y") and corrupt neighbouring links.
+    return value.properNouns.map((noun) => noun.trim()).filter((noun) => noun.length >= 3);
+  }).pipe(Effect.provide(AiService.model(EXTRACTION_MODEL)));
 
 /**
- * Extract entities from the transcript message and add them to the message.
+ * Enriches a transcript message: for each transcript block, extracts proper nouns, links them to
+ * objects in the space via full-text search, and rewrites the text with `[noun](dxn)` references.
+ * Requires {@link AiService.AiService}; takes the space database handle.
  */
-// TODO(dmaretskyi): Move context to a vector search index.
-export const processTranscriptMessage = async (params: ProcessTranscriptMessageProps): Promise<ExtractionOutput> => {
-  try {
-    if (params.options?.timeout && params.options.timeout > 0) {
-      // return await asyncTimeout(params.executor.invoke(params.function, params.input), params.options.timeout);
-    } else {
-      // return await params.executor.invoke(params.function, params.input);
-    }
-  } catch (error) {
-    if (params.options?.fallbackToRaw) {
-      log.warn('failed to process message, falling back to raw text', { error });
-      return {
-        message: params.input.message,
-        timeElapsed: 0,
-      };
-    } else {
-      throw error;
-    }
-  }
+export const enrichTranscriptMessage = (message: Message.Message, { db }: { db: Database.Database }) =>
+  Effect.gen(function* () {
+    const blocks = yield* Effect.forEach(message.blocks, (block) =>
+      Effect.gen(function* () {
+        if (block._tag !== 'transcript') {
+          return block;
+        }
 
-  // TODO(dmaretskyi): Restore extraction logic.
-  return { message: params.input.message, timeElapsed: 0 };
-};
+        const nouns = yield* extractProperNouns(block.text);
+        const references = yield* Effect.promise(() => findReferences([...nouns], db));
+        return { ...block, text: insertReferences(block.text, references) };
+      }),
+    );
+
+    return Obj.make(Message.Message, { sender: message.sender, created: message.created, blocks });
+  });
