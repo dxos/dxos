@@ -54,12 +54,8 @@ test('Runtime and plugin config', () => {
       package: {
         plugins: [
           {
-            name: 'example:app/tasks',
-            record: {
-              web: {
-                entryPoint: 'main.js',
-              },
-            },
+            id: 'example.app.tasks',
+            name: 'Tasks',
           },
         ],
       },
@@ -82,12 +78,8 @@ test('Runtime and plugin config', () => {
     package: {
       plugins: [
         {
-          name: 'example:app/tasks',
-          record: {
-            web: {
-              entryPoint: 'main.js',
-            },
-          },
+          id: 'example.app.tasks',
+          name: 'Tasks',
         },
       ],
     },
