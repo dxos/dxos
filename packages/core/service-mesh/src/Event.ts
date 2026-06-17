@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Pipeable } from 'effect';
+import { Pipeable, type Context, type Effect } from 'effect';
 import * as Schema from 'effect/Schema';
 
 export const TypeId = '~@dxos/service-mesh/Event' as const;
@@ -22,15 +22,17 @@ export interface Event<in out Tag extends string, in out Data extends unknown, i
   new (_: never): {};
   readonly [TypeId]: TypeId;
   readonly _tag: Tag;
-  readonly data: Schema.Schema<Data>;
+  readonly dataSchema: Schema.Schema<Data>;
   readonly direction: _Direction;
 }
 
 export interface Any extends Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
   readonly _tag: string;
-  readonly data: Schema.Schema<unknown>;
+  readonly dataSchema: Schema.Schema<any, any, any>;
 }
+
+export type Tag<E extends Any> = E extends Event<infer Tag, infer Data, infer Direction> ? Tag : never;
 
 export type Direction = 'server-to-client' | 'client-to-server' | 'both';
 
@@ -39,14 +41,14 @@ export const make: {
     tag: Tag,
     options: {
       direction: Direction;
-      data: Schema.Schema<Data>;
+      data: Schema.Schema<Data, Data, never>;
     },
   ): Event<Tag, Data, _Direction>;
 } = (tag, options) =>
   makeProto({
     _tag: tag,
     direction: options.direction,
-    data: options.data,
+    dataSchema: options.data,
   });
 
 const Proto = {
@@ -59,7 +61,7 @@ const Proto = {
 const makeProto = <Tag extends string, Data extends unknown, _Direction extends Direction>(options: {
   _tag: Tag;
   direction: Direction;
-  data: Schema.Schema<Data>;
+  dataSchema: Schema.Schema<Data>;
 }): Event<Tag, Data, _Direction> => {
   function Event() {}
   Object.setPrototypeOf(Event, Proto);
@@ -72,5 +74,19 @@ const makeProto = <Tag extends string, Data extends unknown, _Direction extends 
  */
 export interface Message<_Event extends Any> {
   readonly _tag: _Event['_tag'];
-  readonly data: Schema.Schema<_Event['data']>;
+  readonly data: Schema.Schema.Type<_Event['dataSchema']>;
 }
+
+export type MessageOf<E extends Any> = E extends Any ? Message<E> : never;
+
+/**
+ * Represents an implemented event handler.
+ */
+export interface Handler<Tag extends string> {
+  readonly _: unique symbol;
+  readonly tag: Tag;
+  readonly handler: (message: any) => Effect.Effect<any, any>;
+  readonly context: Context.Context<never>;
+}
+
+export type ToHandler<E extends Any> = E extends Event<infer Tag, infer _Data, infer _Direction> ? Handler<Tag> : never;
