@@ -146,13 +146,15 @@ export default Capability.makeModule(
       }),
 
       // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
-      // by plugin-space: type === SPACE_HOME_NODE_TYPE, data === Space). The actions are conditional
-      // on the personal space and the welcome not being dismissed — read reactively via the space
-      // properties atom so the actions appear/disappear live without a React re-render cycle.
+      // by plugin-space: type === SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
+      // conditional on the personal space and the welcome not being dismissed — read reactively via
+      // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
         id: 'spaceHomeActions',
-        match: (node): Option.Option<Space> =>
-          node.type === SPACE_HOME_NODE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
+        match: (node): Option.Option<Space> => {
+          const space = (node.properties as { space?: unknown }).space;
+          return node.type === SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
+        },
         actions: (space, get) => {
           const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;
           const isDismissed = properties

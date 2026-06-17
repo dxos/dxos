@@ -10,7 +10,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation, SPACE_HOME_MARKER } from '@dxos/app-toolkit';
+import { RootCollectionAnnotation, SPACE_HOME_NODE_TYPE } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
@@ -75,12 +75,9 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceHome',
-        filter: AppSurface.allOf(
-          AppSurface.subject(AppSurface.Article, isSpace),
-          Surface.makeFilter(AppSurface.Article, (data) => !!data.properties?.[SPACE_HOME_MARKER]),
-        ),
+        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
         component: ({ data, role }) => (
-          <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.subject} />
+          <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.properties?.space} />
         ),
       }),
       Surface.create({

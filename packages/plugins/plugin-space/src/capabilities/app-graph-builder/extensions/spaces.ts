@@ -8,7 +8,6 @@ import { Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
   AppNodeMatcher,
-  SPACE_HOME_MARKER,
   SPACE_HOME_NODE_TYPE,
   SPACE_HOME_SEGMENT,
   getActiveSpace,
@@ -45,31 +44,16 @@ import {
 // Extension Factory
 //
 
-// Graph node label tuples and properties MUST be module-level singletons: connectors re-evaluate
-// whenever the matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
-// or properties object rebuilt inline on every evaluation always compares unequal, so the graph
-// re-emits the node, remounting the Home article (and its cross-origin welcome iframe) and freezing
-// the app.
+// The label tuple must be a module-level singleton: connectors re-evaluate whenever the matched
+// node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
+// to re-emit the node and remount the Home article on every evaluation.
 const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.id }] as const;
-const SPACE_HOME_PROPERTIES = {
-  label: SPACE_HOME_NODE_LABEL,
-  icon: 'ph--house--regular',
-  iconHue: 'cyan',
-  position: 'first',
-  draggable: false,
-  droppable: false,
-  [SPACE_HOME_MARKER]: true,
-};
 
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
-    // Per-space Home virtual node, hoisted to the top of every space's navtree. The node carries the
-    // Space as its data (so the article surface can read it from `data.subject`) and is marked via
-    // `properties.isSpaceHome` so the article surface filter can identify it. Properties are a stable
-    // singleton (see above) to avoid remounting on connector re-eval.
     GraphBuilder.createExtension({
       id: 'spaceHome',
       position: 'first',
@@ -79,9 +63,17 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           {
             id: SPACE_HOME_SEGMENT,
             type: SPACE_HOME_NODE_TYPE,
-            data: space,
-            properties: SPACE_HOME_PROPERTIES,
-          } satisfies Node.NodeArg<Space>,
+            data: SPACE_HOME_NODE_TYPE,
+            properties: {
+              label: SPACE_HOME_NODE_LABEL,
+              icon: 'ph--house--regular',
+              iconHue: 'cyan',
+              position: 'first',
+              draggable: false,
+              droppable: false,
+              space,
+            },
+          } satisfies Node.NodeArg<typeof SPACE_HOME_NODE_TYPE>,
         ]),
     }),
 

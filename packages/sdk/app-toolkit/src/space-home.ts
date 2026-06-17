@@ -3,16 +3,9 @@
 //
 
 /**
- * Graph node type tag for the per-space virtual Home node. The node carries the
- * {@link Space} as its `data` and is marked via `properties.isSpaceHome` so article
- * surfaces can distinguish it from other space-subject articles.
+ * Type tag and subject literal for the per-space virtual Home node. Used as both the
+ * graph node `type` and its `data` (subject) so a single constant identifies the node
+ * at the graph layer and at the article surface filter layer. The associated {@link Space}
+ * is on `properties.space`.
  */
 export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
-
-/**
- * Marker property set on the Home node's `properties`. Article surface filters match
- * on `data.properties.isSpaceHome` (the surface data carries `node.properties`) to
- * identify the Home article without relying on the node type, which the surface layer
- * does not see.
- */
-export const SPACE_HOME_MARKER = 'isSpaceHome';
