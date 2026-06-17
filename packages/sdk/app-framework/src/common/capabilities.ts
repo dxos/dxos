@@ -75,7 +75,7 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 /**
  * @category Capability
  */
-export const ReactSurface = Capability$.make<ReactSurface>('org.dxos.app-framework.common.reactSurface');
+export const ReactSurface = Capability$.make<ReactSurface>('org.dxos.app-framework.capability.reactSurface');
 
 export type AnyCommand = Command$.Command<any, any, any, any>;
 
