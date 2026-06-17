@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
@@ -37,7 +37,7 @@ export const Toolbar = () => {
       <Button onClick={handleAdd}>Add</Button>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
-        <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(plugin.meta.key))}>
+        <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}>
           {plugin.meta.id.replace('org.dxos.test.generator.', '')}
         </Button>
       ))}

@@ -113,7 +113,7 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
  * Design notes:
  * - `slug` is required to be a valid NSID (e.g. `org.dxos.plugin.excalidraw`), making it
  *   the single identifier for both PDS addressing and the composer runtime plugin id.
- *   `DXN.make(slug, latestVersion)` reconstructs the canonical `Plugin.Meta.key`.
+ *   `DXN.make(slug, latestVersion)` reconstructs the canonical plugin DXN (`Plugin.getURI(meta)`).
  * - `releases` inlines all known versions, eliminating a separate versions round-trip for
  *   the version picker. Ordered newest-first.
  * - `latestVersion` is a convenience pointer into `releases` indicating the recommended
