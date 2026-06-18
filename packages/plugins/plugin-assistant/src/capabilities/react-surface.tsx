@@ -16,6 +16,7 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
+import { Prompts } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -36,8 +37,6 @@ import {
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant } from '#types';
-
-import { Prompts } from '@dxos/plugin-space';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

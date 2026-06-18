@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-
 import { StatusBar } from '@dxos/plugin-deck';
+
 import StatusBarActionsDefault from '../StatusBarActions';
 
 export type StatusBarPanelProps = {};

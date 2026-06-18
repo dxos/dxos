@@ -9,11 +9,10 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DevtoolsOverview } from '@dxos/plugin-debug';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
-
-import { DevtoolsOverview } from '@dxos/plugin-debug';
 
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 

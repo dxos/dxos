@@ -80,12 +80,20 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.editable',
         position: 'first',
-        filter: AppSurface.object(AppSurface.CardContent, [Markdown.Document, Text.Text], (data) => data.editable === true),
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          [Markdown.Document, Text.Text],
+          (data) => data.editable === true,
+        ),
         component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
       }),
       Surface.create({
         id: 'surface.preview',
-        filter: AppSurface.object(AppSurface.CardContent, [Markdown.Document, Text.Text], (data) => data.editable !== true),
+        filter: AppSurface.object(
+          AppSurface.CardContent,
+          [Markdown.Document, Text.Text],
+          (data) => data.editable !== true,
+        ),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),

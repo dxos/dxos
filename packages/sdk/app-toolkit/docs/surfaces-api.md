@@ -157,7 +157,7 @@ now accepts typed `SurfaceFilter`s only — the two-predicate form is gone.
 | `objectProperties(S)`     | `AppSurface.object(AppSurface.ObjectProperties, S)`           |
 | `objectArticle(S)`        | `AppSurface.object(AppSurface.Article, S)`                    |
 | `objectSection(S)`        | `AppSurface.object(AppSurface.Section, S)`                    |
-| `objectCard(S)`           | `AppSurface.object(AppSurface.CardContent, S)`                       |
+| `objectCard(S)`           | `AppSurface.object(AppSurface.CardContent, S)`                |
 | `componentDialog(id)`     | `AppSurface.component(AppSurface.Dialog, id)`                 |
 | `settingsArticle(prefix)` | `AppSurface.settings(AppSurface.Article, prefix)`             |
 

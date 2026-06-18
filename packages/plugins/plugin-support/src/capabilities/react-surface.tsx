@@ -11,6 +11,7 @@ import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framew
 import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
+import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
 import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
@@ -32,7 +33,6 @@ import { Support, type Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
-import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
