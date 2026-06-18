@@ -238,5 +238,5 @@ The CLI writes these AT Protocol record types under your repo:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `org.dxos.experimental.publisher.profile`      | Your publisher identity (rkey `self`).                                               |
 | `org.dxos.experimental.publisher.verification` | Trust attestation for a publisher DID (written by the configured verifier, not you). |
-| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `key`).                                         |
-| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<key>:<version>`).                              |
+| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `key`).                                        |
+| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<key>:<version>`).                             |

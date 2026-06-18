@@ -97,7 +97,9 @@ const DEFAULT_TIMEOUT_MS = 5_000;
 export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> => {
   const {
     plugins,
-    enabled = plugins.filter(({ meta }) => !meta.profile.tags?.includes('system')).map((plugin) => plugin.meta.profile.key),
+    enabled = plugins
+      .filter(({ meta }) => !meta.profile.tags?.includes('system'))
+      .map((plugin) => plugin.meta.profile.key),
     setupEvents = [],
     autoStart = true,
     registerFrameworkCapabilities = true,

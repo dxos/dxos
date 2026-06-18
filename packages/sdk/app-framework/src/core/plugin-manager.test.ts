@@ -1399,7 +1399,9 @@ describe('PluginManager', () => {
         yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         const messages = yield* Queue.takeAll(queue);
 
-        const errorMessage = [...messages].find((m) => m.module === `lazy:${lazyMeta.profile.key}` && m.state === 'error');
+        const errorMessage = [...messages].find(
+          (m) => m.module === `lazy:${lazyMeta.profile.key}` && m.state === 'error',
+        );
         assert.isDefined(errorMessage);
         assert.isDefined(errorMessage!.error);
       }).pipe(Effect.scoped),

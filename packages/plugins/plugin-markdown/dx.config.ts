@@ -21,7 +21,9 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
     icon: { key: 'ph--text-aa--regular', hue: 'indigo' },
     screenshots: [
-      { dark: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/cdf2656365bb1fd327c1fc2105d75e5a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Fcdf2656365bb1fd327c1fc2105d75e5a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600' },
+      {
+        dark: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/cdf2656365bb1fd327c1fc2105d75e5a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Fcdf2656365bb1fd327c1fc2105d75e5a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+      },
       { dark: 'https://dxos.network/plugin-details-markdown-dark.png' },
     ],
   },

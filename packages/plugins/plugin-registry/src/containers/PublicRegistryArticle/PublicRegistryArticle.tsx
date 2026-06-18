@@ -100,7 +100,9 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
       const catalogIds = new Set(sortedEntries.map((entry) => entry.profile.key));
       const remoteIds = new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id));
       const fromCatalog = sortedEntries.map(toDisplayPlugin);
-      const fromUrlOnly = plugins.filter((plugin) => remoteIds.has(plugin.meta.profile.key) && !catalogIds.has(plugin.meta.profile.key));
+      const fromUrlOnly = plugins.filter(
+        (plugin) => remoteIds.has(plugin.meta.profile.key) && !catalogIds.has(plugin.meta.profile.key),
+      );
       const installedFirst = [...fromCatalog, ...fromUrlOnly].sort((a, b) => {
         const aInstalled = installedSnapshot.has(a.meta.profile.key);
         const bInstalled = installedSnapshot.has(b.meta.profile.key);

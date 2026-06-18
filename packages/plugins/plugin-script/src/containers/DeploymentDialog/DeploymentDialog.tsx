@@ -54,8 +54,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         icon: 'ph--warning--regular',
         duration: Infinity,
         title: ['script-deployment-error-toast.label', { ns: meta.profile.key, count: scriptTemplates.length }],
-        description: ['script-deployment-error-toast.description', { ns: meta.profile.key, count: scriptTemplates.length }],
-        closeLabel: ['script-deployment-error-toast-close.label', { ns: meta.profile.key, count: scriptTemplates.length }],
+        description: [
+          'script-deployment-error-toast.description',
+          { ns: meta.profile.key, count: scriptTemplates.length },
+        ],
+        closeLabel: [
+          'script-deployment-error-toast-close.label',
+          { ns: meta.profile.key, count: scriptTemplates.length },
+        ],
       });
     }
   }, [status, invokePromise]);

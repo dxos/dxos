@@ -38,7 +38,10 @@ export const Toolbar = () => {
       <Button onClick={handleAdd}>Add</Button>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
-        <Button key={plugin.meta.profile.key} onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}>
+        <Button
+          key={plugin.meta.profile.key}
+          onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}
+        >
           {plugin.meta.profile.key.replace('org.dxos.test.generator.', '')}
         </Button>
       ))}

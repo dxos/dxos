@@ -73,7 +73,8 @@ type GraphDebug = {
   root: string;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.profile.key}.space` && isSpace(data.space);
+const isSpaceDebug = (data: any): data is SpaceDebug =>
+  data?.type === `${meta.profile.key}.space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => {
   const graph = data?.graph;
   return (

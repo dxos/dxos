@@ -31,10 +31,13 @@ export namespace ClientAction {
     data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   });
 
-  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${meta.profile.key}.action.create-identity`, {
-    input: ProfileSchema,
-    output: IdentitySchema,
-  }) {}
+  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(
+    `${meta.profile.key}.action.create-identity`,
+    {
+      input: ProfileSchema,
+      output: IdentitySchema,
+    },
+  ) {}
 
   export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${meta.profile.key}.action.join-identity`, {
     input: Schema.Struct({
@@ -48,10 +51,13 @@ export namespace ClientAction {
     output: Schema.Void,
   }) {}
 
-  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${meta.profile.key}.action.recover-identity`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(
+    `${meta.profile.key}.action.recover-identity`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 
   export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${meta.profile.key}.action.reset-storage`, {
     input: Schema.Struct({

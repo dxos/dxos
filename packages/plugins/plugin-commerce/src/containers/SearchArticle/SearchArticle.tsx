@@ -119,8 +119,10 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
             value: view,
           },
           (group) => {
-            group.action('all', { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' }, () =>
-              setView('all'),
+            group.action(
+              'all',
+              { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' },
+              () => setView('all'),
             );
             group.action(
               'starred',

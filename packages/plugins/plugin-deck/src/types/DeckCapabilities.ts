@@ -14,7 +14,9 @@ import { meta } from '#meta';
 
 import { type EphemeralDeckState, type DeckState, type StoredDeckState } from './schema';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 /** Persisted state (stored in KVS/localStorage). */
 export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.profile.key}.capability.state`);

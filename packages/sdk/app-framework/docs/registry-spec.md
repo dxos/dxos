@@ -69,12 +69,12 @@ The machine-readable lexicons are the canonical definition:
 
 ## Records
 
-| NSID                                           | rkey               | Author    | Purpose                                 |
-| ---------------------------------------------- | ------------------ | --------- | --------------------------------------- |
-| `org.dxos.experimental.publisher.profile`      | `self`             | publisher | Identity-level publisher metadata.      |
-| `org.dxos.experimental.publisher.verification` | `<verified DID>`   | verifier  | A trust attestation about a publisher.  |
-| `org.dxos.experimental.package.profile`        | `<key>`            | publisher | Plugin metadata (one per key per DID).  |
-| `org.dxos.experimental.package.release`        | `<key>:<version>`  | publisher | A versioned artifact of a package.      |
+| NSID                                           | rkey              | Author    | Purpose                                |
+| ---------------------------------------------- | ----------------- | --------- | -------------------------------------- |
+| `org.dxos.experimental.publisher.profile`      | `self`            | publisher | Identity-level publisher metadata.     |
+| `org.dxos.experimental.publisher.verification` | `<verified DID>`  | verifier  | A trust attestation about a publisher. |
+| `org.dxos.experimental.package.profile`        | `<key>`           | publisher | Plugin metadata (one per key per DID). |
+| `org.dxos.experimental.package.release`        | `<key>:<version>` | publisher | A versioned artifact of a package.     |
 
 All record bodies carry a `$type` field set to the NSID (standard ATProto convention; stamped by
 the CLI on write). All records live in the author's own repo and are therefore mutable by that
@@ -117,19 +117,19 @@ Mutable metadata for a discoverable plugin. `rkey = <key>` (reverse-domain NSID,
 `org.dxos.plugin.excalidraw`). The `key` field is the plugin's globally-unique identifier and
 matches the `key` in `dx.config.ts`.
 
-| Field        | Required | Type                  | Constraints               | Notes                                                                                              |
-| ------------ | -------- | --------------------- | ------------------------- | -------------------------------------------------------------------------------------------------- |
-| `key`        | yes      | string                | 1–63 chars                | Reverse-domain NSID; equals the rkey (e.g. `org.dxos.plugin.excalidraw`).                         |
-| `name`       | yes      | string                | 1–128 chars               | Display name.                                                                                      |
-| `description`| no       | string                | ≤512 chars                | Shown in listings.                                                                                 |
-| `homePage`   | no       | string (uri)          |                           | Canonical homepage or documentation URL.                                                           |
-| `source`     | no       | string (uri)          |                           | Public source repository.                                                                          |
-| `tags`       | no       | string[]              | ≤16 items, item ≤32 chars | Discovery tags.                                                                                    |
-| `screenshots`| no       | `{ light?, dark? }[]` | item urls                 | Preview images; each entry is a record of theme-specific URLs.                                     |
-| `icon`       | no       | `{ key, hue? }`       |                           | [Phosphor](https://phosphoricons.com) icon name (e.g. `ph--compass-tool--regular`) + palette hue.  |
-| `dependsOn`  | no       | string[]              |                           | Plugin keys this plugin depends on at runtime (author-declared, version-independent NSIDs).        |
-| `spec`       | no       | string                |                           | Relative path inside the bundle to a bundled MDL spec file (e.g. `PLUGIN.mdl`).                   |
-| `createdAt`  | yes      | string (datetime)     |                           |                                                                                                    |
+| Field         | Required | Type                  | Constraints               | Notes                                                                                             |
+| ------------- | -------- | --------------------- | ------------------------- | ------------------------------------------------------------------------------------------------- |
+| `key`         | yes      | string                | 1–63 chars                | Reverse-domain NSID; equals the rkey (e.g. `org.dxos.plugin.excalidraw`).                         |
+| `name`        | yes      | string                | 1–128 chars               | Display name.                                                                                     |
+| `description` | no       | string                | ≤512 chars                | Shown in listings.                                                                                |
+| `homePage`    | no       | string (uri)          |                           | Canonical homepage or documentation URL.                                                          |
+| `source`      | no       | string (uri)          |                           | Public source repository.                                                                         |
+| `tags`        | no       | string[]              | ≤16 items, item ≤32 chars | Discovery tags.                                                                                   |
+| `screenshots` | no       | `{ light?, dark? }[]` | item urls                 | Preview images; each entry is a record of theme-specific URLs.                                    |
+| `icon`        | no       | `{ key, hue? }`       |                           | [Phosphor](https://phosphoricons.com) icon name (e.g. `ph--compass-tool--regular`) + palette hue. |
+| `dependsOn`   | no       | string[]              |                           | Plugin keys this plugin depends on at runtime (author-declared, version-independent NSIDs).       |
+| `spec`        | no       | string                |                           | Relative path inside the bundle to a bundled MDL spec file (e.g. `PLUGIN.mdl`).                   |
+| `createdAt`   | yes      | string (datetime)     |                           |                                                                                                   |
 
 Written by `dx registry publish` (from the manifest emitted by `composerPlugin` reading `dx.config.ts`)
 or `dx registry publish-package`.

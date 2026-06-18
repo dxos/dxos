@@ -549,7 +549,9 @@ class ManagerImpl implements PluginManager {
           yield* this.disable(pluginId);
         }
         this._markDev(pluginId, { plugin: existing, wasEnabled });
-        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.profile.key === pluginId ? plugin : p)));
+        this._update(this._pluginsAtom, (plugins) =>
+          plugins.map((p) => (p.meta.profile.key === pluginId ? plugin : p)),
+        );
       } else {
         this._addPlugin(plugin);
         if (dev) {
@@ -749,7 +751,9 @@ class ManagerImpl implements PluginManager {
               }),
           }),
         );
-        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)));
+        this._update(this._pluginsAtom, (plugins) =>
+          plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)),
+        );
         yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(

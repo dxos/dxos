@@ -15,10 +15,10 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
-import { Config2 } from '@dxos/protocols';
 import { type Client, ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { Config2 } from '@dxos/protocols';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 

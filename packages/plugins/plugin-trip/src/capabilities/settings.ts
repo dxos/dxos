@@ -41,7 +41,11 @@ export default Capability.makeModule(
     const unsubscribe = registry.subscribe(settingsAtom, sync);
 
     return [
-      Capability.contributes(AppCapabilities.Settings, { prefix: meta.profile.key, schema: Settings, atom: settingsAtom }),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.profile.key,
+        schema: Settings,
+        atom: settingsAtom,
+      }),
       Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => unsubscribe())),
     ];
   }),

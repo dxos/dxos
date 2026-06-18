@@ -70,7 +70,10 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
           title={t('danger-zone.title', { ns: meta.profile.key })}
           description={t('danger-zone.description', { ns: meta.profile.key })}
         >
-          <Settings.Item title={t('reset-device.label')} description={t('reset-device.description', { ns: meta.profile.key })}>
+          <Settings.Item
+            title={t('reset-device.label')}
+            description={t('reset-device.description', { ns: meta.profile.key })}
+          >
             <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
               {t('reset-device.label')}
             </Button>

@@ -24,7 +24,11 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
       MenuBuilder.make()
         .action(
           'sync',
-          { label: ['sync-feed.label', { ns: meta.profile.key }], icon: 'ph--arrows-clockwise--regular', iconOnly: true },
+          {
+            label: ['sync-feed.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
+            iconOnly: true,
+          },
           onSync,
         )
         .build(),

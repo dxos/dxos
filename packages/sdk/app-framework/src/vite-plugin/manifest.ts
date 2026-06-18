@@ -37,11 +37,7 @@ export type BuildMeta = Plugin.Profile & { version: string; dependencies?: Recor
  * and an optional resolved `dependencies` snapshot. Produces the {@link BuildMeta} that `composerPlugin`
  * serializes.
  */
-export const toBuildMeta = (
-  meta: Plugin.Meta,
-  version: string,
-  dependencies?: Record<string, string>,
-): BuildMeta => ({
+export const toBuildMeta = (meta: Plugin.Meta, version: string, dependencies?: Record<string, string>): BuildMeta => ({
   ...meta.profile,
   version,
   ...(dependencies ? { dependencies } : {}),

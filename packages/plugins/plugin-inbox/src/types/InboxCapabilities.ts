@@ -12,7 +12,9 @@ import { meta } from '#meta';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 /**
  * Plugins contribute object extractors via this capability.

@@ -51,9 +51,17 @@ export const useEventToolbarActions = ({
     (get) =>
       MenuBuilder.make()
         .root({ label: ['event-toolbar.menu', { ns: meta.profile.key }] })
-        .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }))
         .subgraph(
-          viewModeGroup({ ns: meta.profile.key, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
+          onOpen && openGroup({ ns: meta.profile.key, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }),
+        )
+        .subgraph(
+          viewModeGroup({
+            ns: meta.profile.key,
+            viewMode,
+            setViewMode,
+            modes: ['markdown', 'plain'],
+            disabled: editing,
+          }),
         )
         .separator()
         .menu('more', (b) => {

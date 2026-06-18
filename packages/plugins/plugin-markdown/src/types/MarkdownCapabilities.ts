@@ -48,4 +48,6 @@ export const EditorState = Capability.make<EditorStateStore>(`${meta.profile.key
 export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.profile.key}.capability.editor-views`);
 
 // TODO(burdon): Move to ./types (external API)?
-export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(`${meta.profile.key}.capability.extensions`);
+export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
+  `${meta.profile.key}.capability.extensions`,
+);

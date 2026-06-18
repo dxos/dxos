@@ -5,7 +5,7 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
-import { SystemError } from '@effect/platform/Error';
+import * as Error from '@effect/platform/Error';
 import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
@@ -36,7 +36,7 @@ export const logout = Command.make(
 
     yield* fs.remove(path, { recursive: true }).pipe(
       Effect.catchIf(
-        (e): e is SystemError => e._tag === 'SystemError' && e.reason === 'NotFound',
+        (e): e is Error.SystemError => e._tag === 'SystemError' && e.reason === 'NotFound',
         () => Effect.void,
       ),
     );

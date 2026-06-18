@@ -82,7 +82,8 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
   }, [graph, invokePromise, state.active, state.history.length]);
 
   // Compute popover anchor ID.
-  const popoverAnchorId = node && state.popoverAnchorId === `${meta.profile.key}:${node.id}` ? state.popoverAnchorId : undefined;
+  const popoverAnchorId =
+    node && state.popoverAnchorId === `${meta.profile.key}:${node.id}` ? state.popoverAnchorId : undefined;
 
   return {
     title,

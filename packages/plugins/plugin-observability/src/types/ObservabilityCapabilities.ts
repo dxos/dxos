@@ -15,7 +15,9 @@ import { meta } from '#meta';
 
 export const Namespace = Capability.make<string>(`${meta.profile.key}.capability.namespace`);
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 export const StateSchema = Schema.mutable(
   Schema.Struct({
@@ -28,7 +30,9 @@ export type State = Schema.Schema.Type<typeof StateSchema>;
 
 export const State = Capability.make<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
 
-export const Observability = Capability.make<ObservabilityNs.Observability>(`${meta.profile.key}.capability.observability`);
+export const Observability = Capability.make<ObservabilityNs.Observability>(
+  `${meta.profile.key}.capability.observability`,
+);
 
 /**
  * Optional capability — when contributed, the help/feedback UI exposes a "Download logs" action.

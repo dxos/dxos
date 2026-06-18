@@ -33,7 +33,9 @@ export const publishPackage = Command.make(
       Options.optional,
     ),
     key: Options.text('key').pipe(
-      Options.withDescription('Plugin key — a reverse-domain NSID (e.g. org.dxos.plugin.excalidraw); also the profile record rkey.'),
+      Options.withDescription(
+        'Plugin key — a reverse-domain NSID (e.g. org.dxos.plugin.excalidraw); also the profile record rkey.',
+      ),
     ),
     name: Options.text('name').pipe(Options.withDescription('Human-readable package name.')),
     description: Options.text('description').pipe(
