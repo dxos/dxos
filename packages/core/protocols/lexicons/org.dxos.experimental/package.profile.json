@@ -1,0 +1,83 @@
+{
+  "lexicon": 1,
+  "id": "org.dxos.experimental.package.profile",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:key",
+      "description": "Mutable metadata for a discoverable plugin/module published on the DXOS experimental registry. The rkey is the plugin key (reverse-domain NSID, e.g. org.dxos.plugin.excalidraw). Companion org.dxos.experimental.package.release records carry versioned artifacts.",
+      "record": {
+        "type": "object",
+        "required": ["key", "name", "createdAt"],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Reverse-domain NSID — the plugin's globally-unique key and the profile rkey (e.g. org.dxos.plugin.excalidraw).",
+            "maxLength": 63,
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name.",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "description": "Short description shown in registry listings.",
+            "maxLength": 512
+          },
+          "homePage": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional canonical homepage."
+          },
+          "source": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional public source repository URL."
+          },
+          "tags": {
+            "type": "array",
+            "description": "Optional discovery tags.",
+            "maxLength": 16,
+            "items": { "type": "string", "maxLength": 32 }
+          },
+          "screenshots": {
+            "type": "array",
+            "description": "Optional preview images. Each item has optional light/dark theme URLs.",
+            "maxLength": 8,
+            "items": {
+              "type": "object",
+              "properties": {
+                "light": { "type": "string", "format": "uri" },
+                "dark": { "type": "string", "format": "uri" }
+              }
+            }
+          },
+          "icon": {
+            "type": "object",
+            "description": "Optional icon reference: Phosphor icon key with an optional theme hue.",
+            "required": ["key"],
+            "properties": {
+              "key": { "type": "string", "description": "Phosphor icon name (e.g. ph--compass-tool--regular).", "maxLength": 64 },
+              "hue": { "type": "string", "description": "Theme hue hint (e.g. blue, amber).", "maxLength": 32 }
+            }
+          },
+          "dependsOn": {
+            "type": "array",
+            "description": "Optional list of plugin NSIDs this plugin depends on at runtime.",
+            "items": { "type": "string" }
+          },
+          "spec": {
+            "type": "string",
+            "description": "Optional relative path inside the package to a bundled MDL spec."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}
