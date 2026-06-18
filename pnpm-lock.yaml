@@ -4801,6 +4801,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -4819,6 +4822,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../../plugins/plugin-inbox
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-sandbox
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../../plugins/plugin-testing

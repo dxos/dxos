@@ -13,8 +13,10 @@ import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { type ClientOptions } from '@dxos/client';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Tag } from '@dxos/echo';
+import { configPreset, type ConfigPresetOptions } from '@dxos/config';
+import { Database, Feed, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { type SpaceId } from '@dxos/keys';
@@ -66,6 +68,12 @@ interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints'
 
   /** Additional plugins registered after the default composer plugin set. */
   plugins?: Plugin.Plugin[];
+
+  /** Edge service preset for plugins that call the local EDGE worker (e.g. sandbox). */
+  edge?: ConfigPresetOptions['edge'];
+
+  /** Additional ECHO types registered with ClientPlugin. */
+  clientTypes?: ClientOptions['types'];
 }
 
 const formatInstructions = (instructions: string, completionCriteria: readonly string[] = []): string => {
@@ -94,9 +102,18 @@ const makeMemoizedAiServiceMiddleware = (
     Effect.runPromise,
   );
 
+const DEFAULT_CLIENT_TYPES: Type.AnyEntity[] = [
+  Organization.Organization,
+  Person.Person,
+  Employer.Employer,
+  Tag.Tag,
+  Mailbox.Mailbox,
+];
+
 const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions): Promise<Plugin.Plugin[]> => [
   ClientPlugin({
-    types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Mailbox.Mailbox],
+    ...(options.edge ? { config: configPreset({ edge: options.edge }) } : {}),
+    types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
   AssistantPlugin({
     aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx, options),
