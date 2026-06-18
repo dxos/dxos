@@ -15,7 +15,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { Gallery } from '#types';
 
-import { GALLERY_SHOW_SEGMENT } from '../paths';
+import { GALLERY_SHOW_SEGMENT, getGalleryShowPath } from '../paths';
 
 const SHOW_ACTION_ID = `${meta.id}.action.show`;
 
@@ -45,7 +45,7 @@ export default Capability.makeModule(
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
+              const showId = getGalleryShowPath(objectPath);
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,

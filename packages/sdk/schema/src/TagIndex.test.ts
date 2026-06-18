@@ -136,8 +136,7 @@ describe('TagIndex (feed integration)', () => {
   test('tags immutable feed objects and filters the feed by tag', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, Item, Host, TagIndex.TagIndex] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());

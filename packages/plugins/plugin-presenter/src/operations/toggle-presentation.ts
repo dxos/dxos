@@ -9,9 +9,10 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { PresenterOperation } from '#types';
+
+import { getPresentationPath } from '../paths';
 
 /**
  * Enters or exits presentation for the given object. When `state` is omitted the
@@ -28,7 +29,7 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
         }
 
         const objectPath = Paths.getObjectPathFromObject(object);
-        const presenterId = `${objectPath}/${linkedSegment('presenter')}`;
+        const presenterId = getPresentationPath(objectPath);
         const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         const deck = deckState.decks[deckState.activeDeck];
         const presenting = Boolean(deck?.fullscreen && deck?.solo === presenterId);

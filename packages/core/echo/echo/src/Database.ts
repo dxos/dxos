@@ -17,6 +17,7 @@ import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
+import type * as Feed from './Feed';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
@@ -167,6 +168,19 @@ export interface Database extends Queryable {
   remove(obj: Entity.Unknown): void;
 
   /**
+   * Appends entities to a feed.
+   *
+   * The feed must already be stored in the database (added via {@link add}); its underlying
+   * queue is addressed by the feed object's URI.
+   */
+  appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+
+  /**
+   * Removes entities from a feed.
+   */
+  deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+
+  /**
    * Wait for all pending changes to be saved to disk.
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
@@ -304,6 +318,24 @@ export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, nev
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'));
+
+/**
+ * Appends entities to a feed.
+ * @see {@link Database.appendToFeed}
+ */
+export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.appendToFeed(feed, entities))),
+  ).pipe(Effect.withSpan('Database.appendToFeed'));
+
+/**
+ * Removes entities from a feed.
+ * @see {@link Database.deleteFromFeed}
+ */
+export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.deleteFromFeed(feed, entities))),
+  ).pipe(Effect.withSpan('Database.deleteFromFeed'));
 
 /**
  * Flushes pending changes to disk.

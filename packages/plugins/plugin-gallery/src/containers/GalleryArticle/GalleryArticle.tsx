@@ -11,7 +11,6 @@ import { Obj, Ref } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Lightbox } from '#components';
@@ -19,7 +18,7 @@ import { meta } from '#meta';
 import { Gallery } from '#types';
 
 import { useFileUpload } from '../../hooks';
-import { GALLERY_SHOW_SEGMENT } from '../../paths';
+import { getGalleryShowPath } from '../../paths';
 
 export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
 
@@ -61,7 +60,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
       return;
     }
     const objectPath = Paths.getObjectPathFromObject(subject);
-    const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
+    const showId = getGalleryShowPath(objectPath);
     await invokePromise(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: showId });
     await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: Paths.getSpacePath(db.spaceId) });
   }, [subject, invokePromise]);

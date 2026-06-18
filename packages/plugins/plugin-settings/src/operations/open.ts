@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
-import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
+import { SETTINGS_ID, getPluginSettingsSectionPath } from '../types';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOperation.Open.pipe(
   Operation.withHandler((input) =>
@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOp
         // forked Open for the requested plugin races/drops before its deck update applies, leaving
         // the wrong plugin selected. Awaiting guarantees the requested plugin becomes the selection.
         yield* invoke(LayoutOperation.Open, {
-          subject: [`${Paths.getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${input.plugin.replaceAll('/', ':')}`],
+          subject: [getPluginSettingsSectionPath(input.plugin)],
         });
       }
     }),

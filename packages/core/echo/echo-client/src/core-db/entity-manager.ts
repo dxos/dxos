@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Heads, getHeads } from '@automerge/automerge';
+import { next as A, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import {
@@ -14,44 +14,66 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
-  synchronized,
 } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context, ContextDisposedError } from '@dxos/context';
-import { raise } from '@dxos/debug';
+import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
+import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
 import {
-  type DatabaseDirectory,
+  DatabaseDirectory,
   EncodedReference,
-  type EntityMeta,
   type EntityStructure,
+  SpaceDocVersion,
   type SpaceState,
 } from '@dxos/echo-protocol';
 import { batchEvents, type RefResolver, type RefResolverRequest } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { assertState, invariant } from '@dxos/invariant';
+import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues } from '@dxos/util';
+import { chunkArray, ComplexSet, deepMapValues } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
 import { type HypergraphImpl } from '../hypergraph';
+import { type IDatabaseBinding, ObjectCore } from './object-core';
 import {
-  type AutomergeDocumentLoader,
-  AutomergeDocumentLoaderImpl,
+  type AddCoreOptions,
+  type AtomicReplaceObjectProps,
   type DocumentChanges,
-  type ObjectDocumentLoaded,
-  type ObjectUnavailable,
-} from './automerge-doc-loader';
-import { ObjectCore } from './object-core';
+  type GetObjectCoreByIdOptions,
+  type ItemsUpdatedEvent,
+  type LoadObjectDocumentOptions,
+  type LoadObjectOptions,
+  type SpaceDocumentHeads,
+} from './types';
 import { getInlineAndLinkChanges } from './util';
 
-export type InitRootProxyFn = (core: ObjectCore) => void;
+const THROTTLED_UPDATE_FREQUENCY = 10;
 
-export type CoreDatabaseProps = {
+const TRACE_LOADING = false;
+
+/**
+ * Payload for the internal object-document-loaded notification.
+ */
+interface ObjectDocumentLoaded {
+  handle: DocHandleProxy<DatabaseDirectory>;
+  objectId: string;
+}
+
+/**
+ * Payload for the internal object-unavailable notification.
+ */
+interface ObjectUnavailable {
+  handle?: DocHandleProxy<DatabaseDirectory>;
+  objectId: string;
+}
+
+type SpaceDocumentLinks = DatabaseDirectory['links'];
+
+export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -60,36 +82,21 @@ export type CoreDatabaseProps = {
 };
 
 /**
- * Maximum number of remote update notifications per second.
+ * Core database implementation: owns all Automerge document management, object
+ * storage, dependency tracking, and update scheduling for a single space.
+ * DatabaseImpl holds a reference to this class and delegates all document and
+ * object-core operations here.
  */
-const THROTTLED_UPDATE_FREQUENCY = 10;
-
-export type AddCoreOptions = {
-  /**
-   * Where to place the object in the Automerge document tree.
-   * Root document is always loaded with the space.
-   * Linked documents are loaded lazily.
-   * Placing large number of objects in the root document may slow down the initial load.
-   *
-   * @default 'linked-doc'
-   */
-  placeIn?: Database.ObjectPlacement;
-};
-
-const TRACE_LOADING = false;
-
-/**
- *
- */
-// TODO(burdon): Document.
 @trace.resource()
-export class CoreDatabase {
+export class EntityManager implements IDatabaseBinding {
   private readonly _spaceKey: PublicKey;
   private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
-  private readonly _dataService: DataService;
-  private readonly _queryService: QueryService;
-  private readonly _repoProxy: RepoProxy;
+  private _dataService: DataService;
+  private _queryService: QueryService;
+  readonly _repoProxy: RepoProxy;
+
+  // ── Object storage ──────────────────────────────────────────────────────
   private readonly _objects = new Map<string, ObjectCore>();
 
   /**
@@ -110,94 +117,94 @@ export class CoreDatabase {
 
   private _refResolver: RefResolver | undefined;
 
+  private _ctx: Context | undefined;
+
+  // ── Events ──────────────────────────────────────────────────────────────
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-
-  private _state = CoreDatabaseState.CLOSED;
-
-  private _ctx = Context.default();
-
-  // TODO(dmaretskyi): Refactor this.
-  public readonly opened = new Trigger();
-
-  /**
-   * @internal
-   */
-  readonly _automergeDocLoader: AutomergeDocumentLoader;
-
-  readonly rootChanged = new Event<void>();
-
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** Fires when the database has finished loading its initial space root document. */
+  readonly opened = new Trigger();
 
   /** Fires when service connection is re-established after a leader change. */
   private readonly _reconnected = new Event<void>();
 
-  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
-    this._hypergraph = graph;
-    this._dataService = dataService;
-    this._queryService = queryService;
-    this._spaceId = spaceId;
-    this._spaceKey = spaceKey;
+  // ── Automerge document state ────────────────────────────────────────────
+  private _spaceRootDocHandle: DocHandleProxy<DatabaseDirectory> | null = null;
+
+  private readonly _objectDocumentHandles = new Map<string, DocHandleProxy<DatabaseDirectory>>();
+
+  private readonly _objectsPendingDocumentLoad = new Map<string, LoadObjectDocumentOptions>();
+
+  private readonly _currentlyLoadingObjects = new ComplexSet<{ url: AutomergeUrl; objectId: string }>(
+    ({ url, objectId }) => `${url}:${objectId}`,
+  );
+
+  private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
+
+  // ── Update scheduling ────────────────────────────────────────────────────
+  private _objectsForNextDbUpdate = new Set<string>();
+  private _objectsForNextUpdate = new Set<string>();
+  private _updateScheduler!: UpdateScheduler;
+
+  // ── Private event field ──────────────────────────────────────────────────
+  private readonly _rootChangedEvent = new Event<void>();
+
+  constructor(options: EntityManagerProps) {
+    this._spaceKey = options.spaceKey;
+    this._spaceId = options.spaceId;
+    this._hypergraph = options.graph;
+    this._dataService = options.dataService;
+    this._queryService = options.queryService;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
-  }
-
-  toJSON() {
-    return {
-      id: this._spaceId,
-      objects: this._objects.size,
-    };
-  }
-
-  get graph(): HypergraphImpl {
-    return this._hypergraph;
   }
 
   get spaceId(): SpaceId {
     return this._spaceId;
   }
 
-  /**
-   * @deprecated
-   */
+  /** @deprecated Use spaceId. */
   get spaceKey(): PublicKey {
     return this._spaceKey;
   }
 
-  // TODO(dmaretskyi): Stop exposing repo.
-  // Currently needed for migration-builder and unit-tests.
-  get _repo(): RepoProxy {
-    return this._repoProxy;
+  get rootChanged(): ReadOnlyEvent<void> {
+    return this._rootChangedEvent;
   }
 
-  @synchronized
-  async open(ctx: Context, spaceState: SpaceState): Promise<void> {
-    const start = performance.now();
-    if (this._state !== CoreDatabaseState.CLOSED) {
-      log.info('Already open');
-      return;
-    }
-    this._state = CoreDatabaseState.OPENING;
+  // ── Lifecycle ────────────────────────────────────────────────────────────
 
-    this._ctx = new Context({ parent: ctx });
-    this._updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
+  /**
+   * Opens the entity manager: starts the repo and wires up update scheduling.
+   * Call `openWithSpaceState` afterwards to load documents once a root URL is known.
+   */
+  async open(ctx: Context): Promise<void> {
+    this._ctx = ctx;
+    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
     });
 
     await this._repoProxy.open();
-    this._ctx.onDispose(() => this._unsubscribeFromHandles());
-    this._ctx.onDispose(() => {
+    ctx.onDispose(() => this._unsubscribeFromHandles());
+    ctx.onDispose(() => {
       for (const request of this._satisfactionRequests.values()) {
         request.abort();
       }
       this._satisfactionRequests.clear();
     });
-    this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
-    this._automergeDocLoader.onObjectUnavailable.on(this._ctx, this._onObjectUnavailable.bind(this));
+  }
 
+  /**
+   * Performs initial AM document load after a rootUrl is known.
+   * Called by DatabaseImpl when the first space root is available.
+   */
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  async openWithSpaceState(ctx: Context, spaceState: SpaceState): Promise<void> {
+    const start = performance.now();
     try {
-      await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
-      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+      await this._loadSpaceRootDocHandle(ctx, spaceState);
+      const spaceRootDocHandle = this.getSpaceRootDocHandle();
       const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
@@ -216,45 +223,24 @@ export class CoreDatabase {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
-    this._state = CoreDatabaseState.OPEN;
     this.opened.wake();
   }
 
-  // TODO(dmaretskyi): Cant close while opening.
-  @synchronized
-  async close(): Promise<void> {
-    if (this._state === CoreDatabaseState.CLOSED) {
-      return;
-    }
-    this._state = CoreDatabaseState.CLOSED;
-
-    this.opened.throw(new ContextDisposedError());
-    this.opened.reset();
-
-    await this._ctx.dispose();
-    this._ctx = Context.default();
-
-    await this._repoProxy.close();
-  }
-
   /**
-   * Update DB in response to space state change.
-   * Can be used to change the root AM document.
+   * Update in response to a space root URL change after the initial load.
    */
-  // TODO(dmaretskyi): should it be synchronized and/or cancelable?
-  @synchronized
   async updateSpaceState(ctx: Context, spaceState: SpaceState): Promise<void> {
-    invariant(this._ctx, 'Must be open');
-    const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle().url;
+    invariant(this._spaceRootDocHandle, 'Must be open');
+    const currentRootUrl = this.getSpaceRootDocHandle().url;
     if (spaceState.rootUrl === currentRootUrl) {
       return;
     }
     this._unsubscribeFromHandles();
-    const objectIdsToLoad = this._automergeDocLoader.clearHandleReferences();
+    const objectIdsToLoad = this._clearHandleReferences();
 
     try {
-      await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
-      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+      await this._loadSpaceRootDocHandle(ctx, spaceState);
+      const spaceRootDocHandle = this.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
     } catch (err) {
@@ -266,55 +252,28 @@ export class CoreDatabase {
     }
   }
 
-  /**
-   * Returns ids for loaded and not loaded objects.
-   */
-  getAllObjectIds(): string[] {
-    if (this._state !== CoreDatabaseState.OPEN) {
-      return [];
-    }
-
-    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
-    if (!hasLoadedHandles) {
-      return [];
-    }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().doc();
-    if (!rootDoc) {
-      return [];
-    }
-
-    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  async close(): Promise<void> {
+    this.opened.throw(new ContextDisposedError());
+    this.opened.reset();
+    await this._repoProxy.close();
   }
 
-  getNumberOfInlineObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
-  }
+  // ── Core object operations ───────────────────────────────────────────────
 
-  getNumberOfLinkedObjects(): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.links ?? {}).length;
-  }
-
-  getTotalNumberOfObjects(): number {
-    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
-  }
-
-  /**
-   * @deprecated
-   * Return only loaded objects.
-   */
+  /** @deprecated Return only loaded objects. */
   allObjectCores(): ObjectCore[] {
     return Array.from(this._objects.values());
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
-    if (!this._automergeDocLoader.hasRootHandle) {
+    if (!this._spaceRootDocHandle) {
       throw new Error('Database is not ready.');
     }
 
     const objCore = this._objects.get(id);
     if (!objCore) {
       if (load) {
-        this._automergeDocLoader.loadObjectDocument(id);
+        this._loadObjectDocument(id);
       }
       return undefined;
     }
@@ -323,26 +282,13 @@ export class CoreDatabase {
     return objCore;
   }
 
-  // TODO(Mykola): Reconcile with `getObjectById`.
   async loadObjectCoreById(
     objectId: string,
     { timeout, returnWithUnsatisfiedDeps, diskOnly }: LoadObjectOptions = {},
   ): Promise<ObjectCore | undefined> {
-    // Object's own doc was previously determined unavailable on disk by a
-    // (system-driven or explicit) `diskOnly` probe. Short-circuit with
-    // `undefined` only for `diskOnly` callers so they don't hang waiting
-    // for a doc that isn't on disk; non-`diskOnly` callers must still be
-    // allowed to wait for the network. The mark is cleared by
-    // `_onObjectDocumentLoaded` if the doc later arrives over the network
-    // (the loader's fire-and-forget continuation will wake any in-flight
-    // wait), which lets a fresh `diskOnly` call succeed too.
     if (diskOnly && this._unavailableObjects.has(objectId)) {
       return undefined;
     }
-    // `load: false` so we don't trigger an implicit (non-`diskOnly`)
-    // load via `getObjectCoreById`'s default behavior; the explicit
-    // `loadObjectDocument(..., { diskOnly })` below carries the
-    // caller's preference end-to-end.
     const cachedCore = this.getObjectCoreById(objectId, { load: false });
     if (cachedCore && this._isCoreResolved(cachedCore, returnWithUnsatisfiedDeps)) {
       return this._coreOrUndefined(cachedCore, returnWithUnsatisfiedDeps);
@@ -359,7 +305,7 @@ export class CoreDatabase {
     const waitForUpdate = this._updateEvent.waitFor(
       (event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady(),
     );
-    this._automergeDocLoader.loadObjectDocument(objectId, { diskOnly });
+    this._loadObjectDocument(objectId, { diskOnly });
 
     await (timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate);
 
@@ -373,11 +319,6 @@ export class CoreDatabase {
     return this._coreOrUndefined(finalCore, returnWithUnsatisfiedDeps);
   }
 
-  /**
-   * A core is "resolved" for the purposes of `loadObjectCoreById` when its
-   * deps are either fully satisfied OR every unsatisfied dep is known
-   * unavailable. Either way, there is no further progress to wait for.
-   */
   private _isCoreResolved(core: ObjectCore, returnWithUnsatisfiedDeps?: boolean): boolean {
     if (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core)) {
       return true;
@@ -385,11 +326,6 @@ export class CoreDatabase {
     return this._areDepsResolved(core);
   }
 
-  /**
-   * Apply the `returnWithUnsatisfiedDeps` contract: by default callers
-   * only receive a core when all strong deps loaded; otherwise return
-   * `undefined`. With the flag set, return the core regardless.
-   */
   private _coreOrUndefined(core: ObjectCore, returnWithUnsatisfiedDeps?: boolean): ObjectCore | undefined {
     if (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core)) {
       return core;
@@ -411,7 +347,7 @@ export class CoreDatabase {
       failOnTimeout?: boolean;
     } = {},
   ): Promise<(ObjectCore | undefined)[]> {
-    if (!this._automergeDocLoader.hasRootHandle) {
+    if (!this._spaceRootDocHandle) {
       throw new Error('Database is not ready.');
     }
 
@@ -420,7 +356,7 @@ export class CoreDatabase {
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
 
-      if (!this._automergeDocLoader.objectPresent(objectId)) {
+      if (!this._objectPresent(objectId)) {
         result[i] = undefined;
         continue;
       }
@@ -440,7 +376,7 @@ export class CoreDatabase {
       return result;
     }
     const idsToLoad = objectsToLoad.map((v) => v.id);
-    this._automergeDocLoader.loadObjectDocument(idsToLoad);
+    this._loadObjectDocument(idsToLoad);
 
     const startTime = TRACE_LOADING ? performance.now() : 0;
     const diagnostics: string[] = [];
@@ -501,9 +437,8 @@ export class CoreDatabase {
   }
 
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
-    if (core.database) {
-      // Already in the database.
-      if (core.database !== this) {
+    if (core.entityManager) {
+      if (core.entityManager !== this) {
         throw new Error('Object already belongs to another database');
       }
 
@@ -521,14 +456,13 @@ export class CoreDatabase {
     const placement = opts?.placeIn ?? 'linked-doc';
     switch (placement) {
       case 'linked-doc': {
-        spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
+        spaceDocHandle = this._createDocumentForObject(core.id);
         spaceDocHandle.on('change', this._onDocumentUpdate);
         break;
       }
-      // TODO(dmaretskyi): In the future we should forbid object placement in the root doc.
       case 'root-doc': {
-        spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-        this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
+        spaceDocHandle = this.getSpaceRootDocHandle();
+        this._onObjectBoundToDocument(spaceDocHandle, core.id);
         break;
       }
       default:
@@ -542,8 +476,6 @@ export class CoreDatabase {
       assignFromLocalState: true,
     });
 
-    // A prior `diskOnly` probe (e.g. resolving this object by ref before it was added) may have
-    // marked the id unavailable; it is now locally present, so clear the mark and wake dependents.
     this._markObjectAvailable(core.id);
   }
 
@@ -552,11 +484,8 @@ export class CoreDatabase {
     core.setDeleted(true);
   }
 
-  /**
-   * Removes an object link from the space root document.
-   */
   unlinkObjects(objectIds: string[]): void {
-    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const root = this.getSpaceRootDocHandle();
     for (const objectId of objectIds) {
       if (!root.doc().links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
@@ -569,9 +498,6 @@ export class CoreDatabase {
     });
   }
 
-  /**
-   * Removes all objects that are marked as deleted.
-   */
   async unlinkDeletedObjects({ batchSize = 10 }: { batchSize?: number } = {}): Promise<void> {
     const idChunks = chunkArray(this.getAllObjectIds(), batchSize);
     for (const ids of idChunks) {
@@ -581,11 +507,6 @@ export class CoreDatabase {
     }
   }
 
-  /**
-   * Resets the object to the new state.
-   * Intended way to change the type of the object (for schema migrations).
-   * Any concurrent changes made by other peers will be overwritten.
-   */
   async atomicReplaceObject(id: EntityId, params: AtomicReplaceObjectProps): Promise<void> {
     const { data, type, meta } = params;
 
@@ -605,7 +526,6 @@ export class CoreDatabase {
     invariant(mappedData['@type'] === undefined);
     invariant(mappedData['@meta'] === undefined);
 
-    // deepMapValues is used to clone the automerge doc to avoid "Cannot create a reference to an existing document object" error.
     const existingStruct: EntityStructure = deepMapValues(core.getDecoded([]), (value, recurse) =>
       value instanceof Uint8Array ? value : recurse(value),
     );
@@ -625,17 +545,14 @@ export class CoreDatabase {
     core.setDecoded([], newStruct);
   }
 
-  // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
   async flush({ disk = true, indexes = true, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
-    // Wait for pending document creations to complete before flushing.
-    await this._automergeDocLoader.waitForPendingCreations();
+    await this._waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(
         {
-          documentIds: this._automergeDocLoader
-            .getAllHandles()
+          documentIds: this._getAllDocHandles()
             .map((handle) => handle.documentId)
             .filter((id): id is DocumentId => id != null),
         },
@@ -652,11 +569,8 @@ export class CoreDatabase {
     }
   }
 
-  /**
-   * Returns document heads for all documents in the space.
-   */
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
-    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const root = this.getSpaceRootDocHandle();
     const doc = root.doc();
     if (!doc || root.documentId == null) {
       return { heads: {} };
@@ -681,16 +595,6 @@ export class CoreDatabase {
     return { heads };
   }
 
-  /**
-   * Ensures that document heads have been replicated on the ECHO host.
-   * Waits for the changes to be flushed to disk.
-   * Does not ensure that this data has been propagated to the client.
-   *
-   * Note:
-   *   For queries to return up-to-date results, the client must call `this.updateIndexes()`.
-   *   This is also why flushing to disk is important.
-   */
-  // TODO(dmaretskyi): Find a way to ensure client propagation.
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
     await this._dataService.waitUntilHeadsReplicated(
       {
@@ -702,11 +606,8 @@ export class CoreDatabase {
     );
   }
 
-  /**
-   * Returns document heads for all documents in the space.
-   */
   async reIndexHeads(): Promise<void> {
-    const root = this._automergeDocLoader.getSpaceRootDocHandle();
+    const root = this.getSpaceRootDocHandle();
     const doc = root.doc();
     invariant(doc);
     invariant(root.documentId, 'Space root document must have documentId');
@@ -722,9 +623,7 @@ export class CoreDatabase {
     );
   }
 
-  /**
-   * @deprecated Use `flush()`.
-   */
+  /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
     await this._dataService.updateIndexes(undefined, { timeout: 0 });
   }
@@ -747,7 +646,6 @@ export class CoreDatabase {
         },
         (err) => {
           if (err instanceof RpcClosedError) {
-            // Wait for reconnection and re-establish the stream.
             this._reconnected.once(ctx, () => setupStream());
           } else if (err) {
             ctx.raise(err);
@@ -761,27 +659,317 @@ export class CoreDatabase {
     return () => currentStream?.close();
   }
 
-  /**
-   * Update service references after reconnection.
-   */
+  getAllObjectIds(): string[] {
+    if (!this._spaceRootDocHandle) {
+      return [];
+    }
+
+    const hasLoadedHandles = this._getAllDocHandles().length > 0;
+    if (!hasLoadedHandles) {
+      return [];
+    }
+    const rootDoc = this.getSpaceRootDocHandle().doc();
+    if (!rootDoc) {
+      return [];
+    }
+
+    return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
+  }
+
+  getNumberOfInlineObjects(): number {
+    return Object.keys(this.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
+  }
+
+  getNumberOfLinkedObjects(): number {
+    return Object.keys(this.getSpaceRootDocHandle().doc()?.links ?? {}).length;
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this.getNumberOfInlineObjects() + this.getNumberOfLinkedObjects();
+  }
+
+  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
+    return Object.values(this._repoProxy.handles);
+  }
+
   _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
-    (this as any)._dataService = dataService;
-    (this as any)._queryService = queryService;
+    this._dataService = dataService;
+    this._queryService = queryService;
     this._repoProxy._updateDataService(dataService);
   }
 
-  /**
-   * Handle reconnection to re-establish RPC streams.
-   */
   async _onReconnect(): Promise<void> {
     log('re-establishing database streams');
     await this._repoProxy._onReconnect();
     this._reconnected.emit();
   }
 
-  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
-    return Object.values(this._repoProxy.handles);
+  // ── Document-handle public surface ───────────────────────────────────────
+
+  getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+    return this._spaceRootDocHandle;
   }
+
+  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+    const rootHandle = this._spaceRootDocHandle;
+    return [...new Set(this._objectDocumentHandles.values())].filter((h) => h !== rootHandle);
+  }
+
+  getObjectDocumentId(objectId: string): string | undefined {
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+    const spaceRootDoc = this._spaceRootDocHandle.doc();
+    invariant(spaceRootDoc);
+    if (spaceRootDoc.objects?.[objectId]) {
+      return this._spaceRootDocHandle.documentId;
+    }
+    const documentUrl = this._getLinkedDocumentUrl(objectId);
+    return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
+  }
+
+  // ── Document-handle private implementation ───────────────────────────────
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
+    if (this._spaceRootDocHandle != null) {
+      return;
+    }
+    if (!spaceState.rootUrl) {
+      throw new Error('Database opened with no rootUrl');
+    }
+
+    const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);
+    const doc = existingDocHandle.doc();
+    invariant(doc);
+    invariant(doc.version === SpaceDocVersion.CURRENT);
+    if (doc.access == null) {
+      this._initDocAccess(existingDocHandle);
+    }
+    this._spaceRootDocHandle = existingDocHandle;
+  }
+
+  private _objectPresent(id: EntityId): boolean {
+    assertState(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+    return (
+      DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), id) != null ||
+      DatabaseDirectory.getLink(this._spaceRootDocHandle.doc(), id) != null
+    );
+  }
+
+  private _loadObjectDocument(objectIdOrMany: string | string[], opts: LoadObjectDocumentOptions = {}): void {
+    const objectIds = Array.isArray(objectIdOrMany) ? objectIdOrMany : [objectIdOrMany];
+    let hasUrlsToLoad = false;
+    const urlsToLoad: DatabaseDirectory['links'] = {};
+    for (const objectId of objectIds) {
+      invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+      if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
+        continue;
+      }
+      const documentUrl = this._getLinkedDocumentUrl(objectId);
+      if (documentUrl == null) {
+        this._objectsPendingDocumentLoad.set(objectId, opts);
+        const isInline = DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), objectId) != null;
+        if (!isInline) {
+          log('object absent from space directory, marking unavailable', { objectId });
+          this._onObjectUnavailable({ objectId });
+        } else {
+          log('loading delayed until object links are initialized', { objectId });
+        }
+      } else {
+        urlsToLoad[objectId] = documentUrl;
+        hasUrlsToLoad = true;
+      }
+    }
+    if (hasUrlsToLoad) {
+      this._loadLinkedObjects(urlsToLoad, opts);
+    }
+  }
+
+  private _onObjectLinksUpdated(links: SpaceDocumentLinks): void {
+    if (!links) {
+      return;
+    }
+    const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
+      this._objectsPendingDocumentLoad.has(objectId),
+    );
+    if (linksAwaitingLoad.length > 0) {
+      const groups = new Map<boolean, typeof linksAwaitingLoad>();
+      for (const entry of linksAwaitingLoad) {
+        const opts = this._objectsPendingDocumentLoad.get(entry[0]) ?? {};
+        const key = !!opts.diskOnly;
+        const bucket = groups.get(key) ?? [];
+        bucket.push(entry);
+        groups.set(key, bucket);
+      }
+      for (const [diskOnly, entries] of groups) {
+        this._loadLinkedObjects(Object.fromEntries(entries), { diskOnly });
+      }
+    }
+    linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    const newLinks = Object.entries(links).filter(
+      ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
+    );
+    if (newLinks.length > 0) {
+      this._loadLinkedObjects(Object.fromEntries(newLinks), { diskOnly: true });
+    }
+  }
+
+  private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
+    this._objectDocumentHandles.set(objectId, handle);
+  }
+
+  private _createDocumentForObject(objectId: string): DocHandleProxy<DatabaseDirectory> {
+    invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
+    const spaceDocHandle = this._repoProxy.create<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: this._spaceKey.toHex() },
+    });
+    const creationPromise = spaceDocHandle
+      .whenReady()
+      .then(() => {
+        if (this._spaceRootDocHandle == null) {
+          log.warn('space root document handle is not available, skipping object binding', { objectId });
+          return;
+        }
+        const url = spaceDocHandle.url;
+        if (url == null) {
+          log.warn('document has no url after whenReady, skipping object binding', { objectId });
+          return;
+        }
+        this._spaceRootDocHandle.change((newDoc: DatabaseDirectory) => {
+          newDoc.links ??= {};
+          newDoc.links[objectId] = new A.RawString(url);
+        });
+      })
+      .finally(() => {
+        this._pendingDocumentCreations.delete(objectId);
+      });
+    this._pendingDocumentCreations.set(objectId, creationPromise);
+    this._onObjectBoundToDocument(spaceDocHandle, objectId);
+
+    return spaceDocHandle;
+  }
+
+  private async _waitForPendingCreations(): Promise<void> {
+    await Promise.all([...this._pendingDocumentCreations.values()]);
+  }
+
+  private _clearHandleReferences(): string[] {
+    const objectsWithHandles = [...this._objectDocumentHandles.keys()];
+    this._objectDocumentHandles.clear();
+    this._spaceRootDocHandle = null;
+    return objectsWithHandles;
+  }
+
+  private _getAllDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+    return this._spaceRootDocHandle != null
+      ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
+      : [];
+  }
+
+  private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
+    const spaceRootDoc = this._spaceRootDocHandle?.doc();
+    invariant(spaceRootDoc);
+    return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
+  }
+
+  private _loadLinkedObjects(links: SpaceDocumentLinks, opts: LoadObjectDocumentOptions = {}): void {
+    if (!links) {
+      return;
+    }
+    for (const [objectId, automergeUrlData] of Object.entries(links)) {
+      const automergeUrl = automergeUrlData.toString();
+      const logMeta = { objectId, automergeUrl };
+      const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
+      if (objectDocumentHandle?.url != null && objectDocumentHandle.url !== automergeUrl) {
+        log.warn('object already inlined in a different document, ignoring the link', {
+          ...logMeta,
+          actualDocumentUrl: objectDocumentHandle.url,
+        });
+        continue;
+      }
+      if (objectDocumentHandle?.url === automergeUrl) {
+        log.warn('object document was already loaded', logMeta);
+        continue;
+      }
+      const handle = this._repoProxy.find<DatabaseDirectory>(automergeUrl as DocumentId);
+      log.debug('document loading triggered', logMeta);
+      this._objectDocumentHandles.set(objectId, handle);
+      void this._loadHandleForObject(handle, objectId, opts);
+    }
+  }
+
+  private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
+    const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
+    await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
+      await cancelWithContext(ctx, docHandle.whenReady());
+    });
+
+    return docHandle;
+  }
+
+  private _initDocAccess(handle: DocHandleProxy<DatabaseDirectory>): void {
+    handle.change((newDoc: DatabaseDirectory) => {
+      newDoc.access ??= { spaceKey: this._spaceKey.toHex() };
+      newDoc.access.spaceKey = this._spaceKey.toHex();
+    });
+  }
+
+  private async _loadHandleForObject(
+    handle: DocHandleProxy<DatabaseDirectory>,
+    objectId: string,
+    opts: LoadObjectDocumentOptions = {},
+  ): Promise<void> {
+    invariant(handle.url, 'Document URL is not available');
+    try {
+      if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
+        log.verbose('document is already loading', { objectId });
+        return;
+      }
+      this._currentlyLoadingObjects.add({ url: handle.url, objectId });
+
+      if (opts.diskOnly) {
+        const onDisk = await handle.whenSettledOnDisk();
+        if (!onDisk) {
+          this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+          log('object document unavailable on disk', { objectId, docUrl: handle.url });
+          this._onObjectUnavailable({ handle, objectId });
+          handle
+            .whenReady()
+            .then(() => {
+              if (this._objectDocumentHandles.get(objectId) !== handle) {
+                return;
+              }
+              this._onObjectDocumentLoaded({ handle, objectId });
+            })
+            .catch((err) => log.verbose('background network wait failed', { objectId, err }));
+          return;
+        }
+      }
+
+      await handle.whenReady();
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+
+      const logMeta = { objectId, docUrl: handle.url };
+      const objectDocHandle = this._objectDocumentHandles.get(objectId);
+      if (objectDocHandle?.url != null && objectDocHandle.url !== handle.url) {
+        log.warn('object was rebound while a document was loading, discarding handle', logMeta);
+        return;
+      }
+      this._onObjectDocumentLoaded({ handle, objectId });
+    } catch (err) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+      log.warn('failed to load a document, retrying', {
+        objectId,
+        automergeUrl: handle.url,
+        err,
+      });
+      await this._loadHandleForObject(handle, objectId, opts);
+    }
+  }
+
+  // ── Private document change handlers ────────────────────────────────────
 
   private async _handleSpaceRootDocumentChange(
     spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
@@ -835,11 +1023,11 @@ export class CoreDatabase {
     }
     for (const objectId of objectsToLoad) {
       if (!this._objects.has(objectId)) {
-        this._automergeDocLoader.loadObjectDocument(objectId);
+        this._loadObjectDocument(objectId);
       }
     }
-    this._automergeDocLoader.onObjectLinksUpdated(spaceRootDoc.links);
-    this.rootChanged.emit();
+    this._onObjectLinksUpdated(spaceRootDoc.links);
+    this._rootChangedEvent.emit();
   }
 
   private _emitObjectUpdateEvent(itemsUpdated: string[]): void {
@@ -857,13 +1045,10 @@ export class CoreDatabase {
     });
   }
 
-  /**
-   * Keep as field to have a reference to pass for unsubscribing from handle changes.
-   */
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
-    this._automergeDocLoader.onObjectLinksUpdated(documentChanges.linkedDocuments);
+    this._onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
@@ -912,7 +1097,6 @@ export class CoreDatabase {
     // eventually delivered them); clear the mark so any in-flight body load resolves afresh.
     this._markObjectAvailable(objectId);
 
-    // Skip objects that were already materialized locally.
     if (this._objects.has(objectId)) {
       return;
     }
@@ -924,9 +1108,6 @@ export class CoreDatabase {
     this._scheduleThrottledUpdate([objectId]);
   }
 
-  /**
-   * Loads all objects on open and handles objects that are being created not by this client.
-   */
   private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
       invariant(!this._objects.has(id));
@@ -939,9 +1120,8 @@ export class CoreDatabase {
     const core = new ObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
-    // Clear any stale unavailable mark: the object is now materialized in a document.
     this._markObjectAvailable(objectId);
-    this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
+    this._onObjectBoundToDocument(docHandle, objectId);
     core.bind({
       db: this,
       docHandle,
@@ -986,7 +1166,7 @@ export class CoreDatabase {
       const uri = EID.make({ spaceId: this._spaceId, entityId: core.id });
       request = this._refResolver.resolve(uri, { source: 'disk' });
       this._satisfactionRequests.set(core.id, request);
-      request.stateChanged.on(this._ctx, () => this._scheduleThrottledUpdate([core.id]));
+      request.stateChanged.on(this._ctx!, () => this._scheduleThrottledUpdate([core.id]));
     }
     return request;
   }
@@ -1023,23 +1203,11 @@ export class CoreDatabase {
         path: objectCore.mountPath,
         assignFromLocalState: false,
       });
-      this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
+      this._onObjectBoundToDocument(docHandle, objectId);
     }
   }
 
-  /**
-   * Throttled db query updates. Signal updates were already emitted for these objects to immediately
-   * update the UI. This happens for locally changed objects (_onDocumentUpdate).
-   */
-  private _objectsForNextDbUpdate = new Set<string>();
-  /**
-   * Objects for which we throttled a db update event and a signal update event.
-   * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
-   */
-  private _objectsForNextUpdate = new Set<string>();
-  private _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
-    maxFrequency: THROTTLED_UPDATE_FREQUENCY,
-  });
+  // ── Update scheduling ────────────────────────────────────────────────────
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private _emitDbUpdateEvents(_ctx: Context): void {
@@ -1059,8 +1227,6 @@ export class CoreDatabase {
     });
   }
 
-  // TODO(dmaretskyi): Pass all remote updates through this.
-  // Scheduled db and signal update events.
   private _scheduleThrottledUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
@@ -1072,7 +1238,6 @@ export class CoreDatabase {
     }
   }
 
-  // Scheduled db update event only.
   private _scheduleThrottledDbUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
@@ -1084,79 +1249,6 @@ export class CoreDatabase {
     }
   }
 }
-
-export interface ItemsUpdatedEvent {
-  spaceId: SpaceId;
-  itemsUpdated: Array<{ id: string }>;
-}
-
-export type LoadObjectOptions = {
-  timeout?: number;
-  /**
-   * Will not eagerly preload strong deps.
-   */
-  returnWithUnsatisfiedDeps?: boolean;
-
-  /**
-   * Allow deleted objects to be returned.
-   * @default false
-   */
-  allowDeleted?: boolean;
-
-  /**
-   * Resolve as soon as the worker-side disk probe settles instead of
-   * waiting for the network. If the document for the requested object —
-   * or any of its strong dependencies — is not on local storage, the call
-   * returns `undefined` (or, with `returnWithUnsatisfiedDeps: true`, the
-   * partial core) instead of stalling. Recursive strong-dep loads inherit
-   * this preference. Used by query-driven loads where waiting on network
-   * latency would stall the query pipeline.
-   *
-   * @default false
-   */
-  diskOnly?: boolean;
-};
-
-enum CoreDatabaseState {
-  CLOSED,
-  OPENING,
-  OPEN,
-}
-
-export type SpaceDocumentHeads = {
-  /**
-   * DocumentId => Heads.
-   */
-  heads: Record<DocumentId, Heads>;
-};
-
-export type GetObjectCoreByIdOptions = {
-  /**
-   * Request the object to be loaded if it is not already loaded.
-   * @default true
-   */
-  load?: boolean;
-};
-
-export type AtomicReplaceObjectProps = {
-  /**
-   * Update data.
-   * NOTE: This is not merged with the existing data.
-   */
-  data: any;
-
-  /**
-   * Update object type — either a typename DXN or a stored-schema EID
-   * (see `getSchemaURI`).
-   */
-  type?: URI.URI;
-
-  /**
-   * Optional partial meta patch — merged into the existing object meta.
-   * Fields explicitly set to `undefined` overwrite the previous value with `undefined`.
-   */
-  meta?: Partial<EntityMeta>;
-};
 
 const RPC_TIMEOUT = 20_000;
 

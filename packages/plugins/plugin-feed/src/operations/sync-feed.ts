@@ -92,7 +92,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       // kept items, and any magazine refs to *deleted* posts now
       // reference proxies whose `_internals.database` link is unset —
       // `createRef` then tries to re-add them, hitting the
-      // `!_objects.has(core.id)` invariant in `CoreDatabase.addCore`.
+      // `!_objects.has(core.id)` invariant in `EntityManager.addCore`.
       // Until feed/db lifecycle is reworked we leave the feed unbounded;
       // the `Magazine.keep` bound (enforced in
       // `MagazineArticle.handleCurate`) prevents the visible list from
