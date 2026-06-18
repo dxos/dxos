@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
@@ -269,11 +269,13 @@ export const resolveSession = (options: ResolveSessionOptions) =>
  */
 const resolvePersonalSpaceSession = (client: Client) =>
   Effect.gen(function* () {
-    const space = getPersonalSpace(client);
+    const space = AppSpace.getPersonalSpace(client);
     if (!space) {
       return undefined;
     }
-    const tokens = yield* Effect.promise(() => space.db.query(Filter.type(AccessToken.AccessToken)).run());
+    const tokens = (yield* Effect.promise(() =>
+      space.db.query(Filter.type(AccessToken.AccessToken)).run(),
+    )) as AccessToken.AccessToken[];
     const token = tokens.find((object) => object.source === ATMOSPHERE_SOURCE && !!object.account && !!object.token);
     if (!token?.account) {
       return undefined;
