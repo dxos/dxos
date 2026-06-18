@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 
 import { StatusBarActions, StatusBarPanel, VersionNumber } from '#containers';
 
-import { StatusBar, StatusBarFooter, VersionInfo } from '../roles';
+import { StatusBar, StatusBarFooter, VersionInfo } from '@dxos/plugin-deck';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

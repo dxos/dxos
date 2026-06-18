@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
       Surface.create<{ subject: Person.Person }>({
         id: 'schemaPopoverContact',
         position: 'first',
-        filter: AppSurface.object(AppSurface.Card, Person.Person),
+        filter: AppSurface.object(AppSurface.CardContent, Person.Person),
         component: ({ data, role }) => {
           return (
             <>
@@ -39,7 +39,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'schemaPopoverOrganization',
         position: 'first',
-        filter: AppSurface.object(AppSurface.Card, Organization.Organization),
+        filter: AppSurface.object(AppSurface.CardContent, Organization.Organization),
         component: ({ data, role }) => {
           return (
             <>
@@ -52,7 +52,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'schemaPopoverProject',
         position: 'first',
-        filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
+        filter: AppSurface.object(AppSurface.CardContent, Pipeline.Pipeline),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
         },
@@ -60,14 +60,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'schemaPopoverTask',
         position: 'first',
-        filter: AppSurface.object(AppSurface.Card, Task.Task),
+        filter: AppSurface.object(AppSurface.CardContent, Task.Task),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;
         },
       }),
       Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
         id: 'schemaPopoverExpando',
-        filter: AppSurface.object(AppSurface.Card, Expando.Expando),
+        filter: AppSurface.object(AppSurface.CardContent, Expando.Expando),
         component: ({ data, role }) => {
           return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
         },
@@ -75,7 +75,7 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'schemaPopoverDynamicType',
-        filter: AppSurface.subject(AppSurface.Card, (v): v is Obj.Unknown => {
+        filter: AppSurface.subject(AppSurface.CardContent, (v): v is Obj.Unknown => {
           if (!Obj.isObject(v)) {
             return false;
           }
@@ -113,7 +113,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'fallbackPopover',
         position: 'last',
-        filter: AppSurface.subject(AppSurface.Card, Obj.isObject),
+        filter: AppSurface.subject(AppSurface.CardContent, Obj.isObject),
         component: ({ data, role }) => {
           return <FormCard role={role} subject={data.subject} projection={data.projection} />;
         },
@@ -121,7 +121,7 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'fallbackJson',
-        filter: Surface.makeFilter(AppSurface.Card),
+        filter: Surface.makeFilter(AppSurface.CardContent),
         position: 'last',
         component: ({ data }) => {
           return <JsonCard data={data} />;
@@ -137,7 +137,7 @@ export default Capability.makeModule(() =>
             <div className='flex w-full justify-center'>
               <div className='py-2 dx-card-min-width dx-card-max-width'>
                 <Card.Root>
-                  <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
+                  <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
                 </Card.Root>
               </div>
             </div>

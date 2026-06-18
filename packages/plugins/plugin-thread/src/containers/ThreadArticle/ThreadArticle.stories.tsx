@@ -63,7 +63,7 @@ const meta = {
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',
-            filter: Surface.makeFilter(AppSurface.Card),
+            filter: Surface.makeFilter(AppSurface.CardContent),
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
         ),

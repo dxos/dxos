@@ -78,6 +78,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",

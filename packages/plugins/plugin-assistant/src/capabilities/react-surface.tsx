@@ -37,7 +37,7 @@ import {
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant } from '#types';
 
-import { Prompts } from '../roles';
+import { Prompts } from '@dxos/plugin-space';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -11,7 +11,7 @@ import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { NotchStart, VersionInfo } from '../../roles';
+import { VersionInfo } from '../../roles';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
@@ -37,7 +37,6 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       )}
       <span className='grow' />
       <Surface.Surface type={VersionInfo} limit={1} />
-      <Surface.Surface type={NotchStart} limit={1} />
     </header>
   );
 };

@@ -32,7 +32,7 @@ import { Support, type Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
-import { Hints, Keyshortcuts } from '../roles';
+import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'resultCard',
         position: 'first',
-        filter: AppSurface.object(AppSurface.Card, Result.Result),
+        filter: AppSurface.object(AppSurface.CardContent, Result.Result),
         component: ({ data }) => <ResultCard subject={data.subject} />,
       }),
       Surface.create({

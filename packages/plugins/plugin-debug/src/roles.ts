@@ -4,10 +4,7 @@
 
 import { Surface } from '@dxos/app-framework/ui';
 
-/**
- * Slot for call-specific debug info inside the devtools panel.
- * Filled by plugin-calls; same NSID as `DevtoolsOverview` in plugin-calls/src/roles.ts.
- */
+/** Slot for the devtools-overview sub-surface inside the debug panel. */
 export const DevtoolsOverview: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
-  'org.dxos.plugin.calls.role.devtoolsOverview',
+  'org.dxos.plugin.debug.role.devtoolsOverview',
 );

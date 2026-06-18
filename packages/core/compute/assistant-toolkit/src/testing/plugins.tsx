@@ -11,7 +11,7 @@ import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
-const CardContent: Surface.RoleToken<any> = Surface.makeType('org.dxos.role.cardContent');
+const CardContent: Surface.RoleToken<any> = Surface.makeType('org.dxos.role.card');
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,

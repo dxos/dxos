@@ -181,12 +181,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'messageCard',
-        filter: AppSurface.object(AppSurface.Card, Message.Message),
+        filter: AppSurface.object(AppSurface.CardContent, Message.Message),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
         id: 'eventCard',
-        filter: AppSurface.object(AppSurface.Card, Event.Event),
+        filter: AppSurface.object(AppSurface.CardContent, Event.Event),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
       Surface.create({

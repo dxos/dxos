@@ -114,7 +114,7 @@ export const PopoverContent = () => {
                 <Card.ActionIconButton action='close' onClick={handleClose} />
               </Card.Header>
               {state.popoverContent && 'subject' in state.popoverContent && (
-                <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={state.popoverContent} limit={1} />
               )}
             </Card.Root>
           )}

@@ -13,7 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
 
-import { DevtoolsOverview } from '../roles';
+import { DevtoolsOverview } from '@dxos/plugin-debug';
 
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 

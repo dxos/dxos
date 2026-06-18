@@ -26,7 +26,7 @@ describe('AppSurface', () => {
     test('expose their role string', ({ expect }) => {
       expect(AppSurface.Article.role).toBe('org.dxos.role.article');
       expect(AppSurface.Section.role).toBe('org.dxos.role.section');
-      expect(AppSurface.Card.role).toBe('org.dxos.role.cardContent');
+      expect(AppSurface.CardContent.role).toBe('org.dxos.role.card');
       expect(AppSurface.Slide.role).toBe('org.dxos.role.slide');
       expect(AppSurface.Dialog.role).toBe('org.dxos.role.dialog');
       expect(AppSurface.Popover.role).toBe('org.dxos.role.popover');
@@ -56,13 +56,13 @@ describe('AppSurface', () => {
     });
 
     test('card token does not require attendableId', ({ expect }) => {
-      const filter = AppSurface.object(AppSurface.Card, TypeA);
+      const filter = AppSurface.object(AppSurface.CardContent, TypeA);
       const objectA = Obj.make(TypeA, { name: 'hello' });
       expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
     });
 
     test('accepts an array of schemas (union)', ({ expect }) => {
-      const filter = AppSurface.object(AppSurface.Card, [TypeA, TypeB]);
+      const filter = AppSurface.object(AppSurface.CardContent, [TypeA, TypeB]);
       const objectA = Obj.make(TypeA, { name: 'hi' });
       const objectB = Obj.make(TypeB, { value: 1 });
       expect(filter.bindings[0].guard({ subject: objectA })).toBe(true);
@@ -70,7 +70,7 @@ describe('AppSurface', () => {
     });
 
     test('rejects mismatched subjects', ({ expect }) => {
-      const filter = AppSurface.object(AppSurface.Card, TypeA);
+      const filter = AppSurface.object(AppSurface.CardContent, TypeA);
       const objectB = Obj.make(TypeB, { value: 1 });
       expect(filter.bindings[0].guard({ subject: objectB })).toBe(false);
     });
@@ -159,7 +159,7 @@ describe('AppSurface', () => {
     test('preserves per-binding guard behavior', ({ expect }) => {
       const filter = AppSurface.oneOf(
         AppSurface.object(AppSurface.Article, TypeA),
-        AppSurface.object(AppSurface.Card, TypeB),
+        AppSurface.object(AppSurface.CardContent, TypeB),
       );
       const objectA = Obj.make(TypeA, { name: 'hi' });
       const objectB = Obj.make(TypeB, { value: 1 });
