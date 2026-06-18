@@ -9,8 +9,7 @@ import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
-import { Account } from '@dxos/plugin-client';
+import { Account, ClientOperation, getAccountSecurityPath } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { HelpOperation } from '@dxos/plugin-support';
 import { type Client } from '@dxos/react-client';
@@ -231,7 +230,7 @@ export class OnboardingManager {
       onAction: async () => {
         await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {
-          subject: [`${Paths.getSpacePath(Account.id)}/${Account.Security}`],
+          subject: [getAccountSecurityPath()],
         });
       },
     });

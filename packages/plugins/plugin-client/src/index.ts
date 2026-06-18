@@ -3,5 +3,6 @@
 //
 
 export { meta } from './meta';
+export * from './paths';
 export * from './types';
 export { ClientOperation } from './operations';
