@@ -11,6 +11,7 @@ import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
+
 import { Lightbox } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';

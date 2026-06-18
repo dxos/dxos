@@ -9,9 +9,10 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
-import { getPresentationPath } from '../paths';
 
 import { PresenterOperation } from '#types';
+
+import { getPresentationPath } from '../paths';
 
 /**
  * Enters or exits presentation for the given object. When `state` is omitted the

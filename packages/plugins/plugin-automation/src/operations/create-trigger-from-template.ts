@@ -9,8 +9,8 @@ import { Operation, Script, Trigger } from '@dxos/compute';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { AutomationOperation } from '../types';
 import { getAutomationsSettingsPath } from '../paths';
+import { AutomationOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFromTemplate> =
   AutomationOperation.CreateTriggerFromTemplate.pipe(
