@@ -70,5 +70,5 @@ export type IntegrationCoordinator = {
 };
 
 export const IntegrationCoordinator = Capability.make<IntegrationCoordinator>(
-  `${meta.id}.capability.integration-coordinator`,
+  `${meta.id}.capability.integrationCoordinator`,
 );

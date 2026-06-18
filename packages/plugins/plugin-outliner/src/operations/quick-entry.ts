@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof OutlineOperation.QuickJournalEntry> 
 
         const client = yield* Capability.get(ClientCapabilities.Client);
         yield* Effect.tryPromise(async () => {
-          const space = getPersonalSpace(client);
+          const space = AppSpace.getPersonalSpace(client);
           if (!space) {
             return;
           }

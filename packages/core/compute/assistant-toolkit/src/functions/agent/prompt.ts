@@ -28,7 +28,7 @@ import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 
-const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-6';
+const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-8';
 
 export default AgentPrompt.pipe(
   Operation.withHandler(

@@ -32,6 +32,13 @@ export class ByokError extends BaseError.extend('ByokError', 'BYOK authenticatio
 }
 
 /**
+ * Thrown by {@link EdgeAiHttpClient} when EDGE rejects an AI request with 429 because the
+ * authenticated profile exceeded a metering limit. Wrapped as the `cause` of an
+ * {@link HttpClientError.ResponseError} so it survives `@effect/ai`'s error mapping.
+ */
+export class UsageQuotaExceededError extends BaseError.extend('UsageQuotaExceededError', 'Usage quota exceeded') {}
+
+/**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
  */
 export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
@@ -155,6 +162,27 @@ export class EdgeAiHttpClient {
                         status: response.status,
                         provider: 'anthropic.com',
                         message: body?.error?.message ?? 'Authentication failed',
+                      }),
+                    }),
+                  ),
+                ),
+              );
+            }
+            // Platform quota (not BYOK): reserve/commit rejected the request before upstream AI.
+            if (!carriedByok && response.status === 429) {
+              return Effect.tryPromise({
+                try: () => response.clone().json() as Promise<{ error?: { message?: string } } | undefined>,
+                catch: () => undefined,
+              }).pipe(
+                Effect.orElseSucceed(() => undefined),
+                Effect.flatMap((body) =>
+                  Effect.fail(
+                    new HttpClientError.ResponseError({
+                      request,
+                      response: httpResponse,
+                      reason: 'StatusCode',
+                      cause: new UsageQuotaExceededError({
+                        message: body?.error?.message,
                       }),
                     }),
                   ),

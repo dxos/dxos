@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
@@ -61,7 +61,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
 
       const target = result?.target;
       if (target) {
@@ -74,8 +74,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         ]);
       } else {
         await invokePromise(LayoutOperation.Open, {
-          subject: [getSpaceHomePath(space.id)],
-          workspace: getSpacePath(space.id),
+          subject: [Paths.getSpaceHomePath(space.id)],
+          workspace: Paths.getSpacePath(space.id),
         });
       }
 

@@ -21,7 +21,7 @@ export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.id}
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.make<Atom.Writable<EphemeralDeckState>>(
-  `${meta.id}.capability.ephemeral-state`,
+  `${meta.id}.capability.ephemeralState`,
 );
 
 /** Get the current active deck from state. */

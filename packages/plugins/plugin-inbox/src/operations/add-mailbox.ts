@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { getSpacePath } from '@dxos/app-toolkit';
-import { CollectionModel } from '@dxos/app-toolkit';
+import { CollectionModel, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +37,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
 
       return {
         id: Obj.getURI(object),
-        subject: [`${getSpacePath(db.spaceId)}/mailboxes/${object.id}/all-mail`],
+        subject: [`${Paths.getSpacePath(db.spaceId)}/mailboxes/${object.id}/all-mail`],
         object,
       };
     }),

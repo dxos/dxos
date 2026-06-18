@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space';
@@ -46,7 +46,7 @@ export default Capability.makeModule(
             const client = yield* Capability.get(ClientCapabilities.Client);
             const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
             const layout = layoutAtom ? get(layoutAtom) : undefined;
-            const spaceId = layout?.workspace ? getSpaceIdFromPath(layout.workspace) : undefined;
+            const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
             const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
 

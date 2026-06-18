@@ -760,6 +760,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-onboarding/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-osrm/package.json",
           "jsonpath": "$.version"
         },

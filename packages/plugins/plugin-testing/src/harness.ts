@@ -36,6 +36,12 @@ const headlessCorePlugins = (): Plugin.Plugin[] => [
  * (Attention, Graph, ProcessManager, Settings, optionally Theme).
  *
  * For a ClientPlugin-backed harness, pass `ClientPlugin({ ... })` via `plugins`.
+ *
+ * @idiom org.dxos.plugin-testing.pluginModuleActivation
+ *   applies: Writing a basic activation smoke-test for any Composer plugin
+ *   instead-of: Manually inspecting PluginManager internals or relying on e2e tests for activation checks
+ *   uses: {@link createComposerTestApp}, {@link AppActivationEvents}
+ *   related: org.dxos.app-framework.testing.operationCapture
  */
 export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): Promise<TestHarness> => {
   const { plugins = [], theme = false, ...rest } = opts;

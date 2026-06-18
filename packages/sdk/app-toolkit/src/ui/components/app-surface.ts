@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../capabilities';
+import { AppCapabilities } from '../../app-framework';
 
 //
 // Internal type helpers
@@ -123,7 +123,7 @@ export const object: {
     }
     return predicate ? predicate(data) : true;
   };
-  return { bindings: [{ role: token.role, guard }] };
+  return Surface.makeFilter(token, guard);
 };
 
 /**
@@ -190,24 +190,6 @@ export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S 
       return false;
     }
     return Obj.snapshotOf(schema, (data as { subject?: unknown }).subject);
-  };
-  return { bindings: [{ role: token.role, guard }] };
-};
-
-/**
- * Filter: lifts an ad-hoc predicate into the typed filter world so it composes
- * via {@link allOf} on the same role as `token`.
- */
-export const predicate = <TData extends Record<string, unknown>>(
-  token: Surface.RoleToken<TData>,
-  fn: (data: TData) => boolean,
-): Surface.Filter<TData> => {
-  const guard = (data: unknown): boolean => {
-    try {
-      return fn(data as TData);
-    } catch {
-      return false;
-    }
   };
   return { bindings: [{ role: token.role, guard }] };
 };

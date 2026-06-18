@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { APP_DOMAIN } from '@dxos/app-toolkit';
+import { NativePasskey } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
@@ -52,6 +52,7 @@ import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
 import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
@@ -88,11 +89,9 @@ import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
 import { isTruthy } from '@dxos/util';
 
-import { steps } from './help';
-import { downloadLogs } from './log-download';
-import { WelcomePlugin } from './plugins';
+import { downloadLogs, steps } from './util';
 
-const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
+const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
 export type State = {
   appKey: string;
@@ -225,6 +224,7 @@ export const getPlugins = ({
     isTauri && !isMobile && !isPopover && NativePlugin(),
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     NavTreePlugin(),
+    OnboardingPlugin({ generateExemplarSpace: !isLocal }),
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
@@ -264,7 +264,6 @@ export const getPlugins = ({
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
-    WelcomePlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),

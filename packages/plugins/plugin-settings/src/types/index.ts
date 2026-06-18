@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pinnedWorkspaceId } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 
-export const SETTINGS_ID = pinnedWorkspaceId('dxos:settings');
+export const SETTINGS_ID = Paths.pinnedWorkspaceId('dxos:settings');
 export const SETTINGS_KEY = 'settings';

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -98,7 +98,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         contextId: id,
         selectionId: post.id,
         companion: linkedSegment('post'),
-        path: getObjectPathFromObject(subject),
+        path: Paths.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, invoker, subject],

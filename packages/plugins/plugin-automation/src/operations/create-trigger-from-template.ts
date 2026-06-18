@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -60,8 +60,8 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
           hidden: true,
         });
         yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [`${getSpacePath(db.spaceId)}/settings/${meta.id}.automations`],
-          workspace: getSpacePath(db.spaceId),
+          subject: [`${Paths.getSpacePath(db.spaceId)}/settings/${meta.id}.automations`],
+          workspace: Paths.getSpacePath(db.spaceId),
         });
       }),
     ),

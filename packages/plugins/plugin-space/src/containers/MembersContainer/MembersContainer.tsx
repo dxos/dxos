@@ -7,7 +7,7 @@ import React, { type Dispatch, type SetStateAction, useMemo, useState } from 're
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -64,8 +64,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
-    ?.objects[0]?.target;
+  const target = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+    ?.target?.objects[0]?.target;
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({

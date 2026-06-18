@@ -150,5 +150,5 @@ export type IntegrationProviderEntry = {
  * Capability registry token for IntegrationProvider contributions (sync + OAuth wiring).
  */
 export const IntegrationProvider = Capability.make<IntegrationProviderEntry[]>(
-  'org.dxos.plugin.integration.capability.integration-provider',
+  'org.dxos.plugin.integration.capability.integrationProvider',
 );

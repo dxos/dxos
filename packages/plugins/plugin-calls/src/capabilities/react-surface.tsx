@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
       // TODO(wittjosiah): Update to use a typed token exported from plugin-calls.
       Surface.create({
         id: 'call',
-        filter: AppSurface.predicate(AppSurface.Article, isCallData),
+        filter: Surface.makeFilter(AppSurface.Article, isCallData),
         component: ({ data }) => <CallArticle roomId={data.subject.roomId} attendableId={data.attendableId} />,
       }),
     ]),

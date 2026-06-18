@@ -16,7 +16,7 @@ import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as TypeNs from './Type';
+import type * as Type$ from './Type';
 
 /**
  * Instance type for a reference.
@@ -51,11 +51,11 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * ```
  */
 export const Ref: {
-  <S extends TypeNs.AnyObj | TypeNs.AnyRelation>(type: S): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
+  <S extends Type$.AnyObj | Type$.AnyRelation>(type: S): RefSchema<Type$.InstanceType<S> & Obj.Unknown>;
 
   // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
   // trigger that points to a stored function/workflow definition.
-  <T extends TypeNs.Type<any>>(type: T): RefSchema<TypeNs.InstanceType<T>>;
+  <T extends Type$.Type<any>>(type: T): RefSchema<Type$.InstanceType<T>>;
 
   // Schema-side overload for the well-known "any object" / "any relation" schemas.
   // Other raw `Schema.Schema` values are intentionally rejected — callers should

@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { useAppGraph, useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -103,7 +103,9 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] })),
+          Match.when('open', () =>
+            invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] }),
+          ),
           Match.orElseAbsurd,
         ),
       [invokePromise],

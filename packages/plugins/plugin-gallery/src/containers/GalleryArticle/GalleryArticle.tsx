@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
@@ -60,10 +60,10 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     if (!db || !invokePromise) {
       return;
     }
-    const objectPath = getObjectPathFromObject(subject);
+    const objectPath = Paths.getObjectPathFromObject(subject);
     const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
     await invokePromise(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: showId });
-    await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: getSpacePath(db.spaceId) });
+    await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: Paths.getSpacePath(db.spaceId) });
   }, [subject, invokePromise]);
 
   const menuActions = useMenuBuilder(

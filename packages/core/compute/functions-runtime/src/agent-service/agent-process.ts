@@ -130,7 +130,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const completionGuard = Option.fromNullable(options.completionGuard);
         let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
 
-        const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6');
+        const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
 
         const maybeComplete = Effect.gen(function* () {
           if (

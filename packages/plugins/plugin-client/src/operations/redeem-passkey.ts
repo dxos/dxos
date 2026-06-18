@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
-import { decodeUrlSafeBase64, supportsNativePasskeys, loginNativePasskey } from '@dxos/app-toolkit';
+import { NativePasskey } from '@dxos/app-toolkit';
 import { PublicKey } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
@@ -24,19 +24,19 @@ const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
       );
 
       const { lookupKey, signature, clientDataJson, authenticatorData } = yield* Match.value(
-        supportsNativePasskeys(),
+        NativePasskey.supportsNativePasskeys(),
       ).pipe(
         Match.when(true, () =>
           Effect.gen(function* () {
             const result = yield* Effect.promise(() =>
-              loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
+              NativePasskey.loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
             );
             invariant(result, 'Native passkey login returned no result');
             return {
-              lookupKey: PublicKey.from(decodeUrlSafeBase64(result.user_handle)),
-              signature: Buffer.from(decodeUrlSafeBase64(result.signature)),
-              clientDataJson: Buffer.from(decodeUrlSafeBase64(result.client_data_json)),
-              authenticatorData: Buffer.from(decodeUrlSafeBase64(result.authenticator_data)),
+              lookupKey: PublicKey.from(NativePasskey.decodeUrlSafeBase64(result.user_handle)),
+              signature: Buffer.from(NativePasskey.decodeUrlSafeBase64(result.signature)),
+              clientDataJson: Buffer.from(NativePasskey.decodeUrlSafeBase64(result.client_data_json)),
+              authenticatorData: Buffer.from(NativePasskey.decodeUrlSafeBase64(result.authenticator_data)),
             };
           }),
         ),
