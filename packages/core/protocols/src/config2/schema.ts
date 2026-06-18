@@ -4,23 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IconSchema, ScreenshotSchema } from '../edge/registry.ts';
+import { IconSchema, PluginMetaBaseSchema, ScreenshotSchema } from '../edge/registry.ts';
 
 export { IconSchema, ScreenshotSchema };
 export type { Icon as IconType, Screenshot } from '../edge/registry.ts';
 
 export const PluginMeta = Schema.Struct({
-  id: Schema.String.pipe(Schema.nonEmptyString()),
-  name: Schema.String.pipe(Schema.nonEmptyString()),
+  ...PluginMetaBaseSchema.fields,
   version: Schema.optional(Schema.String),
-  author: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  homePage: Schema.optional(Schema.String),
-  source: Schema.optional(Schema.String),
   spec: Schema.optional(Schema.String),
-  screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
-  icon: Schema.optional(IconSchema),
-  tags: Schema.optional(Schema.Array(Schema.String)),
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
 });
 export type PluginMeta = Schema.Schema.Type<typeof PluginMeta>;
