@@ -352,7 +352,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
   })),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.operationHandler',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    // SetupProcessManager fires very early (on Startup, before the client capability is contributed),
+    // so gate on ClientReady too — otherwise `Capability.get(ClientCapabilities.Client)` fails.
+    activatesOn: ActivationEvent.allOf(ActivationEvents.SetupProcessManager, ClientEvents.ClientReady),
     activate: Effect.fnUntraced(function* () {
       return Capability.contributes(
         Capabilities.OperationHandler,
