@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'tableCard',
-        filter: AppSurface.object(AppSurface.Card, Table.Table),
+        filter: AppSurface.object(AppSurface.CardContent, Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),

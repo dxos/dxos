@@ -16,6 +16,7 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
+import { Prompts } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -61,11 +62,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'chat',
-        role: 'article',
-        filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
-          typeof data.attendableId === 'string' &&
-          Obj.instanceOf(Chat.Chat, data.subject) &&
-          data.variant !== ASSISTANT_COMPANION_VARIANT,
+        filter: AppSurface.object(
+          AppSurface.Article,
+          Chat.Chat,
+          (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
+        ),
         component: ({ data, role, ref }) => {
           return <ChatArticle role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
         },
@@ -84,11 +85,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
-        role: 'article',
-        filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
-          typeof data.attendableId === 'string' &&
-          Obj.isObject(data.companionTo) &&
-          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+        filter: Surface.makeFilter(
+          AppSurface.Article,
+          (data) =>
+            Obj.isObject(data.companionTo) && (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+        ),
         component: ({ data: { subject, attendableId, companionTo }, role, ref }) => (
           <ChatCompanion
             role={role}
@@ -101,10 +102,13 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionInvocations',
-        role: 'article',
-        filter: (data): data is { companionTo: Sequence.Sequence } =>
-          (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
-          data.subject === 'invocations',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'invocations'),
+          AppSurface.oneOf(
+            AppSurface.companion(AppSurface.Article, Sequence.Sequence),
+            AppSurface.companion(AppSurface.Article, Routine.Routine),
+          ),
+        ),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
@@ -149,7 +153,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'trace',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--trace'), 'trace'),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
         component: () => {
           const space = useActiveSpace();
           useEffect(() => {
@@ -165,7 +169,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'triggerStatus',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -177,10 +181,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'prompts',
-        filter: AppSurface.subject(
-          Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'),
-          Obj.isObject,
-        ),
+        filter: AppSurface.subject(Prompts, Obj.isObject),
         component: ({ data }) => <RoutineList subject={data.subject} />,
       }),
     ]),

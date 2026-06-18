@@ -70,7 +70,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
           </Card.Block>
         </Card.Header>
         <Card.Body>
-          <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
+          <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
         </Card.Body>
       </Card.Root>
     </Menu.Root>

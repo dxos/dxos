@@ -20,9 +20,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'sketch',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
-          typeof data.attendableId === 'string' && Sketch.isSketch(data.subject, Sketch.TLDRAW_SCHEMA),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Sketch.Sketch),
+          AppSurface.object(AppSurface.Section, Sketch.Sketch),
+          AppSurface.object(AppSurface.Slide, Sketch.Sketch),
+        ),
         component: ({ data: { subject, attendableId }, role }) => {
           const settings = useAtomCapability(SketchCapabilities.Settings);
           return <SketchArticle role={role} attendableId={attendableId} subject={subject} settings={settings} />;

@@ -27,8 +27,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'notFound',
-        role: 'article',
-        filter: (data): data is { attendableId: string } => data.attendableId === NotFound.NOT_FOUND_PATH,
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
         component: () => <NotFoundArticle />,
       }),
     ]),

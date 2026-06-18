@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
@@ -84,7 +84,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     );
   }, []);
 
-  const showToolbar = role === 'article';
+  const showToolbar = role === AppSurface.Article.role;
 
   if (!db || !model) {
     return null;

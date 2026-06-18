@@ -4901,6 +4901,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../../sdk/app-toolkit
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
@@ -8681,6 +8684,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-debug':
+        specifier: workspace:*
+        version: link:../plugin-debug
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -14803,6 +14809,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -14906,6 +14915,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability

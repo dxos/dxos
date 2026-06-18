@@ -80,7 +80,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
               <Card.Body>
                 {projection && (
                   <Surface.Surface
-                    type={AppSurface.Card}
+                    type={AppSurface.CardContent}
                     limit={1}
                     data={{
                       subject: data,

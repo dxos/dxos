@@ -15,6 +15,7 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
@@ -71,7 +72,7 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
             indentWithTab: true,
             lineNumbers: true,
             lineWrapping: false,
-            scrollPastEnd: role !== 'section',
+            scrollPastEnd: role !== AppSurface.Section.role,
             search: true,
             ...options,
           }),

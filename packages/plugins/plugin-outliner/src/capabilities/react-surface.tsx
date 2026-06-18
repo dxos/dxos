@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'card.outline',
-        filter: AppSurface.object(AppSurface.Card, Outline.Outline),
+        filter: AppSurface.object(AppSurface.CardContent, Outline.Outline),
         component: ({ data }) => <OutlineCard subject={data.subject} />,
       }),
       Surface.create({
