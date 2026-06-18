@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
               db.graph.registry
                 .list()
                 .filter(Type.isType)
-                .filter((t: Type.Type) => Type.getTypename(t) === typename),
+                .filter((t) => Type.getTypename(t) === typename),
             [db, typename],
           );
           const singleSelectColumns = useMemo(() => {
