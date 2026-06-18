@@ -60,9 +60,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
 
   const packageDir = dirname(packagePath);
 
-  const entryPoints: (string | { in: string; out: string })[] = options.entryPoints.map((entry) =>
-    entry === '#meta' ? { in: '#meta', out: 'meta' } : entry,
-  );
+  const entryPoints: (string | { in: string; out: string })[] = options.entryPoints;
 
   let tsConfig: any;
   try {
