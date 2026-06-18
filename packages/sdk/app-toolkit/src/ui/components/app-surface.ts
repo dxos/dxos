@@ -528,7 +528,7 @@ export const StatusIndicator: Surface.RoleToken<Record<string, unknown>> = Surfa
  */
 export type FormInputData = {
   prop: string;
-  schema: Schema.Schema.All;
+  schema: Schema.Schema.AnyNoContext;
   fieldPropertyAst?: SchemaAST.AST;
   [key: string]: unknown;
 };
