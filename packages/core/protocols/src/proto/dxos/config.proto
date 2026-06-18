@@ -33,7 +33,7 @@ message Config {
 message Package {
   optional string license = 1;
   repeated Repo repos = 2;
-  repeated Plugin plugins = 3;
+  repeated Module modules = 3;
 }
 
 // TODO(wittjosiah): Shared with registry types. Factor out?
@@ -44,11 +44,9 @@ message Repo {
 }
 
 //
-// A publishable plugin. Source of truth for plugin metadata (mirrors the
-// app-framework `Plugin.Meta`); the `meta` consumed by plugin code and the
-// registry `manifest.json` are both derived from this at build time.
+// Unit of deployment.
 //
-message Plugin {
+message Module {
   message Build {
     optional string command = 1;
     optional string outdir = 2;
@@ -58,31 +56,30 @@ message Plugin {
     optional google.protobuf.Struct env = 10;
   }
 
-  // Core identity.
-  optional string id = 1;          // Bare NSID (e.g. 'org.dxos.plugin.example'); `key = DXN.make(id)`.
-  optional string name = 2;
-  optional string description = 3;
-  repeated string tags = 4;
+  optional string id = 8;   // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
+  optional string name = 1; // TODO(burdon): Replace with id (or key?)
+  optional string type = 2; // TODO(burdon): Define namespace (e.g.,
+                            // 'org.dxos.type.frame')
 
-  // Authored plugin metadata (mirrors the self-declared subset of `Plugin.Meta`).
-  // `author` is intentionally absent: it is provenance, not self-declared — resolved
-  // at runtime from the publisher (registry) or an app-configured default (bundled).
-  optional string home_page = 10;
-  optional string source = 11;
-  optional string spec = 12;
-  message Screenshot {
-    optional string url = 1;   // Simple URL (mutually exclusive with light/dark).
-    optional string light = 2; // Light-theme variant URL.
-    optional string dark = 3;  // Dark-theme variant URL.
-  }
-  repeated Screenshot screenshots = 13;
-  optional string icon = 14;
-  optional string icon_hue = 15;
-  repeated string depends_on = 16; // Bare NSIDs of plugins this depends on.
+  // TODO(burdon): Developer info message.
 
-  // Build configuration.
+  // TODO(burdon): Start at 10.
+  optional string display_name = 3;
+  optional string description = 4;
+  repeated string tags = 5;
+  optional bytes bundle = 6; // TODO(burdon): ???
+
+  // TODO(burdon): Remove.
+  optional bool tunnel = 7;
+
+  // TODO(burdon): Start at 100.
+  repeated Module deps = 10; // TODO(burdon): E.g., types.
   optional Build build = 100;
   repeated Repo repos = 101;
+
+  /// Data which will be included as apart of DXNS record.
+  /// The data will be validated based on the type when being published.
+  optional google.protobuf.Any record = 200;
 }
 
 message Runtime {
