@@ -4,19 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-/** A plugin preview image with optional theme-specific URLs (`light` / `dark`). */
-export const ScreenshotSchema = Schema.Struct({
-  light: Schema.optional(Schema.String),
-  dark: Schema.optional(Schema.String),
-});
-export type Screenshot = Schema.Schema.Type<typeof ScreenshotSchema>;
-
-/** Icon reference: Phosphor icon key with an optional theme hue. */
-export const IconSchema = Schema.Struct({
-  key: Schema.String.pipe(Schema.nonEmptyString()),
-  hue: Schema.optional(Schema.String),
-});
-export type Icon = Schema.Schema.Type<typeof IconSchema>;
+import { IconSchema, PluginMetaBaseSchema, ScreenshotSchema } from '../config2/schema.ts';
+export { IconSchema, PluginMetaBaseSchema, ScreenshotSchema } from '../config2/schema.ts';
+export type { Icon, PluginMetaBase, Screenshot } from '../config2/schema.ts';
 
 /**
  * A snapshot of a plugin's declared dependencies resolved to concrete installed versions at build
@@ -33,23 +23,6 @@ export type DependencyMap = Schema.Schema.Type<typeof DependencyMapSchema>;
  * never have to think about it.
  */
 export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
-
-/**
- * Display and discovery metadata common to all plugin schema shapes.
- * Spread into {@link PluginManifestSchema}; re-exported to `config2` for use in `PluginMeta`.
- */
-export const PluginMetaBaseSchema = Schema.Struct({
-  id: Schema.String.pipe(Schema.nonEmptyString()),
-  name: Schema.String.pipe(Schema.nonEmptyString()),
-  description: Schema.optional(Schema.String),
-  author: Schema.optional(Schema.String),
-  homePage: Schema.optional(Schema.String),
-  source: Schema.optional(Schema.String),
-  screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
-  tags: Schema.optional(Schema.Array(Schema.String)),
-  icon: Schema.optional(IconSchema),
-});
-export type PluginMetaBase = Schema.Schema.Type<typeof PluginMetaBaseSchema>;
 
 /**
  * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
