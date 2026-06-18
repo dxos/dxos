@@ -74,13 +74,17 @@ export const PluginProfileSchema = Schema.Struct({
   key: Schema.String.pipe(Schema.nonEmptyString()),
   /** Plugin display name. */
   name: Schema.String.pipe(Schema.nonEmptyString()),
+  /** Short description of plugin functionality. */
   description: Schema.optional(Schema.String),
   /** Publisher's homepage or plugin documentation URL. */
   homePage: Schema.optional(Schema.String),
   /** Source repository URL. */
   source: Schema.optional(Schema.String),
+  /** Tags to help categorize the plugin. */
   tags: Schema.optional(Schema.Array(Schema.String)),
+  /** Preview images — theme-keyed screenshot URLs shown on the plugin's card. */
   screenshots: Schema.optional(Schema.Array(Config2.Screenshot)),
+  /** Icon identifier resolvable by `@ch-ui/icons` (e.g. `ph--sparkle--regular`), with an optional palette hue. */
   icon: Schema.optional(Config2.Icon),
   /** Composer plugin ids this plugin depends on at runtime (NSIDs). Author-declared, version-independent. */
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
