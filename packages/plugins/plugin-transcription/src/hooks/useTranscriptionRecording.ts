@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useState } from 'react';
 
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -12,6 +13,8 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Message, type Transcript } from '@dxos/types';
+
+import { TranscriptOperation, TranscriptionCapabilities } from '#types';
 
 import { useAudioTrack } from './useAudioTrack';
 import { useTranscriber } from './useTranscriber';
@@ -33,23 +36,42 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
 
   const [recording, setRecording] = useState(false);
   const track = useAudioTrack(recording);
+  const { invokePromise } = useOperationInvoker();
+  const settings = useAtomCapability(TranscriptionCapabilities.Settings);
 
-  // Append a transcribed message batch to the transcript's feed.
+  // Append a transcribed message batch to the transcript's feed, enriching it first (when entity
+  // extraction is enabled) with references to known entities mentioned in the transcript.
   const handleSegments = useCallback(
     async (blocks: Message.Message['blocks']) => {
       if (!space || !feed || blocks.length === 0) {
         return;
       }
       const sender = identity ? { identityDid: identity.did, name: identity.profile?.displayName } : {};
-      const message = Obj.make(Message.Message, {
+      let message = Obj.make(Message.Message, {
         sender,
         created: new Date().toISOString(),
         blocks,
       });
+
+      // `spaceId` provides the space context required by the process-affinity AiService/Database.
+      // Fall back to the raw message if extraction fails (e.g. AI service unavailable).
+      if (settings?.entityExtraction ?? true) {
+        const { data, error } = await invokePromise(
+          TranscriptOperation.EnrichMessage,
+          { message },
+          { spaceId: space.id },
+        );
+        if (error) {
+          log.warn('entity extraction failed; using raw transcript', { error });
+        } else if (data?.message) {
+          message = data.message;
+        }
+      }
+
       const feedServiceLayer = createFeedServiceLayer(space.db);
       await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
     },
-    [space, feed, identity],
+    [space, feed, identity, invokePromise, settings],
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.

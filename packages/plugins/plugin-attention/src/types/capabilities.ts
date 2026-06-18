@@ -9,5 +9,5 @@ import { meta } from '#meta';
 
 export namespace AttentionCapabilities {
   export const Attention = Capability.make<AttentionManager>(`${meta.id}.capability.attention`);
-  export const ViewState = Capability.make<ViewStateManager>(`${meta.id}.capability.view-state`);
+  export const ViewState = Capability.make<ViewStateManager>(`${meta.id}.capability.viewState`);
 }

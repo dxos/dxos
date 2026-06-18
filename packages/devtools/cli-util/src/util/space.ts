@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { getPersonalSpace } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, Feed, type Key } from '@dxos/echo';
@@ -27,7 +27,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const personal = getPersonalSpace(client);
+      const personal = AppSpace.getPersonalSpace(client);
       if (!personal) {
         throw new Error('No space ID provided and no personal space found.');
       }
@@ -56,7 +56,7 @@ export const spaceLayer = (
       }
       return spaceId$.pipe(
         Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(getPersonalSpace(client))),
+        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
         Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
       );
     };

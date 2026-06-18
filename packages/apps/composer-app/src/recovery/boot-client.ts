@@ -7,7 +7,7 @@ import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { Config, defs } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { setupConfig } from '../config';
+import { setupConfig } from '../util';
 
 let bootedClient: Client | undefined;
 

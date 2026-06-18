@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
@@ -17,6 +17,8 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { getChatPath } from '../paths';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewChat> =
   AssistantOperation.RunPromptInNewChat.pipe(
@@ -88,7 +90,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             return { object: chat };
           }
 
-          const chatPath = getObjectPathFromObject(chat);
+          const chatPath = getChatPath(db.spaceId, chat.id);
           const pendingPromptText =
             typeof prompt === 'string'
               ? prompt

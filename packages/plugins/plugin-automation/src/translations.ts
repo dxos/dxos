@@ -53,6 +53,11 @@ export const translations = [
         'automation-not-associated.message': 'Not yet associated with this object.',
         'automation-detached.message': 'No longer associated with this object.',
 
+        'testing.title': 'Testing',
+        'force-run.label': 'Force run',
+        'reset-cursor.label': 'Reset feed cursor',
+        'reset-cursor-confirm.label': 'Confirm reset feed cursor',
+
         'automation-verbose.label': 'Manage automations',
         'automation.description': 'Manage where automations in this space run.',
 

@@ -4,12 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Label, LayoutOperation } from '@dxos/app-toolkit';
+import { AppNode, LayoutOperation, Translations } from '@dxos/app-toolkit';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export { PLANK_COMPANION_TYPE, DECK_COMPANION_TYPE } from '@dxos/app-toolkit';
+export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
+export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
 export type Part = 'solo' | 'multi' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -92,7 +93,7 @@ export const EphemeralDeckState = Schema.Struct({
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
   popoverKind: Schema.optional(Schema.Literal('base', 'card')),
-  popoverTitle: Schema.optional(Label.annotations({ description: 'The title of the popover.' })),
+  popoverTitle: Schema.optional(Translations.Label.annotations({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */

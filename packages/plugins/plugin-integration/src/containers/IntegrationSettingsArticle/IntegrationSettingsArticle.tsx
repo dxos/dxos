@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -44,7 +44,7 @@ export const IntegrationSettingsArticle = (_props: IntegrationSettingsArticlePro
         return;
       }
       void invokePromise(LayoutOperation.Open, {
-        subject: [integrationDeckSubject(getSpacePath(db.spaceId), integration.id)],
+        subject: [integrationDeckSubject(Paths.getSpacePath(db.spaceId), integration.id)],
         navigation: 'immediate',
       });
     },

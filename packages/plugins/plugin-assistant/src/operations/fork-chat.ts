@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { Paths, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext, SessionLink } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
@@ -100,7 +100,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         );
       } else {
         // Navigate to the forked chat as a standalone plank.
-        const chatPath = getObjectPathFromObject(newChat);
+        const chatPath = Paths.getObjectPathFromObject(newChat);
         yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
       }
 

@@ -118,9 +118,9 @@ export default defineConfig((env) => ({
     warmup: {
       clientFiles: [
         './src/main.tsx',
-        './src/dedicated-worker.ts',
-        './src/shared-worker.ts',
-        './src/coordinator-worker.ts',
+        './src/workers/dedicated-worker.ts',
+        './src/workers/shared-worker.ts',
+        './src/workers/coordinator-worker.ts',
         './src/plugin-defs.tsx',
       ],
     },

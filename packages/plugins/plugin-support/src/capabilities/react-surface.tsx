@@ -8,9 +8,10 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { LayoutOperation, getPersonalSpace, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
+import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
 
@@ -22,7 +23,7 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
-  SpaceHomeArticle,
+  SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
 } from '#containers';
@@ -30,7 +31,7 @@ import { meta } from '#meta';
 import { Support, type Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -46,12 +47,10 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'spaceHome',
-        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          return <SpaceHomeArticle role={role} attendableId={data.attendableId} space={space} />;
-        },
+        id: 'spaceHomeWelcome',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        position: 'first',
+        component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',
@@ -102,7 +101,7 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => {
           const client = useClient();
           const { invokePromise } = useOperationInvoker();
-          const personal = getPersonalSpace(client);
+          const personal = AppSpace.getPersonalSpace(client);
           const [properties, updateProperties] = useObject(personal?.properties);
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const welcomeDismissed = properties
@@ -113,8 +112,8 @@ export default Capability.makeModule(() =>
               return;
             }
             updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
-            const workspace = getSpacePath(personal.id);
-            void invokePromise(LayoutOperation.Open, { subject: [getSpaceHomePath(personal.id)], workspace });
+            const workspace = Paths.getSpacePath(personal.id);
+            void invokePromise(LayoutOperation.Open, { subject: [Paths.getSpaceHomePath(personal.id)], workspace });
           };
           return (
             <SupportSettings

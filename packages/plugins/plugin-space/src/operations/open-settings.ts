@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { SpaceOperation } from './definitions';
@@ -11,8 +11,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = Space
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [`${getSpacePath(input.space.id)}/settings/general`],
-        workspace: getSpacePath(input.space.id),
+        subject: [`${Paths.getSpacePath(input.space.id)}/settings/general`],
+        workspace: Paths.getSpacePath(input.space.id),
       });
     }),
   ),

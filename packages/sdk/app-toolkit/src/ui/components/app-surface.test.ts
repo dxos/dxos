@@ -118,19 +118,26 @@ describe('AppSurface', () => {
     });
   });
 
-  describe('predicate(token, fn)', () => {
+  describe('Surface.makeFilter(token, guard?)', () => {
     test('lifts an ad-hoc predicate into a SurfaceFilter', ({ expect }) => {
-      const filter = AppSurface.predicate(AppSurface.Article, (data: any) => data.custom === true);
+      const filter = SurfaceInternals.makeFilter(AppSurface.Article, (data: any) => data.custom === true);
       expect(filter.bindings[0].role).toBe('article');
       expect(filter.bindings[0].guard({ custom: true })).toBe(true);
       expect(filter.bindings[0].guard({ custom: false })).toBe(false);
     });
 
     test('traps thrown errors and returns false', ({ expect }) => {
-      const filter = AppSurface.predicate(AppSurface.Article, () => {
+      const filter = SurfaceInternals.makeFilter(AppSurface.Article, () => {
         throw new Error('boom');
       });
       expect(filter.bindings[0].guard({})).toBe(false);
+    });
+
+    test('matches any data when guard is omitted', ({ expect }) => {
+      const filter = SurfaceInternals.makeFilter(AppSurface.Article);
+      expect(filter.bindings[0].role).toBe('article');
+      expect(filter.bindings[0].guard({})).toBe(true);
+      expect(filter.bindings[0].guard(null)).toBe(true);
     });
   });
 
@@ -164,7 +171,7 @@ describe('AppSurface', () => {
     test('combines same-role filters with AND semantics', ({ expect }) => {
       const filter = AppSurface.allOf(
         AppSurface.object(AppSurface.Article, TypeA),
-        AppSurface.predicate(AppSurface.Article, (data: any) => data.extra === true),
+        SurfaceInternals.makeFilter(AppSurface.Article, (data: any) => data.extra === true),
       );
       expect(filter.bindings).toHaveLength(1);
       expect(filter.bindings[0].role).toBe('article');

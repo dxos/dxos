@@ -22,7 +22,7 @@ const modifier = isMac ? 'Meta' : 'Control';
 export const INITIAL_URL = 'http://localhost:4173';
 
 // Only the personal space is seeded on every new identity. The exemplar space is skipped on
-// localhost (see WelcomePlugin `generateExemplarSpace`), which is where e2e tests run.
+// localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
 export class AppManager {
