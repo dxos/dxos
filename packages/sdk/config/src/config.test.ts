@@ -48,14 +48,18 @@ test('Basic config', () => {
   });
 });
 
-test('Runtime and plugin config', () => {
+test('Runtime and module config', () => {
   const config = new Config(
     {
       package: {
-        plugins: [
+        modules: [
           {
-            id: 'example.app.tasks',
-            name: 'Tasks',
+            name: 'example:app/tasks',
+            record: {
+              web: {
+                entryPoint: 'main.js',
+              },
+            },
           },
         ],
       },
@@ -76,10 +80,14 @@ test('Runtime and plugin config', () => {
   expect(config.values).toEqual({
     version: 1,
     package: {
-      plugins: [
+      modules: [
         {
-          id: 'example.app.tasks',
-          name: 'Tasks',
+          name: 'example:app/tasks',
+          record: {
+            web: {
+              entryPoint: 'main.js',
+            },
+          },
         },
       ],
     },
