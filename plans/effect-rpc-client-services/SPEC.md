@@ -21,8 +21,9 @@ worker, proxy, socket, agent). `@dxos/rpc` may remain temporarily for unrelated 
 - Migrating teleport/mesh replication protocols (`@dxos/rpc` over teleport muxer) — out of scope.
 - Migrating the iframe `BridgeService` / `WorkerService` / shell protocols — these are separate
   bundles; they ride the same transports but are tracked as a follow-up (see §10).
-- Changing the wire transports themselves (SharedWorker `MessagePort`, WebSocket, in-process).
-  We bridge the existing byte-level transports into `@effect/rpc`, we do not replace them.
+- Changing the wire transports themselves (SharedWorker `MessagePort`, WebSocket, in-process). We
+  reuse the existing transports; the `MessagePort`s are driven by `@effect/rpc`'s native worker
+  protocol (structured clone, no byte serializer) rather than the `@dxos/rpc` byte engine.
 
 ## 2. Background — current architecture
 
