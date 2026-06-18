@@ -13,7 +13,7 @@ import { type ModuleProps } from './types';
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.
  */
-export const TraceModule = ({ space }: ModuleProps) => {
+export const TraceModule = ({}: ModuleProps) => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
@@ -22,7 +22,7 @@ export const TraceModule = ({ space }: ModuleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <Surface.Surface type={AppSurface.deckCompanion('trace')} data={{ subject: 'trace' }} />{' '}
+        <Surface.Surface type={AppSurface.deckCompanion('trace')} data={{ subject: 'trace' }} />
       </Panel.Content>
     </Panel.Root>
   );
