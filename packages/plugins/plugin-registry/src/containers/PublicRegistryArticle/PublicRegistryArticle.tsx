@@ -41,6 +41,7 @@ const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
       screenshots: plugin.screenshots,
       tags: plugin.tags,
       icon: plugin.icon,
+      author: plugin.author,
     }),
     modules: [],
   }) as Plugin.Plugin;
