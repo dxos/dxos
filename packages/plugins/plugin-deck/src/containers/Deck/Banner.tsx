@@ -11,7 +11,7 @@ import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { VersionInfo } from '../../roles';
+import { VersionInfo } from '#types';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {

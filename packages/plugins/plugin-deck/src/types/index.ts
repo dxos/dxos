@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './surface';
 export * from './schema';
 
 export * as DeckCapabilities from './DeckCapabilities';

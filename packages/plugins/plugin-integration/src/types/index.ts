@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './surface';
 export * from './annotations';
 export * from './create-integration-form';
 export * from './integration-coordinator';

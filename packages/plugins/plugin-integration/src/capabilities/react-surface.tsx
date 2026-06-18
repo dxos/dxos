@@ -13,10 +13,9 @@ import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
 import { CustomTokenDialog, IntegrationArticle, IntegrationSettingsArticle, SyncTargetsDialog } from '#containers';
-import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
+import { Integration, IntegrationAuth, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
 import { INTEGRATIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
-import { IntegrationAuth } from '../roles';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

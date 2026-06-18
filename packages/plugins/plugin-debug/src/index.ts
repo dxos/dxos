@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-export * from './roles';
 export * from './types';

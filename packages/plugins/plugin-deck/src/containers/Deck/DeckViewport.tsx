@@ -29,7 +29,7 @@ import { meta } from '#meta';
 import { DeckOperation } from '#types';
 import { getMode } from '#types';
 
-import { Keyshortcuts } from '../../roles';
+import { Keyshortcuts } from '#types';
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
