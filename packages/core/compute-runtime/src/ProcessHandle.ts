@@ -572,6 +572,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
         // the process may have set #finished=true. Bail cleanly rather than clobbering state.
         if (this.#finished) {
           log('lifecycle: handler skipped (already finished)', { name, pid: this.pid });
+          // Release the dispatch-handoff marker if a due alarm is skipped because the process finished
+          // between the dispatch decision and here, so it cannot remain stale.
+          if (name === 'alarm') {
+            this.#alarmDispatching = false;
+          }
           if (eventSeq !== undefined) {
             yield* this.#persistence.removeEvent(eventSeq).pipe(Effect.ignore);
           }
