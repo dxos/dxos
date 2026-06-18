@@ -397,7 +397,7 @@ export type ObjectPropertiesProps<
 //
 
 /** Role token for the card slot. */
-export const CardContent: Surface.RoleToken<CardData<any>> = Surface.makeType('org.dxos.role.card');
+export const CardContent: Surface.RoleToken<CardData<any>> = Surface.makeType('org.dxos.role.cardContent');
 
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {

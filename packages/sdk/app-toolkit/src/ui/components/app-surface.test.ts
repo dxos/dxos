@@ -26,7 +26,7 @@ describe('AppSurface', () => {
     test('expose their role string', ({ expect }) => {
       expect(AppSurface.Article.role).toBe('org.dxos.role.article');
       expect(AppSurface.Section.role).toBe('org.dxos.role.section');
-      expect(AppSurface.CardContent.role).toBe('org.dxos.role.card');
+      expect(AppSurface.CardContent.role).toBe('org.dxos.role.cardContent');
       expect(AppSurface.Slide.role).toBe('org.dxos.role.slide');
       expect(AppSurface.Dialog.role).toBe('org.dxos.role.dialog');
       expect(AppSurface.Popover.role).toBe('org.dxos.role.popover');
