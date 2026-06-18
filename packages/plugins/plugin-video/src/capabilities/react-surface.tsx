@@ -13,6 +13,14 @@ import { Obj } from '@dxos/echo';
 import { SummarySection, TranscriptSection, VideoArticle, VideoSection } from '#containers';
 import { Video } from '#types';
 
+const isVideoPart = (data: unknown, part: string): boolean => {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+  const d = data as { attendableId?: unknown; part?: unknown; subject?: unknown };
+  return typeof d.attendableId === 'string' && d.part === part && Obj.instanceOf(Video.Video, d.subject);
+};
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -34,25 +42,32 @@ export default Capability.makeModule(() =>
       // Discriminated by `data.part`; composed by VideoArticle.
       Surface.create({
         id: 'video.player',
-        role: ['section', 'tabpanel'],
-        filter: (data): data is { subject: Video.Video; attendableId: string; part: 'player' } =>
-          typeof data.attendableId === 'string' && data.part === 'player' && Obj.instanceOf(Video.Video, data.subject),
+        filter: {
+          bindings: [
+            { role: AppSurface.Section.role, guard: (data) => isVideoPart(data, 'player') },
+            { role: AppSurface.Tabpanel.role, guard: (data) => isVideoPart(data, 'player') },
+          ],
+        } satisfies Surface.Filter<{ subject: Video.Video; attendableId: string; part: 'player' }>,
         component: ({ data }) => <VideoSection subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: 'video.transcript',
-        role: ['section', 'tabpanel'],
-        filter: (data): data is { subject: Video.Video; attendableId: string; part: 'transcript' } =>
-          typeof data.attendableId === 'string' &&
-          data.part === 'transcript' &&
-          Obj.instanceOf(Video.Video, data.subject),
+        filter: {
+          bindings: [
+            { role: AppSurface.Section.role, guard: (data) => isVideoPart(data, 'transcript') },
+            { role: AppSurface.Tabpanel.role, guard: (data) => isVideoPart(data, 'transcript') },
+          ],
+        } satisfies Surface.Filter<{ subject: Video.Video; attendableId: string; part: 'transcript' }>,
         component: ({ data }) => <TranscriptSection subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: 'video.summary',
-        role: ['section', 'tabpanel'],
-        filter: (data): data is { subject: Video.Video; attendableId: string; part: 'summary' } =>
-          typeof data.attendableId === 'string' && data.part === 'summary' && Obj.instanceOf(Video.Video, data.subject),
+        filter: {
+          bindings: [
+            { role: AppSurface.Section.role, guard: (data) => isVideoPart(data, 'summary') },
+            { role: AppSurface.Tabpanel.role, guard: (data) => isVideoPart(data, 'summary') },
+          ],
+        } satisfies Surface.Filter<{ subject: Video.Video; attendableId: string; part: 'summary' }>,
         component: ({ data }) => <SummarySection subject={data.subject} attendableId={data.attendableId} />,
       }),
     ]),

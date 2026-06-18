@@ -29,6 +29,7 @@ import { meta } from '#meta';
 import { DeckOperation } from '#types';
 import { getMode } from '#types';
 
+import { Keyshortcuts } from '../../roles';
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
@@ -105,7 +106,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
     <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface role='keyshortcuts' />
+      <Surface.Surface type={Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );

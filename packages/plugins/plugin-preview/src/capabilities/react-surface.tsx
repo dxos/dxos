@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
-import { Expando, type ProjectionModel } from '@dxos/schema';
+import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
@@ -75,19 +75,18 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'schemaPopoverDynamicType',
-        role: 'card--content',
-        filter: (data): data is { subject: Obj.Unknown } => {
-          if (!Obj.isObject(data.subject)) {
+        filter: AppSurface.subject(AppSurface.Card, (v): v is Obj.Unknown => {
+          if (!Obj.isObject(v)) {
             return false;
           }
-          const type = Obj.getType(data.subject);
+          const type = Obj.getType(v);
           if (type) {
             return Type.getDatabase(type) != null;
           }
           // Obj.getType fails for database-registered schemas (DXN mismatch); fall back to typename query.
           try {
-            const db = Obj.getDatabase(data.subject);
-            const typename = Obj.getTypename(data.subject);
+            const db = Obj.getDatabase(v);
+            const typename = Obj.getTypename(v);
             return (
               !!db &&
               !!typename &&
@@ -99,7 +98,7 @@ export default Capability.makeModule(() =>
           } catch {
             return false;
           }
-        },
+        }),
         component: ({ data, role }) => {
           // Dynamic/mutable schemas render an editable, full-layout form;
           // FormCard handles both static and runtime schema resolution internally.
@@ -113,9 +112,8 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'fallbackPopover',
-        role: 'card--content',
         position: 'last',
-        filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
+        filter: AppSurface.subject(AppSurface.Card, Obj.isObject),
         component: ({ data, role }) => {
           return <FormCard role={role} subject={data.subject} projection={data.projection} />;
         },
@@ -123,9 +121,8 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'fallbackJson',
-        role: 'card--content',
+        filter: Surface.makeFilter(AppSurface.Card),
         position: 'last',
-        filter: (data): data is Record<string, unknown> => true,
         component: ({ data }) => {
           return <JsonCard data={data} />;
         },

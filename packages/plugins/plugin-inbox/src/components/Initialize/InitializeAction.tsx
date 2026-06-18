@@ -7,6 +7,7 @@ import React from 'react';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { type Obj, Ref } from '@dxos/echo';
+import { IntegrationAuth } from '@dxos/plugin-integration';
 import { IconButton } from '@dxos/react-ui';
 
 import { useTargetSync } from './useTargetIntegration';
@@ -59,7 +60,7 @@ export const InitializeAction = <T extends Obj.Any>({
   }
 
   const data = { providerId, existingTarget: Ref.make(target) };
-  return Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
-    <Surface.Surface role='integration--auth' data={data} limit={1} />
+  return Surface.isAvailable(pluginManager.capabilities, { type: IntegrationAuth, data }) ? (
+    <Surface.Surface type={IntegrationAuth} data={data} limit={1} />
   ) : null;
 };

@@ -37,21 +37,29 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'createInitialSchemaForm',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.FormInput.role,
+              guard: (data: unknown): boolean => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const schema = (data as { schema?: Schema.Schema.All }).schema;
+                if (!schema?.ast) {
+                  return false;
+                }
+                const annotation = SchemaEx.findAnnotation<boolean>(schema.ast, PivotColumnAnnotationId);
+                return !!annotation;
+              },
+            },
+          ],
+        } satisfies Surface.Filter<{
           prop: string;
           schema: Schema.Schema<any>;
           target: Database.Database | Collection.Collection | undefined;
           fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          const annotation = SchemaEx.findAnnotation<boolean>(
-            (data.schema as Schema.Schema.All).ast,
-            PivotColumnAnnotationId,
-          );
-          return !!annotation;
-        },
+        }>,
         component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
           const ast = fieldPropertyAst;
           if (!ast) {
@@ -70,7 +78,7 @@ export default Capability.makeModule(() =>
               db.graph.registry
                 .list()
                 .filter(Type.isType)
-                .filter((t) => Type.getTypename(t) === typename),
+                .filter((t: Type.Type) => Type.getTypename(t) === typename),
             [db, typename],
           );
           const singleSelectColumns = useMemo(() => {
@@ -84,7 +92,11 @@ export default Capability.makeModule(() =>
             }
 
             const columns = Object.entries(properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === 'single-select') {
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                (value as { format?: string }).format === 'single-select'
+              ) {
                 acc.push(key);
               }
               return acc;

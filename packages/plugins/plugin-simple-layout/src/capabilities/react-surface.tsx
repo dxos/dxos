@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { NotFound } from '@dxos/app-toolkit';
-import { NotFoundArticle } from '@dxos/app-toolkit/ui';
+import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
 
 import { Home, NavBranch } from '#components';
@@ -25,24 +25,55 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
-        role: 'article',
-        filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (data: unknown): boolean => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                return (data as { attendableId?: unknown }).attendableId === Node.RootId;
+              },
+            },
+          ],
+        } satisfies Surface.Filter<SurfaceData>,
         component: () => <Home />,
       }),
       Surface.create({
         id: 'notFound',
-        role: 'article',
-        filter: (data): data is SurfaceData => data.attendableId === NotFound.NOT_FOUND_PATH,
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (data: unknown): boolean => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                return (data as { attendableId?: unknown }).attendableId === NotFound.NOT_FOUND_PATH;
+              },
+            },
+          ],
+        } satisfies Surface.Filter<SurfaceData>,
         component: () => <NotFoundArticle />,
       }),
       Surface.create({
         id: 'navBranch',
-        role: 'article',
         position: 'last',
-        filter: (data): data is SurfaceData => {
-          const props = data.properties as Record<string, any>;
-          return ALLOWED_DISPOSITIONS.includes(props?.disposition) || props?.role === 'branch';
-        },
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (data: unknown): boolean => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const props = (data as { properties?: Record<string, any> }).properties;
+                return ALLOWED_DISPOSITIONS.includes(props?.disposition) || props?.role === 'branch';
+              },
+            },
+          ],
+        } satisfies Surface.Filter<SurfaceData>,
         component: ({ data }) => <NavBranch id={data.attendableId} />,
       }),
     ]),

@@ -31,9 +31,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
-          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Markdown.Document, (data) => !data.variant),
+          AppSurface.object(AppSurface.Section, Markdown.Document),
+          AppSurface.object(AppSurface.Tabpanel, Markdown.Document, (data) => !data.variant),
+        ),
         component: ({ data, role, ref }) => {
           return (
             <Container
@@ -93,36 +95,35 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-const Container = forwardRef<
-  HTMLDivElement,
-  AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
->(({ id, attendableId, subject, role }, forwardedRef) => {
-  const viewState = useCapability(AttentionCapabilities.ViewState);
-  const settings = useAtomCapability(MarkdownCapabilities.Settings);
-  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
-  const editorState = useCapability(MarkdownCapabilities.EditorState);
-  const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
-  const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
+const Container = forwardRef<HTMLElement, AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>>(
+  ({ id, attendableId, subject, role }, forwardedRef) => {
+    const viewState = useCapability(AttentionCapabilities.ViewState);
+    const settings = useAtomCapability(MarkdownCapabilities.Settings);
+    const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+    const editorState = useCapability(MarkdownCapabilities.EditorState);
+    const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+    const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
-  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
-  const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
-    (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
-    [id, setState],
-  );
+    const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+    const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
+      (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+      [id, setState],
+    );
 
-  return (
-    <MarkdownArticle
-      role={role}
-      subject={subject}
-      id={id}
-      attendableId={attendableId}
-      settings={settings}
-      viewState={viewState}
-      extensionProviders={extensionProviders}
-      editorStateStore={editorState}
-      viewMode={viewMode}
-      onViewModeChange={handleViewModeChange}
-      ref={forwardedRef}
-    />
-  );
-});
+    return (
+      <MarkdownArticle
+        role={role}
+        subject={subject}
+        id={id}
+        attendableId={attendableId}
+        settings={settings}
+        viewState={viewState}
+        extensionProviders={extensionProviders}
+        editorStateStore={editorState}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        ref={forwardedRef as React.Ref<HTMLDivElement>}
+      />
+    );
+  },
+);

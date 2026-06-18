@@ -11,6 +11,8 @@ import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
+const CardContent: Surface.RoleToken<any> = Surface.makeType('org.dxos.role.cardContent');
+
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(Type.makeObject(DXN.make('com.example.type.map', '0.1.0')));
@@ -38,8 +40,9 @@ export const capabilities: Capability.Any[] = [
     Capabilities.ReactSurface,
     Surface.create({
       id: 'pluginImage',
-      role: 'card--content',
-      filter: (data: any): data is any => isImage(data.value),
+      filter: {
+        bindings: [{ role: CardContent.role, guard: (data: any): data is any => isImage((data as any).value) }],
+      } satisfies Surface.Filter<any>,
       component: ({ data }) => (
         <Card.Body>
           <img
@@ -55,7 +58,7 @@ export const capabilities: Capability.Any[] = [
     Capabilities.ReactSurface,
     Surface.create({
       id: 'pluginDefault',
-      role: 'card--content',
+      filter: Surface.makeFilter(CardContent),
       position: 'last',
       component: ({ data }) => (
         <Card.Body>

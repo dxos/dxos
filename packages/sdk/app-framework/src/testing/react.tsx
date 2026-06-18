@@ -13,6 +13,7 @@ import { PluginManagerContext } from '../context';
 import { topologicalSort } from '../helpers';
 import { PluginManagerProvider } from '../ui/components/PluginManager/PluginManagerProvider';
 import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent';
+import { type RoleToken } from '../ui/components/Surface/types';
 import { type TestHarness } from './harness';
 
 export type HarnessRenderOptions = Omit<RenderOptions, 'wrapper'> & {
@@ -34,26 +35,26 @@ export const render = (harness: TestHarness, ui: ReactNode, options?: HarnessRen
   return rtlRender(<>{ui}</>, { ...rest, wrapper: Wrapper });
 };
 
-export type RenderSurfaceProps = {
-  role: string;
-  data?: unknown;
+export type RenderSurfaceProps<TToken extends RoleToken<any>> = {
+  type: TToken;
+  data?: TToken extends RoleToken<infer D> ? D : never;
   limit?: number;
   fallback?: FC<{ error: Error; data?: any }>;
   placeholder?: ReactNode;
 };
 
 /**
- * Renders a `Surface` with the given role/data inside the harness provider tree.
+ * Renders a `Surface` with the given role token/data inside the harness provider tree.
  */
-export const renderSurface = (
+export const renderSurface = <TToken extends RoleToken<any>>(
   harness: TestHarness,
-  props: RenderSurfaceProps,
+  props: RenderSurfaceProps<TToken>,
   options?: HarnessRenderOptions,
 ): RenderResult => {
-  const { role, data, limit, fallback, placeholder } = props;
+  const { type, data, limit, fallback, placeholder } = props;
   return render(
     harness,
-    <SurfaceComponent role={role} data={data as any} limit={limit} fallback={fallback} placeholder={placeholder} />,
+    <SurfaceComponent type={type} data={data as any} limit={limit} fallback={fallback} placeholder={placeholder} />,
     options,
   );
 };

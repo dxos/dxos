@@ -37,6 +37,8 @@ import {
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant } from '#types';
 
+import { Prompts } from '../roles';
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -61,11 +63,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'chat',
-        role: 'article',
-        filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
-          typeof data.attendableId === 'string' &&
-          Obj.instanceOf(Chat.Chat, data.subject) &&
-          data.variant !== ASSISTANT_COMPANION_VARIANT,
+        filter: AppSurface.object(
+          AppSurface.Article,
+          Chat.Chat,
+          (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
+        ),
         component: ({ data, role, ref }) => {
           return <ChatArticle role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
         },
@@ -84,11 +86,26 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
-        role: 'article',
-        filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
-          typeof data.attendableId === 'string' &&
-          Obj.isObject(data.companionTo) &&
-          (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (
+                data: unknown,
+              ): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const d = data as { subject?: unknown; attendableId?: unknown; companionTo?: unknown };
+                return (
+                  typeof d.attendableId === 'string' &&
+                  Obj.isObject(d.companionTo) &&
+                  (Obj.instanceOf(Chat.Chat, d.subject) || d.subject === null)
+                );
+              },
+            },
+          ],
+        } satisfies Surface.Filter<{ subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown }>,
         component: ({ data: { subject, attendableId, companionTo }, role, ref }) => (
           <ChatCompanion
             role={role}
@@ -101,10 +118,13 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionInvocations',
-        role: 'article',
-        filter: (data): data is { companionTo: Sequence.Sequence } =>
-          (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
-          data.subject === 'invocations',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'invocations'),
+          AppSurface.oneOf(
+            AppSurface.companion(AppSurface.Article, Sequence.Sequence),
+            AppSurface.companion(AppSurface.Article, Routine.Routine),
+          ),
+        ),
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
@@ -149,7 +169,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'trace',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--trace'), 'trace'),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
         component: () => {
           const space = useActiveSpace();
           useEffect(() => {
@@ -165,7 +185,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'triggerStatus',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -177,10 +197,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'prompts',
-        filter: AppSurface.subject(
-          Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'),
-          Obj.isObject,
-        ),
+        filter: AppSurface.subject(Prompts, Obj.isObject),
         component: ({ data }) => <RoutineList subject={data.subject} />,
       }),
     ]),

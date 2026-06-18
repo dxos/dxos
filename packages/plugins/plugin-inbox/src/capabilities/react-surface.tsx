@@ -38,21 +38,35 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'drafts',
-        role: ['article'],
-        filter: (
-          data,
-        ): data is {
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (
+                data: unknown,
+              ): data is {
+                attendableId?: string;
+                subject: typeof MAILBOX_DRAFTS_NODE_DATA;
+                properties: { mailbox: Mailbox.Mailbox };
+              } => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const d = data as { attendableId?: unknown; subject?: unknown; properties?: unknown };
+                const mailbox = (d.properties as { mailbox?: unknown } | undefined)?.mailbox;
+                const attendableId = typeof d.attendableId === 'string' ? d.attendableId : undefined;
+                const lastSegment = attendableId?.split('/').pop();
+                return (
+                  lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && d.subject === MAILBOX_DRAFTS_NODE_DATA
+                );
+              },
+            },
+          ],
+        } satisfies Surface.Filter<{
           attendableId?: string;
           subject: typeof MAILBOX_DRAFTS_NODE_DATA;
           properties: { mailbox: Mailbox.Mailbox };
-        } => {
-          const mailbox = (data.properties as { mailbox?: Mailbox.Mailbox } | undefined)?.mailbox;
-          const attendableId = data.attendableId as string | undefined;
-          const lastSegment = typeof attendableId === 'string' ? attendableId.split('/').pop() : undefined;
-          return (
-            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
-          );
-        },
+        }>,
         component: ({ data, role }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -74,8 +88,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'draftMessage',
-        role: ['article'],
-        filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, DraftMessage.instanceOf),
         component: ({ data: { subject }, role }) => {
           return <EditMessageArticle role={role} subject={subject} />;
         },
@@ -83,17 +96,32 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        filter: (
-          data,
-        ): data is {
-          attendableId: string;
-          subject: Message.Message;
-          companionTo?: Mailbox.Mailbox;
-        } =>
-          typeof data.attendableId === 'string' &&
-          Obj.instanceOf(Message.Message, data.subject) &&
-          !DraftMessage.instanceOf(data.subject),
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (
+                data: unknown,
+              ): data is { attendableId: string; subject: Message.Message; companionTo?: Mailbox.Mailbox } =>
+                typeof data === 'object' &&
+                data !== null &&
+                typeof (data as { attendableId?: unknown }).attendableId === 'string' &&
+                Obj.instanceOf(Message.Message, (data as { subject?: unknown }).subject) &&
+                !DraftMessage.instanceOf((data as { subject?: unknown }).subject),
+            },
+            {
+              role: AppSurface.Section.role,
+              guard: (
+                data: unknown,
+              ): data is { attendableId: string; subject: Message.Message; companionTo?: Mailbox.Mailbox } =>
+                typeof data === 'object' &&
+                data !== null &&
+                typeof (data as { attendableId?: unknown }).attendableId === 'string' &&
+                Obj.instanceOf(Message.Message, (data as { subject?: unknown }).subject) &&
+                !DraftMessage.instanceOf((data as { subject?: unknown }).subject),
+            },
+          ],
+        } satisfies Surface.Filter<{ attendableId: string; subject: Message.Message; companionTo?: Mailbox.Mailbox }>,
         component: ({ data: { attendableId, subject, companionTo }, role }) => {
           const { graph } = useAppGraph();
           const parentId = getParentId(attendableId);
@@ -163,15 +191,10 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: POPOVER_SAVE_FILTER,
-        role: 'popover',
-        filter: (data): data is { props: { mailbox: Mailbox.Mailbox; filter: string } } =>
-          data.component === POPOVER_SAVE_FILTER &&
-          data.props !== null &&
-          typeof data.props === 'object' &&
-          'mailbox' in data.props &&
-          'filter' in data.props &&
-          Mailbox.instanceOf(data.props.mailbox) &&
-          typeof data.props.filter === 'string',
+        filter: AppSurface.component<{ mailbox: Mailbox.Mailbox; filter: string }>(
+          AppSurface.Popover,
+          POPOVER_SAVE_FILTER,
+        ),
         component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({

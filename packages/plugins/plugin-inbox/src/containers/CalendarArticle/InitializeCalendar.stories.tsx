@@ -14,6 +14,7 @@ import { Feed, Filter, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { IntegrationAuth } from '@dxos/plugin-integration';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -40,7 +41,7 @@ const MockAuthSurfacePlugin = Plugin.define(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'mockIntegrationAuth',
-            role: 'integration--auth',
+            filter: Surface.makeFilter(IntegrationAuth),
             component: ({ data }) => (
               <div className='text-description'>
                 Mock auth surface for <code>{(data as { providerId?: string }).providerId}</code>

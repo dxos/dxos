@@ -8,7 +8,7 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
@@ -27,7 +27,7 @@ export const NODE_TYPE = 'dxos/app-graph/node';
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
   const data = useMemo(() => ({ id: node.id, subject: node.data, open }), [node.id, node.data, open]);
-  return <Surface.Surface role='navtree-item-end' data={data} limit={1} />;
+  return <Surface.Surface type={AppSurface.NavtreeItemEnd} data={data} limit={1} />;
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {

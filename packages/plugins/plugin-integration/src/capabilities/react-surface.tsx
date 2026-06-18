@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useMemo } from 'react';
 
@@ -18,6 +17,7 @@ import { CustomTokenDialog, IntegrationArticle, IntegrationSettingsArticle, Sync
 import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
 import { INTEGRATIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { IntegrationAuth } from '../roles';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -36,13 +36,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationAuth',
-        role: 'integration--auth',
-        filter: (
-          data,
-        ): data is {
-          providerId: string;
-          existingTarget?: ComponentProps<typeof IntegrationAuthButton>['existingTarget'];
-        } => typeof (data as any).providerId === 'string',
+        filter: Surface.makeFilter(IntegrationAuth, (data) => typeof data.providerId === 'string'),
         component: ({ data }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -65,15 +59,24 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationProviderSelector',
-        role: 'form-input',
-        filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;
-          if (!fieldAst) {
-            return false;
-          }
-          const annotation = SchemaEx.findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
-          return !!annotation;
-        },
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.FormInput.role,
+              guard: (data: unknown): boolean => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const fieldAst = (data as Record<string, unknown>).fieldPropertyAst as SchemaAST.AST | undefined;
+                if (!fieldAst) {
+                  return false;
+                }
+                const annotation = SchemaEx.findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
+                return !!annotation;
+              },
+            },
+          ],
+        } satisfies Surface.Filter<Record<string, any>>,
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
           const providers = useCapabilities(IntegrationProvider).flat();
           const options = useMemo(

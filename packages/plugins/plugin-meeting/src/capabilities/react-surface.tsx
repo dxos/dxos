@@ -26,10 +26,34 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'meetingCompanion',
-        role: 'article',
-        filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
-          (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
-          Obj.instanceOf(Channel.Channel, data.companionTo),
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.Article.role,
+              guard: (
+                data: unknown,
+              ): data is {
+                subject: Meeting.Meeting | 'meeting';
+                attendableId: string;
+                companionTo: Channel.Channel;
+              } => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const d = data as { subject?: unknown; attendableId?: unknown; companionTo?: unknown };
+                return (
+                  typeof d.attendableId === 'string' &&
+                  (Obj.instanceOf(Meeting.Meeting, d.subject) || d.subject === 'meeting') &&
+                  Obj.instanceOf(Channel.Channel, d.companionTo)
+                );
+              },
+            },
+          ],
+        } satisfies Surface.Filter<{
+          subject: Meeting.Meeting | 'meeting';
+          attendableId: string;
+          companionTo: Channel.Channel;
+        }>,
         component: ({ role, data }) => {
           return data.subject === 'meeting' ? (
             <MeetingsList companionTo={data.companionTo} />

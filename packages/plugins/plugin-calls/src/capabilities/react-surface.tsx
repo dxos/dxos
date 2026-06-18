@@ -13,6 +13,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
 
+import { DevtoolsOverview } from '../roles';
+
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 
 const isCallData = (data: unknown): data is CallRoomData => {
@@ -25,12 +27,12 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'activeCallCompanion',
-        role: 'deck-companion--activeCall',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('activeCall')),
         component: () => <CallSidebar />,
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        role: 'devtools-overview',
+        filter: Surface.makeFilter(DevtoolsOverview),
         component: () => {
           const call = useCapability(CallsCapabilities.Manager);
           const state = useAtomValue(call.stateAtom);

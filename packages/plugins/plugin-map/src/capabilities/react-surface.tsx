@@ -4,19 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Collection, Database, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { MapSurface, MapViewEditor } from '#containers';
 import { LocationAnnotationId, Map } from '#types';
+
+import { MapInline } from '../roles';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -32,11 +33,10 @@ export default Capability.makeModule(() =>
         ),
       }),
       // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
-      // role (e.g. TripArticle renders `<Surface.Surface role='map' data={{ subject, attendableId }} />`).
+      // role (e.g. TripArticle renders `<Surface.Surface type={MapInline} data={{ subject, attendableId }} />`).
       Surface.create({
         id: 'surface.mapInline',
-        role: 'map',
-        filter: (data): data is { subject: Obj.Any; attendableId?: string } => Obj.isObject(data.subject),
+        filter: AppSurface.subject(MapInline, Obj.isObject),
         component: ({ data, role }) => (
           <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
         ),
@@ -45,9 +45,10 @@ export default Capability.makeModule(() =>
       // emits the `map` companion node when a MarkerProvider matches the primary object).
       Surface.create({
         id: 'surface.mapCompanion',
-        role: 'article',
-        filter: (data): data is { subject: 'map'; companionTo: Obj.Unknown; attendableId: string } =>
-          Obj.isObject(data.companionTo) && (data as { subject?: unknown }).subject === 'map',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'map'),
+          AppSurface.companion(AppSurface.Article),
+        ),
         component: ({ data, role }) => (
           <MapSurface subject={data.companionTo} attendableId={data.attendableId} role={role} />
         ),
@@ -61,21 +62,27 @@ export default Capability.makeModule(() =>
       Surface.create({
         // TODO(burdon): Why this title?
         id: 'surface.createInitialSchemaForm',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
-          prop: string;
-          schema: Schema.Schema<any>;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          const annotation = SchemaEx.findAnnotation<boolean>(
-            (data.schema as Schema.Schema.All).ast,
-            LocationAnnotationId,
-          );
-          return !!annotation;
-        },
+        filter: {
+          bindings: [
+            {
+              role: AppSurface.FormInput.role,
+              guard: (data: unknown): boolean => {
+                if (typeof data !== 'object' || data === null) {
+                  return false;
+                }
+                const schema = (data as Record<string, unknown>).schema;
+                if (!schema) {
+                  return false;
+                }
+                const annotation = SchemaEx.findAnnotation<boolean>(
+                  (schema as Schema.Schema.All).ast,
+                  LocationAnnotationId,
+                );
+                return !!annotation;
+              },
+            },
+          ],
+        } satisfies Surface.Filter<Record<string, any>>,
         component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
           const ast = fieldPropertyAst;
           if (!ast) {
@@ -91,7 +98,7 @@ export default Capability.makeModule(() =>
               ? db.graph.registry
                   .list()
                   .filter(Type.isType)
-                  .find((t) => Type.getTypename(t) === typename)
+                  .find((t: Type.Type) => Type.getTypename(t) === typename)
               : undefined;
           const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
 

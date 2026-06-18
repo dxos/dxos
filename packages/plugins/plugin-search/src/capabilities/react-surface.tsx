@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${SEARCH_DIALOG}.searchInput`,
-        role: 'search-input',
+        filter: Surface.makeFilter(AppSurface.SearchInput),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -52,8 +52,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${SEARCH_DIALOG}.search`,
-        role: 'deck-companion--search',
-        filter: (data): data is { subject: Space } => isSpace(data.subject),
+        filter: AppSurface.subject(AppSurface.deckCompanion('search'), (value): value is Space => isSpace(value)),
         component: ({ data }) => {
           const space = data.subject;
           if (!space) {

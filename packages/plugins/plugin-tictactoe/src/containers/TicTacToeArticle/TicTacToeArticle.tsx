@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
@@ -143,8 +144,8 @@ export const TicTacToeArticle = ({ role, variant }: TicTacToeArticleProps) => {
         <div
           className={mx(
             'flex items-center justify-center h-full w-full',
-            role === 'article' && 'p-4',
-            role === 'section' && 'aspect-square',
+            role === AppSurface.Article.role && 'p-4',
+            role === AppSurface.Section.role && 'aspect-square',
           )}
         >
           <TicTacToeBoard

@@ -110,8 +110,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        role: 'article',
-        filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, (value): value is SpaceDebug => isSpaceDebug(value)),
         component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
@@ -145,8 +144,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'appGraph',
-        role: 'article',
-        filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, (value): value is GraphDebug => isGraphDebug(value)),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
@@ -162,12 +160,17 @@ export default Capability.makeModule(
       Surface.create({
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
+        filter: AppSurface.oneOf(
+          AppSurface.subject(AppSurface.Article, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+          AppSurface.subject(AppSurface.Section, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+        ),
         position: 'first',
-        filter: (data): data is { subject: Obj.Unknown } => {
-          const settings = registry.get(settingsAtom);
-          return Obj.isObject(data.subject) && !!settings.wireframe;
-        },
         component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
@@ -182,15 +185,12 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('devtools')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
         id: 'spaceObjects',
-        filter: AppSurface.literal(
-          Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
-          'space-objects',
-        ),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -203,7 +203,7 @@ export default Capability.makeModule(
 
       Surface.create({
         id: 'debugStatus',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: 'first',
         component: () => <DebugStatus />,
       }),

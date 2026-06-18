@@ -11,6 +11,7 @@ import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from 
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 
+import { PlaygroundRoles } from '../roles';
 import { Number, createAlertOperation, createPluginId } from './generator';
 
 export const Toolbar = () => {
@@ -51,7 +52,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.toolbar',
-        role: 'toolbar',
+        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
         component: Toolbar,
       }),
     ),

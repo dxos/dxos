@@ -32,6 +32,7 @@ import { Support, type Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
+import { Hints, Keyshortcuts } from '../roles';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -54,17 +55,17 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'feedback',
-        role: 'deck-companion--help',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
         id: 'discord',
-        role: 'deck-companion--discord',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
         component: () => <DiscordPanel />,
       }),
       Surface.create({
         id: 'helpMenu',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: 'last',
         component: () => <HelpMenu />,
       }),
@@ -82,12 +83,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        role: 'hints',
+        filter: Surface.makeFilter(Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        role: 'keyshortcuts',
+        filter: Surface.makeFilter(Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({

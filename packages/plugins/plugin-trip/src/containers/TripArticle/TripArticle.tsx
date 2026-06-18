@@ -10,6 +10,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -297,7 +298,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

@@ -167,15 +167,29 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyNavigation',
-            role: 'navigation',
-            filter: (data): data is { current: string } => typeof (data as any).current === 'string',
+            filter: {
+              bindings: [
+                {
+                  role: AppSurface.Navigation.role,
+                  guard: (data): data is { current: string } => typeof (data as any).current === 'string',
+                },
+              ],
+            } satisfies Surface.Filter<{ current: string }>,
             component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
           }),
           Surface.create({
             id: 'storyArticle',
-            role: 'article',
-            filter: (data): data is Record<string, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo == null,
+            filter: {
+              bindings: [
+                {
+                  role: AppSurface.Article.role,
+                  guard: (data): data is Record<string, unknown> =>
+                    typeof data === 'object' &&
+                    data !== null &&
+                    (data as { companionTo?: unknown }).companionTo == null,
+                },
+              ],
+            } satisfies Surface.Filter<Record<string, unknown>>,
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
@@ -202,9 +216,17 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           Surface.create({
             id: 'storyArticleCompanion',
-            role: 'article',
-            filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
+            filter: {
+              bindings: [
+                {
+                  role: AppSurface.Article.role,
+                  guard: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
+                    typeof data === 'object' &&
+                    data !== null &&
+                    (data as { companionTo?: unknown }).companionTo != null,
+                },
+              ],
+            } satisfies Surface.Filter<AppSurface.ArticleData<unknown, {}, unknown>>,
             component: ({ data: { subject, companionTo, properties, variant } }) => {
               if (companionTo == null) {
                 return <Loading />;
@@ -269,7 +291,7 @@ type NavContainerProps = {
   current?: string;
 };
 
-const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forwardedRef) => {
+const NavContainer = forwardRef<HTMLElement, NavContainerProps>((_props, forwardedRef) => {
   const { graph } = useAppGraph();
   const layout = useLayout();
   const { invokePromise } = useOperationInvoker();
@@ -278,7 +300,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
-    <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
+    <div className='dx-container overflow-y-auto p-2' ref={forwardedRef as React.Ref<HTMLDivElement>}>
       <List>
         {items.map((node) => (
           <ListItem.Root

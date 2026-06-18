@@ -4,6 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
+  type FC,
   Fragment,
   type NamedExoticComponent,
   Profiler,
@@ -44,78 +45,95 @@ const DEFAULT_PLACEHOLDER = <Fragment />;
  * Wrapper component for rendering Web Component surfaces.
  * Handles creation, prop setting, and cleanup of Web Components.
  */
+type WebComponentWrapperProps = {
+  id?: string;
+  role: string;
+  data?: Record<string, any>;
+  limit?: number;
+  definition: WebComponentDefinition;
+  [key: string]: any;
+};
+
 const WebComponentWrapper = memo(
-  forwardRef<HTMLElement, Omit<Props, 'role'> & { role: string; definition: WebComponentDefinition }>(
-    ({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
-      const containerRef = useRef<HTMLDivElement>(null);
-      const elementRef = useRef<HTMLElement | null>(null);
-      const propsRef = useRef({ id, role, data, limit, ...rest });
+  forwardRef<HTMLElement, WebComponentWrapperProps>(({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const elementRef = useRef<HTMLElement | null>(null);
+    const propsRef = useRef({ id, role, data, limit, ...rest });
 
-      // Update props ref on every render
-      propsRef.current = { id, role, data, limit, ...rest };
+    // Update props ref on every render
+    propsRef.current = { id, role, data, limit, ...rest };
 
-      // Create element only once
-      useEffect(() => {
-        if (!containerRef.current || elementRef.current) {
-          return;
+    // Create element only once
+    useEffect(() => {
+      if (!containerRef.current || elementRef.current) {
+        return;
+      }
+
+      // Create the Web Component
+      const element = document.createElement(definition.tagName);
+      elementRef.current = element;
+
+      // Set initial properties on the Web Component
+      Object.assign(element, propsRef.current);
+
+      // Append to container
+      containerRef.current.appendChild(element);
+
+      // Setup ref forwarding if provided
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(element);
+      } else if (forwardedRef) {
+        forwardedRef.current = element;
+      }
+
+      // Cleanup on unmount to prevent memory leaks
+      return () => {
+        if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
+          containerRef.current.removeChild(elementRef.current);
         }
-
-        // Create the Web Component
-        const element = document.createElement(definition.tagName);
-        elementRef.current = element;
-
-        // Set initial properties on the Web Component
-        Object.assign(element, propsRef.current);
-
-        // Append to container
-        containerRef.current.appendChild(element);
-
-        // Setup ref forwarding if provided
         if (typeof forwardedRef === 'function') {
-          forwardedRef(element);
+          forwardedRef(null);
         } else if (forwardedRef) {
-          forwardedRef.current = element;
+          forwardedRef.current = null;
         }
+        elementRef.current = null;
+      };
+    }, [definition.tagName, forwardedRef]);
 
-        // Cleanup on unmount to prevent memory leaks
-        return () => {
-          if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
-            containerRef.current.removeChild(elementRef.current);
-          }
-          if (typeof forwardedRef === 'function') {
-            forwardedRef(null);
-          } else if (forwardedRef) {
-            forwardedRef.current = null;
-          }
-          elementRef.current = null;
-        };
-      }, [definition.tagName, forwardedRef]);
+    // Update props on existing element without recreating it
+    // This runs on every render to ensure all props (including those in `rest`) are kept up to date
+    useEffect(() => {
+      const element = elementRef.current;
+      if (!element) {
+        return;
+      }
 
-      // Update props on existing element without recreating it
-      // This runs on every render to ensure all props (including those in `rest`) are kept up to date
-      useEffect(() => {
-        const element = elementRef.current;
-        if (!element) {
-          return;
-        }
+      // Update properties on the existing Web Component
+      Object.assign(element, propsRef.current);
+    });
 
-        // Update properties on the existing Web Component
-        Object.assign(element, propsRef.current);
-      });
-
-      return <div ref={containerRef} />;
-    },
-  ),
+    return <div ref={containerRef} />;
+  }),
 );
 
 WebComponentWrapper.displayName = 'WebComponentWrapper';
+
+type SurfaceContextProviderProps = {
+  id: string;
+  role: string;
+  data?: Record<string, any>;
+  limit?: number;
+  fallback?: FC<{ error: Error; data?: any }>;
+  definition: Definition;
+  [key: string]: any;
+};
 
 /**
  * Wrapper component that provides context for a surface.
  */
 // TODO(burdon): Allow DebugPlugin to provide different fallback using react-ui ErrorFallback.
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, Omit<Props, 'role'> & { role: string; definition: Definition }>(
+  forwardRef<HTMLElement, SurfaceContextProviderProps>(
     ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
       const onProfilerRender = useSurfaceProfilerCallback();
@@ -182,11 +200,13 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 
 /**
  * A surface is a named region of the screen that can be populated by plugins.
+ * The `type` prop is a {@link RoleToken} that defines which region and its
+ * associated data contract.
  */
 // TODO(burdon): Remove `ref` since relying on this would be error prone.
 export const SurfaceComponent = memo(
-  forwardRef<HTMLElement, Props & { type?: RoleToken<any> }>(
-    ({ id: _id, role, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+  forwardRef<HTMLElement, TypedProps<RoleToken<any>>>(
+    ({ id: _id, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       const data = useDefaultValue(dataProp, () => ({}));
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
@@ -195,10 +215,10 @@ export const SurfaceComponent = memo(
       //   In the future, it would be nice to be able to bucket the surface contributions by role.
       const surfaces = useSurfaces();
 
-      const effectiveRole = role ?? type?.role;
+      const effectiveRole = type?.role;
       if (effectiveRole == null) {
         if (DEBUG) {
-          log.warn('Surface has neither `role` nor `type` prop', { id: _id });
+          log.warn('Surface is missing required `type` prop', { id: _id });
         }
         return null;
       }
@@ -230,12 +250,12 @@ export const SurfaceComponent = memo(
     },
   ),
 ) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken> & RefAttributes<HTMLElement>) => React.ReactNode) &
-  NamedExoticComponent<Props & RefAttributes<HTMLElement>>;
+  NamedExoticComponent<TypedProps<RoleToken<any>> & RefAttributes<HTMLElement>>;
 
 SurfaceComponent.displayName = 'Surface';
 
 // TODO(burdon): Make user facing, with telemetry.
-const ErrorFallback = ({ error }: Props) => {
+const ErrorFallback = ({ error }: { error: Error }) => {
   const { message } = error instanceof Error ? error : { message: String(error) };
   return (
     <div role='alert' data-testid='error-boundary-fallback'>
@@ -273,31 +293,21 @@ export const useSurfaces = () => {
 /**
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
  *
- * Two overloads:
- * - Typed: pass a `type` role token and `data` is constrained to the token's
- *   declared contract (e.g. `AppSurface.Section` requires `attendableId`).
- * - Legacy: pass a string `role` and `data` is untyped.
+ * Typed: pass a `type` role token and `data` is constrained to the token's
+ * declared contract (e.g. `AppSurface.Section` requires `attendableId`).
  */
 export function isSurfaceAvailable<TToken extends RoleToken<any>>(
   capabilityManager: CapabilityManager.CapabilityManager,
-  args: { type: TToken; data?: TokenData<TToken>; role?: never },
-): boolean;
-export function isSurfaceAvailable(
-  capabilityManager: CapabilityManager.CapabilityManager,
-  args: Pick<Props, 'role' | 'data'> & { type?: undefined },
-): boolean;
-export function isSurfaceAvailable(
-  capabilityManager: CapabilityManager.CapabilityManager,
-  { role, type, data }: { role?: string; type?: RoleToken<any>; data?: unknown },
+  args: { type: TToken; data?: TokenData<TToken> },
 ): boolean {
-  const effectiveRole = role ?? type?.role;
+  const effectiveRole = args.type?.role;
   if (effectiveRole == null) {
     return false;
   }
   const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), {
     role: effectiveRole,
-    data: data as Props['data'],
+    data: args.data as Props['data'],
   });
   return candidates.length > 0;
 }

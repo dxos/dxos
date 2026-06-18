@@ -54,7 +54,7 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   const menuActions = useMarkdownMenuActions(props);
 
   return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+    <ElevationProvider elevation={role === 'org.dxos.role.section' ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
         <Menu.Toolbar classNames={classNames} />
       </Menu.Root>
