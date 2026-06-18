@@ -18,11 +18,7 @@ export const IconSchema = Schema.Struct({
 });
 export type Icon = Schema.Schema.Type<typeof IconSchema>;
 
-/**
- * Display and discovery metadata common to all plugin schema shapes.
- * Spread into {@link PluginManifestSchema} (edge) and {@link PluginMeta} (config2).
- */
-export const PluginMetaBaseSchema = Schema.Struct({
+export const PluginMeta = Schema.Struct({
   id: Schema.String.pipe(Schema.nonEmptyString()),
   name: Schema.String.pipe(Schema.nonEmptyString()),
   description: Schema.optional(Schema.String),
@@ -32,11 +28,6 @@ export const PluginMetaBaseSchema = Schema.Struct({
   screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
   tags: Schema.optional(Schema.Array(Schema.String)),
   icon: Schema.optional(IconSchema),
-});
-export type PluginMetaBase = Schema.Schema.Type<typeof PluginMetaBaseSchema>;
-
-export const PluginMeta = Schema.Struct({
-  ...PluginMetaBaseSchema.fields,
   version: Schema.optional(Schema.String),
   spec: Schema.optional(Schema.String),
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
