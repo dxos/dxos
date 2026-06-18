@@ -80,7 +80,6 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 // Generic filter builders (role-agnostic — take a role token as first argument)
 //
 
-
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
  *

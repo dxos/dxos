@@ -26,10 +26,8 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#types';
-import { getMode } from '#types';
+import { DeckOperation, getMode, Keyshortcuts } from '#types';
 
-import { Keyshortcuts } from '#types';
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
