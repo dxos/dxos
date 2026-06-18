@@ -14,9 +14,7 @@ import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { MapSurface, MapViewEditor } from '#containers';
-import { LocationAnnotationId, Map } from '#types';
-
-import { MapInline } from '../roles';
+import { LocationAnnotationId, Map, MapInline } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
