@@ -96,9 +96,9 @@ Only `--display-name` is required; the rest are optional.
 `dx.config.ts` at the root of your plugin package is the **single source of truth** for your plugin's registry metadata. The build reads it to emit the manifest, and `dx registry publish` reads that manifest to write your records.
 
 ```ts
-import { defineConfig } from '@dxos/app-framework/config';
+import { Config2 } from '@dxos/app-framework/config';
 
-export default defineConfig({
+export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.excalidraw', // required — a reverse-domain NSID; the plugin's globally-unique key
     name: 'Excalidraw', // required
