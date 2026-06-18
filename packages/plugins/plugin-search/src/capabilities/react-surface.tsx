@@ -8,7 +8,7 @@ import React, { type ComponentProps } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { isSpace } from '@dxos/react-client/echo';
 
 import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
