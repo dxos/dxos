@@ -60,6 +60,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'integrationProviderSelector',
         filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          // FormInput token is Record<string,unknown>; cast to access the AST field at this type-system boundary.
           const { fieldPropertyAst } = data as { fieldPropertyAst?: SchemaAST.AST };
           if (!fieldPropertyAst) {
             return false;

@@ -272,6 +272,7 @@ const NavContainer = forwardRef<HTMLElement, NavContainerProps>((_props, forward
   const items = useConnections(graph, Node.RootId, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
+  // Surface passes Ref<HTMLElement>; this component always renders a div so narrowing to HTMLDivElement is safe.
   return (
     <div className='dx-container overflow-y-auto p-2' ref={forwardedRef as React.Ref<HTMLDivElement>}>
       <List>

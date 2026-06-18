@@ -23,8 +23,8 @@ export const SpaceHomePinBottom: Surface.RoleToken<{ space: Space }> = Surface.m
 );
 
 /**
- * Parallel token for the assistant prompts slot (owned by plugin-assistant).
- * Same NSID as `Prompts` in plugin-assistant/src/roles.ts; no cross-package dep needed.
+ * Surface role token for assistant prompts (consumed by plugin-assistant).
+ * Owned by plugin-space to avoid a circular dependency.
  */
 export const Prompts: Surface.RoleToken<{ subject: Obj.Any; attendableId: string }> = Surface.makeType(
   'org.dxos.plugin.assistant.role.prompts',

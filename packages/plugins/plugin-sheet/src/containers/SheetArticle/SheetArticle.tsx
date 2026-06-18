@@ -41,7 +41,7 @@ const SheetArticleInner = ({
 
   return (
     <Sheet.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
-      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-aquare'}>
+      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square'}>
         <Panel.Toolbar asChild>
           <Sheet.Toolbar />
         </Panel.Toolbar>

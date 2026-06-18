@@ -69,7 +69,7 @@ catalog:
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
-  '@dxos/plugin-deck': ^0.9.0
+  '@dxos/plugin-deck': workspace:*
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.3
   '@effect-atom/atom-react': ^0.5.0

@@ -22,6 +22,9 @@ import { addViewMode } from './view-mode';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
 
+// Local copy of AppSurface.Section.role — react-ui-editor cannot depend on app-toolkit without a circular dep.
+const SECTION_ROLE = 'org.dxos.role.section';
+
 export type EditorToolbarFeatureFlags = Partial<{
   showHeadings: boolean;
   showFormatting: boolean;
@@ -54,7 +57,7 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   const menuActions = useMarkdownMenuActions(props);
 
   return (
-    <ElevationProvider elevation={role === 'org.dxos.role.section' ? 'positioned' : 'base'}>
+    <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
         <Menu.Toolbar classNames={classNames} />
       </Menu.Root>
