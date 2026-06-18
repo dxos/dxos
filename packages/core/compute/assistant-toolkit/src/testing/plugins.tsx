@@ -11,7 +11,7 @@ import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
-const CardContent: Surface.RoleToken<any> = Surface.makeType('org.dxos.role.card');
+const CardContent: Surface.RoleToken<any> = Surface.makeType('org.dxos.role.cardContent');
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
@@ -40,9 +40,7 @@ export const capabilities: Capability.Any[] = [
     Capabilities.ReactSurface,
     Surface.create({
       id: 'pluginImage',
-      filter: {
-        bindings: [{ role: CardContent.role, guard: (data: any): data is any => isImage((data as any).value) }],
-      } satisfies Surface.Filter<any>,
+      filter: Surface.makeFilter(CardContent, (data: any): data is any => isImage((data as any).value)),
       component: ({ data }) => (
         <Card.Body>
           <img
