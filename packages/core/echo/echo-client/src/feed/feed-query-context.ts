@@ -14,10 +14,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type QueryContext, isSimpleSelectionQuery } from '../query';
-import { type QueueImpl } from './queue';
+import { type FeedHandle } from './feed-handle';
 
-export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implements QueryContext<T> {
-  readonly #queue: QueueImpl;
+export class FeedQueryContext implements QueryContext {
+  readonly #feed: FeedHandle;
   readonly #parentCtx: Context;
   #runCtx: Context | null = null;
 
@@ -26,15 +26,15 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
 
   readonly changed = new Event();
 
-  constructor(queue: QueueImpl<T>, parentCtx: Context) {
-    this.#queue = queue;
+  constructor(feed: FeedHandle, parentCtx: Context) {
+    this.#feed = feed;
     this.#parentCtx = parentCtx;
   }
 
   /**
    * One-shot run.
    */
-  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -42,16 +42,15 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     const { filter } = trivial;
 
     const objects = await Function.pipe(
-      await this.#queue.fetchObjectsJSON(),
+      await this.#feed.fetchObjectsJSON(),
       Array.filter((obj) => filterMatchObjectJSON(filter, obj)),
       Array.map(async (obj) => {
         try {
-          return await this.#queue.hydrateObject(obj);
+          return await this.#feed.hydrateObject(obj);
         } catch (err) {
-          // Match the legacy `Queue.queryObjects()` behavior of silently
-          // skipping items that fail to decode (e.g. tombstones from
-          // `Queue.delete()` whose JSON lacks an `@type`).
-          log.verbose('queue object hydration failed; object skipped', { obj, error: err });
+          // Silently skip items that fail to decode (e.g. tombstones from
+          // `delete()` whose JSON lacks an `@type`).
+          log.verbose('feed object hydration failed; object skipped', { obj, error: err });
           return undefined;
         }
       }),
@@ -62,7 +61,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
       .filter((object): object is Entity.Unknown => object !== undefined)
       .map((object) => ({
         id: object.id,
-        result: object as T,
+        result: object,
       }));
   }
 
@@ -71,8 +70,8 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
    */
   start(): void {
     this.#runCtx = this.#parentCtx.derive();
-    this.#runCtx.onDispose(this.#queue.beginPolling());
-    this.#queue.updated.on(this.#runCtx, () => {
+    this.#runCtx.onDispose(this.#feed.beginPolling());
+    this.#feed.updated.on(this.#runCtx, () => {
       this.changed.emit();
     });
   }
@@ -101,16 +100,16 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Synchronously get the results.
    */
-  getResults(): QueryResult.EntityEntry<T>[] {
+  getResults(): QueryResult.EntityEntry[] {
     invariant(this.#filter);
 
     return Function.pipe(
-      this.#queue.getObjectsSync(),
+      this.#feed.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
       Array.map((object) => ({
         id: object.id,
-        result: object as T,
+        result: object,
       })),
     );
   }

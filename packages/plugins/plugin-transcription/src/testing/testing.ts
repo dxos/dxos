@@ -106,7 +106,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
     if (!space || !feed || !running) {
       return;
     }
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const feedServiceLayer = createFeedServiceLayer(space.db);
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {

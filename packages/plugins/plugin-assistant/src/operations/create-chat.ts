@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
       const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const feedServiceLayer = createFeedServiceLayer(space.db);
       const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
       const binder = new AiContext.Binder({ feed, runtime, registry });
 

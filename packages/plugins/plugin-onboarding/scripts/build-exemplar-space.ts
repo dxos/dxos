@@ -237,12 +237,7 @@ const makeCollection = (space: Space, name: string, objects: Ref.Ref<Obj.Unknown
   space.db.add(Obj.make(Collection.Collection, { name, objects }));
 
 const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[]) => {
-  const dxn = Feed.getQueueUri(feed);
-  if (!dxn) {
-    throw new Error('Feed has no DXN — has the space been flushed?');
-  }
-  const queue = space.queues.get(dxn);
-  await queue.append(items as any);
+  await space.db.appendToFeed(feed, items);
 };
 
 // -----------------------------------------------------------------------------

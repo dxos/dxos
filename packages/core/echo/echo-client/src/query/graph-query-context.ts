@@ -8,8 +8,9 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
+import { QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
-import { type EntityId } from '@dxos/keys';
+import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
@@ -17,6 +18,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
+import { WorkingSetQueryExecutor, type WorkingSetDataProvider, type WorkingSetItem } from './working-set-executor';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
@@ -168,8 +170,21 @@ export class SpaceQuerySource implements QuerySource {
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
   private _results?: QueryResult.EntityEntry<Obj.Any>[] = undefined;
+  private readonly _executor: WorkingSetQueryExecutor;
+  private readonly _planner: QueryPlanner;
 
-  constructor(private readonly _database: DatabaseImpl) {}
+  constructor(private readonly _database: DatabaseImpl) {
+    const provider: WorkingSetDataProvider = {
+      get spaceId(): SpaceId {
+        return _database.spaceId;
+      },
+      allCores: () => _database.allObjectCores(),
+      getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
+      areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
+    };
+    this._executor = new WorkingSetQueryExecutor(provider);
+    this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+  }
 
   get spaceId() {
     return this._database.spaceId;
@@ -192,24 +207,28 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     prohibitSignalActions(() => {
+      // Results haven't been computed yet — no stale cache to invalidate.
+      if (!this._results) {
+        return;
+      }
+
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
-        const core = this._database.coreDatabase.getObjectCoreById(objectId, {
-          load: false,
-        });
-
-        const trivial = isSimpleSelectionQuery(this._query!);
-        if (!trivial || trivial.hasQueues) {
-          return false;
+        // If any updated object was in previous results, invalidate.
+        if (this._results!.find((result) => result.id === objectId)) {
+          return true;
         }
 
-        const { filter, options } = trivial;
+        // For simple queries, use the lightweight filter check for the newly-updated object.
+        const trivial = isSimpleSelectionQuery(this._query!);
+        if (trivial && !trivial.hasQueues) {
+          const core = this._database._entityManager.getObjectCoreById(objectId, { load: false });
+          return core != null && this._filterCore(core, trivial.filter, trivial.options);
+        }
 
-        return (
-          !this._results ||
-          this._results.find((result) => result.id === objectId) ||
-          (core && this._filterCore(core, filter, options))
-        );
+        // For complex queries (handled by executor), conservatively invalidate on any update.
+        // The next getResults() call will recompute via the executor.
+        return true;
       });
 
       if (changed) {
@@ -225,15 +244,30 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     const simple = isSimpleSelectionQuery(query);
+
+    // For queries that contain traversals, unions, or set-difference nodes — structures that the
+    // SQL-backed source cannot handle — try the working-set executor. If it can satisfy the query
+    // entirely from in-memory cores, return those results; otherwise return empty.
+    if (requiresWorkingSetExecutor(query)) {
+      const executorResults = this._tryExecuteWithWorkingSet(query);
+      if (executorResults !== null) {
+        return executorResults.map((item) => this._mapItemToResult(item));
+      }
+      return [];
+    }
+
+    // Simple path returned null for non-traversal reasons (limit, order, etc.) — the SQL-backed
+    // source handles those entirely; this source has nothing to contribute.
     if (!simple || simple.hasQueues) {
       return [];
     }
 
+    // Simple selection path: load by id when needed, then scan the working set.
     const { filter, options } = simple;
     const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
+        ...(await this._database.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),
@@ -258,20 +292,37 @@ export class SpaceQuerySource implements QuerySource {
       return [];
     }
 
-    const trivial = isSimpleSelectionQuery(this._query);
-    if (!trivial || trivial.hasQueues) {
-      return [];
-    }
-
-    const { filter, options } = trivial;
-
     if (!this._results) {
       prohibitSignalActions(() => {
-        this._results = this._queryWorkingSet(filter, options);
+        this._results = this._computeResults(this._query!);
       });
     }
 
     return this._results!;
+  }
+
+  private _computeResults(query: QueryAST.Query): QueryResult.EntityEntry<Obj.Unknown>[] {
+    // For queries that contain traversals, unions, or set-difference nodes, the SQL-backed source
+    // cannot handle them — use the working-set executor instead.
+    if (requiresWorkingSetExecutor(query)) {
+      const executorResults = this._tryExecuteWithWorkingSet(query);
+      if (executorResults !== null) {
+        return executorResults.map((item) => this._mapItemToResult(item));
+      }
+      return [];
+    }
+
+    const trivial = isSimpleSelectionQuery(query);
+
+    // Non-traversal reasons for isSimpleSelectionQuery returning null (limit, order, etc.) —
+    // the SQL-backed source handles those; this source has nothing to contribute.
+    if (!trivial || trivial.hasQueues) {
+      return [];
+    }
+
+    // Simple selection path: scan the working set directly.
+    const { filter, options } = trivial;
+    return this._queryWorkingSet(filter, options);
   }
 
   update(query: QueryAST.Query): void {
@@ -284,7 +335,7 @@ export class SpaceQuerySource implements QuerySource {
     this._ctx = new Context();
     this._query = query;
 
-    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate);
+    this._database._updateEvent.on(this._ctx, this._onUpdate);
 
     this._results = undefined;
     this.changed.emit();
@@ -299,12 +350,38 @@ export class SpaceQuerySource implements QuerySource {
   ): QueryResult.EntityEntry<Obj.Unknown>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
-          .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
+          .id!.map((id) => this._database.getObjectCoreById(id, { load: true }))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
-      : this._database.coreDatabase.allObjectCores().filter((core) => this._filterCore(core, filter, options));
+      : this._database.allObjectCores().filter((core) => this._filterCore(core, filter, options));
 
     return filteredCores.map((core) => this._mapCoreToResult(core));
+  }
+
+  /**
+   * Attempt to resolve a query entirely from the in-memory working set.
+   * Returns null when the plan requires SQL index capabilities.
+   */
+  private _tryExecuteWithWorkingSet(query: QueryAST.Query): WorkingSetItem[] | null {
+    try {
+      const plan = this._planner.createPlan(query);
+      return this._executor.tryExecute(plan);
+    } catch {
+      // Query planner threw (e.g. unsupported query shape). Fall back.
+      return null;
+    }
+  }
+
+  private _mapItemToResult(item: WorkingSetItem): QueryResult.EntityEntry<Obj.Unknown> {
+    return {
+      id: item.objectId,
+      result: this._database.getObjectById(item.objectId, { deleted: true }),
+      match: { rank: 1 },
+      resolution: {
+        source: 'local',
+        time: 0,
+      },
+    };
   }
 
   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
@@ -346,7 +423,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
     return (
-      this._database.coreDatabase.areStrongDepsSatisfied(core) &&
+      this._database.areStrongDepsSatisfied(core) &&
       filterCoreByDeletedFlag(core, options) &&
       filterMatchDoc(filter, {
         id: core.id,
@@ -370,5 +447,57 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
       return true;
     case 'only':
       return core.isDeleted();
+  }
+};
+
+/**
+ * Query node types whose shapes the SQL-backed source does not satisfy locally; the working-set
+ * executor handles them. Plain select/filter/limit/order queries stay on the SQL path.
+ */
+const WORKING_SET_NODE_TYPES = new Set<QueryAST.Query['type']>([
+  'reference-traversal',
+  'relation-traversal',
+  'hierarchy-traversal',
+  'incoming-references',
+  'relation',
+  'union',
+  'set-difference',
+]);
+
+/**
+ * Returns true when the query contains traversal, relation, union, set-difference, or child-of
+ * filter nodes. These query types cannot be satisfied by the SQL index and require the working-set
+ * executor. Limit and order nodes alone do not qualify — those are handled entirely by the SQL source.
+ * Child-of filters have no traversal AST node — they appear as filter predicates — so they must
+ * be detected by visiting the filter tree directly.
+ */
+const requiresWorkingSetExecutor = (query: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(query, (node) => {
+    if (WORKING_SET_NODE_TYPES.has(node.type)) {
+      found = true;
+    }
+    if ((node.type === 'filter' || node.type === 'select') && _filterContainsChildOf(node.filter)) {
+      found = true;
+    }
+  });
+  return found;
+};
+
+/**
+ * Returns true if the filter is or composes a child-of predicate.
+ * Child-of filters require in-memory parent-chain traversal which the SQL index cannot handle.
+ */
+const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'child-of':
+      return true;
+    case 'not':
+      return _filterContainsChildOf(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
   }
 };

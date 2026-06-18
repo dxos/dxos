@@ -161,12 +161,13 @@ const meta = {
                   endDate: new Date(now.getTime() + 3 * hour).toISOString(),
                 }),
               ];
-              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(space.db)));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
-              // Re-read via the queue query: these objects carry their queue URI, so `Ref.make` produces a
-              // ref the Meeting can hold (a plain `db.query(...).from(feed)` snapshot would not).
+              // Re-read via the feed query so the event objects have their full echo URI set (via
+              // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
+              // space-qualified ref that findMeetingForEvent can match.
               const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
-                Effect.provide(createFeedServiceLayer(space.queues)),
+                Effect.provide(createFeedServiceLayer(space.db)),
               );
               const event = synced[0];
 
@@ -186,8 +187,8 @@ const meta = {
               const meetingSummary = space.db.add(
                 Text.make({ content: '## Summary\n\n- Roadmap reviewed.\n- Owners assigned.\n- Follow-up scheduled.' }),
               );
-
-              // `event` is a Ref to the feed event (works for queue objects); EventDetails reverse-matches it.
+              // Use Ref.fromURI with the full space-qualified URI so findMeetingForEvent can match
+              // the stored ref against Obj.getURI(event) (both return the full echo://SPACEID/ENTITYID form).
               const meeting = space.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
@@ -195,7 +196,7 @@ const meta = {
                   transcript: Ref.make(transcript),
                   notes: Ref.make(meetingNotes),
                   summary: Ref.make(meetingSummary),
-                  ...(event ? { event: Ref.make(event) } : {}),
+                  ...(event ? { event: Ref.fromURI(Obj.getURI(event)) } : {}),
                 }),
               );
 
