@@ -137,9 +137,14 @@ export const useProcessEphemeralStatus = (
 
     const subscribe = (pid: Process.ID) =>
       Effect.gen(function* () {
+        // `attachActiveHandle` polls, so a teardown can land mid-resolve; bail before forking a
+        // daemon that the cleanup pass below would never see (and thus never interrupt).
+        if (disposed) {
+          return;
+        }
         const processManager = yield* ProcessManager.ProcessManagerService;
         const handle = yield* attachActiveHandle(processManager, pid);
-        if (!handle) {
+        if (!handle || disposed) {
           return;
         }
 
@@ -156,6 +161,10 @@ export const useProcessEphemeralStatus = (
           ),
           Effect.forkDaemon,
         );
+        if (disposed) {
+          yield* Fiber.interrupt(fiber);
+          return;
+        }
         fibersRef.current.push(fiber);
       });
 
