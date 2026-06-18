@@ -15,10 +15,10 @@ describe('Surface.makeType', () => {
   });
 
   test('tokens with the same role are independent objects (identity-by-role)', ({ expect }) => {
-    const a = makeType<{ x: number }>('org.dxos.test.role.shared');
-    const b = makeType<{ x: number }>('org.dxos.test.role.shared');
-    expect(a).not.toBe(b);
-    expect(a.role).toBe(b.role);
+    const tokenOne = makeType<{ x: number }>('org.dxos.test.role.shared');
+    const tokenTwo = makeType<{ x: number }>('org.dxos.test.role.shared');
+    expect(tokenOne).not.toBe(tokenTwo);
+    expect(tokenOne.role).toBe(tokenTwo.role);
   });
 
   test('throws on invalid NSID at runtime (hyphenated final segment)', ({ expect }) => {
@@ -45,7 +45,7 @@ describe('isSurfaceFilter', () => {
 describe('create', () => {
   test('expands a single-binding SurfaceFilter into a role string', ({ expect }) => {
     const token = makeType<Record<string, any>>('org.dxos.test.role.article');
-    const filter = makeFilter(token, (d) => d.subject === 'ok');
+    const filter = makeFilter(token, (data) => data.subject === 'ok');
     const def = create({ id: 'typedSingle', filter, component: () => null });
     expect(def.role).toBe('org.dxos.test.role.article');
     expect(def.filter!({ subject: 'ok' }, 'org.dxos.test.role.article')).toBe(true);
@@ -57,8 +57,8 @@ describe('create', () => {
     const tokenB = makeType<Record<string, any>>('org.dxos.test.role.section');
     const filter: SurfaceFilter<Record<string, any>> = {
       bindings: [
-        { role: tokenA.role, guard: (d) => (d as any).subject === 'a' },
-        { role: tokenB.role, guard: (d) => (d as any).subject === 's' },
+        { role: tokenA.role, guard: (data) => (data as any).subject === 'a' },
+        { role: tokenB.role, guard: (data) => (data as any).subject === 's' },
       ],
     };
     const def = create({ id: 'typedMulti', filter, component: () => null });

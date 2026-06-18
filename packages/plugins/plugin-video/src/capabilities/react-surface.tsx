@@ -17,8 +17,8 @@ const isVideoPart = (data: unknown, part: string): boolean => {
   if (typeof data !== 'object' || data === null) {
     return false;
   }
-  const d = data as { attendableId?: unknown; part?: unknown; subject?: unknown };
-  return typeof d.attendableId === 'string' && d.part === part && Obj.instanceOf(Video.Video, d.subject);
+  const record = data as { attendableId?: unknown; part?: unknown; subject?: unknown };
+  return typeof record.attendableId === 'string' && record.part === part && Obj.instanceOf(Video.Video, record.subject);
 };
 
 export default Capability.makeModule(() =>

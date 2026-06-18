@@ -75,18 +75,18 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'schemaPopoverDynamicType',
-        filter: AppSurface.subject(AppSurface.CardContent, (v): v is Obj.Unknown => {
-          if (!Obj.isObject(v)) {
+        filter: AppSurface.subject(AppSurface.CardContent, (subject): subject is Obj.Unknown => {
+          if (!Obj.isObject(subject)) {
             return false;
           }
-          const type = Obj.getType(v);
+          const type = Obj.getType(subject);
           if (type) {
             return Type.getDatabase(type) != null;
           }
           // Obj.getType fails for database-registered schemas (DXN mismatch); fall back to typename query.
           try {
-            const db = Obj.getDatabase(v);
-            const typename = Obj.getTypename(v);
+            const db = Obj.getDatabase(subject);
+            const typename = Obj.getTypename(subject);
             return (
               !!db &&
               !!typename &&
