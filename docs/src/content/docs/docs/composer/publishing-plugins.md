@@ -120,7 +120,7 @@ export default Config2.make({
 });
 ```
 
-> Import `defineConfig` from `@dxos/app-framework/config`, not from `@dxos/app-framework`. The `/config` subpath is a lightweight entry point with no heavy transitive dependencies — the main entry pulls in the full UI framework which is not needed at build/publish time.
+> Import `Config2` from `@dxos/app-framework/config`, not from `@dxos/app-framework`. The `/config` subpath is a lightweight entry point with no heavy transitive dependencies — the main entry pulls in the full UI framework which is not needed at build/publish time.
 
 Field reference for `plugin`:
 

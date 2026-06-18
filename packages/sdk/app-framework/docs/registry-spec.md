@@ -33,9 +33,9 @@ The machine-readable lexicons are the canonical definition:
 
 - **Lexicon JSON** — `packages/sdk/edge-protocol/lexicons/org.dxos.experimental/*.json` (edge repo).
   These are the source of truth.
-- **Effect-Schema validators** — `packages/services/registry-service/src/registry/atproto/schema.ts`
+- **Effect-Schema validators** — `packages/sdk/edge-protocol/src/registry.ts`
   (edge repo). Decoders used at the indexing/validation seam to reject malformed records before they
-  enter the store. These mirror the JSON lexicons.
+  enter the store. These mirror the JSON lexicons and live alongside them in the protocol package.
 - **`PluginView`** — `packages/core/protocols/src/edge/registry.ts` (dxos repo). The catalog shape
   the indexer serves to Composer.
 - **CLI writers** — `packages/plugins/plugin-registry/src/commands/registry/` (dxos repo). The `dx`
@@ -73,8 +73,8 @@ The machine-readable lexicons are the canonical definition:
 | ---------------------------------------------- | ------------------ | --------- | --------------------------------------- |
 | `org.dxos.experimental.publisher.profile`      | `self`             | publisher | Identity-level publisher metadata.      |
 | `org.dxos.experimental.publisher.verification` | `<verified DID>`   | verifier  | A trust attestation about a publisher.  |
-| `org.dxos.experimental.package.profile`        | `<slug>`           | publisher | Plugin metadata (one per slug per DID). |
-| `org.dxos.experimental.package.release`        | `<slug>:<version>` | publisher | A versioned artifact of a package.      |
+| `org.dxos.experimental.package.profile`        | `<key>`            | publisher | Plugin metadata (one per key per DID).  |
+| `org.dxos.experimental.package.release`        | `<key>:<version>`  | publisher | A versioned artifact of a package.      |
 
 All record bodies carry a `$type` field set to the NSID (standard ATProto convention; stamped by
 the CLI on write). All records live in the author's own repo and are therefore mutable by that
@@ -113,35 +113,37 @@ Written by `dx registry verify`.
 
 ### `package.profile`
 
-Mutable metadata for a discoverable plugin. `rkey = <slug>` (kebab-case `[a-z0-9-]`, ≤63 chars). The
-slug is the plugin's globally-unique id and matches the plugin id in `dx.yml`.
+Mutable metadata for a discoverable plugin. `rkey = <key>` (reverse-domain NSID, e.g.
+`org.dxos.plugin.excalidraw`). The `key` field is the plugin's globally-unique identifier and
+matches the `key` in `dx.config.ts`.
 
-| Field         | Required | Type                              | Constraints               | Notes                                                                                                  |
-| ------------- | -------- | --------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `slug`        | yes      | string                            | 1–63 chars                | Stable id; equals the rkey.                                                                            |
-| `name`        | yes      | string                            | 1–128 chars               | Display name.                                                                                          |
-| `description` | yes      | string                            | ≤512 chars                | Shown in listings.                                                                                     |
-| `homepage`    | no       | string (uri)                      |                           | Canonical homepage.                                                                                    |
-| `source`      | no       | string (uri)                      |                           | Public source repository.                                                                              |
-| `tags`        | no       | string[]                          | ≤16 items, item ≤32 chars | Discovery tags.                                                                                        |
-| `screenshots` | no       | `(string \| { light?, dark? })[]` | item urls                 | Each entry is a URL, or a record of theme-specific URLs. See [Reconciliation](#schema-reconciliation). |
-| `icon`        | no       | string                            | ≤64 chars                 | [Phosphor](https://phosphoricons.com) icon name, e.g. `ph--compass-tool--regular`.                     |
-| `iconHue`     | no       | string                            | ≤32 chars                 | Theme hue hint for the icon backdrop (e.g. `indigo`).                                                  |
-| `createdAt`   | yes      | string (datetime)                 |                           |                                                                                                        |
+| Field        | Required | Type                  | Constraints               | Notes                                                                                              |
+| ------------ | -------- | --------------------- | ------------------------- | -------------------------------------------------------------------------------------------------- |
+| `key`        | yes      | string                | 1–63 chars                | Reverse-domain NSID; equals the rkey (e.g. `org.dxos.plugin.excalidraw`).                         |
+| `name`       | yes      | string                | 1–128 chars               | Display name.                                                                                      |
+| `description`| no       | string                | ≤512 chars                | Shown in listings.                                                                                 |
+| `homePage`   | no       | string (uri)          |                           | Canonical homepage or documentation URL.                                                           |
+| `source`     | no       | string (uri)          |                           | Public source repository.                                                                          |
+| `tags`       | no       | string[]              | ≤16 items, item ≤32 chars | Discovery tags.                                                                                    |
+| `screenshots`| no       | `{ light?, dark? }[]` | item urls                 | Preview images; each entry is a record of theme-specific URLs.                                     |
+| `icon`       | no       | `{ key, hue? }`       |                           | [Phosphor](https://phosphoricons.com) icon name (e.g. `ph--compass-tool--regular`) + palette hue.  |
+| `dependsOn`  | no       | string[]              |                           | Plugin keys this plugin depends on at runtime (author-declared, version-independent NSIDs).        |
+| `spec`       | no       | string                |                           | Relative path inside the bundle to a bundled MDL spec file (e.g. `PLUGIN.mdl`).                   |
+| `createdAt`  | yes      | string (datetime)     |                           |                                                                                                    |
 
-Written by `dx registry publish` (from the build manifest, which is emitted from `dx.yml`) or
-`dx registry publish-package`.
+Written by `dx registry publish` (from the manifest emitted by `composerPlugin` reading `dx.config.ts`)
+or `dx registry publish-package`.
 
 ### `package.release`
 
-A record for one version of a package. `rkey = <slug>:<version>`. Conceptually append-only: a new
-version is a new record, and the registry treats the first release seen per `(did, slug, version)`
+A record for one version of a package. `rkey = <key>:<version>`. Conceptually append-only: a new
+version is a new record, and the registry treats the first release seen per `(did, key, version)`
 as canonical — but the author technically retains write access to it (see
 [Integrity & tamper detection](#integrity--tamper-detection)).
 
 | Field          | Required | Type              | Constraints | Notes                                                                                                             |
 | -------------- | -------- | ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `package`      | yes      | string            | ≤63 chars   | Slug of the parent `package.profile` authored by the same DID.                                                    |
+| `package`      | yes      | string            | ≤63 chars   | Key of the parent `package.profile` authored by the same DID.                                                     |
 | `version`      | yes      | string            | ≤32 chars   | Semver subset without build metadata; pre-release suffixes allowed (`1.2.3-rc.1`). Taken from `package.json`.     |
 | `moduleUrl`    | yes      | string (uri)      | non-empty   | HTTPS URL of the module entrypoint / `manifest.json`. v0 trusts the publisher; content addressing is a follow-on. |
 | `manifestHash` | no       | string            | ≤256 chars  | Integrity hash of the module manifest, e.g. `sha256-<base64>`.                                                    |
@@ -149,9 +151,9 @@ as canonical — but the author technically retains write access to it (see
 
 Written by `dx registry publish`.
 
-> The release rkey uses `<slug>:<version>` (colon), matching the emdash prior art. `:` is a legal
-> record-key character per the AT Protocol record-key grammar, and neither the slug `[a-z0-9-]` nor
-> the version charset contains it, so it is unambiguous.
+> The release rkey uses `<key>:<version>` (colon), matching the emdash prior art. `:` is a legal
+> record-key character per the AT Protocol record-key grammar, and the key (a reverse-domain NSID
+> using only `[a-z0-9.]`) and version charset do not contain it, so the separator is unambiguous.
 
 ## Trust model
 
@@ -216,8 +218,8 @@ publisher-trusted at the record level (the hosted bundle itself is already immut
 - **Bootstrap / backfill.** On first run (and periodically), the indexer walks the verifier's repo
   for verification records to compute the verified-DID set, then lists each verified publisher's repo
   for `package.*` records (`runBackfill`). The catalog (`GET /registry/plugins`) collects releases
-  per `(authorDid, package-slug)` — grouped by the release's `package` field, **not** by parsing the
-  rkey — newest-first, anchored by `at://<authorDid>/org.dxos.experimental.package.profile/<slug>`.
+  per `(authorDid, package-key)` — grouped by the release's `package` field, **not** by parsing the
+  rkey — newest-first, anchored by `at://<authorDid>/org.dxos.experimental.package.profile/<key>`.
 - **Live updates.** The indexer subscribes to the Jetstream firehose; commits for the four NSIDs are
   validated (Effect-Schema) and written/deleted in DO storage, keyed by `record:<nsid>|<did>|<rkey>`.
 - **Validation seam.** Malformed records are rejected at ingestion against the Effect-Schema mirrors
@@ -293,40 +295,26 @@ runtime sandbox surface is defined. (rkey conventions now match emdash, includin
 
 ## Schema reconciliation
 
-The JSON lexicons (source of truth), the Effect-Schema validators, `PluginView`, and the CLI had
-drifted on `package.profile`. Agreed resolutions:
+The JSON lexicons, the Effect-Schema validators, `PluginView`, and the CLI previously had field-level
+drift on `package.profile`. All items listed here are resolved.
 
-- **`icon`** — a **string** Phosphor icon name (e.g. `ph--compass-tool--regular`), not an embedded
-  blob. The CLI writes a name string and the indexer/Composer render by name. _Reconciled:_ the
-  lexicon (`blob → string`) and the validator (`unknown → string`); `PluginView.icon` is already a
-  string.
-- **`screenshots`** — `(string | { light?: uri; dark?: uri })[]`: each entry is a plain URL or a
-  record of theme-specific URLs. _Reconciled on the dxos side; one edge step pending._
-  - **Done (dxos):** `@dxos/protocols` `edge/registry.ts` (`ScreenshotSchema`, used by both
-    `PluginProfileSchema` and the deprecated `PluginMetaSchema`/manifest); app-framework `Plugin.Meta`,
-    `Registry.Plugin`, `PluginMetaEntry`, and the `dx-compile` mirror; the CLI `ManifestSchema`;
-    Composer's `PluginDetail` rendering (theme-aware variant selection via `useThemeContext`); the
-    publishing-plugins docs + example.
-  - **Done (edge):** `package.profile.json` lexicon declares the field (a `string | object` array item
-    isn't cleanly expressible in Lexicon, so items are typed `unknown` with a description; the canonical
-    shape is enforced by the validator).
-  - **Pending (edge), blocked on a `@dxos/protocols` publish + bump:** the validator (`schema.ts`)
-    `screenshots` union and the indexer's assignment into `PluginView`. Edge consumes `@dxos/protocols`
-    as a published dependency, so the validator can't adopt the union until the new protocols (with the
-    `ScreenshotSchema`-typed `PluginView`) is published and the edge repo bumps it — otherwise the
-    indexer's `PluginView.screenshots` assignment fails to type-check.
-  - **Sequencing caveat / footgun:** the union is backward-compatible (a plain URL string is still
-    valid), but until the edge validator accepts the union, a `{ light, dark }` screenshot would be
-    _rejected at indexing_ (the whole `package.profile` fails validation), so the plugin wouldn't appear.
-    Publishers should use plain URL screenshots until the edge update is deployed.
-- **`dependencies`** (SDK-compat snapshot on `package.release`; see
-  [SDK compatibility](#sdk-compatibility--the-upgrade-train)). _Done:_ `composerPlugin` emits it; the
-  build `Manifest`, `@dxos/protocols` `PluginManifestSchema` + `PluginReleaseSchema`, the CLI release
-  write, the edge lexicon (`unknown`-typed map + description), and the edge validator (which preserves
-  it in storage). _Pending, blocked on the `@dxos/protocols` publish + edge bump:_ the indexer
-  projecting `release.dependencies` into `PluginView.releases`, and Composer's load/UI compatibility
-  gate — both consume the new `PluginRelease.dependencies` from published protocols. Backward-compatible
-  (absent = unknown), so it lands incrementally.
+- **`slug` → `key`** — the identity field on `package.profile` is now named `key` everywhere: the
+  lexicon, the Effect-Schema validator, `PluginProfileSchema` in `@dxos/protocols`, the CLI flags
+  (`--key`), and the runtime `Plugin.Meta.profile.key`.
+- **`homepage` → `homePage`** — camelCase alignment across the lexicon, validator, `PluginProfileSchema`,
+  and `dx.config.ts`.
+- **`icon`** — unified as `{ key, hue? }` (object form) across `dx.config.ts`, `PluginProfileSchema`,
+  the validator, and the indexer projection. The CLI writes and the indexer stores the structured object.
+- **`screenshots`** — unified as `{ light?, dark? }[]` (object-only form) across `dx.config.ts`,
+  `PluginProfileSchema`, the validator, and the indexer projection. Plain URL strings are no longer
+  accepted at authoring time; use `{ dark: 'url' }` or `{ light: 'url', dark: 'url' }`.
+- **`dependsOn`** — added to `package.profile` (author-declared runtime plugin deps, NSIDs),
+  `PluginProfileSchema`, the validator, and `dx.config.ts`.
+- **`spec`** — added to `package.profile` (relative path to a bundled MDL spec),
+  `PluginProfileSchema`, the validator, and `dx.config.ts`.
+- **`dependencies`** (SDK-compat snapshot on `package.release`) — `composerPlugin` emits the full
+  resolved dependency map into `manifest.json`; the CLI writes it into the `package.release` record;
+  the validator preserves it in storage; `PluginReleaseSchema` in `@dxos/protocols` types it.
 
 ## Open questions & follow-ons
 
