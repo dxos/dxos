@@ -11,6 +11,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
+import { type PluginProfile, type PluginRelease } from '@dxos/protocols';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
@@ -54,7 +55,11 @@ export const publishPackage = Command.make(
       Options.withDescription('Tag (repeatable). Categorizes the package for discovery.'),
       Options.repeated,
     ),
-    iconHue: Options.text('icon-hue').pipe(Options.withDescription('Display hue (string).'), Options.optional),
+    iconKey: Options.text('icon-key').pipe(
+      Options.withDescription('Icon identifier (e.g. ph--sparkle--regular) resolvable by @ch-ui/icons.'),
+      Options.optional,
+    ),
+    iconHue: Options.text('icon-hue').pipe(Options.withDescription('Icon palette hue (e.g. blue).'), Options.optional),
     manifestHash: Options.text('manifest-hash').pipe(
       Options.withDescription('Optional content hash for the bundle/manifest.'),
       Options.optional,
@@ -71,41 +76,34 @@ export const publishPackage = Command.make(
         });
         const createdAt = new Date().toISOString();
 
-        const profile: Record<string, unknown> = {
+        const homepage = Option.getOrUndefined(options.homepage);
+        const source = Option.getOrUndefined(options.source);
+        const iconKey = Option.getOrUndefined(options.iconKey);
+        const iconHue = Option.getOrUndefined(options.iconHue);
+        const icon = iconKey !== undefined ? { key: iconKey, ...(iconHue !== undefined && { hue: iconHue }) } : undefined;
+
+        const profile: PluginProfile & { createdAt: string } = {
           key: options.key,
           name: options.name,
-          description: options.description,
+          ...(options.description.length > 0 && { description: options.description }),
+          ...(homepage !== undefined && { homePage: homepage }),
+          ...(source !== undefined && { source }),
+          ...(options.tag.length > 0 && { tags: options.tag }),
+          ...(icon !== undefined && { icon }),
           createdAt,
         };
-        const homepage = Option.getOrUndefined(options.homepage);
-        if (homepage !== undefined) {
-          profile.homePage = homepage;
-        }
-        const source = Option.getOrUndefined(options.source);
-        if (source !== undefined) {
-          profile.source = source;
-        }
-        if (options.tag.length > 0) {
-          profile.tags = options.tag;
-        }
-        const iconHue = Option.getOrUndefined(options.iconHue);
-        if (iconHue !== undefined) {
-          profile.iconHue = iconHue;
-        }
 
         const profileResult = yield* putRecord(session, NSID.PackageProfile, options.key, profile);
         yield* Console.log(`Profile  ${profileResult.uri}`);
 
-        const release: Record<string, unknown> = {
+        const manifestHash = Option.getOrUndefined(options.manifestHash);
+        const release: PluginRelease & { package: string; createdAt: string } = {
           package: options.key,
           version: options.version,
           moduleUrl: options.moduleUrl,
           createdAt,
+          ...(manifestHash !== undefined && { manifestHash }),
         };
-        const manifestHash = Option.getOrUndefined(options.manifestHash);
-        if (manifestHash !== undefined) {
-          release.manifestHash = manifestHash;
-        }
 
         const releaseResult = yield* putRecord(
           session,
