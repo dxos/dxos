@@ -26,7 +26,7 @@ import { Calendar } from '#types';
 import { InboxPlugin } from '../../InboxPlugin';
 import { InitializeCalendar } from './InitializeCalendar';
 
-// Contributes a stub `integration--auth` surface so stories can exercise the
+// Contributes a stub `IntegrationAuth` surface so stories can exercise the
 // empty-state path that delegates to an installed integration plugin without
 // pulling in `@dxos/plugin-integration`.
 const MockAuthSurfacePlugin = Plugin.define(

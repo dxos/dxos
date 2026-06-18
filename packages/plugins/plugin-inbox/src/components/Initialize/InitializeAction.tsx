@@ -30,7 +30,7 @@ export type InitializeActionProps<T extends Obj.Any> = {
 /**
  * Toolbar action for the "initialize / connect this thing" empty state.
  * When an `Integration` targets `target` we render an `IconButton` that
- * invokes `operation`; otherwise we render the `integration--auth` Surface
+ * invokes `operation`; otherwise we render the `IntegrationAuth` Surface
  * (if registered) so the user can connect a provider.
  *
  * Used by `InitializeMailboxAction` and `InitializeCalendarAction`.
