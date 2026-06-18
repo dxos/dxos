@@ -337,7 +337,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const chat = yield* Effect.promise(() => agent.chat!.load());
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const feedServiceLayer = createFeedServiceLayer(space.queues);
+          const feedServiceLayer = createFeedServiceLayer(space.db);
           const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
@@ -373,7 +373,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
                 name,
                 feed: Ref.make(feed),
               });
-              const feedServiceLayer = createFeedServiceLayer(space.queues);
+              const feedServiceLayer = createFeedServiceLayer(space.db);
               const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
               const binder = new AiContext.Binder({ feed, runtime, registry });
 

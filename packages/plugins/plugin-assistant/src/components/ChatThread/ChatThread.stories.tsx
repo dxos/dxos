@@ -65,7 +65,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
           Layer.mergeAll(
             Database.layer(space.db),
             Feed.ContextFeedService.layer(feed),
-            createFeedServiceLayer(space.queues),
+            createFeedServiceLayer(space.db),
           ),
         ),
       ),

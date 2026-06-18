@@ -449,7 +449,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             return { pulled };
           }).pipe(
             Effect.provide(Database.layer(db)),
-            Effect.provide(createFeedServiceLayer(space.queues)),
+            Effect.provide(createFeedServiceLayer(space.db)),
             Effect.provide(makeDiscordLayer(integration)),
           ),
         );

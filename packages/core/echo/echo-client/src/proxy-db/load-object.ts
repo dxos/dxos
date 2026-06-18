@@ -6,6 +6,7 @@ import { asyncTimeout } from '@dxos/async';
 import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
+import { type EntityManager } from '../core-db';
 import { getObjectCore } from '../echo-handler';
 
 /**
@@ -41,7 +42,8 @@ export const loadObjectReferences = async <
   const tasks = objectArray.map((obj) => {
     const core = getObjectCore(obj as any);
     const value = valueAccessor(obj);
-    if (core.database == null) {
+    const db = core.entityManager as EntityManager | undefined;
+    if (db == null) {
       return value;
     }
 
@@ -54,7 +56,7 @@ export const loadObjectReferences = async <
 
     // TODO(burdon): Timeout if trying to load object that isn't there.
     return asyncTimeout(
-      core.database._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
+      db._updateEvent.waitFor(() => isLoadedPredicate()).then(() => valueAccessor(obj)),
       timeout,
     );
   });
