@@ -42,7 +42,8 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "lexicons"
   ],
   "dependencies": {
     "@bufbuild/protobuf": "catalog:",
