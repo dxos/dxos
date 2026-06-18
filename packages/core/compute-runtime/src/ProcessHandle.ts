@@ -114,6 +114,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
   // once the sleep has elapsed and the handler is running.
   #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
+  // True from when a due alarm's sleep elapses until its handler starts running. A 0ms alarm clears
+  // `#alarmFiber` and then performs async persistence before the handler is dispatched; this marker
+  // keeps the process out of IDLE across that handoff so a turn deferred to the alarm is observed by
+  // `runUntilSettled` rather than the transient idle between enqueue and dispatch.
+  #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   readonly #callbacks: Process.Callbacks<I, O, R>;
@@ -387,11 +392,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
             case Process.State.TERMINATED:
             case Process.State.IDLE:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
-            // The foreground turn is done once no handler is active and no further turn work is
-            // queued (no pending alarm); remaining hybernation is only background children, which we
-            // intentionally do not wait for.
+            // The foreground turn is done once no handler is active and no further turn work is queued:
+            // no pending alarm (`#alarmFiber`) and none mid-handoff to its handler (`#alarmDispatching`).
+            // Remaining hybernation is only background children, which we intentionally do not wait for.
             case Process.State.HYBERNATING:
-              return this.#alarmFiber === null ? Effect.runSync(Deferred.succeed(deferred, undefined)) : Effect.void;
+              return this.#alarmFiber === null && !this.#alarmDispatching
+                ? Effect.runSync(Deferred.succeed(deferred, undefined))
+                : Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
@@ -506,11 +513,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       } else {
         yield* Effect.yieldNow();
       }
+      // Set before clearing `#alarmFiber` (no yield between) so the process is never seen as IDLE during
+      // the handoff from the elapsed sleep fiber to the dispatched alarm handler.
+      this.#alarmDispatching = true;
       this.#alarmFiber = null;
       this.#alarmDueAt = null;
       yield* this.#persistence.setAlarm(null);
       if (!this.#finished) {
         yield* this.#persistence.appendEvent({ _tag: 'alarm' }).pipe(Effect.flatMap((seq) => this.#dispatchAlarm(seq)));
+      } else {
+        // Dispatch skipped (process already finishing); release the marker.
+        this.#alarmDispatching = false;
       }
     });
   }
@@ -566,6 +579,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
         }
         this.#activeHandlers++;
         this.#setStatus(Process.State.RUNNING);
+        if (name === 'alarm') {
+          // The due alarm's handler is now running; the dispatch handoff is complete.
+          this.#alarmDispatching = false;
+        }
         log('begin handler', { pid: this.pid, state: this.#currentStatus.state, activeHandlers: this.#activeHandlers });
         const t0 = performance.now();
         const recordWall = () => {
@@ -635,7 +652,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
           Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
         );
       } else if (this.#activeHandlers === 0) {
-        const hybernating = this.#alarmFiber !== null || this.#hasRunningChildren();
+        const hybernating = this.#alarmFiber !== null || this.#alarmDispatching || this.#hasRunningChildren();
         this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
       }
     });

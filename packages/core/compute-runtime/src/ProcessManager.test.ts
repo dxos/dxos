@@ -234,6 +234,21 @@ const makeWaitingExecutable = () =>
     }),
   );
 
+/**
+ * Mirrors the agent process: `onInput` enqueues the prompt and defers the actual turn to an immediate
+ * (0ms) alarm. `runUntilSettled` must wait for that deferred turn, not the transient IDLE between
+ * enqueue and alarm dispatch.
+ */
+const makeDeferredAlarmTurn = (ranRef: Ref.Ref<boolean>) =>
+  Process.make({ key: 'test.deferred-alarm-turn', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () => Effect.sync(() => ctx.setAlarm(0)),
+      onAlarm: () => Ref.set(ranRef, true),
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
 const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
@@ -298,6 +313,20 @@ describe('ManagerImpl', () => {
       yield* handle.terminate();
       const exit = yield* handle.runAndExit({ inputs: [1] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runUntilSettled waits for a turn deferred to a 0ms alarm',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const ran = yield* Ref.make(false);
+      const handle = yield* manager.spawn(makeDeferredAlarmTurn(ran));
+      yield* handle.submitInput(undefined);
+      yield* handle.runUntilSettled();
+      // The deferred (0ms-alarm) turn must have run before the process is reported settled — the bug is
+      // settling on the transient IDLE in the enqueue→alarm-dispatch window, before the turn executes.
+      expect(yield* Ref.get(ran)).toEqual(true);
     }, Effect.provide(TestLayer)),
   );
 
