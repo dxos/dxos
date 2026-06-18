@@ -68,13 +68,13 @@ const createToolbarActions = ({
   Atom.make(() => ({
     nodes: [
       createMenuAction('build', onBuild, {
-        label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.id }],
+        label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.profile.key }],
         icon: 'ph--hammer--regular',
         disabled: anyBusy,
         testId: 'code-toolbar.build',
       }),
       createMenuAction('run', onRun, {
-        label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: meta.id }],
+        label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: meta.profile.key }],
         icon: 'ph--play--regular',
         disabled: anyBusy || !canRun,
         testId: 'code-toolbar.run',

@@ -12,5 +12,5 @@ export type WelcomeOptions = {
 };
 
 export namespace WelcomeCapabilities {
-  export const Onboarding = Capability.make<OnboardingManager>(`${meta.id}.capability.onboarding`);
+  export const Onboarding = Capability.make<OnboardingManager>(`${meta.profile.key}.capability.onboarding`);
 }

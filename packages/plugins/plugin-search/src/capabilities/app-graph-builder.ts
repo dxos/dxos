@@ -30,7 +30,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeDeckCompanion({
               id: linkedSegment('search'),
-              label: ['search.label', { ns: meta.id }],
+              label: ['search.label', { ns: meta.profile.key }],
               icon: 'ph--magnifying-glass--regular',
               data: space,
             }),
@@ -49,7 +49,7 @@ export default Capability.makeModule(
                 return false;
               }),
               properties: {
-                label: ['search-action.label', { ns: meta.id }],
+                label: ['search-action.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
                   macos: 'shift+meta+f',

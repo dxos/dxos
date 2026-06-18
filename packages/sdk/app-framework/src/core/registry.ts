@@ -8,60 +8,14 @@ import * as Effect from 'effect/Effect';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-/**
- * A registry plugin entry as seen by the plugin manager layer.
- * Populated from the registry catalog; represents the latest available version of a plugin.
- *
- * Independently defined from @dxos/protocols PluginView — similar shape but not the same type.
- * Implementations of {@link PluginProvider} (e.g. {@link EdgeRegistryPluginProvider})
- * are responsible for mapping their wire-format entries to this shape.
- */
-export type Plugin = {
-  /**
-   * Composer plugin id — a bare NSID, e.g. `org.dxos.plugin.excalidraw`.
-   * Equals `slug` on the wire-format PluginView. Used for `manager.enable(id)`,
-   * `DXN.make(id, version)`, install-version tracking, and all catalog lookups.
-   */
-  id: string;
-  name: string;
-  description?: string;
-  /**
-   * Publisher/provenance, not self-declared by the plugin: for registry plugins
-   * this is the verified publisher (AT Protocol handle, falling back to DID); for
-   * bundled plugins the host supplies a default at registration time.
-   */
-  author?: string;
-  homePage?: string;
-  source?: string;
-  screenshots?: { light?: string; dark?: string }[];
-  tags?: string[];
-  icon?: { key: string; hue?: string };
-  /**
-   * IDs of plugins this entry declares as runtime dependencies. Mirrors
-   * {@link Plugin.Meta.dependsOn}. Surfaced in the catalog so the manager can
-   * resolve and auto-install transitive deps before they are first loaded.
-   */
-  dependsOn?: string[];
-  /** URL to dynamic-import the latest version of this plugin module. */
-  moduleUrl: string;
-  /**
-   * Latest known version string, e.g. `0.8.3`.
-   * Combined with `id`, yields the canonical `Plugin.Meta.key` via `DXN.make(id, version)`.
-   */
-  version: string;
-};
+import type * as Plugin from './plugin';
 
 /**
- * A single installable version of a registry plugin.
+ * A registry catalog entry is a {@link Plugin.Meta} (profile + the latest release), the same
+ * runtime type bundled plugins use. {@link PluginProvider} implementations (e.g.
+ * {@link EdgeRegistryPluginProvider}) map their wire-format entries (`PluginView`) to this shape.
+ * A single installable version is a {@link Plugin.Release}.
  */
-export type PluginVersion = {
-  /** Version string, e.g. `v1.2.0`. */
-  tag: string;
-  /** URL to dynamic-import this specific version of the plugin module. */
-  moduleUrl: string;
-  /** Unix ms of when this version was published (optional; omitted when unknown). */
-  releasedAt?: number;
-};
 
 /**
  * Abstraction over the plugin registry catalog backend.
@@ -76,20 +30,20 @@ export interface PluginProvider {
   /**
    * Returns all registry plugins (latest version of each).
    */
-  listPlugins(): Effect.Effect<readonly Plugin[], Error>;
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error>;
 
   /**
    * Returns all known versions of a plugin, identified by its composer plugin id (NSID).
    * Ordered newest-first. Must return at least one entry.
    */
-  listVersions(id: string): Effect.Effect<readonly PluginVersion[], Error>;
+  listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error>;
 
   /**
    * Returns a single plugin entry for the given id.
    * If `version` is omitted, returns the latest.
    * Fails if the plugin or version is not found.
    */
-  getPlugin(id: string, version?: string): Effect.Effect<Plugin, Error>;
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error>;
 }
 
 /**
@@ -98,7 +52,7 @@ export interface PluginProvider {
  * (loading state, list contents, last error).
  */
 export type PluginsState = {
-  entries: readonly Plugin[];
+  entries: readonly Plugin.Meta[];
   loading: boolean;
   error: Error | null;
 };
@@ -112,7 +66,7 @@ export type PluginsState = {
  * callers know they need to configure a real provider.
  */
 const NULL_PROVIDER: PluginProvider = {
-  listPlugins: () => Effect.succeed([] as readonly Plugin[]),
+  listPlugins: () => Effect.succeed([] as readonly Plugin.Meta[]),
   listVersions: () => Effect.fail(new Error('No plugin registry provider configured')),
   getPlugin: () => Effect.fail(new Error('No plugin registry provider configured')),
 };
@@ -153,17 +107,17 @@ export class Manager {
   }
 
   /** Forwards to the underlying provider. */
-  listPlugins(): Effect.Effect<readonly Plugin[], Error> {
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
     return this.#provider.listPlugins();
   }
 
   /** Forwards to the underlying provider. */
-  listVersions(id: string): Effect.Effect<readonly PluginVersion[], Error> {
+  listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {
     return this.#provider.listVersions(id);
   }
 
   /** Forwards to the underlying provider. */
-  getPlugin(id: string, version?: string): Effect.Effect<Plugin, Error> {
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error> {
     return this.#provider.getPlugin(id, version);
   }
 }

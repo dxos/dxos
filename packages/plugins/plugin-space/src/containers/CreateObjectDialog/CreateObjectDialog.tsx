@@ -27,7 +27,7 @@ import { SpaceCapabilities } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
-export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
+export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'initialFormValues'> & {
   views?: boolean;
@@ -45,7 +45,7 @@ export const CreateObjectDialog = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: CreateObjectDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
@@ -86,7 +86,7 @@ export const CreateObjectDialog = ({
       for (const entry of contributions) {
         entries.push(entry);
         if (owningPlugin) {
-          pluginByEntryId.set(entry.id, owningPlugin.meta.name);
+          pluginByEntryId.set(entry.id, owningPlugin.meta.profile.name);
         }
       }
     }

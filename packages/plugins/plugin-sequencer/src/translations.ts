@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete score',
         'object-deleted.label': 'Score deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Sequencer',
         'add-track.label': 'Add track',
         'remove-track.label': 'Remove track',

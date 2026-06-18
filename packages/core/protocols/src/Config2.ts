@@ -21,17 +21,22 @@ export const Icon = Schema.Struct({
 export type Icon = Schema.Schema.Type<typeof Icon>;
 
 export const Plugin = Schema.Struct({
-  id: Schema.String.pipe(Schema.nonEmptyString()),
+  /** Reverse-domain NSID — the plugin's globally-unique key (e.g. `org.dxos.plugin.excalidraw`). */
+  key: Schema.String.pipe(Schema.nonEmptyString()),
   name: Schema.String.pipe(Schema.nonEmptyString()),
   description: Schema.optional(Schema.String),
+  /**
+   * Author or organization name. Only used for bundled plugins. For plugins published to the
+   * registry this field is ignored — the verified publisher (handle ?? did) is used instead.
+   */
   author: Schema.optional(Schema.String),
   homePage: Schema.optional(Schema.String),
   source: Schema.optional(Schema.String),
   screenshots: Schema.optional(Schema.Array(Screenshot)),
   tags: Schema.optional(Schema.Array(Schema.String)),
   icon: Schema.optional(Icon),
-  version: Schema.optional(Schema.String),
   spec: Schema.optional(Schema.String),
+  /** Composer plugin ids this plugin depends on at runtime (NSIDs). */
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
 });
 export type Plugin = Schema.Schema.Type<typeof Plugin>;

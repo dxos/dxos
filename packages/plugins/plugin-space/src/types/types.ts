@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 export * as Settings from './Settings';
 
-export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
+export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
 

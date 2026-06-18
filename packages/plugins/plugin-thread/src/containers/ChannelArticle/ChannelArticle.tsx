@@ -72,11 +72,11 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['channel-toolbar.title', { ns: meta.id }] });
+    const builder = MenuBuilder.make().root({ label: ['channel-toolbar.title', { ns: meta.profile.key }] });
     if (canStartCall) {
       builder.action(
         'start-video-call',
-        { label: ['start-video-call.menu', { ns: meta.id }], icon: 'ph--video-camera--regular' },
+        { label: ['start-video-call.menu', { ns: meta.profile.key }], icon: 'ph--video-camera--regular' },
         () => {
           void handleStartCall();
         },

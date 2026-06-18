@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceSettingsAutomation',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-automation`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

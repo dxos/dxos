@@ -16,10 +16,10 @@ import type * as Routing from './Routing';
  * may register; `BookingSearch` resolves all contributions and filters them by
  * the segment kind being searched.
  */
-export const BookingService = Capability.make<BookingSearch.BookingService>(`${meta.id}.capability.bookingService`);
+export const BookingService = Capability.make<BookingSearch.BookingService>(`${meta.profile.key}.capability.bookingService`);
 
 /**
  * Plugins contribute driving-route providers via this capability (e.g. plugin-osrm). `PlanRoute`
  * resolves all contributions and uses the first (or the one matching the requested provider id).
  */
-export const RoutingService = Capability.make<Routing.RoutingService>(`${meta.id}.capability.routingService`);
+export const RoutingService = Capability.make<Routing.RoutingService>(`${meta.profile.key}.capability.routingService`);

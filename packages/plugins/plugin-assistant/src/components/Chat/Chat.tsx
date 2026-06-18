@@ -215,7 +215,7 @@ const CHAT_THREAD_NAME = 'Chat.Thread';
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();

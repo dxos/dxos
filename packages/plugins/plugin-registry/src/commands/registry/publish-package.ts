@@ -16,8 +16,8 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 
 /**
  * `dx registry publish-package` — publishes both the mutable
- * `package.profile` (rkey = slug) and a `package.release`
- * (rkey = `<slug>:<version>`) record to the authenticated user's PDS.
+ * `package.profile` (rkey = key) and a `package.release`
+ * (rkey = `<key>:<version>`) record to the authenticated user's PDS.
  *
  * The two writes are independent `putRecord` (upsert) calls; if the second fails the
  * first is left in place (the indexer treats a profile with no releases as
@@ -32,8 +32,8 @@ export const publishPackage = Command.make(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    slug: Options.text('slug').pipe(
-      Options.withDescription('Package slug — also the rkey of the profile record. Lower-case, [a-z0-9-], ≤63 chars.'),
+    key: Options.text('key').pipe(
+      Options.withDescription('Plugin key — a reverse-domain NSID (e.g. org.dxos.plugin.excalidraw); also the profile record rkey.'),
     ),
     name: Options.text('name').pipe(Options.withDescription('Human-readable package name.')),
     description: Options.text('description').pipe(
@@ -41,7 +41,7 @@ export const publishPackage = Command.make(
       Options.withDefault(''),
     ),
     version: Options.text('version').pipe(
-      Options.withDescription('Semver version (no build metadata). The release rkey is `<slug>:<version>`.'),
+      Options.withDescription('Semver version (no build metadata). The release rkey is `<key>:<version>`.'),
     ),
     moduleUrl: Options.text('module-url').pipe(
       Options.withDescription('HTTPS URL to the bundle or manifest for this release.'),
@@ -70,14 +70,14 @@ export const publishPackage = Command.make(
         const createdAt = new Date().toISOString();
 
         const profile: Record<string, unknown> = {
-          slug: options.slug,
+          key: options.key,
           name: options.name,
           description: options.description,
           createdAt,
         };
         const homepage = Option.getOrUndefined(options.homepage);
         if (homepage !== undefined) {
-          profile.homepage = homepage;
+          profile.homePage = homepage;
         }
         const source = Option.getOrUndefined(options.source);
         if (source !== undefined) {
@@ -91,11 +91,11 @@ export const publishPackage = Command.make(
           profile.iconHue = iconHue;
         }
 
-        const profileResult = yield* putRecord(session, NSID.PackageProfile, options.slug, profile);
+        const profileResult = yield* putRecord(session, NSID.PackageProfile, options.key, profile);
         yield* Console.log(`Profile  ${profileResult.uri}`);
 
         const release: Record<string, unknown> = {
-          package: options.slug,
+          package: options.key,
           version: options.version,
           moduleUrl: options.moduleUrl,
           createdAt,
@@ -108,7 +108,7 @@ export const publishPackage = Command.make(
         const releaseResult = yield* putRecord(
           session,
           NSID.PackageRelease,
-          `${options.slug}:${options.version}`,
+          `${options.key}:${options.version}`,
           release,
         );
         yield* Console.log(`Release  ${releaseResult.uri}`);

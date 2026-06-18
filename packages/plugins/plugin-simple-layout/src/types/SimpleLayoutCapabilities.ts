@@ -38,4 +38,4 @@ export type SimpleLayoutState = {
   companionVariant?: string;
 };
 
-export const State = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.id}.state`);
+export const State = Capability.make<Atom.Writable<SimpleLayoutState>>(`${meta.profile.key}.state`);

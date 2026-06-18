@@ -14,14 +14,14 @@ import { meta } from '#meta';
 
 import { type EphemeralDeckState, type DeckState, type StoredDeckState } from './schema';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.profile.key}.capability.settings`);
 
 /** Persisted state (stored in KVS/localStorage). */
-export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.id}.capability.state`);
+export const State = Capability.make<Atom.Writable<StoredDeckState>>(`${meta.profile.key}.capability.state`);
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.make<Atom.Writable<EphemeralDeckState>>(
-  `${meta.id}.capability.ephemeral-state`,
+  `${meta.profile.key}.capability.ephemeral-state`,
 );
 
 /** Get the current active deck from state. */

@@ -28,7 +28,7 @@ export const StackSection = ({
   object,
   metadata: { icon = 'ph--circle-dashed--regular' },
 }: StackSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attendableId = `${parentAttendableId}/${object.id}`;

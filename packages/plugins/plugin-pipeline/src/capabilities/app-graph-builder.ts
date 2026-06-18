@@ -21,13 +21,13 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'invocations',
-              label: ['pipeline-invocations.label', { ns: meta.id }],
+              label: ['pipeline-invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
             }),
             AppNode.makeCompanion({
               id: 'automation',
-              label: ['pipeline-automation.label', { ns: meta.id }],
+              label: ['pipeline-automation.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
             }),

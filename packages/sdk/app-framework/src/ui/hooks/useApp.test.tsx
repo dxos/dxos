@@ -18,7 +18,7 @@ const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 
 
 const pluginLoader = (plugins: Plugin.Plugin[]) =>
   Effect.fn(function* (id: string) {
-    const plugin = plugins.find((plugin) => plugin.meta.id === id);
+    const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
     if (!plugin) {
       return yield* Effect.fail(new Error(`Plugin not found: ${id}`));
     }

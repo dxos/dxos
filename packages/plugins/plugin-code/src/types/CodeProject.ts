@@ -18,7 +18,7 @@ export const CodeProject = Schema.Struct({
   files: Schema.optional(Schema.Array(Ref.Ref(SourceFile.SourceFile))),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--app-window--regular', hue: meta.icon?.hue }),
+  Annotation.IconAnnotation.set({ icon: 'ph--app-window--regular', hue: meta.profile.icon?.hue }),
   Type.makeObject(DXN.make('org.dxos.type.codeProject', '0.1.0')),
 );
 

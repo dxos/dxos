@@ -9,7 +9,7 @@ import { meta } from '#meta';
 
 export const OsrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    id: `${meta.id}/osrm`,
+    id: `${meta.profile.key}/osrm`,
     activatesOn: ActivationEvents.Startup,
     activate: RoutingService,
   }),

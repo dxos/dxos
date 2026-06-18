@@ -56,7 +56,7 @@ export default Capability.makeModule(
         if (!query?.dxn) {
           return [
             {
-              path: `${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+              path: `${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
               label: 'Inbox settings',
               type: 'settings',
             },

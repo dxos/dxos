@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete meeting',
         'object-deleted.label': 'Meeting deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Meeting',
         'meetings.label': 'All Meetings',
         'meeting.label': 'Meeting',

@@ -9,7 +9,7 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'login.title': 'Request access or login',
         'existing-identity.title': 'Sign up to access your account',
         'beta.description': 'Enter your email to request early access to Composer.',

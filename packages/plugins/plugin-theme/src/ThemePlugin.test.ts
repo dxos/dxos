@@ -11,7 +11,7 @@ import { ThemePlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 // jsdom does not implement window.matchMedia — stub it for ThemePlugin's dark-mode detection.
 beforeEach(() => {

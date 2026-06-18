@@ -62,7 +62,7 @@ export default Capability.makeModule(() =>
       // receives these as props via `SettingsArticleProps<T>` and never touches the atom.
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SampleSettings settings={settings} onSettingsChange={updateSettings} />;

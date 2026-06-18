@@ -19,7 +19,7 @@ import { layoutAppliesTopbar } from '../../util';
 import { PlankErrorFallback, PlankLoading } from '../Plank';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
-const label = ['complementary-sidebar.title', { ns: meta.id }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -27,7 +27,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -154,7 +154,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (getLinkedVariant(companion.id) !== activeId && !data) {
     return null;

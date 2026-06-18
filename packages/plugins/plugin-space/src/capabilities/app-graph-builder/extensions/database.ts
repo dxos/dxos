@@ -60,7 +60,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeSection({
             id: Segments.types,
             type: TYPES_SECTION_TYPE,
-            label: ['types-section.label', { ns: meta.id }],
+            label: ['types-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
             position: 'last',
@@ -139,7 +139,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           type: TYPE_COLLECTION_TYPE,
           data: { space, typeUri },
           properties: {
-            label: ['type-collection-all.label', { ns: meta.id }],
+            label: ['type-collection-all.label', { ns: meta.profile.key }],
             icon: 'ph--list--regular',
             iconHue: 'neutral',
             role: 'branch',
@@ -353,7 +353,7 @@ const createSchemaActions = ({
             properties: {
               // Static plugin types carry a per-typename `add-object.label` (e.g. "Add event");
               // database types have no such namespace, so fall back to the plugin's generic label.
-              label: getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
+              label: getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.profile.key : typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',

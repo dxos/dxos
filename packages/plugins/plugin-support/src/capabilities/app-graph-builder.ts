@@ -20,12 +20,12 @@ import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
 // rebuilt inline on every evaluation always compares unequal, so the graph re-emits the node, remounting
 // the node's surface (and any cross-origin iframe it hosts) and freezing the app.
 type LabelTuple = [string, { ns: string }];
-const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.id }];
-const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.id }];
-const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.id }];
-const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.id }];
-const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.id }];
-const SPACE_HOME_NODE_LABEL: LabelTuple = ['space-home-node.label', { ns: meta.id }];
+const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.profile.key }];
+const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.profile.key }];
+const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.profile.key }];
+const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.profile.key }];
+const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.profile.key }];
+const SPACE_HOME_NODE_LABEL: LabelTuple = ['space-home-node.label', { ns: meta.profile.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

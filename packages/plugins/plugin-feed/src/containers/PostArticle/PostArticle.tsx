@@ -113,7 +113,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
       await invokePromise(
         FeedOperation.LoadPostContent,
         { post: Ref.make(subject), force: true },
-        { notify: { error: ['refresh-content-error.message', { ns: meta.id }] } },
+        { notify: { error: ['refresh-content-error.message', { ns: meta.profile.key }] } },
       );
     } finally {
       registry.set(refreshingAtom, false);

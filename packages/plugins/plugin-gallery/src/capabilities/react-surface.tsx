@@ -29,12 +29,12 @@ export default Capability.makeModule(() =>
         position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,
-          (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Gallery.Gallery }> =>
+          (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Gallery.Gallery }> =>
             !!data.subject &&
             typeof data.subject === 'object' &&
             'type' in data.subject &&
             'object' in data.subject &&
-            data.subject.type === meta.id &&
+            data.subject.type === meta.profile.key &&
             Obj.instanceOf(Gallery.Gallery, data.subject.object),
         ),
         component: ({ data }) => <GalleryShow gallery={data.subject.object} />,

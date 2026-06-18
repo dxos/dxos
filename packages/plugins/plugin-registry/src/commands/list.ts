@@ -20,11 +20,11 @@ export const handler = Effect.fn(function* () {
   const core = manager.getCore();
 
   const formattedPlugins: FormattedPlugin[] = plugins.map((plugin: Plugin.Plugin) => {
-    const isEnabled = enabled.includes(plugin.meta.id);
-    const isCore = core.includes(plugin.meta.id);
+    const isEnabled = enabled.includes(plugin.meta.profile.key);
+    const isCore = core.includes(plugin.meta.profile.key);
     return {
-      id: plugin.meta.id,
-      name: plugin.meta.name ?? plugin.meta.id,
+      id: plugin.meta.profile.key,
+      name: plugin.meta.profile.name ?? plugin.meta.profile.key,
       enabled: isEnabled,
       core: isCore,
     };

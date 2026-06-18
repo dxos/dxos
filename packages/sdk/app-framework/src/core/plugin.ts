@@ -6,11 +6,12 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { Config2 } from '@dxos/protocols';
+import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -150,67 +151,62 @@ class PluginModuleImpl implements PluginModule {
 }
 
 /**
- * Runtime plugin metadata — exactly {@link Config2.Plugin} from `@dxos/protocols`, the same schema
- * used in `dx.config.ts`. `id` and `version` are derived from a canonical DXN by {@link makeMeta};
- * use {@link getURI} when a typed DXN is needed.
- */
-export type Meta = Config2.Plugin;
-
-/**
- * Options for {@link makeMeta}: {@link Config2.Plugin} content fields (minus `id` and `version`,
- * which are derived from `key`) plus the canonical DXN `key`.
- * `icon` accepts a bare string key as a legacy convenience — it is normalised to `{ key }`.
- * `iconHue` is a legacy convenience for the `icon.hue` field.
- * `screenshots` accepts bare URL strings as a legacy convenience — normalised to `{ dark: url }`.
- */
-export type MakeMetaOptions = Omit<Config2.Plugin, 'id' | 'version' | 'icon' | 'screenshots'> & {
-  key: DXN.DXN;
-  /** Version string override. If omitted, derived from `key`. */
-  version?: string;
-  /** Icon key string (legacy) or canonical `{ key, hue? }` object. */
-  icon?: string | Config2.Plugin['icon'];
-  /** @deprecated Pass `icon: { key, hue }` instead. */
-  iconHue?: string;
-  /** Screenshot URL strings (legacy) or canonical `{ light?, dark? }` objects. Accepts readonly arrays. */
-  screenshots?: ReadonlyArray<string | { readonly light?: string; readonly dark?: string }>;
-};
-
-/**
- * Constructs a plugin {@link Meta} from a single canonical DXN. `id` (bare NSID) and `version`
- * (semver) are derived from `key` — do not set them directly.
+ * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
+ * config + registry schemas; the runtime projection lives here).
  *
- * @example
- * export const meta = Plugin.makeMeta({
- *   key: DXN.make('org.dxos.plugin.example', '0.8.3'),
- *   name: 'Example',
- *   icon: { key: 'ph--cube--regular', hue: 'indigo' },
- * });
+ * - {@link Profile}: version-independent identity + display + provenance — the wire `PluginProfileSchema`
+ *   (which carries `key`, the display fields, `dependsOn`, `spec`) plus `author` (resolved at runtime
+ *   from the publisher's handle/DID for registry plugins, or self-declared for bundled).
+ * - {@link Release}: a specific hosted release — the wire `PluginReleaseSchema` (version, moduleUrl, dependencies).
+ * - {@link Meta}: a resolved single-release view — `{ profile, release? }`, both nested. `release` is
+ *   unset for bundled plugins (compiled in) and set for registry plugins.
  */
-export const makeMeta = (options: MakeMetaOptions): Meta => {
-  const { key, version: versionOverride, iconHue, icon, screenshots, ...rest } = options;
-  const iconKey = typeof icon === 'string' ? icon : icon?.key;
-  const resolvedHue = iconHue ?? (typeof icon === 'object' && icon !== null ? icon.hue : undefined);
-  const iconObj: Config2.Plugin['icon'] = iconKey !== undefined ? { key: iconKey, hue: resolvedHue } : undefined;
-  const normalizedScreenshots = screenshots?.map((s) => (typeof s === 'string' ? { dark: s } : s));
-  return {
-    ...rest,
-    ...(iconObj !== undefined ? { icon: iconObj } : {}),
-    ...(normalizedScreenshots !== undefined ? { screenshots: normalizedScreenshots } : {}),
-    id: DXN.getName(key),
-    version: versionOverride ?? DXN.getVersion(key),
-  };
+export const Profile = Schema.Struct({
+  ...PluginProfileSchema.fields,
+  author: Schema.optional(Schema.String),
+});
+export type Profile = Schema.Schema.Type<typeof Profile>;
+
+export const Release = PluginReleaseSchema;
+export type Release = Schema.Schema.Type<typeof Release>;
+
+export const Meta = Schema.Struct({
+  profile: Profile,
+  release: Schema.optional(Release),
+});
+export type Meta = Schema.Schema.Type<typeof Meta>;
+
+/** Options for {@link makeMeta}: the {@link Profile} content fields plus the canonical DXN `key`. */
+export type MakeMetaOptions = {
+  key: DXN.DXN;
+  name: string;
+  description?: string;
+  author?: string;
+  homePage?: string;
+  source?: string;
+  tags?: readonly string[];
+  dependsOn?: readonly string[];
+  spec?: string;
+  icon?: Config2.Icon;
+  screenshots?: ReadonlyArray<Config2.Screenshot>;
 };
 
-/** Returns the plugin's canonical DXN URI, constructed from `meta.id` and `meta.version`. */
-export const getURI = (meta: Meta): DXN.DXN => DXN.make(meta.id, meta.version);
+/** Constructs a bundled-plugin {@link Meta} from a canonical DXN. `profile.key` is the bare NSID derived from `key`. */
+export const makeMeta = (options: MakeMetaOptions): Meta => {
+  const { key, ...rest } = options;
+  return { profile: { ...rest, key: DXN.getName(key) } };
+};
+
+/** Returns the plugin's canonical DXN URI, constructed from `meta.profile.key` and `meta.release?.version`. */
+export const getURI = (meta: Meta): DXN.DXN => DXN.make(meta.profile.key, meta.release?.version);
 
 /**
  * Derives a runtime {@link Meta} from a loaded `dx.config.ts` (the `@dxos/protocols` `Config2.Config`).
- * `id` and `version` are derived from the canonical DXN; the remaining authored fields map through.
+ * Maps the flat authoring config to the nested profile; bundled plugins have no `release`.
  */
 export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
-  const { id, ...rest } = plugin;
-  return makeMeta({ key: DXN.make(id), ...rest });
+  const { key, ...rest } = plugin;
+  return makeMeta({ key: DXN.make(key), ...rest });
 };
 
 /**
@@ -334,12 +330,12 @@ const resolveModule = (
   options?: any,
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
-  const pluginName = meta.id;
+  const pluginName = meta.profile.key;
   const id = Option.fromNullable(moduleOptions.id).pipe(
     Option.match({
       onNone: () => {
         const exportName = Capability.getModuleTag(moduleOptions.activate);
-        invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
+        invariant(exportName, `Plugin module missing name. Plugin: ${meta.profile.key}`);
         return computeModuleId(pluginName, exportName);
       },
       onSome: (id) => computeModuleId(pluginName, id),
@@ -357,8 +353,11 @@ const resolveModule = (
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
   const meta = builder.meta;
-  // `dependsOn` entries and `id` are both bare NSIDs, so compare directly.
-  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
+  // `dependsOn` entries and `key` are both bare NSIDs, so compare directly.
+  invariant(
+    !meta.profile.dependsOn?.includes(meta.profile.key),
+    `Plugin ${meta.profile.key} declares itself as a dependency.`,
+  );
 
   const factory = (options: T) => {
     const modules = builder.modules.map((module) => resolveModule(meta, module, options));
@@ -393,7 +392,7 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * Defines a lazy plugin whose body is loaded on first enable.
  *
  * The returned factory produces a stub `Plugin` that exposes `meta`
- * synchronously (so callers can read `Plugin.meta.id` for free) but defers
+ * synchronously (so callers can read `Plugin.meta.profile.key` for free) but defers
  * loading the real plugin's modules until the manager calls
  * `Plugin.resolveLazy`. This lets the plugin's main entry point ship as a
  * tiny meta-only chunk — the heavy capabilities, schema, React surfaces,
@@ -432,7 +431,7 @@ export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
 
 /**
  * Tagged error for failures during lazy plugin resolution. `context.id` is
- * the lazy plugin's `meta.id`; `context.reason` discriminates the failure
+ * the lazy plugin's `meta.profile.key`; `context.reason` discriminates the failure
  * mode (`'load-failed' | 'missing-default' | 'invalid-plugin' |
  * 'meta-mismatch'`) so callers can route on it.
  */
@@ -467,7 +466,7 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     if (!isLazy(plugin)) {
       return plugin;
     }
-    const id = plugin.meta.id;
+    const id = plugin.meta.profile.key;
     const { loader, options } = (plugin as unknown as { [LazyTag]: LazyPayload })[LazyTag];
     const mod = yield* Effect.tryPromise({
       try: loader,
@@ -480,9 +479,9 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     if (!isPlugin(result)) {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'invalid-plugin' } }));
     }
-    if (result.meta.id !== id) {
+    if (result.meta.profile.key !== id) {
       return yield* Effect.fail(
-        new LazyPluginError({ context: { id, reason: 'meta-mismatch', returnedId: result.meta.id } }),
+        new LazyPluginError({ context: { id, reason: 'meta-mismatch', returnedId: result.meta.profile.key } }),
       );
     }
     return result;

@@ -84,7 +84,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('post'),
-              label: ['post-companion.label', { ns: meta.id }],
+              label: ['post-companion.label', { ns: meta.profile.key }],
               icon: 'ph--article--regular',
               data: post,
             }),
@@ -108,7 +108,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(feed)?.spaceId },
                 ),
               properties: {
-                label: ['sync-feed.label', { ns: meta.id }],
+                label: ['sync-feed.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

@@ -100,7 +100,7 @@ import { defineConfig } from '@dxos/app-framework/config';
 
 export default defineConfig({
   plugin: {
-    id: 'org.dxos.plugin.excalidraw', // required — a reverse-domain NSID; also your plugin id
+    key: 'org.dxos.plugin.excalidraw', // required — a reverse-domain NSID; the plugin's globally-unique key
     name: 'Excalidraw', // required
     description: 'Professional diagramming powered by Excalidraw.',
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
@@ -126,7 +126,7 @@ Field reference for `plugin`:
 
 | Field         | Required | Notes                                                                                                           |
 | ------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
-| `id`          | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). This is your plugin's globally-unique id.              |
+| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). The plugin's globally-unique key.                      |
 | `name`        | yes      | Human-readable name shown in the registry.                                                                      |
 | `description` | no       | Short description shown on the plugin's detail view.                                                            |
 | `author`      | no       | Author or organization name.                                                                                    |
@@ -174,7 +174,7 @@ This will:
 1. Run your `build.command` (skip with `--no-build` to publish a pre-built `dist`).
 2. Read the emitted `manifest.json`.
 3. Upload the bundle to the DXOS edge and record the resulting `moduleUrl`.
-4. Write a `package.profile` record and a `package.release` record (rkey `<id>:<version>`) to your PDS.
+4. Write a `package.profile` record and a `package.release` record (rkey `<key>:<version>`) to your PDS.
 
 Useful flags:
 
@@ -202,7 +202,7 @@ Bump the `version` in `package.json`, then run `dx registry publish` again. Each
 ## Removing a plugin
 
 ```bash
-dx registry unpublish --slug org.dxos.plugin.excalidraw
+dx registry unpublish --key org.dxos.plugin.excalidraw
 ```
 
 This removes the package profile and all of its release records from your PDS. The registry stops listing it on the next refresh.
@@ -238,5 +238,5 @@ The CLI writes these AT Protocol record types under your repo:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `org.dxos.experimental.publisher.profile`      | Your publisher identity (rkey `self`).                                               |
 | `org.dxos.experimental.publisher.verification` | Trust attestation for a publisher DID (written by the configured verifier, not you). |
-| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `id`).                                         |
-| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<id>:<version>`).                              |
+| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `key`).                                         |
+| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<key>:<version>`).                              |

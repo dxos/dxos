@@ -24,7 +24,7 @@ export default Capability.makeModule(
             anchor: output.anchor,
           };
         },
-        message: ['thread-deleted.label', { ns: meta.id }],
+        message: ['thread-deleted.label', { ns: meta.profile.key }],
       }),
       UndoMapping.make({
         operation: CommentOperation.DeleteMessage,
@@ -39,7 +39,7 @@ export default Capability.makeModule(
             messageIndex: output.messageIndex,
           };
         },
-        message: ['message-deleted.label', { ns: meta.id }],
+        message: ['message-deleted.label', { ns: meta.profile.key }],
       }),
     ]);
   }),

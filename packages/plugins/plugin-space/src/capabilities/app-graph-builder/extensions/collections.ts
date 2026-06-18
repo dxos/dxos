@@ -76,7 +76,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
-              label: ['collections-section.label', { ns: meta.id }],
+              label: ['collections-section.label', { ns: meta.profile.key }],
               icon: 'ph--folder--regular',
               iconHue: 'amber',
               role: 'branch',

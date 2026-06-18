@@ -35,10 +35,10 @@ export const FeedbackSubmitAction = ({ disabled }: FeedbackSubmitActionProps) =>
         state: 'collapsed',
       });
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}.feedback-success`,
+        id: `${meta.profile.key}.feedback-success`,
         icon: 'ph--paper-plane-tilt--regular',
-        title: ['feedback-toast.label', { ns: meta.id }],
-        description: ['feedback-toast.description', { ns: meta.id }],
+        title: ['feedback-toast.label', { ns: meta.profile.key }],
+        description: ['feedback-toast.description', { ns: meta.profile.key }],
         closeLabel: ['close.label', { ns: osTranslations }],
         duration: 3_000,
       });

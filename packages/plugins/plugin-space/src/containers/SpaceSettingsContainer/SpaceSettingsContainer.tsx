@@ -25,7 +25,7 @@ const SpaceFormSchema = SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
@@ -174,7 +174,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     <Settings.Viewport>
       <Settings.Section
         title={t('space-properties-settings-verbose.label')}
-        description={t('space-properties-settings.description', { ns: meta.id })}
+        description={t('space-properties-settings.description', { ns: meta.profile.key })}
       >
         <Form.Root
           key={space.id}

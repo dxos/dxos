@@ -31,7 +31,7 @@ export type WorkspaceSettingsContainerProps = {
 };
 
 export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsContainerProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const [, updateState] = useAtomCapabilityState(NativeFilesystemCapabilities.State);

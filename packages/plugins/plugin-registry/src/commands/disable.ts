@@ -18,7 +18,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const manager = yield* Plugin.Service;
 
   const plugins = manager.getPlugins();
-  const plugin = plugins.find((p: Plugin.Plugin) => p.meta.id === id);
+  const plugin = plugins.find((p: Plugin.Plugin) => p.meta.profile.key === id);
   invariant(plugin, `Plugin not found: ${id}`);
 
   const core = manager.getCore();
@@ -34,7 +34,7 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
   if (json) {
     yield* Console.log(JSON.stringify({ id, enabled: false }, null, 2));
   } else {
-    yield* Console.log(`Plugin "${plugin.meta.name ?? id}" disabled.`);
+    yield* Console.log(`Plugin "${plugin.meta.profile.name ?? id}" disabled.`);
   }
 });
 

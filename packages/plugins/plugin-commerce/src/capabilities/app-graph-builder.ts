@@ -35,7 +35,7 @@ export default Capability.makeModule(
               type: 'providers', // TODO(burdon): Const.
               data: 'providers-root', // TODO(burdon): Const.
               properties: {
-                label: ['providers.label', { ns: meta.id }],
+                label: ['providers.label', { ns: meta.profile.key }],
                 icon: 'ph--globe--regular',
                 role: 'branch',
                 position: 'first',
@@ -69,7 +69,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(search)?.spaceId },
                 ),
               properties: {
-                label: ['run-search.label', { ns: meta.id }],
+                label: ['run-search.label', { ns: meta.profile.key }],
                 icon: 'ph--shopping-cart--regular',
                 disposition: 'list-item',
               },
@@ -101,7 +101,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(provider)?.spaceId },
                 ),
               properties: {
-                label: ['regenerate.label', { ns: meta.id }],
+                label: ['regenerate.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 disposition: 'toolbar',
               },

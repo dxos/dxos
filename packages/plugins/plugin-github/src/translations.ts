@@ -7,7 +7,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'GitHub',
         'sync-now.label': 'Sync now',
         'sync-toast.success.label': 'Sync complete',

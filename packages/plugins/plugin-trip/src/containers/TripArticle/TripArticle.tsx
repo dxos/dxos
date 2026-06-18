@@ -186,9 +186,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       const friendly =
         err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/plan-route-error`,
-        title: ['route.error.label', { ns: meta.id }],
-        description: friendly ?? ['route.error.message', { ns: meta.id }],
+        id: `${meta.profile.key}/plan-route-error`,
+        title: ['route.error.label', { ns: meta.profile.key }],
+        description: friendly ?? ['route.error.message', { ns: meta.profile.key }],
         icon: 'ph--warning--regular',
       });
     } finally {
@@ -203,7 +203,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
     const builder = MenuBuilder.make().group(
       'add',
       {
-        label: ['segment.add.label', { ns: meta.id }],
+        label: ['segment.add.label', { ns: meta.profile.key }],
         icon: 'ph--plus--regular',
         variant: 'dropdownMenu',
       },
@@ -211,7 +211,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         for (const kind of SEGMENT_KINDS) {
           group.action(
             `add-${kind}`,
-            { label: [`segment.${kind}.label`, { ns: meta.id }], icon: Segment.kindIcon(kind) },
+            { label: [`segment.${kind}.label`, { ns: meta.profile.key }], icon: Segment.kindIcon(kind) },
             () => handleAddSegment(kind),
           );
         }
@@ -229,7 +229,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       builder.action(
         'plan-route',
         {
-          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.id }],
+          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.profile.key }],
           icon: 'ph--path--regular',
           iconOnly: true,
           disabled: planning,
@@ -243,7 +243,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       builder.action(
         'toggle-globe',
         {
-          label: ['globe.toggle.label', { ns: meta.id }],
+          label: ['globe.toggle.label', { ns: meta.profile.key }],
           icon: 'ph--globe-hemisphere-west--regular',
           iconOnly: true,
           checked: showGlobe,

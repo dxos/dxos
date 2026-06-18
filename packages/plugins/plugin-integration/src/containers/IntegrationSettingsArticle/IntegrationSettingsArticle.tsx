@@ -22,7 +22,7 @@ import { Integration } from '../../types';
 export type IntegrationSettingsArticleProps = Record<string, never>;
 
 export const IntegrationSettingsArticle = (_props: IntegrationSettingsArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
   const { invokePromise } = useOperationInvoker();
   const integrations = useQuery(space?.db, Filter.type(Integration.Integration));

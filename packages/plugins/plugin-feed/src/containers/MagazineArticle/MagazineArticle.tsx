@@ -27,7 +27,7 @@ import { MagazineToolbar } from './MagazineToolbar';
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const invoker = useOperationInvoker();
   const [magazine] = useObject(subject);
   const registry = useContext(RegistryContext);
@@ -51,7 +51,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         .invoke(
           FeedOperation.CurateMagazine,
           { magazine: Ref.make(subject) },
-          { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.id }] } },
+          { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.profile.key }] } },
         )
         .pipe(Effect.ensuring(Effect.sync(() => registry.set(busyAtom, false)))),
     );
@@ -67,7 +67,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         .invoke(
           FeedOperation.ClearMagazine,
           { magazine: Ref.make(subject) },
-          { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.id }] } },
+          { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.profile.key }] } },
         )
         .pipe(Effect.ensuring(Effect.sync(() => registry.set(busyAtom, false)))),
     );

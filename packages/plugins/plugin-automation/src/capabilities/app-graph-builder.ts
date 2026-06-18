@@ -61,8 +61,8 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'automations',
-              type: `${meta.id}.space-settings-automation`,
-              label: ['automation-panel.label', { ns: meta.id }],
+              type: `${meta.profile.key}.space-settings-automation`,
+              label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               iconHue: 'indigo',
               position: 'last',
@@ -76,7 +76,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('automation'),
-              label: ['automation-companion.label', { ns: meta.id }],
+              label: ['automation-companion.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
               position: 'last',

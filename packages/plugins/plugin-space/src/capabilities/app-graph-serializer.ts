@@ -32,8 +32,8 @@ export default Capability.makeModule(
         inputType: SPACES,
         outputType: DIRECTORY_TYPE,
         serialize: (node) => ({
-          name: translations[0]['en-US'][meta.id]['spaces.label'] ?? 'Spaces',
-          data: translations[0]['en-US'][meta.id]['spaces.label'] ?? 'Spaces',
+          name: translations[0]['en-US'][meta.profile.key]['spaces.label'] ?? 'Spaces',
+          data: translations[0]['en-US'][meta.profile.key]['spaces.label'] ?? 'Spaces',
           type: DIRECTORY_TYPE,
         }),
         deserialize: () => {
@@ -44,8 +44,8 @@ export default Capability.makeModule(
         inputType: SPACE_TYPE,
         outputType: DIRECTORY_TYPE,
         serialize: (node) => ({
-          name: node.data.properties.name ?? translations[0]['en-US'][meta.id]['unnamed-space.label'],
-          data: node.data.properties.name ?? translations[0]['en-US'][meta.id]['unnamed-space.label'],
+          name: node.data.properties.name ?? translations[0]['en-US'][meta.profile.key]['unnamed-space.label'],
+          data: node.data.properties.name ?? translations[0]['en-US'][meta.profile.key]['unnamed-space.label'],
           type: DIRECTORY_TYPE,
         }),
         deserialize: async (data) => {
@@ -58,8 +58,8 @@ export default Capability.makeModule(
         inputType: COLLECTION_TYPE,
         outputType: DIRECTORY_TYPE,
         serialize: (node) => ({
-          name: node.data.name ?? translations[0]['en-US'][meta.id]['object-name.placeholder'],
-          data: node.data.name ?? translations[0]['en-US'][meta.id]['object-name.placeholder'],
+          name: node.data.name ?? translations[0]['en-US'][meta.profile.key]['object-name.placeholder'],
+          data: node.data.name ?? translations[0]['en-US'][meta.profile.key]['object-name.placeholder'],
           type: DIRECTORY_TYPE,
         }),
         deserialize: async (data, ancestors) => {

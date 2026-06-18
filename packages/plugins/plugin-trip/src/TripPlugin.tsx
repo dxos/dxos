@@ -39,7 +39,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.addModule({
     id: 'trip-extractor',

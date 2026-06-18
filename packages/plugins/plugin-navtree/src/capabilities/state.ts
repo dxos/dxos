@@ -13,7 +13,7 @@ import { Path } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { NavTreeCapabilities } from '#types';
 
-const KEY = `${meta.id}.state.v1`;
+const KEY = `${meta.profile.key}.state.v1`;
 
 /** Default item state for new entries. */
 const defaultItemState: NavTreeCapabilities.NavTreeItemState = { open: false, current: false };

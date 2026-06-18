@@ -40,7 +40,7 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const call = useCapability(CallsCapabilities.Manager);
   const media = useAtomValue(call.mediaAtom);
   const [classNames, setClassNames] = useState('');

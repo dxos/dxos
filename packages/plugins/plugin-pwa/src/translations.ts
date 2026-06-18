@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'need-refresh.label': 'Refresh now to get app updates',
         'need-refresh.description': 'You’ll need these updates to continue without interruption.',
         'refresh.label': 'Refresh',

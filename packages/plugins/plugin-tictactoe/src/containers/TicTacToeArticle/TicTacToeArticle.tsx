@@ -25,7 +25,7 @@ import { TicTacToe } from '#types';
 export type TicTacToeArticleProps = GameVariantSurfaceProps;
 
 export const TicTacToeArticle = ({ role, variant }: TicTacToeArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [aiThinking, setAiThinking] = useState(false);
   const aiTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const boardRef = useRef<string>('');

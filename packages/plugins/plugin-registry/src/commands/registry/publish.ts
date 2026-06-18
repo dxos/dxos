@@ -113,14 +113,14 @@ export const publish = Command.make(
         }
 
         // Read the emitted manifest.
-        const outdir = path.join(dir, config.publish?.outdir ?? 'dist');
+        const outdir = path.join(dir, config.publish?.outputDirectory ?? 'dist');
         const manifestPath = path.join(outdir, 'manifest.json');
         if (!(yield* fs.exists(manifestPath))) {
           return yield* Effect.fail(new Error(`manifest.json not found in ${outdir}. Did the build run?`));
         }
         const manifestRaw = yield* fs.readFileString(manifestPath);
         const manifest: Manifest = yield* Schema.decodeUnknown(ManifestSchema)(JSON.parse(manifestRaw));
-        const slug = manifest.id;
+        const key = manifest.key;
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
 
@@ -137,11 +137,11 @@ export const publish = Command.make(
           const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
           if (explicitEdgeUrl) {
             const http = new EdgeHttpClient(explicitEdgeUrl);
-            moduleUrl = yield* uploadBundleDirect({ http, slug, version, outdir });
+            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
           } else {
             const client = yield* ClientService;
             const hasIdentity = !!client.halo.identity.get();
-            moduleUrl = yield* uploadBundle({ client, slug, version, outdir, auth: hasIdentity });
+            moduleUrl = yield* uploadBundle({ client, key, version, outdir, auth: hasIdentity });
           }
           yield* Console.log(`Uploaded:  ${moduleUrl}`);
         }
@@ -155,12 +155,12 @@ export const publish = Command.make(
         });
         const createdAt = new Date().toISOString();
 
-        const profile: Record<string, unknown> = { slug, name: manifest.name, createdAt };
+        const profile: Record<string, unknown> = { key, name: manifest.name, createdAt };
         if (manifest.description !== undefined) {
           profile.description = manifest.description;
         }
         if (manifest.homePage !== undefined) {
-          profile.homepage = manifest.homePage;
+          profile.homePage = manifest.homePage;
         }
         if (manifest.source !== undefined) {
           profile.source = manifest.source;
@@ -174,12 +174,18 @@ export const publish = Command.make(
         if (manifest.screenshots && manifest.screenshots.length > 0) {
           profile.screenshots = manifest.screenshots;
         }
+        if (manifest.dependsOn?.length) {
+          profile.dependsOn = manifest.dependsOn;
+        }
+        if (manifest.spec !== undefined) {
+          profile.spec = manifest.spec;
+        }
 
-        const profileResult = yield* putRecord(session, NSID.PackageProfile, slug, profile);
+        const profileResult = yield* putRecord(session, NSID.PackageProfile, key, profile);
         yield* Console.log(`Profile    ${profileResult.uri}`);
 
-        const releaseResult = yield* putRecord(session, NSID.PackageRelease, `${slug}:${version}`, {
-          package: slug,
+        const releaseResult = yield* putRecord(session, NSID.PackageRelease, `${key}:${version}`, {
+          package: key,
           version,
           moduleUrl,
           manifestHash,
@@ -201,13 +207,13 @@ export const publish = Command.make(
  */
 const uploadBundle = ({
   client,
-  slug,
+  key,
   version,
   outdir,
   auth = true,
 }: {
   client: Client;
-  slug: string;
+  key: string;
   version: string;
   outdir: string;
   auth?: boolean;
@@ -229,7 +235,7 @@ const uploadBundle = ({
     }
 
     const { moduleUrl } = yield* Effect.tryPromise(() =>
-      client.edge.http.uploadPluginBundle(Context.default(), { slug, version, files }, { auth }),
+      client.edge.http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth }),
     );
     return moduleUrl;
   });
@@ -240,12 +246,12 @@ const uploadBundle = ({
  */
 const uploadBundleDirect = ({
   http,
-  slug,
+  key,
   version,
   outdir,
 }: {
   http: EdgeHttpClient;
-  slug: string;
+  key: string;
   version: string;
   outdir: string;
 }) =>
@@ -266,7 +272,7 @@ const uploadBundleDirect = ({
     }
 
     const { moduleUrl } = yield* Effect.tryPromise(() =>
-      http.uploadPluginBundle(Context.default(), { slug, version, files }, { auth: false }),
+      http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
     );
     return moduleUrl;
   });

@@ -42,7 +42,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
 
 /** Masonry tile renderer for a related entity. */
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 

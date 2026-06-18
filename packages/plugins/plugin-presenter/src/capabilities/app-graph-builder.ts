@@ -47,7 +47,7 @@ export default Capability.makeModule(
             id: linkedSegment('presenter'),
             label: 'Presenter',
             icon: 'ph--presentation--regular',
-            data: { type: meta.id, object },
+            data: { type: meta.profile.key, object },
           }),
         ]);
       },
@@ -84,7 +84,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['toggle-presentation.label', { ns: meta.id }],
+              label: ['toggle-presentation.label', { ns: meta.profile.key }],
               icon: 'ph--presentation--regular',
               disposition: 'list-item',
               keyBinding: {

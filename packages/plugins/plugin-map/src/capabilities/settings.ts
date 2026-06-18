@@ -21,13 +21,13 @@ import { Settings } from '../types/Settings';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Settings,
       defaultValue: (): Settings => ({}),
     });
 
     return [
-      Capability.contributes(AppCapabilities.Settings, { prefix: meta.id, schema: Settings, atom: settingsAtom }),
+      Capability.contributes(AppCapabilities.Settings, { prefix: meta.profile.key, schema: Settings, atom: settingsAtom }),
       Capability.contributes(MapCapabilities.Settings, settingsAtom),
     ];
   }),

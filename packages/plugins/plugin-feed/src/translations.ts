@@ -42,7 +42,7 @@ export const translations = [
         'delete-object.label': 'Delete magazine',
         'object-deleted.label': 'Magazine deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Feed',
         'empty-feed.message': 'No posts yet',
         'feed-companion.label': 'Feed',

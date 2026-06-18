@@ -52,7 +52,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
       { video: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['fetch-description-error.message', { ns: meta.id }] },
+        notify: { error: ['fetch-description-error.message', { ns: meta.profile.key }] },
       },
     ).finally(() => {
       fetchingDescriptionRef.current = false;
@@ -70,7 +70,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
       { video: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['summarize-error.message', { ns: meta.id }] },
+        notify: { error: ['summarize-error.message', { ns: meta.profile.key }] },
       },
     ).finally(() => setSummarizing(false));
   }, [invokePromise, subject, hasTranscript]);
@@ -81,7 +81,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         .action(
           'openOriginal',
           {
-            label: ['open-original.label', { ns: meta.id }],
+            label: ['open-original.label', { ns: meta.profile.key }],
             icon: 'ph--arrow-square-out--regular',
             disabled: !isExternalHttpUrl(video.url),
             disposition: 'toolbar',
@@ -155,7 +155,7 @@ const TranscriptTabs = ({
   onTabChange,
   onRegenerate,
 }: TranscriptTabsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Panel.Root asChild role={role}>
       <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>

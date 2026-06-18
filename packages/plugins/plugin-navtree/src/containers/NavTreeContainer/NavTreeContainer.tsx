@@ -48,7 +48,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(Node.RootId);
-    const { navigationSidebarState } = useSidebars(meta.id);
+    const { navigationSidebarState } = useSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,

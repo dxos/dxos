@@ -60,7 +60,7 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
           hidden: true,
         });
         yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [`${getSpacePath(db.spaceId)}/settings/${meta.id}.automations`],
+          subject: [`${getSpacePath(db.spaceId)}/settings/${meta.profile.key}.automations`],
           workspace: getSpacePath(db.spaceId),
         });
       }),

@@ -88,7 +88,7 @@ export default Capability.makeModule(() =>
         id: 'pluginSettings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
-          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.profile.key,
         component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
       }),
     ]),

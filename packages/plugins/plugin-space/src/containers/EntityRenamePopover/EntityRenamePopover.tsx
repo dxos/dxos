@@ -13,10 +13,10 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const ENTITY_RENAME_POPOVER = `${meta.id}.EntityRenamePopover`;
+export const ENTITY_RENAME_POPOVER = `${meta.profile.key}.EntityRenamePopover`;
 
 export const EntityRenamePopover = ({ entity }: { entity: Entity.Unknown }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(Entity.getLabel(entity));
   const { invokePromise } = useOperationInvoker();

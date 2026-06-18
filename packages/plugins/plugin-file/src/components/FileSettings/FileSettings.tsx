@@ -15,7 +15,7 @@ import { FileCapabilities, Settings } from '#types';
 export type FileSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const backends = useCapabilities(FileCapabilities.Backend);
   const requestedId = settings.backend ?? Settings.DEFAULT_BACKEND_ID;
   const active =

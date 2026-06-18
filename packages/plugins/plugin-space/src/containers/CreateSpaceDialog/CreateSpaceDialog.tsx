@@ -17,14 +17,14 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceForm } from '#types';
 
-export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
+export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();

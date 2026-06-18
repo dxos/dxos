@@ -111,7 +111,7 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spaces',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',

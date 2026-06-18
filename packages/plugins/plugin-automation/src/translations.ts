@@ -21,7 +21,7 @@ export const translations = [
         'rename-object.label': 'Rename automation',
         'delete-object.label': 'Delete automation',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Automation',
         'automation-panel.label': 'Automations',
         'create-panel.template.placeholder': 'Search templates...',

@@ -23,10 +23,10 @@ export type PluginConfig = {
 };
 
 export const getDefaults = (): string[] => [
-  ChessPlugin.meta.id,
-  SamplePlugin.meta.id,
-  InboxPlugin.meta.id,
-  MarkdownPlugin.meta.id,
+  ChessPlugin.meta.profile.key,
+  SamplePlugin.meta.profile.key,
+  InboxPlugin.meta.profile.key,
+  MarkdownPlugin.meta.profile.key,
 ];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {

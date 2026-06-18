@@ -17,20 +17,20 @@ import { Gallery } from '#types';
 
 import { GALLERY_SHOW_SEGMENT } from '../paths';
 
-const SHOW_ACTION_ID = `${meta.id}.action.show`;
+const SHOW_ACTION_ID = `${meta.profile.key}.action.show`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: meta.id,
+      id: meta.profile.key,
       match: (node) => NodeMatcher.whenEchoType(Gallery.Gallery)(node),
       connector: (object) =>
         Effect.succeed([
           AppNode.makeCompanion({
             id: linkedSegment(GALLERY_SHOW_SEGMENT),
-            label: ['show.label', { ns: meta.id }],
+            label: ['show.label', { ns: meta.profile.key }],
             icon: 'ph--play--regular',
-            data: { type: meta.id, object },
+            data: { type: meta.profile.key, object },
           }),
         ]),
       actions: (object) => {
@@ -58,7 +58,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['show.label', { ns: meta.id }],
+              label: ['show.label', { ns: meta.profile.key }],
               icon: 'ph--play--regular',
               disposition: 'list-item',
             },

@@ -22,7 +22,7 @@ import { SimpleLayoutCapabilities } from '#types';
  * Derives activeId from state atom. Returns props ready to spread into the AppBar component.
  */
 export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const stateAtom = useCapability(SimpleLayoutCapabilities.State);
   const state = useAtomValue(stateAtom);
   const { graph } = useAppGraph();
@@ -82,7 +82,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
   }, [graph, invokePromise, state.active, state.history.length]);
 
   // Compute popover anchor ID.
-  const popoverAnchorId = node && state.popoverAnchorId === `${meta.id}:${node.id}` ? state.popoverAnchorId : undefined;
+  const popoverAnchorId = node && state.popoverAnchorId === `${meta.profile.key}:${node.id}` ? state.popoverAnchorId : undefined;
 
   return {
     title,

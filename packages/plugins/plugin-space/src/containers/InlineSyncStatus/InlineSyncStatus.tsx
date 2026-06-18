@@ -27,7 +27,7 @@ const useEdgeStatus = (): EdgeStatus.ConnectionState => {
 };
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const qualifiedId = getSpacePath(space.id);
   const { hasAttention, isAncestor, isRelated } = useAttention(qualifiedId);
   const attended = hasAttention || isRelated;

@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete document',
         'object-deleted.label': 'Document deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Editor',
         'choose-markdown-from-space-dialog.title': 'Choose one or more documents to add',
         'empty-choose-markdown-from-space.message': 'None available; try creating a new one instead?',

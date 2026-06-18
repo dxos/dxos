@@ -54,7 +54,7 @@ export type SpaceHomeArticleProps = {
  * or starter prompts when the space is empty, above the assistant prompt pinned at the bottom.
  */
 export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   // Recent objects are scoped to the registered object types contributed to the schema capability,
@@ -205,24 +205,24 @@ const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void]
  * assistant chat) never re-render the carousel or its cross-origin Cloudflare Stream iframe.
  */
 const WelcomePanel = memo(() => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
 
   const slides = useMemo(() => {
     const seen = new Set<string>();
     const result: Array<{ key: string; src: string; description: string }> = [{ key: 'welcome', ...WELCOME_SLIDE }];
     for (const plugin of manager.getPlugins()) {
-      for (const [index, screenshot] of (plugin.meta.screenshots ?? []).entries()) {
+      for (const [index, screenshot] of (plugin.meta.profile.screenshots ?? []).entries()) {
         const src = typeof screenshot === 'string' ? screenshot : (screenshot.light ?? screenshot.dark ?? '');
         if (!src || seen.has(src)) {
           continue;
         }
         seen.add(src);
         result.push({
-          key: `${plugin.meta.id}:${index}`,
+          key: `${plugin.meta.profile.key}:${index}`,
           src,
           // Use the short plugin name — meta.description can be multi-kB and stalls caption/layout.
-          description: plugin.meta.name ?? plugin.meta.id,
+          description: plugin.meta.profile.name ?? plugin.meta.profile.key,
         });
       }
     }
@@ -261,7 +261,7 @@ WelcomePanel.displayName = 'WelcomePanel';
  * opened chat view — the processor here exists only to back the context binder UI.
  */
 const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const registry = useRegistry();
@@ -336,7 +336,7 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
 };
 
 const SuggestionCards = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleRunPrompt = useCallback(
@@ -381,7 +381,7 @@ type RecentObjectTileProps = {
 
 const RecentObjectTile = ({ space, object }: RecentObjectTileProps) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const typename = Obj.getTypename(object);
   const label = toLocalizedString(
     Obj.getLabel(object) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),

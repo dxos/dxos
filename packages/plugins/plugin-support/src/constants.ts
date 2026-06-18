@@ -4,7 +4,7 @@
 
 import { meta } from '#meta';
 
-export const SHORTCUTS_DIALOG = `${meta.id}.ShortcutsDialog`;
+export const SHORTCUTS_DIALOG = `${meta.profile.key}.ShortcutsDialog`;
 
 export const DXOS_GUILD_ID = '837138313172353095';
 
@@ -18,4 +18,4 @@ export const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro
 /**
  * Free-form node type tag for the virtual Home node. Avoids the ECHO-object node matchers in app-graph.
  */
-export const SPACE_HOME_NODE_TYPE = `${meta.id}.space-home-node`;
+export const SPACE_HOME_NODE_TYPE = `${meta.profile.key}.space-home-node`;

@@ -30,7 +30,7 @@ export const ChatActions = ({
   debug,
   onEvent,
 }: ChatActionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className={mx('flex items-center', classNames)}>

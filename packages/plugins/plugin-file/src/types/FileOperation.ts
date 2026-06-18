@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 import { FileAction } from './types';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create File', icon: 'ph--file--regular' },

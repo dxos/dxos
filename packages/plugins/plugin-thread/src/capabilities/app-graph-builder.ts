@@ -43,7 +43,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: 'chat',
-              label: ['channel-companion.label', { ns: meta.id }],
+              label: ['channel-companion.label', { ns: meta.profile.key }],
               icon: 'ph--hash--regular',
               data: 'chat',
               position: 'first',

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { type Registry, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, type Registry, UrlLoader } from '@dxos/app-framework';
 import { EffectEx } from '@dxos/effect';
 
 /**
@@ -26,11 +26,11 @@ export const useVersionPicker = ({
   moduleUrl: string | undefined;
   installedVersionTag: string | undefined;
 }): {
-  pickerVersions: readonly Registry.PluginVersion[];
+  pickerVersions: readonly Plugin.Release[];
   selectedVersionTag: string | undefined;
   setSelectedVersionTag: Dispatch<SetStateAction<string | undefined>>;
 } => {
-  const [versions, setVersions] = useState<readonly Registry.PluginVersion[]>([]);
+  const [versions, setVersions] = useState<readonly Plugin.Release[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
 
   // Load version list whenever pluginId changes. The `cancelled` flag guards
@@ -52,7 +52,7 @@ export const useVersionPicker = ({
           setVersions(vs);
           // Default selection: the currently installed version, or the latest.
           const installedVersion = UrlLoader.getInstalledVersion(pluginId);
-          setSelectedVersionTag(installedVersion ?? vs[0]?.tag);
+          setSelectedVersionTag(installedVersion ?? vs[0]?.version);
         },
         onFailure: () => {
           if (cancelled) {
@@ -71,15 +71,15 @@ export const useVersionPicker = ({
 
   // Make sure the picker always lists the installed version, even if the catalog
   // hasn't surfaced it (the current `listVersions` stub only returns latest).
-  const pickerVersions = useMemo<readonly Registry.PluginVersion[]>(() => {
+  const pickerVersions = useMemo<readonly Plugin.Release[]>(() => {
     if (!installedVersionTag) {
       return versions;
     }
-    if (versions.some((entry) => entry.tag === installedVersionTag)) {
+    if (versions.some((entry) => entry.version === installedVersionTag)) {
       return versions;
     }
-    const installedEntry: Registry.PluginVersion = {
-      tag: installedVersionTag,
+    const installedEntry: Plugin.Release = {
+      version: installedVersionTag,
       // Picker won't be re-installing this entry unless the user selects + clicks Install,
       // and the catalog moduleUrl is the closest stand-in we have.
       moduleUrl: moduleUrl ?? '',
@@ -94,10 +94,10 @@ export const useVersionPicker = ({
     if (pickerVersions.length === 0) {
       return;
     }
-    if (selectedVersionTag && pickerVersions.some((entry) => entry.tag === selectedVersionTag)) {
+    if (selectedVersionTag && pickerVersions.some((entry) => entry.version === selectedVersionTag)) {
       return;
     }
-    setSelectedVersionTag(installedVersionTag ?? pickerVersions[0]?.tag);
+    setSelectedVersionTag(installedVersionTag ?? pickerVersions[0]?.version);
   }, [pickerVersions, selectedVersionTag, installedVersionTag]);
 
   return { pickerVersions, selectedVersionTag, setSelectedVersionTag };
