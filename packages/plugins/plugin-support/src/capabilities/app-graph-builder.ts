@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, SPACE_HOME_SEGMENT } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
@@ -149,7 +149,7 @@ export default Capability.makeModule(
         connector: (space) =>
           Effect.succeed([
             {
-              id: SPACE_HOME_SEGMENT,
+              id: Paths.SPACE_HOME_SEGMENT,
               type: SPACE_HOME_NODE_TYPE,
               data: SPACE_HOME_NODE_TYPE,
               properties: {

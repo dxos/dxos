@@ -107,9 +107,9 @@ export default Capability.makeModule(
               Node.make({
                 id: Account.Usage,
                 data: Account.Usage,
-                type: meta.id,
+                type: meta.profile.key,
                 properties: {
-                  label: ['usage-panel.label', { ns: meta.id }],
+                  label: ['usage-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--chart-bar--regular',
                 },
               }),

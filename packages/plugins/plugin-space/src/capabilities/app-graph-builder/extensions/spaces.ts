@@ -37,7 +37,7 @@ import {
 // The label tuple must be a module-level singleton: connectors re-evaluate whenever the matched
 // node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
 // to re-emit the node and remount the Home article on every evaluation.
-const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.id }] as const;
+const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
 
 /** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {

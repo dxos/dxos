@@ -152,7 +152,7 @@ const TESTING_ITEM = { id: 'testing' };
  * Not rendered for trigger kinds with no applicable action (email, webhook, subscription).
  */
 const TriggerTestingSection = ({ space, trigger }: TriggerTestingSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const processManagerRuntime = useProcessManagerRuntime();
   const [properties] = useObject(space.properties);

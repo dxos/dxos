@@ -29,7 +29,7 @@ type SpaceScopedProps = {
  * quick entry points regardless of whether recent objects exist.
  */
 export const SpaceHomeSuggestions = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleRunPrompt = useCallback(

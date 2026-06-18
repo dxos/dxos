@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppNode, AppNodeMatcher, LayoutOperation, Segments, getTypeSlug } from '@dxos/app-toolkit';
+import { AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
@@ -56,7 +56,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed([
           AppNode.makeSection({
-            id: Segments.types,
+            id: Paths.Segments.types,
             type: TYPES_SECTION_TYPE,
             label: ['types-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
@@ -128,7 +128,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const slug = getTypeSlug(schema);
+        const slug = Paths.getTypeSlug(schema);
         const typeUri = Type.getURI(schema);
 
         // {All} virtual node.
@@ -254,7 +254,7 @@ const createSchemaNode = ({
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
-  const slug = getTypeSlug(schema);
+  const slug = Paths.getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))

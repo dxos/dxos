@@ -22,7 +22,7 @@ export const PresenterPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: PresenterSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.addModule({
-    id: `${meta.id}/markdown`,
+    id: `${meta.profile.key}/markdown`,
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: MarkdownExtension,
   }),
