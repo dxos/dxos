@@ -161,3 +161,45 @@ export const GetPluginsResponseBodySchema = Schema.Struct({
   refreshedAt: Schema.Number,
 });
 export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsResponseBodySchema>;
+
+// ─── Publisher records ────────────────────────────────────────────────────────
+
+/** Content of a `publisher.profile` ATProto record. Display metadata for a publisher DID. */
+export const PublisherProfileSchema = Schema.Struct({
+  displayName: Schema.String.pipe(Schema.nonEmptyString()),
+  bio: Schema.optional(Schema.String),
+  homepageUrl: Schema.optional(Schema.String),
+  contact: Schema.optional(Schema.String),
+});
+export type PublisherProfile = Schema.Schema.Type<typeof PublisherProfileSchema>;
+
+/**
+ * Content of a `publisher.verification` record written by the curator DID.
+ * Links a publisher DID to a trusted AT Protocol handle.
+ */
+export const PublisherVerificationSchema = Schema.Struct({
+  subject: Schema.String.pipe(Schema.nonEmptyString()),
+  handle: Schema.String.pipe(Schema.nonEmptyString()),
+  displayName: Schema.String.pipe(Schema.nonEmptyString()),
+  createdAt: Schema.String.pipe(Schema.nonEmptyString()),
+});
+export type PublisherVerification = Schema.Schema.Type<typeof PublisherVerificationSchema>;
+
+// ─── NSID constants ───────────────────────────────────────────────────────────
+
+/** NSID constants for the four `org.dxos.experimental.*` record collections. */
+export const NSID = {
+  PackageProfile: 'org.dxos.experimental.package.profile',
+  PackageRelease: 'org.dxos.experimental.package.release',
+  PublisherProfile: 'org.dxos.experimental.publisher.profile',
+  PublisherVerification: 'org.dxos.experimental.publisher.verification',
+} as const;
+
+export type RegistryNsid = (typeof NSID)[keyof typeof NSID];
+
+export const ALL_NSIDS: readonly RegistryNsid[] = [
+  NSID.PackageProfile,
+  NSID.PackageRelease,
+  NSID.PublisherProfile,
+  NSID.PublisherVerification,
+];

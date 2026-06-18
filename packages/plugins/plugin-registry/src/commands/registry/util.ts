@@ -13,7 +13,10 @@ import * as Schema from 'effect/Schema';
 import { AppSpace } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
+import { ALL_NSIDS, NSID } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
+
+export { ALL_NSIDS, NSID };
 
 /**
  * Shared helpers for the `dx registry *` commands.
@@ -27,17 +30,6 @@ import { AccessToken } from '@dxos/types';
  * - **App password (fallback):** explicit `--handle` / `--app-password` (or `$ATPROTO_HANDLE` /
  *   `$ATPROTO_APP_PASSWORD`) authenticate directly against the PDS with a session token.
  */
-
-// NSIDs the registry indexer cares about. Mirrored from
-// packages/services/registry-service/src/registry/atproto/schema.ts in the edge repo.
-export const NSID = {
-  PackageProfile: 'org.dxos.experimental.package.profile',
-  PackageRelease: 'org.dxos.experimental.package.release',
-  PublisherProfile: 'org.dxos.experimental.publisher.profile',
-  PublisherVerification: 'org.dxos.experimental.publisher.verification',
-} as const;
-
-export const ALL_NSIDS: readonly string[] = Object.values(NSID);
 
 // `AccessToken.source` of the default atproto / login integration ("Atmosphere"). Mirrors
 // `ATMOSPHERE_SOURCE` in plugin-integration; inlined to avoid a plugin-registry -> plugin-integration
