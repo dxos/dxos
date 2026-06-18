@@ -132,16 +132,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   ) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
-    const {
-      id,
-      name,
-      author,
-      description,
-      homePage,
-      source,
-      screenshots,
-      icon: rawIcon,
-    } = plugin.meta;
+    const { id, name, author, description, homePage, source, screenshots, icon: rawIcon } = plugin.meta;
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
