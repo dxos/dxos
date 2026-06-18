@@ -80,8 +80,6 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 // Generic filter builders (role-agnostic — take a role token as first argument)
 //
 
-/** Roles whose data contract requires a string `attendableId`. */
-const ATTENDABLE_ROLES = new Set(['org.dxos.role.article', 'org.dxos.role.section', 'org.dxos.role.tabpanel']);
 
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
@@ -345,6 +343,9 @@ export const Slide: Surface.RoleToken<SectionData<any>> = Surface.makeType('org.
 
 /** Role token for the `tabpanel` role. Shares the article data shape. */
 export const Tabpanel: Surface.RoleToken<ArticleData<any>> = Surface.makeType('org.dxos.role.tabpanel');
+
+/** Roles whose data contract requires a string `attendableId`. */
+const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);
 
 /**
  * Role token for the `related` role. Related panels may render in both
