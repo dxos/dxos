@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IconSchema, PluginMetaBaseSchema, ScreenshotSchema } from '../config2/schema.ts';
-export { IconSchema, PluginMetaBaseSchema, ScreenshotSchema } from '../config2/schema.ts';
-export type { Icon, PluginMetaBase, Screenshot } from '../config2/schema.ts';
+import { IconSchema, PluginMeta, ScreenshotSchema } from '../config2/schema.ts';
+export { IconSchema, ScreenshotSchema } from '../config2/schema.ts';
+export type { Icon, Screenshot } from '../config2/schema.ts';
 
 /**
  * A snapshot of a plugin's declared dependencies resolved to concrete installed versions at build
@@ -34,7 +34,7 @@ export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
  * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
-  ...PluginMetaBaseSchema.fields,
+  ...PluginMeta.fields,
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
   version: Schema.String.pipe(Schema.nonEmptyString()),
   /**
