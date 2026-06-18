@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { DXN } from '@dxos/keys';
+
 // TODO(wittjosiah): Cleanup to avoid re-naming.
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
@@ -43,7 +45,12 @@ export namespace Surface {
   export type TokenData<T> = SurfaceTokenData<T>;
   export type TypedProps<TToken extends SurfaceRoleToken<any>> = SurfaceTypedProps<TToken>;
 
-  export const makeType = makeTypeFn;
+  /** Mints a typed role token. The NSID is validated at compile time via {@link DXN.Name}. */
+  export const makeType: {
+    <TData = unknown, T extends string = string>(
+      nsid: [DXN.Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
+    ): SurfaceRoleToken<TData>;
+  } = makeTypeFn;
 
   export const makeFilter = makeFilterFn;
   export const isFilter = isSurfaceFilterFn;
