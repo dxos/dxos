@@ -565,7 +565,7 @@ export const deckCompanion = (variant: string): Surface.RoleToken<{ subject?: an
 /** Surface data for navigation role. */
 export type NavigationData<Props extends {} = {}> = {
   popoverAnchorId?: string;
-  current?: string;
+  current: string;
 } & Props;
 
 /** Component props for navigation role. */

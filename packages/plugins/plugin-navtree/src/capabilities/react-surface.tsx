@@ -23,14 +23,10 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'navigation',
-        // Narrower type than NavigationData: current is required for this slot.
-        filter: Surface.makeFilter(AppSurface.Navigation, (data) => typeof data.current === 'string'),
-        component: ({ data, ref }) => {
-          if (!data.current) {
-            return null;
-          }
-          return <NavTreeContainer tab={data.current} popoverAnchorId={data.popoverAnchorId} ref={ref} />;
-        },
+        filter: Surface.makeFilter(AppSurface.Navigation),
+        component: ({ data, ref }) => (
+          <NavTreeContainer tab={data.current} popoverAnchorId={data.popoverAnchorId} ref={ref} />
+        ),
       }),
       Surface.create({
         id: 'documentTitle',
