@@ -40,6 +40,7 @@ displaying and editing events within a single week.
 ## Shared header — `CalendarWeekdays`
 
 Props:
+
 - `weekStartsOn: Day`
 - `columnWidth?: number` — fixed px columns (month grid → 40); omitted → flex `1fr` (week view).
 - `gutter?: number` — leading spacer width (week view aligns over the hour gutter).
@@ -56,12 +57,14 @@ export type CalendarEvent = { id: string; title?: string; start: Date; end: Date
 ```
 
 Callbacks:
+
 - `onEventCreate?: (event: { start: Date; end: Date }) => void`
 - `onEventUpdate?: (event: { id: string; start: Date; end: Date }) => void` — move and resize.
 
 ## Overlap layout
 
 Pure function in `util.ts`:
+
 - Input: events for one day. Output: per-event `{ columnIndex, columnCount }`.
 - Sort by start; build transitive overlap clusters; greedily pack each cluster's events
   into the first free column. `left = columnIndex / columnCount`, `width = 1 / columnCount`.

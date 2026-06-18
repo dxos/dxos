@@ -4,14 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import {
-  layoutDayEvents,
-  minutesOfDay,
-  minutesToY,
-  setMinutesOfDay,
-  snapMinutes,
-  yToMinutes,
-} from './util';
+import { layoutDayEvents, minutesOfDay, minutesToY, setMinutesOfDay, snapMinutes, yToMinutes } from './util';
 
 // 2026-06-16 is a Tuesday.
 const day = new Date(2026, 5, 16);
