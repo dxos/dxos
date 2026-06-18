@@ -13,7 +13,7 @@ import { type ModuleProps } from './types';
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.
  */
-export const TraceModule = ({}: ModuleProps) => {
+export const TraceModule = (_: ModuleProps) => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
