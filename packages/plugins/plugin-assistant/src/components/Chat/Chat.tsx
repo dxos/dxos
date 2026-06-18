@@ -12,7 +12,7 @@ import { Event } from '@dxos/async';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
@@ -20,6 +20,7 @@ import { Message } from '@dxos/types';
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
+import { AiUsageQuotaError } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -212,9 +213,12 @@ ChatContent.displayName = CHAT_CONTENT_NAME;
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'> & {
+  /** Invoked from the over-quota error toast to open the usage dashboard. */
+  onViewUsage?: () => void;
+};
 
-const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
+const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatThreadProps) => {
   const { t } = useTranslation(meta.id);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const extensions = useChatKeymapExtensions({ event });
@@ -279,6 +283,20 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
           {t('ai-service-error.label')}
         </Toast.Title>
         <Toast.Description>{toastError?.message}</Toast.Description>
+        {toastError instanceof AiUsageQuotaError && onViewUsage && (
+          <Toast.Actions>
+            <Toast.Action altText={t('view-usage.label')} asChild>
+              <Button
+                onClick={() => {
+                  setToastError(undefined);
+                  onViewUsage();
+                }}
+              >
+                {t('view-usage.label')}
+              </Button>
+            </Toast.Action>
+          </Toast.Actions>
+        )}
       </Toast.Root>
     </>
   );

@@ -57,6 +57,17 @@ export const ShareIdentity = Operation.make({
   output: Schema.Void,
 });
 
+export const OpenUsage = Operation.make({
+  meta: {
+    key: makeKey('openUsage'),
+    name: 'Open Usage',
+    icon: 'ph--chart-bar--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
 export const RecoverIdentity = Operation.make({
   meta: { key: makeKey('recoverIdentity'), name: 'Recover Identity', icon: 'ph--key--regular' },
   services: [Capability.Service],

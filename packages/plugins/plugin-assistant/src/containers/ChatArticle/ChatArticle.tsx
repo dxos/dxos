@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
+import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
@@ -34,6 +35,11 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const { preset, ...chatProps } = usePresets(online);
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
     const pendingSubmitted = useRef(false);
+
+    const { invokePromise } = useOperationInvoker();
+    const handleViewUsage = useCallback(() => {
+      void invokePromise(ClientOperation.OpenUsage, undefined);
+    }, [invokePromise]);
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
@@ -82,7 +88,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content>
             <ChatComponent.Content>
               <div className='dx-container relative'>
-                <ChatComponent.Thread viewType={view} />
+                <ChatComponent.Thread viewType={view} onViewUsage={handleViewUsage} />
                 {view !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
