@@ -41,6 +41,13 @@ export type RunProps<R = never> = {
    * Space-level MCP servers to connect alongside blueprint-defined ones.
    */
   mcpServers?: readonly McpServer.McpServer[];
+
+  /**
+   * When false, messages from this request are not appended to the feed or persisted to trace.
+   *
+   * @default true
+   */
+  persist?: boolean;
 };
 
 export type Options = {
@@ -145,6 +152,7 @@ export class Session extends Resource {
       const request = new AiRequest.Request({
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
+        persist: params.persist,
         onOutput: (message) =>
           Effect.promise(() => Runtime.runPromise(this._runtime)(Feed.append(this._feed, [message]))),
       });

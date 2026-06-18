@@ -68,7 +68,9 @@ export const ChatActions = ({
         icon='ph--x--regular'
         iconOnly
         label={t('cancel-processing.button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
+        onClick={() => {
+          onEvent?.({ type: 'cancel' });
+        }}
       />
     </div>
   );
