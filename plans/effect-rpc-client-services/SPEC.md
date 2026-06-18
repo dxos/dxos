@@ -130,7 +130,7 @@ and `RpcServer.makeProtocolSocketServer`.
 
 - **Local (`fromHost`, same thread, no worker):** wire client and server with an in-memory
   `MessageChannel` pair (`new MessageChannel()` → `port1` to the client spawner, `port2` to the
-  runner) so the exact same worker-protocol code path is exercised with no postMessage hop across
+  runner) so the same worker-protocol code path is exercised with no postMessage hop across
   threads, or use `RpcTest`/a direct in-memory protocol where a real channel is undesirable.
 - **Node worker (cli/agent host):** the same shape using `@effect/platform-node`'s worker layers
   instead of `@effect/platform-browser`. Platform selection is a layer choice, not a code change.
@@ -328,6 +328,15 @@ To avoid touching ~85 call sites at once, ship a **`ClientServicesAdapter`** tha
 - unary methods → `async (req, opts) => runtime.runPromise(client.Svc.Method(req).pipe(Effect.timeout(opts?.timeout)))`
 - streaming methods → return a codec-protobuf-compatible `Stream` whose `.subscribe`/`.close`
   drive `Stream.runForEach` on a child scope (interrupt on `.close()`).
+
+Teardown contract: each `.subscribe()` runs the underlying `RpcClient` stream in a fiber forked
+into a **child scope** of the proxy's runtime scope. `.close()` interrupts that fiber and closes
+its child scope; scope closure runs the stream's finalizers, which send the `@effect/rpc`
+`Interrupt` message so the server cancels the corresponding handler fiber and stops emitting. A
+pending unary call interrupted this way rejects with an interruption error (surfaced as the
+existing `closed`/timeout path). Because the child scope is owned by the proxy scope, closing the
+proxy (or a transport drop rebuilding the client, §3.3) cancels all in-flight subscriptions
+automatically — individual `.close()` calls are not required for global teardown.
 
 `ClientServicesProvider.descriptors` (typed `ServiceBundle<ClientServices>`) is removed from the
 interface or returns the `RpcGroup`; downstream uses of `descriptors` are limited (devtools proxy)
