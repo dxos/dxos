@@ -73,16 +73,16 @@ DevicesService, SpacesService, ContactsService, EdgeAgentService` (defined in
 └───────────────────────────────┬───────────────────────────────────────┘
                                  │  ClientServicesAdapter (Phase 1)
                                  ▼
-                         RpcClient<ClientRpcs>            (effect/rpc)
-                                 │  RpcClient.Protocol
+                  RpcClient<ClientRpcs>  →  client.SpacesService.CreateSpace
+                                 │  RpcClient.makeProtocolWorker
                                  ▼
-                    RpcPortClientProtocol(port)           (new bridge)
-                                 │  Uint8Array via RpcPort
-        ════════════════════════╪════════════════════════  transport (MessagePort / WS / in-proc)
+                BrowserWorker.layerPlatform(() => appMessagePort)
+                                 │  postMessage / structured clone (NO serialization)
+        ════════════════════════╪════════════════════════  MessagePort (worker / in-proc MessageChannel)
                                  │
-                    RpcPortServerProtocol(port)           (new bridge)
+                BrowserWorkerRunner.layerMessagePort(appMessagePort)
                                  ▼
-                         RpcServer(group)                 (effect/rpc)
+                RpcServer.layerProtocolWorkerRunner + RpcServer.layer(ClientRpcs)
                                  │  RpcGroup.toLayer(handlers)
                                  ▼
               Service impl Layers (SystemService, Spaces, ...)
@@ -90,70 +90,76 @@ DevicesService, SpacesService, ContactsService, EdgeAgentService` (defined in
 
 Four pieces change:
 
-1. **Definitions** — `RpcGroup`s of `Rpc.make(...)` typed by Effect Schema, replacing the
-   `.proto` services and `clientServiceBundle`.
-2. **Transport bridge** — a new adapter that implements `@effect/rpc`'s `RpcClient.Protocol` and
-   `RpcServer.Protocol` over the existing `RpcPort` byte duplex.
+1. **Definitions** — `RpcGroup`s of `Rpc.make(...)` typed by Effect Schema and prefixed with the
+   service name, replacing the `.proto` services and `clientServiceBundle`.
+2. **Transport** — Effect's **native worker protocol** over the existing `MessagePort`s. No custom
+   byte port, no serialization codec on the MessagePort path (see §3.1–3.2).
 3. **Server** — `ClientServicesHost` builds an Effect `Layer` graph and runs `RpcServer.layer`
    instead of constructing a `ClientRpcServer`/`RpcPeer`.
 4. **Client** — `ClientServicesProxy` derives an `RpcClient` and (Phase 1) exposes it through an
    adapter that preserves today's `Partial<ClientServices>` surface.
 
-### 3.1 Serialization: MessagePack
+### 3.1 Transport: native worker protocol (no serialization on MessagePort)
 
-Use `RpcSerialization.layerMsgPack` (`@effect/rpc/RpcSerialization`).
+The client-services transports are `MessagePort`s (SharedWorker / dedicated worker), an in-process
+pair (local), and a remote WebSocket (agent/vault). `@effect/rpc` ships a worker protocol that runs
+directly over `@effect/platform`'s `Worker`/`WorkerRunner`, which `@effect/platform-browser` binds
+to a `MessagePort`. On this path messages move via `postMessage` **structured clone** with
+zero-copy `Transferable`s — there is no JSON/msgpack byte-serialization step and no `RpcPort`.
 
-Rationale: client-service payloads carry binary fields everywhere — `PublicKey` (32 bytes),
-`Credential`, automerge sync blobs (`DataService`), `bytes` signatures. JSON serialization cannot
-carry `Uint8Array` without lossy base64 wrappers; msgpack encodes binary natively and is
-self-framing (`includesFraming = true`), which matches discrete-message transports (postMessage,
-WS frames).
+- **Client:** `RpcClient.makeProtocolWorker({ size: 1 })` (or `layerProtocolWorker`), whose
+  requirements `Worker.PlatformWorker | Worker.Spawner` are satisfied by
+  `BrowserWorker.layerPlatform((_id) => appMessagePort)` — the spawner returns the **existing**
+  `MessagePort` rather than spawning a new `Worker`.
+- **Server (inside the worker):** `RpcServer.layerProtocolWorkerRunner` whose requirement
+  `WorkerRunner.PlatformRunner` is satisfied by `BrowserWorkerRunner.layerMessagePort(appMessagePort)`.
 
-### 3.2 Transport bridge: `RpcPort` ↔ `@effect/rpc` Protocol
+Effect Schema payloads are encoded to their `Encoded` representation (plain structured-cloneable
+objects); `Uint8Array`/`ArrayBuffer` fields (e.g. `PublicKey`, credential bytes, automerge chunks)
+clone (and can transfer) natively — so binary survives the hop without base64 or msgpack. We still
+need Effect Schema definitions (§4) so that class instances like `PublicKey` round-trip to/from
+their clonable encoded form; what we drop is the wire **serializer**, not the schema.
 
-`@effect/rpc` separates the wire **protocol** (`RpcClient.Protocol` / `RpcServer.Protocol`) from
-serialization (`RpcSerialization`). Both protocols expose `Protocol.make(write => Effect<{ send,
-... }>)`. We implement a single bridge module that adapts our `RpcPort` (`{ send(bytes),
-subscribe(cb) }`):
+The remote **WebSocket** transport (agent/vault) is the one exception: there is a real byte wire,
+so it keeps a serializer — `RpcSerialization.layerMsgPack` (binary-friendly) over
+`@effect/platform`'s `Socket` (`BrowserSocket` / node socket) with `RpcClient.makeProtocolSocket`
+and `RpcServer.makeProtocolSocketServer`.
 
-- **Client** (`RpcClient.Protocol.make`): on `port.subscribe`, decode incoming bytes with the
-  serialization `Parser` and `write(FromServerEncoded)` for each decoded message; `send(request)`
-  encodes `FromClientEncoded` and calls `port.send(bytes)`. `supportsAck=false`,
-  `supportsTransferables=false` (initially).
-- **Server** (`RpcServer.Protocol.make`): symmetric — decode `FromClientEncoded`, `write(clientId,
-msg)`; `send(clientId, response)` encodes and `port.send`. A single `RpcPort` represents exactly
-  one client connection, so `clientId` is a constant (e.g. `0`); a multi-client transport (one
-  worker, many tabs) instantiates one server protocol per `WorkerSession`/port — mirroring today's
-  one-`ClientRpcServer`-per-port model.
+### 3.2 In-process (local) and node transports
 
-New package: **`@dxos/effect-rpc`** at `packages/core/mesh/effect-rpc`, exporting:
+- **Local (`fromHost`, same thread, no worker):** wire client and server with an in-memory
+  `MessageChannel` pair (`new MessageChannel()` → `port1` to the client spawner, `port2` to the
+  runner) so the exact same worker-protocol code path is exercised with no postMessage hop across
+  threads, or use `RpcTest`/a direct in-memory protocol where a real channel is undesirable.
+- **Node worker (cli/agent host):** the same shape using `@effect/platform-node`'s worker layers
+  instead of `@effect/platform-browser`. Platform selection is a layer choice, not a code change.
+
+A thin **`@dxos/effect-rpc`** package (`packages/core/mesh/effect-rpc`) holds the small glue that
+is shared across these cases:
 
 ```ts
-// RpcPortProtocol.ts  (@import-as-namespace)
-export const layerClient: (port: RpcPort) => Layer.Layer<RpcClient.Protocol, never, RpcSerialization>;
-export const layerServer: (port: RpcPort) => Layer.Layer<RpcServer.Protocol, never, RpcSerialization>;
+// transport.ts  (@import-as-namespace)
+// Client protocol layer from an existing MessagePort (browser).
+export const clientLayer: (port: MessagePort) => Layer.Layer<RpcClient.Protocol, WorkerError>;
+// Server protocol layer from an existing MessagePort (browser worker).
+export const serverLayer: (port: MessagePort) => Layer.Layer<RpcServer.Protocol, WorkerError>;
+// In-process MessageChannel pair for local services.
+export const inProcessPair: () => { client: Layer.Layer<RpcClient.Protocol>; server: Layer.Layer<RpcServer.Protocol> };
 ```
-
-This keeps the transport plumbing reusable and isolates the only genuinely tricky boundary code.
-
-> Note on framing: msgpack's `Parser.decode` returns an array of fully-parsed values and tolerates
-> messages split/coalesced across `port.send` boundaries, so no extra length-prefix framing is
-> required even on transports that don't preserve boundaries. WS and postMessage already preserve
-> boundaries.
 
 ### 3.3 Connection lifecycle, heartbeat, reconnection
 
 `@dxos/rpc` did an explicit open handshake + `Bye` close + heartbeat; `@effect/rpc` does not. The
-bridge must reproduce the behaviours client-services relies on:
+transport layer must reproduce the behaviours client-services relies on:
 
 - **Open gate** — `ClientServicesProxy.open()` currently waits (with `RemoteServiceConnectionTimeout`,
   30s) for the worker to be ready. Preserve by keeping the existing `SharedWorkerConnection` /
   `WorkerService.start` system-port handshake (unchanged, still `@dxos/rpc` until §10) and only
   building the `RpcClient` once the worker signals ready.
 - **Reconnection** — keep `ClientServicesProvider.onReconnect`/`reconnected`. On transport drop, the
-  adapter rebuilds the `RpcClient` (new `Scope`) and fires `onReconnect` callbacks so proxies
-  re-subscribe their streams. `@effect/rpc` will surface a transport error on in-flight effects;
-  the adapter maps that to the existing `closed` event.
+  adapter rebuilds the `RpcClient` (new `Scope`, new `MessagePort`) and fires `onReconnect`
+  callbacks so proxies re-subscribe their streams. `@effect/rpc` surfaces a transport error on
+  in-flight effects; the adapter maps that to the existing `closed` event.
 - **Timeouts** — per-call `timeout` (`RPC_TIMEOUT=20s`, `EPOCH_CREATION_TIMEOUT=60s`) map to
   `Effect.timeout` in the adapter (Phase 1) or to `Effect.timeout` at Effect-native call sites
   (later phases).
@@ -166,52 +172,79 @@ and adding codecs for primitive wire types that today only exist as protobuf/cla
 
 ### 4.1 Shared wire types — add Effect Schema codecs
 
-| Type                                                                     | Today                                | Plan                                                                                                   |
-| ------------------------------------------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `PublicKey`                                                              | class in `@dxos/keys` (binary)       | add `PublicKey.Schema` (Schema transform `Uint8Array` ⇄ `PublicKey`, msgpack-friendly) in `@dxos/keys` |
-| `SpaceId`, `EntityId`, DID                                               | already Effect Schema (`@dxos/keys`) | reuse                                                                                                  |
-| `Credential`, `ProfileDocument`, `DeviceProfileDocument`, `Presentation` | protobuf (`dxos.halo.credentials`)   | new Schema in `@dxos/credentials` (or a `halo-protocol` schema barrel)                                 |
-| `Timeframe` / `TimeframeVector`                                          | protobuf                             | Schema in `@dxos/timeframe`                                                                            |
-| `GossipMessage`, edge `SwarmResponse`, `JoinRequest`, etc.               | protobuf                             | Schema co-located with their owning package                                                            |
-| `Struct` / `Any` (config, diagnostics, gossip payload)                   | `google.protobuf.Struct`/`Any`       | `Schema.Unknown` / `Schema.Any` (diagnostics is already JSON)                                          |
+| Type                                                                     | Today                                | Plan                                                                                                                       |
+| ------------------------------------------------------------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `PublicKey`                                                              | class in `@dxos/keys` (binary)       | add `PublicKey.Schema` (Schema transform `Uint8Array` ⇄ `PublicKey`; encoded form is structured-cloneable) in `@dxos/keys` |
+| `SpaceId`, `EntityId`, DID                                               | already Effect Schema (`@dxos/keys`) | reuse                                                                                                                      |
+| `Credential`, `ProfileDocument`, `DeviceProfileDocument`, `Presentation` | protobuf (`dxos.halo.credentials`)   | new Schema in `@dxos/credentials` (or a `halo-protocol` schema barrel)                                                     |
+| `Timeframe` / `TimeframeVector`                                          | protobuf                             | Schema in `@dxos/timeframe`                                                                                                |
+| `GossipMessage`, edge `SwarmResponse`, `JoinRequest`, etc.               | protobuf                             | Schema co-located with their owning package                                                                                |
+| `Struct` / `Any` (config, diagnostics, gossip payload)                   | `google.protobuf.Struct`/`Any`       | `Schema.Unknown` / `Schema.Any` (diagnostics is already JSON)                                                              |
 
-`PublicKey.Schema` is the keystone — almost every message references it. It must round-trip through
-msgpack as raw bytes (not hex) to keep payloads small.
+`PublicKey.Schema` is the keystone — almost every message references it. Its `Encoded` form is a
+raw `Uint8Array` (not hex) so it structured-clones (and can transfer) without bloating payloads.
 
 ### 4.2 Service definitions — `RpcGroup` per service
 
-Each protobuf `service` becomes an `RpcGroup` whose members are `Rpc.make`. Streaming RPCs use
-`RpcSchema.Stream` + `stream: true`. Example (`SystemService`):
+Each protobuf `service` becomes an `RpcGroup` whose members are `Rpc.make`, **prefixed with the
+service name** via `RpcGroup.prefix('<ServiceName>.')`. Prefixing makes the wire tag
+`SpacesService.CreateSpace` and — because `RpcClient` splits tags on the first `.` — nests the
+generated client as `client.SpacesService.CreateSpace(...)`, which both namespaces the methods and
+mirrors today's `services.SpacesService.*` access. Streaming RPCs use `RpcSchema.Stream` +
+`stream: true`.
+
+Full example (`SpacesService`); request/response messages are Effect Schema classes named to match
+the proto types they replace:
 
 ```ts
-// SystemRpcs.ts
+// SpacesRpcs.ts
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
 import * as Schema from 'effect/Schema';
 
-export const SystemStatus = Schema.Literal('INACTIVE', 'ACTIVE');
+import { PublicKey, SpaceId } from '@dxos/keys';
 
-export const GetDiagnosticsResponse = Schema.Struct({
-  timestamp: Schema.DateFromSelf,
-  diagnostics: Schema.Unknown,
-});
+import { Credential } from '../schema/credentials'; // Effect Schema (was dxos.halo.credentials).
 
-export const SystemRpcs = RpcGroup.make(
-  Rpc.make('GetConfig', { payload: Schema.Void, success: ConfigSchema }),
-  Rpc.make('GetDiagnostics', { payload: GetDiagnosticsRequest, success: GetDiagnosticsResponse }),
-  Rpc.make('UpdateStatus', { payload: Schema.Struct({ status: SystemStatus }) }),
-  Rpc.make('QueryStatus', {
-    payload: Schema.Struct({ interval: Schema.optional(Schema.Number) }),
-    success: RpcSchema.Stream({ success: Schema.Struct({ status: SystemStatus }), failure: Schema.Never }),
+export const SpaceState = Schema.Literal('ACTIVE', 'INACTIVE', 'CLOSED', 'ERROR');
+
+// Messages — `PublicKey` round-trips as raw bytes via structured clone (no base64).
+export class Space extends Schema.Class<Space>('dxos.client.services.Space')({
+  id: SpaceId,
+  spaceKey: PublicKey,
+  state: SpaceState,
+  members: Schema.Array(SpaceMember),
+}) {}
+
+export class CreateSpaceRequest extends Schema.Class<CreateSpaceRequest>('CreateSpaceRequest')({
+  tags: Schema.optional(Schema.Array(Schema.String)),
+}) {}
+
+// Snapshot re-emitted on every (re)subscribe — the stream element type.
+export class QuerySpacesResponse extends Schema.Class<QuerySpacesResponse>('QuerySpacesResponse')({
+  spaces: Schema.Array(Space),
+}) {}
+
+export const SpacesRpcs = RpcGroup.make(
+  Rpc.make('CreateSpace', { payload: CreateSpaceRequest, success: Space }),
+  Rpc.make('UpdateSpace', { payload: UpdateSpaceRequest }), // success defaults to Schema.Void.
+  Rpc.make('QuerySpaces', {
+    payload: Schema.Void,
+    success: RpcSchema.Stream({ success: QuerySpacesResponse, failure: Schema.Never }),
     stream: true,
   }),
-  Rpc.make('Reset', {}),
-  Rpc.make('GetPlatform', { payload: Schema.Void, success: Platform }),
-);
+  Rpc.make('WriteCredentials', { payload: WriteCredentialsRequest }),
+  Rpc.make('QueryCredentials', {
+    payload: QueryCredentialsRequest,
+    success: RpcSchema.Stream({ success: Credential, failure: Schema.Never }),
+    stream: true,
+  }),
+).prefix('SpacesService.'); // tags become `SpacesService.CreateSpace`, etc.
 ```
 
-The full `ClientServices` group merges every service group:
+The full `ClientServices` group merges every prefixed service group (tags stay unique across
+services because each carries its own prefix):
 
 ```ts
 export const ClientRpcs = SystemRpcs.merge(IdentityRpcs)
@@ -227,10 +260,26 @@ export const ClientRpcs = SystemRpcs.merge(IdentityRpcs)
   .merge(QueueRpcs);
 ```
 
-> Method naming: keep PascalCase tags (`CreateSpace`) matching the proto rpc names so wire
-> compatibility/observability stays familiar; the generated client exposes them as
-> `client.CreateSpace(...)`. The legacy adapter (§5.2) maps these to the camelCase
-> `services.SpacesService.createSpace(...)` surface.
+Server handlers and the client both key off the prefixed tag:
+
+```ts
+// Server: handler keys are the full prefixed tags.
+const SpacesHandlers = SpacesRpcs.toLayer({
+  'SpacesService.CreateSpace': (req) => Effect.promise(() => impl.createSpace(req)),
+  'SpacesService.QuerySpaces': () => adaptStream(impl.querySpaces()), // codec-protobuf Stream → Effect Stream.
+  // ...
+});
+
+// Client: nested by prefix.
+const client = yield * RpcClient.make(ClientRpcs);
+const space = yield * client.SpacesService.CreateSpace({ tags: [] }); // Effect<Space>
+const spaces = client.SpacesService.QuerySpaces(); // Stream<QuerySpacesResponse>
+```
+
+> Method naming: tags keep PascalCase matching the proto rpc names for observability; the
+> service-name prefix yields `client.SpacesService.CreateSpace`. The Phase-1 legacy adapter (§5.2)
+> down-cases the leaf to the existing `services.SpacesService.createSpace(...)` surface so consumers
+> don't change.
 
 ### 4.3 Decision: echo `DataService` / `QueryService` / `QueueService`
 
@@ -251,10 +300,11 @@ transport via a per-service compatibility shim only if cheap, otherwise keep the
     `adaptStream(stream)` converts `{ subscribe, close }` into an Effect `Stream`.
   - **Native (later):** rewrite impls to return `Effect`/`Stream` directly.
 - `ClientServicesHost.open()` constructs the handler layer + `RpcServer.layer(ClientRpcs)`,
-  provided with `RpcPortProtocol.layerServer(port)` and `RpcSerialization.layerMsgPack`, and runs
-  it on the host's `ManagedRuntime`. The dynamic add/remove of services (`setServices`) becomes a
-  handler layer that resolves impls lazily from `ServiceContext` (handlers can `yield*` a service
-  registry tag), preserving the "services appear after `open`" behaviour.
+  provided with `EffectRpc.serverLayer(appMessagePort)` (= `RpcServer.layerProtocolWorkerRunner` +
+  `BrowserWorkerRunner.layerMessagePort`) — **no serialization layer** — and runs it on the host's
+  `ManagedRuntime`. The dynamic add/remove of services (`setServices`) becomes a handler layer that
+  resolves impls lazily from `ServiceContext` (handlers can `yield*` a service registry tag),
+  preserving the "services appear after `open`" behaviour.
 
 `WorkerSession` builds one server scope per `appPort` (and per `shellPort`), replacing the two
 `ClientRpcServer` instances. The `handleCall`/`handleStream` middleware (readySignal gate) becomes a
@@ -266,13 +316,15 @@ middleware on the `RpcGroup` (`RpcGroup.middleware`) or an `Effect` wrapper in e
 
 ```ts
 this._client = yield * RpcClient.make(ClientRpcs); // within a scoped runtime
-// provided: RpcPortProtocol.layerClient(port) + RpcSerialization.layerMsgPack
+// provided: EffectRpc.clientLayer(appMessagePort)  (= makeProtocolWorker + BrowserWorker.layerPlatform)
+// no serialization layer on the MessagePort path
 ```
 
 To avoid touching ~85 call sites at once, ship a **`ClientServicesAdapter`** that turns the Effect
-`RpcClient` into the legacy `Partial<ClientServices>` object:
+`RpcClient` into the legacy `Partial<ClientServices>` object (mapping `client.SpacesService.CreateSpace`
+→ `services.SpacesService.createSpace`):
 
-- unary methods → `async (req, opts) => runtime.runPromise(client.Method(req).pipe(Effect.timeout(opts?.timeout)))`
+- unary methods → `async (req, opts) => runtime.runPromise(client.Svc.Method(req).pipe(Effect.timeout(opts?.timeout)))`
 - streaming methods → return a codec-protobuf-compatible `Stream` whose `.subscribe`/`.close`
   drive `Stream.runForEach` on a child scope (interrupt on `.close()`).
 
@@ -292,15 +344,17 @@ until consumers go Effect-native, then dropped.
 New / changed files (✎ change, ＋ new, ✗ delete):
 
 ```
-packages/core/mesh/effect-rpc/                      ＋ new package @dxos/effect-rpc
+packages/core/mesh/effect-rpc/                      ＋ new package @dxos/effect-rpc (transport glue)
   src/
     index.ts
-    RpcPortProtocol.ts                              ＋ layerClient(port) / layerServer(port)
-    RpcPortProtocol.test.ts                         ＋ round-trip over an in-memory RpcPort pair
+    transport.ts                                    ＋ clientLayer(port) / serverLayer(port) / inProcessPair()
+                                                       (wraps BrowserWorker / BrowserWorkerRunner + worker protocol)
+    socket.ts                                       ＋ remote WS: makeProtocolSocket(+msgPack) client/server
+    transport.test.ts                               ＋ round-trip over a MessageChannel pair (unary + stream + transferable)
   package.json moon.yml
 
 packages/sdk/client-protocol/src/
-  rpcs/                                             ＋ Effect service definitions (RpcGroups)
+  rpcs/                                             ＋ Effect service definitions (prefixed RpcGroups)
     SystemRpcs.ts  IdentityRpcs.ts  DevicesRpcs.ts
     ContactsRpcs.ts  SpacesRpcs.ts  InvitationsRpcs.ts
     NetworkRpcs.ts  LoggingRpcs.ts  EdgeAgentRpcs.ts
@@ -317,14 +371,14 @@ packages/sdk/client-services/src/packlets/services/
   service-host.ts                                    ✎ build RpcServer layer instead of ClientRpcServer
   rpc-handlers.ts                                    ＋ ClientRpcs.toLayer({...}) + Promise/Stream adapters
 packages/sdk/client-services/src/packlets/worker/
-  worker-session.ts                                  ✎ one RpcServer scope per port
+  worker-session.ts                                  ✎ one RpcServer scope per MessagePort
 
 packages/sdk/client/src/services/
   service-proxy.ts                                   ✎ RpcClient + ClientServicesAdapter
   client-services-adapter.ts                         ＋ Effect client → legacy ClientServices surface
-  local-client-services.ts                           ✎ in-proc: connect client/server protocols directly
-  worker-client-services.ts / dedicated/...          ✎ swap proxy internals (ports unchanged)
-  socket.ts / agent.ts                               ✎ WS RpcPort → client protocol
+  local-client-services.ts                           ✎ in-proc: EffectRpc.inProcessPair() (MessageChannel)
+  worker-client-services.ts / dedicated/...          ✎ feed existing MessagePort to EffectRpc.clientLayer
+  socket.ts / agent.ts                               ✎ remote WS → EffectRpc.socket client protocol (+msgPack)
 
 packages/common/keys/src/
   public-key.ts                                      ✎ add PublicKey.Schema (bytes ⇄ PublicKey)
@@ -349,8 +403,9 @@ The Phase-1 adapter hides this so existing `.subscribe/.close` consumers keep wo
 
 Each phase is independently shippable and keeps CI (build/test/lint/fmt) green.
 
-1. **Bridge foundation** — add `@dxos/effect-rpc` (`RpcPortProtocol`) + msgpack; unit-test a
-   client/server round-trip (unary + stream) over an in-memory `RpcPort` pair. No product wiring.
+1. **Transport foundation** — add `@dxos/effect-rpc` (`clientLayer`/`serverLayer`/`inProcessPair`
+   over the native worker protocol); unit-test a client/server round-trip (unary + stream +
+   transferable bytes) over a `MessageChannel` pair. No product wiring.
 2. **`PublicKey.Schema`** + shared schema barrel; land independently with tests.
 3. **First vertical slice** — migrate `SystemService` end-to-end (def + host handler + proxy
    adapter) behind the existing transports; prove the in-proc (`local-client-services`) and
@@ -365,22 +420,22 @@ Each phase is independently shippable and keeps CI (build/test/lint/fmt) green.
    adapter to consume the `RpcClient` (Streams/Effects) directly; drop the adapter and
    `@dxos/codec-protobuf` `Stream`.
 
-Running two engines side-by-side during phases 3–5 requires either two transport ports or a single
-demux; recommend a **single `appPort` carrying both** — wrap the legacy `RpcPort` so the effect
-protocol claims a channel prefix — only if phases don't land quickly. Default plan: land phases 3–5
-quickly enough to flip the whole bundle at once on `appPort`, avoiding a demux.
+Running two engines side-by-side during phases 3–5 requires either two `MessagePort`s (one for the
+legacy `@dxos/rpc` peer, one for the effect worker protocol) or a single demux. Two ports is the
+simple option — the worker already passes multiple ports (app/system/shell). Default plan: land
+phases 3–5 quickly enough to flip the whole bundle at once on a single `appPort`, avoiding both.
 
 ## 9. Testing
 
-- `RpcPortProtocol.test.ts` — unary + server-stream round-trip over an in-memory port pair;
-  error propagation; interrupt/close; reconnect.
+- `transport.test.ts` — unary + server-stream round-trip over a `MessageChannel` pair;
+  transferable bytes; error propagation; interrupt/close; reconnect.
 - Extend existing suites rather than add new ones:
   - `service-host.test.ts`, `service-registry.test.ts` — host serves via `RpcServer`.
   - `system-service.test.ts`, `identity-service.test.ts`, `spaces-service.test.ts`, etc. — exercise
     each service through the public client surface.
   - `client-services.test.ts` (client-e2e) — full proxy↔host over a `MessageChannel`.
-- Schema round-trip tests for `PublicKey.Schema` and each message schema (encode/decode through
-  msgpack equals identity).
+- Schema round-trip tests for `PublicKey.Schema` and each message schema (decode∘encode is identity;
+  encoded form survives `structuredClone`).
 - Use the unified `TestLayer` pattern; avoid sleeps — drive streams with events/`TestClock`.
 
 ## 10. Out-of-scope but adjacent (follow-ups)
