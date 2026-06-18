@@ -26,18 +26,18 @@ worker, proxy, socket, agent). `@dxos/rpc` may remain temporarily for unrelated 
 
 ## 2. Background — current architecture
 
-| Concern | Current implementation | File |
-| --- | --- | --- |
-| Service typing | Protobuf services (`dxos.client.services.*`) | `packages/core/protocols/src/proto/dxos/client/services.proto` |
-| Service bundle | `clientServiceBundle = createServiceBundle<ClientServices>({...})` | `packages/sdk/client-protocol/src/service.ts` |
-| Engine | `RpcPeer` framing Request/Response/Stream protobuf envelopes | `packages/core/mesh/rpc/src/rpc.ts` |
-| Server | `ClientRpcServer` → `RpcPeer` with per-service `ServiceHandler` | `packages/sdk/client-services/src/packlets/services/client-rpc-server.ts` |
-| Registry | `ServiceRegistry<ClientServices>` holds `{descriptors, services}` | `.../services/service-registry.ts` |
-| Host wiring | `ClientServicesHost.open()` instantiates impls + registers them | `.../services/service-host.ts` |
-| Client proxy | `ClientServicesProxy` → `createProtoRpcPeer({ requested: clientServiceBundle })`, exposes `.rpc` as `services` | `packages/sdk/client/src/services/service-proxy.ts` |
-| Transport (byte port) | `RpcPort = { send(Uint8Array), subscribe(cb) }` | `packages/core/mesh/rpc/src/rpc.ts:50` |
-| Worker transport | `createWorkerPort` (MessagePort), `createIFramePort` | `packages/core/mesh/rpc-tunnel/src/ports/*` |
-| Socket transport | `WebsocketRpcClient` wraps a `WebSocket` into an `RpcPort` | `packages/core/mesh/websocket-rpc` |
+| Concern               | Current implementation                                                                                         | File                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Service typing        | Protobuf services (`dxos.client.services.*`)                                                                   | `packages/core/protocols/src/proto/dxos/client/services.proto`            |
+| Service bundle        | `clientServiceBundle = createServiceBundle<ClientServices>({...})`                                             | `packages/sdk/client-protocol/src/service.ts`                             |
+| Engine                | `RpcPeer` framing Request/Response/Stream protobuf envelopes                                                   | `packages/core/mesh/rpc/src/rpc.ts`                                       |
+| Server                | `ClientRpcServer` → `RpcPeer` with per-service `ServiceHandler`                                                | `packages/sdk/client-services/src/packlets/services/client-rpc-server.ts` |
+| Registry              | `ServiceRegistry<ClientServices>` holds `{descriptors, services}`                                              | `.../services/service-registry.ts`                                        |
+| Host wiring           | `ClientServicesHost.open()` instantiates impls + registers them                                                | `.../services/service-host.ts`                                            |
+| Client proxy          | `ClientServicesProxy` → `createProtoRpcPeer({ requested: clientServiceBundle })`, exposes `.rpc` as `services` | `packages/sdk/client/src/services/service-proxy.ts`                       |
+| Transport (byte port) | `RpcPort = { send(Uint8Array), subscribe(cb) }`                                                                | `packages/core/mesh/rpc/src/rpc.ts:50`                                    |
+| Worker transport      | `createWorkerPort` (MessagePort), `createIFramePort`                                                           | `packages/core/mesh/rpc-tunnel/src/ports/*`                               |
+| Socket transport      | `WebsocketRpcClient` wraps a `WebSocket` into an `RpcPort`                                                     | `packages/core/mesh/websocket-rpc`                                        |
 
 ### Consumer surface (must be understood before changing it)
 
@@ -121,7 +121,7 @@ subscribe(cb) }`):
   encodes `FromClientEncoded` and calls `port.send(bytes)`. `supportsAck=false`,
   `supportsTransferables=false` (initially).
 - **Server** (`RpcServer.Protocol.make`): symmetric — decode `FromClientEncoded`, `write(clientId,
-  msg)`; `send(clientId, response)` encodes and `port.send`. A single `RpcPort` represents exactly
+msg)`; `send(clientId, response)` encodes and `port.send`. A single `RpcPort` represents exactly
   one client connection, so `clientId` is a constant (e.g. `0`); a multi-client transport (one
   worker, many tabs) instantiates one server protocol per `WorkerSession`/port — mirroring today's
   one-`ClientRpcServer`-per-port model.
@@ -166,14 +166,14 @@ and adding codecs for primitive wire types that today only exist as protobuf/cla
 
 ### 4.1 Shared wire types — add Effect Schema codecs
 
-| Type | Today | Plan |
-| --- | --- | --- |
-| `PublicKey` | class in `@dxos/keys` (binary) | add `PublicKey.Schema` (Schema transform `Uint8Array` ⇄ `PublicKey`, msgpack-friendly) in `@dxos/keys` |
-| `SpaceId`, `EntityId`, DID | already Effect Schema (`@dxos/keys`) | reuse |
-| `Credential`, `ProfileDocument`, `DeviceProfileDocument`, `Presentation` | protobuf (`dxos.halo.credentials`) | new Schema in `@dxos/credentials` (or a `halo-protocol` schema barrel) |
-| `Timeframe` / `TimeframeVector` | protobuf | Schema in `@dxos/timeframe` |
-| `GossipMessage`, edge `SwarmResponse`, `JoinRequest`, etc. | protobuf | Schema co-located with their owning package |
-| `Struct` / `Any` (config, diagnostics, gossip payload) | `google.protobuf.Struct`/`Any` | `Schema.Unknown` / `Schema.Any` (diagnostics is already JSON) |
+| Type                                                                     | Today                                | Plan                                                                                                   |
+| ------------------------------------------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `PublicKey`                                                              | class in `@dxos/keys` (binary)       | add `PublicKey.Schema` (Schema transform `Uint8Array` ⇄ `PublicKey`, msgpack-friendly) in `@dxos/keys` |
+| `SpaceId`, `EntityId`, DID                                               | already Effect Schema (`@dxos/keys`) | reuse                                                                                                  |
+| `Credential`, `ProfileDocument`, `DeviceProfileDocument`, `Presentation` | protobuf (`dxos.halo.credentials`)   | new Schema in `@dxos/credentials` (or a `halo-protocol` schema barrel)                                 |
+| `Timeframe` / `TimeframeVector`                                          | protobuf                             | Schema in `@dxos/timeframe`                                                                            |
+| `GossipMessage`, edge `SwarmResponse`, `JoinRequest`, etc.               | protobuf                             | Schema co-located with their owning package                                                            |
+| `Struct` / `Any` (config, diagnostics, gossip payload)                   | `google.protobuf.Struct`/`Any`       | `Schema.Unknown` / `Schema.Any` (diagnostics is already JSON)                                          |
 
 `PublicKey.Schema` is the keystone — almost every message references it. It must round-trip through
 msgpack as raw bytes (not hex) to keep payloads small.
@@ -214,11 +214,17 @@ export const SystemRpcs = RpcGroup.make(
 The full `ClientServices` group merges every service group:
 
 ```ts
-export const ClientRpcs = SystemRpcs
-  .merge(IdentityRpcs).merge(DevicesRpcs).merge(ContactsRpcs)
-  .merge(SpacesRpcs).merge(InvitationsRpcs).merge(NetworkRpcs)
-  .merge(LoggingRpcs).merge(EdgeAgentRpcs)
-  .merge(DataRpcs).merge(QueryRpcs).merge(QueueRpcs);
+export const ClientRpcs = SystemRpcs.merge(IdentityRpcs)
+  .merge(DevicesRpcs)
+  .merge(ContactsRpcs)
+  .merge(SpacesRpcs)
+  .merge(InvitationsRpcs)
+  .merge(NetworkRpcs)
+  .merge(LoggingRpcs)
+  .merge(EdgeAgentRpcs)
+  .merge(DataRpcs)
+  .merge(QueryRpcs)
+  .merge(QueueRpcs);
 ```
 
 > Method naming: keep PascalCase tags (`CreateSpace`) matching the proto rpc names so wire
@@ -259,7 +265,7 @@ middleware on the `RpcGroup` (`RpcGroup.middleware`) or an `Effect` wrapper in e
 `ClientServicesProxy.open()`:
 
 ```ts
-this._client = yield* RpcClient.make(ClientRpcs);            // within a scoped runtime
+this._client = yield * RpcClient.make(ClientRpcs); // within a scoped runtime
 // provided: RpcPortProtocol.layerClient(port) + RpcSerialization.layerMsgPack
 ```
 
@@ -328,14 +334,14 @@ packages/core/protocols/src/proto/dxos/client/services.proto   ✗ delete (after
 
 ## 7. Streaming semantics mapping
 
-| Concept | `@dxos/rpc` (today) | `@effect/rpc` (target) |
-| --- | --- | --- |
-| Server stream def | proto `returns (stream X)` | `Rpc.make(..., { success: RpcSchema.Stream(...), stream: true })` |
-| Handler return | `Stream<X>` (codec-protobuf) | `Stream.Stream<X, E, R>` or `Effect<Mailbox>` |
-| Client receive | `Stream` with `.subscribe(cb)/.close()` | `Stream.Stream<X>` (or `asMailbox`) |
-| Snapshot-on-subscribe | handler re-emits current state | unchanged (handler responsibility) |
-| Teardown | `stream.close()` | interrupt the consuming fiber / close scope |
-| Backpressure | none (push) | `streamBufferSize` option on client |
+| Concept               | `@dxos/rpc` (today)                     | `@effect/rpc` (target)                                            |
+| --------------------- | --------------------------------------- | ----------------------------------------------------------------- |
+| Server stream def     | proto `returns (stream X)`              | `Rpc.make(..., { success: RpcSchema.Stream(...), stream: true })` |
+| Handler return        | `Stream<X>` (codec-protobuf)            | `Stream.Stream<X, E, R>` or `Effect<Mailbox>`                     |
+| Client receive        | `Stream` with `.subscribe(cb)/.close()` | `Stream.Stream<X>` (or `asMailbox`)                               |
+| Snapshot-on-subscribe | handler re-emits current state          | unchanged (handler responsibility)                                |
+| Teardown              | `stream.close()`                        | interrupt the consuming fiber / close scope                       |
+| Backpressure          | none (push)                             | `streamBufferSize` option on client                               |
 
 The Phase-1 adapter hides this so existing `.subscribe/.close` consumers keep working.
 
@@ -389,13 +395,16 @@ quickly enough to flip the whole bundle at once on `appPort`, avoiding a demux.
 
 1. **Echo services scope.** Migrate `DataService`/`QueryService`/`QueueService` to Effect Schema in
    this effort (heavy, automerge sync payloads), or keep them on a parallel `@dxos/rpc` port until a
-   separate effort? *(Recommend: defer to a later phase, parallel port, to bound risk.)*
+   separate effort? _(Recommend: defer to a later phase, parallel port, to bound risk.)_
 2. **Transition transport.** During phases 3–5, run two RPC engines on **two ports**, or invest in a
-   **single-port channel demux**? *(Recommend: land slices fast and flip the whole bundle on one
-   port; only build a demux if timelines slip.)*
+   **single-port channel demux**? _(Recommend: land slices fast and flip the whole bundle on one
+   port; only build a demux if timelines slip.)_
 3. **Consumer migration.** Keep the legacy `services.XxxService.method()` adapter long-term, or
-   commit to migrating all proxies to Effect-native `RpcClient` consumption? *(Recommend: adapter
-   first for a safe cutover, Effect-native as an opt-in follow-up.)*
+   commit to migrating all proxies to Effect-native `RpcClient` consumption? _(Recommend: adapter
+   first for a safe cutover, Effect-native as an opt-in follow-up.)_
 4. **Schema home for HALO credential types.** Add Effect Schemas to `@dxos/credentials`, or a new
-   `halo-protocol` schema barrel? *(Recommend: `@dxos/credentials`, alongside the existing types.)*
+   `halo-protocol` schema barrel? _(Recommend: `@dxos/credentials`, alongside the existing types.)_
+
+```
+
 ```
