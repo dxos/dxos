@@ -158,7 +158,9 @@ export const useProcessEphemeralStatus = (
       });
 
     void runtime
-      .runPromise(Effect.forEach(pids, subscribe, { concurrency: 'unbounded', discard: true }).pipe(Effect.provide(layer)))
+      .runPromise(
+        Effect.forEach(pids, subscribe, { concurrency: 'unbounded', discard: true }).pipe(Effect.provide(layer)),
+      )
       .catch(() => {
         if (!disposed) {
           setStatus(undefined);

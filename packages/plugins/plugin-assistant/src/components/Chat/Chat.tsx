@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
-import { getSpace } from '@dxos/client/echo';
 import { Event } from '@dxos/async';
+import { getSpace } from '@dxos/client/echo';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

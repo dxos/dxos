@@ -7,10 +7,17 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
+import { Process } from '@dxos/compute';
 import { storageServiceLayer } from '@dxos/compute-runtime';
 
-import { AlarmManager, computeAlarmDelay, isAgentWorkPending, makeAlarmToolkit, parseContinueDecision, resolveWakeAt } from './agent-process';
-import { Process } from '@dxos/compute';
+import {
+  AlarmManager,
+  computeAlarmDelay,
+  isAgentWorkPending,
+  makeAlarmToolkit,
+  parseContinueDecision,
+  resolveWakeAt,
+} from './agent-process';
 
 const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
 

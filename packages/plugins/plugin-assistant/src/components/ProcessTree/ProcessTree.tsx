@@ -7,7 +7,16 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Process } from '@dxos/compute';
-import { Icon, IconButton, ScrollArea, Tooltip, Treegrid, TREEGRID_PATH_SEPARATOR, composable, composableProps } from '@dxos/react-ui';
+import {
+  Icon,
+  IconButton,
+  ScrollArea,
+  Tooltip,
+  Treegrid,
+  TREEGRID_PATH_SEPARATOR,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
@@ -84,9 +93,7 @@ const ProcessTreeRowView = ({ process, path, onProcessSelect, onProcessTerminate
       classNames={mx('col-span-full grid grid-cols-subgrid gap-2 ps-1', onProcessSelect && 'dx-hover')}
     >
       <Treegrid.Cell classNames='flex items-center gap-0.5'>
-        {nested && (
-          <Icon icon='ph--arrow-elbow-down-right--regular' size={3} classNames='shrink-0 text-subdued' />
-        )}
+        {nested && <Icon icon='ph--arrow-elbow-down-right--regular' size={3} classNames='shrink-0 text-subdued' />}
         <Tooltip.Trigger content={process.state.toString()}>
           <Icon
             size={4}

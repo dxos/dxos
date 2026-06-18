@@ -92,7 +92,8 @@ const TaskListItem = ({ task, space, traceMessages, conversationId }: TaskListIt
     return durableLines;
   }, [durableLines, ephemeralLine, inFlightLine]);
 
-  const showActivity = task.delegated === true && task.agentPid != null && activityLines.length > 0;
+  const agentPid = task.agentPid;
+  const showActivity = task.delegated === true && agentPid != null && activityLines.length > 0;
 
   return (
     <Listbox.Item id={task.id} classNames='py-0'>
@@ -110,9 +111,7 @@ const TaskListItem = ({ task, space, traceMessages, conversationId }: TaskListIt
           {task.status === 'in-progress' && <Tag palette='info'>pending</Tag>}
           {task.agentPid && <Tag palette='info'>{Plan.formatAgentPidTag(task.agentPid)}</Tag>}
         </div>
-        {showActivity && (
-          <DelegatedTaskActivity agentPid={task.agentPid!} lines={activityLines} />
-        )}
+        {showActivity && agentPid != null && <DelegatedTaskActivity agentPid={agentPid} lines={activityLines} />}
       </div>
     </Listbox.Item>
   );

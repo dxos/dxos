@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type CompletionGuard } from '@dxos/functions-runtime';
 import { Database, Feed, Filter } from '@dxos/echo';
+import { type CompletionGuard } from '@dxos/functions-runtime';
 
 import { Agent, Plan } from '../types';
 

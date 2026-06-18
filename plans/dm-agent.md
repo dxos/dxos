@@ -32,15 +32,15 @@ Finishing pass over the WIP described below:
 
 ## Committed (`8b292bed86`)
 
-| Step | Area | What |
-|------|------|------|
-| 1 | `ProcessTree.tsx` | `depth` prop, always-expanded nesting, label-only indent (`0.5rem`/level) |
-| 2 | `ProcessTree.tsx` | Nested rows (level > 1): active only (`RUNNING` / `HYBERNATING` / `TERMINATING`); completed children hidden |
-| 3 | `ProcessTree.tsx` | Restored subprocess elbow icon (`ph--arrow-elbow-down-right`) |
-| 4 | `TracePanel.tsx` | `ProcessTree` with `depth={3}` |
-| 5 | `delegate-task.ts` | Accept `id` OR `title` (not both); delegate existing plan task without duplicating |
-| 6 | `delegate-task.test.ts` | Tests: create-by-title, delegate-by-id, reject both |
-| 7 | `ProcessTree.stories.tsx` | `WithNestedChildren` story |
+| Step | Area                      | What                                                                                                        |
+| ---- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1    | `ProcessTree.tsx`         | `depth` prop, always-expanded nesting, label-only indent (`0.5rem`/level)                                   |
+| 2    | `ProcessTree.tsx`         | Nested rows (level > 1): active only (`RUNNING` / `HYBERNATING` / `TERMINATING`); completed children hidden |
+| 3    | `ProcessTree.tsx`         | Restored subprocess elbow icon (`ph--arrow-elbow-down-right`)                                               |
+| 4    | `TracePanel.tsx`          | `ProcessTree` with `depth={3}`                                                                              |
+| 5    | `delegate-task.ts`        | Accept `id` OR `title` (not both); delegate existing plan task without duplicating                          |
+| 6    | `delegate-task.test.ts`   | Tests: create-by-title, delegate-by-id, reject both                                                         |
+| 7    | `ProcessTree.stories.tsx` | `WithNestedChildren` story                                                                                  |
 
 ---
 
@@ -48,44 +48,44 @@ Finishing pass over the WIP described below:
 
 ### Agent PID on plan tasks
 
-| Step | File | Change |
-|------|------|--------|
-| 8 | `Plan.ts` | Added optional `agentPid: Process.ID` + `formatAgentPidTag()` (e.g. `agent-a1b2`) |
-| 9 | `update-tasks.ts` | Omit `agentPid` from LLM-facing schema |
-| 10 | `delegation-strategy.ts` | Set `task.agentPid` when sub-agent spawns |
-| 11 | `TaskList.tsx` | Show `pending` + `agent-xxxx` tags (both when applicable; no brackets on agent tag) |
-| 12 | `TaskList.stories.tsx` | `WithDelegatedAgent` story |
+| Step | File                     | Change                                                                              |
+| ---- | ------------------------ | ----------------------------------------------------------------------------------- |
+| 8    | `Plan.ts`                | Added optional `agentPid: Process.ID` + `formatAgentPidTag()` (e.g. `agent-a1b2`)   |
+| 9    | `update-tasks.ts`        | Omit `agentPid` from LLM-facing schema                                              |
+| 10   | `delegation-strategy.ts` | Set `task.agentPid` when sub-agent spawns                                           |
+| 11   | `TaskList.tsx`           | Show `pending` + `agent-xxxx` tags (both when applicable; no brackets on agent tag) |
+| 12   | `TaskList.stories.tsx`   | `WithDelegatedAgent` story                                                          |
 
 ### Delegated task live activity (trace feed)
 
-| Step | File | Change |
-|------|------|--------|
-| 13 | `execution-graph.ts` | `collectProcessActivityLines()` — filter trace by pid subtree (+ optional `conversationId`), reuse execution-graph event labels |
-| 14 | `execution-graph/index.ts` | Export `collectProcessActivityLines`, `CollectProcessActivityOptions` |
-| 15 | `sub-agent-delegation.test.ts` | Test activity lines for sub-agent fixture pid |
-| 16 | `hooks/useTraceMessages.ts` | New hook — space trace feed atom (extracted from TracePanel) |
-| 17 | `hooks/index.ts` | Export `useTraceMessages`, `getTraceMessagesAtom` |
-| 18 | `TracePanel.tsx` | Use shared `useTraceMessages` / `getTraceMessagesAtom` |
-| 19 | `TaskList.tsx` | Delegated rows: `TextCrawl` (`autoAdvance` + `greedy`) under title — same flip animation as `ToolWidget` tool-call headers |
-| 20 | `Chat.tsx` | `Chat.TaskList` passes `traceMessages` + `conversationId` from chat space/feed |
-| 21 | `PlanArticle.tsx` | Passes trace messages via `getSpace(subject)` |
-| 22 | `TaskList.stories.tsx` | `WithDelegatedAgent` uses real sub-agent delegation fixture + trace messages |
+| Step | File                           | Change                                                                                                                          |
+| ---- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| 13   | `execution-graph.ts`           | `collectProcessActivityLines()` — filter trace by pid subtree (+ optional `conversationId`), reuse execution-graph event labels |
+| 14   | `execution-graph/index.ts`     | Export `collectProcessActivityLines`, `CollectProcessActivityOptions`                                                           |
+| 15   | `sub-agent-delegation.test.ts` | Test activity lines for sub-agent fixture pid                                                                                   |
+| 16   | `hooks/useTraceMessages.ts`    | New hook — space trace feed atom (extracted from TracePanel)                                                                    |
+| 17   | `hooks/index.ts`               | Export `useTraceMessages`, `getTraceMessagesAtom`                                                                               |
+| 18   | `TracePanel.tsx`               | Use shared `useTraceMessages` / `getTraceMessagesAtom`                                                                          |
+| 19   | `TaskList.tsx`                 | Delegated rows: `TextCrawl` (`autoAdvance` + `greedy`) under title — same flip animation as `ToolWidget` tool-call headers      |
+| 20   | `Chat.tsx`                     | `Chat.TaskList` passes `traceMessages` + `conversationId` from chat space/feed                                                  |
+| 21   | `PlanArticle.tsx`              | Passes trace messages via `getSpace(subject)`                                                                                   |
+| 22   | `TaskList.stories.tsx`         | `WithDelegatedAgent` uses real sub-agent delegation fixture + trace messages                                                    |
 
 ### Agent process completion + respawn
 
-| Step | File | Change |
-|------|------|--------|
-| 23 | `agent-process.ts` | `maybeComplete()` → `ctx.succeed()` when queue, alarms, delegations, and undelivered tool results are all clear; called from empty `onAlarm`, post-turn `onAlarm`, delegation `onChildEvent` |
-| 24 | `agent-process.ts` | `ToolCallManager.hasPendingToolResults()`; exported `isAgentWorkPending()` for unit tests |
-| 25 | `AgentService.ts` | Skip terminal handles in session cache; reuse only non-terminal processes from `list()`; spawn fresh after completion |
-| 26 | `agent-process.test.ts` | `isAgentWorkPending` unit tests (5 cases, passing) |
-| 27 | `AgentService.test.ts` | E2e deferred — see Tests TODO below |
+| Step | File                    | Change                                                                                                                                                                                       |
+| ---- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 23   | `agent-process.ts`      | `maybeComplete()` → `ctx.succeed()` when queue, alarms, delegations, and undelivered tool results are all clear; called from empty `onAlarm`, post-turn `onAlarm`, delegation `onChildEvent` |
+| 24   | `agent-process.ts`      | `ToolCallManager.hasPendingToolResults()`; exported `isAgentWorkPending()` for unit tests                                                                                                    |
+| 25   | `AgentService.ts`       | Skip terminal handles in session cache; reuse only non-terminal processes from `list()`; spawn fresh after completion                                                                        |
+| 26   | `agent-process.test.ts` | `isAgentWorkPending` unit tests (5 cases, passing)                                                                                                                                           |
+| 27   | `AgentService.test.ts`  | E2e deferred — see Tests TODO below                                                                                                                                                          |
 
 ### Formatting only
 
-| Step | File | Change |
-|------|------|--------|
-| 28 | `delegate-task.ts` | Line-wrap formatting |
+| Step | File               | Change               |
+| ---- | ------------------ | -------------------- |
+| 28   | `delegate-task.ts` | Line-wrap formatting |
 
 ---
 
@@ -198,10 +198,10 @@ never did.
 `ProcessOperationInvoker.fiberFromProcess`). Explicit `Fiber.interrupt` on hook/module
 dispose still tears down subscriptions.
 
-| File | Change |
-|------|--------|
+| File                           | Change                              |
+| ------------------------------ | ----------------------------------- |
 | `useProcessEphemeralStatus.ts` | `Effect.fork` → `Effect.forkDaemon` |
-| `EphemeralDebugModule.tsx` | `Effect.fork` → `Effect.forkDaemon` |
+| `EphemeralDebugModule.tsx`     | `Effect.fork` → `Effect.forkDaemon` |
 
 **Contrast:** `processor.ts` uses `Effect.fork` safely because the parent effect continues
 through `submitPrompt` + `waitForCompletion` — the scope stays open for the whole turn.
@@ -219,7 +219,7 @@ through `submitPrompt` + `waitForCompletion` — the scope stays open for the wh
 1. **Suppress / reformat `status.update` ULID lines** in `pendingStatusFromEphemeralMessage`
    so descriptive partial-block lines win (don't let `"Running <ULID>"` overwrite
    `"Generating N tokens..."` / `"Calling X..."`).
-2. **Make the ephemeral line sticky**: keep the last meaningful status until a *new* line
+2. **Make the ephemeral line sticky**: keep the last meaningful status until a _new_ line
    arrives or the task reaches a terminal state, instead of clearing on every block
    completion — avoids the revert to `"Run Routine..."` during LLM gaps.
 3. **Replay coalescing**: on re-subscribe to a still-active process, don't let a trailing
@@ -232,9 +232,9 @@ through `submitPrompt` + `waitForCompletion` — the scope stays open for the wh
 
 ## Agent handoff
 
-| Agent | Focus |
-|-------|-------|
-| Agent 1 | ProcessTree nesting/filtering, delegate-task by id, TracePanel depth |
+| Agent   | Focus                                                                                              |
+| ------- | -------------------------------------------------------------------------------------------------- |
+| Agent 1 | ProcessTree nesting/filtering, delegate-task by id, TracePanel depth                               |
 | Agent 2 | Agent PID on plan tasks, TaskList tags + trace activity, `ctx.succeed` / respawn, test scaffolding |
 
 Both logs consolidated in this file.

@@ -10,7 +10,6 @@ import { Process, type Trace } from '@dxos/compute';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
-
 import { TaskList } from './TaskList';
 
 const SUB_AGENT_PID = Process.ID.make('cf8f7243-5b1d-4902-b158-70d9107d5f43');

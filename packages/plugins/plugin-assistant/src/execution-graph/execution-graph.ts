@@ -343,11 +343,7 @@ export const collectProcessActivityLines = (
     if (!pid || !descendantPids.has(pid)) {
       return false;
     }
-    if (
-      conversationId &&
-      message.meta.conversationId !== undefined &&
-      message.meta.conversationId !== conversationId
-    ) {
+    if (conversationId && message.meta.conversationId !== undefined && message.meta.conversationId !== conversationId) {
       return false;
     }
     return true;
@@ -385,11 +381,7 @@ export const deriveInFlightActivityLine = (
     if (!pid || !descendantPids.has(pid)) {
       return false;
     }
-    if (
-      conversationId &&
-      message.meta.conversationId !== undefined &&
-      message.meta.conversationId !== conversationId
-    ) {
+    if (conversationId && message.meta.conversationId !== undefined && message.meta.conversationId !== conversationId) {
       return false;
     }
     return true;

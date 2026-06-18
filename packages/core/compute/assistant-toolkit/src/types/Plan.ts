@@ -58,8 +58,7 @@ export type Task = Schema.Schema.Type<typeof Task>;
 /**
  * Short tag label for a delegated sub-agent process id (e.g. `agent-a1b2`).
  */
-export const formatAgentPidTag = (pid: Process.ID): string =>
-  `agent-${String(pid).replaceAll('-', '').slice(0, 4)}`;
+export const formatAgentPidTag = (pid: Process.ID): string => `agent-${String(pid).replaceAll('-', '').slice(0, 4)}`;
 
 /**
  * Hierarchical collection of tasks for humans and agents to track progress.

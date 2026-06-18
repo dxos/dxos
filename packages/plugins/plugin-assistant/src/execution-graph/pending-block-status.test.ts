@@ -87,7 +87,11 @@ describe('formatPendingBlockStatus', () => {
     expect(
       pendingStatusFromEphemeralMessage(
         ephemeralMessage([
-          { type: Trace.StatusUpdate.key, timestamp: Date.now(), data: { message: 'Running 01KVB9WBRG0000000000000000' } },
+          {
+            type: Trace.StatusUpdate.key,
+            timestamp: Date.now(),
+            data: { message: 'Running 01KVB9WBRG0000000000000000' },
+          },
         ]),
       ),
     ).toBeUndefined();
