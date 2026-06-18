@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Trace } from '@dxos/compute';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { buildExecutionGraph } from './execution-graph';
+import { buildExecutionGraph, collectProcessActivityLines, deriveInFlightActivityLine } from './execution-graph';
 import subAgentFixture from './testing/sub-agent-delegation.json';
 
 // Real trace captured from a live supervisor → sub-agent delegation via `dxosDumpTrace()`.
@@ -46,5 +46,20 @@ describe('sub-agent delegation fixture', () => {
       ◆─────╯  [brain] Run Routine - Success
       "
     `);
+  });
+
+  test('collects sub-agent activity lines for a delegated process pid', ({ expect }) => {
+    const subAgentPid = 'cf8f7243-5b1d-4902-b158-70d9107d5f43';
+    const lines = collectProcessActivityLines(messages, subAgentPid);
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines).toContain('Run Routine');
+    expect(lines[lines.length - 1]).toMatch(/Run Routine - Success/);
+  });
+
+  test('derives in-flight operation before completion', ({ expect }) => {
+    const subAgentPid = 'cf8f7243-5b1d-4902-b158-70d9107d5f43';
+    const partial = messages.slice(0, Math.floor(messages.length / 2));
+    const line = deriveInFlightActivityLine(partial, subAgentPid);
+    expect(line).toBeDefined();
   });
 });

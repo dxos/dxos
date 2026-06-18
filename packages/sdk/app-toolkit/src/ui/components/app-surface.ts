@@ -198,8 +198,8 @@ export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S 
 
 /**
  * Filter: requires `data.companionTo` to match the given schema, literal string,
- * or (with no second argument) any ECHO object. Pair with {@link allOf} and
- * {@link object} to express "article displaying X whose companion is Y".
+ * type predicate, or (with no second argument) any ECHO object. Pair with
+ * {@link allOf} and {@link object} to express "article displaying X whose companion is Y".
  */
 export const companion: {
   <TToken extends Surface.RoleToken<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
@@ -211,19 +211,29 @@ export const companion: {
     token: TToken,
     value: T,
   ): Surface.Filter<{ companionTo: T }>;
-} = (token: Surface.RoleToken<any>, schemaOrValue?: Type.AnyEntity | string): Surface.Filter<any> => {
+  <TToken extends Surface.RoleToken<any>, T>(
+    token: TToken,
+    guard: (value: unknown) => value is T,
+  ): Surface.Filter<{ companionTo: T }>;
+} = (
+  token: Surface.RoleToken<any>,
+  schemaOrValueOrGuard?: Type.AnyEntity | string | ((value: unknown) => boolean),
+): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
     }
     const companionTo = (data as { companionTo?: unknown }).companionTo;
-    if (schemaOrValue === undefined) {
+    if (schemaOrValueOrGuard === undefined) {
       return Obj.isObject(companionTo);
     }
-    if (typeof schemaOrValue === 'string') {
-      return companionTo === schemaOrValue;
+    if (typeof schemaOrValueOrGuard === 'function') {
+      return schemaOrValueOrGuard(companionTo);
     }
-    return Entity.instanceOf(schemaOrValue as Type.AnyObj | Type.AnyRelation, companionTo);
+    if (typeof schemaOrValueOrGuard === 'string') {
+      return companionTo === schemaOrValueOrGuard;
+    }
+    return Entity.instanceOf(schemaOrValueOrGuard as Type.AnyObj | Type.AnyRelation, companionTo);
   };
   return { bindings: [{ role: token.role, guard }] };
 };
@@ -538,9 +548,15 @@ export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Su
 export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
   Surface.makeFilter(FormInput, (data) => predicate(data.schema.ast));
 
+/** Surface data for navtree-item-end role. */
+export type NavtreeItemEndData<Subject = unknown> = {
+  id: string;
+  subject?: Subject;
+  open?: boolean;
+};
+
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
-export const NavtreeItemEnd: Surface.RoleToken<Record<string, unknown>> =
-  Surface.makeType('org.dxos.role.navtreeItemEnd');
+export const NavtreeItemEnd: Surface.RoleToken<NavtreeItemEndData> = Surface.makeType('org.dxos.role.navtreeItemEnd');
 
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Surface.RoleToken<Record<string, unknown>> = Surface.makeType('org.dxos.role.searchInput');

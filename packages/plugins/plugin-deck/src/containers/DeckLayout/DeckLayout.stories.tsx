@@ -168,7 +168,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           Surface.create({
             id: 'storyNavigation',
             filter: Surface.makeFilter(AppSurface.Navigation),
-            component: ({ data, ref }) => <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />,
+            component: ({ data, ref }) => (
+              <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />
+            ),
           }),
           Surface.create({
             id: 'storyArticle',

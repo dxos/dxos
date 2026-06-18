@@ -165,18 +165,10 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'selectedObjects',
-        // Guard validates companionTo is Obj.Unknown; ArticleData<any> defaults CompanionTo=unknown so we assert the narrowed shape.
-        filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
-            return false;
-          }
-          const type = Obj.getType(data.companionTo);
-          const path = type
-            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
-            : [];
-          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
-          return !!viewTarget;
-        }) as Surface.Filter<AppSurface.ArticleData<unknown, {}, Obj.Unknown>>,
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'selected-objects'),
+          AppSurface.companion(AppSurface.Article, Obj.isObject),
+        ),
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
           const type = Obj.getType(data.companionTo);
@@ -330,11 +322,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'navtreePresence',
-        // Filter guard validates id:string and subject:Obj.Unknown; token is Record<string,unknown> so we assert the narrowed shape.
-        filter: Surface.makeFilter(
-          AppSurface.NavtreeItemEnd,
-          (data) => typeof data.id === 'string' && Obj.isObject(data.subject),
-        ) as Surface.Filter<{ id: string; subject: Obj.Unknown; open?: boolean }>,
+        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, Obj.isObject),
         component: ({ data }) => {
           const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
           return <SmallPresenceLive id={data.id} open={data.open} viewers={ephemeral.viewersByObject[data.id]} />;
@@ -344,31 +332,22 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navtreePresenceFallback',
         position: 'last',
-        // Filter guard validates id:string; token is Record<string,unknown> so we assert the narrowed shape.
-        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd, (data) => typeof data.id === 'string') as Surface.Filter<{
-          id: string;
-          open?: boolean;
-        }>,
+        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
       // TODO(wittjosiah): Broken?
       Surface.create({
         id: 'navtreeSyncStatus',
-        // Filter guard validates subject is Space; token is Record<string,unknown> so we assert the narrowed shape.
-        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd, (data) => isSpace(data.subject)) as Surface.Filter<{
-          subject: Space;
-          open?: boolean;
-        }>,
+        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, isSpace),
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
       Surface.create({
         id: 'navbarPresence',
         position: 'first',
-        // Filter guard validates subject is Space or Obj; NavbarEndData<unknown> subject is unknown so we assert the narrowed shape.
-        filter: Surface.makeFilter(
+        filter: AppSurface.subject(
           AppSurface.NavbarEnd,
-          (data) => isSpace(data.subject) || Obj.isObject(data.subject),
-        ) as Surface.Filter<{ subject: Space | Obj.Unknown }>,
+          (value): value is Space | Obj.Unknown => isSpace(value) || Obj.isObject(value),
+        ),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(wittjosiah): Cleanup to avoid re-naming.
 import type { DXN } from '@dxos/keys';
 
+// TODO(wittjosiah): Cleanup to avoid re-naming.
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
 import {

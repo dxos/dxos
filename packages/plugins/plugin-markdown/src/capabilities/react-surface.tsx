@@ -103,35 +103,36 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-const Container = forwardRef<HTMLDivElement, AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>>(
-  ({ id, attendableId, subject, role }, forwardedRef) => {
-    const viewState = useCapability(AttentionCapabilities.ViewState);
-    const settings = useAtomCapability(MarkdownCapabilities.Settings);
-    const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
-    const editorState = useCapability(MarkdownCapabilities.EditorState);
-    const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
-    const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
+const Container = forwardRef<
+  HTMLDivElement,
+  AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>
+>(({ id, attendableId, subject, role }, forwardedRef) => {
+  const viewState = useCapability(AttentionCapabilities.ViewState);
+  const settings = useAtomCapability(MarkdownCapabilities.Settings);
+  const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
+  const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
-    const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
-    const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
-      (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
-      [id, setState],
-    );
+  const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
+  const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
+    (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+    [id, setState],
+  );
 
-    return (
-      <MarkdownArticle
-        role={role}
-        subject={subject}
-        id={id}
-        attendableId={attendableId}
-        settings={settings}
-        viewState={viewState}
-        extensionProviders={extensionProviders}
-        editorStateStore={editorState}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
+  return (
+    <MarkdownArticle
+      role={role}
+      subject={subject}
+      id={id}
+      attendableId={attendableId}
+      settings={settings}
+      viewState={viewState}
+      extensionProviders={extensionProviders}
+      editorStateStore={editorState}
+      viewMode={viewMode}
+      onViewModeChange={handleViewModeChange}
+      ref={forwardedRef}
+    />
+  );
+});

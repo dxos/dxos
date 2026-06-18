@@ -34,8 +34,12 @@ export const Segments = {
 
 /**
  * Canonical qualified path to a space node.
+ * Optional additional segments are appended (e.g. a section name for a well-known child node).
  */
-export const getSpacePath = (spaceId: string): string => `${Node.RootId}/${spaceId}`;
+export const getSpacePath = (spaceId: string, ...segments: string[]): string => {
+  const base = `${Node.RootId}/${spaceId}`;
+  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
+};
 
 /**
  * Well-known local segment name for the per-space virtual Home node.
@@ -45,7 +49,7 @@ export const SPACE_HOME_SEGMENT = 'home';
 /**
  * Canonical qualified path to the virtual Home node of a space.
  */
-export const getSpaceHomePath = (spaceId: string): string => `${getSpacePath(spaceId)}/${SPACE_HOME_SEGMENT}`;
+export const getSpaceHomePath = (spaceId: string): string => getSpacePath(spaceId, SPACE_HOME_SEGMENT);
 
 /**
  * Extract the space ID segment from a qualified graph path.
@@ -56,8 +60,12 @@ export const getSpaceIdFromPath = (qualifiedPath: string) => {
 
 /**
  * Canonical qualified path to the types section of a space.
+ * Optional additional segments are appended.
  */
-export const getTypesPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.types}`;
+export const getTypesPath = (spaceId: string, ...segments: string[]): string => {
+  const base = getSpacePath(spaceId, Segments.types);
+  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
+};
 
 /**
  * Slash- and colon-free slug identifying a type for use as a graph node id / path segment: a static
@@ -85,17 +93,15 @@ export const getTypeSlugFromUri = (uri: URI.URI): string => {
  * Canonical qualified path to a specific type's subtree within a space.
  * Optional additional segments are appended (e.g. an object id for a view under that type).
  */
-export const getTypePath = (spaceId: string, typename: string, ...segments: string[]): string => {
-  const base = `${Node.RootId}/${spaceId}/${Segments.types}/${typename}`;
-  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
-};
+export const getTypePath = (spaceId: string, typename: string, ...segments: string[]): string =>
+  getTypesPath(spaceId, typename, ...segments);
 
 /**
  * Canonical qualified path to a specific object node within a type's subtree.
  * Uses the ECHO-local object ID, not the full DXN.
  */
 export const getObjectPath = (spaceId: string, typename: string, objectId: string): string =>
-  `${Node.RootId}/${spaceId}/${Segments.types}/${typename}/all/${objectId}`;
+  getTypesPath(spaceId, typename, 'all', objectId);
 
 /**
  * Derive the canonical graph path for a reactive ECHO object.
@@ -112,10 +118,8 @@ export const getObjectPathFromObject = (object: Obj.Unknown): string => {
  * Canonical qualified path to the collections section of a space.
  * Optional additional segments are appended (e.g. an object id for a collection under that section).
  */
-export const getCollectionsPath = (spaceId: string, ...segments: string[]): string => {
-  const base = `${Node.RootId}/${spaceId}/${Segments.collections}`;
-  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
-};
+export const getCollectionsPath = (spaceId: string, ...segments: string[]): string =>
+  getSpacePath(spaceId, Segments.collections, ...segments);
 
 /**
  * Qualified path to a child object within a collection node.
@@ -159,7 +163,7 @@ export const fromUrlPath = (pathname: string): string => {
  * This is the path used by sections created with {@link createTypeSectionExtension}.
  * Distinct from {@link getTypePath} which navigates to the plugin-space database subtree.
  */
-const getTypeSectionPath = (spaceId: string, typename: string): string => `${getSpacePath(spaceId)}/${typename}`;
+const getTypeSectionPath = (spaceId: string, typename: string): string => getSpacePath(spaceId, typename);
 
 /**
  * Canonical qualified path to a specific object within a custom type section.
@@ -168,7 +172,7 @@ const getTypeSectionPath = (spaceId: string, typename: string): string => `${get
  * than the database subtree.
  */
 const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: string): string =>
-  `${getSpacePath(spaceId)}/${typename}/${objectId}`;
+  getSpacePath(spaceId, typename, objectId);
 
 /**
  * Creates strongly-typed path helpers for a plugin's custom type section.

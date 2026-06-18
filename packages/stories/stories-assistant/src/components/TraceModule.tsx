@@ -11,12 +11,9 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { type ModuleProps } from './types';
 
 /**
- * Renders the assistant `TracePanel` (process tree + execution-graph timeline) via the
- * `deck-companion--trace` surface, so sub-agent processes spawned by the supervisor surface as
- * nested lanes alongside the chat. The surface resolves the active space internally (set by
- * `ModuleContainer`).
+ * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.
  */
-export const TraceModule = (_props: ModuleProps) => {
+export const TraceModule = ({ space }: ModuleProps) => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
