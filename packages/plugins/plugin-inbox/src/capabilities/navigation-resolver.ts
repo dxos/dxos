@@ -6,10 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, Paths, TypeSection, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  createTypeSectionPathResolver,
+  getSpaceIdFromPath,
+  getSpacePath,
+  type AppCapabilities as AppCaps,
+} from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -29,7 +35,7 @@ const createFeedObjectPathResolver =
       return Effect.succeed(Option.none());
     }
     const segments = qualifiedPath.split('/');
-    const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
+    const spaceId = getSpaceIdFromPath(qualifiedPath);
     const parentIdx = segments.indexOf(parentSegmentName);
     const parentId = parentIdx >= 0 ? segments[parentIdx + 1] : undefined;
     if (!spaceId || !parentId || !Key.EntityId.isValid(parentId)) {
@@ -50,7 +56,7 @@ export default Capability.makeModule(
         if (!query?.dxn) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.id),
+              path: `${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
               label: 'Inbox settings',
               type: 'settings',
             },
@@ -86,7 +92,7 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
       const segments = qualifiedPath.split('/');
-      const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
+      const spaceId = getSpaceIdFromPath(qualifiedPath);
       const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
       const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
       if (!spaceId || !mailboxId || !Key.EntityId.isValid(mailboxId)) {
@@ -102,10 +108,7 @@ export default Capability.makeModule(
         AppCapabilities.NavigationPathResolver,
         createFeedObjectPathResolver(getMailboxesSectionId()),
       ),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        TypeSection.createTypeSectionPathResolver(Calendar.Calendar),
-      ),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Calendar.Calendar)),
       Capability.contributes(
         AppCapabilities.NavigationPathResolver,
         createFeedObjectPathResolver(Type.getTypename(Calendar.Calendar)),

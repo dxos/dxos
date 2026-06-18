@@ -28,10 +28,10 @@ const parseUrl = (url: string): URL | undefined => {
   }
 };
 
-export const ABOUT_DIALOG = `${meta.id}.component.about-dialog`;
+export const ABOUT_DIALOG = `${meta.profile.key}.component.about-dialog`;
 
 export const AboutDialog = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 

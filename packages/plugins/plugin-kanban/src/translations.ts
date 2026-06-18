@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete kanban',
         'object-deleted.label': 'Kanban deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'action-menu.label': 'Actions',
         'plugin.name': 'Kanban',
         'kanban-title.label': 'Title',

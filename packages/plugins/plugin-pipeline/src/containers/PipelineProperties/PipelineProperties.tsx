@@ -28,7 +28,7 @@ export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.
  * Supports editing the pipeline view.
  */
 export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const [columns, updateColumns] = useObject(pipeline, 'columns');

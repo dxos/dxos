@@ -27,7 +27,7 @@ type RunState =
 
 // TODO(burdon): Trigger editor.
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const invoke = usePromptHandler(subject);
   const [state, setState] = useState<RunState>({ status: 'idle' });
@@ -73,7 +73,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
 };
 
 const RoutineResult = ({ state }: { state: RunState }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   switch (state.status) {
     case 'idle':
       return null;

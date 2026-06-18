@@ -98,7 +98,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: () => {
           const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
@@ -128,7 +128,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsProperties',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.general`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -141,7 +141,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'spaceSettingsMembers',
         position: 'first',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -153,7 +153,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsSchema',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.schema`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.schema`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

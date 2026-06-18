@@ -23,7 +23,7 @@ export type GalleryShowProps = {
 };
 
 export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [gallery] = useObject(subject);
   const stateAtom = useCapability(DeckCapabilities.State);
   const state = useAtomValue(stateAtom);

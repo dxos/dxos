@@ -19,7 +19,7 @@ import type { DirectoryWatcher } from './directory-watcher';
 import type { MarkdownDocuments } from './markdown-documents';
 import type { MirrorSpaceManager } from './mirror-space-manager';
 
-const STORAGE_KEY = `${meta.id}.workspaces`;
+const STORAGE_KEY = `${meta.profile.key}.workspaces`;
 
 /** Load workspace list from local storage, returning an empty array on failure. */
 export const loadPersistedWorkspaces = (): Effect.Effect<FilesystemWorkspace[]> =>

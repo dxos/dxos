@@ -53,7 +53,7 @@ export const PostToolbar = ({
           .action(
             'star',
             {
-              label: [starred ? 'unstar-post.label' : 'star-post.label', { ns: meta.id }],
+              label: [starred ? 'unstar-post.label' : 'star-post.label', { ns: meta.profile.key }],
               icon: starred ? 'ph--star--fill' : 'ph--star--regular',
               iconOnly: true,
             },
@@ -62,7 +62,7 @@ export const PostToolbar = ({
           .action(
             'archive',
             {
-              label: [archived ? 'unarchive-post.label' : 'archive-post.label', { ns: meta.id }],
+              label: [archived ? 'unarchive-post.label' : 'archive-post.label', { ns: meta.profile.key }],
               icon: archived ? 'ph--archive--fill' : 'ph--archive--regular',
               iconOnly: true,
             },
@@ -71,7 +71,7 @@ export const PostToolbar = ({
           .action(
             'mark-unread',
             {
-              label: ['mark-unread.label', { ns: meta.id }],
+              label: ['mark-unread.label', { ns: meta.profile.key }],
               icon: 'ph--envelope--regular',
               iconOnly: true,
               hidden: !read,
@@ -83,7 +83,7 @@ export const PostToolbar = ({
           .action(
             'refresh',
             {
-              label: [refreshing ? 'refresh-content-pending.label' : 'refresh-content.label', { ns: meta.id }],
+              label: [refreshing ? 'refresh-content-pending.label' : 'refresh-content.label', { ns: meta.profile.key }],
               icon: 'ph--arrows-clockwise--regular',
               iconClassNames: refreshing ? 'animate-spin' : undefined,
               iconOnly: true,
@@ -95,7 +95,7 @@ export const PostToolbar = ({
           .action(
             'open-original',
             {
-              label: ['open-original.label', { ns: meta.id }],
+              label: ['open-original.label', { ns: meta.profile.key }],
               icon: 'ph--arrow-square-out--regular',
               iconOnly: true,
               hidden: !hasLink,

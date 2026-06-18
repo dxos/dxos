@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppNode, AppNodeMatcher, LayoutOperation, Segments, getTypeSlug } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
@@ -32,7 +32,9 @@ import {
   TYPES_SECTION_TYPE,
   TYPE_COLLECTION_TYPE,
   buildViewIndex,
+  createObjectNode,
   downloadBlob,
+  getDynamicLabel,
 } from './shared';
 
 //
@@ -56,9 +58,9 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed([
           AppNode.makeSection({
-            id: Paths.Segments.types,
+            id: Segments.types,
             type: TYPES_SECTION_TYPE,
-            label: ['types-section.label', { ns: meta.id }],
+            label: ['types-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
             position: 'last',
@@ -70,7 +72,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: 'database',
+      id: 'types',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -128,7 +130,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client ? get(client.graph.registry.query(Filter.type(Type.Type)).atom) : [];
 
-        const slug = Paths.getTypeSlug(schema);
+        const slug = getTypeSlug(schema);
         const typeUri = Type.getURI(schema);
 
         // {All} virtual node.
@@ -137,7 +139,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           type: TYPE_COLLECTION_TYPE,
           data: { space, typeUri },
           properties: {
-            label: ['type-collection-all.label', { ns: meta.id }],
+            label: ['type-collection-all.label', { ns: meta.profile.key }],
             icon: 'ph--list--regular',
             iconHue: 'neutral',
             role: 'branch',
@@ -155,7 +157,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
           .map((object: Obj.Unknown) =>
-            AppNode.makeObject({
+            createObjectNode({
               get,
               db: space.db,
               object,
@@ -175,10 +177,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
           return Option.none();
         }
-        return Option.some({
-          space: node.data.space as Space,
-          typeUri: node.data.typeUri as URI.URI,
-        });
+        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
       },
       connector: ({ space, typeUri }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -192,7 +191,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           objects
             .map((object: Obj.Unknown) => {
               get(Obj.atom(object));
-              return AppNode.makeObject({
+              return createObjectNode({
                 get,
                 db: space.db,
                 object,
@@ -257,7 +256,7 @@ const createSchemaNode = ({
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
-  const slug = Paths.getTypeSlug(schema);
+  const slug = getTypeSlug(schema);
   const iconAnnotation =
     Type.getDatabase(schema) == null
       ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
@@ -278,7 +277,7 @@ const createSchemaNode = ({
       },
     ),
     Match.orElse(() => ({
-      label: AppNode.getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
+      label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
       nodeId: slug,
     })),
   );
@@ -354,7 +353,7 @@ const createSchemaActions = ({
             properties: {
               // Static plugin types carry a per-typename `add-object.label` (e.g. "Add event");
               // database types have no such namespace, so fall back to the plugin's generic label.
-              label: AppNode.getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
+              label: getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.profile.key : typename),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -387,7 +386,7 @@ const createSchemaActions = ({
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
-        label: AppNode.getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
+        label: getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
         disabled: Type.getDatabase(type) == null,
         disposition: 'list-item',
@@ -403,7 +402,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
+        label: getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

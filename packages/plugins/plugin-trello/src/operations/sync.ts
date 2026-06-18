@@ -701,9 +701,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       if (outcome._tag === 'Right') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-success.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
             icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.id }],
+            title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
         return outcome.right;
@@ -711,9 +711,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         const message = formatTrelloSyncFailure(outcome.left);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-error.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
             icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.id }],
+            title: ['sync-toast.error.label', { ns: meta.profile.key }],
             description: message,
           }),
         );

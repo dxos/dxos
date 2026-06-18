@@ -14,7 +14,7 @@ import { type Support } from '#types';
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
 export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleSetTitle = useCallback(
     (value: string) => {

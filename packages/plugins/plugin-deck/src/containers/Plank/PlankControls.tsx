@@ -34,7 +34,7 @@ export type PlankCompanionControlsProps = {
 
 export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionControlsProps>(
   ({ primary }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { invokePromise } = useOperationInvoker();
     const handleCloseCompanion = useCallback(() => {
       return invokePromise(LayoutOperation.UpdateCompanion, { subject: null });
@@ -78,7 +78,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     { children, classNames, variant = 'default', capabilities, layoutMode, pin, close = false, onClick, ...props },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const buttonClassNames =
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 

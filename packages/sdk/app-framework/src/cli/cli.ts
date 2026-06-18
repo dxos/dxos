@@ -15,7 +15,7 @@ const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>
   (id: string) =>
     Effect.sync(() => {
-      const plugin = plugins.find((plugin) => plugin.meta.id === id);
+      const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
       invariant(plugin, `Plugin not found: ${id}`);
       return { plugin };
     });
@@ -43,7 +43,7 @@ export type CreateCliAppOptions = {
  *
  * @param options.pluginManager Optional existing PluginManager instance.
  * @param options.pluginLoader Function to load plugins by ID.
- * @param options.plugins All plugins available to the application. Plugins whose `meta.tags` includes `'system'` are treated as core.
+ * @param options.plugins All plugins available to the application. Plugins whose `meta.profile.tags` includes `'system'` are treated as core.
  * @param options.enabled Enabled plugins.
  * @param options.safeMode Whether to enable safe mode, which disables optional plugins.
  */

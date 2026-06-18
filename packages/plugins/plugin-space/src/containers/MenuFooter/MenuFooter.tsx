@@ -14,7 +14,7 @@ import { meta } from '#meta';
 import { getSpaceDisplayName } from '../../util';
 
 export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const space = getSpace(object);
   const spaceName = space ? getSpaceDisplayName(space, { personal: AppSpace.isPersonalSpace(space) }) : '';
   return space ? (

@@ -21,7 +21,7 @@ export type ChatDialogProps = {
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const db = chat && Obj.getDatabase(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);

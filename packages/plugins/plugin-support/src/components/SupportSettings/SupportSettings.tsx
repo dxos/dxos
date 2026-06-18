@@ -16,11 +16,11 @@ export type SupportSettingsProps = AppSurface.SettingsArticleProps<Settings.Sett
 };
 
 export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: SupportSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         {onShowWelcome && (
           <SettingsForm.Item title={t('show-welcome.label')}>
             <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>

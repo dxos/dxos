@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 import * as Meeting from './Meeting';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create Meeting', icon: 'ph--video-camera--regular' },

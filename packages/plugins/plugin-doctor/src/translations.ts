@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Doctor',
         'diagnostics-tab.label': 'Diagnostics',
         'run-diagnostics.label': 'Run diagnostics',

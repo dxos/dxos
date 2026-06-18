@@ -12,11 +12,11 @@ import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.id}.loadPluginDialog`);
+export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
 
 export const LoadPluginDialog = () => {
   const manager = usePluginManager();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export const LoadPluginDialog = () => {
 
     void Effect.gen(function* () {
       const plugin = yield* manager.add(trimmed);
-      yield* manager.enable(plugin.meta.id);
+      yield* manager.enable(plugin.meta.profile.key);
       closeRef.current?.click();
     }).pipe(
       Effect.catchAll((err) =>

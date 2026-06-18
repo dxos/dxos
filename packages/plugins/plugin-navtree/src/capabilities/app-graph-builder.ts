@@ -26,7 +26,7 @@ export default Capability.makeModule(
                 blockAlign: 'start',
               }),
             properties: {
-              label: ['open-commands.label', { ns: meta.id }],
+              label: ['open-commands.label', { ns: meta.profile.key }],
               icon: 'ph--magnifying-glass--regular',
               keyBinding: {
                 macos: 'meta+k',

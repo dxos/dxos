@@ -33,7 +33,7 @@ export const translations = [
         'delete-object.label': 'Delete booking',
         'object-deleted.label': 'Booking deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Trip',
         'trip.new.label': 'New trip',
         'trip.merge.label': 'Merge into nearest trip',

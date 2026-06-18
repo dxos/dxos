@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Pipelines',
         'add-column.label': 'Add column',
         'add-card.label': 'Add object',

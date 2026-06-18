@@ -9,10 +9,10 @@ import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 import { meta } from './meta';
 
 /** Surface id for the sync-targets dialog. */
-export const SYNC_TARGETS_DIALOG = DXN.make(`${meta.id}.syncTargetsDialog`);
+export const SYNC_TARGETS_DIALOG = DXN.make(`${meta.profile.key}.syncTargetsDialog`);
 
 /** Surface id for the per-provider credential-form dialog (custom tokens, OAuth pre-flight inputs). */
-export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.id}.providerFormDialog`);
+export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.profile.key}.providerFormDialog`);
 
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';

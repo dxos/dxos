@@ -46,7 +46,7 @@ type FlightEditableCardProps = {
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
 
     const handleDepartChange = useCallback(
       (next: string) => {

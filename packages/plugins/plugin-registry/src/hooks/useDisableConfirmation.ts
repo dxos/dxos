@@ -37,7 +37,7 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager, dis
         return;
       }
       const resolveName = (id: string): string =>
-        manager.getPlugins().find((plugin) => plugin.meta.id === id)?.meta.name ?? id;
+        manager.getPlugins().find((plugin) => plugin.meta.profile.key === id)?.meta.profile.name ?? id;
       void invokePromise(LayoutOperation.UpdateDialog, {
         subject: DISABLE_DEPENDENTS_DIALOG,
         state: true,

@@ -41,7 +41,7 @@ const RUN_ROUTINE_DXN = 'org.dxos.function.prompt';
 export type AutomationArticleProps = AppSurface.ObjectArticleProps<Automation.Automation>;
 
 export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(subject);
   const trigger = usePrimaryTrigger(subject);
   const space = getSpace(subject);
@@ -119,7 +119,7 @@ const EnabledField = ({
   messageKey,
   ...props
 }: FormFieldRendererProps & { canEnable: boolean; messageKey?: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div className='flex items-center gap-2 pt-form-padding'>
       <Input.Root>
@@ -312,7 +312,7 @@ const ActionInputEditor = ({
   operation: Operation.PersistentOperation;
   trigger: Trigger.Trigger;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const effectSchema = useMemo(
     () => (operation.inputSchema ? JsonSchema.toEffectSchema(operation.inputSchema) : undefined),
     [operation.inputSchema],
@@ -450,7 +450,7 @@ export const AutomationInlineForm = ({
   automation: Automation.Automation;
   db: Database.Database;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const trigger = usePrimaryTrigger(automation);
 
   return (
@@ -554,7 +554,7 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
 
 /** Form state for the Action section: pick an operation|routine and bind it to the trigger's function/input. */
 const useActionForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(automation);
   // Query by typename DXN so results stay untyped (`Entity.Any[]`), as RefField.useResults expects.
   const operations = useQuery(
@@ -644,7 +644,7 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
 
 /** Form state for the Trigger section: the timer|feed spec, plus create-on-first-edit and remove handlers. */
 const useTriggerForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const kindOptions = useMemo(
     () => [
       { value: 'timer', label: t('trigger-kind.timer.label') },

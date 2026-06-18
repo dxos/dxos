@@ -30,7 +30,7 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
- * plugin's `meta.description` (Markdown) and `meta.screenshots` (Carousel).
+ * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
   const manager = usePluginManager();
@@ -56,8 +56,8 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
       .getPlugins()
       .find((plugin) => plugin.modules.some((module) => module.id === owningModuleId));
     return {
-      content: owningPlugin?.meta.description ?? '',
-      screenshots: (owningPlugin?.meta.screenshots ?? [])
+      content: owningPlugin?.meta.profile.description ?? '',
+      screenshots: (owningPlugin?.meta.profile.screenshots ?? [])
         .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
         .filter(Boolean),
     };

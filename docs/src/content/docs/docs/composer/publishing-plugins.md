@@ -100,14 +100,17 @@ import { defineConfig } from '@dxos/app-framework/config';
 
 export default defineConfig({
   plugin: {
-    id: 'org.dxos.plugin.excalidraw', // required — a reverse-domain NSID; also your plugin id
+    key: 'org.dxos.plugin.excalidraw', // required — a reverse-domain NSID; the plugin's globally-unique key
     name: 'Excalidraw', // required
     description: 'Professional diagramming powered by Excalidraw.',
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     source: 'https://github.com/your-org/your-plugin',
     tags: ['labs'],
     screenshots: [
-      { light: 'https://example.com/screenshot-light.png', dark: 'https://example.com/screenshot-dark.png' },
+      {
+        light: 'https://example.com/screenshot-light.png',
+        dark: 'https://example.com/screenshot-dark.png',
+      },
     ],
   },
   publish: {
@@ -121,25 +124,25 @@ export default defineConfig({
 
 Field reference for `plugin`:
 
-| Field         | Required | Notes                                                                                                                   |
-| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `id`          | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). This is your plugin's globally-unique id.                      |
-| `name`        | yes      | Human-readable name shown in the registry.                                                                              |
-| `description` | no       | Short description shown on the plugin's detail view.                                                                    |
-| `author`      | no       | Author or organization name.                                                                                            |
-| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.            |
-| `source`      | no       | Source repository URL.                                                                                                  |
-| `homePage`    | no       | Homepage URL.                                                                                                           |
-| `tags`        | no       | List of tags for categorization/discovery.                                                                              |
-| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.         |
+| Field         | Required | Notes                                                                                                           |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| `key`         | yes      | Reverse-domain NSID (e.g. `org.dxos.plugin.excalidraw`). The plugin's globally-unique key.                      |
+| `name`        | yes      | Human-readable name shown in the registry.                                                                      |
+| `description` | no       | Short description shown on the plugin's detail view.                                                            |
+| `author`      | no       | Author or organization name.                                                                                    |
+| `icon`        | no       | `{ key, hue? }` — a [Phosphor](https://phosphoricons.com) icon name and optional display hue, e.g. `indigo`.    |
+| `source`      | no       | Source repository URL.                                                                                          |
+| `homePage`    | no       | Homepage URL.                                                                                                   |
+| `tags`        | no       | List of tags for categorization/discovery.                                                                      |
+| `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs. |
 
 Field reference for `publish`:
 
-| Field          | Required | Notes                                                                               |
-| -------------- | -------- | ----------------------------------------------------------------------------------- |
-| `buildCommand` | no       | Build command run by `dx registry publish` (skipped with `--no-build`).             |
-| `outdir`       | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`.  |
-| `assetBaseUrl` | no       | Skip the upload and point the release at a bundle you host yourself.                |
+| Field          | Required | Notes                                                                              |
+| -------------- | -------- | ---------------------------------------------------------------------------------- |
+| `buildCommand` | no       | Build command run by `dx registry publish` (skipped with `--no-build`).            |
+| `outdir`       | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
+| `assetBaseUrl` | no       | Skip the upload and point the release at a bundle you host yourself.               |
 
 The release **version is taken from your `package.json` `version` field**, not from `dx.config.ts`. Bump it before publishing a new release.
 
@@ -171,16 +174,16 @@ This will:
 1. Run your `build.command` (skip with `--no-build` to publish a pre-built `dist`).
 2. Read the emitted `manifest.json`.
 3. Upload the bundle to the DXOS edge and record the resulting `moduleUrl`.
-4. Write a `package.profile` record and a `package.release` record (rkey `<id>:<version>`) to your PDS.
+4. Write a `package.profile` record and a `package.release` record (rkey `<key>:<version>`) to your PDS.
 
 Useful flags:
 
-| Flag                     | Purpose                                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------------------ |
-| `--dir <path>`           | Project directory containing `dx.config.ts` (defaults to the current directory).           |
-| `--no-build`             | Skip the build and publish the existing `dist`.                                            |
-| `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself.                       |
-| `--edge-url <url>`       | Override the edge used for upload (mainly for local testing against a dev worker).         |
+| Flag                     | Purpose                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `--dir <path>`           | Project directory containing `dx.config.ts` (defaults to the current directory).   |
+| `--no-build`             | Skip the build and publish the existing `dist`.                                    |
+| `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself.               |
+| `--edge-url <url>`       | Override the edge used for upload (mainly for local testing against a dev worker). |
 
 ## 7. Confirm it's published
 
@@ -199,7 +202,7 @@ Bump the `version` in `package.json`, then run `dx registry publish` again. Each
 ## Removing a plugin
 
 ```bash
-dx registry unpublish --slug org.dxos.plugin.excalidraw
+dx registry unpublish --key org.dxos.plugin.excalidraw
 ```
 
 This removes the package profile and all of its release records from your PDS. The registry stops listing it on the next refresh.
@@ -235,5 +238,5 @@ The CLI writes these AT Protocol record types under your repo:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `org.dxos.experimental.publisher.profile`      | Your publisher identity (rkey `self`).                                               |
 | `org.dxos.experimental.publisher.verification` | Trust attestation for a publisher DID (written by the configured verifier, not you). |
-| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `id`).                                         |
-| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<id>:<version>`).                              |
+| `org.dxos.experimental.package.profile`        | A plugin's profile (rkey = the plugin `key`).                                         |
+| `org.dxos.experimental.package.release`        | A specific version of a plugin (rkey `<key>:<version>`).                              |

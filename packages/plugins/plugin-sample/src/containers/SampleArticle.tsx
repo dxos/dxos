@@ -105,7 +105,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action as Node.Action, { caller: meta.id });
+      void runAction(action as Node.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

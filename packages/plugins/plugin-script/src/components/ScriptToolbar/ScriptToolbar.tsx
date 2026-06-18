@@ -28,7 +28,7 @@ export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
 
 export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
   ({ script, attendableId, role, state, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const options = useDeployDeps({ script });
     const menuCreator = useMemo(
       () => createToolbarActions({ state, script, t, ...options }),

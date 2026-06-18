@@ -31,15 +31,15 @@ export const Toolbar = () => {
 
   const count = (useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
 
-  const generatorPlugins = plugins.filter((plugin) => plugin.meta.id.startsWith('org.dxos.test.generator.'));
+  const generatorPlugins = plugins.filter((plugin) => plugin.meta.profile.key.startsWith('org.dxos.test.generator.'));
 
   return (
     <>
       <Button onClick={handleAdd}>Add</Button>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
-        <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}>
-          {plugin.meta.id.replace('org.dxos.test.generator.', '')}
+        <Button key={plugin.meta.profile.key} onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}>
+          {plugin.meta.profile.key.replace('org.dxos.test.generator.', '')}
         </Button>
       ))}
     </>

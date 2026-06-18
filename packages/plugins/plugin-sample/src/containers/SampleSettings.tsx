@@ -22,7 +22,7 @@ import { Settings } from '#types';
 export type SampleSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const SampleSettings = ({ settings, onSettingsChange }: SampleSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>

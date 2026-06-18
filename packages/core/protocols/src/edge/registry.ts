@@ -32,7 +32,7 @@ export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
  * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
-  ...Config2.Plugin.omit('spec', 'dependsOn', 'version').fields,
+  ...Config2.Plugin.fields,
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
   version: Schema.String.pipe(Schema.nonEmptyString()),
   /**
@@ -65,20 +65,27 @@ export const PluginReleaseSchema = Schema.Struct({
 export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
 
 /**
- * Verbatim content of a `package.profile` ATProto record, minus the rkey which is
- * lifted to {@link PluginViewSchema.slug}. Display metadata only — no runtime identity.
+ * Verbatim content of a `package.profile` ATProto record. `key` is the record's rkey (a reverse-domain
+ * NSID), denormalized into the body. Version-independent identity + display metadata; provenance
+ * (`author`) is resolved separately from the publisher DID/handle.
  */
 export const PluginProfileSchema = Schema.Struct({
+  /** Reverse-domain NSID — the plugin's globally-unique key and the `package.profile` rkey (e.g. `org.dxos.plugin.excalidraw`). */
+  key: Schema.String.pipe(Schema.nonEmptyString()),
   /** Plugin display name. */
   name: Schema.String.pipe(Schema.nonEmptyString()),
   description: Schema.optional(Schema.String),
   /** Publisher's homepage or plugin documentation URL. */
-  homepage: Schema.optional(Schema.String),
+  homePage: Schema.optional(Schema.String),
   /** Source repository URL. */
   source: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
   screenshots: Schema.optional(Schema.Array(Config2.Screenshot)),
   icon: Schema.optional(Config2.Icon),
+  /** Composer plugin ids this plugin depends on at runtime (NSIDs). Author-declared, version-independent. */
+  dependsOn: Schema.optional(Schema.Array(Schema.String)),
+  /** Relative path inside the package to a bundled MDL spec (consumed by plugin-code). */
+  spec: Schema.optional(Schema.String),
 });
 export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
 
@@ -91,9 +98,9 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
  * of any single ATProto record.
  *
  * Design notes:
- * - `slug` is required to be a valid NSID (e.g. `org.dxos.plugin.excalidraw`), making it
+ * - `profile.key` is required to be a valid NSID (e.g. `org.dxos.plugin.excalidraw`), making it
  *   the single identifier for both PDS addressing and the composer runtime plugin id.
- *   `DXN.make(slug, latestVersion)` reconstructs the canonical plugin DXN (`Plugin.getURI(meta)`).
+ *   `DXN.make(profile.key, latestVersion)` reconstructs the canonical plugin DXN.
  * - `releases` inlines all known versions, eliminating a separate versions round-trip for
  *   the version picker. Ordered newest-first.
  * - `latestVersion` is a convenience pointer into `releases` indicating the recommended
@@ -113,13 +120,6 @@ export const PluginViewSchema = Schema.Struct({
    * Display-only — handles can be reassigned; never use as a stable key.
    */
   handle: Schema.optional(Schema.String),
-  /**
-   * Package slug — the rkey of the `package.profile` record.
-   * MUST be a valid NSID (e.g. `org.dxos.plugin.excalidraw`).
-   * Serves as both the PDS record address and the composer plugin id.
-   * `DXN.make(slug, latestVersion)` yields the canonical `Plugin.Meta.key`.
-   */
-  slug: Schema.String.pipe(Schema.nonEmptyString()),
   /** Unix ms when the indexer last assembled this entry. */
   indexedAt: Schema.Number,
   /**

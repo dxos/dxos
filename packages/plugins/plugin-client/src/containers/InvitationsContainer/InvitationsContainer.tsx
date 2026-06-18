@@ -17,7 +17,7 @@ import { type AccountCacheInvitation } from '../../state/account-cache';
 import { useHubHttpClient } from '../../state/use-hub-http';
 
 export const InvitationsContainer = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);

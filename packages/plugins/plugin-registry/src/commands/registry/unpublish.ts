@@ -18,8 +18,8 @@ const rkeyOf = (uri: string): string => uri.split('/').pop() ?? '';
 
 /**
  * `dx registry unpublish` — removes a package from the authenticated user's PDS:
- * deletes the `package.profile` (rkey = slug) and every `package.release`
- * (rkey = `<slug>:<version>`). The registry indexer unindexes on its next sweep.
+ * deletes the `package.profile` (rkey = key) and every `package.release`
+ * (rkey = `<key>:<version>`). The registry indexer unindexes on its next sweep.
  * Hosted bundles in edge R2 are immutable and are not removed.
  */
 export const unpublish = Command.make(
@@ -30,8 +30,8 @@ export const unpublish = Command.make(
       Options.withDescription(AUTH_OPTION_DESCRIPTIONS.appPassword),
       Options.optional,
     ),
-    slug: Options.text('slug').pipe(
-      Options.withDescription('Package slug (the profile rkey). Removes its profile and all releases.'),
+    key: Options.text('key').pipe(
+      Options.withDescription('Package key (the profile rkey). Removes its profile and all releases.'),
     ),
   },
   (options) =>
@@ -43,9 +43,9 @@ export const unpublish = Command.make(
           appPassword: Option.getOrUndefined(options.appPassword),
           client,
         });
-        const slug = options.slug;
+        const key = options.key;
 
-        // Delete every release whose rkey is `<slug>:<version>`, paging until exhausted.
+        // Delete every release whose rkey is `<key>:<version>`, paging until exhausted.
         let cursor: string | undefined;
         let deletedReleases = 0;
         do {
@@ -53,7 +53,7 @@ export const unpublish = Command.make(
           cursor = releases.cursor;
           for (const record of releases.records) {
             const rkey = rkeyOf(record.uri);
-            if (rkey.startsWith(`${slug}:`)) {
+            if (rkey.startsWith(`${key}:`)) {
               yield* deleteRecord(session, NSID.PackageRelease, rkey);
               yield* Console.log(`Deleted release ${rkey}`);
               deletedReleases += 1;
@@ -61,9 +61,9 @@ export const unpublish = Command.make(
           }
         } while (cursor !== undefined);
 
-        // Delete the profile (rkey = slug).
-        yield* deleteRecord(session, NSID.PackageProfile, slug);
-        yield* Console.log(`Deleted profile ${slug} (${deletedReleases} release(s) removed)`);
+        // Delete the profile (rkey = key).
+        yield* deleteRecord(session, NSID.PackageProfile, key);
+        yield* Console.log(`Deleted profile ${key} (${deletedReleases} release(s) removed)`);
       }),
       Effect.provide(FetchHttpClient.layer),
     ),

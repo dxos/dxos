@@ -17,7 +17,7 @@ import { type EncodedTrackName, type GlobalState } from '../../calls';
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
 
 export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);

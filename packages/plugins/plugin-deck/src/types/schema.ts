@@ -127,12 +127,12 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}.action.adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.profile.key}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.profile.key}.action.update-plank-size`, {
     input: Schema.Struct({
       id: Schema.String,
       size: Schema.Number,

@@ -6,11 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, Paths, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  getActiveSpace,
+  getObjectPath,
+  getSpaceIdFromPath,
+  getSpacePath,
+  type AppCapabilities as AppCaps,
+} from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
 
@@ -25,7 +32,7 @@ export default Capability.makeModule(
         if (!query?.dxn) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.id),
+              path: `${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
               label: 'Spaces settings',
               type: 'settings',
             },
@@ -51,7 +58,7 @@ export default Capability.makeModule(
 
         return [
           {
-            path: Paths.getObjectPath(db.spaceId, typename, object.id),
+            path: getObjectPath(db.spaceId, typename, object.id),
             label: Entity.getLabel(object) ?? '',
             type: typename,
           },
@@ -64,7 +71,7 @@ export default Capability.makeModule(
     // is the first segment and the object id the last.
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
-      const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
+      const spaceId = getSpaceIdFromPath(qualifiedPath);
       const objectId = segments[segments.length - 1];
       if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
         return Effect.succeed(Option.none());
@@ -78,7 +85,7 @@ export default Capability.makeModule(
       if (path.includes('/') || !Key.EntityId.isValid(path)) {
         return Effect.succeed(Option.none());
       }
-      const space = AppSpace.getActiveSpace(client, capabilities);
+      const space = getActiveSpace(client, capabilities);
       if (!space) {
         return Effect.succeed(Option.none());
       }

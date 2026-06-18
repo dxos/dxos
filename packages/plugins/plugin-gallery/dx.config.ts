@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 
 export default defineConfig({
   plugin: {
-    id: 'org.dxos.plugin.gallery',
+    key: 'org.dxos.plugin.gallery',
     name: 'Gallery',
     description: trim`
       GalleryPlugin is a lightweight image gallery for DXOS Composer. A Gallery is

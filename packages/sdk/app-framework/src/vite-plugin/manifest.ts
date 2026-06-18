@@ -20,23 +20,29 @@ export const MANIFEST_ASSET_NAME = 'manifest.json';
 export const ENTRY_FILENAME = PLUGIN_ENTRY_FILENAME;
 
 /**
- * Plugin metadata required to emit a manifest at build time.
+ * Flat plugin metadata emitted into `manifest.json` at build time (the shape validated by
+ * `@dxos/protocols` `PluginManifestSchema`).
  *
- * Extends `Plugin.Meta` with build-time fields not relevant to the runtime plugin
- * definition: the package `version`, and a `dependencies` snapshot (every declared
- * dependency resolved to its concrete installed version). The host derives SDK
- * compatibility from the subset of `dependencies` it shares with the plugin (the
- * externalized `@dxos/*` packages); the rest are recorded for transparency.
+ * The runtime {@link Plugin.Meta} nests its display/identity fields under `profile`; the build
+ * manifest is intentionally flat, so this is the {@link Plugin.Profile} content plus build-time fields:
+ * the package `version`, and a `dependencies` snapshot (every declared dependency resolved to its
+ * concrete installed version). The host derives SDK compatibility from the subset of `dependencies`
+ * it shares with the plugin (the externalized `@dxos/*` packages); the rest are recorded for transparency.
  */
-export type BuildMeta = Plugin.Meta & { version: string; dependencies?: Record<string, string> };
+export type BuildMeta = Plugin.Profile & { version: string; dependencies?: Record<string, string> };
 
 /**
- * Augments a runtime {@link Plugin.Meta} with the build-time fields needed to emit a manifest: the
- * package `version` (from the publishing project's `package.json`) and an optional resolved
- * `dependencies` snapshot. Produces the {@link BuildMeta} that `composerPlugin` serializes.
+ * Flattens a runtime {@link Plugin.Meta}'s `profile` and augments it with the build-time fields
+ * needed to emit `manifest.json`: the package `version` (from the publishing project's `package.json`)
+ * and an optional resolved `dependencies` snapshot. Produces the {@link BuildMeta} that `composerPlugin`
+ * serializes.
  */
-export const toBuildMeta = (meta: Plugin.Meta, version: string, dependencies?: Record<string, string>): BuildMeta => ({
-  ...meta,
+export const toBuildMeta = (
+  meta: Plugin.Meta,
+  version: string,
+  dependencies?: Record<string, string>,
+): BuildMeta => ({
+  ...meta.profile,
   version,
   ...(dependencies ? { dependencies } : {}),
 });

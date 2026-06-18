@@ -45,7 +45,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
     void invokePromise(
       FeedOperation.SyncFeed,
       { feed: Ref.make(subject) },
-      { spaceId: Obj.getDatabase(subject)?.spaceId, notify: { error: ['sync-feed-error.title', { ns: meta.id }] } },
+      { spaceId: Obj.getDatabase(subject)?.spaceId, notify: { error: ['sync-feed-error.title', { ns: meta.profile.key }] } },
     );
   }, [subject, invokePromise]);
 

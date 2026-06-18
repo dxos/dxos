@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [

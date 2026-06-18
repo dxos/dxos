@@ -16,13 +16,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}.diagnosticsDeckCompanion`,
+        id: `${meta.profile.key}.diagnosticsDeckCompanion`,
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: DIAGNOSTICS_DECK_COMPANION_ID,
-              label: ['diagnostics-tab.label', { ns: meta.id }],
+              label: ['diagnostics-tab.label', { ns: meta.profile.key }],
               icon: 'ph--first-aid-kit--regular',
               data: DIAGNOSTICS_DECK_COMPANION_ID,
               position: 'last',

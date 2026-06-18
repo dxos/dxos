@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete game',
         'object-deleted.label': 'Game deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Game',
         'create-panel.variant.label': 'Select variant',
         'create-panel.variant.placeholder': 'Search variants...',

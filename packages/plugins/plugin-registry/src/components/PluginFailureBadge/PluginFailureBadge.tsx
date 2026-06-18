@@ -29,7 +29,7 @@ export type PluginFailureBadgeProps = {
  * from "the plugin crashed".
  */
 export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: PluginFailureBadgeProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const phaseLabel = failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label');
   const reasonLabel =

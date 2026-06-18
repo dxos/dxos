@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type Plugin, type PluginManager, type Registry } from '@dxos/app-framework';
+import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import {
   Button,
   Carousel,
@@ -40,7 +40,7 @@ export type PluginDetailProps = {
   /** Currently selected version tag in the picker. */
   selectedVersionTag?: string;
   /** Available versions of this plugin from the catalog. When non-empty, a version picker is shown. */
-  versions?: readonly Registry.PluginVersion[];
+  versions?: readonly Plugin.Release[];
   /**
    * Ids of plugins this plugin declares as dependencies (direct only). Rendered
    * under a "Requires" heading so the user can see what enabling this plugin
@@ -130,18 +130,9 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
-    const {
-      id,
-      name,
-      author,
-      description,
-      homePage,
-      source,
-      screenshots,
-      icon: rawIcon,
-    } = plugin.meta;
+    const { key: slug, name, author, description, homePage, source, screenshots, icon: rawIcon } = plugin.meta.profile;
     const iconKey = rawIcon?.key ?? 'ph--circle--regular';
     const iconHue = rawIcon?.hue ?? 'neutral';
     const styles = getStyles(iconHue);
@@ -180,7 +171,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 </Input.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
-                {id}
+                {slug}
                 {author && <span className='dx-tag dx-tag--info'>{author}</span>}
               </div>
             </div>
@@ -230,7 +221,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     </Link>
                   )}
 
-                  {onOpenSpec && <Chip id={id} name={t('open-spec.label')} onClick={onOpenSpec} />}
+                  {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
                 </div>
               </Section.Body>
             </Section.Root>
@@ -282,9 +273,9 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                         <Select.Content>
                           <Select.Viewport>
                             {versions.map((versionEntry) => (
-                              <Select.Option key={versionEntry.tag} value={versionEntry.tag}>
-                                {versionEntry.tag}
-                                {installedVersionTag === versionEntry.tag ? ` (${t('installed.label')})` : ''}
+                              <Select.Option key={versionEntry.version} value={versionEntry.version}>
+                                {versionEntry.version}
+                                {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
                               </Select.Option>
                             ))}
                           </Select.Viewport>

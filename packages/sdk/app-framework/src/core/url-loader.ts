@@ -200,14 +200,14 @@ const loadStylesheets = (
     }
     const cssUrls = manifest.assetUrls.filter((url) => url.endsWith('.css'));
     for (const url of cssUrls) {
-      const resolved = yield* cache.resolve(manifest.id, url);
-      if (document.querySelector(`link[data-dxos-plugin-id="${manifest.id}"][href="${resolved}"]`)) {
+      const resolved = yield* cache.resolve(manifest.key, url);
+      if (document.querySelector(`link[data-dxos-plugin-id="${manifest.key}"][href="${resolved}"]`)) {
         continue;
       }
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = resolved;
-      link.dataset.dxosPluginId = manifest.id;
+      link.dataset.dxosPluginId = manifest.key;
       document.head.appendChild(link);
     }
   });
@@ -237,30 +237,30 @@ const loadFromManifest = (
       // plugin's host is offline, dropping the plugin from the runtime.
       const cachedUrls =
         manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
-      yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
+      yield* cache.cache(manifest.key, cachedUrls).pipe(wrapCacheError);
     }
     const entryUrl = manifest.dev
       ? manifest.entryUrl
-      : yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
+      : yield* cache.resolve(manifest.key, manifest.entryUrl).pipe(wrapCacheError);
     const mod = yield* Effect.tryPromise({
       try: () => import(/* @vite-ignore */ entryUrl),
       catch: (cause) =>
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
     });
     const plugin = normalizePluginExport(mod);
-    if (!plugin.meta.id || !plugin.meta.name) {
+    if (!plugin.meta.profile.key || !plugin.meta.profile.name) {
       return yield* Effect.fail(
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'meta-missing' } }),
       );
     }
-    if (plugin.meta.id !== manifest.id) {
+    if (plugin.meta.profile.key !== manifest.key) {
       return yield* Effect.fail(
         new RemotePluginLoadError({
           context: {
             locator: manifestUrl,
             reason: 'meta-mismatch',
-            metaId: plugin.meta.id,
-            manifestId: manifest.id,
+            metaId: plugin.meta.profile.key,
+            manifestId: manifest.key,
           },
         }),
       );
@@ -341,7 +341,7 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
 
   return (locator: string): Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, RemotePluginLoadError> =>
     Effect.gen(function* () {
-      const builtin = builtinPlugins.find((plugin) => plugin.meta.id === locator);
+      const builtin = builtinPlugins.find((plugin) => plugin.meta.profile.key === locator);
       if (builtin) {
         return { plugin: builtin };
       }
@@ -355,13 +355,13 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
       // overlap (dev plugin takes the id slot for the session, original is
       // restored on uninstall or page reload).
       if (!manifest.dev) {
-        const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
+        const duplicate = builtinPlugins.find((existing) => existing.meta.profile.key === plugin.meta.profile.key);
         if (duplicate) {
           return yield* Effect.fail(
-            new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
+            new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.profile.key } }),
           );
         }
-        persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
+        persistRemotePlugin(storage, key, { id: plugin.meta.profile.key, url: locator });
       }
       return { plugin, dev: manifest.dev };
     });

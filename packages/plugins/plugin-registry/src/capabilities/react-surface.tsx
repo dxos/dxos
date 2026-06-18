@@ -7,6 +7,7 @@ import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DisableDependentsAlert } from '#components';
@@ -85,7 +86,9 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        role: 'article',
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.profile.key,
         component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
       }),
     ]),

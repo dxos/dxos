@@ -36,7 +36,7 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
 
 export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
   ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const density = useDensityContext();
     const runAction = useActionRunner();
     const handleAction = useCallback(
@@ -118,7 +118,7 @@ export const NavTreeItemAction = ({
   path,
   ...props
 }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);

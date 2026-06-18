@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type Registry } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 
 import { useRegistryPlugins } from './useRegistryPlugins';
 
@@ -15,10 +15,10 @@ import { useRegistryPlugins } from './useRegistryPlugins';
 export const useCatalogEntry = (
   pluginId: string,
 ): {
-  catalogEntry: Registry.Plugin | undefined;
+  catalogEntry: Plugin.Meta | undefined;
   moduleUrl: string | undefined;
 } => {
   const { entries } = useRegistryPlugins();
-  const catalogEntry = useMemo(() => entries.find((entry) => entry.id === pluginId), [entries, pluginId]);
-  return { catalogEntry, moduleUrl: catalogEntry?.moduleUrl };
+  const catalogEntry = useMemo(() => entries.find((entry) => entry.profile.key === pluginId), [entries, pluginId]);
+  return { catalogEntry, moduleUrl: catalogEntry?.release?.moduleUrl };
 };

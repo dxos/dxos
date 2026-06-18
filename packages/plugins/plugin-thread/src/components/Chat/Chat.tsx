@@ -55,7 +55,7 @@ export type ChatProps = ThemedClassName<{
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
 

@@ -20,7 +20,7 @@ const SnippetsField = ({ value, onChange, readonly }: SettingsFieldProps<string 
 export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsProps) => {
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={meta.name ?? 'Editor'}>
+      <SettingsForm.Section title={meta.profile.name ?? 'Editor'}>
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Markdown.Settings}

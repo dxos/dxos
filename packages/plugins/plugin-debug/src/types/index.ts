@@ -34,11 +34,11 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 });
 
 export namespace DebugCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
 }
 
 export namespace Devtools {
-  export const id = `${meta.id}.devtools`;
+  export const id = `${meta.profile.key}.devtools`;
 
   export const ToolsExplorer = `${Devtools.id}.tools-explorer`;
 

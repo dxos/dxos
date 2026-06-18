@@ -19,7 +19,7 @@ import { type Integration } from '../../types';
 export type IntegrationArticleProps = AppSurface.ObjectArticleProps<Integration.Integration>;
 
 export const IntegrationArticle = ({ subject }: IntegrationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [integration] = useObject(subject);
   const accessToken = integration.accessToken.target;
   const provider = useIntegrationProvider(integration.providerId);
@@ -126,7 +126,7 @@ const TargetRow = ({
   targetIndex: number;
   optionsSchema?: Schema.Schema<any, any>;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const target = integration.targets[targetIndex];
   const obj = target?.object?.target;
   const label = obj
