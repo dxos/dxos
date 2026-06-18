@@ -33,40 +33,21 @@ import { Calendar, DraftMessage, Mailbox } from '#types';
 import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
 import { getDraftsId } from '../paths';
 
+const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
+  Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'drafts',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.Article.role,
-              guard: (
-                data: unknown,
-              ): data is {
-                attendableId?: string;
-                subject: typeof MAILBOX_DRAFTS_NODE_DATA;
-                properties: { mailbox: Mailbox.Mailbox };
-              } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const d = data as { attendableId?: unknown; subject?: unknown; properties?: unknown };
-                const mailbox = (d.properties as { mailbox?: unknown } | undefined)?.mailbox;
-                const attendableId = typeof d.attendableId === 'string' ? d.attendableId : undefined;
-                const lastSegment = attendableId?.split('/').pop();
-                return (
-                  lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && d.subject === MAILBOX_DRAFTS_NODE_DATA
-                );
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{
-          attendableId?: string;
-          subject: typeof MAILBOX_DRAFTS_NODE_DATA;
-          properties: { mailbox: Mailbox.Mailbox };
-        }>,
+        filter: Surface.makeFilter(AppSurface.Article, (data) => {
+          const mailbox = data.properties?.mailbox;
+          const lastSegment = data.attendableId.split('/').pop();
+          return (
+            lastSegment === getDraftsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_DRAFTS_NODE_DATA
+          );
+        }),
         component: ({ data, role }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -96,42 +77,22 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.Article.role,
-              guard: (
-                data: unknown,
-              ): data is { attendableId: string; subject: Message.Message; companionTo?: Mailbox.Mailbox } =>
-                typeof data === 'object' &&
-                data !== null &&
-                typeof (data as { attendableId?: unknown }).attendableId === 'string' &&
-                Obj.instanceOf(Message.Message, (data as { subject?: unknown }).subject) &&
-                !DraftMessage.instanceOf((data as { subject?: unknown }).subject),
-            },
-            {
-              role: AppSurface.Section.role,
-              guard: (
-                data: unknown,
-              ): data is { attendableId: string; subject: Message.Message; companionTo?: Mailbox.Mailbox } =>
-                typeof data === 'object' &&
-                data !== null &&
-                typeof (data as { attendableId?: unknown }).attendableId === 'string' &&
-                Obj.instanceOf(Message.Message, (data as { subject?: unknown }).subject) &&
-                !DraftMessage.instanceOf((data as { subject?: unknown }).subject),
-            },
-          ],
-        } satisfies Surface.Filter<{ attendableId: string; subject: Message.Message; companionTo?: Mailbox.Mailbox }>,
-        component: ({ data: { attendableId, subject, companionTo }, role }) => {
+        filter: AppSurface.oneOf(
+          AppSurface.subject(AppSurface.Article, isNonDraftMessage),
+          AppSurface.subject(AppSurface.Section, isNonDraftMessage),
+        ),
+        component: ({ data, role }) => {
           const { graph } = useAppGraph();
-          const parentId = getParentId(attendableId);
+          const parentId = getParentId(data.attendableId);
           const parent = useNode(graph, parentId);
           const mailbox = parent?.properties.mailbox;
+          // companionTo is only present on Article data; Section renders without a companion.
+          const companionTo = (data as { companionTo?: Mailbox.Mailbox }).companionTo;
           return (
             <MessageArticle
               role={role}
-              subject={subject}
-              attendableId={attendableId}
+              subject={data.subject}
+              attendableId={data.attendableId}
               companionTo={companionTo}
               mailbox={companionTo ? undefined : mailbox}
             />

@@ -42,32 +42,26 @@ export default Capability.makeModule(() =>
       // Discriminated by `data.part`; composed by VideoArticle.
       Surface.create({
         id: 'video.player',
-        filter: {
-          bindings: [
-            { role: AppSurface.Section.role, guard: (data) => isVideoPart(data, 'player') },
-            { role: AppSurface.Tabpanel.role, guard: (data) => isVideoPart(data, 'player') },
-          ],
-        } satisfies Surface.Filter<{ subject: Video.Video; attendableId: string; part: 'player' }>,
+        filter: AppSurface.oneOf(
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'player')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'player')),
+        ),
         component: ({ data }) => <VideoSection subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: 'video.transcript',
-        filter: {
-          bindings: [
-            { role: AppSurface.Section.role, guard: (data) => isVideoPart(data, 'transcript') },
-            { role: AppSurface.Tabpanel.role, guard: (data) => isVideoPart(data, 'transcript') },
-          ],
-        } satisfies Surface.Filter<{ subject: Video.Video; attendableId: string; part: 'transcript' }>,
+        filter: AppSurface.oneOf(
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'transcript')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'transcript')),
+        ),
         component: ({ data }) => <TranscriptSection subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: 'video.summary',
-        filter: {
-          bindings: [
-            { role: AppSurface.Section.role, guard: (data) => isVideoPart(data, 'summary') },
-            { role: AppSurface.Tabpanel.role, guard: (data) => isVideoPart(data, 'summary') },
-          ],
-        } satisfies Surface.Filter<{ subject: Video.Video; attendableId: string; part: 'summary' }>,
+        filter: AppSurface.oneOf(
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'summary')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'summary')),
+        ),
         component: ({ data }) => <SummarySection subject={data.subject} attendableId={data.attendableId} />,
       }),
     ]),

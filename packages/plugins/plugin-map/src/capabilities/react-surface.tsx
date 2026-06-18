@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -62,35 +63,23 @@ export default Capability.makeModule(() =>
       Surface.create({
         // TODO(burdon): Why this title?
         id: 'surface.createInitialSchemaForm',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const schema = (data as Record<string, unknown>).schema;
-                if (!schema) {
-                  return false;
-                }
-                const annotation = SchemaEx.findAnnotation<boolean>(
-                  (schema as Schema.Schema.All).ast,
-                  LocationAnnotationId,
-                );
-                return !!annotation;
-              },
-            },
-          ],
-        } satisfies Surface.Filter<Record<string, any>>,
-        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { schema } = data as { schema?: Schema.Schema.All };
+          if (!schema?.ast) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation<boolean>(schema.ast, LocationAnnotationId);
+        }),
+        component: ({ data: rawData, ...inputProps }) => {
+          // FormInput data is untyped at framework level; casts align with what the filter validates.
+          const ast = rawData.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!ast) {
             return null;
           }
 
           const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+          const target = rawData.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
           const { typename } = useFormValues('MapForm');
 
           const schema =
@@ -98,7 +87,7 @@ export default Capability.makeModule(() =>
               ? db.graph.registry
                   .list()
                   .filter(Type.isType)
-                  .find((t: Type.Type) => Type.getTypename(t) === typename)
+                  .find((t) => Type.getTypename(t) === typename)
               : undefined;
           const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
 

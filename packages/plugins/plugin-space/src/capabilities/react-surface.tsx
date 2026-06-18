@@ -167,35 +167,18 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'selectedObjects',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.Article.role,
-              guard: (
-                data: unknown,
-              ): data is { companionTo: Obj.Unknown; subject: 'selected-objects'; attendableId: string } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const d = data as { subject?: unknown; companionTo?: unknown; attendableId?: unknown };
-                if (
-                  d.subject !== 'selected-objects' ||
-                  !Obj.isObject(d.companionTo) ||
-                  typeof d.attendableId !== 'string'
-                ) {
-                  return false;
-                }
-                const type = Obj.getType(d.companionTo);
-                const path = type
-                  ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
-                  : [];
-                const viewTarget =
-                  path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(d.companionTo, path) : undefined;
-                return !!viewTarget;
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ companionTo: Obj.Unknown; subject: 'selected-objects'; attendableId: string }>,
+        // Guard validates companionTo is Obj.Unknown; ArticleData<any> defaults CompanionTo=unknown so we assert the narrowed shape.
+        filter: Surface.makeFilter(AppSurface.Article, (data) => {
+          if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
+            return false;
+          }
+          const type = Obj.getType(data.companionTo);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
+          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
+          return !!viewTarget;
+        }) as Surface.Filter<AppSurface.ArticleData<unknown, {}, Obj.Unknown>>,
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
           const type = Obj.getType(data.companionTo);
@@ -242,25 +225,16 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'createInitialSpaceFormHue',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const schema = (data as { schema?: Schema.Schema.All }).schema;
-                if (!schema?.ast) {
-                  return false;
-                }
-                return !!SchemaEx.findAnnotation<boolean>(schema.ast, HueAnnotationId);
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST }>,
-        component: ({ data, ...inputProps }) => {
-          const ast = data.fieldPropertyAst;
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { schema } = data as { schema?: Schema.Schema.All };
+          if (!schema?.ast) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation<boolean>(schema.ast, HueAnnotationId);
+        }),
+        component: ({ data: rawData, ...inputProps }) => {
+          // FormInput data is untyped at framework level; cast aligns with what the filter validates.
+          const ast = rawData.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!ast) {
             return null;
           }
@@ -278,25 +252,16 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'createInitialSpaceFormIcon',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const schema = (data as { schema?: Schema.Schema.All }).schema;
-                if (!schema?.ast) {
-                  return false;
-                }
-                return !!SchemaEx.findAnnotation<boolean>(schema.ast, IconAnnotationId);
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST }>,
-        component: ({ data, ...inputProps }) => {
-          const ast = data.fieldPropertyAst;
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { schema } = data as { schema?: Schema.Schema.All };
+          if (!schema?.ast) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation<boolean>(schema.ast, IconAnnotationId);
+        }),
+        component: ({ data: rawData, ...inputProps }) => {
+          // FormInput data is untyped at framework level; cast aligns with what the filter validates.
+          const ast = rawData.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!ast) {
             return null;
           }
@@ -319,39 +284,24 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'typenameFormInput',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const d = data as { prop?: unknown; schema?: Schema.Schema.All };
-                if (d.prop !== 'typename') {
-                  return false;
-                }
-                if (!d.schema?.ast) {
-                  return false;
-                }
-                return !!SchemaEx.findAnnotation(d.schema.ast, TypeInputOptionsAnnotationId);
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{
-          prop: string;
-          schema: Schema.Schema.Any;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        }>,
-        component: ({ data: { schema, target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { prop, schema } = data as { prop?: unknown; schema?: Schema.Schema.All };
+          if (prop !== 'typename' || !schema?.ast) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation(schema.ast, TypeInputOptionsAnnotationId);
+        }),
+        component: ({ data: rawData, ...inputProps }) => {
+          // FormInput data is untyped at framework level; casts align with what the filter validates.
+          const ast = rawData.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!ast) {
             return null;
           }
 
           const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+          const target = rawData.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
+          const schema = rawData.schema as Schema.Schema.All;
           const annotation = SchemaEx.findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
           const options = useTypeOptions({ db, annotation });
 
@@ -360,28 +310,17 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'objectProperties',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.ObjectProperties.role,
-              guard: (data: unknown): data is { subject: Obj.Unknown } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const subject = (data as { subject?: unknown }).subject;
-                if (!Obj.isObject(subject)) {
-                  return false;
-                }
-                const type = Obj.getType(subject);
-                const path = type
-                  ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
-                  : [];
-                const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(subject, path) : undefined;
-                return !!viewTarget;
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ subject: Obj.Unknown }>,
+        filter: Surface.makeFilter(AppSurface.ObjectProperties, (data) => {
+          if (!Obj.isObject(data.subject)) {
+            return false;
+          }
+          const type = Obj.getType(data.subject);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
+          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
+          return !!viewTarget;
+        }),
         component: ({ data }) => {
           const type = Obj.getType(data.subject);
           const path = type
@@ -412,20 +351,11 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'navtreePresence',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.NavtreeItemEnd.role,
-              guard: (data: unknown): data is { id: string; subject: Obj.Unknown; open?: boolean } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const d = data as { id?: unknown; subject?: unknown };
-                return typeof d.id === 'string' && Obj.isObject(d.subject);
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ id: string; subject: Obj.Unknown; open?: boolean }>,
+        // Filter guard validates id:string and subject:Obj.Unknown; token is Record<string,unknown> so we assert the narrowed shape.
+        filter: Surface.makeFilter(
+          AppSurface.NavtreeItemEnd,
+          (data) => typeof data.id === 'string' && Obj.isObject(data.subject),
+        ) as Surface.Filter<{ id: string; subject: Obj.Unknown; open?: boolean }>,
         component: ({ data }) => {
           const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
           return <SmallPresenceLive id={data.id} open={data.open} viewers={ephemeral.viewersByObject[data.id]} />;
@@ -435,56 +365,31 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navtreePresenceFallback',
         position: 'last',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.NavtreeItemEnd.role,
-              guard: (data: unknown): data is { id: string; open?: boolean } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                return typeof (data as { id?: unknown }).id === 'string';
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ id: string; open?: boolean }>,
+        // Filter guard validates id:string; token is Record<string,unknown> so we assert the narrowed shape.
+        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd, (data) => typeof data.id === 'string') as Surface.Filter<{
+          id: string;
+          open?: boolean;
+        }>,
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
       // TODO(wittjosiah): Broken?
       Surface.create({
         id: 'navtreeSyncStatus',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.NavtreeItemEnd.role,
-              guard: (data: unknown): data is { subject: Space; open?: boolean } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                return isSpace((data as { subject?: unknown }).subject);
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ subject: Space; open?: boolean }>,
+        // Filter guard validates subject is Space; token is Record<string,unknown> so we assert the narrowed shape.
+        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd, (data) => isSpace(data.subject)) as Surface.Filter<{
+          subject: Space;
+          open?: boolean;
+        }>,
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
       Surface.create({
         id: 'navbarPresence',
         position: 'first',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.NavbarEnd.role,
-              guard: (data: unknown): data is { subject: Space | Obj.Unknown } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const subject = (data as { subject?: unknown }).subject;
-                return isSpace(subject) || Obj.isObject(subject);
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ subject: Space | Obj.Unknown }>,
+        // Filter guard validates subject is Space or Obj; NavbarEndData<unknown> subject is unknown so we assert the narrowed shape.
+        filter: Surface.makeFilter(
+          AppSurface.NavbarEnd,
+          (data) => isSpace(data.subject) || Obj.isObject(data.subject),
+        ) as Surface.Filter<{ subject: Space | Obj.Unknown }>,
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)

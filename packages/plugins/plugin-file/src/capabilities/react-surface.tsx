@@ -32,29 +32,19 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'createForm',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const schema = (data as { schema?: Schema.Schema.All }).schema;
-                if (!schema?.ast) {
-                  return false;
-                }
-                const annotation = SchemaEx.findAnnotation<Record<string, string[]>>(
-                  schema.ast,
-                  FileAction.UploadAnnotationId,
-                );
-                return !!annotation;
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ prop: string; schema: Schema.Schema.Any; fieldPropertyAst?: SchemaAST.AST }>,
-        component: ({ data: { schema, fieldPropertyAst }, ...props }) => {
-          const ast = fieldPropertyAst;
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { schema } = data as { schema?: Schema.Schema.All };
+          if (!schema?.ast) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation<Record<string, string[]>>(schema.ast, FileAction.UploadAnnotationId);
+        }),
+        component: ({ data: rawData, ...props }) => {
+          // FormInput data is untyped at framework level; cast matches what the filter validates.
+          const { schema, fieldPropertyAst: ast } = rawData as {
+            schema: Schema.Schema.Any;
+            fieldPropertyAst?: SchemaAST.AST;
+          };
           if (!ast) {
             return null;
           }

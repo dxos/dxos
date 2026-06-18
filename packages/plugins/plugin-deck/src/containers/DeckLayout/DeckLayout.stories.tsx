@@ -167,29 +167,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyNavigation',
-            filter: {
-              bindings: [
-                {
-                  role: AppSurface.Navigation.role,
-                  guard: (data): data is { current: string } => typeof (data as any).current === 'string',
-                },
-              ],
-            } satisfies Surface.Filter<{ current: string }>,
+            filter: Surface.makeFilter(AppSurface.Navigation, (data) => typeof data.current === 'string'),
             component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
           }),
           Surface.create({
             id: 'storyArticle',
-            filter: {
-              bindings: [
-                {
-                  role: AppSurface.Article.role,
-                  guard: (data): data is Record<string, unknown> =>
-                    typeof data === 'object' &&
-                    data !== null &&
-                    (data as { companionTo?: unknown }).companionTo == null,
-                },
-              ],
-            } satisfies Surface.Filter<Record<string, unknown>>,
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
@@ -216,17 +199,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           Surface.create({
             id: 'storyArticleCompanion',
-            filter: {
-              bindings: [
-                {
-                  role: AppSurface.Article.role,
-                  guard: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
-                    typeof data === 'object' &&
-                    data !== null &&
-                    (data as { companionTo?: unknown }).companionTo != null,
-                },
-              ],
-            } satisfies Surface.Filter<AppSurface.ArticleData<unknown, {}, unknown>>,
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
             component: ({ data: { subject, companionTo, properties, variant } }) => {
               if (companionTo == null) {
                 return <Loading />;

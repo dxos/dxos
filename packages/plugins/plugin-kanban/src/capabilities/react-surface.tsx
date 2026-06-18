@@ -37,37 +37,23 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'createInitialSchemaForm',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const schema = (data as { schema?: Schema.Schema.All }).schema;
-                if (!schema?.ast) {
-                  return false;
-                }
-                const annotation = SchemaEx.findAnnotation<boolean>(schema.ast, PivotColumnAnnotationId);
-                return !!annotation;
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{
-          prop: string;
-          schema: Schema.Schema<any>;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        }>,
-        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { schema } = data as { schema?: Schema.Schema.All };
+          if (!schema?.ast) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation<boolean>(schema.ast, PivotColumnAnnotationId);
+        }),
+        component: ({ data: rawData, ...inputProps }) => {
+          // FormInput data is untyped at framework level; casts align with what the filter validates.
+          const ast = rawData.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!ast) {
             return null;
           }
 
           const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+          const target = rawData.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
           if (!db) {
             return null;
           }

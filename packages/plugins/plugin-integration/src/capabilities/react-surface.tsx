@@ -59,24 +59,13 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationProviderSelector',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.FormInput.role,
-              guard: (data: unknown): boolean => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const fieldAst = (data as Record<string, unknown>).fieldPropertyAst as SchemaAST.AST | undefined;
-                if (!fieldAst) {
-                  return false;
-                }
-                const annotation = SchemaEx.findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
-                return !!annotation;
-              },
-            },
-          ],
-        } satisfies Surface.Filter<Record<string, any>>,
+        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
+          const { fieldPropertyAst } = data as { fieldPropertyAst?: SchemaAST.AST };
+          if (!fieldPropertyAst) {
+            return false;
+          }
+          return !!SchemaEx.findAnnotation<boolean>(fieldPropertyAst, IntegrationProviderAnnotationId);
+        }),
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
           const providers = useCapabilities(IntegrationProvider).flat();
           const options = useMemo(

@@ -85,26 +85,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
-        filter: {
-          bindings: [
-            {
-              role: AppSurface.Article.role,
-              guard: (
-                data: unknown,
-              ): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } => {
-                if (typeof data !== 'object' || data === null) {
-                  return false;
-                }
-                const d = data as { subject?: unknown; attendableId?: unknown; companionTo?: unknown };
-                return (
-                  typeof d.attendableId === 'string' &&
-                  Obj.isObject(d.companionTo) &&
-                  (Obj.instanceOf(Chat.Chat, d.subject) || d.subject === null)
-                );
-              },
-            },
-          ],
-        } satisfies Surface.Filter<{ subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown }>,
+        filter: Surface.makeFilter(
+          AppSurface.Article,
+          (data) =>
+            Obj.isObject(data.companionTo) && (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+        ),
         component: ({ data: { subject, attendableId, companionTo }, role, ref }) => (
           <ChatCompanion
             role={role}
