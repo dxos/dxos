@@ -63,3 +63,6 @@ export const Config = Schema.Struct({
   publish: Schema.optional(Publish),
 });
 export type Config = Schema.Schema.Type<typeof Config>;
+
+/** Identity helper: authors a typed `dx.config.ts`. Validation runs at load time, not here. */
+export const make = (config: Config): Config => config;

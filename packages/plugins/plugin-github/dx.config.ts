@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { defineConfig } from '@dxos/app-framework';
+import { Config2 } from '@dxos/app-framework/config';
 import { trim } from '@dxos/util';
 
-export default defineConfig({
+export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.github',
     name: 'GitHub',

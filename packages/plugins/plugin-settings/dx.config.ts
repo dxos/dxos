@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineConfig } from '@dxos/app-framework';
+import { Config2 } from '@dxos/app-framework/config';
 
-export default defineConfig({
+export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.settings',
     name: 'Settings',
