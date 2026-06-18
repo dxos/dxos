@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
-              ref={ref}
+              ref={ref as React.Ref<HTMLDivElement>}
             />
           );
         },
@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
-              ref={ref}
+              ref={ref as React.Ref<HTMLDivElement>}
             />
           );
         },
@@ -103,9 +103,7 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-// Surface passes Ref<HTMLElement>; MarkdownArticle expects Ref<HTMLDivElement>. The cast below is valid
-// because this component always renders an HTMLDivElement via MarkdownArticle.
-const Container = forwardRef<HTMLElement, AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>>(
+const Container = forwardRef<HTMLDivElement, AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>>(
   ({ id, attendableId, subject, role }, forwardedRef) => {
     const viewState = useCapability(AttentionCapabilities.ViewState);
     const settings = useAtomCapability(MarkdownCapabilities.Settings);
@@ -132,7 +130,7 @@ const Container = forwardRef<HTMLElement, AppSurface.ObjectArticleProps<Markdown
         editorStateStore={editorState}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
-        ref={forwardedRef as React.Ref<HTMLDivElement>}
+        ref={forwardedRef}
       />
     );
   },
