@@ -12,7 +12,6 @@ import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
-
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(Type.makeObject(DXN.make('com.example.type.map', '0.1.0')));
