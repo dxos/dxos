@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.zen',
     name: 'Zen',
+    author: 'DXOS',
     description: trim`
     ZenPlugin is an ambient sound and meditation plugin for DXOS Composer. Users create and edit Dream
     objects — named, duration-bound soundscapes composed of layered audio sequences that play through

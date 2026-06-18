@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.sandbox',
     name: 'Sandbox',
+    author: 'DXOS',
     description: trim`
       Sandbox plugin for DXOS Composer that provides isolated shell environments.
       Each sandbox is a persistent container identified by an ECHO object in the space.

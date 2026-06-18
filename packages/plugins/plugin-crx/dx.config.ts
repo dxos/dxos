@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.crx',
     name: 'Browser Extension',
+    author: 'DXOS',
     description: trim`
       Capture content from any web page into your workspace with the Composer browser extension.
       Highlight a section of a page and save it as a contact, an organization, or a bookmark —

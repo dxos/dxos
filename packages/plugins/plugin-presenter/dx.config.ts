@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.presenter',
     name: 'Presenter',
+    author: 'DXOS',
     description: trim`
       Transform existing workspace objects into interactive presentation slideshows without
       duplicating content. Markdown documents are split into slides on horizontal \`---\`

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.conductor',
     name: 'Conductor',
+    author: 'DXOS',
     description: trim`
       Conductor is a visual node-based compute graph plugin for DXOS Composer.
       It lets you compose reactive data pipelines by connecting typed input and output ports on a

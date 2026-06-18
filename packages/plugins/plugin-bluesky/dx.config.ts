@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.bluesky',
     name: 'Bluesky',
+    author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-bluesky',
     spec: 'PLUGIN.mdl',
     description: trim`

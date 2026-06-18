@@ -8,6 +8,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.settings',
     name: 'Settings',
+    author: 'DXOS',
     tags: ['system'],
   },
 });

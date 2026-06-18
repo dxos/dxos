@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.board',
     name: 'Board',
+    author: 'DXOS',
     description: trim`
     Board is an infinite spatial canvas that lets you place any ECHO object — documents, tasks, notes, or rich media — anywhere on a two-dimensional grid.
     Items are arranged by dragging, resized freely, and removed from the canvas without deleting the underlying data, so the same object can appear on multiple boards simultaneously.

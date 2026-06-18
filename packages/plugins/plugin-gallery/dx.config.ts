@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.gallery',
     name: 'Gallery',
+    author: 'DXOS',
     description: trim`
       GalleryPlugin is a lightweight image gallery for DXOS Composer. A Gallery is
       an ECHO object that stores an ordered array of images, where each image

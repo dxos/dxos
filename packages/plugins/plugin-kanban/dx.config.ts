@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.kanban',
     name: 'Kanban',
+    author: 'DXOS',
     description: trim`
       Visual project management using customizable kanban boards to track workflow progress.
       Organize any ECHO type into drag-and-drop columns defined by a single-select field, move cards

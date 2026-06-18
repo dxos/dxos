@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.registry',
     name: 'Plugins',
+    author: 'DXOS',
     description: trim`
       Plugin management system for discovering, installing, and configuring workspace extensions.
       Browse available plugins and customize your workspace capabilities.

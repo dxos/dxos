@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.spacetime',
     name: 'Spacetime',
+    author: 'DXOS',
     description: trim`
     A generative 3D modeling and animation plugin for DXOS Composer.
     Uses Babylon.js for real-time rendering with an ArcRotateCamera, HemisphericLight, and a toggleable ground-plane grid.

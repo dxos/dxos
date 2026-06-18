@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.map',
     name: 'Maps',
+    author: 'DXOS',
     description: trim`
       Interactive geospatial mapping plugin that renders ECHO dataset records as map pins or globe markers.
       Connect any table schema that contains latitude/longitude coordinates to a named Map object,

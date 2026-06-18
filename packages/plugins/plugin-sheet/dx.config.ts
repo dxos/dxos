@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.sheet',
     name: 'Sheet',
+    author: 'DXOS',
     description: trim`
       Full-featured spreadsheet for DXOS Composer backed by ECHO for local-first, real-time collaborative editing.
       Cells, row/column metadata, and range-based formatting are all stored as ECHO objects and replicated to peers instantly.

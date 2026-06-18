@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.masonry',
     name: 'Masonry',
+    author: 'DXOS',
     description: trim`
     Masonry renders a live, query-driven collection as a responsive column-balanced card grid.
 

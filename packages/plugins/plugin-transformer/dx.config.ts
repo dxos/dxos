@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.transformer',
     name: 'Transformer',
+    author: 'DXOS',
     description: trim`
       Browser-based machine learning plugin that runs Hugging Face Transformers.js models
       entirely in-browser via WebAssembly and WebGPU — no server-side inference required.

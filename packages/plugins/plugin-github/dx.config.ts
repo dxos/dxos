@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.github',
     name: 'GitHub',
+    author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-github',
     spec: 'PLUGIN.mdl',
     description: trim`

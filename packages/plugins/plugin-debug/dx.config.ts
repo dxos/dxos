@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.debug',
     name: 'Debug',
+    author: 'DXOS',
     description: trim`
       DebugPlugin is the developer toolkit for DXOS Composer. It adds a structured Devtools node
       to the navigation graph — grouped into Client, HALO, ECHO, Mesh, and EDGE sub-sections —

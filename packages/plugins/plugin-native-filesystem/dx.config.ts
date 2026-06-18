@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.nativeFilesystem',
     name: 'Native Filesystem',
+    author: 'DXOS',
     description: trim`
       Open local directories as workspaces inside the Composer desktop app, similar to an Obsidian vault.
       Markdown files and sub-directories are surfaced in the navtree alongside ECHO spaces and objects,

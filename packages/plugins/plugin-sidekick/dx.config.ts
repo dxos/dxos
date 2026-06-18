@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.sidekick',
     name: 'Sidekick',
+    author: 'DXOS',
     description: trim`
       Sidekick is a personal companion agent for DXOS Composer that acts as a
       persistent, document-aware assistant living inside your workspace. On first

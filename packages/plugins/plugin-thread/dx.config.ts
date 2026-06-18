@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.thread',
     name: 'Threads',
+    author: 'DXOS',
     description: trim`
       ThreadPlugin provides chat: channels backed by an ECHO feed and free-standing
       message threads. It renders the channel article and companion surfaces plus a

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.pipeline',
     name: 'Pipelines',
+    author: 'DXOS',
     description: trim`
       A multi-column Kanban-style pipeline plugin for DXOS Composer.
       Each Pipeline holds an ordered set of Columns; each Column is backed by a ViewModel whose query

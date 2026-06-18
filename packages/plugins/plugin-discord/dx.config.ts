@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.discord',
     name: 'Discord',
+    author: 'DXOS',
     description: trim`
       Connect a Discord bot to your workspace so server channels stream alongside everything else you're doing.
       Messages from every guild the bot belongs to are pulled incrementally into ECHO as structured Message objects

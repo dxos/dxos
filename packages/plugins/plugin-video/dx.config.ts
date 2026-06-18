@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.video',
     name: 'Video',
+    author: 'DXOS',
     description: trim`
       Store videos and play them inline in DXOS Composer. Each Video object holds a name and a source
       URL that renders in an embedded player. A transcription operation calls a remote EDGE service to

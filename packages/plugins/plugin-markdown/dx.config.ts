@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.markdown',
     name: 'Markdown',
+    author: 'DXOS',
     description: trim`
       A full-featured markdown editor for authoring documents in your space. Edits flow through a collaborative CodeMirror surface backed by ECHO Text, so every keystroke replicates to other peers in real time without merge conflicts or lost work.
 

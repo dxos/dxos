@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.assistant',
     name: 'Assistant',
+    author: 'DXOS',
     description: trim`
       AssistantPlugin brings a conversational AI assistant into DXOS Composer, letting users chat naturally
       with objects in their spaces. Every Chat is a first-class ECHO object — messages are persisted,

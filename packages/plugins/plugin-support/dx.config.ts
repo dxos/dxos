@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.support',
     name: 'Support',
+    author: 'DXOS',
     description: trim`
       Support provides three user-assistance paths inside Composer. The
       conversational path lets users open a Ticket from the navtree and work with

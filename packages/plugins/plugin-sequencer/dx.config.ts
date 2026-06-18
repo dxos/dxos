@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.sequencer',
     name: 'Sequencer',
+    author: 'DXOS',
     description: trim`
       SequencerPlugin is a collaborative music step-grid editor embedded in DXOS
       Composer. A Score is a first-class ECHO object that owns a roster of tracks

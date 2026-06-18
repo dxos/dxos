@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.voxel',
     name: 'Voxel',
+    author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-voxel',
     spec: 'PLUGIN.mdl',
     description: trim`

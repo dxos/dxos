@@ -80,7 +80,8 @@ export const publishPackage = Command.make(
         const source = Option.getOrUndefined(options.source);
         const iconKey = Option.getOrUndefined(options.iconKey);
         const iconHue = Option.getOrUndefined(options.iconHue);
-        const icon = iconKey !== undefined ? { key: iconKey, ...(iconHue !== undefined && { hue: iconHue }) } : undefined;
+        const icon =
+          iconKey !== undefined ? { key: iconKey, ...(iconHue !== undefined && { hue: iconHue }) } : undefined;
 
         const profile: PluginProfile & { createdAt: string } = {
           key: options.key,

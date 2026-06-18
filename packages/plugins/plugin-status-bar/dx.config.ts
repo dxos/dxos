@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.statusBar',
     name: 'Status Bar',
+    author: 'DXOS',
     description: trim`
       Persistent bottom bar displaying workspace status information and quick actions.
       Access connection state, notifications, and common commands without leaving your current context.

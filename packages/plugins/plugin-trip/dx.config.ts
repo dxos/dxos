@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.trip',
     name: 'Trip',
+    author: 'DXOS',
     description: trim`
       Trip manages travel itineraries as local-first ECHO objects. A Trip is an
       ordered list of typed Segments — Flight, Train, Boat, Road, Lodging, and

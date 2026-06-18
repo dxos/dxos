@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.inbox',
     name: 'Inbox',
+    author: 'DXOS',
     description: trim`
       A unified inbox for managing email, calendar events, and contacts directly inside your workspace. Mailboxes and calendars are backed by append-only ECHO feeds, so messages and events stream in from sync without ever overwriting history.
 

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.space',
     name: 'Spaces',
+    author: 'DXOS',
     description: trim`
       SpacePlugin is the core workspace container for DXOS Composer. It owns the full lifecycle of
       collaborative spaces — creating, joining, opening, closing, and resetting them — and manages

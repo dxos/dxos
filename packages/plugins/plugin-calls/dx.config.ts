@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.calls',
     name: 'Calls',
+    author: 'DXOS',
     description: trim`
       Calls adds WebRTC video and audio conferencing to Composer. A call room is
       derived from the DXN of any host object — typically a Channel — so starting

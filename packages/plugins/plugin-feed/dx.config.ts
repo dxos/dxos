@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.feed',
     name: 'Feed',
+    author: 'DXOS',
     description: trim`
       FeedPlugin brings syndicated content into DXOS Composer by syncing RSS feeds
       and ATproto (Bluesky) feeds as ECHO objects stored in the user's space.

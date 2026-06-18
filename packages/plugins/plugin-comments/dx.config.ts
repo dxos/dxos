@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.comments',
     name: 'Comments',
+    author: 'DXOS',
     description: trim`
       CommentsPlugin renders comment threads anchored to ECHO objects (primarily Markdown
       documents). Threads can be created inline on any commentable object, letting collaborators

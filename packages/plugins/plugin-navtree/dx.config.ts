@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.navtree',
     name: 'Navtree',
+    author: 'DXOS',
     description: trim`
       NavTreePlugin renders the application graph as a collapsible hierarchical tree in the Composer sidebar.
       It manages workspace tabs at the root level and provides expand/collapse navigation for spaces, folders,

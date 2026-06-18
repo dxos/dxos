@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.code',
     name: 'Code',
+    author: 'DXOS',
     description: trim`
       Code is the plugin-authoring workbench for DXOS Composer. It pairs a
       structured DEUS spec document (a .mdl file describing types, components,

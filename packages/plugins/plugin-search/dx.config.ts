@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.search',
     name: 'Search',
+    author: 'DXOS',
     description: trim`
       Full-text search engine for finding content across all spaces and object types in DXOS Composer.
       The plugin provides a global command-palette style dialog (invoked via the OpenSearch operation)

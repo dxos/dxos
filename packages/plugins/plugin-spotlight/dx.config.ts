@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.spotlight',
     name: 'Spotlight',
+    author: 'DXOS',
     description: trim`
       The Spotlight plugin drives the Tauri popover window that gives users instant keyboard
       access to Composer commands and navigation from anywhere on the desktop. It renders the

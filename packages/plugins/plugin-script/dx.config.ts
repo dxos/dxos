@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.script',
     name: 'Scripts',
+    author: 'DXOS',
     description: trim`
       Write, deploy, and run custom TypeScript functions as ECHO objects directly inside your Composer spaces.
       Scripts execute on the Cloudflare Workers-based EDGE runtime and have access to the full DXOS SDK,

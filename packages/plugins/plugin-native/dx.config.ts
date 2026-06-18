@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.native',
     name: 'App',
+    author: 'DXOS',
     description: trim`
       Tauri-based native platform integration for DXOS Composer on macOS, Linux, and Windows.
 

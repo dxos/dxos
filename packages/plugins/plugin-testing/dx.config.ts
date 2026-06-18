@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.storybookLayout',
     name: 'Storybook',
+    author: 'DXOS',
     description: trim`
       Development layout optimized for Storybook component testing and documentation.
       Provides specialized views for component development and design system exploration.

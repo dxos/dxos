@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.generator',
     name: 'Generator',
+    author: 'DXOS',
     description: trim`
       Generator adds AI-driven media production to Composer. A Generation object
       pairs a markdown prompt (stored as a linked Text ref so it replicates to

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.slack',
     name: 'Slack',
+    author: 'DXOS',
     description: trim`
       SlackPlugin connects a Slack workspace to DXOS Composer via OAuth so that
       channels and messages appear alongside documents, threads, and other

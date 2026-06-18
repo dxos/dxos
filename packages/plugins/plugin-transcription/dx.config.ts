@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.transcription',
     name: 'Transcription',
+    author: 'DXOS',
     description: trim`
       Real-time voice-to-text transcription for DXOS Composer.
       Captures microphone audio in short PCM chunks, batches them into WAV payloads, and streams

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.commerce',
     name: 'Commerce',
+    author: 'DXOS',
     description: trim`
       Structured product search across configurable vendor sites.
       Each vendor is described by an editable template that drives search and result extraction.

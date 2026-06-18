@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.mermaid',
     name: 'Mermaid',
+    author: 'DXOS',
     description: trim`
       Generate diagrams from simple text-based definitions using Mermaid syntax.
       Create flowcharts, sequence diagrams, class diagrams, state diagrams, entity-relationship

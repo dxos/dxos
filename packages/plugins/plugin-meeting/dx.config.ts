@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.meeting',
     name: 'Meetings',
+    author: 'DXOS',
     description: trim`
       Comprehensive meeting management that captures notes, generates real-time transcriptions, and produces AI-powered summaries of every session.
       Each meeting record stores an ISO-timestamped creation time, a list of participant identities, and three linked documents: a live transcript feed, a freeform markdown notes editor, and an AI-generated summary.

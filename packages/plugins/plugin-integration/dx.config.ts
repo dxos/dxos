@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.integration',
     name: 'Integrations',
+    author: 'DXOS',
     description: trim`
       Manages connections to external services for DXOS Composer workspaces.
       OAuth credentials and API tokens are stored as AccessToken objects in ECHO

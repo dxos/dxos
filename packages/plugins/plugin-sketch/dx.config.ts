@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.sketch',
     name: 'Sketch',
+    author: 'DXOS',
     description: trim`
       Sketch is a collaborative whiteboard plugin for DXOS Composer that gives every workspace a
       full-featured infinite canvas. Draw freehand strokes, place geometric shapes, add text and

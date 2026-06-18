@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.mapSolid',
     name: 'Maps (Solid)',
+    author: 'DXOS',
     description: trim`
       SolidJS-native map surface plugin that renders ECHO Map objects as interactive tile maps or 3-D globes.
       Implements the map surface as a SolidJS Web Component (dx-map-surface), providing fine-grained reactivity

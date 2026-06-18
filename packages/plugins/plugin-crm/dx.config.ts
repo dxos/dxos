@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.crm',
     name: 'CRM',
+    author: 'DXOS',
     description: trim`
       CRM adds a blueprint that drives the AI assistant to research people and
       organizations and produce structured Profile documents stored in your

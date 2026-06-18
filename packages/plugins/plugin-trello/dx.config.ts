@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.trello',
     name: 'Trello',
+    author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-trello',
     spec: 'PLUGIN.mdl',
     description: trim`

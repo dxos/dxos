@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.tictactoe',
     name: 'Tic-Tac-Toe',
+    author: 'DXOS',
     description: trim`
       Tic-Tac-Toe adds a fully-featured strategy game to Composer. Games are
       stored as ECHO objects so they replicate in real time across every peer in a

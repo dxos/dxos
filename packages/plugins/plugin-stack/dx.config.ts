@@ -11,6 +11,7 @@ export default Config2.make({
     // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
     //   Conside renaming this to the collection plugin and trying to factor more collections logic from the space plugin.
     name: 'Collections',
+    author: 'DXOS',
     description: trim`
       StackPlugin renders any Collection object as a vertically scrollable stack of collapsible sections in the
       Composer article surface. Each section wraps an arbitrary ECHO object and delegates its content rendering

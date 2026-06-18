@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.doctor',
     name: 'Doctor',
+    author: 'DXOS',
     description: trim`
       Doctor adds a self-introspection blueprint to Composer. When the blueprint
       is loaded the assistant gains access to the queryComposerLogs tool, which

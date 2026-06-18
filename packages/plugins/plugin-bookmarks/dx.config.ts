@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.bookmarks',
     name: 'Bookmarks',
+    author: 'DXOS',
     description: trim`
       Save web pages you want to come back to. Add a bookmark from any page with one click in the
       Composer browser extension — the page's title, image, and description are captured

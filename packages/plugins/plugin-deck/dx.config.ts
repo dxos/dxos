@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.deck',
     name: 'Layout',
+    author: 'DXOS',
     description: trim`
       The Deck plugin is the core layout engine for DXOS Composer. It manages the multi-plank
       workspace (the "deck"), sidebar panels, dialogs, popovers, and toast notifications, giving

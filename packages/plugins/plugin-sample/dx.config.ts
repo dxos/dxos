@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.sample',
     name: 'Sample',
+    author: 'DXOS',
     description: trim`
       Pedagogical reference plugin demonstrating all common DXOS plugin patterns
       in a single, well-commented package. The plugin manages a \`SampleItem\` ECHO

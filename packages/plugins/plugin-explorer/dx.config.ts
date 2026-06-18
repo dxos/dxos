@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.explorer',
     name: 'Explorer',
+    author: 'DXOS',
     description: trim`
     Explorer is an interactive hypergraph visualization plugin that reveals the relationships
     between objects stored in your DXOS workspace. Each Graph document is backed by a live

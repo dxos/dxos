@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.chess',
     name: 'Chess',
+    author: 'DXOS',
     description: trim`
       Full-featured chess game supporting multiplayer matches with friends or practice sessions against AI opponents.
       Track game history and analyze moves in real-time.

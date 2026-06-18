@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.automation',
     name: 'Automation',
+    author: 'DXOS',
     description: trim`
       Event-driven workflow automation engine for DXOS Composer.
       An Automation is a user-facing object pairing a trigger ("when" — a timer schedule or an

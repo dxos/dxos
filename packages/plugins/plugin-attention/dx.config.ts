@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.attention',
     name: 'Attention',
+    author: 'DXOS',
     description: trim`
       Track and manage focused attention on objects across your workspace.
       Highlight items requiring action and coordinate team focus on priority work.

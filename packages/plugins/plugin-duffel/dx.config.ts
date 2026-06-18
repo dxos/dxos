@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.duffel',
     name: 'Duffel',
+    author: 'DXOS',
     description: trim`
       Duffel contributes a flight-search booking provider to Composer. It
       implements the plugin-trip BookingService capability by mapping a simplified

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.file',
     name: 'File',
+    author: 'DXOS',
     description: trim`
       FilePlugin enables DXOS Composer to store and preview binary files — images, videos, and PDFs — as
       first-class ECHO objects. Uploaded bytes are routed through a pluggable backend system: the built-in

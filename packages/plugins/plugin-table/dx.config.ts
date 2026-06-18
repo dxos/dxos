@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.table',
     name: 'Tables',
+    author: 'DXOS',
     description: trim`
       Tables brings structured, spreadsheet-style data views to DXOS Composer.
       Any ECHO schema type can be bound to a Table, giving users a familiar grid interface

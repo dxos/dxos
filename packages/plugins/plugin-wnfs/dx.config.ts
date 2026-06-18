@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.wnfs',
     name: 'WNFS',
+    author: 'DXOS',
     description: trim`
       Decentralized, end-to-end encrypted file storage for DXOS Composer built on the Web Native File System (WNFS) protocol.
 

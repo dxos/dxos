@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.outliner',
     name: 'Outliner',
+    author: 'DXOS',
     description: trim`
       Tree-structured note-taking editor for organizing ideas hierarchically.
       Each Outline is backed by an ECHO CRDT Text object so edits merge automatically across peers in real time.

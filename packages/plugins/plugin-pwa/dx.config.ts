@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.pwa',
     name: 'PWA',
+    author: 'DXOS',
     description: trim`
       Progressive Web App capabilities enabling offline functionality and app-like experience.
       Install to home screen and use the workspace without internet connection.

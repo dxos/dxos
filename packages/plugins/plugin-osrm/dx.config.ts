@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.osrm',
     name: 'OSRM',
+    author: 'DXOS',
     description: trim`
       OSRM contributes a driving-route provider to Composer. It implements the plugin-trip
       RoutingService capability by geocoding city names via Nominatim and computing the driving route

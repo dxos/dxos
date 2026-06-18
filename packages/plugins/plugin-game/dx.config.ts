@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.game',
     name: 'Game',
+    author: 'DXOS',
     description: trim`
       Generic game host plugin that provides shared infrastructure for local-first,
       multi-player turn-based games inside DXOS Composer. The plugin owns the base

@@ -9,6 +9,7 @@ export default Config2.make({
   plugin: {
     key: 'org.dxos.plugin.template',
     name: 'Template',
+    author: 'DXOS',
     description: trim`
       Create reusable templates for documents, tables, and other objects.
       Define structured patterns that can be quickly instantiated with pre-configured content and settings.
