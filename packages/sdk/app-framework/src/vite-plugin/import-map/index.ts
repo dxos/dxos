@@ -6,8 +6,7 @@ import { init as initCjsLexer, parse as parseCjs } from 'cjs-module-lexer';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';
-import { ResolverFactory } from 'oxc-resolver';
-import { type Plugin, type ResolvedConfig } from 'vite';
+import { type Plugin } from 'vite';
 
 import { DEFAULT_PACKAGES } from '../packages';
 
@@ -106,30 +105,6 @@ const resolvePackageJsonPathViaContext = async (
     // fall through
   }
   return resolvePackageJsonPath(packageName);
-};
-
-/**
- * Resolve a bare specifier for import-map wrapper emission.
- * `@dxos/*` packages prefer the `source` export (matching composer-app's
- * `importSource` plugin) so host and remote plugins share one module graph.
- * Without this, wrappers re-export compiled `dist/` while the host bundles
- * TypeScript source — duplicating module-local state such as React contexts.
- */
-const resolveImportMapSpecifier = async (
-  ctx: { resolve: (id: string) => Promise<{ id: string } | null> },
-  specifier: string,
-  sourceResolver: ResolverFactory,
-  resolveFrom: string,
-): Promise<string | undefined> => {
-  if (specifier.startsWith('@dxos/')) {
-    const sourceResolved = await sourceResolver.async(resolveFrom, specifier);
-    if (!sourceResolved.error && sourceResolved.path) {
-      return trimQueryString(sourceResolved.path);
-    }
-  }
-
-  const resolved = await ctx.resolve(specifier);
-  return resolved ? trimQueryString(resolved.id) : undefined;
 };
 
 /**
@@ -386,8 +361,6 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
   let modules: string[] = [];
   let importMapIsDev = false;
   let base = '/';
-  let sourceResolver: ResolverFactory;
-  let resolveFrom = '';
 
   return [
     // Phase 1: Resolve all package entrypoints and emit chunks.
@@ -405,11 +378,8 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
     {
       name: 'import-map:get-chunk-ref-ids',
       apply: 'build',
-      configResolved(config: ResolvedConfig) {
+      configResolved(config) {
         base = config.base ?? '/';
-        resolveFrom = config.root;
-        const conditionNames = ['source', ...(config.resolve.conditions ?? [])];
-        sourceResolver = new ResolverFactory({ conditionNames });
       },
       async buildStart() {
         importMapIsDev = this.environment.mode === 'dev';
@@ -446,8 +416,8 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             continue;
           }
 
-          const resolvedPath = await resolveImportMapSpecifier(this, specifier, sourceResolver, resolveFrom);
-          if (!resolvedPath) {
+          const resolved = await this.resolve(specifier);
+          if (!resolved) {
             this.warn(`Import map: unable to resolve "${specifier}"; omitting from import map.`);
             continue;
           }
@@ -457,10 +427,11 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             // `/@fs/` escape hatch so absolute node_modules paths (including
             // `.vite/deps/*` pre-bundled chunks) round-trip through the dev server
             // instead of being resolved against the document origin as a 404.
-            imports[specifier] = resolvedPath.startsWith('/') ? `/@fs${resolvedPath}` : resolvedPath;
+            const filePath = trimQueryString(resolved.id);
+            imports[specifier] = filePath.startsWith('/') ? `/@fs${filePath}` : filePath;
           } else {
             // Prod: emit a virtual wrapper chunk that re-exports from the real module.
-            resolvedIds[specifier] = resolvedPath;
+            resolvedIds[specifier] = resolved.id;
             chunkRefIds[specifier] = this.emitFile({
               type: 'chunk',
               id: `${WRAPPER_PREFIX}${specifier}`,
@@ -505,10 +476,10 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         if (isCjs) {
           const named = getCjsNamedExports(filePath);
           if (named.length > 0) {
-            return `export { default, ${named.join(', ')} } from ${JSON.stringify(resolvedId)};\n${keepalive}\n`;
+            return `export { default, ${named.join(', ')} } from ${JSON.stringify(specifier)};\n${keepalive}\n`;
           }
         }
-        return `export * from ${JSON.stringify(resolvedId)};\n${keepalive}\n`;
+        return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
       },
 
       // After bundling, map each specifier to the URL of its emitted chunk. Preserves

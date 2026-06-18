@@ -135,7 +135,6 @@
     "cjs-module-lexer": "catalog:",
     "esbuild": "catalog:",
     "idb-keyval": "catalog:",
-    "oxc-resolver": "catalog:",
     "solid-js": "catalog:",
     "yaml": "catalog:"
   },
