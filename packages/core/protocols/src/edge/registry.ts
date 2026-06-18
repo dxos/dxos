@@ -34,7 +34,7 @@ export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
  * Paths in `assets` are relative to the manifest's URL.
  */
 export const PluginManifestSchema = Schema.Struct({
-  ...PluginMeta.fields,
+  ...PluginMeta.omit('spec', 'dependsOn', 'version').fields,
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
   version: Schema.String.pipe(Schema.nonEmptyString()),
   /**
