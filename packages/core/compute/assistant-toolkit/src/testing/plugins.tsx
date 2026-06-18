@@ -7,11 +7,11 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
-const CardContent: Surface.RoleToken<Record<string, unknown>> = Surface.makeType('org.dxos.role.cardContent');
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
@@ -37,7 +37,7 @@ export const capabilities: Capability.Any[] = [
     Capabilities.ReactSurface,
     Surface.create({
       id: 'pluginDefault',
-      filter: Surface.makeFilter(CardContent),
+      filter: Surface.makeFilter(AppSurface.CardContent),
       position: 'last',
       component: ({ data }) => (
         <Card.Body>
