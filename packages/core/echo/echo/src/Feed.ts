@@ -245,6 +245,9 @@ export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Ef
 /**
  * Creates a reactive query over items in a feed.
  *
+ * In non-Effect code, query a feed directly through the database with a feed scope:
+ * `db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed))))`.
+ *
  * @example
  * ```ts
  * const result = yield* Feed.query(feed, Filter.type(Person));

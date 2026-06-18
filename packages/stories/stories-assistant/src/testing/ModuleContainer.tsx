@@ -72,7 +72,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       .filter(isNonNullable);
 
     const feedTarget = await chat.feed.load();
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const feedServiceLayer = createFeedServiceLayer(space.db);
     const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );

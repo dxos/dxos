@@ -20,7 +20,7 @@ import { EchoTestBuilder } from '../testing';
 // an indexed object had a strong dependency (e.g. its dynamic schema)
 // referenced by the space root but whose chunks were not on disk and there
 // was no peer to fetch them from. The query pipeline landed on
-// `coreDatabase.loadObjectCoreById`, which waited on `_updateEvent` until
+// `entityManager.loadObjectCoreById`, which waited on `_updateEvent` until
 // the object was materialized AND `_areDepsSatisfied(core)` returned true,
 // hanging forever when the dep document was unreachable.
 //
@@ -81,7 +81,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     // 3. Wire both objects into the local space root. Main is reachable on
     //    disk via `links[mainObjectId]`; dep is *advertised* via
     //    `links[depObjectId]` but its underlying chunks never arrive.
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -97,14 +97,14 @@ describe('Query pipeline strong-dependency stalls', () => {
     //    Must resolve quickly with `undefined`: dep doc's disk probe
     //    returns negative -> `onObjectUnavailable` fires -> main's deps
     //    are "resolved" (unavailable) -> wait predicate fires.
-    const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
+    const resolved = await asyncTimeout(db.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
     expect(resolved).toBeUndefined();
 
     // 6. With `returnWithUnsatisfiedDeps: true` the partial core is
     //    returned so callers that explicitly opt in can still see the
     //    object body even when its strong deps are unavailable.
     const partial = await asyncTimeout(
-      db.coreDatabase.loadObjectCoreById(mainObjectId, {
+      db.loadObjectCoreById(mainObjectId, {
         diskOnly: true,
         returnWithUnsatisfiedDeps: true,
       }),
@@ -158,7 +158,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     });
     const unreachableUrl = orphanDepHandle.url;
 
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -167,7 +167,7 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     await sleep(200);
 
-    const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId), 1000);
+    const resolved = await asyncTimeout(db.loadObjectCoreById(mainObjectId), 1000);
     expect(resolved).toBeUndefined();
   });
 
@@ -220,7 +220,7 @@ describe('Query pipeline strong-dependency stalls', () => {
       },
     });
 
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[aId] = new A.RawString(aHandle.url);
@@ -230,7 +230,7 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     await sleep(200);
 
-    const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(aId), 1000);
+    const resolved = await asyncTimeout(db.loadObjectCoreById(aId), 1000);
     expect(resolved).toBeUndefined();
   });
 
@@ -272,7 +272,7 @@ describe('Query pipeline strong-dependency stalls', () => {
       },
     });
 
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -282,9 +282,9 @@ describe('Query pipeline strong-dependency stalls', () => {
     await sleep(200);
 
     // Main object is materialized locally but its schema dep is unreachable.
-    const core = db.coreDatabase.getObjectCoreById(mainObjectId, { load: false });
+    const core = db.getObjectCoreById(mainObjectId, { load: false });
     expect(core).toBeDefined();
-    expect(db.coreDatabase.areStrongDepsSatisfied(core!)).toBe(false);
+    expect(db.areStrongDepsSatisfied(core!)).toBe(false);
 
     const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
     expect(results.some((object) => object.id === mainObjectId)).toBe(false);
@@ -301,7 +301,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     // resolution / a reactive query) BEFORE it is added to the space. The diskOnly probe marks the
     // id unavailable because it is absent from the space directory.
     const object = Obj.make(TestSchema.Expando, { name: 'companion-chat' });
-    const probe = await asyncTimeout(db.coreDatabase.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
+    const probe = await asyncTimeout(db.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
     expect(probe, 'absent id resolves to undefined and is marked unavailable').toBeUndefined();
 
     // Persist locally — mirrors SpaceOperation.AddObject + flush on first submit.
@@ -311,7 +311,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     // The reactive index query now returns this object; client hydration uses the same diskOnly
     // entry point (EchoClient._loadObjectFromDocument). It MUST resolve the now-present object
     // rather than short-circuiting on the stale unavailable mark.
-    const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
+    const resolved = await asyncTimeout(db.loadObjectCoreById(object.id, { diskOnly: true }), 1000);
     expect(resolved, 'locally-persisted object must resolve despite a stale unavailable mark').toBeDefined();
     expect(resolved!.id).toEqual(object.id);
   });
@@ -343,7 +343,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     });
 
     // Link only the main object — the dep id has no entry in the directory at all.
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
@@ -354,7 +354,7 @@ describe('Query pipeline strong-dependency stalls', () => {
     // The dangling dep resolves as unavailable instead of parking forever, so the
     // load completes promptly with `undefined` (deps unsatisfied → object omitted).
     const begin = performance.now();
-    const loaded = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
+    const loaded = await asyncTimeout(db.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
     expect(loaded).toBeUndefined();
 
     const results = await asyncTimeout(db.query(Filter.everything()).run({ timeout: 1000 }), 2000);
@@ -390,14 +390,14 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     // Link only main; the dep is absent from the directory, so its load op settles `unavailable`
     // and main is omitted. This latches the cached op that the local materialization must heal.
-    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    const spaceRootHandle = db._entityManager.getSpaceRootDocHandle();
     spaceRootHandle.change((newDoc: DatabaseDirectory) => {
       newDoc.links ??= {};
       newDoc.links[mainObjectId] = new A.RawString(mainDocHandle.url);
     });
     await sleep(200);
 
-    const before = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
+    const before = await asyncTimeout(db._entityManager.loadObjectCoreById(mainObjectId, { diskOnly: true }), 1000);
     expect(before, 'main omitted while its strong dep is absent').toBeUndefined();
 
     // Materialize the dep locally: plant its document and link it into the space root. The link
@@ -415,7 +415,7 @@ describe('Query pipeline strong-dependency stalls', () => {
 
     // The local materialization heals the cached resolution, so main now surfaces.
     await expect
-      .poll(async () => (await db.coreDatabase.loadObjectCoreById(mainObjectId, { diskOnly: true }))?.id, {
+      .poll(async () => (await db._entityManager.loadObjectCoreById(mainObjectId, { diskOnly: true }))?.id, {
         timeout: 5_000,
       })
       .toEqual(mainObjectId);

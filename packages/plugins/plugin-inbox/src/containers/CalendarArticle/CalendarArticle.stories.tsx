@@ -62,7 +62,7 @@ const meta = {
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
                 const { events } = new Builder().createEvents(count).build();
-                yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+                yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.db)));
               }
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));

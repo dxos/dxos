@@ -78,13 +78,13 @@ describe('Integration tests', () => {
     await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
     await db.flush();
-    const heads = await db.coreDatabase.getDocumentHeads();
+    const heads = await db.getDocumentHeads();
 
     await peer.reload();
 
     await using db2 = await peer.openLastDatabase();
-    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-    await db2.coreDatabase.updateIndexes();
+    await db2.waitUntilHeadsReplicated(heads);
+    await db2.updateIndexes();
     await dataAssertion.verify(db2);
   });
 
@@ -131,14 +131,14 @@ describe('Integration tests', () => {
     await using db = await peer.createDatabase(spaceKey);
     await dataAssertion.seed(db);
     await db.flush();
-    const heads = await db.coreDatabase.getDocumentHeads();
+    const heads = await db.getDocumentHeads();
 
     await using client2 = await peer.createClient();
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!, {
       client: client2,
     });
-    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-    await db2.coreDatabase.updateIndexes();
+    await db2.waitUntilHeadsReplicated(heads);
+    await db2.updateIndexes();
     await dataAssertion.verify(db2);
   });
 
@@ -160,8 +160,9 @@ describe('Integration tests', () => {
 
     // Set up a listener for update events on db2 BEFORE client 1 creates the object.
     const updateReceived = new Trigger();
-    const unsubscribe = db2.coreDatabase._updateEvent.on(({ itemsUpdated }) => {
-      if (itemsUpdated.length > 0) {
+    const updateQuery = db2.query(Filter.type(TestSchema.Person));
+    const unsubscribe = updateQuery.subscribe(() => {
+      if (updateQuery.results.length > 0) {
         updateReceived.wake();
       }
     });
@@ -299,11 +300,11 @@ describe('Integration tests', () => {
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
     await db1.flush();
-    const heads = await db1.coreDatabase.getDocumentHeads();
+    const heads = await db1.getDocumentHeads();
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-    await db2.coreDatabase.updateIndexes();
+    await db2.waitUntilHeadsReplicated(heads);
+    await db2.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
@@ -322,11 +323,11 @@ describe('Integration tests', () => {
       await using db1 = await peer1.createDatabase(spaceKey1);
       await dataAssertion.seed(db1);
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads();
+      const heads = await db1.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-      await db2.coreDatabase.updateIndexes();
+      await db2.waitUntilHeadsReplicated(heads);
+      await db2.updateIndexes();
       await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
       await dataAssertion.verify(db2);
     }
@@ -335,11 +336,11 @@ describe('Integration tests', () => {
       await using db1 = await peer1.createDatabase(spaceKey2);
       await dataAssertion.seed(db1);
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads();
+      const heads = await db1.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-      await db2.coreDatabase.updateIndexes();
+      await db2.waitUntilHeadsReplicated(heads);
+      await db2.updateIndexes();
       await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
       await dataAssertion.verify(db2);
     }
@@ -373,11 +374,11 @@ describe('Integration tests', () => {
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
     await db1.flush();
-    const heads = await db1.coreDatabase.getDocumentHeads();
+    const heads = await db1.getDocumentHeads();
 
     await using db2 = await asyncTimeout(peer2.openDatabase(spaceKey, db1.rootUrl!), 1_000);
-    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-    await db2.coreDatabase.updateIndexes();
+    await db2.waitUntilHeadsReplicated(heads);
+    await db2.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
@@ -444,14 +445,14 @@ describe('Integration tests', () => {
 
       await expect
         .poll(async () => {
-          const state = await db2.coreDatabase.getSyncState();
+          const state = await db2.getSyncState();
           return state.peers!.length;
         })
         .toBe(1);
 
       await expect
         .poll(async () => {
-          const state = await db2.coreDatabase.getSyncState();
+          const state = await db2.getSyncState();
           return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
         })
         .toEqual(0);
@@ -687,11 +688,11 @@ describe('load tests', () => {
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
     await db1.flush();
-    const heads = await db1.coreDatabase.getDocumentHeads();
+    const heads = await db1.getDocumentHeads();
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
-    await db2.coreDatabase.updateIndexes();
+    await db2.waitUntilHeadsReplicated(heads);
+    await db2.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });

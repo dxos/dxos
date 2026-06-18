@@ -115,7 +115,7 @@ export class ChatProcessor {
     Obj.setParent(feed, chat);
     space.db.add(chat);
 
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
+    const feedServiceLayer = createFeedServiceLayer(space.db);
     const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
