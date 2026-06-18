@@ -14,8 +14,8 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PromptEditor } from '#components';
 import { meta } from '#meta';
-import { HeyGenProvider, type GenerationProvider, MissingApiKeyError } from '#services';
-import { type Generation, GeneratorCapabilities } from '#types';
+import { createProvider, type GenerationProvider, MissingApiKeyError } from '#services';
+import { Generation, GeneratorCapabilities } from '#types';
 
 type Status = 'idle' | 'busy' | 'error';
 
@@ -25,9 +25,18 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
   const { t } = useTranslation(meta.id);
   const [generation] = useObject(subject);
   const settings = useAtomCapability(GeneratorCapabilities.Settings);
-  const apiKey = settings?.apiKey;
-  const provider = useGenerationProvider();
-  const { status, error } = useGenerationProgress(subject, provider, apiKey);
+  // Two distinct provider ids:
+  //   - `providerId` is the *selection* (what a new job would use).
+  //   - `jobProviderId` is the *in-flight* provider snapshotted at enqueue time;
+  //     polling must use this so a mid-job selection change doesn't talk to the
+  //     wrong backend or use the wrong api key.
+  const providerId = Generation.getProvider(generation);
+  const jobProviderId = generation.jobProvider ?? providerId;
+  const apiKey = settings?.providers?.[providerId]?.apiKey;
+  const jobApiKey = settings?.providers?.[jobProviderId]?.apiKey;
+  const provider = useGenerationProvider(providerId);
+  const jobProvider = useGenerationProvider(jobProviderId);
+  const { status, error } = useGenerationProgress(subject, jobProvider, jobApiKey);
   const urls = generation.urls ?? [];
 
   const handleGenerate = useCallback(async () => {
@@ -42,9 +51,11 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
       );
       // Persisting `jobId` flips `useGenerationProgress` to 'busy' and starts
       // polling; if the user navigates away mid-job the next mount picks the
-      // stored id up and resumes.
+      // stored id up and resumes. `jobProvider` snapshots which backend owns
+      // the job so a later provider change doesn't reroute polling.
       Obj.update(subject, (subject) => {
         subject.jobId = jobId;
+        subject.jobProvider = providerId;
       });
     } catch (err) {
       log.catch(err);
@@ -62,6 +73,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
     Obj.update(subject, (subject) => {
       subject.urls = undefined;
       subject.jobId = undefined;
+      subject.jobProvider = undefined;
     });
   }, [subject]);
 
@@ -198,6 +210,7 @@ const useGenerationProgress = (
           // carousel surfaces by default and what users expect after clicking ▶.
           subject.urls = [url, ...(subject.urls ?? [])];
           subject.jobId = undefined;
+          subject.jobProvider = undefined;
         });
         setStatus('idle');
       })
@@ -215,5 +228,6 @@ const useGenerationProgress = (
   return { status, error };
 };
 
-/** Resolves the active GenerationProvider. The default is the HeyGen adapter. */
-const useGenerationProvider = (): GenerationProvider => useMemo(() => new HeyGenProvider(), []);
+/** Resolves the active GenerationProvider for the given provider id. */
+const useGenerationProvider = (providerId: Generation.ProviderId): GenerationProvider =>
+  useMemo(() => createProvider(providerId), [providerId]);
