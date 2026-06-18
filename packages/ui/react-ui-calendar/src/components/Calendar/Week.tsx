@@ -87,7 +87,9 @@ const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
         setViewDate(date);
       }
     }, [date]);
-    useEffect(() => scrollEvent.on(({ date }) => setViewDate(date)), [scrollEvent]);
+    useEffect(() => {
+      return scrollEvent.on(({ date }) => setViewDate(date));
+    }, [scrollEvent]);
 
     const weekDays = useMemo(() => {
       const weekStart = startOfWeek(viewDate, { weekStartsOn });
