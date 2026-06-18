@@ -11,13 +11,12 @@ import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { Lightbox } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
 
-import { GALLERY_SHOW_SEGMENT } from '../../paths';
+import { getGalleryShowPath } from '../../paths';
 
 export type GalleryShowProps = {
   gallery: Gallery.Gallery;
@@ -36,7 +35,7 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
       return;
     }
     const objectPath = Paths.getObjectPathFromObject(subject);
-    const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
+    const showId = getGalleryShowPath(objectPath);
     const db = Obj.getDatabase(subject);
     if (deck?.fullscreen) {
       // Match the ID used to enter fullscreen (see GalleryArticle.handleShow / app-graph-builder).

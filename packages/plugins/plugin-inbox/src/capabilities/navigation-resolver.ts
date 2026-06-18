@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, Paths, TypeSection, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
-import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
+import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -50,7 +50,7 @@ export default Capability.makeModule(
         if (!query?.dxn) {
           return [
             {
-              path: `${Paths.getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+              path: getPluginSettingsSectionPath(meta.id),
               label: 'Inbox settings',
               type: 'settings',
             },

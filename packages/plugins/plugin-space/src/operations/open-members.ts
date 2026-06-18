@@ -11,7 +11,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenMembers> = SpaceO
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [`${Paths.getSpacePath(input.space.id)}/settings`],
+        subject: [Paths.getSpacePath(input.space.id, 'settings')],
         workspace: Paths.getSpacePath(input.space.id),
       });
     }),
