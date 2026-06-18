@@ -14,7 +14,7 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
+import { Blueprint, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -24,6 +24,7 @@ import { trim } from '@dxos/util';
 
 import { ProcessManager } from '../index';
 import * as ResearchService from '../testing/ResearchService';
+import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
 import { type DelegationStrategy } from './delegation-strategy';
 
@@ -159,9 +160,6 @@ describe('Agent Service', () => {
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
-
-  // TODO(before merge): e2e coverage for agent ctx.succeed lifecycle — see agent-process.test.ts.
-  it.todo('agent process succeeds when idle and respawns for a follow-up turn');
 
   it.scoped(
     'tool call',
@@ -485,6 +483,48 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
           .map(Message.extractText)
           .join('\n');
         expect(forkText.toLocaleLowerCase()).toContain('france');
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
+  // the memoized tests above.
+  it.scoped(
+    'agent process succeeds when idle and respawns for a follow-up turn',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        const agent = yield* AgentService.createSession();
+        const target = Obj.getURI(agent.feed);
+
+        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* agent.waitForCompletion();
+
+        // With no queued work, alarms, delegations, or undelivered tool results, the process calls
+        // `ctx.succeed()` (see `maybeComplete` / `isAgentWorkPending`) and reaches a terminal state
+        // instead of idling.
+        const [firstHandle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        const firstPid = String(firstHandle.pid);
+        yield* Effect.promise(async () => {
+          await expect.poll(() => firstHandle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+        });
+
+        // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
+        // and spawns a fresh one, which replays conversation history from the feed.
+        const followUp = yield* AgentService.getSession(agent.feed);
+        yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+        yield* followUp.waitForCompletion();
+
+        const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
+
+        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const text = messages.map(Message.extractText).join('\n');
+        expect(text.toLocaleLowerCase()).toContain('france');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,

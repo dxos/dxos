@@ -87,7 +87,7 @@ const useEphemeralFeedsByPid = (
       if (disposed) {
         return;
       }
-      log.info('[DEBUG H8] ephemeral debug message received', {
+      log.info('ephemeral debug: message received', {
         pid,
         messagePid: message.meta.pid,
         eventTypes: message.events.map((event) => event.type),
@@ -106,7 +106,7 @@ const useEphemeralFeedsByPid = (
       });
     };
 
-    log.info('[DEBUG H8] ephemeral debug subscribe start', { spaceId, activePidsKey });
+    log.info('ephemeral debug: subscribe start', { spaceId, activePidsKey });
 
     const subscribe = (pid: Process.ID) =>
       Effect.gen(function* () {
@@ -114,7 +114,7 @@ const useEphemeralFeedsByPid = (
         const handle = yield* attachActiveHandle(processManager, pid);
         const pidKey = String(pid);
         if (!handle) {
-          log.info('[DEBUG H8] ephemeral debug attach failed', { pid: pidKey });
+          log.info('ephemeral debug: attach failed', { pid: pidKey });
           setFeeds((previous) => ({
             ...previous,
             [pidKey]: {
@@ -126,7 +126,7 @@ const useEphemeralFeedsByPid = (
           return;
         }
 
-        log.info('[DEBUG H8] ephemeral debug attach ok', { pid: pidKey, state: handle.status.state });
+        log.info('ephemeral debug: attach ok', { pid: pidKey, state: handle.status.state });
 
         setFeeds((previous) => ({
           ...previous,
@@ -161,7 +161,7 @@ const useEphemeralFeedsByPid = (
 
     return () => {
       disposed = true;
-      log.info('[DEBUG H8] ephemeral debug subscribe dispose', { activePidsKey });
+      log.info('ephemeral debug: subscribe dispose', { activePidsKey });
       const fibers = [...fibersRef.current.values()];
       fibersRef.current.clear();
       for (const fiber of fibers) {

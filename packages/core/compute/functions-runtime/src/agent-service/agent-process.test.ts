@@ -214,14 +214,10 @@ describe('AlarmToolkit handlers', () => {
   );
 });
 
-// TODO(before merge): e2e tests for AgentProcess ctx.succeed — wire with ProcessManager + stub operations.
-describe.todo('AgentProcess completion', () => {
-  it.todo('calls ctx.succeed when queue, alarms, delegations, and tool calls are all clear');
-  it.todo('stays alive while a linked tool-call child is running');
-  it.todo('stays alive while a delegated subprocess is running');
-  it.todo('succeeds after the last delegated child exits');
-  it.todo('does not succeed while a self-wake alarm is scheduled');
-});
+// The completion decision (`maybeComplete` → `ctx.succeed()`) is exercised at two levels: the
+// `isAgentWorkPending` suite below covers the predicate the process consults (queue / alarm /
+// delegations / pending tool results), and `AgentService.test.ts` covers the process reaching a
+// terminal state and respawning for a follow-up turn end-to-end.
 
 describe('parseContinueDecision', () => {
   it('continues when the model says continue', ({ expect }) => {

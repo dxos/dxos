@@ -133,12 +133,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
 
         const maybeComplete = Effect.gen(function* () {
-          if (
-            inputQueue.length > 0 ||
-            alarmManager.wakeAt != null ||
-            delegations.length > 0 ||
-            toolCallManager.hasPendingToolResults()
-          ) {
+          if (isAgentWorkPending({ inputQueue, alarmManager, delegations, toolCallManager })) {
             return;
           }
 
@@ -527,7 +522,9 @@ export type AgentIdleSnapshot = {
   inputQueue: readonly AgentEvent[];
   alarmManager: AlarmManager;
   delegations: readonly Delegation[];
-  toolCallManager: ToolCallManager;
+  // Only the pending-results check is consulted, so the predicate stays decoupled from the rest of
+  // the ToolCallManager surface (and is trivially stubbable in tests).
+  toolCallManager: Pick<ToolCallManager, 'hasPendingToolResults'>;
 };
 
 /** True while the agent still has queued work, a self-wake, subprocesses, or undelivered tool results. */

@@ -18,6 +18,9 @@ const formatOperationInputStatus = (data: { key: string; name?: string; input: u
   return `Calling ${name} (${bytes} bytes)...`;
 };
 
+/** Raw routine status updates (e.g. `Running 01KVB9WBRG…`) carry an opaque ULID, not a useful label. */
+const ROUTINE_ULID_STATUS = /^Running [0-9A-HJKMNP-TV-Z]{26}$/i;
+
 /**
  * Formats a pending assistant block for the delegated-task status line.
  */
@@ -57,36 +60,26 @@ export const pendingStatusFromEphemeralMessage = (message: Trace.Message): strin
     }
 
     if (Trace.isOfType(Trace.StatusUpdate, event)) {
+      // Suppress opaque routine ULID lines so descriptive partial-block / operation-input lines win.
+      if (ROUTINE_ULID_STATUS.test(event.data.message.trim())) {
+        continue;
+      }
       return event.data.message;
     }
   }
   return undefined;
 };
 
-/**
- * Whether an ephemeral message carries a completed (non-pending) partial block.
- */
-export const isCompletedPartialBlockMessage = (message: Trace.Message): boolean => {
-  for (const event of message.events) {
-    if (!Trace.isOfType(PartialBlock, event)) {
-      continue;
-    }
-    if (!event.data.block.pending) {
-      return true;
-    }
-  }
-  return false;
-};
-
-export type EphemeralStatusUpdate = 'unchanged' | 'clear' | { readonly line: string };
+export type EphemeralStatusUpdate = 'unchanged' | { readonly line: string };
 
 /**
  * Maps an ephemeral trace message to a task-status update.
+ *
+ * The status line is "sticky": a message without a pending line (e.g. a completed block during an
+ * LLM-thinking gap) leaves the previous line in place rather than clearing it, so the row keeps
+ * showing the latest meaningful activity until a new line arrives or the subscription ends.
  */
 export const resolveEphemeralStatusUpdate = (message: Trace.Message): EphemeralStatusUpdate => {
-  if (isCompletedPartialBlockMessage(message)) {
-    return 'clear';
-  }
   const line = pendingStatusFromEphemeralMessage(message);
   if (line) {
     return { line };

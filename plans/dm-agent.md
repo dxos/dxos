@@ -1,7 +1,32 @@
 # Session log — `dm/agent`
 
-Branch: `dm/agent`  
-Latest commit: `8b292bed86` — `feat(plugin-assistant): nested process tree and delegate-task by id`
+Branch: `dm/agent`
+
+---
+
+## Final state (landed)
+
+Finishing pass over the WIP described below:
+
+- **Debug instrumentation removed**: all `[DEBUG H1]`–`[DEBUG H7]` logs and `#region DEBUG` blocks
+  (ChatActions, ChatPrompt, Chat, TaskList, `useProcessEphemeralStatus`, processor) deleted; the
+  `TaskList` ephemeral-only override is gone and the real `ephemeral → inFlight → durable` cascade
+  restored. The storybook `EphemeralDebugModule` is kept (debug panel) with its logs de-tagged.
+- **Ephemeral status (POC, simple)**: `pending-block-status` now (1) suppresses raw routine-ULID
+  `status.update` lines so descriptive partial-block / operation-input lines win, and (2) makes the
+  status line **sticky** — a completed block during an LLM gap no longer clears it, so the row keeps
+  the latest meaningful activity until a new line arrives or the subscription ends. `forkDaemon`
+  subscription lifecycle retained.
+- **Completion predicate deduped**: `maybeComplete` now calls the exported `isAgentWorkPending`
+  predicate instead of an inline copy, so the unit suite authoritatively covers the production
+  decision. `AgentIdleSnapshot.toolCallManager` narrowed to the method it reads.
+- **Tests**: the 6 `it.todo` lifecycle cases are resolved — the decision is covered by the
+  `isAgentWorkPending` unit suite, and `AgentService.test.ts` gains an e2e
+  (`agent process succeeds when idle and respawns for a follow-up turn`) asserting the process
+  reaches `SUCCEEDED` and a follow-up turn spawns a fresh process (offline memoized replay). The
+  `pending-block-status` fixtures were fixed to actually type-check.
+- **Merge**: `origin/main` merged (model default → `claude-opus-4-8`, lockfile regenerated). Build,
+  lint, and tests are green for the touched packages.
 
 ---
 

@@ -45,26 +45,22 @@ describe('formatPendingBlockStatus', () => {
   });
 
   test('formats operation input as calling with byte count', ({ expect }) => {
-    const status = pendingStatusFromEphemeralMessage({
-      meta: { pid: 'pid-1' },
-      isEphemeral: true,
-      events: [
+    const status = pendingStatusFromEphemeralMessage(
+      ephemeralMessage([
         {
           type: Trace.OperationInput.key,
           timestamp: Date.now(),
           data: { key: 'org.dxos.function.agent.get-context', name: 'Get Agent Context', input: { foo: 'bar' } },
         },
-      ],
-    } as Trace.Message);
+      ]),
+    );
     expect(status).toBe('Calling Get Agent Context (13 bytes)...');
   });
 
-  test('clears status when partial block stream completes', ({ expect }) => {
+  test('leaves status unchanged (sticky) when partial block stream completes', ({ expect }) => {
     expect(
-      resolveEphemeralStatusUpdate({
-        meta: { pid: 'pid-1' },
-        isEphemeral: true,
-        events: [
+      resolveEphemeralStatusUpdate(
+        ephemeralMessage([
           {
             type: 'assistant.partialBlock',
             timestamp: Date.now(),
@@ -82,8 +78,33 @@ describe('formatPendingBlockStatus', () => {
               },
             },
           },
-        ],
-      } as Trace.Message),
-    ).toBe('clear');
+        ]),
+      ),
+    ).toBe('unchanged');
+  });
+
+  test('suppresses raw routine ULID status updates', ({ expect }) => {
+    expect(
+      pendingStatusFromEphemeralMessage(
+        ephemeralMessage([
+          { type: Trace.StatusUpdate.key, timestamp: Date.now(), data: { message: 'Running 01KVB9WBRG0000000000000000' } },
+        ]),
+      ),
+    ).toBeUndefined();
+  });
+
+  test('keeps descriptive status updates', ({ expect }) => {
+    expect(
+      pendingStatusFromEphemeralMessage(
+        ephemeralMessage([
+          { type: Trace.StatusUpdate.key, timestamp: Date.now(), data: { message: 'Thinking about the plan' } },
+        ]),
+      ),
+    ).toBe('Thinking about the plan');
   });
 });
+
+// `Trace.Message` is an ECHO object type, so a plain test literal does not structurally overlap it;
+// build the minimal ephemeral envelope the status helpers read via a single boundary cast.
+const ephemeralMessage = (events: readonly Trace.Event[]): Trace.Message =>
+  ({ meta: { pid: 'pid-1' }, isEphemeral: true, events }) as unknown as Trace.Message;

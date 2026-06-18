@@ -21,10 +21,6 @@ import { Message } from '@dxos/types';
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 
-// #region DEBUG
-import { log } from '@dxos/log';
-// #endregion DEBUG
-
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -120,9 +116,6 @@ const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, on
         }
 
         case 'cancel': {
-          // #region DEBUG
-          log('[DEBUG H2] chat root received cancel', { streaming, hasProcessor: !!processor });
-          // #endregion DEBUG
           void processor.cancel();
           if (streaming) {
             if (lastPrompt.current) {

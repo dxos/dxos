@@ -11,17 +11,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
-import { Process, ServiceResolver } from '@dxos/compute';
+import { Process, ServiceResolver, type Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { type Space } from '@dxos/react-client/echo';
 
-import {
-  resolveEphemeralStatusUpdate,
-} from '#execution-graph';
-
-// #region DEBUG
-import { log } from '@dxos/log';
-// #endregion DEBUG
+import { resolveEphemeralStatusUpdate } from '#execution-graph';
 
 const atomEmpty = Atom.make(() => [] as const);
 
@@ -69,24 +63,11 @@ const attachActiveHandle = (
   Effect.gen(function* () {
     const maxAttempts = 15;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const handle = yield* processManager.attach(pid).pipe(
-        Effect.catchAll((error) => {
-          // #region DEBUG
-          log('[DEBUG H3] ephemeral attach failed', { pid: String(pid), attempt, error: String(error) });
-          // #endregion DEBUG
-          return Effect.succeed(undefined);
-        }),
-      );
+      const handle = yield* processManager.attach(pid).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
       if (handle && ACTIVE_PROCESS_STATES.has(handle.status.state)) {
-        // #region DEBUG
-        log('[DEBUG H3] ephemeral attach ok', { pid: String(pid), state: handle.status.state, attempt });
-        // #endregion DEBUG
         return handle;
       }
       if (handle) {
-        // #region DEBUG
-        log('[DEBUG H3] ephemeral attach inactive', { pid: String(pid), state: handle.status.state, attempt });
-        // #endregion DEBUG
         return undefined;
       }
       yield* Effect.sleep(100);
@@ -120,14 +101,6 @@ export const useProcessEphemeralStatus = (
 
   useEffect(() => {
     if (!agentPid || !space?.id || !runtime || !subscribePidsKey) {
-      // #region DEBUG
-      log('[DEBUG H1] ephemeral subscribe skipped', {
-        agentPid: agentPid ? String(agentPid) : undefined,
-        spaceId: space?.id,
-        hasRuntime: runtime != null,
-        subscribePidsKey,
-      });
-      // #endregion DEBUG
       setStatus(undefined);
       return;
     }
@@ -151,32 +124,12 @@ export const useProcessEphemeralStatus = (
         return;
       }
 
-      const nextStatus = update === 'clear' ? undefined : update.line;
-
-      if (update === 'clear') {
-        // #region DEBUG
-        log('[DEBUG H5] ephemeral partial completed', { pid: message.meta.pid });
-        // #endregion DEBUG
-      } else {
-        // #region DEBUG
-        log('[DEBUG H4] ephemeral pending status', {
-          pid: message.meta.pid,
-          line: nextStatus,
-          eventTypes: message.events.map((event) => event.type),
-        });
-        // #endregion DEBUG
-      }
-
       if (replaying) {
-        replayStatus = nextStatus;
+        replayStatus = update.line;
         return;
       }
-      setStatus(nextStatus);
+      setStatus(update.line);
     };
-
-    // #region DEBUG
-    log('[DEBUG H2] ephemeral subscribe start', { agentPid: String(agentPid), pids: subscribePidsKey });
-    // #endregion DEBUG
 
     const layer = ServiceResolver.provide({ space: space.id }, ProcessManager.ProcessManagerService);
 
@@ -206,10 +159,7 @@ export const useProcessEphemeralStatus = (
 
     void runtime
       .runPromise(Effect.forEach(pids, subscribe, { concurrency: 'unbounded', discard: true }).pipe(Effect.provide(layer)))
-      .catch((error) => {
-        // #region DEBUG
-        log('[DEBUG H2] ephemeral subscribe failed', { error: String(error) });
-        // #endregion DEBUG
+      .catch(() => {
         if (!disposed) {
           setStatus(undefined);
         }
