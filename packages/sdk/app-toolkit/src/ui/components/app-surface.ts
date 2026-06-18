@@ -81,7 +81,7 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 //
 
 /** Roles whose data contract requires a string `attendableId`. */
-const ATTENDABLE_ROLES = new Set<string>();
+const ATTENDABLE_ROLES = new Set(['org.dxos.role.article', 'org.dxos.role.section', 'org.dxos.role.tabpanel']);
 
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
@@ -618,11 +618,6 @@ export type DocumentTitleData<Subject = unknown, Props extends {} = {}> = {
 export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = DocumentTitleData<Subject, Props> & {
   role?: string;
 };
-
-// Register the attendable roles after token creation.
-ATTENDABLE_ROLES.add(Article.role);
-ATTENDABLE_ROLES.add(Section.role);
-ATTENDABLE_ROLES.add(Tabpanel.role);
 
 /**
  * Spy filter: logs the filter's bindings and data to the console.
