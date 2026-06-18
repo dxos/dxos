@@ -9,7 +9,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -42,7 +42,9 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
       <PipelineArticle role='article' subject={pipeline} attendableId='test' />
-      <PipelineProperties pipeline={pipeline} classNames='border-s border-separator' />
+      <div className='overflow-y-auto border-is border-separator'>
+        <PipelineProperties subject={pipeline} />
+      </div>
     </div>
   );
 };

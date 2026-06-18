@@ -8,6 +8,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 import type { ClientReadyOptions } from './client-ready';
 
 export const ClientReady = Capability.lazy<ClientReadyOptions>('ClientReady', () => import('./client-ready'));
+export const PrivacyNotice = Capability.lazy('PrivacyNotice', () => import('./privacy-notice'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

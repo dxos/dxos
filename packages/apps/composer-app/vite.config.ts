@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -90,6 +90,19 @@ export default defineConfig((env) => ({
             cert: '../../../cert.pem',
           }
         : undefined,
+    watch: {
+      // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
+      // a single HMR pass: chokidar holds add/change events until the file size
+      // has been stable for `stabilityThreshold` ms, so a hundred-file burst
+      // produces one invalidation wave instead of one per write. Costs ~200 ms
+      // of HMR latency on every save — acceptable against the multi-second
+      // rescan queue a burst otherwise produces (each invalidation of the
+      // theme CSS re-runs a monorepo-wide Tailwind scan).
+      awaitWriteFinish: {
+        stabilityThreshold: 200,
+        pollInterval: 50,
+      },
+    },
     fs: {
       strict: false,
       cachedChecks: false,
@@ -105,9 +118,9 @@ export default defineConfig((env) => ({
     warmup: {
       clientFiles: [
         './src/main.tsx',
-        './src/dedicated-worker.ts',
-        './src/shared-worker.ts',
-        './src/coordinator-worker.ts',
+        './src/workers/dedicated-worker.ts',
+        './src/workers/shared-worker.ts',
+        './src/workers/coordinator-worker.ts',
         './src/plugin-defs.tsx',
       ],
     },
@@ -129,8 +142,13 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
-        'script-frame': path.resolve(dirname, './script-frame/index.html'),
+        recovery: path.resolve(dirname, './recovery.html'),
       },
+      // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
+      // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
+      // and its CJS-only chromium-bidi deps. These are dev-only, must not be in the app bundle,
+      // and cannot be resolved cleanly as ESM, so mark them external.
+      external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
         // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
@@ -145,10 +163,108 @@ export default defineConfig((env) => ({
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
+    // List deeply-imported dep entrypoints so vite's optimize-deps phase
+    // pre-bundles them up front. Without this, vite discovers them mid-load
+    // (when a dynamic import unwraps a new subpath), which forces a full page
+    // reload with the "Discovered new dependencies" banner — ~10 s of wasted
+    // dev time per discovery cycle and the most common cause of HMR appearing
+    // to hang. The pre-bundle cost is amortized after the first `vite serve`.
+    //
+    // IMPORTANT: every entry must be resolvable from this app's root. If even
+    // one is not, vite aborts the *entire* dependency scan ("Failed to run
+    // dependency scan. Skipping dependency pre-bundling.") and pre-bundles
+    // nothing — worse than an empty list. Several entries below (@automerge/*,
+    // @atlaskit/pragmatic-drag-and-drop*, @effect/ai*, @opentelemetry/*,
+    // xstate, @xstate/react, react-qr-rounded) are only transitive deps of
+    // `@dxos/*` packages; they are listed as direct deps of composer-app in
+    // package.json *specifically* so they resolve from root and can be
+    // pre-bundled here — each one was observed triggering a mid-session
+    // "discovered new dependencies" reload before being added.
+    include: [
+      // React.
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      // Effect (with subpath imports).
+      'effect',
+      'effect/Effect',
+      'effect/Array',
+      'effect/Ref',
+      'effect/Option',
+      'effect/Cause',
+      'effect/Exit',
+      'effect/Layer',
+      'effect/Runtime',
+      'effect/Fiber',
+      'effect/Deferred',
+      'effect/Function',
+      'effect/HashSet',
+      'effect/PubSub',
+      'effect/Schema',
+      'effect/Context',
+      'effect/Stream',
+      'effect/Console',
+      '@effect/platform',
+      '@effect/platform-browser',
+      // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
+      '@effect-atom/atom',
+      '@effect-atom/atom/Registry',
+      // Effect AI (with submodule exports).
+      '@effect/ai',
+      '@effect/ai/AiError',
+      '@effect/ai/Chat',
+      '@effect/ai/LanguageModel',
+      '@effect/ai/Prompt',
+      '@effect/ai/Response',
+      '@effect/ai/Tool',
+      '@effect/ai/Toolkit',
+      '@effect/ai-anthropic',
+      '@effect/ai-anthropic/AnthropicClient',
+      '@effect/ai-anthropic/AnthropicLanguageModel',
+      '@effect/ai-anthropic/AnthropicTool',
+      '@effect/ai-openai',
+      '@effect/ai-openai/OpenAiClient',
+      '@effect/ai-openai/OpenAiLanguageModel',
+      // Automerge (CRDT; deeply imported via @dxos/echo).
+      '@automerge/automerge',
+      '@automerge/automerge-repo',
+      // OpenTelemetry (loaded eagerly via @dxos/observability).
+      '@opentelemetry/api',
+      '@opentelemetry/api-logs',
+      '@opentelemetry/exporter-logs-otlp-http',
+      '@opentelemetry/exporter-metrics-otlp-http',
+      '@opentelemetry/sdk-logs',
+      '@opentelemetry/sdk-metrics',
+      // XState + QR (HALO invitation flow via @dxos/shell).
+      'xstate',
+      '@xstate/react',
+      'react-qr-rounded',
+      // Atlaskit drag-and-drop (mosaic / dnd).
+      '@atlaskit/pragmatic-drag-and-drop',
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+      // CodeMirror (many files in HAR).
+      'codemirror',
+      '@codemirror/state',
+      '@codemirror/view',
+      '@codemirror/language',
+      '@codemirror/commands',
+      '@codemirror/autocomplete',
+      '@codemirror/lang-javascript',
+      '@codemirror/lang-json',
+      '@codemirror/lang-markdown',
+      '@codemirror/theme-one-dark',
+      // Radix (many requests in HAR).
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-context-menu',
+    ],
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
-    // to `internal.html` / `devtools.html` / `reset.html` /
-    // `script-frame/index.html` don't trip a "discovered new dependencies"
-    // reload mid-session.
+    // to `internal.html` / `devtools.html` / `reset.html` don't trip a
+    // "discovered new dependencies" reload mid-session.
     //
     // Additionally, point the scanner at every plugin's entry files. Plugins
     // are loaded via `await import(...)` at runtime so their bare-module
@@ -163,34 +279,41 @@ export default defineConfig((env) => ({
       './internal.html',
       './devtools.html',
       './reset.html',
-      './script-frame/index.html',
+      './recovery.html',
       path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
-    alias: {
-      ['node-fetch']: 'isomorphic-fetch',
-      ['node:util']: '@dxos/node-std/util',
-      ['node:path']: '@dxos/node-std/path',
-      ['util']: '@dxos/node-std/util',
-      ['path']: '@dxos/node-std/path',
-      ['node:crypto']: '@dxos/node-std/crypto',
-      ['crypto']: '@dxos/node-std/crypto',
-      ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+    // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
+    // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
+    // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
+    // native node: polyfill layer handle subpaths like `node:util/types`.
+    alias: [
+      { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
+      { find: /^node:util$/, replacement: '@dxos/node-std/util' },
+      { find: /^node:path$/, replacement: '@dxos/node-std/path' },
+      { find: /^util$/, replacement: '@dxos/node-std/util' },
+      { find: /^path$/, replacement: '@dxos/node-std/path' },
+      { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
       // '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
-      '@dxos/solid-ui-geo': path.resolve(rootDir, 'packages/ui/solid-ui-geo/src'),
-      '@dxos/plugin-map-solid': path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src'),
-      '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),
-      '@dxos/effect-atom-solid': path.resolve(rootDir, 'packages/common/effect-atom-solid/src'),
-      '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
+      { find: '@dxos/solid-ui-geo', replacement: path.resolve(rootDir, 'packages/ui/solid-ui-geo/src') },
+      { find: '@dxos/plugin-map-solid', replacement: path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src') },
+      { find: '@dxos/web-context-solid', replacement: path.resolve(rootDir, 'packages/common/web-context-solid/src') },
+      { find: '@dxos/effect-atom-solid', replacement: path.resolve(rootDir, 'packages/common/effect-atom-solid/src') },
+      { find: '@dxos/echo-solid', replacement: path.resolve(rootDir, 'packages/core/echo/echo-solid/src') },
       // Worker entry point for OPFS SQLite.
-      '@dxos/client/opfs-worker': path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
-    },
+      {
+        find: '@dxos/client/opfs-worker',
+        replacement: path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+      },
+    ],
   },
   worker: {
     format: 'es' as const,
@@ -225,6 +348,25 @@ export default defineConfig((env) => ({
             res.statusCode = 502;
             res.end(String(error));
           }
+        });
+      },
+    },
+
+    // Dev-only: serve forensics test profile for recovery import testing.
+    {
+      name: 'recovery-test-fixture',
+      configureServer(server) {
+        const fixturePath =
+          process.env.COMPOSER_TEST_DXPROFILE ??
+          '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
+        server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
+          if (!existsSync(fixturePath)) {
+            res.statusCode = 404;
+            res.end(`Test profile not found at ${fixturePath}`);
+            return;
+          }
+          res.setHeader('Content-Type', 'application/octet-stream');
+          createReadStream(fixturePath).pipe(res);
         });
       },
     },

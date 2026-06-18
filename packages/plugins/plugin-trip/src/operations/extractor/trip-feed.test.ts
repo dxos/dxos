@@ -7,8 +7,8 @@ import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Relation } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { ExtractedFrom } from '@dxos/plugin-inbox';
@@ -52,33 +52,45 @@ const makeMessage = (props: { from: string; subject: string; body: string }): Me
 
 // One booking (PNR ABC123) with two legs, plus a gate change for the first leg.
 const FIRST_LEG = {
-  number: 'AF-1',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-06-01T15:30:00.000Z',
-  arriveAt: '2026-06-02T09:30:00.000Z',
   confirmationCode: 'ABC123',
-  provider: { name: 'Air France', domain: 'airfrance.com' },
+  segments: [
+    {
+      number: 'AF-1',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-01T15:30:00.000Z',
+      arriveAt: '2026-06-02T09:30:00.000Z',
+      provider: { name: 'Air France', domain: 'airfrance.com' },
+    },
+  ],
 };
 
 const SECOND_LEG = {
-  number: 'AF-2',
-  origin: { code: 'CDG', name: 'Paris' },
-  destination: { code: 'BCN', name: 'Barcelona' },
-  departAt: '2026-06-05T11:00:00.000Z',
-  arriveAt: '2026-06-05T13:15:00.000Z',
   confirmationCode: 'ABC123',
-  provider: { name: 'Air France', domain: 'airfrance.com' },
+  segments: [
+    {
+      number: 'AF-2',
+      origin: { code: 'CDG', name: 'Paris' },
+      destination: { code: 'BCN', name: 'Barcelona' },
+      departAt: '2026-06-05T11:00:00.000Z',
+      arriveAt: '2026-06-05T13:15:00.000Z',
+      provider: { name: 'Air France', domain: 'airfrance.com' },
+    },
+  ],
 };
 
 const GATE_CHANGE = {
-  number: 'AF-1',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-06-01T15:30:00.000Z',
-  arriveAt: '2026-06-02T09:30:00.000Z',
-  gateFrom: '21B',
-  terminalFrom: '3',
+  segments: [
+    {
+      number: 'AF-1',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-01T15:30:00.000Z',
+      arriveAt: '2026-06-02T09:30:00.000Z',
+      gateFrom: '21B',
+      terminalFrom: '3',
+    },
+  ],
 };
 
 describe('trip extraction over a message feed', () => {
@@ -131,7 +143,7 @@ describe('trip extraction over a message feed', () => {
           ),
         )
         .pipe(Effect.either)
-        .pipe(runAndForwardErrors);
+        .pipe(EffectEx.runAndForwardErrors);
       await db.flush();
     }
 

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import type { SpaceSyncState } from '@dxos/echo-db';
+import type { SpaceSyncState } from '@dxos/echo-client';
 
 import { JsonView } from '../../../components';
 
@@ -19,7 +19,7 @@ export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
 
   useEffect(() => {
     if (space) {
-      return space.internal.db.coreDatabase.subscribeToSyncState(Context.default(), (syncState) => {
+      return space.internal.db.subscribeToSyncState(Context.default(), (syncState) => {
         setSyncState(syncState);
       });
     }

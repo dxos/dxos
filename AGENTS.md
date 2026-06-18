@@ -5,6 +5,7 @@
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
+- DO NOT EVER ASK a-or-b questions without numbering them.
 - ALWAYS test your work after each step.
 
 ## Dependencies
@@ -28,10 +29,10 @@
 ## Planning
 
 - **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
-  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error.
+  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error. `as const` is NOT a cast in this sense — it narrows a literal rather than bypassing the checker, and is always acceptable (no comment or justification needed).
   - Default: fix the type at its source (inference, signature, generic), not the call site that surfaced the error. A red typecheck during a refactor is a finding, not an obstacle to paper over.
   - Casts are only acceptable at genuine type-system boundaries (external/untyped data, deliberate coercions), and must carry a concise comment saying why no typed alternative exists.
-  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|const|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review.
+  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review. (`as const` is intentionally excluded from this pattern.)
   - Casts accumulate fastest during large codemods — treat each as a deliberate decision, never an autopilot stopgap.
 
 ## Knowledge
@@ -45,12 +46,14 @@
 - Use TypeScript with single quotes for strings.
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
+- **Internal module imports** (e.g. `@dxos/echo` entrypoints importing `src/internal/<Module>/`): import the capitalized internal barrel as a lowercase `*Internal` namespace — `import * as objInternal from './internal/Obj'`, `import * as queryInternal from './internal/Query'`. Do not deep-import submodules (`./internal/Obj/atoms`, `./internal/Ref/ref`, etc.); re-export needed symbols from the module's `index.ts` instead. The top-level `./internal` barrel is for cross-cutting re-exports only — prefer the per-module barrel when a single entrypoint owns the dependency. Atom factories inside internal modules use the `makeAtom` name (not `make`) to avoid clashing with public `make` APIs.
 - Error handling: use Effect-TS patterns.
-- Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
 - JSDoc comments for public functions, all comments end with period.
+- Comments state _why the code is necessary_ (the invariant or constraint it satisfies), concise and self-contained. Never narrate the fix, reference this conversation, or use before/after framing ("rather than X we now do Y", "this used to…"). State the constraint that makes the code correct; drop the history.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
+- Avoid default exports unless required.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.
@@ -67,6 +70,61 @@
   } = (a): Bar<unknown> => { ... };
   ```
 
+### Testing
+
+- place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
+- **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
+- **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
+- Prefer unified `TestLayer` for all tests instead of creating a separate one for each test.
+- `TestLayer(opts?)` can be parametrized so tests can configure it.
+- Place test layer, configuration, and main definitions on top of the suite, while helpers go on the bottom.
+- Avoid sleep and polling in tests as much as possible. Try to use events and TestClock instead.
+
+### Namespaces exports in packages
+
+- We're converting more and more packages to ones with namespaces exports. Example:
+
+```text
+src/
+  Foo.ts
+  Bar.ts
+  errors.ts
+  index.ts
+  testing/
+    index.ts
+  internal/
+    foo.ts
+    bar.ts
+    baz.ts
+```
+
+```ts
+// index.ts
+export * as Foo from './Foo';
+export * as Bar from './Bar';
+export * from './errors';
+```
+
+```ts
+// Foo.ts
+
+// @import-as-namespace
+export const one = 1;
+export const two = 2;
+export const func: {
+  (a: string): number;
+  (a: number): string;
+} = (a) => {
+  return a;
+};
+```
+
+- Code is organized into modules exported as namespace. Modules have capital case names.
+- `@import-as-namespace` linter directive is used to mark the file as a namespace export.
+- Internal code is hidden in the `internal/` directory that is not exported.
+- `testing/` directory and `errors.ts` are the exception.
+- Use `@dxos/echo` as a reference for this pattern.
+
 ### React
 
 - Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
@@ -78,11 +136,9 @@
 
 ## Workflow
 
-- Never work on `main`
-  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
-  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
-  - If there are unstaged changes, stash these and move them into the worktree.
+- Never work on `main`; always work within the session-generated worktree.
+  - If there are unstaged changes, stash these and move them into the worktree; tell the user.
+  - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
   - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
@@ -132,7 +188,7 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push all pending changes.
+  - Commit and push ALL unstaged changes (including any edits that the user may have made in the worktree).
   - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch

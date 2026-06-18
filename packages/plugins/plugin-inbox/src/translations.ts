@@ -77,6 +77,8 @@ export const translations = [
 
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',
+        'remove-attendee.label': 'Remove attendee',
+        'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
@@ -91,20 +93,35 @@ export const translations = [
         'disable-background-sync.label': 'Disable background sync',
         'view-trigger.label': 'View trigger',
 
+        'view-mode.menu': 'View mode',
+        'view-mode-enriched.menu': 'Enriched',
+        'view-mode-markdown.menu': 'Markdown',
+        'view-mode-plain.menu': 'Plain text',
+
         'event-untitled.label': 'Untitled',
+        'event-all-day.label': 'All day',
+        'event-duration.placeholder': 'Duration',
+        'event-duration-custom.label': 'Custom end…',
         'event-toolbar.menu': 'Actions',
-        'event-toolbar-create-note.menu': 'Create note',
+        'event-toolbar-open.menu': 'Open',
+        'event-toolbar-save.menu': 'Save to calendar',
+        'event-toolbar-more.menu': 'More',
+        'star-event.label': 'Star event',
+        'unstar-event.label': 'Unstar event',
+        'event-toolbar-delete.menu': 'Delete event',
+
+        'calendar-toolbar.menu': 'Calendar toolbar',
+        'calendar-toolbar-create-event.menu': 'Create event',
+        'calendar-toolbar-sync.menu': 'Save events to calendar',
 
         'message-toolbar.label': 'Message toolbar',
-        'message-toolbar-view.menu': 'View mode',
-        'message-toolbar-view-enriched.menu': 'Enriched',
-        'message-toolbar-view-markdown.menu': 'Markdown',
-        'message-toolbar-view-plain.menu': 'Plain text',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
+        'message-toolbar-load-images.menu': 'Load remote images',
 
         'message-body.placeholder': 'Enter message text...',
 
@@ -146,8 +163,6 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
-
-        'settings.title': 'Inbox settings',
       },
     },
   },

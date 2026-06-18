@@ -69,16 +69,14 @@ export const translations = [
         'open-help-tour.message': 'Show welcome tour',
         'open-shortcuts.label': 'Show shortcuts',
         'shortcuts-dialog.title': 'Shortcuts',
-        // Welcome virtual node (personal space).
-        'welcome-node.label': 'Welcome',
         'welcome.title': 'Welcome to Composer',
         'welcome.description':
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',
         'start-tour.button': 'Start tour',
-        'open-assistant.button': 'Open Assistant',
+        'hide-welcome.button': 'Hide Welcome',
         // Settings.
         'settings.title': 'Support settings',
-        'show-welcome.label': 'Show welcome article on personal space',
+        'show-welcome.label': 'Show welcome',
         // Help menu (status-indicator surface; right-rail ? dropdown).
         'help-menu.label': 'Help & resources',
         'docs.label': 'Documentation',

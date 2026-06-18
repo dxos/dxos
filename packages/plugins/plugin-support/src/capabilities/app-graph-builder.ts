@@ -3,21 +3,41 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { isSpace, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
+import { Annotation, Obj } from '@dxos/echo';
+import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { SHORTCUTS_DIALOG, WELCOME_NODE_ID, WELCOME_NODE_TYPE } from '../constants';
+import { WelcomeDismissedAnnotation } from '../annotations';
+import { SHORTCUTS_DIALOG } from '../constants';
+
+// Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
+// whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
+// rebuilt inline on every evaluation always compares unequal, so the graph re-emits the node, remounting
+// the node's surface (and any cross-origin iframe it hosts) and freezing the app.
+type LabelTuple = [string, { ns: string }];
+const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.id }];
+const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.id }];
+const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.id }];
+const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.id }];
+const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.id }];
+const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.id }];
+const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.id }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
+    const settingsAtom = capabilities.get(SupportCapabilities.Settings);
+
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       GraphBuilder.createExtension({
@@ -32,7 +52,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(HelpOperation.Start);
               }),
               properties: {
-                label: ['open-help-tour.message', { ns: meta.id }],
+                label: OPEN_HELP_TOUR_LABEL,
                 icon: 'ph--info--regular',
                 keyBinding: {
                   macos: 'shift+meta+/',
@@ -43,7 +63,7 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: 'open-shortcuts',
+              id: 'openShortcuts',
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -51,7 +71,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['open-shortcuts.label', { ns: meta.id }],
+                label: OPEN_SHORTCUTS_LABEL,
                 icon: 'ph--keyboard--regular',
                 keyBinding: {
                   macos: 'meta+ctrl+/',
@@ -65,13 +85,13 @@ export default Capability.makeModule(
       // article. The panel surface (`help-companion` in react-surface)
       // renders the owning plugin's `meta.description`.
       GraphBuilder.createExtension({
-        id: 'help-companion',
+        id: 'helpCompanion',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'help',
-              label: ['help-companion.label', { ns: meta.id }],
+              label: HELP_COMPANION_LABEL,
               icon: 'ph--info--regular',
               data: 'help',
               position: 'last',
@@ -88,7 +108,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('help'),
-              label: ['help.label', { ns: meta.id }],
+              label: HELP_LABEL,
               icon: 'ph--megaphone--regular',
               data: null,
               position: 'first',
@@ -99,55 +119,75 @@ export default Capability.makeModule(
 
       // Deck companion: Discord community tab in the complementary sidebar (R1).
       // Renders the Discord widget iframe via the `deck-companion--discord` surface.
+      // Hidden by default; toggled via the showDiscordCompanion setting.
       GraphBuilder.createExtension({
         id: 'discord',
         match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
+        connector: (_root, get) => {
+          const settings = get(settingsAtom);
+          if (!settings.showDiscordCompanion) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('discord'),
-              label: ['discord.label', { ns: meta.id }],
+              label: DISCORD_LABEL,
               icon: 'ph--discord-logo--regular',
               data: null,
               position: 'first',
             }),
-          ]),
+          ]);
+        },
       }),
 
-      // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
-      // The node is fully virtual (no backing ECHO object); the matching Article surface
-      // is selected via the `welcome` literal subject. Gated by the `showWelcome` setting.
-      // The extension itself is positioned `first` so its node is inserted ahead of other
-      // `position: 'first'` siblings (Settings, Collections) under the personal space.
+      // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
+      // by plugin-space: type === SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
+      // conditional on the personal space and the welcome not being dismissed — read reactively via
+      // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
-        id: 'welcome',
-        position: 'first',
-        match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          if (!isPersonalSpace(space)) {
-            return Effect.succeed([]);
-          }
-
-          // Settings atom may not be contributed yet on first render — default to "show".
-          const settingsAtom = capabilities.get(SupportCapabilities.Settings);
-          if (settingsAtom && !get(settingsAtom).showWelcome) {
+        id: 'spaceHomeActions',
+        match: (node): Option.Option<Space> => {
+          const space = (node.properties as { space?: unknown }).space;
+          return node.type === SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
+        },
+        actions: (space, get) => {
+          const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;
+          const isDismissed = properties
+            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+            : false;
+          const showActions = AppSpace.isPersonalSpace(space) && !isDismissed;
+          if (!showActions) {
             return Effect.succeed([]);
           }
 
           return Effect.succeed([
-            {
-              id: WELCOME_NODE_ID,
-              type: WELCOME_NODE_TYPE,
-              data: WELCOME_NODE_ID,
+            Node.makeAction({
+              id: HelpOperation.Start.meta.key,
+              data: Effect.fnUntraced(function* () {
+                yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, showHints: true }));
+                yield* Operation.invoke(HelpOperation.Start);
+              }),
               properties: {
-                label: ['welcome-node.label', { ns: meta.id }],
-                icon: 'ph--lifebuoy--regular',
-                iconHue: 'rose',
-                position: 'first',
-                draggable: false,
-                droppable: false,
+                label: START_TOUR_LABEL,
+                icon: 'ph--path--regular',
+                iconOnly: false,
+                disposition: 'toolbar',
+                testId: 'supportPlugin.startTour',
               },
-            } satisfies Node.NodeArg<string>,
+            }),
+            Node.makeAction({
+              id: HelpOperation.HideWelcome.meta.key,
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(HelpOperation.HideWelcome, { space });
+              }),
+              properties: {
+                label: HIDE_WELCOME_LABEL,
+                icon: 'ph--eye-slash--regular',
+                iconOnly: false,
+                disposition: 'toolbar',
+                testId: 'supportPlugin.hideWelcome',
+              },
+            }),
           ]);
         },
       }),

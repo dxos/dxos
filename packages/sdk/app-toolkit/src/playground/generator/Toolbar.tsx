@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 
 import { Number, createAlertOperation, createPluginId } from './generator';
@@ -24,7 +24,7 @@ export const Toolbar = () => {
         const id = createPluginId(Math.random().toString(16).substring(2, 8));
         yield* manager.add(id);
         yield* manager.enable(id);
-      }).pipe(runAndForwardErrors),
+      }).pipe(EffectEx.runAndForwardErrors),
     [manager],
   );
 
@@ -37,7 +37,7 @@ export const Toolbar = () => {
       <Button onClick={handleAdd}>Add</Button>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
-        <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(plugin.meta.id))}>
+        <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(plugin.meta.key))}>
           {plugin.meta.id.replace('org.dxos.test.generator.', '')}
         </Button>
       ))}

@@ -6,8 +6,8 @@ import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './app-graph-builder';
+export { makeCreateObjectEntryForDatabaseType } from '../util';
 
-export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
 export { NavigationHandler } from './navigation-handler';

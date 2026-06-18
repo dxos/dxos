@@ -15,6 +15,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 
 import { AssistantSettings } from '#components';
@@ -28,6 +29,8 @@ import {
   PlanArticle,
   RoutineArticle,
   RoutineList,
+  SpaceHomePrompt,
+  SpaceHomeSuggestions,
   TracePanel,
   TriggerStatus,
 } from '#containers';
@@ -38,12 +41,23 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
         },
+      }),
+      Surface.create({
+        id: 'spaceHomePrompt',
+        filter: Surface.makeFilter(SpaceHomePinBottom),
+        component: ({ data }) => <SpaceHomePrompt space={data.space} />,
+      }),
+      Surface.create({
+        id: 'spaceHomeSuggestions',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        position: 'last',
+        component: ({ data }) => <SpaceHomeSuggestions space={data.space} />,
       }),
       Surface.create({
         id: 'chat',
@@ -64,12 +78,12 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'agent-properties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
         component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'companion-chat',
+        id: 'companionChat',
         role: 'article',
         filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
@@ -86,7 +100,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'companion-invocations',
+        id: 'companionInvocations',
         role: 'article',
         filter: (data): data is { companionTo: Sequence.Sequence } =>
           (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
@@ -150,7 +164,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'status',
+        id: 'triggerStatus',
         role: 'status-indicator',
         component: () => {
           const space = useActiveSpace();

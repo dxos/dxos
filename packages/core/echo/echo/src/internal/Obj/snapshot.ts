@@ -7,7 +7,6 @@ import { deepMapValues } from '@dxos/util';
 
 import {
   KindId,
-  MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
   ParentId,
@@ -21,6 +20,7 @@ import {
   TypeEntityId,
   TypeId,
 } from '../common/types';
+import { MetaId } from '../common/types/model-symbols';
 
 /**
  * Copy a Symbol-keyed property from source to target if it has a defined value.
@@ -95,10 +95,13 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   // Parent reference (required for Obj.getParent to work on snapshots).
   copySymbolProperty(source, snapshot, ParentId);
 
-  // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
+  // Metadata symbol. Copy arrays/objects so the snapshot is not affected by mutations to the live meta.
   copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({
     keys: [...(meta?.keys ?? [])],
     tags: [...(meta?.tags ?? [])],
+    ...(meta?.key != null ? { key: meta.key } : {}),
+    ...(meta?.version != null ? { version: meta.version } : {}),
+    ...(meta?.annotations ? { annotations: { ...meta.annotations } } : {}),
   }));
 
   // Relation endpoint symbols.

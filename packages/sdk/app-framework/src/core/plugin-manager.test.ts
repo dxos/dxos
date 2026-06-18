@@ -15,6 +15,7 @@ import * as Queue from 'effect/Queue';
 import * as TestClock from 'effect/TestClock';
 
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents } from '../common';
@@ -31,7 +32,7 @@ const Total = Capability.make<{ total: number }>('org.dxos.test.total');
 const CountEvent = ActivationEvent.make('org.dxos.test.count');
 const FailEvent = ActivationEvent.make('org.dxos.test.fail');
 
-const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 
 // TODO(wittjosiah): Factor out?
 const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
@@ -376,7 +377,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects when activate throws before returning Effect', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('org.dxos.test.defect-immediate');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defectImmediate');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -541,7 +542,7 @@ describe('PluginManager', () => {
   it.effect('should not fire an unknown event', () =>
     Effect.gen(function* () {
       const manager = PluginManager.make({ pluginLoader });
-      const UnknownEvent = ActivationEvent.make('unknown');
+      const UnknownEvent = ActivationEvent.make('org.dxos.test.unknown');
       const result = yield* manager.activate(UnknownEvent);
       assert.isFalse(result);
     }),
@@ -549,7 +550,7 @@ describe('PluginManager', () => {
 
   it.effect('should be able to fire custom activation events', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -557,7 +558,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -565,7 +566,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin3'), name: 'Plugin 3' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -681,7 +682,7 @@ describe('PluginManager', () => {
         state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
       };
 
-      const Count = Plugin.define({ id: 'org.dxos.test.count', name: 'Count' }).pipe(
+      const Count = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.count'), name: 'Count' })).pipe(
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
@@ -763,7 +764,7 @@ describe('PluginManager', () => {
 
   it.effect('should be reactive', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -771,7 +772,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -779,7 +780,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin3'), name: 'Plugin 3' })).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -893,7 +894,9 @@ describe('PluginManager', () => {
       });
 
       const SlowEvent = ActivationEvent.make('org.dxos.test.slow');
-      const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-plugin', name: 'Slow Plugin' }).pipe(
+      const SlowPlugin = Plugin.define(
+        Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowPlugin'), name: 'Slow Plugin' }),
+      ).pipe(
         Plugin.addModule({
           id: 'SlowModule',
           activatesOn: SlowEvent,
@@ -936,11 +939,16 @@ describe('PluginManager', () => {
   it.effect('should prevent concurrent loads of the same module via semaphore', () =>
     Effect.gen(function* () {
       // Two different events that both can trigger the same module.
-      const EventA = ActivationEvent.make('org.dxos.test.event-a');
-      const EventB = ActivationEvent.make('org.dxos.test.event-b');
+      const EventA = ActivationEvent.make('org.dxos.test.eventA');
+      const EventB = ActivationEvent.make('org.dxos.test.eventB');
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define({ id: 'org.dxos.test.concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
+      const ConcurrentPlugin = Plugin.define(
+        Plugin.makeMeta({
+          key: DXN.make('org.dxos.test.concurrentPlugin'),
+          name: 'Concurrent Plugin',
+        }),
+      ).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
@@ -987,7 +995,7 @@ describe('PluginManager', () => {
 
   it.effect('should deactivate all active modules on shutdown', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin1',
@@ -995,7 +1003,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin2',
@@ -1060,7 +1068,7 @@ describe('PluginManager', () => {
   it.effect('should deactivate modules in reverse activation order during shutdown', () =>
     Effect.gen(function* () {
       const deactivationOrder: string[] = [];
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'First',
@@ -1075,7 +1083,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' })).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Second',
@@ -1241,7 +1249,7 @@ describe('PluginManager', () => {
   );
 
   describe('Plugin.lazy', () => {
-    const lazyMeta = { id: 'org.dxos.plugin.lazy', name: 'Lazy' };
+    const lazyMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.lazy'), name: 'Lazy' });
 
     it('exposes meta synchronously without invoking the loader', () => {
       let loaderCalls = 0;
@@ -1484,8 +1492,13 @@ describe('PluginManager', () => {
 
     it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
       Effect.gen(function* () {
-        const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
-        const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-activation', name: 'Slow Activation' }).pipe(
+        const SlowEvent = ActivationEvent.make('org.dxos.test.activationTimeout');
+        const SlowPlugin = Plugin.define(
+          Plugin.makeMeta({
+            key: DXN.make('org.dxos.test.slowActivation'),
+            name: 'Slow Activation',
+          }),
+        ).pipe(
           Plugin.addModule({
             id: 'Slow',
             activatesOn: SlowEvent,
@@ -1529,7 +1542,7 @@ describe('PluginManager', () => {
 
     it.effect('records and auto-disables a lazy plugin whose loader exceeds the load timeout', () =>
       Effect.gen(function* () {
-        const lazyMeta = { id: 'org.dxos.test.slow-load', name: 'Slow Load' };
+        const lazyMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowLoad'), name: 'Slow Load' });
         // The dynamic import never resolves; the manager's load timeout should
         // surface this as a `LazyPluginError` whose `cause` is `PluginTimeoutError`.
         const LazyTest = Plugin.lazy(lazyMeta, () => new Promise<{ default: Plugin.PluginFactory }>(() => {}));
@@ -1572,8 +1585,10 @@ describe('PluginManager', () => {
 
     it.effect('records non-timeout activation errors as reason: error', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
-        const FailingPlugin = Plugin.define({ id: 'org.dxos.test.failing', name: 'Failing' }).pipe(
+        const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
+        const FailingPlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+        ).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1602,8 +1617,10 @@ describe('PluginManager', () => {
 
     it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
-        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core', tags: ['system'] }).pipe(
+        const FailingEvent = ActivationEvent.make('org.dxos.test.coreFail');
+        const CorePlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] }),
+        ).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1632,7 +1649,9 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         let shouldFail = true;
         const Event = ActivationEvent.make('org.dxos.test.flaky');
-        const FlakyPlugin = Plugin.define({ id: 'org.dxos.test.flaky', name: 'Flaky' }).pipe(
+        const FlakyPlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.flaky'), name: 'Flaky' }),
+        ).pipe(
           Plugin.addModule({
             id: 'Maybe',
             activatesOn: Event,
@@ -1674,8 +1693,19 @@ describe('PluginManager', () => {
   describe('plugin dependencies (dependsOn)', () => {
     // Build a small plugin with a `dependsOn` chain. The helper keeps each test
     // focused on the dependency semantics rather than module wiring.
+    // These dependency-graph tests use short opaque ids (`'a'`, `'coreClient'`,
+    // `'org.dxos.missing'`) as graph keys rather than real DXNs. `id`/`dependsOn` are
+    // bare strings; only `key` (an unused DXN here) is cast at this test-only boundary.
     const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
-      Plugin.make(Plugin.define({ id, name: id, dependsOn, tags }))();
+      Plugin.make(
+        Plugin.define({
+          id,
+          key: id as unknown as DXN.DXN,
+          name: id,
+          dependsOn,
+          tags,
+        }),
+      )();
 
     it.effect('enable resolves the transitive closure in dependency-first order', () =>
       Effect.gen(function* () {

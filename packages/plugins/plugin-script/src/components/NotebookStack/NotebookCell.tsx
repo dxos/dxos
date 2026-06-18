@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -143,7 +143,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <>
           <TemplateEditor
             id={cell.id}
-            template={cell.prompt.target.instructions}
+            source={cell.prompt.target.instructions}
             lineNumbers={false}
             classNames={editorStyles}
           />

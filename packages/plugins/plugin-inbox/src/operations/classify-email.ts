@@ -10,8 +10,9 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
@@ -31,7 +32,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
 
         log.info('classify message', { message });
 
-        const tags = yield* Database.runQuery(Filter.type(Tag.Tag));
+        const tags = yield* Database.query(Filter.type(Tag.Tag)).run;
         log.info('tags', { count: tags.length });
 
         if (tags.length === 0) {
@@ -79,15 +80,14 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         log.info('selected tag', { tagId: Obj.getURI(selectedTag), tagLabel: selectedTag.label });
 
         // Find the feed by querying for mailboxes in the database.
-        // After the identifier refactor, message DXNs are ECHO-kind (dxn:echo:spaceId:itemId)
-        // and no longer embed the queue/feed ID. We locate the feed via the mailbox object.
-        // Accept new `@uri` and legacy `@dxn` field name for backward compat with old snapshots.
-        const messageEchoId = EID.tryParse((message as any)['@uri'] ?? (message as any)['@dxn']);
+        // Message identifiers are ECHO-kind (echo://spaceId/itemId) and no longer embed the
+        // queue/feed ID, so we locate the feed via the mailbox object.
+        const messageEchoId = EID.tryParse((message as any)['@uri']);
         if (!messageEchoId) {
           return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }
 
-        const mailboxes = yield* Database.runQuery(Filter.type(Mailbox.Mailbox));
+        const mailboxes = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
         if (mailboxes.length === 0) {
           return yield* Effect.fail(new Error('No mailbox found in database'));
         }
@@ -107,7 +107,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
             ...message,
             id: message.id,
           }),
-          completedAt: new Date().toISOString(),
         });
 
         yield* Feed.append(feed, [relation]);
@@ -120,7 +119,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-haiku-4-5'),
+          AiService.model('ai.claude.model.claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
@@ -131,7 +130,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          registryLayerNoop,
         ),
       ),
     ),

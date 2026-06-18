@@ -74,7 +74,7 @@ export type MarkdownEditorProviderProps = {
   'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 > &
   Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-  Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>;
+  Pick<ExtensionsOptions, 'editorStateStore' | 'viewState' | 'settings' | 'onSelectObject'>;
 
 export const MarkdownEditorProvider = ({
   children,
@@ -84,7 +84,7 @@ export const MarkdownEditorProvider = ({
   settings,
   compact,
   viewMode,
-  selectionManager,
+  viewState,
   editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
@@ -118,7 +118,7 @@ export const MarkdownEditorProvider = ({
     object,
     compact,
     viewMode,
-    selectionManager,
+    viewState,
     editorStateStore,
     previewOptions,
     settings,
@@ -215,7 +215,7 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
 type MarkdownEditorToolbarProps = ThemedClassName<
-  Omit<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
+  Omit<NaturalMarkdownToolbarProps, 'getView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
@@ -224,11 +224,15 @@ const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
 
   const { controller } = useEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
+  // Stable getter identity (changes only when the controller does) so the FileUpload effect, whose
+  // deps include `getView`, does not re-run every render and re-upload the same file.
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
+
   return (
     <NaturalMarkdownToolbar
       {...props}
       id={attendableId ?? id}
-      editorView={controller?.view ?? undefined}
+      getView={getView}
       onAction={onAction}
       onFileUpload={onFileUpload}
       onViewModeChange={onViewModeChange}

@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,18 +19,9 @@ describe('ThreadPlugin', () => {
       plugins: [ClientPlugin({}), ThreadPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, CreateObject, schema, OperationHandler, UndoMappings all auto-cascade.
+    // After autoStart: CreateObject, schema, OperationHandler all auto-cascade.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
-    );
-
-    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
-
-    // Operation handlers auto-cascade from ProcessManagerPlugin.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
+      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });

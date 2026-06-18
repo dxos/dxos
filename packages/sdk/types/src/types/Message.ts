@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
@@ -42,10 +42,7 @@ export const Message = Schema.Struct({
   ),
 }).pipe(
   LabelAnnotation.set(['properties.subject']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--note--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
   Type.makeObject(DXN.make('org.dxos.type.message', '0.1.0')),
 );
 
@@ -66,4 +63,8 @@ export const make = ({
     properties,
     ...rest,
   });
+};
+
+export const extractText = (message: Message): string => {
+  return message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
 };

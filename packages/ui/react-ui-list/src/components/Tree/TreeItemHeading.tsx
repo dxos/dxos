@@ -4,8 +4,7 @@
 
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallback } from 'react';
 
-import { Button, Icon, type Label, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { Button, Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
@@ -70,9 +69,7 @@ export const TreeItemHeading = memo(
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
-            {icon && (
-              <Icon size={5} icon={icon ?? 'ph--circle-dashed--regular'} classNames={['my-1', styles?.foreground]} />
-            )}
+            {icon && <Icon size={5} icon={icon ?? 'ph--circle-dashed--regular'} classNames={['my-1', styles?.text]} />}
             <span className='min-w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>

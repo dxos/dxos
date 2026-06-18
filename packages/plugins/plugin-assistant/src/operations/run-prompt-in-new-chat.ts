@@ -5,18 +5,20 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { getChatPath } from '../paths';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewChat> =
   AssistantOperation.RunPromptInNewChat.pipe(
@@ -88,14 +90,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             return { object: chat };
           }
 
-          const chatPath = getObjectPathFromObject(chat);
+          const chatPath = getChatPath(db.spaceId, chat.id);
           const pendingPromptText =
             typeof prompt === 'string'
               ? prompt
               : yield* Effect.gen(function* () {
                   const promptObj = yield* Effect.promise(() => prompt.load());
-                  const source = yield* Effect.promise(() => promptObj.instructions.source.load());
-                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt template source must be Text.');
+                  const source = yield* Effect.promise(() => promptObj.instructions.load());
+                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt instructions must be Text.');
                   return Template.process(source.content ?? '');
                 });
           yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({

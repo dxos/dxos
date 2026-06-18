@@ -3,11 +3,14 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { type ReadOnlyEvent } from '@dxos/async';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
+import type * as Filter from './Filter';
+import type * as Query from './Query';
 
 /**
  * Identifier denoting an ECHO Registry.
@@ -33,9 +36,9 @@ export type TypeId = typeof TypeId;
  * in-memory cache. Wire one per space (e.g. as a Layer scoped to the space's Effect runtime)
  * or share a single instance across spaces depending on the use case.
  *
- * The concrete implementation (and the `makeRegistry` / `findTypeByDXN` / `registryLayer`
- * factories) lives in `@dxos/echo-db`; this module declares only the interface so that the
- * `@dxos/echo` API surface stays free of query-matching dependencies.
+ * The concrete implementation (and the `makeRegistry` / `registryLayer` factories) lives in
+ * `@dxos/echo-client`; this module declares only the interface so that the `@dxos/echo` API surface
+ * stays free of query-matching dependencies.
  */
 export interface Registry {
   readonly [TypeId]: TypeId;
@@ -83,6 +86,14 @@ export interface Registry {
   get(id: string): Entity.Unknown | undefined;
 
   /**
+   * Get an entity by one of its addressing URIs — a type entity by its typename DXN (or, when
+   * persisted, its identifier EID), a keyed entity by its `dxn:<key>[:<version>]`. Accepts legacy
+   * DXN forms (normalized internally). Searches the local registry first, then falls back to the
+   * upstream registry. Narrow the result with `Type.isType` when a type entity is required.
+   */
+  getByURI(uri: string): Entity.Unknown | undefined;
+
+  /**
    * List all entities.
    * Local entities take precedence over upstream entities with the same id.
    */
@@ -109,7 +120,7 @@ export const isRegistry = (obj: unknown): obj is Registry =>
   obj != null && typeof obj === 'object' && TypeId in obj && (obj as { [TypeId]?: unknown })[TypeId] === TypeId;
 
 /**
- * Options for the registry factory (`makeRegistry` in `@dxos/echo-db`).
+ * Options for the registry factory (`makeRegistry` in `@dxos/echo-client`).
  */
 export type Options = {
   /**
@@ -129,3 +140,16 @@ export type Options = {
  * Use this to inject a registry into Effect-based code.
  */
 export class Service extends Context.Tag('@dxos/echo/Registry/Service')<Service, Registry>() {}
+
+/**
+ * Executes a query against the registry and returns the results.
+ * Analogous to {@link Database.query} `.run` for the in-process registry.
+ */
+export const runQuery: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  Effect.gen(function* () {
+    const registry = yield* Service;
+    return (yield* Effect.promise(() => registry.query(queryOrFilter as any).run())) as any;
+  });

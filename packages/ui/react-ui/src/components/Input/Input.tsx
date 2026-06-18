@@ -3,19 +3,18 @@
 //
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
@@ -41,8 +40,11 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import {
   SegmentedDate,
@@ -70,16 +72,21 @@ type InputTriggerContextValue = {
   hasTrigger: boolean;
 };
 
-const InputTriggerContext = createContext<InputTriggerContextValue | undefined>(undefined);
+// Default context makes the trigger registry a no-op outside `Input.Root` (consumers opt in).
+const [InputTriggerProvider, useInputTriggerContext] = createContext<InputTriggerContextValue>(INPUT_NAME, {
+  registerTrigger: () => () => {},
+  trigger: () => {},
+  hasTrigger: false,
+});
 
 /**
  * Field hook. Pass an opener function; while the field is mounted, an `Input.TriggerIcon`
  * sibling will call this opener on press. Returns a no-op when used outside `Input.Root`.
  */
 const useInputTrigger = (handler: InputTriggerHandler | undefined) => {
-  const ctx = useContext(InputTriggerContext);
+  const ctx = useInputTriggerContext('useInputTrigger');
   useEffect(() => {
-    if (!ctx || !handler) {
+    if (!handler) {
       return;
     }
     return ctx.registerTrigger(handler);
@@ -109,12 +116,10 @@ const Root = (props: InputRootProps) => {
     handlerRef.current?.();
   }, []);
 
-  const value = useMemo(() => ({ registerTrigger, trigger, hasTrigger }), [registerTrigger, trigger, hasTrigger]);
-
   return (
-    <InputTriggerContext.Provider value={value}>
+    <InputTriggerProvider registerTrigger={registerTrigger} trigger={trigger} hasTrigger={hasTrigger}>
       <InputRoot {...props} />
-    </InputTriggerContext.Provider>
+    </InputTriggerProvider>
   );
 };
 
@@ -125,31 +130,30 @@ Root.displayName = 'Input.Root';
 // when no field in the surrounding `Input.Root` has registered an opener.
 //
 
-type TriggerIconProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'button'>, 'children' | 'onClick'> & {
-    icon?: string;
-  }
->;
+// `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Input.TriggerIcon />`).
+// `onClick` is reserved — the trigger always opens the registered picker.
+type TriggerIconProps = Omit<IconButtonProps, 'label' | 'onClick'> & { label?: string };
 
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
-  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, ...props }, forwardedRef) => {
-    const ctx = useContext(InputTriggerContext);
-    const { tx } = useThemeContext();
-    if (!ctx?.hasTrigger) {
+  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const ctx = useInputTriggerContext('Input.TriggerIcon');
+    if (!ctx.hasTrigger) {
       return null;
     }
 
     return (
-      <button
-        type='button'
+      <IconButton
         ref={forwardedRef}
-        aria-label={ariaLabel ?? 'Open picker'}
+        variant='ghost'
+        icon={icon}
+        iconOnly
+        classNames={classNames}
+        aria-label={ariaLabel}
+        label={label ?? ariaLabel ?? t('trigger-button.label')}
         {...props}
         onClick={ctx.trigger}
-        className={tx('input.triggerIcon', {}, classNames) ?? undefined}
-      >
-        <Icon size={4} icon={icon} />
-      </button>
+      />
     );
   },
 );
@@ -316,24 +320,6 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 TextInput.displayName = 'Input.TextInput';
 
 //
-// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
-// spinbutton semantics, and immutable separators. ISO string API:
-//   - Date     `YYYY-MM-DD`
-//   - Time     `HH:mm`
-//   - DateTime `YYYY-MM-DDTHH:mm`
-// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
-// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
-//
-
-const Time = SegmentedTime;
-const Date_ = SegmentedDate;
-const DateTime = SegmentedDateTime;
-
-type TimeProps = SegmentedTimeProps;
-type DateInputProps = SegmentedDateProps;
-type DateTimeInputProps = SegmentedDateTimeProps;
-
-//
 // TextArea
 //
 
@@ -481,6 +467,24 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
 Switch.displayName = 'Input.Switch';
 
 //
+// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
+// spinbutton semantics, and immutable separators. ISO string API:
+//   - Date     `YYYY-MM-DD`
+//   - Time     `HH:mm`
+//   - DateTime `YYYY-MM-DDTHH:mm`
+// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
+// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
+//
+
+const Time = SegmentedTime;
+const Date = SegmentedDate;
+const DateTime = SegmentedDateTime;
+
+type TimeProps = SegmentedTimeProps;
+type DateInputProps = SegmentedDateProps;
+type DateTimeInputProps = SegmentedDateTimeProps;
+
+//
 // Input
 //
 
@@ -491,7 +495,7 @@ export const Input = {
   TextInput,
   TextArea,
   Time,
-  Date: Date_,
+  Date,
   DateTime,
   Checkbox,
   Switch,

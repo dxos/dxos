@@ -9,10 +9,9 @@ import * as Schema from 'effect/Schema';
 import type * as URI from './URI';
 
 /**
- * Full DXN regex per spec — new format only: `dxn:<nsid>[:<version>]`.
+ * Full DXN regex per spec: `dxn:<nsid>[:<version>]`.
  * Middle segments may contain hyphens; the final segment must be camelCase
  * (alphanumeric, leading letter — no hyphens or underscores).
- * Does NOT match legacy `dxn:<kind>:<...>` formats (e.g. `dxn:type:...`).
  */
 const DXN_SPEC_REGEXP =
   /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z][a-zA-Z0-9]{0,62})(:\d+\.\d+\.\d+)?$/;
@@ -32,6 +31,33 @@ const DXN_SPEC_REGEXP =
 export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
 /**
+ * Compile-time validation for NSID strings (the `dxn:` prefix is absent here).
+ *
+ * Checks two rules expressible with template literal types:
+ * - Must contain at least one dot (multi-segment).
+ * - Final segment (after the last dot) must not contain a hyphen.
+ *
+ * TypeScript template literal inference is non-greedy: `${string}.${infer Rest}`
+ * always splits at the first dot. The type recurses until `Rest` has no more dots,
+ * at which point it is the true final segment and is checked for hyphens.
+ *
+ * Broad `string` passes through unchanged so that template-literal call sites
+ * whose prefix segment is `string` are not rejected — those are validated at
+ * runtime by the regex inside `parse`.
+ */
+export type Name<T extends string> = [string] extends [T]
+  ? string
+  : T extends `${string}.${infer Rest}`
+    ? Rest extends `${string}.${string}`
+      ? [Name<Rest>] extends [never]
+        ? never
+        : T
+      : Rest extends `${string}-${string}`
+        ? never
+        : T
+    : never;
+
+/**
  * Cheap prefix check — does not validate the full DXN grammar.
  * Sufficient for narrowing a URI to a DXN.
  */
@@ -41,15 +67,22 @@ export const isDXN = (value: unknown): value is DXN => typeof value === 'string'
  * Constructs a DXN from an NSID (and optional version). Throws if the result
  * is not a valid DXN. Use `tryMake` for non-throwing string parsing.
  *
+ * Static NSID strings are validated at compile time via {@link Name}:
+ * the final segment must be camelCase (no hyphens). Template-literal strings
+ * with a runtime prefix are accepted here but still validated at runtime.
+ *
  * @example make('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
  * @example make('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
  */
-export const make = (nsid: string, version?: string): DXN =>
-  parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
+export const make: {
+  <T extends string>(
+    nsid: [Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
+    version?: string,
+  ): DXN;
+} = (nsid: string, version?: string): DXN => parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
 
 /**
  * Parses a full DXN string. Returns undefined on failure.
- * Normalizes legacy `dxn:type:<nsid>` to the canonical `dxn:<nsid>` form.
  */
 export const tryMake = (dxn: string): DXN | undefined => {
   try {
@@ -62,14 +95,6 @@ export const tryMake = (dxn: string): DXN | undefined => {
 // Internal — full-grammar validator. Callers outside this module should use
 // `make(nsid, version?)` or `tryMake(dxn)`.
 const parse = (dxn: string): DXN => {
-  // Backward compat: strip legacy `type:` kind segment.
-  const legacyTypeMatch = /^dxn:type:(.+)$/.exec(dxn);
-  if (legacyTypeMatch) {
-    const normalized = `dxn:${legacyTypeMatch[1]}` as DXN;
-    if (DXN_SPEC_REGEXP.test(normalized)) {
-      return normalized;
-    }
-  }
   if (typeof dxn === 'string' && DXN_SPEC_REGEXP.test(dxn)) {
     return dxn as DXN;
   }

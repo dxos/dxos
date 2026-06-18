@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
 import { EntityId } from '@dxos/keys';
+import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
 
 import { CommitSelector, buildExecutionGraph } from './execution-graph';
@@ -224,7 +225,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
@@ -261,6 +262,36 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[1].branch).toBe('op-1');
     expect(commits[2].branch).toBe('main');
     expect(commits[2].parents?.length).toBe(2);
+  });
+
+  test('child process (sub-agent) forks onto its own branch from its first event', ({ expect }) => {
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestBegin, {}));
+        // A delegated sub-agent runs as a separate process: its own pid, parented to the supervisor.
+        // With an inner status event the span is non-collapsible, so its begin event is emitted as a
+        // real fork — and because it crosses a process boundary it forks onto its OWN branch.
+        yield* withMeta(
+          { pid: 'sub', parentPid: 'supervisor' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'routine', name: 'Run Routine' });
+            yield* Trace.write(CompleteBlock, {
+              messageId: MESSAGE_ID,
+              role: 'assistant',
+              block: { _tag: 'status', statusText: 'working', pending: false },
+            });
+            yield* Trace.write(Trace.OperationEnd, { key: 'routine', name: 'Run Routine', outcome: 'success' });
+          }),
+        );
+        yield* withMeta({ pid: 'supervisor' }, Trace.write(AgentRequestEnd, { status: 'success' }));
+      }),
+    );
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    // The sub-agent's begin ("Run Routine") lands on its OWN branch ('sub'), not the supervisor's —
+    // so a concurrent sub-agent gets its own lane from its first event rather than sharing the
+    // parent lane until its first middle commit.
+    const begin = commits.find((commit) => commit.message === 'Run Routine');
+    expect(begin?.branch).toBe('sub');
   });
 
   test('pending span with user message → user lands on own branch, not parent', ({ expect }) => {
@@ -344,7 +375,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'b', name: 'B', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
     const { commits } = buildExecutionGraph({ traceMessages: messages });
@@ -527,14 +558,14 @@ describe('buildExecutionGraph scenarios', () => {
             role: 'user',
             block: { _tag: 'text', text: 'First question', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
           yield* Trace.write(AgentRequestBegin, {});
           yield* Trace.write(CompleteBlock, {
             messageId: MESSAGE_ID,
             role: 'user',
             block: { _tag: 'text', text: 'Follow-up question', pending: false },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -616,7 +647,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -666,7 +697,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -714,7 +745,7 @@ describe('buildExecutionGraph scenarios', () => {
               pending: false,
             },
           });
-          yield* Trace.write(AgentRequestEnd, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
         }),
       ),
     );
@@ -764,7 +795,7 @@ describe('buildExecutionGraph scenarios', () => {
             yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
           }),
         );
-        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, { status: 'success' }));
       }),
     );
 
@@ -773,6 +804,67 @@ describe('buildExecutionGraph scenarios', () => {
       ●     [atom] Agent processing request...
       ├──●  [function] Lookup - Success
       ◆──╯  [atom] Agent completed request
+      "
+    `);
+  });
+
+  /**
+   * Failed agent requests surface as an error-level end commit with the failure message.
+   */
+  test('agent request end with error status renders as error commit', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'user',
+            block: { _tag: 'text', text: 'hello', pending: false },
+          });
+          yield* Trace.write(AgentRequestEnd, {
+            status: 'error',
+            error: 'Unsupported schema AST: UnknownKeyword',
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.at(-1);
+    expect(endCommit?.message).toBe('Agent request failed: Unsupported schema AST: UnknownKeyword');
+    expect(endCommit?.level).toBe(LogLevel.ERROR);
+    expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
+      "
+      ●     [atom] Agent processing request...
+      ├──●  [user] hello
+      ◆──╯  [atom] Agent request failed: Unsupported schema AST: UnknownKeyword
+      "
+    `);
+  });
+
+  /**
+   * Interrupted agent requests surface as a warning-level end commit.
+   */
+  test('agent request end with interrupted status renders as interrupted commit', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'interrupted' });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.at(-1);
+    expect(endCommit?.message).toBe('Agent request interrupted');
+    expect(endCommit?.level).toBe(LogLevel.WARN);
+    // Begin/end only — collapsible span renders a single end commit on main.
+    expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
+      "
+      ●  [atom] Agent request interrupted
       "
     `);
   });

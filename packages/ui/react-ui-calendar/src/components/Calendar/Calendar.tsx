@@ -32,12 +32,19 @@ import { getDate, getRowIndex, isSameDay } from './util';
 
 const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
-const size = 48;
+const size = 40;
 const defaultWidth = 7 * size;
 
 // Auto-scroll while dragging near a vertical edge.
 const EDGE_SCROLL_ZONE = 32; // px
 const EDGE_SCROLL_MAX_SPEED = 12; // px per frame
+
+const DATE_CLASS_NAMES = {
+  current: 'ring-2 ring-primary-500',
+  today: 'border-2 border-amber-500 bg-amber-500/50 text-inverse-fg',
+  busy: 'border border-green-700',
+  starred: 'border-2 border-dashed border-amber-500',
+};
 
 //
 // Range
@@ -86,7 +93,8 @@ const cellDate = (el: Element | null): Date | undefined => {
 //
 
 type CalendarEvent = {
-  type: 'scroll';
+  /** `scroll` brings a date into view; `select` also sets it as the grid's selected day. */
+  type: 'scroll' | 'select';
   date: Date;
 };
 
@@ -112,7 +120,10 @@ const [CalendarContextProvider, useCalendarContext] = createContext<CalendarCont
 //
 
 type CalendarController = {
+  /** Bring a date into view without changing the selection. */
   scrollTo: (date: Date) => void;
+  /** Set the grid's selected day (and scroll it into view) — e.g. when the active event changes. */
+  select: (date: Date) => void;
 };
 
 //
@@ -134,6 +145,9 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
       () => ({
         scrollTo: (date: Date) => {
           event.emit({ type: 'scroll', date });
+        },
+        select: (date: Date) => {
+          event.emit({ type: 'select', date });
         },
       }),
       [event],
@@ -209,10 +223,30 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
 
+/** Semantic kind of a {@link DateMarker}; the grid maps each kind to its own border treatment. */
+export type DateMarkerTag = 'busy' | 'star';
+
+/**
+ * A date (or inclusive date range) to mark on the grid. */
+export type DateMarker = { startDate: Date; endDate?: Date; tag?: DateMarkerTag };
+
 type CalendarGridProps = {
   rows?: number;
-  /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
-  dates?: Date[];
+  /**
+   * Dates to mark on the grid; each marked day gets a border keyed off its `tag` kind (defaults to `busy`).
+   */
+  dates?: DateMarker[];
+  /**
+   * Date the grid scrolls into view on mount, and whenever this value changes.
+   * Defaults to today. Pass a stable (memoized) Date so the grid does not
+   * re-scroll on every render.
+   */
+  initialDate?: Date;
+  /**
+   * Weeks of context kept above a date when scrolling it into view (on mount and via the controller's
+   * `scrollTo`), so the date sits below the top edge rather than pinned to it. Defaults to 2.
+   */
+  scrollMargin?: number;
   /** Fired when a user selects a single date (click or arrow key). */
   onSelect?: (event: { date: Date }) => void;
   /**
@@ -224,7 +258,10 @@ type CalendarGridProps = {
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, dates = [], onSelect, onSelectRange, ...props }, forwardedRef) => {
+  (
+    { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
+    forwardedRef,
+  ) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
       useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
@@ -233,28 +270,50 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const gridRef = useRef<HTMLDivElement>(null);
     const today = useMemo(() => new Date(), []);
 
-    // Build a set of ISO date strings (YYYY-MM-DD) for O(1) per-cell lookup.
-    const dateSet = useMemo(() => new Set(dates.map((date) => startOfDay(date).toISOString())), [dates]);
+    // Map each marked ISO day to its tag kind, expanding ranges. `star` wins over `busy` on the same
+    // day so a starred event keeps its highlighted border.
+    const dateMarkers = useMemo(() => {
+      const markers = new Map<string, DateMarkerTag>();
+      for (const { startDate, endDate, tag = 'busy' } of dates) {
+        const end = endDate ? startOfDay(endDate) : startOfDay(startDate);
+        for (let date = startOfDay(startDate); date <= end; date = addDays(date, 1)) {
+          const iso = date.toISOString();
+          if (markers.get(iso) !== 'star') {
+            markers.set(iso, tag);
+          }
+        }
+      }
 
-    const hasDate = useCallback((date: Date) => dateSet.has(startOfDay(date).toISOString()), [dateSet]);
+      return markers;
+    }, [dates]);
+
+    const getMarker = useCallback(
+      (date: Date): { tag: DateMarkerTag } | undefined => {
+        const iso = startOfDay(date).toISOString();
+        const tag = dateMarkers.get(iso);
+        return tag ? { tag } : undefined;
+      },
+      [dateMarkers],
+    );
 
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
-      const index = getRowIndex(start, today, weekStartsOn);
-      listRef.current?.scrollToRow(index);
-    }, [initialized, start, today, weekStartsOn]);
+      const index = getRowIndex(start, initialDate ?? today, weekStartsOn);
+      // Keep `scrollMargin` weeks of context above the target row.
+      listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
+    }, [initialized, start, today, initialDate, weekStartsOn, scrollMargin]);
 
     useEffect(() => {
       return event.on((event) => {
-        switch (event.type) {
-          case 'scroll': {
-            const index = getRowIndex(start, event.date, weekStartsOn);
-            listRef.current?.scrollToRow(index);
-            break;
-          }
+        // `select` also sets the grid's selection (e.g. when the active event changes); the grid still
+        // owns selection — a user click sets it locally and isn't overwritten until the next `select`.
+        if (event.type === 'select') {
+          setSelected(event.date);
         }
+        const index = getRowIndex(start, event.date, weekStartsOn);
+        listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
       });
-    }, [event]);
+    }, [event, start, weekStartsOn, scrollMargin, setSelected]);
 
     const days = useMemo(() => {
       const weekStart = startOfWeek(new Date(), { weekStartsOn });
@@ -294,15 +353,18 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         if (!visibleHeight) {
           return;
         }
-        const firstVisibleRow = Math.floor(scrollTopRef.current / size);
-        const lastVisibleRow = firstVisibleRow + Math.floor(visibleHeight / size) - 1;
-        if (targetRow < firstVisibleRow) {
-          listRef.current?.scrollToRow(targetRow);
-        } else if (targetRow > lastVisibleRow) {
-          // Place the target row at the bottom of the viewport.
-          listRef.current?.scrollToPosition(
-            Math.max(0, (targetRow + 1) * size - Math.floor(visibleHeight / size) * size),
-          );
+        // Rows fully inside the viewport. Use ceil/floor (not floor of scrollTop) so a partially
+        // visible row at either edge counts as "not fully visible" even when scrollTop is not a
+        // multiple of the row height (which it isn't after a bottom-aligned scroll).
+        const firstFullyVisibleRow = Math.ceil(scrollTopRef.current / size);
+        const lastFullyVisibleRow = Math.floor((scrollTopRef.current + visibleHeight) / size) - 1;
+        if (targetRow < firstFullyVisibleRow) {
+          // Align the top edge of the target row with the top edge of the viewport.
+          listRef.current?.scrollToPosition(targetRow * size);
+        } else if (targetRow > lastFullyVisibleRow) {
+          // Align the bottom edge of the target row with the bottom edge of the viewport (using the
+          // full visible height, not a row-rounded height, so the row sits flush against the edge).
+          listRef.current?.scrollToPosition(Math.max(0, (targetRow + 1) * size - visibleHeight));
         }
       },
       [height, maxHeight, weekStartsOn],
@@ -557,39 +619,54 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const rowRenderer = useCallback<ListRowRenderer>(
       ({ key, index, style }) => {
-        const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
+        // Zebra-stripe alternating months with a subtle neutral overlay over the grid surface, so
+        // the banding is independent of (and robust to) surface-token retuning.
+        const getBgColor = (date: Date) => (date.getMonth() % 2 === 0 ? 'bg-group-surface' : 'bg-group-alt-surface');
+
         return (
           <div key={key} style={style} className='grid'>
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
-                const inRange = isInRange(date, activeRange);
-                const border = isSameDay(date, selected)
-                  ? 'border-primary-500'
-                  : isSameDay(date, today)
-                    ? 'border-amber-500'
-                    : hasDate(date)
-                      ? 'border-neutral-700 border-dashed'
+                const marker = getMarker(date);
+                const isToday = isSameDay(date, today);
+                const isCurrent = isSameDay(date, selected);
+                const dateClassNames = isToday
+                  ? DATE_CLASS_NAMES.today
+                  : marker?.tag === 'star'
+                    ? DATE_CLASS_NAMES.starred
+                    : marker
+                      ? DATE_CLASS_NAMES.busy
                       : undefined;
+
+                const inRange = isInRange(date, activeRange);
 
                 return (
                   <div
                     key={i}
                     data-date={startOfDay(date).toISOString()}
-                    className={mx(
-                      'relative flex justify-center items-center cursor-pointer select-none',
-                      getBgColor(date),
-                    )}
+                    className={mx('relative flex justify-center cursor-pointer select-none', getBgColor(date))}
                     onPointerDown={(ev) => handleDayPointerDown(date, ev)}
                     onPointerEnter={() => handleDayPointerEnter(date)}
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
+                    {/* Selection range */}
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
-                    <span className='relative text-description'>{date.getDate()}</span>
-                    {!border && date.getDate() === 1 && (
+                    {/* Month */}
+                    {!dateClassNames && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {border && <div className={mx('absolute inset-1 border-2 rounded-full', border)} />}
+                    {/* Day + Marker */}
+                    <div
+                      className={mx(
+                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-description',
+                        dateClassNames,
+                      )}
+                    >
+                      {date.getDate()}
+                    </div>
+                    {/* Current */}
+                    {isCurrent && <div className={mx('absolute inset-0.5 rounded-full', DATE_CLASS_NAMES.current)} />}
                   </div>
                 );
               })}
@@ -597,7 +674,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           </div>
         );
       },
-      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, hasDate, selected, weekStartsOn],
+      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, getMarker, selected, weekStartsOn],
     );
 
     return (

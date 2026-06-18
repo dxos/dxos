@@ -11,11 +11,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -36,7 +35,7 @@ export default Capability.makeModule(
       // in the global action menu (e.g., the "+" button in the navigation tree).
       // `position: 'first'` places the action in the primary action area.
       GraphBuilder.createExtension({
-        id: 'root-actions',
+        id: 'rootActions',
         position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -67,14 +66,14 @@ export default Capability.makeModule(
         id: 'section',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const items = get(AtomQuery.make(space.db, Filter.type(SampleItem.SampleItem)));
+          const items = get(space.db.query(Filter.type(SampleItem.SampleItem)).atom);
           if (items.length === 0) {
             return Effect.succeed([]);
           }
 
           return Effect.succeed([
             AppNode.makeSection({
-              id: 'sample-section',
+              id: 'sampleSection',
               type: SAMPLE_SECTION_TYPE,
               label: ['plugin.name', { ns: meta.id }],
               icon: 'ph--book-open--regular',
@@ -89,16 +88,16 @@ export default Capability.makeModule(
       // Matches nodes of `SAMPLE_SECTION_TYPE` and queries the space's database.
       // `createObjectNode` builds a standard app-graph node using the registered metadata.
       GraphBuilder.createExtension({
-        id: 'section-items',
+        id: 'sectionItems',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === SAMPLE_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const items = get(AtomQuery.make(space.db, Filter.type(SampleItem.SampleItem)));
+          const items = get(space.db.query(Filter.type(SampleItem.SampleItem)).atom);
           return Effect.succeed(
             items
-              .map((item) => createObjectNode({ db: space.db, object: item }))
+              .map((item) => AppNode.makeObject({ get, db: space.db, object: item }))
               .filter((node): node is NonNullable<typeof node> => node !== null),
           );
         },
@@ -108,7 +107,7 @@ export default Capability.makeModule(
       // `GraphBuilder.createTypeExtension` is a convenience that matches nodes whose data
       // is an ECHO object of the specified type. The callback receives the typed object.
       GraphBuilder.createTypeExtension({
-        id: 'item-actions',
+        id: 'itemActions',
         type: SampleItem.SampleItem,
         actions: (item) =>
           Effect.succeed([
@@ -143,7 +142,7 @@ export default Capability.makeModule(
       // The `data` string identifies which companion surface to render (matched by the
       // `literalArticle` filter in react-surface.tsx).
       GraphBuilder.createTypeExtension({
-        id: 'related-companion',
+        id: 'relatedCompanion',
         type: SampleItem.SampleItem,
         connector: () =>
           Effect.succeed([
@@ -162,12 +161,12 @@ export default Capability.makeModule(
       // The surface role follows the convention: `deck-companion--{id}`.
       // `position: 'last'` places it after higher-priority companions.
       GraphBuilder.createExtension({
-        id: 'deck-companion',
+        id: 'deckCompanion',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'sample-panel',
+              id: 'samplePanel',
               label: ['deck-companion.label', { ns: meta.id }],
               icon: 'ph--book-open--regular',
               data: 'sample-panel' as const,

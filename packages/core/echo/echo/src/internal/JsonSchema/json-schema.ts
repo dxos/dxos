@@ -11,19 +11,15 @@ import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { mapAst } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
 import type * as Type from '../../Type';
-import {
-  type TypeAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-  makeTypeJsonSchemaAnnotation,
-} from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import {
   ANY_OBJECT_TYPENAME,
   ANY_OBJECT_VERSION,
@@ -161,7 +157,7 @@ const withEchoRefinements = (
     }
   } else if (SchemaAST.isTypeLiteral(ast)) {
     // Add property order annotations
-    recursiveResult = mapAst(ast, (ast, key) =>
+    recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
       withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
     );
     recursiveResult = addJsonSchemaFields(recursiveResult, {
@@ -171,7 +167,7 @@ const withEchoRefinements = (
     // Ignore undefined keyword that appears in the optional fields.
     return ast;
   } else {
-    recursiveResult = mapAst(ast, (ast, key) =>
+    recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
       withEchoRefinements(
         ast,
         path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,
@@ -208,7 +204,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
     }
   } else if ('$id' in root) {
-    switch (root.$id as string) {
+    switch (decodeURIComponent(root.$id as string)) {
       case '/schemas/any': {
         result = anyToEffectSchema(root as JSONSchema.JsonSchema7Any);
         break;
@@ -219,7 +215,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
       case '/schemas/{}':
       case '/schemas/object': {
-        result = Schema.Object;
+        result = Schema.Struct({});
         break;
       }
       // Custom ECHO object reference.
@@ -358,7 +354,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
-    const echoUri = root.$id.startsWith('echo:') || root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
+    const echoUri = root.$id.startsWith('echo:') ? root.$id : undefined;
     return createEchoReferenceSchema(
       echoUri,
       (echoRefinement as any).reference.typename,
@@ -425,11 +421,11 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
 };
 
 const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefined => {
-  // For stored schemas `$id` IS the storage URI (echo:/… or legacy dxn:echo:…).
-  if (schema.$id && (schema.$id.startsWith('echo:') || schema.$id.startsWith('dxn:echo:'))) {
+  // For stored schemas `$id` IS the storage URI (echo:/<id>).
+  if (schema.$id && schema.$id.startsWith('echo:')) {
     return schema.$id;
   }
-  // Legacy: older serializations stored the EID on echo.type.schemaId.
+  // Older serializations stored the EID on echo.type.schemaId.
   const legacySchemaId = schema.echo?.type?.schemaId;
   if (legacySchemaId) {
     return EntityId.isValid(legacySchemaId) ? EID.make({ entityId: legacySchemaId }) : legacySchemaId;

@@ -26,10 +26,10 @@ import { type Integration } from '@dxos/plugin-integration';
 import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
 import { IntegrationDatabaseMissingError, MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
 
-// ---------------------------------------------------------------------------
-// Schemas
-// ---------------------------------------------------------------------------
 //
+// Schemas
+//
+
 // Each schema is a strict subset of the upstream lexicon; extra fields on the
 // wire are decoded as `Schema.Unknown` or simply ignored. Decoding through
 // Effect Schema gives us `ParseError`s rather than runtime crashes when the
@@ -139,9 +139,9 @@ const DidDocumentSchema = Schema.Struct({
   service: Schema.optional(Schema.Array(DidServiceSchema)),
 });
 
-// ---------------------------------------------------------------------------
+//
 // Pure helpers (post mapping)
-// ---------------------------------------------------------------------------
+//
 
 /**
  * Map a feed-view post into the lightweight shape `Subscription.makePost`
@@ -163,9 +163,9 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
   };
 };
 
-// ---------------------------------------------------------------------------
+//
 // Request pipeline
-// ---------------------------------------------------------------------------
+//
 
 type RequestEffect<T> = Effect.Effect<
   T,
@@ -242,10 +242,10 @@ const queryParams = (query: Record<string, string | number | undefined>): Record
   return out;
 };
 
-// ---------------------------------------------------------------------------
-// PDS resolution
-// ---------------------------------------------------------------------------
 //
+// PDS resolution
+//
+
 // Atproto identities are sharded across many PDSes (including bsky.social's
 // own per-user `*.host.bsky.network` shards), so authenticated XRPC must
 // target whatever PDS minted the auth context. The DID document's
@@ -309,9 +309,9 @@ const resolvePds = (handleOrDid: string) =>
     return endpoint;
   });
 
-// ---------------------------------------------------------------------------
+//
 // Credentials service
-// ---------------------------------------------------------------------------
+//
 
 type CredentialsValue = {
   spaceId: string;
@@ -367,9 +367,9 @@ export class Credentials extends Context.Tag('@dxos/plugin-bluesky/Credentials')
     );
 }
 
-// ---------------------------------------------------------------------------
+//
 // Public API surface
-// ---------------------------------------------------------------------------
+//
 
 type AuthedEffect<T> = Effect.Effect<
   T,

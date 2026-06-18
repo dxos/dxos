@@ -18,7 +18,10 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -33,19 +36,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/assistant-toolkit"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-query"
@@ -58,6 +55,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -73,9 +73,6 @@
     },
     {
       "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-form"
@@ -100,9 +97,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

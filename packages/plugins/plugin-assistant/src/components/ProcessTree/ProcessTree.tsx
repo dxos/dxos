@@ -54,7 +54,7 @@ export const ProcessTree = React.memo(
                       parentOf={process.parentPid?.toString()}
                       classNames={mx('col-span-full grid grid-cols-subgrid gap-2 ps-1', onProcessSelect && 'dx-hover')}
                     >
-                      <Treegrid.Cell>
+                      <Treegrid.Cell classNames='grid place-items-center'>
                         <Tooltip.Trigger content={process.state.toString()}>
                           <Icon
                             size={4}
@@ -69,7 +69,7 @@ export const ProcessTree = React.memo(
                               Match.when(Process.State.SUCCEEDED, () => 'ph--check-circle--regular'),
                               Match.when(Process.State.FAILED, () => 'ph--warning--regular'),
                               Match.when(Process.State.HYBERNATING, () => 'ph--spinner--regular'),
-                              Match.when(Process.State.IDLE, () => 'ph--hourglass--regular'),
+                              Match.when(Process.State.IDLE, () => 'ph--moon-stars--regular'),
                               Match.when(Process.State.TERMINATING, () => 'ph--x-circle--regular'),
                               Match.when(Process.State.TERMINATED, () => 'ph--x-circle--regular'),
                               Match.orElse(() => 'ph--spinner-gap--regular'),

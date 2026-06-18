@@ -21,6 +21,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -42,13 +45,7 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/ui-theme"

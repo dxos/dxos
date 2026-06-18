@@ -115,7 +115,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+    const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -177,7 +177,7 @@ const updateSpec = Effect.fn(function* (
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    const queryAst = Query.select(Filter.type(typename)).ast;
+    const queryAst = Query.select(Filter.type(DXN.make(typename))).ast;
 
     const deepOptionValue = yield* Option.match(deepOption, {
       onNone: () =>

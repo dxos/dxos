@@ -20,7 +20,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Hypergraph, Type } from '@dxos/echo';
-import { EchoClient } from '@dxos/echo-db';
+import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -357,6 +357,7 @@ export class Client {
       return this;
     }
 
+    performance.mark('client.initialize:called');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
@@ -375,13 +376,13 @@ export class Client {
           : Runtime.Client.ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
-        // - FILE when a sqlitePath was supplied (Node/Bun CLI)
+        // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
         // - MEMORY otherwise
         const sqliteMode = clientCfg?.storage?.sqliteMode
           ? undefined
           : this._options.createOpfsWorker
             ? Runtime.Client.Storage.SqliteMode.OPFS
-            : this._options.sqlitePath
+            : this._options.sqlitePath || clientCfg?.storage?.dataRoot
               ? Runtime.Client.Storage.SqliteMode.FILE
               : Runtime.Client.Storage.SqliteMode.MEMORY;
         this._config = new Config(
@@ -423,6 +424,8 @@ export class Client {
     }
 
     this._initialized = true;
+    performance.mark('client.initialize:completed');
+    performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
     return this;
   }

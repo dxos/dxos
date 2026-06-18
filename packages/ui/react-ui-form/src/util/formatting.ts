@@ -4,7 +4,7 @@
 
 import { format as formatDate } from 'date-fns/format';
 
-import { Format, GeoLocation, TypeEnum } from '@dxos/echo/internal';
+import { Format, GeoLocation, TypeEnum } from '@dxos/echo/Format';
 
 type ValueFormatProps = {
   type: TypeEnum;

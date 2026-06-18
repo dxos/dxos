@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Format, Ref, Type } from '@dxos/echo';
-import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * @deprecated Use (@dxos/echo/testing)

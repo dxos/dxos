@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * A player in a game.
@@ -46,10 +46,7 @@ export const Game = Schema.Struct({
     .pipe(FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--sword--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
   // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
   // the static `ph--sword--regular` above while the variant ref is still loading.
   Annotation.IconFromRefAnnotation.set('variant'),

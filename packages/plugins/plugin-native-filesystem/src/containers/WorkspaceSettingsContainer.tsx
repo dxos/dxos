@@ -7,8 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-ui';
@@ -71,7 +71,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
 
       const config = { icon: mergedIcon, hue: mergedHue };
       log.info('Writing composer config', { path: workspace.path, config });
-      void runAndForwardErrors(
+      void EffectEx.runAndForwardErrors(
         writeComposerConfig(workspace.path, config).pipe(
           Effect.tap((success) =>
             success
@@ -86,10 +86,10 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
 
   const handleRemove = useCallback(async () => {
     await invokePromise(NativeFilesystemOperation.CloseDirectory, { id: workspace.id });
-    const personalSpaceId = getPersonalSpace(client)?.id;
+    const personalSpaceId = AppSpace.getPersonalSpace(client)?.id;
     if (personalSpaceId) {
       await invokePromise(LayoutOperation.SwitchWorkspace, {
-        subject: getSpacePath(personalSpaceId),
+        subject: Paths.getSpacePath(personalSpaceId),
       });
     }
   }, [workspace.id, invokePromise, client]);

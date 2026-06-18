@@ -15,12 +15,12 @@ import { type QueryAST } from '@dxos/echo-protocol';
  * @example
  * ```ts
  * db.query(Filter.type(Person).from(Scope.space()));            // owning space
- * db.query(Filter.type(Person).from(Scope.space(otherSpaceId))); // a specific space
+ * db.query(Filter.type(Person).from(Scope.space({ id: otherSpaceId }))); // a specific space
  * ```
  */
-export const space = (spaceId?: string, options?: { includeAllFeeds?: boolean }): QueryAST.SpaceScope => ({
+export const space = (options?: { id?: string; includeAllFeeds?: boolean }): QueryAST.SpaceScope => ({
   _tag: 'space',
-  ...(spaceId !== undefined ? { spaceId } : {}),
+  ...(options?.id !== undefined ? { spaceId: options.id } : {}),
   ...(options?.includeAllFeeds ? { includeAllFeeds: true } : {}),
 });
 
@@ -42,7 +42,7 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
 });
 
 /**
- * Scope targeting a specific feed (by its underlying queue DXN).
+ * Scope targeting a specific feed (by its underlying queue EID).
  */
 export const feed = (feedUri: string): QueryAST.FeedScope => ({
   _tag: 'feed',

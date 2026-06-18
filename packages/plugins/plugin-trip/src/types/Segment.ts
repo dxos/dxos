@@ -11,6 +11,7 @@ import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
 import { Place } from './Place';
+import * as Routing from './Routing';
 
 //
 // Enums
@@ -78,11 +79,16 @@ export const BoatDetails = Schema.extend(
 );
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 
-// TODO(burdon): Separate structure for route?
 export const RoadDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('road', {
     subKind: Schema.optional(RoadSubKind).annotations({ title: 'Mode' }),
+    /**
+     * Computed driving route(s) for this leg, populated by `PlanRoute` (the primary route is
+     * `routes[0]`; additional entries are alternatives). Each route carries distance, duration, the
+     * decoded geometry, and per-leg detail. Rendered on the map.
+     */
+    routes: Schema.optional(Schema.Array(Routing.Route)),
   }),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
@@ -134,11 +140,8 @@ export const Segment = Schema.Struct({
   notes: Schema.optional(Schema.String),
   details: Details,
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--ticket--regular',
-    hue: 'sky',
-  }),
-  Annotation.SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
+  Annotation.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
 );
 
@@ -192,6 +195,32 @@ export const getArriveAt = (seg: Segment): string | undefined =>
   seg.details._tag === 'accommodation' ? seg.details.checkOut : seg.details.arriveAt;
 
 /**
+ * Sets the departure time (ISO 8601) across variants — `checkIn` for
+ * accommodation, `departAt` otherwise.
+ */
+export const setDepartAt = (seg: Segment, iso: string): void =>
+  Obj.update(seg, (seg) => {
+    if (seg.details._tag === 'accommodation') {
+      seg.details.checkIn = iso;
+    } else {
+      seg.details.departAt = iso;
+    }
+  });
+
+/**
+ * Sets the arrival / end time (ISO 8601) across variants — `checkOut` for
+ * accommodation, `arriveAt` otherwise.
+ */
+export const setArriveAt = (seg: Segment, iso: string): void =>
+  Obj.update(seg, (seg) => {
+    if (seg.details._tag === 'accommodation') {
+      seg.details.checkOut = iso;
+    } else {
+      seg.details.arriveAt = iso;
+    }
+  });
+
+/**
  * "From" Place across variants.
  * - transport:     `origin`
  * - accommodation: `location`
@@ -221,6 +250,35 @@ export const getDestination = (seg: Segment): Place | undefined => {
     default:
       return seg.details.destination;
   }
+};
+
+/**
+ * Sets the "from" Place across variants, mirroring {@link getOrigin} — `origin`
+ * for transport, `location` for accommodation, `venue` for activity. Writes a
+ * fresh copy: the decoded `Place` carries a readonly `geo` tuple, so the value
+ * is normalized to the live object's mutable shape before assignment.
+ */
+export const setOrigin = (seg: Segment, place: Place): void => {
+  const value = {
+    name: place.name,
+    code: place.code,
+    city: place.city,
+    country: place.country,
+    geo: place.geo ? [...place.geo] : undefined,
+  };
+  Obj.update(seg, (seg) => {
+    switch (seg.details._tag) {
+      case 'accommodation':
+        seg.details.location = value;
+        break;
+      case 'activity':
+        seg.details.venue = value;
+        break;
+      default:
+        seg.details.origin = value;
+        break;
+    }
+  });
 };
 
 //

@@ -6,16 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/echo';
-import {
-  Format,
-  FormatAnnotation,
-  GeneratorAnnotation,
-  LabelAnnotation,
-  PropertyMetaAnnotationId,
-} from '@dxos/echo/internal';
+import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { FormatAnnotation } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 import * as Person from './Person';
 import * as Project from './Project';
@@ -87,10 +83,7 @@ export const Task = Schema.Struct({
   // tags: [String],
 }).pipe(
   LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--check-circle--regular',
-    hue: 'neutral',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
   Type.makeObject(DXN.make('org.dxos.type.task', '0.1.0')),
 );
 

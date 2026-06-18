@@ -6,13 +6,19 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    showWelcome: Schema.Boolean.annotations({
-      title: 'Show welcome article',
-      description: 'Display the Welcome surface at the top of the personal space.',
+export const Settings = Schema.Struct({
+  enableGitHubIssues: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'Enable GitHub issue submission',
+      description: 'Show the "Create GitHub Issue" button in the feedback panel.',
     }),
-  }),
-);
+  ),
+  showDiscordCompanion: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'Show Discord community panel',
+      description: 'Show the Discord community tab in the sidebar.',
+    }),
+  ),
+});
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

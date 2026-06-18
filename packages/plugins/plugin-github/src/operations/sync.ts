@@ -5,7 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
+import { IntegrationSync, LayoutOperation } from '@dxos/app-toolkit';
+
+const { mergeField, readSnapshot, snapshotField, writeSnapshot } = IntegrationSync;
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -91,11 +93,11 @@ const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) 
 /**
  * Generic foreign-key lookup. Type is forwarded to `Filter.foreignKeys`
  * untyped — the caller supplies the result type via the explicit `T` parameter
- * (mirrors how plugin-trello casts after `Database.runQuery`).
+ * (mirrors how plugin-trello casts after `Database.query(...).run`).
  */
 const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
   Effect.gen(function* () {
-    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(type as never, [fkFor(id)])));
+    const results = yield* Database.query(Query.select(Filter.foreignKeys(type as never, [fkFor(id)]))).run;
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 

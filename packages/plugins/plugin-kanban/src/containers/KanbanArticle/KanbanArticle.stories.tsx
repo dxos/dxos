@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';
 // `/plugin` entrypoints used here for the same reason as `corePlugins()` —
 // see `@dxos/plugin-testing/src/core.ts` for the rationale.
@@ -26,7 +26,7 @@ import { type Space, useQuery, useType, useSpaces } from '@dxos/react-client/ech
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
-import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
 
@@ -91,8 +91,8 @@ const DefaultComponent = () => {
   const [kanban] = useQuery(space?.db, Filter.type(Kanban.Kanban));
   const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
   const view = viewRef?.target;
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const type = useType(space?.db, typename);
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
+  const type = useType(space?.db, typeUri);
   const projection = useProjectionModel(type, kanban, registry);
 
   const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);

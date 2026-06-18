@@ -7,14 +7,17 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type JsonPath, getField } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
+import type * as Annotation from '../../Annotation';
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { type AnnotationHelper, createAnnotationHelper } from './util';
+import { createAnnotationHelper } from './util';
+
+const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
 /**
  * @internal
@@ -34,7 +37,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
 
 /**
  * ECHO identifier (for a stored schema).
- * Must be a `dxn:echo:` URI.
+ * Must be an `echo:` URI.
  */
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 
@@ -280,10 +283,10 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as a schema for a hidden system type.
+ * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
  */
-export const SystemTypeAnnotationId = Symbol.for('@dxos/schema/annotation/SystemType');
-export const SystemTypeAnnotation = createAnnotationHelper<boolean>(SystemTypeAnnotationId);
+export const HiddenAnnotationId = Symbol.for('@dxos/schema/annotation/Hidden');
+export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
 
 /**
  * Identifies label property or JSON path expression.
@@ -297,7 +300,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Lower-level version that requires explicit schema parameter.
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
-// TODO(burdon): Convert to JsonPath?
+// TODO(burdon): Convert to SchemaEx.JsonPath?
 export const getLabelWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
@@ -309,7 +312,7 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
       'accessor',
       'Label annotation must be a string or an array of strings',
     );
-    const value = getField(object, accessor as JsonPath);
+    const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
     switch (typeof value) {
       case 'string': {
         const trimmed = value.trim();
@@ -360,14 +363,14 @@ export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionA
  * Returns the description for a given object based on {@link DescriptionAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-// TODO(burdon): Convert to JsonPath?
+// TODO(burdon): Convert to SchemaEx.JsonPath?
 export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
   const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
   assertArgument(typeof accessor === 'string', 'accessor', 'Description annotation must be a string');
-  const value = getField(object, accessor as JsonPath);
+  const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
   switch (typeof value) {
     case 'string':
     case 'number':
@@ -404,6 +407,54 @@ export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInp
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
+ * When set on a `Ref` property, the form renders the referenced object's own
+ * fields inline (a nested form bound to the target) instead of a picker.
+ */
+export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormInline');
+export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
+
+/**
+ * When set on an array property, the form renders it as an ordered,
+ * drag-to-reorder list (drag handles per row). Element order is meaningful and
+ * user-controllable; reordering rewrites the array.
+ */
+export const FormOrderedAnnotationId = Symbol.for('@dxos/schema/annotation/FormOrdered');
+export const FormOrderedAnnotation = createAnnotationHelper<boolean>(FormOrderedAnnotationId);
+
+/**
+ * Annotation carrying one or more named layout DSL templates that control how a
+ * form arranges a schema's fields (consumed by `@dxos/react-ui-form`'s
+ * `Form.Layout` / `Form.FieldSet`). Callers select a variant by name; the
+ * implicit name is `DEFAULT_LAYOUT_NAME` (`'default'`).
+ *
+ * Templates use a minimal XML grammar. Example:
+ *
+ *   FormLayoutAnnotation.set({
+ *     default: `
+ *       <grid cols="2">
+ *         <field name="origin"/>
+ *         <field name="destination"/>
+ *         <field name="provider" span="2"/>
+ *       </grid>
+ *     `,
+ *     card: `
+ *       <grid cols="1">
+ *         <field name="provider"/>
+ *         <field name="number"/>
+ *       </grid>
+ *     `,
+ *   })
+ */
+export const FormLayoutAnnotationId = Symbol.for('@dxos/react-ui-form/annotation/Layout');
+
+export type FormLayoutMap = Record<string, string>;
+
+export const FormLayoutAnnotation = createAnnotationHelper<FormLayoutMap>(FormLayoutAnnotationId);
+
+/** Name used when no explicit form-layout variant is requested. */
+export const DEFAULT_LAYOUT_NAME = 'default';
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
@@ -428,26 +479,29 @@ interface MakeAnnoationsProps<T> {
   schema: Schema.Schema<T, any, never>;
 }
 
-// TODO(wittjosiah): Comment.
-export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
+// Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
+// dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
+// At least 3 segments are required (e.g. org.dxos.annotation.example).
+export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
   assertArgument(
-    /^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/.test(props.id),
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
+      props.id,
+    ),
     'id',
-    'Annotation id must be in the FQN format (org.dxos.annotation.example).',
+    'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection).',
   );
 
-  const getFromAst = (ast: SchemaAST.AST) =>
-    SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
-      Option.map(Schema.decodeUnknownSync(props.schema)),
-    );
-
-  return {
-    get: (schema) => getFromAst(schema.ast),
-    getFromAst: (ast) => getFromAst(ast),
+  const annotation: Annotation.Annotation<T> = {
+    [ANNOTATION_TYPE_ID]: { _Type: {} as T },
+    key: props.id as Annotation.Key,
+    schema: props.schema,
+    get: (schema) => getFromAst(schema.ast, annotation),
+    getFromAst: (ast) => getFromAst(ast, annotation),
     set: (value) =>
       PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
   };
+
+  return annotation;
 };
 
 const IconAnnotationSchema = Schema.Struct({
@@ -545,6 +599,21 @@ export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
 };
 
 /**
+ * Returns the primary label property key for an entity.
+ * Reads the first accessor from {@link LabelAnnotation}, defaulting to 'name'.
+ */
+export const getLabelProperty = (entity: AnyProperties): string => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return 'name';
+  }
+  return LabelAnnotation.get(schema).pipe(
+    Option.flatMap((fields) => Option.fromNullable(fields[0])),
+    Option.getOrElse(() => 'name'),
+  );
+};
+
+/**
  * Get the description of an entity.
  * Accepts both reactive entities and snapshots.
  */
@@ -584,4 +653,13 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   if (schema != null) {
     setDescriptionWithSchema(schema, entity, description);
   }
+};
+
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+
+export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+  return SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
+    Option.flatMap((meta) => Option.fromNullable(meta[annotation.key])),
+    Option.map(Schema.decodeUnknownSync(annotation.schema)),
+  );
 };

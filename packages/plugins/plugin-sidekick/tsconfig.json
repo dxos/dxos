@@ -21,6 +21,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -42,12 +45,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -61,9 +58,6 @@
     },
     {
       "path": "../plugin-outliner"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * AI chat.
@@ -18,10 +18,7 @@ export const Chat = Schema.Struct({
   view: Schema.String.pipe(Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--sparkle--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
 );
 

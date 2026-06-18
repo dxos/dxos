@@ -11,13 +11,14 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Map } from '#types';
 
+import { viewMarkerProvider } from '../../capabilities/marker-provider';
 import { MapArticle } from './MapArticle';
 
 type DefaultStoryProps = {};
 
 const DefaultStory = (_: DefaultStoryProps) => {
   const map = useMemo(() => Map.make({ name: 'Story map' }), []);
-  return <MapArticle role='article' attendableId='story' subject={map} />;
+  return <MapArticle role='article' attendableId='story' subject={map} provider={viewMarkerProvider} />;
 };
 
 const meta = {

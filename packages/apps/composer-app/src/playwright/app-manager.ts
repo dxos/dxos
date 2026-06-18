@@ -22,7 +22,7 @@ const modifier = isMac ? 'Meta' : 'Control';
 export const INITIAL_URL = 'http://localhost:4173';
 
 // Only the personal space is seeded on every new identity. The exemplar space is skipped on
-// localhost (see WelcomePlugin `generateExemplarSpace`), which is where e2e tests run.
+// localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
 export class AppManager {
@@ -212,6 +212,39 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
+  /**
+   * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
+   * expanding the Settings section first if necessary.
+   */
+  async openSpaceSettings(): Promise<void> {
+    const generalHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.general')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await generalHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await generalHeading.click();
+  }
+
+  /**
+   * Deletes the space at the given index (default: the first non-personal space) via its
+   * settings danger zone, including the confirmation step.
+   */
+  async deleteSpace(nth = 1): Promise<void> {
+    // Select the space so its Settings section is available in the navtree.
+    await this.getSpaceItems().nth(nth).click();
+    await this.openSpaceSettings();
+    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+    await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
+  }
+
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean): Promise<void> {
     const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
@@ -229,32 +262,10 @@ export class AppManager {
     return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
   }
 
-  toggleCollectionsSection(delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId('spacePlugin.collectionsSection')
-      .getByRole('button')
-      .first()
-      .click({ delay });
-  }
-
-  toggleTypesSection(delay = 100): Promise<void> {
-    return this.currentWorkspace.getByTestId('spacePlugin.typesSection').getByRole('button').first().click({ delay });
-  }
-
-  toggleSchemaNode(typename: string, delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId(`spacePlugin.schemaNode.${typename}`)
-      .getByRole('button')
-      .first()
-      .click({ delay });
-  }
-
-  toggleTypeCollectionAll(typename: string, delay = 100): Promise<void> {
-    return this.currentWorkspace
-      .getByTestId(`spacePlugin.typeCollectionAll.${typename}`)
-      .getByRole('button')
-      .first()
-      .click({ delay });
+  async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
+    const section = this.currentWorkspace.getByTestId(testId);
+    await section.waitFor({ state: 'attached', timeout });
+    await section.getByRole('button').first().click({ delay });
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {

@@ -7,6 +7,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Type } from '@dxos/echo';
 import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Subscription } from '#types';
@@ -103,31 +104,40 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef} fullWidth>
           <Card.Header>
-            <Card.IconBlock>
-              <Card.Icon icon='ph--dot-outline--regular' />
-            </Card.IconBlock>
+            <Card.Block>
+              <Icon icon='ph--dot-outline--regular' />
+            </Card.Block>
             <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
-              <Card.IconBlock>
+              <Card.Block end>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
                   <Icon icon='ph--arrow-square-out--regular' size={4} />
                 </a>
-              </Card.IconBlock>
+              </Card.Block>
             )}
           </Card.Header>
           <Card.Body>
             {post.author && (
-              <Card.Row icon='ph--user--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--user--regular' />
+                </Card.Block>
                 <Card.Text variant='description'>{post.author}</Card.Text>
               </Card.Row>
             )}
-            {post.description && (
+            {(post.description || post.content) && (
               <Card.Row>
-                <Card.Html variant='description' html={post.description} />
+                <MarkdownView
+                  content={post.description ?? post.content}
+                  classNames='line-clamp-5 text-sm text-description'
+                />
               </Card.Row>
             )}
             {published && (
-              <Card.Row icon='ph--calendar--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--calendar--regular' />
+                </Card.Block>
                 <Card.Text variant='description'>{published}</Card.Text>
               </Card.Row>
             )}

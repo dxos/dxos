@@ -10,7 +10,7 @@ import { synchronized } from '@dxos/async';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Feed, Obj } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -180,6 +180,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await Feed.append(this._feed, [block]).pipe(Effect.provide(this._feedServiceLayer), runAndForwardErrors);
+    await Feed.append(this._feed, [block]).pipe(Effect.provide(this._feedServiceLayer), EffectEx.runAndForwardErrors);
   }
 }

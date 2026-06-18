@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
-import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { useSoundEffect } from '@dxos/react-ui-audio';
 
 import { CallsCapabilities } from '#types';
 
@@ -28,14 +28,15 @@ export const CallSidebar = () => {
   }, [call, leaveSound]);
 
   return (
-    <Panel.Root>
-      <Panel.Content>
-        <Call.Root>
-          <Call.Audio />
-          <Call.Grid />
-          <Call.Toolbar onLeave={handleLeave} />
-        </Call.Root>
-      </Panel.Content>
-    </Panel.Root>
+    <Call.Root>
+      <Panel.Root>
+        <Panel.Content asChild>
+          <Call.Viewport>
+            <Call.Grid />
+            <Call.Toolbar onLeave={handleLeave} />
+          </Call.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Call.Root>
   );
 };

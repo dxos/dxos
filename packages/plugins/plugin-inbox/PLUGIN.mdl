@@ -49,7 +49,7 @@ type Mailbox
 type Calendar
   fields:
     name?: string
-    feed: Ref<Feed>             # append-only Event stream
+    feed: Ref<Feed>             # append-only stream of synced (Google) Events
 ```
 
 ```mdl
@@ -59,7 +59,15 @@ type DraftMessage
     to?: string
     body?: string
     replyTo?: Ref<Message>
-    mailbox: Ref<Mailbox>
+    mailbox: Ref<Mailbox>       # marker: a Message with properties.mailbox set is a local draft
+```
+
+```mdl
+# Draft events are the calendar analogue of an email DraftMessage: locally-created Events that
+# have not been pushed to Google. They live in the space db (not the calendar feed), are parented to
+# their Calendar, and carry no Google foreign key (synced feed Events do). Edited offline, overlaid on
+# the calendar, and pushed to Google on save.
+type DraftEvent = Event       # an Event with no google.com foreign key, parented to a Calendar
 ```
 
 ```mdl
@@ -104,15 +112,50 @@ component MailboxArticle
 
 ```mdl
 component CalendarArticle
-  desc: Day/week view of events from a Calendar with selectable event detail.
+  desc: |
+    Day/week view of a Calendar. Overlays synced (feed) Events and draft (local) Events on the
+    grid and event list. Toolbar (toolbar idiom) offers "Create event" and, when any draft events
+    exist, "Save events to calendar" (disabled unless an Integration targets the Calendar). The
+    toolbar also slots the connect/sync action (InitializeCalendarAction): "Connect" auth Surface
+    when no Integration targets the Calendar, pull-sync button when one does. Selecting an event in
+    the list scrolls its date into view on the month grid (CalendarController.scrollTo).
   props:
     subject: Calendar
   state:
     selected?: Event
+    selectedDate?: Date          # default date for newly created events
     range: { from: Date; to: Date }
   actions:
-    selectEvent(event: Event)
+    selectEvent(event: Event)    # selects, opens companion, and scrolls the grid to the event date
+    createEvent()                # creates a draft Event (db, parented to Calendar) and focuses it
+    syncDraft()             # op:syncDraftEvents (spaceId-scoped) for all draft events on this Calendar
     sync()
+```
+
+```mdl
+component EventArticle
+  desc: |
+    Event detail (companion to a Calendar). When the event is draft the header is an editable form
+    (title · all-day toggle · start · end-or-duration · attendees) and the body is a markdown editor;
+    the toolbar shows a Save action (disabled unless an Integration targets the Calendar). The
+    attendee list always ends with a blank ActorList row (react-ui-components): typing `@` opens a
+    typeahead against Person names/emails; each completed token (an `@<id>` reference or a
+    well-formed email) is committed as an attendee. Toolbar (toolbar idiom): Open (promote from
+    companion), Create note, Save (draft only), Delete. Editing resolves the live db object
+    (useQuery by id) so inputs stay reactive. Operations are invoked with the calendar db's spaceId
+    so their space-affinity services (Database/Feed/Credentials) materialize.
+  props:
+    subject: Event
+    companionTo?: Calendar
+  state:
+    editable: boolean            # true when the event is draft
+    allDay: boolean              # whole-day event (date only); maps to Google start.date/end.date
+    endMode: explicit | duration # specify an explicit end DateTime or a duration preset (end = start + d)
+  actions:
+    open()                       # op:layoutOpen — promote from companion to main view
+    save()                       # op:syncDraftEvents (spaceId-scoped) for this event
+    delete()                     # op:deleteEvent (spaceId-scoped)
+    addAttendee(actor: Actor)    # via the blank ActorList row (Person reference or email)
 ```
 
 ```mdl
@@ -190,13 +233,63 @@ op googleMailSync
 
 ```mdl
 op googleCalendarSync
-  desc: Pulls events from Google Calendar into the calendar feed.
+  desc: Pulls events from Google Calendar into the calendar feed (stamps a google.com foreign key on each).
   input:
     integration: Ref<Integration>
     calendar?: Ref<Calendar>
     syncBackDays?: number
     syncForwardDays?: number
   output: number                # newEvents count
+  effects: [echo:write, feed:write, http]
+```
+
+```mdl
+op createGoogleCalendarEvent
+  desc: Creates a single event on Google Calendar (write counterpart to googleCalendarSync). Requires the calendar.events scope.
+  input:
+    event: Event
+    googleCalendarId: string
+    integration: Ref<Integration>
+  output: string                # remote Google event id
+  effects: [http]
+```
+
+```mdl
+op syncDraftEvents
+  desc: |
+    Pushes draft (local, unsynced) events for a Calendar to Google Calendar (the email draft→send
+    analogue). For each: createGoogleCalendarEvent, stamp the google.com foreign key, then (after a
+    feed re-sync) remove the local draft so the synced feed copy is the source of truth. When `event`
+    is given, only that one is synced. NOTE follow-up: re-anchor an event's note relation onto the
+    synced copy before deleting the local draft.
+  input:
+    calendar: Calendar
+    event?: Event               # when omitted, syncs all draft events on the Calendar
+  output: number                # synced count
+  effects: [echo:write, feed:write, http]
+```
+
+```mdl
+op deleteEvent
+  desc: |
+    Deletes a calendar event. A draft (local) event is removed from the db; a synced event is
+    deleted on Google Calendar by its foreign key and removed from the calendar feed.
+  input:
+    calendar: Calendar
+    event: Event
+  output: boolean
+  effects: [echo:write, feed:write, http]
+```
+
+```mdl
+op deleteEmail
+  desc: |
+    Deletes an email. A draft (local) message is removed from the db; a synced message is moved to the
+    Gmail trash by its foreign key (requires gmail.modify scope) and removed from the mailbox feed.
+  input:
+    mailbox: Mailbox
+    message: Message
+  output: boolean
   effects: [echo:write, feed:write, http]
 ```
 
@@ -257,8 +350,9 @@ feat F-1: Mailbox
 ```mdl
 feat F-2: Calendar
 
-  req F-2.1: Calendar stores events in an append-only Feed.
+  req F-2.1: Calendar stores synced events in an append-only Feed.
   req F-2.2: Day and week views render events ordered by start time.
+  req F-2.3: CalendarArticle overlays synced (feed) and draft (local) events together on the grid and list.
 ```
 
 ```mdl
@@ -290,6 +384,41 @@ feat F-4: Compose & Send
     when: user sends a draft
     then: op:gmailSend dispatches via the linked Google Integration
     errors: [SendFailed, NoIntegration]
+
+  req F-4.3:
+    when: user clicks delete on a message
+    then: op:deleteEmail removes a draft locally, or trashes a synced message on Gmail and drops the feed copy
+```
+
+```mdl
+feat F-8: Draft Events & Two-way Calendar
+
+  req F-8.1:
+    when: user clicks "Create event" on the calendar toolbar
+    then: a draft Event is created (db, parented to the Calendar) and focused for editing
+
+  req F-8.2:
+    when: an event is draft
+    then: EventArticle's header exposes editable title, start/end and body, and the toolbar shows Save
+
+  req F-8.2a:
+    when: the user toggles "All day" on a draft
+    then: the event is date-only (Event.allDay); it round-trips to Google start.date/end.date (end exclusive)
+
+  req F-8.2b:
+    when: the user picks a duration preset instead of an explicit end
+    then: endDate = startDate + duration; moving the start preserves the duration
+
+  req F-8.3: User may create multiple draft events offline before saving (e.g. while disconnected).
+
+  req F-8.4:
+    when: user clicks Save (per-event in EventArticle, or "Save events to calendar" on the calendar toolbar)
+    then: op:syncDraftEvents creates the event(s) on Google Calendar and reconciles into the feed
+    errors: [NoIntegration, NoCalendarWriteScope]
+
+  req F-8.5:
+    when: user clicks delete on a draft event
+    then: op:deleteEvent removes it locally; a synced event is deleted on Google and dropped from the feed
 ```
 
 ```mdl
@@ -371,6 +500,27 @@ test T-5: Extract confirmation
   then:
     - Trip segment objects created or updated
     - extractMessage output reports created/updated counts
+```
+
+```mdl
+test T-6: Create and save a draft event
+  given: a Calendar linked to a Google Integration with calendar.events scope
+  when: user clicks "Create event", edits the title and date, then clicks Save
+  then:
+    - a draft Event (parented to the Calendar, no google.com foreign key) is created and focused
+    - it is overlaid on the calendar grid and event list before saving
+    - op:syncDraftEvents calls op:createGoogleCalendarEvent and the event lands in the calendar feed
+    - the local draft Event is removed after reconciliation
+```
+
+```mdl
+test T-7: Delete event and email
+  given: a synced Event and a synced Message
+  when: user clicks delete in EventArticle and in MessageArticle
+  then:
+    - op:deleteEvent deletes the event on Google Calendar and removes it from the calendar feed
+    - op:deleteEmail trashes the message on Gmail and removes it from the mailbox feed
+    - a draft event / draft message would instead be removed locally only
 ```
 
 ---

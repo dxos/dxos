@@ -113,6 +113,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Spaces',
+        'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
         'join-space.label': 'Join space',
@@ -150,9 +151,6 @@ export const translations = [
         'space-settings.label': 'Spaces',
         'space-settings.description':
           'Per-space settings for properties, membership, integrations, and other space-specific objects.',
-        'show-hidden-spaces.label': 'Show archived spaces',
-        'show-hidden-spaces.description':
-          'Display archived spaces in the sidebar so they can be accessed or unarchived.',
         'save-files-to-directory.label': 'Save files to disk',
         'select-path.label': 'Select path',
         'snapshot-by-schema.label': 'Snapshot of objects',
@@ -219,7 +217,6 @@ export const translations = [
         'no-sync-status.label': 'No space with missing objects.',
         'create-space-dialog.title': 'Create Space',
         'create-object-dialog.title': 'Create {{object}}',
-        'open-plugin-registry.label': 'Open plugin registry',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
         'plugin-subtitle.label': '{{plugin}} Plugin',
@@ -267,11 +264,6 @@ export const translations = [
         'hue.description': 'Color used to represent the space in the app.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
-        'archive-space.description':
-          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. Unarchive by enabling archived spaces in the app settings.',
-        'archive-space.label': 'Archive',
-        'unarchive-space.label': 'Unarchive',
-
         'space-key.title': 'Space Key',
         'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
         'copy-space-key.label': 'Copy space key',
@@ -290,20 +282,15 @@ export const translations = [
 
         'danger-zone.title': 'Danger Zone',
         'danger-zone.description': 'Destructive actions that cannot be undone.',
-        'space-contents.title': 'Space contents',
-        'space-contents.description': 'Current contents of this space.',
-        'schema-count.label': 'Schema',
-        'object-count.label': 'Objects',
-        'relation-count.label': 'Relations',
-        'feed-count.label': 'Feeds',
-        'reset-space.title': 'Reset Space',
-        'reset-space.description':
-          'Permanently delete all objects, relations, schema, and feeds in this space. This action cannot be undone.',
-        'reset-space.label': 'Reset space',
-        'reset-space-confirm.title': 'Reset this space?',
-        'reset-space-confirm.description':
-          'All objects, relations, schema, and feeds in this space will be permanently deleted. This action cannot be undone.',
-        'reset-space-failed.message': 'Failed to reset space.',
+
+        'delete-space.title': 'Delete Space',
+        'delete-space.description':
+          'Remove this space from all of your devices. The space stops replicating and is hidden everywhere. This action cannot be undone.',
+        'delete-space.label': 'Delete space',
+        'delete-space-confirm.title': 'Delete this space?',
+        'delete-space-confirm.description':
+          'This space will be removed from all of your devices and will stop replicating. This action cannot be undone.',
+        'delete-space-failed.message': 'Failed to delete space.',
 
         'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
@@ -331,6 +318,8 @@ export const translations = [
         'qr.label': 'QR Code',
         'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
+        'space-home-node.label': 'Home',
+        'space-home.recent.heading': 'Recent',
       },
     },
   },

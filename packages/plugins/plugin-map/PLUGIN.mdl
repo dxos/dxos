@@ -8,6 +8,11 @@ An interactive geospatial mapping plugin for `DXOS` Composer.
 Renders table records that contain latitude/longitude coordinates as pins on a zoomable map or 3-D globe.
 Supports creating map objects backed by a view over any ECHO dataset, with a geolocation field selector for automatic marker placement.
 
+The map surface is generic: any plugin can contribute a `MarkerProvider` capability that plots its own
+object type (e.g. plugin-trip plots a `Trip`'s segments). When a provider matches an object the plugin
+also offers a map **companion** for it. A configured MapTiler API key (plugin settings) selects the tile
+provider; otherwise OpenStreetMap is used.
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -65,14 +70,64 @@ type MapState
     zoom?: number
 ```
 
+```mdl
+type APIKey
+  desc: A named API key scoped to a service domain (defined in @dxos/schema). Used by settings.
+  fields:
+    name: string
+    domain: string              # e.g. 'maptiler.com'
+    apiKey: string
+```
+
+```mdl
+type MapSettings
+  desc: Plugin-scoped settings surfaced as a form via AppCapabilities.Settings.
+  fields:
+    apiKeys?: APIKey[]          # annotated with recognized domains (e.g. maptiler.com)
+```
+
+```mdl
+type GeoLine
+  desc: Origin → destination arc, rendered as a great-circle line on the globe.
+  fields:
+    source: GeoPoint
+    target: GeoPoint
+```
+
+```mdl
+type MarkerSet
+  desc: Reactive marker data a MarkerProvider resolves for a subject.
+  fields:
+    markers: GeoMarker[]        # marker.id is the selectable entity id
+    lines?: GeoLine[]
+    selection?: Selection       # { contextId?, mode? } attention wiring
+```
+
+```mdl
+type MarkerProvider
+  desc: |
+    Capability (array) contributed by any plugin that can plot a subject. MapArticle and the map
+    companion resolve the first provider whose `match` accepts the subject and render its markers.
+  fields:
+    id: string                  # stable id (React remount key)
+    match: (subject) => boolean # synchronous, type-based; must not call hooks
+    useMarkers: (subject, { attendableId }) => MarkerSet   # reactive hook
+```
+
 ## Components
 
 ```mdl
 component MapArticle
-  desc: Primary article/section surface; renders the map or globe for a Map object.
+  desc: |
+    Generic map surface (article / section / inline 'map' role / companion). Renders the markers
+    resolved by a MarkerProvider as a map or globe. The provider, tile URL and selection writer are
+    resolved by the surface and passed in, so this container has no plugin-context hooks. Reads the
+    attention selection via useSelected; the globe tours markers and selecting recenters the view.
   props:
-    role: article | section
-    subject: Map
+    role: article | section | map
+    subject: object             # any object a MarkerProvider matches (Map, Trip, …)
+    provider?: MarkerProvider   # resolved by the surface
+    tileUrl?: string            # MapTiler endpoint when an API key is configured; else OSM
     type: MapViewType
     center?: GeoPoint
     zoom?: number
@@ -85,6 +140,7 @@ component MapArticle
     toggleView()               # switches between map and globe
   emits:
     onChange(center: GeoPoint, zoom: number)
+    onSelect(contextId, mode, id)   # dispatches LayoutOperation.Select
   layout: |
     ┌─────────────────────────────┐
     │ [toolbar slot]              │
@@ -199,6 +255,31 @@ feat F-5: Blueprint
   req F-5.2: The blueprint instructions describe the plugin's geospatial capabilities.
 ```
 
+```mdl
+feat F-6: Pluggable marker providers & companion
+
+  req F-6.1: MapPlugin registers a built-in MarkerProvider for Map objects (view rows → pins).
+  req F-6.2: Other plugins can contribute a MarkerProvider for their own object types.
+  req F-6.3:
+    when: a MarkerProvider matches an object (other than a Map itself)
+    then: a 'map' companion is offered for that object via the app graph
+  req F-6.4: Selecting a marker (map click or nearest-marker globe click) dispatches LayoutOperation.Select.
+  note: |
+    Gating the companion on a matching provider lives in the app-graph-builder connector
+    (capability-aware). Refining the surface filter itself to require non-empty markers is a
+    follow-up (it would need async/reactive resolution).
+```
+
+```mdl
+feat F-7: Tile providers via API keys
+
+  req F-7.1: Plugin settings expose an `apiKeys` list of { name, domain, apiKey }.
+  req F-7.2: The apiKeys property is annotated with recognized domains (e.g. maptiler.com).
+  req F-7.3:
+    when: an API key for 'maptiler.com' is configured
+    then: the map renders MapTiler tiles; otherwise OpenStreetMap is used
+```
+
 ## Acceptance
 
 ```mdl
@@ -242,6 +323,22 @@ test T-5: Object properties editor shown
   given: a Map object is selected
   when: the object properties panel opens
   then: MapViewEditor is rendered with the current typename and field selections pre-filled
+```
+
+```mdl
+test T-6: Companion offered for a provided object
+  given: a plugin contributes a MarkerProvider matching type Foo, and a Foo object is open
+  when: the app graph is built for that object
+  then:
+    - a 'map' companion node is offered
+    - opening it renders MapArticle plotting the object's markers
+```
+
+```mdl
+test T-7: MapTiler tiles when key configured
+  given: settings contain an apiKey for domain 'maptiler.com'
+  when: MapArticle renders in map mode
+  then: the Leaflet tile layer uses the MapTiler URL (key in query); otherwise OSM
 ```
 
 ---

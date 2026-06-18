@@ -5,25 +5,33 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
+import type * as Terminal from '@effect/platform/Terminal';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
+import { AppActivationEvents, AppAnnotation } from '@dxos/app-toolkit';
+import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
+import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
-// eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
+import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities } from '#types';
 
 import { printObject } from './util';
 
-export const add = Command.make(
+// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
+export const add: Command.Command<
+  'add',
+  ClientService | CommandConfig | Operation.Service | Plugin.Service | Capability.Service | Terminal.Terminal,
+  Err.EntityNotFoundError | Error | SpaceNotFoundError,
+  { readonly spaceId: Option.Option<SpaceId>; readonly typename: Option.Option<string> }
+> = Command.make(
   'add',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
@@ -44,10 +52,11 @@ export const add = Command.make(
         return entry ?? undefined;
       };
 
-      const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
-      const collection = yield* Database.load<Collection.Collection>(
-        properties[Type.getTypename(Collection.Collection)],
+      const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
+      const rootCollectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(
+        Option.getOrUndefined,
       );
+      const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),
@@ -58,7 +67,7 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const result = yield* metadata.createObject({}, { db, target: collection });
+      const result = yield* metadata.createObject({}, { db, target: collection ?? db });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
@@ -84,9 +93,10 @@ const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
   const { db } = yield* Database.Service;
-  const allTypes = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const allTypes = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
+    .run;
   const types = allTypes
-    .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 

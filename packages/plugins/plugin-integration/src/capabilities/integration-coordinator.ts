@@ -6,13 +6,13 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -123,7 +123,7 @@ const navigateToNewIntegration = (
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(LayoutOperation.Open, {
-      subject: [integrationDeckSubject(getSpacePath(db.spaceId), integrationId)],
+      subject: [integrationDeckSubject(Paths.getSpacePath(db.spaceId), integrationId)],
       navigation: 'immediate',
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new integration failed', { error }))));
@@ -312,7 +312,7 @@ export default Capability.makeModule(
       });
 
     const handleMessage = (event: MessageEvent): void => {
-      void runAndForwardErrors(handleOAuthPostMessage(event));
+      void EffectEx.runAndForwardErrors(handleOAuthPostMessage(event));
     };
 
     window.addEventListener('message', handleMessage);

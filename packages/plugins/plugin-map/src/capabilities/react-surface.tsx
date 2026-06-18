@@ -5,61 +5,62 @@
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Database, JsonSchema, Obj, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/internal';
-import { findAnnotation } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
-import { type LatLngLiteral } from '@dxos/react-ui-geo';
+import { Format } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
+import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
-import { MapArticle, MapViewEditor } from '#containers';
-import { LocationAnnotationId, Map, MapCapabilities } from '#types';
+import { MapSurface, MapViewEditor } from '#containers';
+import { LocationAnnotationId, Map } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.map',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Map.Map),
           AppSurface.object(AppSurface.Section, Map.Map),
         ),
-        component: ({ data, role }) => {
-          const state = useAtomCapability(MapCapabilities.State);
-          const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
-          const [zoom, setZoom] = useState<number | undefined>(undefined);
-
-          const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
-            setCenter(center);
-            setZoom(zoom);
-          }, []);
-
-          return (
-            <MapArticle
-              role={role}
-              subject={data.subject}
-              type={state.type}
-              center={center}
-              zoom={zoom}
-              onChange={handleChange}
-            />
-          );
-        },
+        component: ({ data, role }) => (
+          <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
+      }),
+      // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
+      // role (e.g. TripArticle renders `<Surface.Surface role='map' data={{ subject, attendableId }} />`).
+      Surface.create({
+        id: 'surface.mapInline',
+        role: 'map',
+        filter: (data): data is { subject: Obj.Any; attendableId?: string } => Obj.isObject(data.subject),
+        component: ({ data, role }) => (
+          <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
+      }),
+      // Companion surface for any object that has markers (gated by app-graph-builder, which only
+      // emits the `map` companion node when a MarkerProvider matches the primary object).
+      Surface.create({
+        id: 'surface.mapCompanion',
+        role: 'article',
+        filter: (data): data is { subject: 'map'; companionTo: Obj.Unknown; attendableId: string } =>
+          Obj.isObject(data.companionTo) && (data as { subject?: unknown }).subject === 'map',
+        component: ({ data, role }) => (
+          <MapSurface subject={data.companionTo} attendableId={data.attendableId} role={role} />
+        ),
       }),
       Surface.create({
-        id: 'surface.object-properties',
+        id: 'surface.objectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: 'surface.create-initial-schema-form-[property-of-interest]',
+        id: 'surface.createInitialSchemaForm',
         role: 'form-input',
         filter: (
           data,
@@ -69,7 +70,10 @@ export default Capability.makeModule(() =>
           target: Database.Database | Collection.Collection | undefined;
           fieldPropertyAst?: SchemaAST.AST;
         } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>(
+            (data.schema as Schema.Schema.All).ast,
+            LocationAnnotationId,
+          );
           return !!annotation;
         },
         component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
@@ -78,7 +82,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const { typename } = useFormValues('MapForm');
 

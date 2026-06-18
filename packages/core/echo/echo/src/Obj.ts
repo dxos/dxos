@@ -12,9 +12,9 @@ import * as Schema from 'effect/Schema';
 import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EntityId, type URI } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -24,6 +24,7 @@ import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
 import * as Ref from './Ref';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 /**
@@ -119,9 +120,13 @@ export interface BaseObjJson {
   id: string;
 }
 
-const defaultMeta: internal.EntityMeta = {
+// Factory (not a shared const): each object must get its own `keys`/`tags`/`annotations` containers,
+// otherwise mutating one object's meta would leak into every other object via the shared references.
+const defaultMeta = (): internal.EntityMeta => ({
   keys: [],
-};
+  tags: [],
+  annotations: {},
+});
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
@@ -180,7 +185,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
 
   // Set default fields on meta on creation.
   if (props[internal.MetaId] != null) {
-    meta = { ...structuredClone(defaultMeta), ...props[internal.MetaId] };
+    meta = { ...defaultMeta(), ...props[internal.MetaId] };
     delete props[internal.MetaId];
   }
 
@@ -199,7 +204,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     schema,
     filterUndefined,
     {
-      ...defaultMeta,
+      ...defaultMeta(),
       ...meta,
     },
     input,
@@ -382,7 +387,7 @@ export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallb
  * ```
  */
 export const getValue = (obj: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return internal.getValue(obj, createJsonPath(path));
+  return SchemaEx.getValue(obj, SchemaEx.createJsonPath(path));
 };
 
 /**
@@ -492,16 +497,18 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
+export type { GetURIOptions } from './internal';
+
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical URI of the object. Returns `URI.URI` (today always an EID,
- * but future entity kinds may surface other URI schemes — narrow with
- * `EID.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
+ * Get the URI of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link GetURIOptions}).
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => {
+export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  return internal.getUri(entity);
+  return internal.getUri(entity, options);
 };
 
 /**
@@ -540,6 +547,11 @@ export const getTypename = (entity: Unknown | Snapshot): string | undefined => i
 /**
  * Get the database the object belongs to.
  * Accepts both reactive objects and snapshots.
+ *
+ * @idiom org.dxos.echo.objGetDatabase
+ *   applies: Reaching an object's database — to query, add, or remove — when the surrounding Space is not otherwise needed
+ *   instead-of: `getSpace(obj)?.db` (resolving the whole Space just to read its `.db`)
+ *   uses: {@link getDatabase}
  */
 export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.Database | undefined =>
   internal.getDatabase(entity);
@@ -581,8 +593,7 @@ export type Meta = internal.Meta;
  * // Mutable access inside change callback
  * Obj.update(person, (obj) => {
  *   const meta = Obj.getMeta(obj);     // EntityMeta (mutable)
- *   meta.tags ??= [];
- *   meta.tags.push('important');
+ *   meta.tags.push(Ref.make(tag));     // tags are refs to Tag objects
  * });
  * ```
  */
@@ -618,7 +629,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the object.
@@ -627,7 +638,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the object is deleted.
@@ -907,3 +918,13 @@ export const decodeVersion = internal.decodeVersion;
  * Accepts both reactive objects and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom = objInternal.makeAtom;
+export const atomReactive = objInternal.makeWithReactive;
+export const atomProperty = objInternal.makeProperty;
+export const labelAtom = objInternal.makeLabelAtom;
+export const labelProperty = internal.getLabelProperty;

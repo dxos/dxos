@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -49,7 +49,7 @@ export class MirrorSpaceManager {
   }
 
   private async _doCreateSpace(workspace: FilesystemWorkspace): Promise<Space> {
-    const config = await runAndForwardErrors(readComposerConfig(workspace.path));
+    const config = await EffectEx.runAndForwardErrors(readComposerConfig(workspace.path));
     if (config.spaceId) {
       const existing = this._client.spaces.get().find((space) => space.id === config.spaceId);
       if (existing && existing.tags.includes(FILESYSTEM_MIRROR_TAG)) {
@@ -61,7 +61,7 @@ export class MirrorSpaceManager {
         workspaceId: workspace.id,
         staleSpaceId: config.spaceId,
       });
-      await runAndForwardErrors(writeComposerConfig(workspace.path, { ...config, spaceId: undefined }));
+      await EffectEx.runAndForwardErrors(writeComposerConfig(workspace.path, { ...config, spaceId: undefined }));
     }
 
     const space = await this._client.spaces.create(
@@ -70,8 +70,8 @@ export class MirrorSpaceManager {
     );
     await space.waitUntilReady();
 
-    const currentConfig = await runAndForwardErrors(readComposerConfig(workspace.path));
-    await runAndForwardErrors(writeComposerConfig(workspace.path, { ...currentConfig, spaceId: space.id }));
+    const currentConfig = await EffectEx.runAndForwardErrors(readComposerConfig(workspace.path));
+    await EffectEx.runAndForwardErrors(writeComposerConfig(workspace.path, { ...currentConfig, spaceId: space.id }));
 
     this._spaceByWorkspaceId.set(workspace.id, space);
     return space;

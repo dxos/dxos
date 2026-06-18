@@ -24,7 +24,6 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Meeting',
-        'settings.title': 'Meeting settings',
         'meetings.label': 'All Meetings',
         'meeting.label': 'Meeting',
 
@@ -33,13 +32,19 @@ export const translations = [
 
         'meeting-list.label': 'Meetings',
         'create-meeting.label': 'Start New Meeting',
+        'create-meeting-for-event.label': 'Create meeting',
+        'open-meeting-for-event.label': 'Open meeting',
         'select-meeting.label': 'Set Active',
         'share-call-link.label': 'Share call link',
 
+        'meeting-toolbar.menu': 'Meeting',
+        'meeting-tabs.menu': 'View',
         'meeting-companion.label': 'Meeting Notes',
         'notes.label': 'Notes',
+        'transcript.label': 'Transcript',
         'stats.label': 'Stats',
         'summary.label': 'Summary',
+        'call.label': 'Call',
         'regenerate-summary.label': 'Regenerate Summary',
         'generate-summary.label': 'Generate Summary',
 

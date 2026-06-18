@@ -8,16 +8,17 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const SHEET_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
 const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 
 export const InsertAxis = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.axis-insert`, name: 'Insert Axis', icon: 'ph--plus--regular' },
+  meta: { key: makeKey('axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -38,7 +39,7 @@ export const DropAxisOutput = Schema.Struct({
 export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
 export const DropAxis = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.axis-drop`, name: 'Drop Axis', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('axisDrop'), name: 'Drop Axis', icon: 'ph--trash--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -48,7 +49,11 @@ export const DropAxis = Operation.make({
 });
 
 export const ScrollToAnchor = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor', icon: 'ph--anchor-simple--regular' },
+  meta: {
+    key: makeKey('scrollToAnchor'),
+    name: 'Scroll To Anchor',
+    icon: 'ph--anchor-simple--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the sheet.' }),
@@ -62,7 +67,11 @@ export const ScrollToAnchor = Operation.make({
  * Restore a dropped axis (inverse of DropAxis).
  */
 export const RestoreAxis = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.restore-axis`, name: 'Restore Axis', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: {
+    key: makeKey('restoreAxis'),
+    name: 'Restore Axis',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   input: Schema.Struct({
     model: Schema.Any.annotations({ description: 'The sheet model.' }),
     axis: Axis.annotations({ description: 'The axis type (row or col).' }),

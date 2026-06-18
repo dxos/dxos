@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { type Mutable } from '@dxos/echo/Obj';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -51,11 +51,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       }
 
       const queue = target;
-      const query = queue
-        ? Query.fromAst(newQuery).from([
-            Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
-          ])
-        : Query.fromAst(newQuery);
+      const query = queue ? Query.fromAst(newQuery).from([Scope.feed(queue)]) : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });

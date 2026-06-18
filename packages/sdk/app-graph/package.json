@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-graph",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Constructs knowledge graphs for the purpose of building applications on top of",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,8 +43,8 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "main-thread-scheduling": "catalog:"

@@ -26,7 +26,6 @@ import {
 } from '@dxos/types';
 
 import {
-  AppGraphSerializer,
   CreateObject,
   IdentityCreated,
   NavigationHandler,
@@ -110,7 +109,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
       id: Capability.getModuleTag(AppGraphBuilder),
-      activatesOn: AppActivationEvents.SetupAppGraph,
+      activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AppActivationEvents.SetupAppGraph),
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),
   ),
@@ -134,11 +133,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
     },
   ),
-  // TODO(wittjosiah): This could probably be deferred.
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
-  }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
     firesAfterActivation: [SpaceEvents.PersonalSpaceReady],

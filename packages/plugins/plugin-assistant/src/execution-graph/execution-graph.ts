@@ -28,9 +28,17 @@ const ICONS = {
     icon: 'ph--atom--regular',
     level: LogLevel.VERBOSE,
   },
-  agentRequestEnd: {
+  agentRequestEndSuccess: {
     icon: 'ph--atom--regular',
     level: LogLevel.INFO,
+  },
+  agentRequestEndError: {
+    icon: 'ph--atom--regular',
+    level: LogLevel.ERROR,
+  },
+  agentRequestEndInterrupted: {
+    icon: 'ph--atom--regular',
+    level: LogLevel.WARN,
   },
   userMessage: {
     icon: 'ph--user--regular',
@@ -75,7 +83,7 @@ const ICONS = {
 } as const;
 
 export interface BuildExecutionGraphParams {
-  traceMessages: Trace.Message[];
+  traceMessages: readonly Trace.Message[];
   activeProcesses?: readonly Process.Info[];
   eventLimit?: number;
 }
@@ -162,6 +170,47 @@ interface EventPresentation {
   idSuffix?: string;
 }
 
+type AgentRequestEndData = Schema.Schema.Type<typeof AgentRequestEnd.schema>;
+
+/**
+ * Parses `AgentRequestEnd` payload, accepting legacy traces that omitted `status`.
+ */
+const parseAgentRequestEnd = (data: unknown): AgentRequestEndData | undefined => {
+  const validated = Schema.validateEither(AgentRequestEnd.schema)(data);
+  if (Either.isRight(validated)) {
+    return validated.right;
+  }
+  // Traces emitted before `status` was added wrote an empty object.
+  if (data != null && typeof data === 'object' && Object.keys(data).length === 0) {
+    return { status: 'success' };
+  }
+  log('invalid trace event', { type: AgentRequestEnd.key });
+  return undefined;
+};
+
+const presentAgentRequestEnd = (data: AgentRequestEndData): EventPresentation => {
+  switch (data.status) {
+    case 'error':
+      return {
+        icon: ICONS.agentRequestEndError.icon,
+        level: ICONS.agentRequestEndError.level,
+        message: data.error ? trimText(`Agent request failed: ${data.error}`) : 'Agent request failed',
+      };
+    case 'interrupted':
+      return {
+        icon: ICONS.agentRequestEndInterrupted.icon,
+        level: ICONS.agentRequestEndInterrupted.level,
+        message: 'Agent request interrupted',
+      };
+    default:
+      return {
+        icon: ICONS.agentRequestEndSuccess.icon,
+        level: ICONS.agentRequestEndSuccess.level,
+        message: 'Agent completed request',
+      };
+  }
+};
+
 const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
   if (Trace.isOfType(AgentRequestBegin, event)) {
     if (Either.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
@@ -175,15 +224,11 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     };
   }
   if (Trace.isOfType(AgentRequestEnd, event)) {
-    if (Either.isLeft(Schema.validateEither(AgentRequestEnd.schema)(event.data))) {
-      log('invalid trace event', { type: event.type });
+    const endData = parseAgentRequestEnd(event.data);
+    if (!endData) {
       return undefined;
     }
-    return {
-      icon: ICONS.agentRequestEnd.icon,
-      level: ICONS.agentRequestEnd.level,
-      message: 'Agent completed request',
-    };
+    return presentAgentRequestEnd(endData);
   }
   if (Trace.isOfType(CompleteBlock, event)) {
     if (Either.isLeft(Schema.validateEither(CompleteBlock.schema)(event.data))) {
@@ -418,6 +463,17 @@ const spanTreeToCommits = (
     const parentBranch = branchOf(parentSpan);
     const ownBranch = branchOf(span);
 
+    // A "process boundary" span is a concurrent child PROCESS (its own pid, differing from the
+    // parent's) with real sub-flow content (a middle event) — e.g. a delegated sub-agent. Such a
+    // span gets its own lane: it forks onto its own branch at begin and collapses back to main at
+    // end (so neither its lane nor its parent's lane dangles). A bare operation (begin+end only)
+    // collapses to a single commit and is NOT treated as a boundary — forking its transient begin
+    // mid-stream would flash a throwaway lane.
+    const ownPid = span.meta.pid;
+    const parentPid = parentSpan?.meta.pid;
+    const spanHasMiddle = span.events.some((event) => !isSpanBeginEvent(event) && !isSpanEndEvent(event));
+    const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid && spanHasMiddle;
+
     let branch: string;
     let parents: string[];
 
@@ -432,8 +488,10 @@ const spanTreeToCommits = (
       branch = parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isBeginEvent) {
-      // Begin commit: fork off the parent branch, attached to the parent's structural context.
-      branch = parentBranch;
+      // Begin commit, anchored to the parent's structural context. A nested sub-span stays on the
+      // parent lane (only its middle events fork). A concurrent child process forks onto its own
+      // branch from this first event so it gets its own lane immediately.
+      branch = isProcessBoundary ? ownBranch : parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isEndEvent) {
       // End commit: continues the parent branch chronologically and merges in own-branch work.
@@ -443,10 +501,15 @@ const spanTreeToCommits = (
       // sibling span's commits emitted between begin and end — e.g. when two top-level Routine
       // spans overlap on main, R1.end would otherwise draw an arrow back to R1.begin that
       // crosses over R2.begin. Anchoring to the previous main commit keeps main linear.
-      branch = parentBranch;
+      //
+      // A concurrent child process collapses all the way back to MAIN (merging its own branch),
+      // rather than to its parent's branch: the parent (e.g. a supervisor whose turn already merged
+      // to main) would otherwise gain commits after its own merge and never re-collapse — leaving a
+      // dangling lane after the child finishes.
+      branch = isProcessBoundary ? MAIN_BRANCH : parentBranch;
       parents = builder.computeParents(
         CommitSelector.unionAll(
-          CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+          CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last())),
           CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
         ),
       );

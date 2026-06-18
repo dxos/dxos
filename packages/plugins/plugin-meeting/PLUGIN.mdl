@@ -34,12 +34,6 @@ type Meeting
 ```
 
 ```mdl
-type Settings
-  fields:
-    entityExtraction: boolean         # default: true — annotate transcript with known objects
-```
-
-```mdl
 type MeetingState
   fields:
     activeMeeting?: Meeting
@@ -97,15 +91,6 @@ component MeetingsList
     │ meeting row             │
     │  ...                    │
     └─────────────────────────┘
-```
-
-```mdl
-component MeetingSettings
-  desc: Settings panel for configuring meeting plugin preferences.
-  props:
-    settings: Settings
-  actions:
-    toggleEntityExtraction(enabled: boolean)
 ```
 
 ## Operations

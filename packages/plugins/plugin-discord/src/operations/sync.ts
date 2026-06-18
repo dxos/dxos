@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -125,9 +125,9 @@ export const findChannelForDiscordChannel: (
   discordChannelId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForDiscordChannel')(
   function* (discordChannelId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Channel.Channel, [{ source: DISCORD_SOURCE, id: discordChannelId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );
@@ -386,7 +386,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                         return { added: 0 };
                       }
 
-                      const feed = yield* Database.load(targetChannel.feed);
+                      yield* Database.load(targetChannel.backend.config);
+                      const feed = Channel.getFeed(targetChannel);
+                      invariant(feed, 'Channel is not feed-backed');
                       yield* Feed.append(feed, mapped);
 
                       const newestId = messages[messages.length - 1].id;

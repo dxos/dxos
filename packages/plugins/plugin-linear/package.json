@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-linear",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "DXOS plugin that integrates Linear as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -72,7 +72,6 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -86,7 +85,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*"

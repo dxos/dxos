@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as AccessToken from './AccessToken';
 import * as Provider from './Provider';
@@ -29,10 +29,7 @@ export const Account = Schema.Struct({
   accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
 }).pipe(
   LabelAnnotation.set(['displayName']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--identification-card--regular',
-    hue: 'teal',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--identification-card--regular', hue: 'teal' }),
   Type.makeObject(DXN.make('org.dxos.type.account', '0.1.0')),
 );
 

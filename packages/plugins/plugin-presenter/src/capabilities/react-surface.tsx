@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'document',
         position: 'first',
-        filter: AppSurface.predicate(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Markdown.Document }> =>
             !!data.subject &&
@@ -37,7 +37,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'collection',
         position: 'first',
-        filter: AppSurface.predicate(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Collection.Collection }> =>
             !!data.subject &&
@@ -55,7 +55,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

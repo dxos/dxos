@@ -2,52 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { URI } from '@dxos/keys';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { isNonNullable } from '@dxos/util';
 
 import { translationKey } from '#translations';
+import { type FormFieldMap } from '#types';
 
-import { Form, type FormFieldMap, omitId } from '../Form';
+import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectFormProps = {
   type: Type.AnyEntity;
   object: Obj.Unknown;
 };
 
-const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
-    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
-    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-    return (
-      <>
-        {layout !== 'inline' && <Form.Label label={label} />}
-        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
-    );
-  },
-};
-
 export const ObjectForm = ({ object, type }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
-  const values = useMemo(() => ({ tags, ...object }), [object, tags]);
-  const formSchema = useMemo(
-    () =>
-      omitId(
-        Schema.Struct({
-          tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-        }).pipe(Schema.extend(Type.getSchema(type))),
-      ),
-    [type],
-  );
+  // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
+  const tags = [...meta.tags];
+  const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...object }), [object, tags]);
+  const formSchema = useMemo(() => withMetaTags(Type.getSchema(type)), [type]);
 
   const handleCreate = useCallback((type: Type.AnyEntity, values: any) => {
     invariant(db);
@@ -55,34 +33,40 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
     const newObject = db.add(Obj.make(type, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getURI(newObject)];
+        Obj.getMeta(object).tags = [...Obj.getMeta(object).tags, Ref.make(newObject)];
       });
     }
   }, []);
 
   // TODO(wittjosiah): Use FormRootProps type.
   const handleChange = useCallback(
-    ({ tags, ...values }: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
+    (
+      { [META_TAGS_KEY]: metaTags, ...values }: any,
+      { isValid, changed }: { isValid: boolean; changed: Record<SchemaEx.JsonPath, boolean> },
+    ) => {
       if (!isValid) {
         return;
       }
 
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+      const changedPaths = Object.keys(changed).filter(
+        (path) => changed[path as SchemaEx.JsonPath],
+      ) as SchemaEx.JsonPath[];
 
-      // Handle tags separately using Obj.update.
-      const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
+      // Handle meta-tags separately using Obj.update.
+      const hasTagsChange = changedPaths.some((path) => SchemaEx.splitJsonPath(path)[0] === META_TAGS_KEY);
       if (hasTagsChange) {
         Obj.update(object, (object) => {
-          Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.uri) ?? [];
+          // Copy so later in-place form mutations don't bypass the `Obj.update` boundary.
+          Obj.getMeta(object).tags = Array.isArray(metaTags) ? [...(metaTags as Ref.Ref<Tag.Tag>[])] : [];
         });
       }
 
       // Handle other property changes.
-      const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
+      const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
       if (nonTagPaths.length > 0) {
         Obj.update(object, () => {
           for (const path of nonTagPaths) {
-            const parts = splitJsonPath(path);
+            const parts = SchemaEx.splitJsonPath(path);
             const value = Obj.getValue(values, parts);
             Obj.setValue(object, parts, value);
           }
@@ -112,4 +96,17 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
       </Form.Viewport>
     </Form.Root>
   );
+};
+
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
 };

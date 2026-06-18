@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { type Atom } from '@effect-atom/atom-react';
+
 import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
@@ -15,8 +17,9 @@ import {
   type TranscriptMessageEnricher,
   type TranscriptionManager as TranscriptionManagerType,
 } from '../transcriber';
+import { type Settings as SettingsType } from './index';
 
-export type GetTranscriberProps = {
+export type TranscriberProviderProps = {
   audioStreamTrack: MediaStreamTrack;
   recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
   transcriberConfig?: Partial<TranscriberProps['config']>;
@@ -24,16 +27,18 @@ export type GetTranscriberProps = {
   transcribe?: TranscriberProps['transcribe'];
 };
 
-export type GetTranscriber = (props: GetTranscriberProps) => TranscriberType;
+export type TranscriberProvider = (props: TranscriberProviderProps) => TranscriberType;
 
-export type GetTranscriptionManagerProps = {
+export type TranscriptionManagerProviderProps = {
   messageEnricher?: TranscriptMessageEnricher;
 };
 
-export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManagerType;
+export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManagerType;
 
-export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}.capability.transcriber`);
+export const TranscriberProvider = Capability.make<TranscriberProvider>(`${meta.id}.capability.transcriber`);
 
-export const TranscriptionManager = Capability.make<GetTranscriptionManager>(
-  `${meta.id}.capability.transcription-manager`,
+export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
+  `${meta.id}.capability.transcriptionManager`,
 );
+
+export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(`${meta.id}.capability.settings`);

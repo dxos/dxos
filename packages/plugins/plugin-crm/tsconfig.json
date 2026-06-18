@@ -48,10 +48,13 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
-      "path": "../../core/compute/operation"
+      "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
@@ -60,10 +63,22 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../plugin-automation"
+    },
+    {
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-markdown"

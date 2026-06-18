@@ -4,20 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Registry, Type } from '@dxos/echo';
-import { findTypeByDXN } from '@dxos/echo-db';
-import {
-  EchoObjectSchema,
-  Format,
-  FormatAnnotation,
-  type JsonSchemaType,
-  type Mutable,
-  PropertyMetaAnnotationId,
-  type SelectOption,
-  TypeEnum,
-  formatToType,
-  toEffectSchema,
-} from '@dxos/echo/internal';
+import { Format, type Registry, Type } from '@dxos/echo';
+import { FormatAnnotation, type SelectOption, TypeEnum, formatToType } from '@dxos/echo/Format';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
+import { type Mutable } from '@dxos/echo/Obj';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 
@@ -66,8 +57,9 @@ export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Pro
     return;
   }
   // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
-  // directly rather than rebuilding a legacy `dxn:type:` string.
-  return findTypeByDXN(registry, dxn);
+  // directly rather than rebuilding a DXN string.
+  const entity = registry.getByURI(dxn);
+  return entity != null && Type.isType(entity) ? entity : undefined;
 };
 
 // TODO(burdon): Factor out.
@@ -93,7 +85,7 @@ export const getSchemaFromPropertyDefinitions = (
   // `EchoObjectSchema(...)` yields a static `Type.Obj` entity; unwrap to its
   // source schema (which carries the typename annotation) before handing it to
   // `createEchoSchema`, which expects a raw Effect Schema.
-  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
+  const typeSchema = Schema.Struct(fields).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
   const schema = createEchoSchema(Type.getSchema(typeSchema));
 
   // Wrap schema modifications in Type.update so they run inside the schema's change context.
@@ -143,7 +135,7 @@ export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: s
 export const makeSingleSelectAnnotations = (
   jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
-) => {
+): Mutable<JsonSchemaType> => {
   jsonProperty.enum = options.map(({ id }) => id);
   jsonProperty.format = Format.TypeFormat.SingleSelect;
   jsonProperty.annotations = {
@@ -164,7 +156,7 @@ export const makeSingleSelectAnnotations = (
 export const makeMultiSelectAnnotations = (
   jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
-) => {
+): Mutable<JsonSchemaType> => {
   // TODO(ZaymonFC): Is this how do we encode an array of enums?
   jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };

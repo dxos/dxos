@@ -3,7 +3,6 @@
 //
 
 import anthropic from './anthropic.ts?raw';
-import chat from './chat.ts?raw';
 import chessBot from './chess-bot.ts?raw';
 import commentary from './commentary.ts?raw';
 import dataGenerator from './data-generator.ts?raw';
@@ -40,12 +39,6 @@ export const templates = [
     id: 'org.dxos.script.forex-effect',
     name: 'Forex (Effect)',
     source: removeHeader(forexEffect),
-  },
-  {
-    id: 'org.dxos.script.gpt',
-    name: 'Gpt',
-    source: removeHeader(chat),
-    presetId: 'org.dxos.function.gpt',
   },
   {
     id: 'org.dxos.script.chess-bot',

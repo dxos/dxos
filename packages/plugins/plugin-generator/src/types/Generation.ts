@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 
 /** Media kind produced by a Generation. */
@@ -50,10 +50,7 @@ export const Generation = Schema.Struct({
   jobId: Schema.optional(Schema.String.annotations({ title: 'Job ID' }).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--film-reel--regular',
-    hue: 'fuchsia',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--film-reel--regular', hue: 'fuchsia' }),
   Type.makeObject(DXN.make('org.dxos.type.generation', '0.1.0')),
 );
 

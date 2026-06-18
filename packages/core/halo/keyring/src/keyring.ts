@@ -16,9 +16,19 @@ import { ComplexMap, arrayToBuffer } from '@dxos/util';
 const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
 /**
+ * Shared public API for keyring implementations.
+ */
+export interface KeyringApi extends Signer {
+  readonly keysUpdate: Event;
+  createKey(): Promise<PublicKey>;
+  importKeyPair(keyPair: CryptoKeyPair): Promise<PublicKey>;
+  list(): Promise<KeyRecord[]>;
+}
+
+/**
  * Manages keys.
  */
-export class Keyring implements Signer {
+export class Keyring implements KeyringApi {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(PublicKey.hash);
   readonly keysUpdate = new Event();
 

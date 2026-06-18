@@ -14,10 +14,8 @@ export const Memory = Schema.Struct({
   content: Schema.String,
 }).pipe(
   Annotation.LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--brain--regular',
-    hue: 'pink',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--brain--regular', hue: 'pink' }),
+  Annotation.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.memory', '0.1.0')),
 );
 

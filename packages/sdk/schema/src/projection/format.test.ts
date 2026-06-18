@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo';
-import { type JsonProp, TypeEnum } from '@dxos/echo/internal';
-import { getProperties } from '@dxos/effect';
+import { TypeEnum } from '@dxos/echo/Format';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
@@ -21,7 +21,7 @@ describe('format', () => {
   });
 
   test('invalid state', ({ expect }) => {
-    const prop: Partial<PropertyType> = { property: 'test' as JsonProp };
+    const prop: Partial<PropertyType> = { property: 'test' as SchemaEx.JsonProp };
     const schema = getFormatSchema(prop.format);
     expect(schema).to.eq(formatToSchema[Format.TypeFormat.None]);
     const validate = Schema.validate(PropertySchema);
@@ -30,7 +30,7 @@ describe('format', () => {
 
   test('encode/decode format', async ({ expect }) => {
     const prop: PropertyType = {
-      property: 'salary' as JsonProp,
+      property: 'salary' as SchemaEx.JsonProp,
       type: TypeEnum.Number,
       format: Format.TypeFormat.Currency,
       title: 'Base salary',
@@ -56,7 +56,11 @@ describe('format', () => {
     {
       const { property: _, format, ...props } = prop;
       expect(format).to.eq(Format.TypeFormat.Currency);
-      const newProp: PropertyType = { property: 'amount' as JsonProp, format: Format.TypeFormat.Percent, ...props };
+      const newProp: PropertyType = {
+        property: 'amount' as SchemaEx.JsonProp,
+        format: Format.TypeFormat.Percent,
+        ...props,
+      };
       newProp.format = Format.TypeFormat.Percent;
 
       const schema = getFormatSchema(newProp.format);
@@ -71,7 +75,7 @@ describe('format', () => {
   test('ref format', async ({ expect }) => {
     const validate = Schema.validateSync(PropertySchema);
     const prop: Partial<PropertyType> = {
-      property: 'organization' as JsonProp,
+      property: 'organization' as SchemaEx.JsonProp,
       type: TypeEnum.Ref,
       format: Format.TypeFormat.Ref,
     };
@@ -90,7 +94,7 @@ describe('format', () => {
 
   test('get properties', ({ expect }) => {
     const prop: Partial<PropertyType> = {
-      property: 'org' as JsonProp,
+      property: 'org' as SchemaEx.JsonProp,
       type: TypeEnum.Ref,
       format: Format.TypeFormat.Ref,
     };
@@ -98,7 +102,7 @@ describe('format', () => {
     const schema = getFormatSchema(prop.format);
     invariant(schema);
 
-    const props = getProperties(schema.ast);
+    const props = SchemaEx.getProperties(schema.ast);
     expect(props).to.have.length(7);
   });
 });

@@ -7,22 +7,10 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import {
-  type AnyProperties,
-  GeneratorAnnotationId,
-  type GeneratorAnnotationValue,
-  type JsonSchemaType,
-  getSchemaReference,
-  getTypeAnnotation,
-} from '@dxos/echo/internal';
-import {
-  type SchemaProperty,
-  findAnnotation,
-  getProperties,
-  isArrayType,
-  isNestedType,
-  runAndForwardErrors,
-} from '@dxos/effect';
+import { GeneratorAnnotationId, type GeneratorAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { type AnyProperties, getSchemaReference } from '@dxos/echo/internal';
+import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import { EffectEx, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
@@ -57,7 +45,7 @@ export const createObjectFactory =
       try {
         invariant(Type.isObject(type), 'TypeSpec.type must be an object type');
         const pipeline = createObjectPipeline(generator, type, { db });
-        const objects = await runAndForwardErrors(createArrayPipeline(count, pipeline));
+        const objects = await EffectEx.runAndForwardErrors(createArrayPipeline(count, pipeline));
         result.push(...objects);
         // NOTE: Flush so that available to other generators as refs.
         await db.flush();
@@ -151,7 +139,7 @@ export const createRelationFactory =
 export const createProps = <S extends Type.AnyObj>(generator: ValueGenerator, schema: S, force = false) => {
   type T = Type.InstanceType<S>;
   return (data: Entity.Properties<T> = {} as Entity.Properties<T>): Entity.Properties<T> => {
-    return getProperties(Type.getSchema(schema).ast).reduce<Entity.Properties<T>>((obj, property) => {
+    return SchemaEx.getProperties(Type.getSchema(schema).ast).reduce<Entity.Properties<T>>((obj, property) => {
       const name = property.name.toString();
       if ((obj as any)[name] === undefined && name !== 'id') {
         (obj as any)[name] = createValue(generator, schema, property, force);
@@ -168,7 +156,7 @@ export const createProps = <S extends Type.AnyObj>(generator: ValueGenerator, sc
 const createValue = <S extends Type.AnyObj>(
   generator: ValueGenerator,
   schema: S,
-  property: SchemaProperty,
+  property: SchemaEx.SchemaProperty,
   force = false,
 ): any | undefined => {
   const defaultValue = SchemaAST.getDefaultAnnotation(property.type);
@@ -177,7 +165,7 @@ const createValue = <S extends Type.AnyObj>(
   }
 
   // Generator value from annotation.
-  const annotation = findAnnotation<GeneratorAnnotationValue>(property.type, GeneratorAnnotationId);
+  const annotation = SchemaEx.findAnnotation<GeneratorAnnotationValue>(property.type, GeneratorAnnotationId);
   if (annotation) {
     const {
       generator: generatorName,
@@ -196,9 +184,9 @@ const createValue = <S extends Type.AnyObj>(
 
   // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
   if (!property.isOptional) {
-    if (isArrayType(property.type)) {
+    if (SchemaEx.isArrayType(property.type)) {
       return [];
-    } else if (isNestedType(property.type)) {
+    } else if (SchemaEx.isNestedType(property.type)) {
       return {};
     } else {
       const prop = [Type.getTypename(schema), property.name.toString()].filter(Boolean).join('.');
@@ -216,10 +204,10 @@ export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.
     // Collect all references to set.
     const refsToSet: Array<{ name: PropertyKey; ref: any }> = [];
 
-    for (const property of getProperties(Type.getSchema(schema).ast)) {
+    for (const property of SchemaEx.getProperties(Type.getSchema(schema).ast)) {
       if (!property.isOptional || randomBoolean()) {
         if (Ref.isRefType(property.type)) {
-          const jsonSchema = findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
+          const jsonSchema = SchemaEx.findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {
             const { typename } = getSchemaReference(jsonSchema) ?? {};
             invariant(typename);
@@ -343,7 +331,7 @@ export const createAsyncGenerator = <S extends Type.AnyObj>(
   const pipeline = createObjectPipeline(generator, type, options);
 
   return {
-    createObject: () => runAndForwardErrors(pipeline({} as Entity.Properties<T>)),
-    createObjects: (n: number) => runAndForwardErrors(createArrayPipeline(n, pipeline)),
+    createObject: () => EffectEx.runAndForwardErrors(pipeline({} as Entity.Properties<T>)),
+    createObjects: (n: number) => EffectEx.runAndForwardErrors(createArrayPipeline(n, pipeline)),
   };
 };

@@ -3,11 +3,11 @@
 //
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { SpeakingMonitor } from '@dxos/av';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { SpeakingMonitor } from './speaking-monitor';
 import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types';
 import {
   type CallsServiceConfig,

@@ -90,7 +90,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
         input: {
           prompt: Ref.make(routine),
           input: {},
-          model: '@anthropic/claude-haiku-4-5',
+          model: 'ai.claude.model.claude-haiku-4-5',
         },
       }),
     );

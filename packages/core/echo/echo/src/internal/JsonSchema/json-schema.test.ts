@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { type JsonProp, findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -75,7 +75,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Test);
     const effectSchema = toEffectSchema(jsonSchema);
 
-    const annotation = findAnnotation<string>(effectSchema.ast, FieldLookupAnnotationId);
+    const annotation = SchemaEx.findAnnotation<string>(effectSchema.ast, FieldLookupAnnotationId);
     expect(annotation).to.not.toBeUndefined();
   });
 
@@ -221,8 +221,13 @@ describe('effect-to-json', () => {
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const jsonSchema = toJsonSchema(Contact);
-    setSchemaProperty(jsonSchema, 'organization' as JsonProp, createSchemaReference(Type.getTypename(Organization)));
-    const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'organization' as JsonProp) ?? {}) ?? {};
+    setSchemaProperty(
+      jsonSchema,
+      'organization' as SchemaEx.JsonProp,
+      createSchemaReference(Type.getTypename(Organization)),
+    );
+    const { typename } =
+      getSchemaReference(getSchemaProperty(jsonSchema, 'organization' as SchemaEx.JsonProp) ?? {}) ?? {};
     expect(typename).to.eq(Type.getTypename(Organization));
   });
 
@@ -456,9 +461,9 @@ describe('json-to-effect', () => {
     });
   }
 
-  test('legacy schema with dxn:type $id gets decoded', () => {
+  test('legacy schema with echo.type annotation gets decoded', () => {
     const jsonSchema: JsonSchemaType = {
-      $id: 'dxn:type:com.example.type.project',
+      $id: 'dxn:com.example.type.project',
       $schema: 'http://json-schema.org/draft-07/schema#',
       additionalProperties: false,
       echo: {
@@ -770,5 +775,12 @@ describe('reference', () => {
       typename: Type.getTypename(TestSchema.Person),
       version: Type.getVersion(TestSchema.Person),
     });
+  });
+
+  test('empty struct round-trips as TypeLiteral', () => {
+    const schema = Schema.Struct({});
+    const jsonSchema = toJsonSchema(schema);
+    const deserialized = toEffectSchema(jsonSchema);
+    expect(deserialized.ast._tag).toBe('TypeLiteral');
   });
 });

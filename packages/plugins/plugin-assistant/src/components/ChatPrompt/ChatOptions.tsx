@@ -6,8 +6,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/compute';
-import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -17,35 +16,24 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
 import { meta } from '#meta';
-import { Assistant } from '#types';
+import { Assistant, type ChatPresetProps } from '#types';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
   toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
-export type ChatOptionsProps = {
+export type ChatOptionsProps = ChatPresetProps & {
   chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContext.Binder;
-  blueprintRegistry?: Blueprint.Registry;
-  presets?: { id: string; label: string }[];
-  preset?: string;
-  onPresetChange?: (id: string) => void;
+  registry?: Registry.Registry;
 };
 
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({
-  chat,
-  db,
-  context,
-  blueprintRegistry,
-  presets,
-  preset,
-  onPresetChange,
-}: ChatOptionsProps) => {
+export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -76,19 +64,13 @@ export const ChatOptions = ({
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
-              <Tabs.Root
-                classNames='flex'
-                orientation='horizontal'
-                defaultValue='view'
-                defaultActivePart='list'
-                tabIndex={-1}
-              >
-                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
+              <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
+                <Tabs.Viewport classNames={mx('flex grid grid-rows-[1fr_40px] w-full')}>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
-                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
+                    <BlueprintsPanel registry={registry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
@@ -121,16 +103,12 @@ export const ChatOptions = ({
   );
 };
 
-const BlueprintsPanel = ({
-  blueprintRegistry,
-  db,
-  context,
-}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'db' | 'context'>) => {
+const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry, db });
+  const blueprints = useBlueprints({ registry, db });
   const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
+  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, registry });
   const { results, handleSearch } = useSearchListResults({
     items: blueprints,
     extract: (blueprint) => blueprint.name,
@@ -168,12 +146,14 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
 
   return (
     <Listbox.Root value={value} onValueChange={setView} autoFocus>
-      {Assistant.ChatViews.map((view) => (
-        <Listbox.Option key={view} value={view}>
-          <Listbox.OptionLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.OptionLabel>
-          <Listbox.OptionIndicator />
-        </Listbox.Option>
-      ))}
+      <Listbox.Content aria-label={t('chat-view.title')}>
+        {Assistant.ChatViews.map((view) => (
+          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };
@@ -183,16 +163,17 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
+  const { t } = useTranslation(meta.id);
   return (
     <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-      {presets?.map(({ id, label }) => {
-        return (
-          <Listbox.Option key={id} value={id}>
-            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
-            <Listbox.OptionIndicator />
-          </Listbox.Option>
-        );
-      })}
+      <Listbox.Content aria-label={t('options.chat-model.title')}>
+        {presets?.map(({ id, label }) => (
+          <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };
@@ -348,7 +329,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
   );
 };
 
-const ANY = '__any__';
+const ANY = '__any__' as const;
 
 /** @private */
 export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
@@ -356,28 +337,25 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);
-  const typenames = useMemo(() => {
-    const typenames = types.map((type) => {
+  const typeOptions = useMemo(() => {
+    const options = types.map((type) => {
       const typename = Type.getTypename(type);
       return {
-        typename,
+        uri: Type.getURI(type),
         label: t('typename.label', { ns: typename, defaultValue: typename }),
       };
     });
 
-    typenames.sort((a, b) => a.label.localeCompare(b.label));
-    return typenames;
-  }, [types]);
+    options.sort((a, b) => a.label.localeCompare(b.label));
+    return options;
+  }, [types, t]);
 
-  // Current type and filter.
-  const [typename, setTypename] = useState<string>(ANY);
-  const anyFilter = useMemo(
-    () => Filter.or(...typenames.map(({ typename }) => Filter.typename(typename))),
-    [typenames],
-  );
+  // Current type URI and filter.
+  const [selectedUri, setSelectedUri] = useState<URI.URI | typeof ANY>(ANY);
+  const anyFilter = useMemo(() => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))), [typeOptions]);
 
   // Context objects.
-  const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
+  const objects = useQuery(db, selectedUri === ANY ? anyFilter : Filter.type(selectedUri));
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
   const { results, handleSearch } = useSearchListResults({
     items: objects,
@@ -399,7 +377,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   key={object.id}
                   value={object.id}
                   icon={icon}
-                  iconClassNames={styles?.foreground}
+                  iconClassNames={styles?.text}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
                   onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
@@ -413,15 +391,18 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
       </SearchList.Content>
 
       <div className={mx('flex flex-col', styles.toolbar)}>
-        <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
+        <Select.Root
+          value={selectedUri === ANY ? undefined : selectedUri}
+          onValueChange={(val) => setSelectedUri(val as URI.URI | typeof ANY)}
+        >
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.ScrollUpButton />
               <Select.Viewport>
                 <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
-                {typenames.map(({ typename, label }) => (
-                  <Select.Option key={typename} value={typename}>
+                {typeOptions.map(({ uri, label }) => (
+                  <Select.Option key={uri} value={uri}>
                     {label}
                   </Select.Option>
                 ))}

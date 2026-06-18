@@ -8,17 +8,14 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import {
-  Format,
-  type JsonPath,
-  type JsonProp,
-  Ref,
-  TypeEnum,
-  getPropertyMetaAnnotation,
-  toJsonSchema,
-} from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TypeEnum } from '@dxos/echo/Format';
+import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
+import { toJsonSchema } from '@dxos/echo/JsonSchema';
+import { Ref } from '@dxos/echo/Ref';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';
@@ -90,7 +87,7 @@ describe('ProjectionModel', () => {
     projectionModel.setFieldProjection({
       field: {
         id: getFieldId(view.projection, 'email'),
-        path: 'email' as JsonPath,
+        path: 'email' as SchemaEx.JsonPath,
       },
     });
 
@@ -243,7 +240,7 @@ describe('ProjectionModel', () => {
 
     // Capture initial states.
     const initialFieldsOrder = projectionModel.getFields().map((f) => f.path);
-    const emailIndex = initialFieldsOrder.indexOf('email' as JsonPath);
+    const emailIndex = initialFieldsOrder.indexOf('email' as SchemaEx.JsonPath);
     const initialEmail = projectionModel.getFieldProjection(getFieldId(view.projection, 'email'));
     const initialSchemaProps = { ...mutable.jsonSchema.properties! };
 
@@ -258,7 +255,7 @@ describe('ProjectionModel', () => {
 
     // Verify field position is restored.
     const restoredFieldsOrder = projectionModel.getFields().map((f) => f.path);
-    expect(restoredFieldsOrder.indexOf('email' as JsonPath)).to.equal(emailIndex);
+    expect(restoredFieldsOrder.indexOf('email' as SchemaEx.JsonPath)).to.equal(emailIndex);
 
     // Verify projection data matches.
     const restored = projectionModel.getFieldProjection(getFieldId(view.projection, 'email'));
@@ -290,13 +287,13 @@ describe('ProjectionModel', () => {
 
     // Capture initial state.
     const initialFieldsOrder = projectionModel.getFields().map((f) => f.path);
-    const emailIndex = initialFieldsOrder.indexOf('email' as JsonProp);
+    const emailIndex = initialFieldsOrder.indexOf('email' as SchemaEx.JsonProp);
     const { field, props } = projectionModel.getFieldProjection(getFieldId(view.projection, 'email'));
 
     // Perform rename.
     projectionModel.setFieldProjection({
       field,
-      props: { ...props, property: 'primaryEmail' as JsonProp },
+      props: { ...props, property: 'primaryEmail' as SchemaEx.JsonProp },
     });
 
     // Verify field order is preserved.
@@ -348,7 +345,7 @@ describe('ProjectionModel', () => {
     const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'email'));
     projection.setFieldProjection({
       field,
-      props: { ...props, property: 'primaryEmail' as JsonProp },
+      props: { ...props, property: 'primaryEmail' as SchemaEx.JsonProp },
     });
 
     // Verify schema properties are updated correctly.
@@ -395,9 +392,9 @@ describe('ProjectionModel', () => {
 
     // Set single select format with options.
     projection.setFieldProjection({
-      field: { id: fieldId, path: 'status' as JsonPath },
+      field: { id: fieldId, path: 'status' as SchemaEx.JsonPath },
       props: {
-        property: 'status' as JsonProp,
+        property: 'status' as SchemaEx.JsonProp,
         type: TypeEnum.String,
         format: Format.TypeFormat.SingleSelect,
         options: [
@@ -435,7 +432,7 @@ describe('ProjectionModel', () => {
 
     // Update options.
     projection.setFieldProjection({
-      field: { id: fieldId, path: 'status' as JsonPath },
+      field: { id: fieldId, path: 'status' as SchemaEx.JsonPath },
       props: {
         ...props,
         options: [
@@ -502,9 +499,9 @@ describe('ProjectionModel', () => {
     invariant(fieldId);
 
     projection.setFieldProjection({
-      field: { id: fieldId, path: 'tags' as JsonPath },
+      field: { id: fieldId, path: 'tags' as SchemaEx.JsonPath },
       props: {
-        property: 'tags' as JsonProp,
+        property: 'tags' as SchemaEx.JsonProp,
         type: TypeEnum.Object,
         format: Format.TypeFormat.MultiSelect,
         options: [
@@ -541,10 +538,10 @@ describe('ProjectionModel', () => {
     ]);
 
     projection.setFieldProjection({
-      field: { id: fieldId, path: 'tags' as JsonPath },
+      field: { id: fieldId, path: 'tags' as SchemaEx.JsonPath },
       props: {
         ...props,
-        property: 'tags' as JsonProp,
+        property: 'tags' as SchemaEx.JsonProp,
         options: [
           { id: 'draft', title: 'Draft', color: 'indigo' },
           { id: 'published', title: 'Published', color: 'blue' },
@@ -662,7 +659,7 @@ describe('ProjectionModel', () => {
     expect(hiddenProps[0]).to.equal('createdAt');
 
     // Verify we can unhide the hidden field.
-    projectionModel.showFieldProjection('createdAt' as JsonProp);
+    projectionModel.showFieldProjection('createdAt' as SchemaEx.JsonProp);
     expect(projectionModel.getFieldProjection(getFieldId(view.projection, 'createdAt'))).to.exist;
     expect(projectionModel.getFields()).to.have.length(3);
     expect(projectionModel.getFields().map((f) => f.path)).to.deep.equal(['createdAt', 'name', 'email']);
@@ -684,7 +681,7 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getFields().find((f) => f.path === 'createdAt')).to.be.undefined;
 
     // Unhide using the same property name.
-    projectionModel.showFieldProjection('createdAt' as JsonProp);
+    projectionModel.showFieldProjection('createdAt' as SchemaEx.JsonProp);
 
     // Field should be back in visible fields with same ID.
     expect(projectionModel.getFields()).to.have.length(3);
@@ -705,7 +702,7 @@ describe('ProjectionModel', () => {
     expect(multipleHidden).to.include('createdAt');
 
     // Unhide email and verify ID is preserved
-    projectionModel.showFieldProjection('email' as JsonProp);
+    projectionModel.showFieldProjection('email' as SchemaEx.JsonProp);
     expect(projectionModel.getFields().find((f) => f.path === 'email')?.id).to.equal(emailId);
 
     // Ensure schema still matches.
@@ -933,7 +930,7 @@ describe('ProjectionModel', () => {
     projection.setFieldProjection({
       field: {
         id: fieldId,
-        path: 'emails' as JsonPath,
+        path: 'emails' as SchemaEx.JsonPath,
       },
     });
 
@@ -974,9 +971,9 @@ describe('ProjectionModel', () => {
 
       // Act.
       projection.setFieldProjection({
-        field: { id: fieldId, path: fieldName as JsonPath },
+        field: { id: fieldId, path: fieldName as SchemaEx.JsonPath },
         props: {
-          property: fieldName as JsonProp,
+          property: fieldName as SchemaEx.JsonProp,
           type: expectedType,
           format,
         },

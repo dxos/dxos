@@ -17,7 +17,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
-import { type EchoClient } from '@dxos/echo-db';
+import { type EchoClient } from '@dxos/echo-client';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -144,8 +144,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
+      const incoming = data.spaces ?? [];
 
-      for (const space of data.spaces ?? []) {
+      // Remove proxies for spaces that are no longer present (e.g. tombstoned/deleted).
+      // `querySpaces` always emits a full snapshot, so absence means the space is gone.
+      for (let index = newSpaces.length - 1; index >= 0; --index) {
+        const spaceProxy = newSpaces[index];
+        if (!incoming.some((space) => space.spaceKey.equals(spaceProxy.key))) {
+          newSpaces.splice(index, 1);
+          void spaceProxy._destroy();
+          emitUpdate = true;
+        }
+      }
+
+      for (const space of incoming) {
         if (this._ctx.disposed) {
           return;
         }

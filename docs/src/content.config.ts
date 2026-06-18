@@ -58,6 +58,7 @@ export const collections = {
       featureImage: z.string().optional(),
       bskyPostUri: z.string().optional(),
       documentAtUri: z.string().optional(),
+      draft: z.boolean().default(false),
     }),
   }),
 };

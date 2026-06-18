@@ -15,7 +15,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type EchoHost, type SpaceManager } from '@dxos/echo-pipeline';
+import { type EchoHost, type SpaceManager } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
@@ -105,6 +105,11 @@ export class SpacesServiceImpl implements SpacesService {
         case SpaceState.SPACE_INACTIVE:
           await space.deactivate(ctx);
           break;
+
+        case SpaceState.SPACE_DELETED:
+          await dataSpaceManager.markSpaceDeleted(ctx, spaceKey);
+          // The space is removed from the manager; skip any further mutations (e.g. edgeReplication).
+          return;
         default:
           throw new ApiError({ message: 'Invalid space state' });
       }

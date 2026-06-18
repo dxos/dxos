@@ -53,9 +53,9 @@ const fetchAllConnections = Effect.fn(function* () {
 const upsertPerson = (remote: GooglePeople.Person) =>
   Effect.gen(function* () {
     const props = mapGooglePerson(remote);
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Person.Person, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remote.resourceName }])),
-    );
+    ).run;
 
     if (existing.length > 0) {
       if (existing.length > 1) {

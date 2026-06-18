@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-e2e",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Assistant e2e tests.",
   "homepage": "https://dxos.org",
@@ -12,33 +12,23 @@
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/default/index.mjs"
-    }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {},
-  "publishConfig": {
-    "access": "public"
-  },
   "beast": {}
 }

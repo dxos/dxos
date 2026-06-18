@@ -9,7 +9,7 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { type Plugin } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -93,7 +93,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
               ? { plugin: pluginId, enabled: nextEnabled, source }
               : { plugin: pluginId, enabled: nextEnabled },
           });
-        }).pipe(runAndForwardErrors),
+        }).pipe(EffectEx.runAndForwardErrors),
       [invoke, manager, source],
     );
 

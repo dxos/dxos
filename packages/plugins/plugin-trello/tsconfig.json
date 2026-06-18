@@ -39,10 +39,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/protocols"
@@ -52,9 +49,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/schema"

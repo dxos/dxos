@@ -15,7 +15,7 @@ import {
   SpaceProtocol,
   createIdFromSpaceKey,
   valueEncoding,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';

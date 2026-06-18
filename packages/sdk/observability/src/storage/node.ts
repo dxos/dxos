@@ -105,6 +105,12 @@ const initializeState = async (idPath: string): Promise<PersistentObservabilityS
   return observabilityState;
 };
 
+/** Not applicable in Node.js contexts; OTEL log level override is browser-only. */
+export const getOtelLogLevel = async (_namespace: string): Promise<string | null> => null;
+
+/** Not applicable in Node.js contexts; OTEL log level override is browser-only. */
+export const storeOtelLogLevel = async (_namespace: string, _value: string | null): Promise<void> => {};
+
 const validate = (contextString: string) => {
   const context = yaml.load(contextString) as PersistentObservabilityState;
   if (Boolean(context.installationId) && validateUuid(context.installationId!)) {

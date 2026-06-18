@@ -8,4 +8,5 @@ export const TranscriptionOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),
   () => import('./open'),
   () => import('./summarize'),
+  () => import('./enrich-message'),
 );

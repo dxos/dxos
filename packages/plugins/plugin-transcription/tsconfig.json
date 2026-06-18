@@ -21,16 +21,10 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/av"
     },
     {
       "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/display-name"
     },
     {
       "path": "../../common/effect"
@@ -75,9 +69,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -102,7 +93,7 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
+      "path": "../../ui/react-ui-audio"
     },
     {
       "path": "../../ui/react-ui-components"
@@ -117,19 +108,7 @@
       "path": "../../ui/react-ui-graph"
     },
     {
-      "path": "../../ui/react-ui-grid"
-    },
-    {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
@@ -144,25 +123,10 @@
       "path": "../../ui/ui-types"
     },
     {
-      "path": "../plugin-calls"
-    },
-    {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

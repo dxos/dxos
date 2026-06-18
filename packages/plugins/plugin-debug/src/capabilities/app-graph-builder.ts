@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             Node.makeAction({
-              id: 'reset-data',
+              id: 'resetData',
               data: () =>
                 Effect.sync(() => {
                   window.location.href = '/reset.html#continue';
@@ -46,7 +46,7 @@ export default Capability.makeModule(
             const client = yield* Capability.get(ClientCapabilities.Client);
             const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
             const layout = layoutAtom ? get(layoutAtom) : undefined;
-            const spaceId = layout?.workspace ? getSpaceIdFromPath(layout.workspace) : undefined;
+            const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
             const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
 
@@ -63,7 +63,7 @@ export default Capability.makeModule(
                 },
                 nodes: [
                   Node.make({
-                    id: 'app-graph',
+                    id: 'appGraph',
                     type: `${meta.id}.app-graph`,
                     data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
                     properties: {
@@ -72,7 +72,7 @@ export default Capability.makeModule(
                     },
                   }),
                   Node.make({
-                    id: 'tools-explorer',
+                    id: 'toolsExplorer',
                     data: Devtools.ToolsExplorer,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -118,6 +118,15 @@ export default Capability.makeModule(
                         properties: {
                           label: ['storage.label', { ns: meta.id }],
                           icon: 'ph--hard-drives--regular',
+                        },
+                      }),
+                      Node.make({
+                        id: Devtools.Client.Sqlite,
+                        data: Devtools.Client.Sqlite,
+                        type: DEVTOOLS_TYPE,
+                        properties: {
+                          label: ['sqlite.label', { ns: meta.id }],
+                          icon: 'ph--database--regular',
                         },
                       }),
                       Node.make({
@@ -239,6 +248,15 @@ export default Capability.makeModule(
                         properties: {
                           label: ['schema.label', { ns: meta.id }],
                           icon: 'ph--database--regular',
+                        },
+                      }),
+                      Node.make({
+                        id: Devtools.Echo.Registry,
+                        data: Devtools.Echo.Registry,
+                        type: DEVTOOLS_TYPE,
+                        properties: {
+                          label: ['registry.label', { ns: meta.id }],
+                          icon: 'ph--books--regular',
                         },
                       }),
                       Node.make({
@@ -372,7 +390,7 @@ export default Capability.makeModule(
 
       // Debug object companion.
       GraphBuilder.createExtension({
-        id: 'debug-object',
+        id: 'debugObject',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -388,7 +406,7 @@ export default Capability.makeModule(
 
       // Devtools deck companion.
       GraphBuilder.createExtension({
-        id: 'devtools-overview',
+        id: 'devtoolsOverview',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -404,12 +422,12 @@ export default Capability.makeModule(
 
       // Object explorer.
       GraphBuilder.createExtension({
-        id: 'space-objects',
+        id: 'spaceObjects',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'space-objects',
+              id: 'spaceObjects',
               label: ['space-objects.label', { ns: meta.id }],
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,

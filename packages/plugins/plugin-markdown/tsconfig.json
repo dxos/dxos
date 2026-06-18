@@ -61,13 +61,16 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"
@@ -82,12 +85,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
-      "path": "../../ui/react-primitives/react-hooks"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -100,13 +97,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui"
@@ -122,9 +113,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

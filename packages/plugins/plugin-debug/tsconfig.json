@@ -21,9 +21,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -69,10 +66,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-generator"
-    },
-    {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-host"
     },
     {
       "path": "../../core/protocols"
@@ -102,9 +96,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/react-primitives/react-hooks"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -123,12 +114,6 @@
       "path": "../../ui/react-ui-introspect"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -141,9 +126,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
@@ -151,9 +133,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-meeting"
     },
     {
       "path": "../plugin-script"
@@ -171,13 +150,7 @@
       "path": "../plugin-status-bar"
     },
     {
-      "path": "../plugin-table"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

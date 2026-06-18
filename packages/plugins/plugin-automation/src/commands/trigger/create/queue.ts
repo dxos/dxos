@@ -14,7 +14,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Feed as FeedNs, Filter, JsonSchema, Ref } from '@dxos/echo';
+import { Database, Feed as Feed$, Filter, JsonSchema, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 import { Enabled, Feed, Input } from '../options';
@@ -37,7 +37,7 @@ export const queue = Command.make(
         onNone: () => selectFunction(),
         onSome: (id) => Effect.succeed(id),
       });
-      const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+      const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -45,7 +45,7 @@ export const queue = Command.make(
 
       const feed = yield* Option.match(options.feed, {
         onNone: () => selectFeed(),
-        onSome: (uri) => Database.resolve(EID.parse(uri), FeedNs.Feed),
+        onSome: (uri) => Database.resolve(EID.parse(uri), Feed$.Feed),
       });
 
       const input = yield* Option.match(options.input, {

@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
@@ -74,6 +76,16 @@ export const useRelatedObjects = (
         // TODO(burdon): Configure.
         .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.text')
         .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
+        .filter((obj) => {
+          if (!Obj.isObject(obj)) {
+            return true;
+          }
+          const typeEntity = Obj.getType(obj);
+          if (!typeEntity) {
+            return true;
+          }
+          return !HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
+        })
     );
   }, [subject, objects, options.references, options.relations]);
 };

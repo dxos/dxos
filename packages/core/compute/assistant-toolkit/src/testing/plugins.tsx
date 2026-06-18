@@ -37,7 +37,7 @@ export const capabilities: Capability.Any[] = [
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({
-      id: 'plugin-image',
+      id: 'pluginImage',
       role: 'card--content',
       filter: (data: any): data is any => isImage(data.value),
       component: ({ data }) => (
@@ -54,7 +54,7 @@ export const capabilities: Capability.Any[] = [
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({
-      id: 'plugin-default',
+      id: 'pluginDefault',
       role: 'card--content',
       position: 'last',
       component: ({ data }) => (

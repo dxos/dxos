@@ -3,23 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
-/** Starter feed seeded into every newly created Magazine. */
-const DEFAULT_MAGAZINE_FEED = {
-  name: 'EFF Updates',
-  url: 'https://www.eff.org/rss/updates.xml',
-  type: 'rss',
-} as Subscription.Subscription;
+import { getMagazinesPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -38,7 +32,11 @@ export default Capability.makeModule(
             });
             // Auto-sync after creation if URL is provided.
             if (object.url) {
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(object) },
+                { spaceId: Obj.getDatabase(object)?.spaceId },
+              );
             }
             return result;
           }),
@@ -48,31 +46,15 @@ export default Capability.makeModule(
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            // Seed every new Magazine with one starter Feed so the article view has
-            // something to curate immediately rather than booting into an empty state.
-            // Best-effort: a seeding failure (AddObject reject, SyncFeed schedule
-            // error) must not abort Magazine creation, and partial success (feed
-            // added but schedule failed) would otherwise leave an orphaned hidden
-            // feed referenced by no magazine. Wrapping the whole block in
-            // `Effect.option` collapses both into a clean None on failure.
-            const seededFeed = yield* Effect.gen(function* () {
-              const defaultFeed = Subscription.makeSubscription({ ...DEFAULT_MAGAZINE_FEED });
-              yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: defaultFeed,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
-              return defaultFeed;
-            }).pipe(Effect.option);
+            const { instructions, ...magazineProps } = props;
+            // The topic instructions live on the magazine; the base methodology is the registry
+            // blueprint, attached to the in-memory routine at curation time (no persisted routine).
+            const magazine = Magazine.make({ ...magazineProps, instructions });
 
-            const initialFeeds = Option.isSome(seededFeed) ? [Ref.make(seededFeed.value)] : [];
-            const object = Magazine.make({ ...props, feeds: initialFeeds });
             return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
+              object: magazine,
               target: options.target,
-              targetNodeId: options.targetNodeId,
+              targetNodeId: options.targetNodeId ?? getMagazinesPath(options.db.spaceId),
             });
           }),
       }),

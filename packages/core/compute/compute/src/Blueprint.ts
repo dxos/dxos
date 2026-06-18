@@ -4,15 +4,12 @@
 
 // @import-as-namespace
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import { log } from '@dxos/log';
 
 import * as McpServer from './McpServer';
 import * as Operation from './Operation';
@@ -70,10 +67,7 @@ export const Blueprint = Schema.Struct({
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--blueprint--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.blueprint', '0.2.0')),
 );
 
@@ -121,7 +115,7 @@ export const toolDefinitions = ({
 }: {
   tools?: string[];
   operations?: Operation.Definition.Any[];
-}) => [...operations.map((op) => ToolId.make(op.meta.key)), ...tools.map((tool) => ToolId.make(tool))];
+}) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
  * Factory for the blueprints.
@@ -131,89 +125,23 @@ export type Definition = {
   make: () => Blueprint;
 };
 
-//
-// Registry
-//
-
 /**
- * Blueprint registry.
+ * Returns the canonical URI used to reference this blueprint in the registry.
+ * Valid DXN keys produce `dxn:<key>`; other keys use the raw key as a URI.
+ * Use this URI with `Ref.fromURI` to bind a blueprint without cloning it to the DB.
+ *
+ * TODO(wittjosiah): Should use Obj.getURI instead once it supports options to prefer meta key over EID.
  */
-export class Registry {
-  private readonly _blueprints: Blueprint[] = [];
-
-  constructor(blueprints: Blueprint[]) {
-    const seen = new Set<string>();
-    blueprints.forEach((blueprint) => {
-      const key = getKey(blueprint);
-      if (seen.has(key)) {
-        log.warn('duplicate blueprint', { key });
-      } else {
-        seen.add(key);
-        this._blueprints.push(blueprint);
-      }
-    });
-
-    this._blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
-  }
-
-  get blueprints(): Blueprint[] {
-    return this._blueprints;
-  }
-
-  getByKey(key: string): Blueprint | undefined {
-    return this._blueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
-  }
-
-  query(): Blueprint[] {
-    return this._blueprints;
-  }
-
-  updateBlueprints(): Effect.Effect<void, never, Database.Service> {
-    return Effect.gen(this, function* () {
-      const blueprints = yield* Database.runQuery(Filter.type(Blueprint));
-      for (const blueprint of blueprints) {
-        const blueprintKey = Obj.getMeta(blueprint).key;
-        if (!blueprintKey) {
-          continue;
-        }
-        const registryBlueprint = this.getByKey(blueprintKey);
-        if (!registryBlueprint) {
-          continue;
-        }
-        const source = Obj.clone(registryBlueprint, { deep: true });
-        Obj.update(blueprint, (blueprint) => {
-          void Obj.updateFrom(blueprint, source);
-        });
-      }
-    }).pipe(Effect.orDie);
-  }
-}
-
-export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {
-  static notAvailable = Layer.succeed(RegistryService, {
-    get blueprints(): Blueprint[] {
-      throw new Error('Blueprint registry not available');
-    },
-    getByKey(_key: string): Blueprint | undefined {
-      throw new Error('Blueprint registry not available');
-    },
-    query(): Blueprint[] {
-      throw new Error('Blueprint registry not available');
-    },
-    updateBlueprints() {
-      throw new Error('Blueprint registry not available');
-    },
-  } as unknown as Registry);
-}
+export const registryURI = (key: string): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
 
 /**
- * Resolves a blueprint from the registry.
+ * Resolves a blueprint from the registry by its meta key.
  * Does not check the local database for the blueprint.
  */
-export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService> =>
+export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service> =>
   Effect.gen(function* () {
-    const registry = yield* RegistryService;
-    const blueprint = registry.getByKey(key);
+    const results = yield* Registry.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
+    const blueprint = results[0];
     if (!blueprint) {
       return yield* Effect.fail(new NotFoundError({ context: { key } }));
     }
@@ -222,12 +150,14 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
 
 /**
  * Upserts a blueprint into the database.
- * If the blueprint already exists in the database, local blueprint is returned.
- * Otherwise, it will be added.
+ * If the blueprint already exists in the database, the local (possibly forked) copy is returned as-is.
+ * Otherwise, a fresh copy is cloned from the registry and added.
+ * @deprecated Since we're using a registry we no longer need to store blueprints in the database.
  */
-export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService | Database.Service> =>
+// TODO(dmaretskyi): Remove.
+export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service | Database.Service> =>
   Effect.gen(function* () {
-    const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
+    const local = yield* Database.query(Filter.and(Filter.type(Blueprint), Filter.key(key))).run;
     if (local.length > 0) {
       return local[0];
     }

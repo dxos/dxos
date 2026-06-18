@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -126,9 +126,9 @@ export const findChannelForConversation: (
   conversationId: string,
 ) => Effect.Effect<Channel.Channel | undefined, never, Database.Service> = Effect.fn('findChannelForConversation')(
   function* (conversationId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Channel.Channel, [{ source: SLACK_SOURCE, id: conversationId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Channel.Channel) : undefined;
   },
 );
@@ -351,7 +351,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                       return { added: 0 };
                     }
 
-                    const feed = yield* Database.load(targetChannel.feed);
+                    yield* Database.load(targetChannel.backend.config);
+                    const feed = Channel.getFeed(targetChannel);
+                    invariant(feed, 'Channel is not feed-backed');
                     yield* Feed.append(feed, mapped);
 
                     const newestTs = sorted[sorted.length - 1].ts;

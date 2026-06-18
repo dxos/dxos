@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ViewAnnotation } from '@dxos/schema';
 
 /**
@@ -74,10 +74,7 @@ export const Kanban = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['spec', 'view']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--kanban--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
 );
 

@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.feed',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.feed'),
   name: 'Feed',
   author: 'DXOS',
   description: trim`
@@ -16,22 +17,19 @@ export const meta: Plugin.Meta = {
     are fetched on each sync, and feed metadata (name, icon, description) is
     persisted alongside the posts for offline access.
 
-    Magazines are agent-curated collections drawn from one or more feeds. The
-    user writes a natural-language brief describing what the Magazine should
-    gather; pressing the Curate button triggers a deterministic sync of all
-    referenced feeds followed by a curation pass that derives a short snippet
-    and hero image from each post's description and appends matching posts to
-    the collection. A Masonry grid renders the curated tiles with images, titles,
-    author metadata, and read-state dimming.
-
-    A parallel agent path lets a conversational assistant curate a Magazine with
-    higher fidelity. The MagazineBlueprint exposes three fine-grained tools —
-    ListCandidatePosts, FetchArticleContent, and AddPostToMagazine — that the
-    agent calls in sequence, reading the full article body and selecting the best
-    hero image before committing a post to the collection. The deterministic
-    button path and the agent path coexist: the button gives an immediate result
-    without requiring an LLM, while the agent path delivers instruction-driven
-    selection when a chat session is active.
+    Magazines are agent-curated collections drawn from one or more feeds. Each
+    Magazine carries the user's topic instructions describing what it should
+    cover; pressing the Curate button (or a scheduled trigger) syncs all
+    referenced feeds in parallel, then runs a single-shot agent pass that selects
+    matching posts and returns their ids, which the operation adds mechanically.
+    The agent's base methodology — how to select, how to dedup, and the structured
+    output contract — lives in the MagazineBlueprint, resolved from the registry
+    and combined with the magazine's topic into an ephemeral routine each run; the
+    blueprint also exposes a FetchArticleContent tool the agent may call to read a
+    candidate's full text when title and description are insufficient to judge.
+    A short snippet and hero image are derived mechanically from each post for
+    display. A Masonry grid renders the curated tiles with images, titles, author
+    metadata, and read-state dimming.
 
     Clicking a tile opens the PostArticle detail surface via the deck's layout
     dispatch, routing to the appropriate location (complementary drawer, sibling
@@ -44,6 +42,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'orange',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-feed',
   spec: 'PLUGIN.mdl',
-  version: '0.8.3',
   tags: ['labs'],
-};
+});

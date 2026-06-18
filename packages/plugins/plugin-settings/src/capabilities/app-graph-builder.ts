@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { isNonNullable } from '@dxos/util';
 
@@ -62,7 +62,7 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
-        match: NodeMatcher.whenId(getSpacePath(SETTINGS_ID)),
+        match: NodeMatcher.whenId(Paths.getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
@@ -87,6 +87,7 @@ export default Capability.makeModule(
                   properties: {
                     label: meta.name ?? meta.id,
                     icon: meta.icon ?? 'ph--circle--regular',
+                    iconHue: meta.iconHue,
                   },
                 }),
               ),

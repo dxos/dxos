@@ -11,7 +11,13 @@
   /* Base styles */
   .dx-button {
     @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
-    @apply font-medium transition-colors duration-100 ease-linear bg-input-surface;
+    @apply font-medium transition-colors duration-100 ease-linear bg-input-bg;
+    /* The default variant inherits ambient valence colors when rendered inside a valence surface
+     * (e.g. Message.Root, which sets --dx-valence-*); otherwise it falls back to the base input styling. */
+    &[data-variant='default'] {
+      color: var(--dx-valence-text, inherit);
+      background: var(--dx-valence-bg, var(--color-input-bg));
+    }
     &[aria-pressed='true'],
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention-surface;
@@ -26,10 +32,12 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
+        /* Shares the surface-derived control hover (--color-hover-surface tracks the enclosing
+         * --surface-bg) so every variant tints consistently on any background. */
         @apply bg-hover-surface text-inherit;
       }
       &[data-state='open'] {
-        @apply bg-input-surface;
+        @apply bg-input-bg;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
@@ -46,30 +54,55 @@
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
-      /* Hover */
       &:hover {
         @apply bg-hover-surface;
       }
 
-      /* Variants */
+      &[data-variant='default']:hover {
+        color: var(--dx-valence-text);
+        background-color: var(--dx-valence-bg-hover, var(--color-hover-surface));
+      }
+
+      /* 
+       * Inside a valence surface the (otherwise transparent) ghost hover adopts the valence background;
+       * elsewhere it falls back to the standard hover surface. 
+       */
+      &[data-variant='ghost']:hover {
+        color: var(--dx-valence-text);
+        background-color: var(--dx-valence-bg, var(--color-hover-surface));
+      }
+
       &[data-variant='primary'] {
-        @apply text-accent-foreground bg-accent-surface;
+        @apply text-accent-fg bg-accent-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-accent-surface-hover;
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          @apply bg-accent-bg-hover;
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accent-foreground bg-rose-fill;
+        @apply text-accent-fg bg-error-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-rose-fill;
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          @apply bg-error-bg-hover;
+        }
+      }
+      &[data-variant='valence'] {
+        @apply text-inverse-fg;
+        background: var(--dx-valence-bg, var(--color-neutral-bg));
+        &:hover,
+        &[aria-pressed='true'],
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          background-color: var(--dx-valence-bg-hover, var(--color-neutral-bg-hover));
         }
       }
     }
   }
+
   /* Props */
   .dx-button:not([data-props~='grouped']) {
     @apply rounded-xs;

@@ -12,11 +12,12 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { ArtifactId } from '@dxos/assistant';
-import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-db';
+import { Trace, Operation } from '@dxos/compute';
+import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-client';
+import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
 import { Game, GameRef, loadGame } from '@dxos/plugin-game';
@@ -27,7 +28,7 @@ import { trim } from '@dxos/util';
 
 const Commentary = Operation.make({
   meta: {
-    key: 'org.dxos.function.chess.commentary',
+    key: DXN.make('org.dxos.function.chess.commentary'),
     name: 'Commentary',
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },
@@ -38,7 +39,7 @@ const Commentary = Operation.make({
   }),
   output: Schema.Union(
     Schema.Struct({
-      documentId: ArtifactId.annotations({
+      documentId: URI.Schema.annotations({
         description: 'The ID of the markdown document that was updated or created.',
       }),
       commentary: Schema.String.annotations({
@@ -116,10 +117,10 @@ export default Commentary.pipe(
         log.info('commentary', { commentary });
 
         // TODO(wittjosiah): Functions currently don't support traversals.
-        // const docs = yield* Database.runQuery(
+        // const docs = yield* Database.query(
         //   Query.select(Filter.id(chessGame.id)).targetOf(HasSubject.HasSubject).source(),
-        // ).pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
-        const docs = yield* Database.runQuery(Filter.type(HasSubject.HasSubject)).pipe(
+        // ).run.pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
+        const docs = yield* Database.query(Filter.type(HasSubject.HasSubject)).run.pipe(
           Effect.map((relations) =>
             relations.filter((relation) => {
               // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
@@ -157,10 +158,13 @@ export default Commentary.pipe(
         let document: Markdown.Document;
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
-          const rootCollection = yield* Database.load<Collection.Collection>(
-            properties[Type.getTypename(Collection.Collection)],
+          const [properties] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.spaceProperties'))).run;
+          const rootCollectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(
+            Option.getOrUndefined,
           );
+          const rootCollection = rootCollectionRef
+            ? yield* Database.load<Collection.Collection>(rootCollectionRef)
+            : undefined;
 
           log.info('rootCollection', { rootCollection });
 
@@ -174,16 +178,17 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.update(rootCollection, (rootCollection) => {
-            rootCollection.objects.push(documentRef);
-          });
+          if (rootCollection) {
+            Obj.update(rootCollection, (rootCollection) => {
+              rootCollection.objects.push(documentRef);
+            });
+          }
 
           // Create the HasSubject relation
           yield* Database.add(
             Relation.make(HasSubject.HasSubject, {
               [Relation.Source]: document,
               [Relation.Target]: chessGame,
-              completedAt: new Date().toISOString(),
             }),
           );
         } else {
@@ -208,7 +213,7 @@ export default Commentary.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-haiku-4-5'),
+          AiService.model('ai.claude.model.claude-haiku-4-5'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
@@ -218,7 +223,7 @@ export default Commentary.pipe(
             schedule: () => Effect.die('Not available.'),
             invokePromise: async () => ({ error: new Error('Not available.') }),
           } as any),
-          Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+          registryLayerNoop,
         ),
       ),
     ),

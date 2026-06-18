@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { JsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { DXN, PublicKey } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
@@ -22,11 +22,11 @@ import * as Type from './Type';
  */
 export const FieldSchema = Schema.Struct({
   id: Schema.String,
-  path: JsonPath,
+  path: SchemaEx.JsonPath,
   visible: Schema.optional(Schema.Boolean),
 
   // TODO(wittjosiah): Presentation-specific?
-  referencePath: Schema.optional(JsonPath),
+  referencePath: Schema.optional(SchemaEx.JsonPath),
 });
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
@@ -44,7 +44,7 @@ export const Projection = Schema.Struct({
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
-  // TODO(wittjosiah): Should this just be an array of JsonPath?
+  // TODO(wittjosiah): Should this just be an array of SchemaEx.JsonPath?
   fields: Schema.Array(FieldSchema),
 
   /**
@@ -75,11 +75,8 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  internal.SystemTypeAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--funnel--regular',
-    hue: 'green',
-  }),
+  internal.HiddenAnnotation.set(true),
+  Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 

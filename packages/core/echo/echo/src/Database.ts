@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { promiseWithCauseCapture } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
@@ -121,6 +121,7 @@ export interface Database extends Queryable {
 
   /**
    * Return object by local ID.
+   * @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}.
    */
   getObjectById<T extends Obj.Unknown = Obj.OfShape<AnyProperties>>(
     id: string,
@@ -242,14 +243,14 @@ export const resolve: {
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
-    const object = yield* promiseWithCauseCapture(() =>
+    const object = yield* EffectEx.promiseWithCauseCapture(() =>
       db.graph
         .createRefResolver({
           context: {
             space: db.spaceId,
           },
         })
-        .resolve(dxn),
+        .resolveLegacy(dxn),
     );
 
     if (!object) {
@@ -263,28 +264,23 @@ export const resolve: {
 
 /**
  * Loads an object reference.
+ *
+ * Catching not found error:
+ *
+ * ```ts
+ * yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
+ * ```
+ *
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
-    const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
+    const object = yield* EffectEx.promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
     }
     return object;
   },
 );
-
-/**
- * Loads an object reference option.
- */
-// TODO(dmaretskyi): Do we need this -- you can just use `Effect.catchTag` in calling code instead.
-export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(
-  'Database.loadOption',
-)(function* (ref) {
-  const object = yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
-
-  return Option.fromNullable(object);
-});
 
 /**
  * Adds an object or relation to the database.
@@ -298,7 +294,7 @@ export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Eff
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.addType(type)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.addType(type)))).pipe(
     Effect.withSpan('Database.addType'),
   );
 
@@ -314,7 +310,7 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  * @see {@link Database.flush}
  */
 export const flush = (opts?: FlushOptions) =>
-  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
   );
 
@@ -331,41 +327,13 @@ export const query: {
     makeQueryResultEffect,
   );
 
-/**
- * Executes the query once and returns the results.
- * @deprecated Use `yield* query(...).run` instead.
- */
-export const runQuery: {
-  <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
-  <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
-} = (queryOrFilter: Query.Any | Filter.Any) =>
-  query(queryOrFilter as any).pipe(
-    Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
-    Effect.withSpan('Database.runQuery'),
-  );
-
-/**
- * Executes the query once and returns the first result as or None.
- * @deprecated Use `yield* query(...).first` instead.
- */
-export const runQueryFirst: {
-  <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
-  <F extends Filter.Any>(filter: F): Effect.Effect<Option.Option<Filter.Type<F>>, never, Service>;
-} = (queryOrFilter: Query.Any | Filter.Any) =>
-  query(queryOrFilter as any).pipe(
-    Effect.flatMap((queryResult) =>
-      promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
-    ),
-    Effect.withSpan('Database.runQueryFirst'),
-  );
-
 const makeQueryResultEffect = <T>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
 ): QueryResult.QueryResultEffect<T, never, Service> => {
   return {
-    run: Effect.flatMap(eff, (result) => promiseWithCauseCapture(() => result.run())),
+    run: Effect.flatMap(eff, (result) => EffectEx.promiseWithCauseCapture(() => result.run())),
     first: Effect.flatMap(eff, (result) =>
-      promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
+      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
     ),
 
     // Effect internals

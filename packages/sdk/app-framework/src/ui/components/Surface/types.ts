@@ -4,6 +4,7 @@
 
 import type { FC, PropsWithChildren, ReactNode, RefCallback } from 'react';
 
+import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
 /**
@@ -56,6 +57,31 @@ export const isSurfaceFilter = (value: unknown): value is SurfaceFilter<any> =>
  * `role` string are interchangeable at runtime.
  */
 export const makeType = <TData>(role: string): RoleToken<TData> => ({ role });
+
+/**
+ * Creates a {@link SurfaceFilter} from a role token and an optional guard.
+ *
+ * When `guard` is omitted the filter matches any data at the token's role
+ * (role-only dispatch). Pass a guard to add runtime data-shape validation on
+ * top of the role match.
+ *
+ * This is the framework-level primitive; `@dxos/app-toolkit` builds richer
+ * domain-aware helpers (ECHO schema checks, literal matching, etc.) on top of it.
+ */
+export const makeFilter = <TData>(token: RoleToken<TData>, guard?: (data: TData) => boolean): SurfaceFilter<TData> => {
+  const boundGuard =
+    guard == null
+      ? () => true
+      : (data: unknown): boolean => {
+          try {
+            return guard(data as TData);
+          } catch (err) {
+            log.catch(err);
+            return false;
+          }
+        };
+  return { bindings: [{ role: token.role, guard: boundGuard }] };
+};
 
 /**
  * Props that are passed to the Surface component.
@@ -231,6 +257,25 @@ const expandBindings = <T extends Record<string, any>>(
 };
 
 /**
+ * Validates that a surface or extension local ID follows NSID conventions:
+ * each dot-separated segment must be alphanumeric, and the final segment must
+ * be camelCase (no hyphens). This mirrors the rule enforced when the id is
+ * appended to a plugin's NSID to form a full DXN path.
+ *
+ * @example Valid:   'about', 'integrationArticle', 'article.journal'
+ * @example Invalid: 'integration-article', 'plugin-spec'
+ */
+const validateLocalId = (id: string): void => {
+  const segments = id.split('.');
+  const finalSegment = segments[segments.length - 1];
+  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
+    throw new Error(
+      `Invalid surface id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
+    );
+  }
+};
+
+/**
  * Creates a React surface definition.
  */
 export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
@@ -240,6 +285,7 @@ export function create<T extends Record<string, any> = any>(
 export function create<T extends Record<string, any> = any>(
   definition: TypedReactDefinition<T> | Omit<ReactDefinition<T>, 'kind'>,
 ): ReactDefinition<T> {
+  validateLocalId(definition.id);
   if (isSurfaceFilter(definition.filter)) {
     const { id, filter, component, position } = definition as TypedReactDefinition<T>;
     const { role, guard } = expandBindings(filter);
@@ -260,6 +306,7 @@ export function createWeb<T extends Record<string, any> = any>(
 export function createWeb<T extends Record<string, any> = any>(
   definition: TypedWebComponentDefinition<T> | Omit<WebComponentDefinition<T>, 'kind'>,
 ): WebComponentDefinition<T> {
+  validateLocalId(definition.id);
   if (isSurfaceFilter(definition.filter)) {
     const { id, filter, tagName, position } = definition as TypedWebComponentDefinition<T>;
     const { role, guard } = expandBindings(filter);

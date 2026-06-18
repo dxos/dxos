@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -49,9 +52,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-space"
     }
   ]
 }

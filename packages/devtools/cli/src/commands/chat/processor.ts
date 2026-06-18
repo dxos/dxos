@@ -15,9 +15,9 @@ import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -98,7 +98,8 @@ export class ChatProcessor {
           // continue;
         }
 
-        const blueprint = blueprintRegistry.getByKey(key);
+        const candidate = blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key);
+        const blueprint = candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate) ? candidate : undefined;
         if (!blueprint) {
           log.warn('blueprint not found', { key });
           return;
@@ -115,7 +116,7 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await runAndForwardErrors(
+    const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const session = new AiSession.Session({ feed, runtime, registry: this._registry });

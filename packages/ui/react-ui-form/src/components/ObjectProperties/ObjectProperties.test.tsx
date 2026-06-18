@@ -3,13 +3,13 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup } from '@testing-library/react';
+import { act, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './ObjectProperties.stories';
 import { type ObjectPropertiesDebug } from './ObjectProperties.stories';
 
@@ -22,8 +22,8 @@ const getDebug = (): ObjectPropertiesDebug => {
 };
 
 /**
- * Refs may be stored as legacy (`dxn:echo:@:<id>`, `dxn:echo:<space>:<id>`) or
- * new (`echo:/<id>`, `echo://<space>/<id>`) form — extract and compare object id.
+ * Refs may be stored in local (`echo:/<id>`) or qualified (`echo://<space>/<id>`) form —
+ * extract and compare object id.
  */
 const refTargetsObject = (uri: string, objectId: string): boolean => {
   const parsed = EID.tryParse(uri);
@@ -31,7 +31,10 @@ const refTargetsObject = (uri: string, objectId: string): boolean => {
 };
 
 describe('ObjectProperties — inline create flow', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
     delete (window as any)[OBJECT_PROPERTIES_DEBUG_SYMBOL];
   });
@@ -45,11 +48,11 @@ describe('ObjectProperties — inline create flow', () => {
     const created = tags.find((tag) => tag.label === 'PinnedTag');
     expect(created, 'new Tag.Tag with label "PinnedTag" should be in the database').toBeDefined();
 
-    // And `object.meta.tags` should contain a DXN that resolves to that tag.
+    // And `object.meta.tags` should contain a ref that resolves to that tag.
     const meta = Obj.getMeta(object);
     const createdId = (created as any).id as string;
-    const matched = (meta.tags ?? []).some((dxn) => refTargetsObject(dxn, createdId));
-    expect(matched, "meta.tags should contain a DXN targeting the new tag's id").toBe(true);
+    const matched = meta.tags.some((ref) => refTargetsObject(ref.uri, createdId));
+    expect(matched, "meta.tags should contain a ref targeting the new tag's id").toBe(true);
   });
 
   test('non-Tag ref-array: Create + Save assigns the new ref to the array slot', { timeout: 30_000 }, async () => {
@@ -57,7 +60,7 @@ describe('ObjectProperties — inline create flow', () => {
     const { db, object } = getDebug();
 
     // The new Author should exist in the DB.
-    const authors = (await db.query(Filter.typename('org.dxos.test.author' as any)).run()) as any[];
+    const authors = (await db.query(Filter.type(DXN.make('org.dxos.test.author'))).run()) as any[];
     const created = authors.find((author: any) => author.name === 'Ada Lovelace');
     expect(created, 'new Author with name "Ada Lovelace" should be in the database').toBeDefined();
 
@@ -81,7 +84,7 @@ describe('ObjectProperties — inline create flow', () => {
       const { db, object } = getDebug();
 
       // The new Note should exist in the DB with the synthesised backing ref.
-      const notes = (await db.query(Filter.typename('org.dxos.test.note' as any)).run()) as any[];
+      const notes = (await db.query(Filter.type(DXN.make('org.dxos.test.note'))).run()) as any[];
       const created = notes.find((note: any) => note.title === 'Ideas');
       expect(created, 'new Note with title "Ideas" should be in the database').toBeDefined();
       expect(

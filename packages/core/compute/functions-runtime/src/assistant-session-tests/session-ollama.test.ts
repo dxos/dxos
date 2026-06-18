@@ -33,7 +33,7 @@ const TestLayer = Layer.empty.pipe(
     AssistantTestLayer({
       tracing: 'pretty',
       aiServicePreset: 'ollama',
-      model: 'gpt-oss:20b',
+      model: 'ai.ollama.model.gpt-oss:20b',
       disableLlmMemoization: true,
     }),
   ),

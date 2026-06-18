@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getParentId, useNode } from '@dxos/plugin-graph';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
-import { InboxSettings } from '#components';
 import {
   CalendarArticle,
   CalendarProperties,
@@ -29,8 +28,7 @@ import {
   RelatedToOrganization,
   SaveFilterPopover,
 } from '#containers';
-import { meta } from '#meta';
-import { Calendar, DraftMessage, Mailbox, type Settings } from '#types';
+import { Calendar, DraftMessage, Mailbox } from '#types';
 
 import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
 import { getDraftsId } from '../paths';
@@ -38,14 +36,6 @@ import { getDraftsId } from '../paths';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'plugin-settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <InboxSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
-      }),
       Surface.create({
         id: 'drafts',
         role: ['article'],
@@ -83,7 +73,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'draft-message',
+        id: 'draftMessage',
         role: ['article'],
         filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
         component: ({ data: { subject }, role }) => {
@@ -131,12 +121,27 @@ export default Capability.makeModule(() =>
             AppSurface.object(AppSurface.Section, Event.Event),
             AppSurface.companion(AppSurface.Section, Calendar.Calendar),
           ),
+          // Primary mode (navigated directly — no companion; calendar looked up from parent node).
+          AppSurface.object(AppSurface.Article, Event.Event),
+          AppSurface.object(AppSurface.Section, Event.Event),
         ),
         component: ({ data, role }) => {
-          if (!data?.subject || !data?.companionTo) {
+          const { graph } = useAppGraph();
+          // In companion mode attendableId is the calendar node itself; in primary mode
+          // (navigated directly) attendableId is the event node and its parent is the calendar.
+          const atNode = useNode(graph, data.attendableId);
+          const parentNode = useNode(graph, getParentId(data.attendableId));
+          const calendar = Calendar.instanceOf(atNode?.data)
+            ? atNode.data
+            : Calendar.instanceOf(parentNode?.data)
+              ? parentNode.data
+              : undefined;
+          if (!calendar) {
             return null;
           }
-          return <EventArticle role={role} subject={data.subject} companionTo={data.companionTo} />;
+          return (
+            <EventArticle role={role} subject={data.subject} attendableId={data.attendableId} companionTo={calendar} />
+          );
         },
       }),
       Surface.create({
@@ -147,12 +152,12 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'message-card',
+        id: 'messageCard',
         filter: AppSurface.object(AppSurface.Card, Message.Message),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: 'event-card',
+        id: 'eventCard',
         filter: AppSurface.object(AppSurface.Card, Event.Event),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
@@ -170,24 +175,24 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
-        id: 'mailbox-properties',
+        id: 'mailboxProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Mailbox.Mailbox),
         component: ({ data }) => <MailboxProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'calendar-properties',
+        id: 'calendarProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Calendar.Calendar),
         component: ({ data }) => <CalendarProperties subject={data.subject} />,
       }),
 
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
-        id: 'contact-related',
+        id: 'contactRelated',
         filter: AppSurface.object(AppSurface.Related, Person.Person),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
-        id: 'organization-related',
+        id: 'organizationRelated',
         filter: AppSurface.object(AppSurface.Related, Organization.Organization),
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
       }),

@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { DXN, Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ import { Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
 import { ObjectProperties } from './ObjectProperties';
 
 //
@@ -276,9 +276,9 @@ export const CreateRefArrayPlay: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    // ObjectProperties extends Article with the BaseSchema's `tags` array, so
-    // the form has two "Add item" buttons (Tags + Authors). Pick the last one
-    // — Authors comes after Tags in the rendered order.
+    // ObjectProperties extends Article with the synthetic `_tags` meta-tags
+    // array (labelled "Tags"), so the form has two "Add item" buttons (Tags +
+    // Authors). Pick the last one — Authors comes after Tags in rendered order.
     const addButtons = await canvas.findAllByRole('button', { name: /add/i }, { timeout: 10_000 });
     await userEvent.click(addButtons[addButtons.length - 1]);
     await new Promise((resolve) => setTimeout(resolve, 250));

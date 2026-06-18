@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
 /**
@@ -17,10 +17,7 @@ export const Board = Schema.Struct({
   layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--squares-four--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.board', '0.1.0')),
 );
 

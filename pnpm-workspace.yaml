@@ -1,5 +1,6 @@
 packages:
   - docs
+  - .agents/skills/composer-forensics/scripts
   - packages/**/*
   - tools/**/*
   - vendor/**/*
@@ -17,8 +18,8 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
-  '@astrojs/rss': ^4.0.17
-  '@astrojs/starlight': ^0.38.2
+  '@astrojs/rss': ^4.0.18
+  '@astrojs/starlight': ^0.40.0
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -56,7 +57,7 @@ catalog:
   '@codemirror/lang-yaml': ^6.1.3
   '@codemirror/language': ^6.12.3
   '@codemirror/language-data': ^6.5.2
-  '@codemirror/lint': 6.9.6
+  '@codemirror/lint': 6.9.7
   '@codemirror/search': ^6.7.0
   '@codemirror/state': ^6.6.0
   '@codemirror/theme-one-dark': ^6.1.3
@@ -69,32 +70,32 @@ catalog:
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect-atom/atom': ^0.5.1
+  '@effect-atom/atom': ^0.5.3
   '@effect-atom/atom-react': ^0.5.0
   '@effect-rx/rx-react': ^0.42.4
-  '@effect/ai': 0.33.2
-  '@effect/ai-anthropic': 0.23.0
-  '@effect/ai-openai': 0.37.2
-  '@effect/cli': 0.73.2
-  '@effect/cluster': 0.56.3
-  '@effect/experimental': 0.58.0
-  '@effect/language-service': ^0.73.1
-  '@effect/opentelemetry': ^0.61.0
-  '@effect/platform': 0.94.4
-  '@effect/platform-browser': 0.74.0
-  '@effect/platform-bun': 0.87.1
-  '@effect/platform-node': 0.104.1
-  '@effect/printer': 0.47.0
-  '@effect/printer-ansi': 0.47.0
-  '@effect/rpc': 0.73.0
-  '@effect/sql': 0.49.0
-  '@effect/sql-sqlite-bun': 0.50.2
-  '@effect/sql-sqlite-node': 0.50.1
-  '@effect/sql-sqlite-wasm': 0.50.0
-  '@effect/typeclass': 0.38.0
+  '@effect/ai': 0.36.0
+  '@effect/ai-anthropic': 0.26.0
+  '@effect/ai-openai': 0.40.0
+  '@effect/cli': 0.75.2
+  '@effect/cluster': 0.59.0
+  '@effect/experimental': 0.60.0
+  '@effect/language-service': ^0.86.2
+  '@effect/opentelemetry': ^0.63.0
+  '@effect/platform': 0.96.1
+  '@effect/platform-browser': 0.76.0
+  '@effect/platform-bun': 0.90.0
+  '@effect/platform-node': 0.107.0
+  '@effect/printer': 0.49.0
+  '@effect/printer-ansi': 0.49.0
+  '@effect/rpc': 0.75.1
+  '@effect/sql': 0.51.1
+  '@effect/sql-sqlite-bun': 0.52.0
+  '@effect/sql-sqlite-node': 0.52.0
+  '@effect/sql-sqlite-wasm': 0.52.0
+  '@effect/typeclass': 0.40.0
   '@effect/vitest': 0.29.0
   '@effect/wa-sqlite': ^0.1.2
-  '@effect/workflow': ^0.16.0
+  '@effect/workflow': ^0.18.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
@@ -117,7 +118,7 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.2.6
+  '@moonrepo/cli': 2.3.0
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
@@ -199,22 +200,23 @@ catalog:
   '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.4.1
-  '@storybook/addon-links': ^10.4.1
-  '@storybook/addon-themes': ^10.4.1
-  '@storybook/addon-vitest': ^10.4.1
-  '@storybook/builder-vite': ^10.4.1
-  '@storybook/html-vite': ^10.4.1
+  '@storybook/addon-docs': ^10.4.2
+  '@storybook/addon-links': ^10.4.2
+  '@storybook/addon-themes': ^10.4.2
+  '@storybook/addon-vitest': ^10.4.2
+  '@storybook/builder-vite': ^10.4.2
+  '@storybook/html-vite': ^10.4.2
   '@storybook/icons': ^2.0.2
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.4.1
-  '@storybook/web-components-vite': ^10.4.1
+  '@storybook/react-vite': ^10.4.2
+  '@storybook/web-components-vite': ^10.4.2
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.15.40
+  '@swc/core': 1.15.41
   '@swc/types': ^0.1.26
   '@tailwindcss/forms': ^0.5.9
-  '@tailwindcss/oxide': ^4.2.0
-  '@tailwindcss/postcss': ^4.2.0
+  '@tailwindcss/oxide': ^4.3.0
+  '@tailwindcss/postcss': ^4.3.0
+  '@tailwindcss/vite': ^4.3.0
   '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.11.0
   '@tauri-apps/cli': ^2.11.1
@@ -309,15 +311,15 @@ catalog:
   '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/plugin-react': ^6.0.2
   '@vitejs/plugin-react-swc': ^4.3.1
-  '@vitest/browser': ^4.1.7
-  '@vitest/browser-playwright': ^4.1.7
-  '@vitest/coverage-v8': ^4.1.7
-  '@vitest/expect': ^4.1.7
-  '@vitest/runner': ^4.1.7
-  '@vitest/snapshot': ^4.1.7
-  '@vitest/spy': ^4.1.7
-  '@vitest/ui': ^4.1.7
-  '@vitest/utils': ^4.1.7
+  '@vitest/browser': ^4.1.8
+  '@vitest/browser-playwright': ^4.1.8
+  '@vitest/coverage-v8': ^4.1.8
+  '@vitest/expect': ^4.1.8
+  '@vitest/runner': ^4.1.8
+  '@vitest/snapshot': ^4.1.8
+  '@vitest/spy': ^4.1.8
+  '@vitest/ui': ^4.1.8
+  '@vitest/utils': ^4.1.8
   '@vscode/vsce': ^3.7.1
   '@xenova/transformers': ^2.17.2
   '@xstate/react': ^3.2.1
@@ -332,7 +334,7 @@ catalog:
   aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  astro: ^6.0.8
+  astro: ^6.4.6
   autoprefixer: ^10.5.0
   babel-preset-solid: ^1.9.9
   babylonjs-gltf2interface: ^7.0.0
@@ -375,6 +377,7 @@ catalog:
   copy: ~0.3.2
   cosmiconfig: ^8.0.0
   crc-32: ^1.2.2
+  cronstrue: ^2.56.0
   crx: ^5.0.1
   d3: ^7.9.0
   d3-force: ~3.0.0
@@ -392,14 +395,14 @@ catalog:
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 3.20.0
+  effect: 3.21.3
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
-  esbuild: 0.28.0
+  esbuild: 0.28.1
   esbuild-plugin-glsl: ^1.4.1
   esbuild-plugin-inline-image: ^0.0.9
-  esbuild-plugin-raw: 0.3.0
+  esbuild-plugin-raw: 0.4.2
   esbuild-plugin-wasm: ^1.1.0
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.3
@@ -513,7 +516,7 @@ catalog:
   node-html-parser: ^7.0.1
   node-notifier: ^10.0.1
   noise-protocol: 3.0.1
-  nyc: ^15.1.0
+  nyc: ^18.0.0
   ogl: ^1.0.11
   ollama: ^0.5.11
   once: ^1.4.0
@@ -601,15 +604,15 @@ catalog:
   solid-js: ^1.9.11
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
-  starlight-links-validator: ^0.20.1
-  storybook: ^10.4.1
+  starlight-links-validator: ^0.24.0
+  storybook: ^10.4.2
   storybook-solidjs-vite: ^10.0.13
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tabster: ^8.5.5
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
-  tailwindcss: ^4.2.0
+  tailwindcss: ^4.3.0
   tailwindcss-radix: ^4.0.2
   tauri-plugin-web-auth-api: ^1.0.0
   three: ^0.178.0
@@ -644,7 +647,7 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
-  vite: ^8.0.14
+  vite: ^8.0.16
   vite-node: ^6.0.0
   vite-plugin-devtools-json: ^1.0.0
   vite-plugin-glslify: ^2.3.0
@@ -655,7 +658,7 @@ catalog:
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
-  vitest: 4.1.7
+  vitest: 4.1.8
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-tree-sitter: ^0.25.10
@@ -712,6 +715,7 @@ onlyBuiltDependencies:
 overrides:
   '@automerge/automerge': 'catalog:'
   '@automerge/automerge-subduction': 'catalog:'
+  '@dxos/docs>vite': ^7.3.2
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': 'catalog:'
   '@lezer/highlight': 'catalog:'
@@ -724,6 +728,7 @@ overrides:
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
   ajv@8: '>=8.18.0'
+  astro>vite: ^7.3.2
   axios: 1.14.0
   base-x@4: 4.0.1
   cookie: '>=0.7.0'
@@ -755,29 +760,37 @@ overrides:
   tar-fs: '>=3.1.1'
   typescript: 'catalog:'
   undici: '>=7.18.2'
-  vite: '>=8.0.0'
+  vite: '>=8.0.16'
   wrangler: '>=4.59.1'
   ws: '>=8.17.1'
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.23': patches/@automerge__automerge-repo@2.6.0-subduction.23.patch
   '@automerge/automerge-subduction@0.13.0': patches/@automerge__automerge-subduction@0.13.0.patch
-  '@vitest/browser@4.1.7': patches/@vitest__browser@4.1.7.patch
+  '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
+  '@vitest/browser@4.1.8': patches/@vitest__browser@4.1.8.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
-  vitest@4.1.7: patches/vitest@4.1.7.patch
+  vitest@4.1.8: patches/vitest@4.1.8.patch
 
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
+    '@effect-atom/atom>@effect/experimental': 0.60.0
+    '@effect-atom/atom>@effect/platform': 0.96.1
+    '@effect-atom/atom>@effect/rpc': 0.75.1
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
     vite-plugin-pwa>vite: '>=7.0.0'
+    vitefu>vite: '>=7.0.0'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
+    - '@effect/experimental'
+    - '@effect/platform'
+    - '@effect/rpc'
 
 strictPeerDependencies: true
 

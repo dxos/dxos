@@ -10,6 +10,9 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'ref-editor.placeholder': "Type '@' to add a reference, or enter a value",
+        'ref-editor-auto.placeholder': 'Search by name, or enter a value',
+
         'fields.label': 'Fields',
         'hidden-fields.label': 'Hidden Fields',
         'empty-readonly-ref-field.label': '(none)',
@@ -26,6 +29,8 @@ export const translations = [
         'boolean-input-false.value': 'No',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
+        'expand-fields.label': 'Expand',
+        'collapse-fields.label': 'Collapse',
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',

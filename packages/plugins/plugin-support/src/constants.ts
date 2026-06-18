@@ -14,15 +14,3 @@ export const DISCORD_SERVICE_URL = 'https://discord-service.dxos.workers.dev';
 export const GITHUB_NEW_ISSUE_URL = 'https://github.com/dxos/dxos/issues/new';
 
 export const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
-
-/**
- * Local id of the virtual Welcome node under the personal-space subtree.
- * Also used as the `data.subject` value for the Article surface filter.
- */
-export const WELCOME_NODE_ID = 'welcome';
-
-/**
- * Free-form node type tag for the virtual Welcome node. Avoids the ECHO-object
- * node matchers in app-graph.
- */
-export const WELCOME_NODE_TYPE = `${meta.id}.welcome-node`;

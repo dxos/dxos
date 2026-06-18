@@ -1,6 +1,6 @@
 {
   "name": "@dxos/extractor",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Template-driven extraction of ECHO objects from source objects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,7 @@
     "@effect/ai": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

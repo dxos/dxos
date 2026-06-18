@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.meeting',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.meeting'),
   name: 'Meetings',
   author: 'DXOS',
   description: trim`
@@ -19,11 +20,11 @@ export const meta: Plugin.Meta = {
     AI summarisation sends the combined transcript and notes content to a language model, which returns a structured markdown document containing key discussion points, verbatim quotes, and a checklist of clearly assigned action items.
     The summary is written back to ECHO and replicated to all peers; the meeting article view displays a generate button on first use and a regenerate button once a summary exists.
   `,
-  icon: 'ph--note--regular',
-  iconHue: 'rose',
+  icon: 'ph--handshake--regular',
+  iconHue: 'yellow',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-meeting',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
   // TODO(wittjosiah): Needs new screenshots.
   screenshots: ['https://dxos.network/plugin-details-calls-dark.png'],
-};
+});

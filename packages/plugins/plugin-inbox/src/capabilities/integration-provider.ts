@@ -115,11 +115,13 @@ export default Capability.makeModule(
           scopes: [
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/gmail.send',
+            // `gmail.modify` is required to move messages to the trash (delete).
+            'https://www.googleapis.com/auth/gmail.modify',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
         optionsSchema: SyncOptions,
-        sync: InboxOperation.SyncMailbox,
+        sync: InboxOperation.GoogleMailSync,
         onTokenCreated: gmailOnTokenCreated,
       },
       {
@@ -129,13 +131,16 @@ export default Capability.makeModule(
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [
+            // `calendar.readonly` is required to list the user's calendars (GetGoogleCalendars);
+            // `calendar.events` adds read/write on events so draft events can be created remotely.
             'https://www.googleapis.com/auth/calendar.readonly',
+            'https://www.googleapis.com/auth/calendar.events',
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: InboxOperation.GetGoogleCalendars,
-        sync: InboxOperation.SyncCalendar,
+        sync: InboxOperation.GoogleCalendarSync,
         onTokenCreated: calendarOnTokenCreated,
       },
       {

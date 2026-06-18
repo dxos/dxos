@@ -14,8 +14,7 @@ import * as HashSet from 'effect/HashSet';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
-import { runAndForwardErrors } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { EffectEx, Performance } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -342,7 +341,7 @@ class ManagerImpl implements PluginManager {
     // Core plugins are derived from `meta.tags.includes('system')`; the set is
     // a snapshot of the initial `plugins` array (later `add()` calls do not
     // promote plugins to core).
-    const core = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
+    const core: string[] = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
@@ -375,7 +374,7 @@ class ManagerImpl implements PluginManager {
         Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
         Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause)),
       )
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -1121,7 +1120,7 @@ class ManagerImpl implements PluginManager {
    */
   private _collectDependents(id: string, opts: { transitive: boolean; enabledOnly: boolean }): string[] {
     const direct = this._get(this._pluginsAtom)
-      .filter((plugin) => plugin.meta.dependsOn?.includes(id))
+      .filter((plugin) => plugin.meta.dependsOn?.some((dep) => dep === id))
       .map((plugin) => plugin.meta.id);
 
     if (!opts.transitive) {
@@ -1138,7 +1137,7 @@ class ManagerImpl implements PluginManager {
       }
       visited.add(currentId);
       const parents = this._get(this._pluginsAtom)
-        .filter((plugin) => plugin.meta.dependsOn?.includes(currentId))
+        .filter((plugin) => plugin.meta.dependsOn?.some((dep) => dep === currentId))
         .map((plugin) => plugin.meta.id);
       for (const parentId of parents) {
         visit(parentId);
@@ -1164,7 +1163,7 @@ class ManagerImpl implements PluginManager {
   private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
     const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
     const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed', { id, phase, reason, error: error.message });
+    log.warn('plugin failed to activate', { id, phase, reason, error: error.message });
     this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
   }
 
@@ -1175,6 +1174,10 @@ class ManagerImpl implements PluginManager {
    * them being non-removable; the failure record is enough signal).
    */
   private _scheduleAutoDisable(id: string): void {
+    if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+      // Transient HMR failures must not persist; skip auto-disable in dev server.
+      return;
+    }
     if (this._get(this._coreAtom).includes(id)) {
       return;
     }
@@ -1183,6 +1186,7 @@ class ManagerImpl implements PluginManager {
     }
     this._runForkedFiber(
       this.disable(id).pipe(
+        Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
         Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
         Effect.ignore,
       ),
@@ -1344,7 +1348,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
-      log('activating modules', { key, modules: activatingModuleIds });
+      log('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
@@ -1582,9 +1586,14 @@ class ManagerImpl implements PluginManager {
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) => {
               const error = Cause.squash(cause);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              const missingCapability = errorMessage.match(/No capability found for ([^\s\[]+)/)?.[1];
               log.error('module failed to activate', {
                 module: module.id,
-                error: error instanceof Error ? error.message : String(error),
+                parentEvent,
+                missingCapability,
+                registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
+                error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });

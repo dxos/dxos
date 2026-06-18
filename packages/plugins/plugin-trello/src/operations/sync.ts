@@ -5,7 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
+import { IntegrationSync, LayoutOperation } from '@dxos/app-toolkit';
+
+const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = IntegrationSync;
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -456,9 +458,9 @@ export const findKanbanForBoard: (
   boardId: string,
 ) => Effect.Effect<Kanban.Kanban | undefined, never, Database.Service> = Effect.fn('findKanbanForBoard')(
   function* (boardId) {
-    const existing = yield* Database.runQuery(
+    const existing = yield* Database.query(
       Query.select(Filter.foreignKeys(Kanban.Kanban, [{ source: TRELLO_SOURCE, id: boardId }])),
-    );
+    ).run;
     return existing.length > 0 ? (existing[0] as Kanban.Kanban) : undefined;
   },
 );
@@ -541,7 +543,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // and the ref written back; subsequent syncs see `target.object` and
           // skip materialization. This is where `getSyncTargets`'s read-only
           // discovery hands off to actual local writes.
-          // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
+          // Stored target refs use the space-relative form (`echo:/<id>`); the
           // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
           const kanbanFilterId = kanbanRef ? EID.getEntityId(EID.tryParse(kanbanRef.uri)!) : undefined;
           const targetEntries: Array<{

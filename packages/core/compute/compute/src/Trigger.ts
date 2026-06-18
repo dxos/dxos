@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
-import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { OptionsAnnotationId } from '@dxos/echo/Format';
 
 /**
  * Type discriminator for TriggerType.
@@ -179,13 +180,13 @@ const TriggerSchema = Schema.Struct({
    * {
    *   item: '{{event.item}}',
    *   instructions: 'Summarize and perform entity-extraction'
-   *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
+   *   mailbox: { '/': 'echo://AAA/ZZZ' }
    * }
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-  SystemTypeAnnotation.set(true),
+  HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
 );
 

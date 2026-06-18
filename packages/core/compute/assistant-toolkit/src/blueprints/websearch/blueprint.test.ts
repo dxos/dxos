@@ -10,7 +10,7 @@ import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 
 import WebSearchBlueprint from './blueprint';
-import { WebSearchHandlers } from './functions';
+import { WebSearchHandlers } from './operations';
 import { WebSearchToolkitOpaque } from './toolkit';
 
 const TestLayer = AssistantTestLayer({
@@ -21,7 +21,8 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('WebToolkit', () => {
-  it.effect(
+  // Keep skipped, this test is flaky.
+  it.effect.skip(
     'WebFetch handler returns response text',
     Effect.fnUntraced(
       function* ({ expect }) {

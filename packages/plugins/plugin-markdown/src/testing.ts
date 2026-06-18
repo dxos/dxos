@@ -5,8 +5,9 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Collection, Database, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale. Uses the `#plugin` subpath so the node-only build is
@@ -19,12 +20,19 @@ export * from '#plugin';
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
   Effect.zipRight(
     Effect.gen(function* () {
-      // TODO(wittjosiah): Remove cast.
-      yield* Database.add(
-        Obj.make(SpaceProperties, {
-          [Type.getTypename(Collection.Collection)]: Ref.make(Collection.make()),
-        }) as any,
-      );
+      const collection = Collection.make({ objects: [] });
+      const properties = Obj.make(SpaceProperties, {});
+      yield* Database.add(collection);
+      yield* Database.add(properties);
+      // Both entities are in the DB before setting the annotation so Database.load
+      // works in CollectionModel.add (which uses the Effect DB context, not Ref.load).
+      Obj.update(properties, (properties) => {
+        const meta = Obj.getMeta(properties);
+        if (!meta.annotations) {
+          meta.annotations = {};
+        }
+        Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
+      });
     }),
     effect,
   );

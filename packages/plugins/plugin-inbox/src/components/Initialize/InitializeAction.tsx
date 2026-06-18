@@ -22,6 +22,8 @@ export type InitializeActionProps<T extends Obj.Any> = {
   operation: Operation.Definition<any, any>;
   /** Already-translated label for the sync action. */
   syncLabel: string;
+  /** Per-phase notifications shown for the sync invocation. */
+  notify?: Operation.NotifyOptions;
 };
 
 /**
@@ -38,9 +40,10 @@ export const InitializeAction = <T extends Obj.Any>({
   providerId,
   operation,
   syncLabel,
+  notify,
 }: InitializeActionProps<T>) => {
   const pluginManager = usePluginManager();
-  const { integration, sync, syncing } = useTargetSync(target, operation, targetKey);
+  const { integration, sync, syncing } = useTargetSync(target, operation, targetKey, notify);
 
   if (integration) {
     return (

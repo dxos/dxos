@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type GameVariantSurfaceProps } from '@dxos/plugin-game';
+import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

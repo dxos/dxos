@@ -3,7 +3,7 @@
 //
 
 import { importSpace } from '@dxos/client/echo';
-import { type SerializedSpace, Serializer } from '@dxos/echo-db';
+import { type SerializedSpace, Serializer } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 

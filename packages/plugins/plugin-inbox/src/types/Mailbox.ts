@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, TagIndex, Tagging, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
-import { FeedAnnotation } from '@dxos/schema';
+import { AppAnnotation } from '@dxos/app-toolkit';
+import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { FeedAnnotation, TagIndex, Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 /**
@@ -34,14 +34,21 @@ export const Mailbox = Schema.Struct({
   viewedAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
-  // Messages are immutable Queue items, so their tag associations live here on the mutable Mailbox
+  // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
   // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
-  tags: TagIndex.field(),
+  tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+  extractors: Schema.Struct({
+    enabled: Schema.Array(Schema.String),
+    threshold: Schema.Number.pipe(Schema.between(0, 1)),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
   // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
   // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
   // the association lives here on the mutable Mailbox. The referenced objects are space-db
   // objects resolved by id (`db.getObjectById`).
-  extracted: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) })),
+  extracted: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }).pipe(
+    FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -49,17 +56,10 @@ export const Mailbox = Schema.Struct({
       filter: Schema.String,
     }),
   ).pipe(FormInputAnnotation.set(false)),
-  extractors: Schema.Struct({
-    enabled: Schema.Array(Schema.String),
-    threshold: Schema.Number.pipe(Schema.between(0, 1)),
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--tray--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
   FeedAnnotation.set(true),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),
 );
 
@@ -92,7 +92,7 @@ export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters' | 'extractors'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'tags' | 'filters' | 'extractors'> & {
   filters?: { name: string; filter: string }[];
   extractors?: { enabled: string[]; threshold: number };
 };
@@ -100,15 +100,18 @@ type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters' | 'ex
 /** Creates a mailbox object with a backing feed. */
 export const make = (props: MailboxProps = {}) => {
   const feed = Feed.make();
+  const tags = TagIndex.make();
   const mailbox = Obj.make(Mailbox, {
     feed: Ref.make(feed),
-    tags: {},
+    tags: Ref.make(tags),
     filters: [],
     ...props,
   });
 
   // TODO(wittjosiah): Parent should be declarative in the schema.
   Obj.setParent(feed, mailbox);
+  // Tag index is a child: cascade-deleted with the mailbox.
+  Obj.setParent(tags, mailbox);
   return mailbox;
 };
 
@@ -140,13 +143,13 @@ export const applyTag = async (
 ): Promise<string> => {
   const tag = await Tag.findOrCreate(db, { label, hue });
   const uri = tagUri(tag);
-  Tagging.set(message, uri, { host: mailbox });
+  Tagging.set(message, uri, { index: mailbox.tags.target });
   return uri;
 };
 
 /** Removes a tag from a message's index entry. No-op when not present. */
 export const removeTag = (mailbox: Mailbox, uri: string, message: Message.Message): void => {
-  Tagging.unset(message, uri, { host: mailbox });
+  Tagging.unset(message, uri, { index: mailbox.tags.target });
 };
 
 /**
@@ -183,8 +186,11 @@ export const getExtractedObjectIds = (mailbox: Mailbox | Obj.Snapshot<Mailbox>, 
  */
 export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>): Record<string, string[]> => {
   const index: Record<string, string[]> = {};
-  // Read-only inversion; `bind` accepts a live object but we only read here, so a snapshot is safe.
-  const tags = TagIndex.bind(mailbox as Obj.Any, 'tags');
+  const tagIndex = mailbox.tags.target;
+  if (!tagIndex) {
+    return index;
+  }
+  const tags = TagIndex.bind(tagIndex);
   for (const uri of tags.tagIds()) {
     for (const messageId of tags.objects(uri)) {
       (index[messageId] ??= []).push(uri);
@@ -195,4 +201,4 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
 
 /** Returns the tag uris currently applied to a single message. */
 export const getTagsForMessage = (mailbox: Mailbox, message: Message.Message): string[] =>
-  Tagging.get(message, { host: mailbox });
+  Tagging.get(message, { index: mailbox.tags.target });

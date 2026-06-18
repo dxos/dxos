@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import { Trace } from '@dxos/compute';
 import { ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Order, Query } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -139,7 +139,7 @@ export const layerLiveWithDirectSink: Layer.Layer<
 > = layerDirect.pipe(Layer.provideMerge(layerLive));
 
 export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* () {
-  const feeds = yield* Database.runQuery(query);
+  const feeds = yield* Database.query(query).run;
   if (feeds.length > 0) {
     return feeds[0];
   }
@@ -185,7 +185,7 @@ export const makeRoutingSink = (opts: { resolver: ServiceResolver.ServiceResolve
       return;
     }
     const effect = opts.resolver.resolve(FeedTraceSink, { space }).pipe(Effect.scoped);
-    runAndForwardErrors(effect).then(
+    EffectEx.runAndForwardErrors(effect).then(
       (service) => {
         const entry = perSpace.get(space);
         perSpace.set(space, { status: 'ready', sink: service.sink });

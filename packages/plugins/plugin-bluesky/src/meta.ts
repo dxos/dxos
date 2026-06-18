@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.bluesky',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.bluesky'),
   name: 'Bluesky',
   author: 'DXOS',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-bluesky',
@@ -40,4 +41,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--butterfly--regular',
   iconHue: 'sky',
   tags: ['labs', 'integration'],
-};
+});

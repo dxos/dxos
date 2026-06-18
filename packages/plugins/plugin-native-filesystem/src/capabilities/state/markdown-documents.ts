@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { updateText } from '@dxos/echo-db';
+import { Filter, Obj } from '@dxos/echo';
+import { updateText } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -51,7 +51,7 @@ const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): P
     return undefined;
   }
 
-  const byId = owningSpace.db.getObjectById(objectId);
+  const byId = owningSpace.db.query(Filter.id(objectId)).runSync()[0];
   if (byId && Obj.instanceOf(Text.Text, byId)) {
     return byId;
   }

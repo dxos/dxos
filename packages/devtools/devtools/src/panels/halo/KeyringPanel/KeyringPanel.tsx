@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Format } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';

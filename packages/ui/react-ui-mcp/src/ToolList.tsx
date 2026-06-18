@@ -2,27 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-// Composable list view over MCP tool definitions. Built on
-// `@dxos/react-ui-list`'s `List.Root` / `List.Item` primitives, with each
-// part exposed as its own component so consumers can either drop in
-// `<ToolList ... />` for the default layout or assemble exactly the surface
-// they need (just titles, custom row, header chips, etc.).
+// Composable list view over MCP tool definitions. Built on `@dxos/react-ui-list`'s
+// `Listbox` + `Listbox.Item` selectable-listbox primitives, with each part exposed as its own
+// component so consumers can either drop in `<ToolList ... />` for the default layout or
+// assemble exactly the surface they need (just titles, custom row, header chips, etc.).
 //
-// Each subcomponent accepts `classNames` via `@dxos/react-ui`'s
-// `ThemedClassName` so consumers can layer Tailwind classes on top of the
-// theme defaults without forking the component.
+// Each subcomponent accepts `classNames` via `@dxos/react-ui`'s `ThemedClassName` so
+// consumers can layer Tailwind classes on top of the theme defaults without forking the
+// component.
 
-import React, {
-  type ComponentProps,
-  type PropsWithChildren,
-  type ReactNode,
-  createContext,
-  useContext,
-  useMemo,
-} from 'react';
+import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
-import { List as NaturalList } from '@dxos/react-ui-list';
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -41,62 +33,57 @@ export type Tool = {
 };
 
 //
-// Context — lets nested `<ToolList.Item>` rows pull selection state from the
-// parent `<ToolList.Root>` without prop drilling. Keeps the composable shape
-// flat from a consumer's perspective.
+// Root — wraps `Listbox.Root` so descendant `ToolList.Item` rows participate in
+// the listbox's single-select model. `Listbox` itself supplies the selection context
+// (`useListboxSelection` reads back the active id), so `ToolList` doesn't ship its own.
 //
 
-type ToolListContextValue = {
-  selectedId: string | null;
-  onSelect?: (id: string) => void;
-};
-
-const ToolListContext = createContext<ToolListContextValue | null>(null);
-
-const useToolListContext = (): ToolListContextValue => {
-  const ctx = useContext(ToolListContext);
-  if (!ctx) {
-    throw new Error('ToolList.Item must be rendered inside a <ToolList.Root>');
-  }
-  return ctx;
-};
-
-//
-// Root
-//
-
-export type ToolListRootProps = ThemedClassName<{
-  /** The tools to render. Order is preserved as-is. */
-  tools: readonly Tool[];
+export type ToolListRootProps = PropsWithChildren<{
   /** Selected tool id; null when no row is highlighted. */
   selectedId?: string | null;
   /** Called when the user picks a tool. */
   onSelect?: (id: string) => void;
+}>;
+
+const ToolListRoot = ({ selectedId, onSelect, children }: ToolListRootProps): ReactNode => (
+  <Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>
+    {children}
+  </Listbox.Root>
+);
+ToolListRoot.displayName = 'ToolList.Root';
+
+//
+// Content — the `role=listbox` container that renders rows from `tools`.
+//
+
+export type ToolListContentProps = ThemedClassName<{
+  /** The tools to render. Order is preserved as-is. */
+  tools: readonly Tool[];
   /**
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
-   * content (badges, kbd hints, etc.).
+   * content (badges, kbd hints, etc.). (Not `children` so the part can be a
+   * `composable` Slot target — see below.)
    */
-  children?: (tool: Tool) => ReactNode;
+  renderItem?: (tool: Tool) => ReactNode;
 }>;
 
-const ToolListRoot = ({ classNames, tools, selectedId = null, onSelect, children }: ToolListRootProps): ReactNode => {
-  // Stable context value across renders that don't change selection so memoized
-  // children don't re-render unnecessarily.
-  const value = useMemo<ToolListContextValue>(() => ({ selectedId, onSelect }), [selectedId, onSelect]);
-  return (
-    <ToolListContext.Provider value={value}>
-      <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
-        {({ items }) => (
-          <div role='listbox' className={mx('flex flex-col gap-px', classNames)}>
-            {items?.map((tool) => (children ? children(tool) : <ToolListItem key={tool.id} tool={tool} />))}
-          </div>
-        )}
-      </NaturalList.Root>
-    </ToolListContext.Provider>
-  );
-};
-ToolListRoot.displayName = 'ToolList.Root';
+// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
+// land on the listbox's `<ul>` (which `Listbox.Content` renders via `@dxos/react-list`).
+const ToolListContent = composable<HTMLUListElement, ToolListContentProps>(
+  ({ tools, renderItem, ...props }, forwardedRef) => (
+    <Listbox.Content
+      {...composableProps<HTMLUListElement>(props, { classNames: 'flex flex-col gap-px' })}
+      aria-label='Tools'
+      ref={forwardedRef}
+    >
+      {tools.map((tool) =>
+        renderItem ? <Fragment key={tool.id}>{renderItem(tool)}</Fragment> : <ToolListItem key={tool.id} tool={tool} />,
+      )}
+    </Listbox.Content>
+  ),
+);
+ToolListContent.displayName = 'ToolList.Content';
 
 //
 // Item
@@ -105,39 +92,28 @@ ToolListRoot.displayName = 'ToolList.Root';
 export type ToolListItemProps = ThemedClassName<
   PropsWithChildren<{
     tool: Tool;
-    /** Forces selected styling regardless of context state. */
-    selected?: boolean;
   }>
 >;
 
-const ToolListItem = ({ classNames, tool, selected: selectedProp, children }: ToolListItemProps): ReactNode => {
-  const { selectedId, onSelect } = useToolListContext();
-  const selected = selectedProp ?? selectedId === tool.id;
+const ToolListItem = ({ classNames, tool, children }: ToolListItemProps): ReactNode => {
   return (
-    <NaturalList.Item<Tool>
-      item={tool}
-      selected={selected}
+    <Listbox.Item
+      id={tool.id}
       classNames={mx(
-        // Tailwind tokens follow the conventions used in `react-ui-list`:
-        // `dx-hover` and `dx-selected` are theme states that adapt to dark
-        // mode. We layer the consumer's `classNames` last so they win on conflict.
-        'cursor-pointer rounded px-2 py-1',
+        // Tailwind tokens follow the conventions used in `react-ui-list`: `dx-hover`
+        // and `dx-selected` are theme states that adapt to dark mode (already applied
+        // by `Listbox.Item`). We layer the consumer's `classNames` last so they win on conflict.
+        'flex flex-col gap-0.5 rounded',
         classNames,
       )}
     >
-      <button
-        type='button'
-        className='flex w-full flex-col gap-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-accentSurface'
-        onClick={() => onSelect?.(tool.id)}
-      >
-        {children ?? (
-          <>
-            <ToolListItemTitle>{tool.title}</ToolListItemTitle>
-            {tool.description ? <ToolListItemDescription>{tool.description}</ToolListItemDescription> : null}
-          </>
-        )}
-      </button>
-    </NaturalList.Item>
+      {children ?? (
+        <>
+          <ToolListItemTitle>{tool.title}</ToolListItemTitle>
+          {tool.description ? <ToolListItemDescription>{tool.description}</ToolListItemDescription> : null}
+        </>
+      )}
+    </Listbox.Item>
   );
 };
 ToolListItem.displayName = 'ToolList.Item';
@@ -177,26 +153,32 @@ ToolListItemDescription.displayName = 'ToolList.ItemDescription';
 //
 // Default usage:
 //
-//   <ToolList.Root tools={tools} selectedId={id} onSelect={setId} />
+//   <ToolList.Root selectedId={id} onSelect={setId}>
+//     <ToolList.Content tools={tools} />
+//   </ToolList.Root>
 //
 // Custom row content:
 //
-//   <ToolList.Root tools={tools} selectedId={id} onSelect={setId}>
-//     {(tool) => (
-//       <ToolList.Item key={tool.id} tool={tool}>
-//         <Badge>{tool.id}</Badge>
-//         <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
-//       </ToolList.Item>
-//     )}
+//   <ToolList.Root selectedId={id} onSelect={setId}>
+//     <ToolList.Content
+//       tools={tools}
+//       renderItem={(tool) => (
+//         <ToolList.Item key={tool.id} tool={tool}>
+//           <Badge>{tool.id}</Badge>
+//           <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
+//         </ToolList.Item>
+//       )}
+//     />
 //   </ToolList.Root>
 //
 
 export const ToolList = {
   Root: ToolListRoot,
+  Content: ToolListContent,
   Item: ToolListItem,
   ItemTitle: ToolListItemTitle,
   ItemDescription: ToolListItemDescription,
 };
 
 // Direct exports too for callers that prefer them over the namespace.
-export { ToolListRoot, ToolListItem, ToolListItemTitle, ToolListItemDescription };
+export { ToolListRoot, ToolListContent, ToolListItem, ToolListItemTitle, ToolListItemDescription };

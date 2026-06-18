@@ -4,9 +4,17 @@
 
 import { describe, test } from 'vitest';
 
+import { URI } from '@dxos/keys';
+
 import * as Obj from '../../../Obj';
+import * as Ref from '../../../Ref';
 import * as Relation from '../../../Relation';
 import { TestSchema } from '../../../testing';
+
+// Tags are stored as `Ref<Tag>`; build refs from synthetic URIs and compare by `.uri`.
+const tagRef = (id: string): Ref.Ref<any> => Ref.fromURI(URI.make(`echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/${id}`));
+const tagUris = (entity: Obj.Unknown | Relation.Unknown): string[] =>
+  Obj.getMeta(entity as Obj.Unknown).tags.map((tag) => tag.uri);
 
 /**
  * Tests for Obj.update context enforcement and mutator type safety.
@@ -44,7 +52,7 @@ describe('Obj.update enforcement', () => {
 
       // No compile-time error: TypeScript's structural typing allows readonly objects
       // to be passed to Mutable<T> parameters. Enforcement is runtime-only.
-      expect(() => Obj.addTag(obj, 'tag')).toThrow(/outside of Obj.update/);
+      expect(() => Obj.addTag(obj, tagRef('tag'))).toThrow(/outside of Obj.update/);
     });
 
     test('getMeta mutation outside change throws', ({ expect }) => {
@@ -53,7 +61,7 @@ describe('Obj.update enforcement', () => {
 
       // Runtime errors for direct meta mutations.
       expect(() => ((meta as any).keys = [])).toThrow(/outside of Obj.update/);
-      expect(() => ((meta as any).tags = ['tag'])).toThrow(/outside of Obj.update/);
+      expect(() => ((meta as any).tags = [tagRef('tag')])).toThrow(/outside of Obj.update/);
     });
 
     test('getMeta returns mutable EntityMeta inside change callback', ({ expect }) => {
@@ -64,11 +72,11 @@ describe('Obj.update enforcement', () => {
 
         // These should compile without errors because meta is EntityMeta (mutable).
         meta.keys = [];
-        meta.tags = ['tag'];
+        meta.tags = [tagRef('tag')];
         meta.keys.push({ source: 'test', id: '123' });
       });
 
-      expect(Obj.getMeta(obj).tags).toEqual(['tag']);
+      expect(tagUris(obj)).toEqual([tagRef('tag').uri]);
       expect(Obj.getMeta(obj).keys).toHaveLength(1);
     });
 
@@ -77,12 +85,12 @@ describe('Obj.update enforcement', () => {
 
       // These should compile without errors inside change callback.
       Obj.update(obj, (obj) => {
-        Obj.addTag(obj, 'my-tag');
+        Obj.addTag(obj, tagRef('my-tag'));
         Obj.setValue(obj, ['name'], 'Updated');
       });
 
       expect(obj.name).toBe('Updated');
-      expect(Obj.getMeta(obj).tags).toContain('my-tag');
+      expect(tagUris(obj)).toContain(tagRef('my-tag').uri);
     });
 
     test('Relation property mutation outside change throws', ({ expect }) => {
@@ -110,7 +118,7 @@ describe('Obj.update enforcement', () => {
 
       // No compile-time error: TypeScript's structural typing allows readonly objects
       // to be passed to Mutable<T> parameters. Enforcement is runtime-only.
-      expect(() => Relation.addTag(rel, 'tag')).toThrow(/outside of Obj.update/);
+      expect(() => Relation.addTag(rel, tagRef('tag'))).toThrow(/outside of Obj.update/);
     });
   });
 
@@ -151,20 +159,20 @@ describe('Obj.update enforcement', () => {
     test('addTag and removeTag work correctly', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      expect(Obj.getMeta(obj).tags).toBeUndefined();
+      expect(Obj.getMeta(obj).tags).toEqual([]);
 
       Obj.update(obj, (obj) => {
-        Obj.addTag(obj, 'tag-1');
-        Obj.addTag(obj, 'tag-2');
+        Obj.addTag(obj, tagRef('tag-1'));
+        Obj.addTag(obj, tagRef('tag-2'));
       });
 
-      expect(Obj.getMeta(obj).tags).toEqual(['tag-1', 'tag-2']);
+      expect(tagUris(obj)).toEqual([tagRef('tag-1').uri, tagRef('tag-2').uri]);
 
       Obj.update(obj, (obj) => {
-        Obj.removeTag(obj, 'tag-1');
+        Obj.removeTag(obj, tagRef('tag-1'));
       });
 
-      expect(Obj.getMeta(obj).tags).toEqual(['tag-2']);
+      expect(tagUris(obj)).toEqual([tagRef('tag-2').uri]);
     });
 
     test('deleteKeys removes foreign keys by source', ({ expect }) => {
@@ -202,12 +210,12 @@ describe('Obj.update enforcement', () => {
 
       Obj.update(obj, (obj) => {
         const meta = Obj.getMeta(obj);
-        meta.tags = ['tag-1', 'tag-2'];
+        meta.tags = [tagRef('tag-1'), tagRef('tag-2')];
         meta.keys.push({ source: 'external', id: '123' });
       });
 
       // Changes should persist after the change callback.
-      expect(Obj.getMeta(obj).tags).toEqual(['tag-1', 'tag-2']);
+      expect(tagUris(obj)).toEqual([tagRef('tag-1').uri, tagRef('tag-2').uri]);
       expect(Obj.getMeta(obj).keys).toEqual([{ source: 'external', id: '123' }]);
     });
 
@@ -218,13 +226,13 @@ describe('Obj.update enforcement', () => {
         obj.name = 'Name 1';
         obj.name = 'Name 2';
         obj.name = 'Name 3';
-        Obj.addTag(obj, 'tag-1');
-        Obj.addTag(obj, 'tag-2');
+        Obj.addTag(obj, tagRef('tag-1'));
+        Obj.addTag(obj, tagRef('tag-2'));
       });
 
       // All mutations should persist.
       expect(obj.name).toBe('Name 3');
-      expect(Obj.getMeta(obj).tags).toEqual(['tag-1', 'tag-2']);
+      expect(tagUris(obj)).toEqual([tagRef('tag-1').uri, tagRef('tag-2').uri]);
     });
   });
 
@@ -457,11 +465,11 @@ describe('Obj.update enforcement', () => {
 
       Relation.update(rel, (rel) => {
         const meta = Relation.getMeta(rel);
-        meta.tags = ['rel-tag'];
+        meta.tags = [tagRef('rel-tag')];
         meta.keys.push({ source: 'rel-source', id: 'rel-key' });
       });
 
-      expect(Relation.getMeta(rel).tags).toEqual(['rel-tag']);
+      expect(tagUris(rel)).toEqual([tagRef('rel-tag').uri]);
       expect(Relation.getMeta(rel).keys).toHaveLength(1);
     });
 
@@ -474,16 +482,16 @@ describe('Obj.update enforcement', () => {
       });
 
       Relation.update(rel, (rel) => {
-        Relation.addTag(rel, 'important');
+        Relation.addTag(rel, tagRef('important'));
       });
 
-      expect(Relation.getMeta(rel).tags).toContain('important');
+      expect(tagUris(rel)).toContain(tagRef('important').uri);
 
       Relation.update(rel, (rel) => {
-        Relation.removeTag(rel, 'important');
+        Relation.removeTag(rel, tagRef('important'));
       });
 
-      expect(Relation.getMeta(rel).tags).not.toContain('important');
+      expect(tagUris(rel)).not.toContain(tagRef('important').uri);
     });
   });
 

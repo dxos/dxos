@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
@@ -279,6 +280,61 @@ export const ArrayOfObjects: StoryObj = {
   parameters: {
     layout: 'fullscreen',
     translations,
+  },
+};
+
+export const RequiredSchema: StoryObj = {
+  render: DefaultStory,
+  decorators: [
+    withClientProvider({
+      types: [View.View, Table.Table, TestSchema.Person],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
+        // TestSchema.Person has a required `name: Schema.String` field.
+        // No pre-populated rows so the add-row flow is the first interaction.
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(TestSchema.Person),
+        });
+        const table = Table.make({ view, jsonSchema });
+        space.db.add(table);
+      },
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...formTranslations],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 30 s covers ECHO client + space + table creation (the only inherently slow step).
+    const addRowButton = await canvas.findByTestId('table.toolbar.add-row', undefined, { timeout: 30_000 });
+
+    // Person.name is required, so db.add throws → useAddRow returns 'draft' →
+    // a draft row appears in frozenRowsEnd and focus is set to its first cell.
+    await userEvent.click(addRowButton);
+
+    const draftCell = await canvas.findByTestId('frozenRowsEnd.0.0');
+    await userEvent.click(draftCell);
+
+    // Open the editor with Enter rather than typing to open — the latter routes the first
+    // character into dx-grid's `initialContent` and races the editor mount. The empty value
+    // fails validation; the editor must stay open so the value below can be entered.
+    await userEvent.keyboard('{Enter}');
+    await canvas.findByTestId('grid.cell-editor');
+
+    // The editor is focused (autoFocus); type the required value and commit.
+    await userEvent.keyboard('Alice');
+    await userEvent.keyboard('{Enter}');
+
+    // The draft row is committed and appears in the grid with the typed value.
+    await waitFor(async () => {
+      const cell = canvas.getByTestId('grid.0.0');
+      const text = cell.querySelector('.dx-grid__cell__content')?.textContent;
+      await expect(text).toBe('Alice');
+    });
   },
 };
 

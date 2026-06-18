@@ -25,15 +25,19 @@ export type PopoverOptions = {
   placeholder?: Partial<PlaceholderOptions>;
   delimiters?: string[];
 
-  // TODO(burdon): Auto.
-  // activateOnTyping?: boolean;
+  /**
+   * Open the popover automatically while typing a word (no trigger character required).
+   * The completion range covers the word under the cursor (delimited by {@link PopoverOptions.delimiters}).
+   */
+  activateOnTyping?: boolean;
 
   // Trigger update.
   onTextChange?: (event: { view: EditorView; pos: number; text: string; trigger?: string }) => void;
   onClose?: (event: { view: EditorView }) => void;
 
   // Menu specific.
-  onEnter?: (event: { view: EditorView }) => void;
+  /** Returns true when the menu consumed the key (an item was selected); false falls through. */
+  onEnter?: (event: { view: EditorView }) => boolean | void;
   onArrowUp?: (event: { view: EditorView }) => void;
   onArrowDown?: (event: { view: EditorView }) => void;
 };
@@ -47,6 +51,7 @@ export const popover = (options: PopoverOptions = {}): Extension => {
     Prec.highest(popoverKeymap(options)),
     popoverStateField,
     popoverTriggerListener(options),
+    options.activateOnTyping && popoverAutoActivate(options),
     popoverAnchorDecoration(options),
     modalStateField,
     options.trigger &&
@@ -91,6 +96,33 @@ const popoverTriggerListener = (options: PopoverOptions) =>
     if (shouldClose) {
       options.onClose?.({ view });
     }
+  });
+
+/**
+ * Open the popover while typing a word, without requiring a trigger character. Once a range is
+ * active, {@link popoverTriggerListener} keeps it in sync and closes it (whitespace, cursor moves).
+ */
+const popoverAutoActivate = (options: PopoverOptions) =>
+  EditorView.updateListener.of(({ view, docChanged, transactions }) => {
+    // Only user input opens the popover — programmatic syncs (e.g. a controlled `value` update on
+    // mount) must not pop the menu.
+    if (!docChanged || !transactions.some((tr) => tr.isUserEvent('input')) || view.state.field(popoverStateField)) {
+      return;
+    }
+    const selection = view.state.selection.main;
+    if (!selection.empty) {
+      return;
+    }
+    const line = view.state.doc.lineAt(selection.head);
+    const before = line.text.slice(0, selection.head - line.from);
+    const idx = getLastIndexOf(before, options.delimiters ?? DELIMITERS);
+    const token = before.slice(idx + 1);
+    if (token.length === 0) {
+      return;
+    }
+    view.dispatch({
+      effects: popoverRangeEffect.of({ range: { from: line.from + idx + 1, to: selection.head } }),
+    });
   });
 
 /**
@@ -190,9 +222,10 @@ const popoverKeymap = (options: PopoverOptions) => {
         run: (view: EditorView) => {
           const range = view.state.field(popoverStateField)?.range;
           if (range) {
-            view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
-            options.onEnter?.({ view });
-            return true;
+            // The consumer deletes the range when it selects an item; when nothing is selectable
+            // (empty menu over an `activateOnTyping` range) the key must fall through so the
+            // typed text is preserved.
+            return options.onEnter?.({ view }) ?? false;
           }
 
           return false;

@@ -3,7 +3,6 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { getObjectCore } from '@dxos/echo-db';
 import { type TypedObjectSerializer } from '@dxos/plugin-space';
 
 import { Sketch } from '#types';
@@ -17,16 +16,12 @@ export const serializer: TypedObjectSerializer<Sketch.Sketch> = {
 
   deserialize: async ({ content, newId }) => {
     const parsed = JSON.parse(content);
-    const canvas = Obj.make(Sketch.Canvas, { content: {} });
-    const sketch = Obj.make(Sketch.Sketch, { name: parsed.name, canvas: Ref.make(canvas) });
-
-    if (!newId) {
-      const core = getObjectCore(sketch);
-      core.id = parsed.id;
-
-      const canvasCore = getObjectCore(canvas);
-      canvasCore.id = parsed.data.id;
-    }
+    const canvas = Obj.make(Sketch.Canvas, { content: {}, ...(newId ? {} : { id: parsed.data.id }) });
+    const sketch = Obj.make(Sketch.Sketch, {
+      name: parsed.name,
+      canvas: Ref.make(canvas),
+      ...(newId ? {} : { id: parsed.id }),
+    });
 
     setCanvasContent(canvas, parsed.data.content);
     return sketch;

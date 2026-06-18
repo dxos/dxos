@@ -23,18 +23,18 @@ import {
   type EchoHost,
   type EdgeAutomergeReplicator,
   type MeshEchoReplicator,
-  type MetadataStore,
+  type IMetadataStore,
   type Space,
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
   findInlineObjectOfType,
-} from '@dxos/echo-pipeline';
+} from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
@@ -104,8 +104,8 @@ export type AdmitMemberOptions = {
 
 export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
-  metadataStore: MetadataStore;
-  keyring: Keyring;
+  metadataStore: IMetadataStore;
+  keyring: KeyringApi;
   signingContext: SigningContext;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
@@ -145,8 +145,8 @@ export class DataSpaceManager extends Resource {
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
   private readonly _spaceManager: SpaceManager;
-  private readonly _metadataStore: MetadataStore;
-  private readonly _keyring: Keyring;
+  private readonly _metadataStore: IMetadataStore;
+  private readonly _keyring: KeyringApi;
   private readonly _signingContext: SigningContext;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _echoHost: EchoHost;
@@ -223,6 +223,11 @@ export class DataSpaceManager extends Resource {
     const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
+        // Tombstoned spaces are never constructed, opened, or replicated.
+        if (spaceMetadata.state === SpaceState.SPACE_DELETED || this.isSpaceDeleted(spaceMetadata.key)) {
+          log('skipping deleted space', { spaceKey: spaceMetadata.key });
+          return;
+        }
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(ctx, spaceMetadata);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
@@ -370,6 +375,7 @@ export class DataSpaceManager extends Resource {
     log('accept space', { opts });
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
+    invariant(!this.isSpaceDeleted(opts.spaceKey), 'Cannot accept a deleted space.');
 
     const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
@@ -391,6 +397,77 @@ export class DataSpaceManager extends Resource {
 
     this.updated.emit();
     return space;
+  }
+
+  /**
+   * Whether the space has been tombstoned (soft-deleted). Deleted spaces are never opened or replicated.
+   */
+  isSpaceDeleted(spaceKey: PublicKey): boolean {
+    // Mirror the deletion predicate used in `_open`: the tombstone list or a persisted SPACE_DELETED state.
+    return (
+      this._metadataStore.deletedSpaces.some((key) => key.equals(spaceKey)) ||
+      this._metadataStore.spaces.some(
+        (spaceMetadata) => spaceMetadata.key.equals(spaceKey) && spaceMetadata.state === SpaceState.SPACE_DELETED,
+      )
+    );
+  }
+
+  /**
+   * Tombstones (soft-deletes) a space initiated locally on this device.
+   * Records a SpaceDeleted credential in the HALO so the deletion replicates to the user's other devices,
+   * then unloads the space locally. Data is not removed until garbage collection (future work).
+   */
+  @synchronized
+  async markSpaceDeleted(ctx: Context, spaceKey: PublicKey): Promise<void> {
+    if (this.isSpaceDeleted(spaceKey)) {
+      return;
+    }
+
+    // Replicates to the user's other devices via the HALO control feed.
+    const credential = await this._signingContext.credentialSigner.createCredential({
+      subject: spaceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.SpaceDeleted',
+        spaceKey,
+        deletedAt: new Date(),
+      },
+    });
+    await this._signingContext.recordCredential(credential);
+
+    await this._tombstoneSpace(ctx, spaceKey);
+  }
+
+  /**
+   * Tombstones a space in response to a SpaceDeleted credential replicated from another device.
+   * Does not write a credential (one already exists in the HALO).
+   */
+  @synchronized
+  async handleRemoteSpaceDeleted(ctx: Context, spaceKey: PublicKey): Promise<void> {
+    if (this.isSpaceDeleted(spaceKey)) {
+      return;
+    }
+
+    await this._tombstoneSpace(ctx, spaceKey);
+  }
+
+  /**
+   * Persists the tombstone and unloads the space if it is currently loaded.
+   * Must be called while holding the DataSpaceManager lock (see callers).
+   */
+  private async _tombstoneSpace(ctx: Context, spaceKey: PublicKey): Promise<void> {
+    await this._metadataStore.addDeletedSpace(spaceKey);
+
+    const space = this._spaces.get(spaceKey);
+    if (space) {
+      // Separate teardown (resource lifecycle) from the terminal state transition.
+      if (space.isOpen) {
+        await space.close(ctx);
+      }
+      await space.delete();
+      this._spaces.delete(spaceKey);
+    }
+
+    this.updated.emit();
   }
 
   async admitMember(options: AdmitMemberOptions): Promise<Credential> {

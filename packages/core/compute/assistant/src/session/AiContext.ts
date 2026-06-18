@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,7 +33,7 @@ export const Binding = Schema.Struct({
     added: Schema.Array(Ref.Ref(Obj.Unknown)),
     removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
+}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
 
 export type Binding = Type.InstanceType<typeof Binding>;
 export type BindingProps = Partial<{
@@ -61,7 +61,8 @@ export class Bindings {
 export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
-  registry?: Registry.Registry;
+  /** @effect-atom/atom-react Registry for reactive state management. */
+  registry?: AtomRegistry.Registry;
 };
 
 /**
@@ -71,7 +72,7 @@ export type BinderOptions = {
 export class Binder extends Resource {
   private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: AtomRegistry.Registry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
 
@@ -83,7 +84,7 @@ export class Binder extends Resource {
     assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
     this._feed = options.feed;
     this._runtime = options.runtime;
-    this._registry = options.registry ?? Registry.make();
+    this._registry = options.registry ?? AtomRegistry.make();
   }
 
   /**
@@ -309,16 +310,17 @@ export class Binder extends Resource {
     const seen = new Set<URI.URI>(current.map((obj) => Obj.getURI(obj)));
     for (const ref of refs) {
       const uri = ref.uri;
-      if (!seen.has(uri)) {
-        seen.add(uri);
-        added.push(ref);
+      if (seen.has(uri)) {
+        continue;
+      }
+      seen.add(uri);
+      added.push(ref);
 
-        // Only resolve target if available (has target or resolver).
-        if (ref.isAvailable) {
-          const target = ref.target;
-          if (target) {
-            next.push(target);
-          }
+      // Only resolve target if available (has target or resolver).
+      if (ref.isAvailable) {
+        const target = ref.target;
+        if (target) {
+          next.push(target);
         }
       }
     }
@@ -373,6 +375,8 @@ export class Binder extends Resource {
 
   /**
    * Resolve references to objects, loading them first if needed and falling back to existing objects.
+   * DXN refs (e.g. `dxn:org.dxos.blueprint.database`) resolve via the wired-up ECHO ref resolver
+   * which already spans both the space DB and the hypergraph registry.
    */
   private async _resolve<T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
     const refArray = [...refs];

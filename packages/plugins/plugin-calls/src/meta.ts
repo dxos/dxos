@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.calls',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.calls'),
   name: 'Calls',
   author: 'DXOS',
   description: trim`
@@ -26,8 +27,8 @@ export const meta: Plugin.Meta = {
 
     A pluggable Extension capability lets other plugins react to call lifecycle
     events (join, leave, media state changes) without being coupled to
-    plugin-calls. plugin-meeting and plugin-transcription use this contract to
-    start recording and transcription when a call begins and persist the
+    plugin-calls. plugin-transcription uses this contract to start recording and
+    transcription when a call begins and persist the
     artefacts when it ends. A display-name gate prevents users without a profile
     from joining; the Lobby component prompts for a name and resumes the join
     flow automatically on save.
@@ -43,6 +44,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-calls',
   spec: 'PLUGIN.mdl',
-  version: '0.8.3',
   tags: ['labs'],
-};
+});

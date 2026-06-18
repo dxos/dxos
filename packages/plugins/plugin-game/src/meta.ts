@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.game',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.game'),
   name: 'Game',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -18,7 +19,7 @@ export const meta: Plugin.Meta = {
     input form).
 
     Game variants (chess, tic-tac-toe, and others) are contributed by separate
-    plugins via the \`GameCapabilities.Variant\` capability. Each variant supplies
+    plugins via the \`GameCapabilities.VariantProvider\` capability. Each variant supplies
     its own state schema, player roles, create factory, and surface components
     (Article and Card). Plugin-game resolves the correct variant at runtime and
     delegates rendering, keeping the host layer fully decoupled from game logic.
@@ -29,9 +30,9 @@ export const meta: Plugin.Meta = {
     Game write fails, the variant state is rolled back automatically.
   `,
   icon: 'ph--sword--regular',
-  iconHue: 'indigo',
+  iconHue: 'amber',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-game',
   screenshots: [
     'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/2797d56edc9658d018ad75fe48a47f27/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2F2797d56edc9658d018ad75fe48a47f27%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
   ],
-};
+});

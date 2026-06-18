@@ -6,21 +6,22 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Collection, Type } from '@dxos/echo';
+import { Collection, Type, DXN } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
 
-const PRESENTER_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
-// TODO(wittjosiah): This appears to be unused.
 export const TogglePresentation = Operation.make({
   meta: {
-    key: `${PRESENTER_OPERATION}.toggle-presentation`,
+    key: makeKey('togglePresentation'),
     name: 'Toggle Presentation',
     icon: 'ph--presentation--regular',
   },
+  services: [Capability.Service],
   input: Schema.Struct({
     object: Schema.Union(Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)),
     state: Schema.optional(Schema.Boolean),

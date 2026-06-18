@@ -9,6 +9,7 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 // Narrow subpath imports (`/blueprints` and `/types`) so the CLI's
 // `bun run --conditions=source` only walks plugin source files that are free of
 // React-component imports. The plugin root barrels re-export the whole tree
@@ -19,6 +20,8 @@ import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { Chess } from '@dxos/plugin-chess/types';
+import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
+import { CommentOperationHandlerSet } from '@dxos/plugin-comments/plugin';
 import { Game } from '@dxos/plugin-game/types';
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
@@ -34,8 +37,6 @@ import { ScriptBlueprint } from '@dxos/plugin-script/blueprints';
 import { ScriptOperationHandlerSet } from '@dxos/plugin-script/plugin';
 import { TableBlueprint } from '@dxos/plugin-table/blueprints';
 import { TableOperationHandlerSet } from '@dxos/plugin-table/plugin';
-import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
-import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/plugin';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/plugin';
 import { DataTypes } from '@dxos/schema';
@@ -54,22 +55,24 @@ import {
 
 import * as TestToolkit from './test-toolkit';
 
-export const blueprintRegistry = new Blueprint.Registry([
-  // Blueprints available to the chat.
-  AssistantBlueprint.make(),
-  DatabaseBlueprint.make(),
-  CalendarBlueprint.make(),
-  ChessBlueprint.make(),
-  InboxBlueprint.make(),
-  InboxSendBlueprint.make(),
-  KanbanBlueprint.make(),
-  MapBlueprint.make(),
-  MarkdownBlueprint.make(),
-  ScriptBlueprint.make(),
-  TableBlueprint.make(),
-  ThreadBlueprint.make(),
-  TranscriptionBlueprint.make(),
-]);
+export const blueprintRegistry = makeRegistry({
+  initial: [
+    // Blueprints available to the chat.
+    AssistantBlueprint.make(),
+    DatabaseBlueprint.make(),
+    CalendarBlueprint.make(),
+    ChessBlueprint.make(),
+    InboxBlueprint.make(),
+    InboxSendBlueprint.make(),
+    KanbanBlueprint.make(),
+    MapBlueprint.make(),
+    MarkdownBlueprint.make(),
+    ScriptBlueprint.make(),
+    TableBlueprint.make(),
+    CommentBlueprint.make(),
+    TranscriptionBlueprint.make(),
+  ],
+});
 
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
 //  But since CLI doesn't have this, we have to manually collect them and configure them here.
@@ -86,7 +89,7 @@ export const operationHandlers = OperationHandlerSet.merge(
   MarkdownOperationHandlerSet,
   ScriptOperationHandlerSet,
   TableOperationHandlerSet,
-  ThreadOperationHandlerSet,
+  CommentOperationHandlerSet,
   TranscriptionOperationHandlerSet,
 );
 

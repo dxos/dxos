@@ -54,10 +54,16 @@
       "path": "../../../ui/ui-theme"
     },
     {
+      "path": "../../compute-runtime"
+    },
+    {
       "path": "../../echo/echo"
     },
     {
       "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../mesh/edge-client"
     },
     {
       "path": "../ai"

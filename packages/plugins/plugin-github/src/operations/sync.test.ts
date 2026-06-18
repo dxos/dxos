@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
 import { Integration } from '@dxos/plugin-integration';
 import { AccessToken, Organization, Person, Project, Task } from '@dxos/types';
 
@@ -88,7 +88,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         },
         updateRepo: () => Effect.succeed(undefined),
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(result.tasks).toBe(1);
     expect(updateIssueNumber).toBe(42);
@@ -125,7 +125,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         },
         updateRepo: () => Effect.succeed(undefined),
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(result.tasks).toBe(0);
     expect(calls).toBe(0);
@@ -157,7 +157,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         },
         updateRepo: () => Effect.succeed(undefined),
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(updateIssueInput?.state).toBe('closed');
   });
@@ -187,7 +187,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
           return Effect.succeed(undefined);
         },
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(result.projects).toBe(1);
     expect(updateRepoInput).toEqual({ description: 'rewritten' });
@@ -218,7 +218,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
           return Effect.succeed(undefined);
         },
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(result.projects).toBe(0);
     expect(calls).toBe(0);
@@ -259,7 +259,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         },
         updateRepo: () => Effect.succeed(undefined),
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     // No task push (status was the only diverging field, and PR status is
     // pull-only).
@@ -303,7 +303,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         },
         updateRepo: () => Effect.succeed(undefined),
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(updateIssueInput).toEqual({ title: 'fix flake (renamed)' });
     expect(updateIssueInput?.state).toBeUndefined();
@@ -336,7 +336,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
         },
         updateRepo: () => Effect.succeed(undefined),
       });
-    }).pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
     expect(result.tasks).toBe(0);
     expect(calls).toBe(0);

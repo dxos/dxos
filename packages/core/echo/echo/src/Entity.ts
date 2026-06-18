@@ -10,7 +10,10 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
+import * as objInternal from './internal/Obj';
+import type * as Ref from './Ref';
 import type * as Relation from './Relation';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
@@ -103,12 +106,7 @@ export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.T
  * Check if a value is an ECHO entity (object or relation).
  * Returns `false` for snapshots.
  */
-export const isEntity = (value: unknown): value is Unknown => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  return (value as any)[KindId] !== undefined;
-};
+export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
 
 /**
  * Test if a value is an instance of a given object or relation type.
@@ -188,9 +186,11 @@ export type AnyInput = Unknown | Snapshot;
  * an `EID` for object/relation instances and persisted types, or a typename
  * `DXN` for static type entities; narrow with `EID.parse(uri)` or
  * `DXN.tryMake(uri)` at the point of use.
+ *
+ * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  */
-export const getURI = (entity: AnyInput): URI.URI =>
-  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity) : internal.getUri(entity as Unknown);
+export const getURI = (entity: AnyInput, options?: internal.GetURIOptions): URI.URI =>
+  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity, options) : internal.getUri(entity as Unknown, options);
 
 /**
  * Get the DXN of an entity's type. For object/relation instances this is the URI
@@ -330,10 +330,18 @@ export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCa
  * Add a tag to an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+
+//
+// Atoms
+//
+
+export const atom = objInternal.makeEntity;
+export const labelAtom = objInternal.makeLabelAtom;
+export const labelProperty = internal.getLabelProperty;

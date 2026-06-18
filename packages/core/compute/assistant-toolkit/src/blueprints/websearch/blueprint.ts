@@ -6,9 +6,9 @@ import { Blueprint } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { Fetch } from './functions';
+import { Fetch } from './operations/definitions';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.webSearch';
 
 const make = () =>
   Blueprint.make({
@@ -19,7 +19,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make()),
     },
-    tools: Blueprint.toolDefinitions({ operations: [Fetch], tools: ['AnthropicWebSearch'] }),
+    tools: Blueprint.toolDefinitions({ operations: [Fetch] }),
   });
 
 const blueprint: Blueprint.Definition = {

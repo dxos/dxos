@@ -1,0 +1,19 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, TypeSection } from '@dxos/app-toolkit';
+
+import { Magazine } from '#types';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    return Capability.contributes(
+      AppCapabilities.NavigationPathResolver,
+      TypeSection.createTypeSectionPathResolver(Magazine.Magazine),
+    );
+  }),
+);

@@ -77,7 +77,7 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -96,6 +96,9 @@
     },
     {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-comments"
     },
     {
       "path": "../../plugins/plugin-game"
@@ -132,9 +135,6 @@
     },
     {
       "path": "../../plugins/plugin-table"
-    },
-    {
-      "path": "../../plugins/plugin-thread"
     },
     {
       "path": "../../plugins/plugin-transcription"

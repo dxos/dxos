@@ -9,11 +9,11 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 export type MasonryContainerProps = {
@@ -31,30 +31,30 @@ export const MasonryContainer = ({
   const [view] = useObject(viewOrRef);
   const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<Type.AnyEntity>();
 
   useEffect(() => {
-    const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
+    const staticSchema = schemas.flat().find((schema) => Type.getURI(schema) === typeUri);
     if (staticSchema) {
       setCardSchema(() => staticSchema);
       return;
     }
-    if (typename && db) {
+    if (typeUri && db) {
       const findInRegistry = () =>
         db.graph.registry
           .list()
           .filter(Type.isType)
-          .find((t) => Type.getTypename(t) === typename);
+          .find((t) => Type.getURI(t) === typeUri);
       setCardSchema(() => findInRegistry());
       return db.graph.registry.changed.on(() => {
         setCardSchema(() => findInRegistry());
       });
     }
     setCardSchema(undefined);
-  }, [schemas, typename, db]);
+  }, [schemas, typeUri, db]);
 
   const baseFilter = useSchemaFilter(cardSchema);
   const query = useMemo(
@@ -102,13 +102,17 @@ const Item = ({ data }: { data: any }) => {
     <Menu.Root>
       <Card.Root>
         <Card.Header>
-          <Card.Icon icon={icon} />
+          <Card.Block>
+            <Icon icon={icon} />
+          </Card.Block>
           <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-          </Menu.Trigger>
-          <Menu.Content items={objectMenuItems} />
+          <Card.Block end>
+            <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+              <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            </Menu.Trigger>
+            <Menu.Content items={objectMenuItems} />
+          </Card.Block>
         </Card.Header>
         <Surface.Surface
           type={AppSurface.Card}

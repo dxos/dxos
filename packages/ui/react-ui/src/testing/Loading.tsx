@@ -24,11 +24,12 @@ export const Loading = ({ data }: LoadingProps) => {
   }, []);
 
   return (
-    <div className='w-full p-2'>
+    <div className='grid p-2'>
       <div
         className={mx(
           'flex flex-col w-full p-2 border-2 border-teal-500 rounded-md',
           'opacity-0 transition delay-1000 duration-1000',
+          'overflow-auto',
           visible && 'opacity-100',
         )}
       >

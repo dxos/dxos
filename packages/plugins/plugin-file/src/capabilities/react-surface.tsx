@@ -10,8 +10,8 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { findAnnotation } from '@dxos/effect';
-import { type FormFieldComponentProps } from '@dxos/react-ui-form';
+import { SchemaEx } from '@dxos/effect';
+import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { FileInput, FileSettings } from '#components';
 import { FileArticle } from '#containers';
@@ -31,10 +31,10 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <FileArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'create-form',
+        id: 'createForm',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = findAnnotation<Record<string, string[]>>(
+          const annotation = SchemaEx.findAnnotation<Record<string, string[]>>(
             (data.schema as Schema.Schema.All).ast,
             FileAction.UploadAnnotationId,
           );
@@ -46,7 +46,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          const inputProps = { ...props, type: ast } as unknown as FormFieldComponentProps;
+          const inputProps = { ...props, type: ast } as unknown as FormFieldRendererProps;
           const handleChange = useCallback(
             (file: File) => inputProps.onValueChange?.(ast, file),
             [ast, inputProps.onValueChange],
@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

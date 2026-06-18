@@ -48,7 +48,7 @@ export const HelpMenu = () => {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <IconButton variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>

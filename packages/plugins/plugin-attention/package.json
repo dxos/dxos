@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-attention",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -65,17 +65,25 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:",

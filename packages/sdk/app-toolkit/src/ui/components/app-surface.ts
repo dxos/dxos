@@ -4,10 +4,11 @@
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../capabilities';
+import { AppCapabilities } from '../../app-framework';
 
 //
 // Internal type helpers
@@ -122,7 +123,7 @@ export const object: {
     }
     return predicate ? predicate(data) : true;
   };
-  return { bindings: [{ role: token.role, guard }] };
+  return Surface.makeFilter(token, guard);
 };
 
 /**
@@ -189,24 +190,6 @@ export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S 
       return false;
     }
     return Obj.snapshotOf(schema, (data as { subject?: unknown }).subject);
-  };
-  return { bindings: [{ role: token.role, guard }] };
-};
-
-/**
- * Filter: lifts an ad-hoc predicate into the typed filter world so it composes
- * via {@link allOf} on the same role as `token`.
- */
-export const predicate = <TData extends Record<string, unknown>>(
-  token: Surface.RoleToken<TData>,
-  fn: (data: TData) => boolean,
-): Surface.Filter<TData> => {
-  const guard = (data: unknown): boolean => {
-    try {
-      return fn(data as TData);
-    } catch {
-      return false;
-    }
   };
   return { bindings: [{ role: token.role, guard }] };
 };
@@ -292,10 +275,14 @@ export type SettingsArticleProps<T extends {}, Props extends {} = {}> = {
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
 
-/** Filter: matches a plugin-settings article by prefix. */
+/**
+ * Filter: matches a plugin-settings article. When `prefix` is omitted the
+ * filter matches any settings subject (used by the generic default settings
+ * surface); pass a `prefix` to match a single plugin's settings.
+ */
 export const settings = (
   token: Surface.RoleToken<any>,
-  prefix: string,
+  prefix?: string,
 ): Surface.Filter<{ subject: AppCapabilities.Settings }> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -303,7 +290,7 @@ export const settings = (
     }
 
     const subject = (data as { subject?: unknown }).subject;
-    return AppCapabilities.isSettings(subject) && subject.prefix === prefix;
+    return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
   };
   return { bindings: [{ role: token.role, guard }] };
 };
@@ -554,3 +541,19 @@ export type DocumentTitleData<Subject = unknown, Props extends {} = {}> = {
 export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = DocumentTitleData<Subject, Props> & {
   role?: 'document-title' | (string & {});
 };
+
+/**
+ * Spy filter: logs the filter's bindings and data to the console.
+ */
+export const spyFilter = <TData>(label: string, filter: Surface.Filter<TData>): Surface.Filter<TData> => ({
+  bindings: filter.bindings.map((binding) => ({
+    role: binding.role,
+    guard: (data: unknown) => {
+      const result = binding.guard(data);
+      // Debug-gated and payload-free: this runs on every guard evaluation (hot path) and `data` may
+      // carry sensitive entity content.
+      log.debug(label, { role: binding.role, result, dataType: data == null ? String(data) : typeof data });
+      return result;
+    },
+  })),
+});

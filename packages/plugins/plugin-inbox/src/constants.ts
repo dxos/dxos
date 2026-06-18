@@ -2,10 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 
 /** Google Calendar / Gmail foreign-key `Meta.keys[].source` used by inbox sync. */
 export const GOOGLE_INTEGRATION_SOURCE = 'google.com';
+
+/** Foreign-key `Meta.keys[].source` stamped on synced Gmail messages (see gmail mapper). */
+export const GMAIL_SOURCE = 'gmail.com';
 
 /** `IntegrationProvider.id` for Gmail OAuth / sync; use as `providerId` on `integration--auth` surfaces. */
 export const GMAIL_PROVIDER_ID = 'gmail';
@@ -16,7 +21,7 @@ export const GOOGLE_CALENDAR_PROVIDER_ID = 'google-calendar';
 /** `IntegrationProvider.id` for Google Contacts OAuth / sync; use as `providerId` on `integration--auth` surfaces. */
 export const GOOGLE_CONTACTS_PROVIDER_ID = 'google-contacts';
 
-export const POPOVER_SAVE_FILTER = `${meta.id}.SaveFilterPopover`;
+export const POPOVER_SAVE_FILTER = DXN.make(`${meta.id}.saveFilterPopover`);
 
 export const MAILBOXES_SECTION_TYPE = `${meta.id}.mailboxes-section`;
 export const MAILBOX_ALL_MAIL_TYPE = `${meta.id}.all-mail`;

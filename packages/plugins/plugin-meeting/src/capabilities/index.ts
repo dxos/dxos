@@ -4,8 +4,6 @@
 
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { CallsCapabilities } from '@dxos/plugin-calls';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const CallExtension = Capability.lazy('CallExtension', () => import('./call-extension'));
@@ -14,5 +12,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const MeetingSettings = Capability.lazy('MeetingSettings', () => import('./settings'));
 export const MeetingState = Capability.lazy('MeetingState', () => import('./state'));

@@ -4,5 +4,7 @@
 
 export * from './blueprints';
 export * from './meta';
-export { normalizeText, parseFromHeader } from './operations/google/util';
 export * from './types';
+
+// TODO(burdon): Remove export! Pass range via operation.
+export { getCalendarRangeSelectionId } from './paths';

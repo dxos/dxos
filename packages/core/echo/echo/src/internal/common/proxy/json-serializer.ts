@@ -2,24 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EntityMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
 import { Ref } from '../../Ref';
 import {
-  ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_TYPE,
-  MetaId,
   RelationSourceDXNId,
   RelationTargetDXNId,
   SelfURIId,
   TypeId,
 } from '../types';
+import { ATTR_META, type EntityMeta } from '../types/meta';
+import { MetaId } from '../types/model-symbols';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.
@@ -89,5 +88,14 @@ const serializeData = (data: unknown) => {
 };
 
 const serializeMeta = (meta: EntityMeta) => {
-  return deepMapValues(meta, (value, recurse) => recurse(value));
+  // Omit empty `tags`/`annotations` to keep serialized output minimal; `objectFromJSON` backfills
+  // the required defaults on read.
+  const { tags, annotations, ...rest } = meta;
+  const compact = {
+    ...rest,
+    ...(tags != null && tags.length > 0 ? { tags } : {}),
+    ...(annotations != null && Object.keys(annotations).length > 0 ? { annotations } : {}),
+  };
+  // Use `serializeData` so `meta.tags` `Ref<Tag>` values encode to the on-wire reference form.
+  return serializeData(compact);
 };

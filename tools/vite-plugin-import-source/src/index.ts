@@ -62,7 +62,9 @@ const PluginImportSource = ({
           return null; // Skip to next resolver.
         }
 
-        // Filter by package name pattern before resolving.
+        // Filter by package name pattern before resolving. nocomment: minimatch
+        // treats '#'-prefixed patterns as comments by default, which breaks
+        // subpath-import patterns like '#*'.
         const match =
           include.some((pattern) => Minimatch(source, pattern, globOptions)) &&
           !exclude.some((pattern) => Minimatch(source, pattern, globOptions));

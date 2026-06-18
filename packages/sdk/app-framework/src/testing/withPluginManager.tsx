@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
@@ -96,7 +97,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
-        void runAndForwardErrors(pluginManager.shutdown());
+        void EffectEx.runAndForwardErrors(pluginManager.shutdown());
       };
     }, [storyId, init]);
 
@@ -119,11 +120,11 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
   return <App />;
 };
 
-const storyMeta = {
-  id: 'org.dxos.app-framework.story',
+const storyMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.appFramework.story'),
   name: 'Story',
   tags: ['system'],
-};
+});
 
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.

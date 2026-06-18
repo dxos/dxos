@@ -23,7 +23,14 @@ export const Task = Schema.Struct({
     description: 'Task title and description.',
   }),
 
-  status: Schema.Literal('todo', 'in-progress', 'done'),
+  status: Schema.Literal('todo', 'in-progress', 'done', 'failed'),
+
+  /**
+   * Whether this task was handed to a sub-agent via the delegation tool. Only delegated tasks are
+   * picked up by the supervisor's reconcile loop, so a task created via ordinary planning
+   * (`update-tasks`) is not double-spawned as a sub-agent.
+   */
+  delegated: Schema.optional(Schema.Boolean),
 
   /**
    * Parent task ID.
@@ -44,7 +51,7 @@ export type Task = Schema.Schema.Type<typeof Task>;
  */
 export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
-}).pipe(Annotation.SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
+}).pipe(Annotation.HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
 export type Plan = Type.InstanceType<typeof Plan>;
 export const generateTaskId = (plan: Plan): TaskId => {
   const existingIds = plan.tasks
@@ -69,7 +76,7 @@ export const generateTaskId = (plan: Plan): TaskId => {
  */
 export const addTasks = (
   plan: Obj.Mutable<Plan>,
-  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat'>>)[],
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat' | 'delegated'>>)[],
 ) => {
   for (const task of tasks) {
     const taskId = generateTaskId(plan);
@@ -79,10 +86,7 @@ export const addTasks = (
 };
 
 interface MakePlanProps {
-  tasks: {
-    title: string;
-    status?: 'todo' | 'in-progress' | 'done';
-  }[];
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status'>>)[];
 }
 
 export const makePlan = (props: MakePlanProps): Plan => {

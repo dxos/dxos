@@ -1,6 +1,6 @@
 {
   "name": "@dxos/schema",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Common data types and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,12 +33,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-query": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -47,10 +43,10 @@
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "date-fns": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

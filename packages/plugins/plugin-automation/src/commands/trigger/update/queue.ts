@@ -13,7 +13,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Feed as FeedNs, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed as Feed$, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
 import { Enabled, Feed, Input, TriggerId } from '../options';
@@ -87,7 +87,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
+    const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const foundFn = functions.find((fn) => fn.id === functionId);
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -124,7 +124,7 @@ const updateFeed = Effect.fn(function* (trigger: Trigger.Trigger, feedOption: Op
   if (shouldChangeFeed) {
     const feed = yield* Option.match(feedOption, {
       onNone: () => selectFeed(),
-      onSome: (uri) => Database.resolve(EID.parse(uri), FeedNs.Feed),
+      onSome: (uri) => Database.resolve(EID.parse(uri), Feed$.Feed),
     });
     Obj.update(trigger, (trigger) => {
       if (trigger.spec?.kind === 'feed') {

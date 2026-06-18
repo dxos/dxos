@@ -3,7 +3,6 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { getObjectCore } from '@dxos/echo-db';
 import { type TypedObjectSerializer } from '@dxos/plugin-space';
 
 import { Sheet } from '#types';
@@ -15,13 +14,6 @@ export const serializer: TypedObjectSerializer<Sheet.Sheet> = {
 
   deserialize: async ({ content, newId }) => {
     const { id, ...parsed } = JSON.parse(content);
-    const sheet = Obj.make(Sheet.Sheet, parsed);
-
-    if (!newId) {
-      const core = getObjectCore(sheet);
-      core.id = id;
-    }
-
-    return sheet;
+    return Obj.make(Sheet.Sheet, { ...parsed, ...(newId ? {} : { id }) });
   },
 };

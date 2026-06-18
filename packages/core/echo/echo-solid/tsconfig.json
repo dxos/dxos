@@ -20,10 +20,7 @@
       "path": "../echo"
     },
     {
-      "path": "../echo-atom"
-    },
-    {
-      "path": "../echo-db"
+      "path": "../echo-client"
     }
   ]
 }

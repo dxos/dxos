@@ -15,18 +15,17 @@ import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
-  ATTR_META,
   ATTR_PARENT,
   ATTR_TYPE,
   type AnyEntity,
   EntityKind,
   KindId,
-  MetaId,
-  EntityMetaSchema,
   ParentId,
   setSchema,
   setType,
 } from '../common/types';
+import { ATTR_META, EntityMetaSchema } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
@@ -130,8 +129,8 @@ export const objectFromJSON = async (
     const sourceDxn = jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source'));
     const targetDxn = jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target'));
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolveLegacy(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolveLegacy(targetDxn)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
@@ -149,18 +148,20 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
+    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(normalizeMeta(jsonData[ATTR_META]));
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {
     defineHiddenProperty(obj, MetaId, {
       keys: [],
+      tags: [],
+      annotations: {},
     });
   }
 
   if (jsonData[ATTR_PARENT]) {
     const parentDxn = jsonData[ATTR_PARENT];
-    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    const resolvedParent = (await refResolver?.resolveLegacy(parentDxn)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);
@@ -183,6 +184,23 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
   return obj;
+};
+
+/**
+ * Backfills required meta fields and upgrades legacy `tags` (bare URI strings) to encoded references
+ * so serialized data produced before the tags-as-refs migration still decodes.
+ */
+const normalizeMeta = (meta: any): any => {
+  const tags = Array.isArray(meta?.tags)
+    ? meta.tags.map((tag: unknown) => (typeof tag === 'string' ? { '/': URI.make(tag) } : tag))
+    : [];
+  // Coalesce required fields so explicit `undefined` in legacy input doesn't override the defaults.
+  return {
+    ...meta,
+    keys: Array.isArray(meta?.keys) ? meta.keys : [],
+    tags,
+    annotations: meta?.annotations ?? {},
+  };
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {

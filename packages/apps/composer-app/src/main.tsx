@@ -16,11 +16,10 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
+import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Composer } from '@dxos/brand';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
@@ -31,20 +30,25 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { ResetDialog } from './components';
-import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
-import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
-import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
-import { showDevRssBanner } from './dev-rss-banner';
-import { downloadLogs } from './log-download';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
-import { startupProfiler } from './profiler';
-import { translations } from './translations';
 import {
+  APP_KEY,
+  LOG_STORE_DB_NAME,
+  PARAM_LOG_LEVEL,
+  PARAM_PROFILER,
+  PARAM_SAFE_MODE,
   defaultStorageIsEmpty,
+  downloadLogs,
+  initializeObservability,
   isFalse,
   isTrue,
   runStorageResetMigration,
+  setSafeModeUrl,
+  setupConfig,
   shouldRunStorageResetMigration,
+  showDevRssBanner,
+  startupProfiler,
+  translations,
 } from './util';
 
 declare global {
@@ -171,7 +175,25 @@ const main = async () => {
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
-  (window as any).composer = { profiler };
+  const otel = {
+    /** Enable debug-level OTEL log export for this device (persisted across reloads, works in workers). */
+    enableDebugLogs: () => {
+      void Observability.storeOtelLogLevel(APP_KEY, 'debug');
+      log.info('otel debug log level enabled — reload to apply');
+    },
+    /** Remove the debug override and revert to the default INFO log level. */
+    disableDebugLogs: () => {
+      void Observability.storeOtelLogLevel(APP_KEY, null);
+      log.info('otel debug log level override removed — reload to apply');
+    },
+    /** Return the active OTEL log level override, or null if using the default. */
+    getLogLevel: async (): Promise<string | null> => {
+      const level = await Observability.getOtelLogLevel(APP_KEY);
+      log.info('otel log level', { level: level ?? 'default (INFO)' });
+      return level;
+    },
+  };
+  (window as any).composer = { profiler, otel };
 
   Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
@@ -286,7 +308,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.succeed(false)),
     Match.exhaustive,
-    runAndForwardErrors,
+    EffectEx.runPromise,
   );
 
   // Detect mobile operating systems (phones only, not tablets).
@@ -301,7 +323,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
     Match.exhaustive,
-    runAndForwardErrors,
+    EffectEx.runPromise,
   );
 
   // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
@@ -330,12 +352,12 @@ const main = async () => {
         : defs.Runtime.Client.ServicesMode.HOST
       : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
-  // Host mode uses OPFS SQLite in a dedicated worker; worker modes run their own in-memory SQLite
-  // (OPFS does not yet work from inside a SharedWorker per the TODO in `worker-runtime.ts`).
+  // Host and dedicated worker use OPFS-backed SQLite. SharedWorker still uses in-memory SQLite
+  // because OPFS is not available there (see `onconnect.ts`).
   const sqliteMode =
-    servicesMode === defs.Runtime.Client.ServicesMode.HOST
-      ? defs.Runtime.Client.Storage.SqliteMode.OPFS
-      : defs.Runtime.Client.Storage.SqliteMode.MEMORY;
+    servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
+      ? defs.Runtime.Client.Storage.SqliteMode.MEMORY
+      : defs.Runtime.Client.Storage.SqliteMode.OPFS;
 
   config = new Config(
     {
@@ -353,17 +375,17 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createWorker: () =>
-      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/shared-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createDedicatedWorker: () =>
-      new Worker(new URL('./dedicated-worker', import.meta.url), {
+      new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createCoordinatorWorker: () =>
-      new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-coordinator-worker',
       }),
@@ -385,7 +407,7 @@ const main = async () => {
     logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
-    isLocal: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
@@ -404,7 +426,7 @@ const main = async () => {
   bootStatus('Loading plugins…');
   const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isPwa, isTauri);
-  const remotePluginsResult = await runAndForwardErrors(
+  const remotePluginsResult = await EffectEx.runPromise(
     UrlLoader.preload({
       cache: assetCache,
       onPluginLoaded: (loaded, total) => {
@@ -465,14 +487,12 @@ const main = async () => {
     );
   };
 
-  const ComposerPlaceholder = (props: PlaceholderComponentProps) => (
-    <Placeholder {...props} logo={(logoProps) => <Composer {...logoProps} />} />
-  );
-
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      placeholder: ComposerPlaceholder,
+      // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
+      // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
+      // relays startup progress into it and dismisses it — no placeholder here.
       pluginLoader,
       onPluginRemove,
       pluginRegistryProvider,

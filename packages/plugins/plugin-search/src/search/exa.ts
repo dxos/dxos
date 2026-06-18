@@ -10,8 +10,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { ReferenceAnnotationId } from '@dxos/echo/internal';
-import { mapAst } from '@dxos/effect';
+import { ReferenceAnnotationId } from '@dxos/echo/Annotation';
+import { SchemaEx } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<T extends Type.AnyEntity> = {
@@ -61,7 +61,7 @@ export const search = async <T extends Type.AnyEntity>(
   //   systemPrompt += `\n<search_context>${options.context}</search_context>`;
   // }
   // const result = await getStructuredOutput(options.AiService, {
-  //   model: '@anthropic/claude-3-5-haiku-20241022',
+  //   model: 'ai.claude.model.claude-3-5-haiku-20241022',
   //   systemPrompt,
   //   history: [
   //     Obj.make(Message.Message, {
@@ -152,7 +152,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 
 // const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
 //   const { terms } = await getStructuredOutput(AiService, {
-//     model: '@anthropic/claude-3-5-haiku-20241022',
+//     model: 'ai.claude.model.claude-3-5-haiku-20241022',
 //     systemPrompt: trim`
 //       You are a search term extraction agent.
 //       Extract the relevant search terms from the context.
@@ -196,7 +196,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
           const ref = value['/'];
           if (idMap.has(ref)) {
             // TODO(dmaretskyi): Whats the best way to represent a local url.
-            return { '/': `dxn:echo:@:${idMap.get(ref)}` };
+            return { '/': `echo:/${idMap.get(ref)}` };
           } else {
             // Search URIs?
             return { '/': `search:?q=${encodeURIComponent(ref)}` };
@@ -223,8 +223,8 @@ const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoC
       return SoftRef.ast;
     }
 
-    return mapAst(ast, go);
+    return SchemaEx.mapAst(ast, go);
   };
 
-  return Schema.make(mapAst(schema.ast, go));
+  return Schema.make(SchemaEx.mapAst(schema.ast, go));
 };

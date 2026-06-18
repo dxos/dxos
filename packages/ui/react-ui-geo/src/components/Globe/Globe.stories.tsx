@@ -11,7 +11,9 @@ import { type Topology } from 'topojson-specification';
 import { useAsyncState } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { loadTopology } from '../../data';
 import {
+  type GlobeController,
   type Level,
   type Vector,
   useDrag,
@@ -19,45 +21,38 @@ import {
   useGlobeZoomHandler,
   useSpinner,
   useTopology,
-  useTopologyForZoom,
   useTour,
   useWheel,
 } from '../../hooks';
 import { type LatLngLiteral } from '../../types';
 import { type StyleSet, closestPoint } from '../../util';
 import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
+import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe';
 
 const defaultStyles: StyleSet = {
   water: {
     fillStyle: '#0a0a0a',
   },
-
   land: {
     fillStyle: '#050505',
     strokeStyle: 'darkgreen',
   },
-
   graticule: {
     strokeStyle: '#111',
   },
-
   line: {
     lineWidth: 1,
     lineDash: [4, 16],
     strokeStyle: 'yellow',
   },
-
   point: {
     pointRadius: 2,
     fillStyle: 'red',
   },
-
   cursor: {
     fillStyle: 'orange',
     pointRadius: 2,
   },
-
   arc: {
     lineWidth: 2,
     strokeStyle: 'yellow',
@@ -69,17 +64,14 @@ const dotStyles: StyleSet = {
     fillStyle: '#444',
     pointRadius: 2,
   },
-
   point: {
     pointRadius: 2,
     fillStyle: 'red',
   },
-
   cursor: {
     fillStyle: 'orange',
     pointRadius: 2,
   },
-
   arc: {
     lineWidth: 2,
     strokeStyle: 'yellow',
@@ -166,7 +158,7 @@ const DefaultStory = ({
       objects: { dots: points },
     } as any as Topology;
   });
-  const [topology] = useTopology(level);
+  const [topology] = useAsyncState(() => loadTopology(level), [level]);
   const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
 
   const features = useMemo(() => {
@@ -222,20 +214,21 @@ const DefaultStory = ({
   };
 
   return (
-    <Globe.Root zoom={zoomProp} translation={translation} rotation={rotation}>
-      <Globe.Canvas
-        topology={styles?.dots ? dots : topology}
-        projection={projection}
-        styles={styles}
-        features={tour ? { points: features?.points ?? [] } : features}
-        ref={setController}
-      />
-      <Globe.Zoom onAction={handleAction} />
-      <Globe.Action onAction={handleAction} />
-      <Globe.Debug />
-      <Globe.Panel position='topright' classNames='w-20 h-20'>
-        <Leva />
-      </Globe.Panel>
+    <Globe.Root zoom={zoomProp} translation={translation} rotation={rotation} ref={setController}>
+      <Globe.Viewport>
+        <Globe.Canvas
+          topology={styles?.dots ? dots : topology}
+          projection={projection}
+          styles={styles}
+          features={tour ? { points: features?.points ?? [] } : features}
+        />
+        <Globe.Zoom onAction={handleAction} />
+        <Globe.Action onAction={handleAction} />
+        <Globe.Debug />
+        <Globe.Panel position='topright' classNames='w-20 h-20'>
+          <Leva />
+        </Globe.Panel>
+      </Globe.Viewport>
     </Globe.Root>
   );
 };
@@ -255,64 +248,65 @@ const meta = {
 export default meta;
 
 const Earth = ({ level }: { level: Level }) => {
-  const [topology] = useTopology(level);
+  const [topology] = useAsyncState(() => loadTopology(level), [level]);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
   useWheel(controller);
 
   return (
-    <Globe.Root zoom={1.2} rotation={[0, 0, 0]}>
-      <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
-      <Globe.Zoom onAction={handleAction} />
+    <Globe.Root zoom={1.2} rotation={[0, 0, 0]} ref={setController}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} styles={defaultStyles} />
+        <Globe.Zoom onAction={handleAction} />
+      </Globe.Viewport>
     </Globe.Root>
   );
 };
 
-export const Earth110 = () => {
+export const Topology110 = () => {
   return <Earth level='110m' />;
 };
 
-export const Earth50 = () => {
+export const Topology50 = () => {
   return <Earth level='50m' />;
 };
 
-export const Earth10 = () => {
+export const Topology10 = () => {
   return <Earth level='10m' />;
 };
 
 /**
- * Discrete-resolution LOD: swaps between 110m / 50m / 10m by zoom. Each
- * resolution is a code-split chunk and is fetched on demand the first time
- * its tier is entered. No runtime simplification (which is itself O(N) per
- * tier change on the 10m source).
+ * Discrete-resolution LOD: swaps resolution by zoom via `useTopology(zoom)`. Each resolution is a
+ * code-split chunk fetched on demand the first time its tier is entered (default tiers: 110m / 50m).
+ * Reads the live zoom from the globe context, so it must render inside `Globe.Root`.
  */
-const EarthLODCanvas = () => {
+const DynamicCanvas = ({ controller }: { controller: GlobeController | null | undefined }) => {
   const { zoom } = useGlobeContext();
-  const topology = useTopologyForZoom(zoom);
-  const [controller, setController] = useState<GlobeController | null>();
+  const topology = useTopology(zoom);
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
   useWheel(controller);
   return (
-    <>
-      <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
+    <Globe.Viewport>
+      <Globe.Canvas topology={topology} styles={defaultStyles} />
       <Globe.Zoom onAction={handleAction} />
-    </>
+      <Globe.Debug />
+    </Globe.Viewport>
   );
 };
 
-export const EarthLOD = () => {
+export const Dynamic = () => {
+  const [controller, setController] = useState<GlobeController | null>();
   return (
-    <Globe.Root zoom={1.2} rotation={[0, 0, 0]}>
-      <EarthLODCanvas />
-      <Globe.Debug />
+    <Globe.Root zoom={1.2} rotation={[0, 0, 0]} ref={setController}>
+      <DynamicCanvas controller={controller} />
     </Globe.Root>
   );
 };
 
 export const Earthrise = () => {
-  const [topology] = useTopology();
+  const topology = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -320,9 +314,11 @@ export const Earthrise = () => {
 
   return (
     <div className='absolute bottom-0 left-0 right-0 '>
-      <Globe.Root classNames='h-[400px]' zoom={2.8} translation={{ x: 0, y: 400 }}>
-        <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
-        <Globe.Zoom onAction={handleAction} />
+      <Globe.Root zoom={2.8} translation={{ x: 0, y: 400 }} ref={setController}>
+        <Globe.Viewport classNames='h-[400px]'>
+          <Globe.Canvas topology={topology} styles={defaultStyles} />
+          <Globe.Zoom onAction={handleAction} />
+        </Globe.Viewport>
       </Globe.Root>
     </div>
   );
@@ -332,32 +328,31 @@ const monochrome: StyleSet = {
   water: {
     fillStyle: '#191919',
   },
-
   land: {
     fillStyle: '#444',
     strokeStyle: '#222',
   },
-
   border: {
     strokeStyle: '#111',
   },
-
   graticule: {
     strokeStyle: '#111',
   },
 };
 
 export const Mercator = () => {
-  const [topology] = useTopology();
+  const topology = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
   useWheel(controller);
 
   return (
-    <Globe.Root classNames='flex grow overflow-hidden' zoom={0.7} rotation={initialRotation}>
-      <Globe.Canvas ref={setController} topology={topology} projection='mercator' styles={monochrome} />
-      <Globe.Zoom onAction={handleAction} />
+    <Globe.Root zoom={0.7} rotation={initialRotation} ref={setController}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} projection='mercator' styles={monochrome} />
+        <Globe.Zoom onAction={handleAction} />
+      </Globe.Viewport>
     </Globe.Root>
   );
 };
@@ -432,7 +427,7 @@ export const Globe6: Story = {
   },
 };
 
-export const GlobeVersorDrag: Story = {
+export const VersorDrag: Story = {
   args: {
     drag: true,
     wheel: true,

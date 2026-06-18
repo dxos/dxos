@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
@@ -17,7 +17,10 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
+import * as objInternal from './internal/Obj';
 import * as Obj from './Obj';
+import type * as Ref from './Ref';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 export type Endpoints<Source, Target> = {
@@ -127,7 +130,7 @@ export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
  */
 type MakePropsInternal<T extends Endpoints<any, any>> = {
   id?: EntityId;
-  [Meta]?: internal.EntityMeta;
+  [Meta]?: Partial<internal.EntityMeta>;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Entity.Properties<T>;
@@ -357,7 +360,7 @@ export const subscribe = (rel: Unknown, callback: () => void): (() => void) => {
  * Accepts both reactive relations and snapshots.
  */
 export const getValue = (rel: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return internal.getValue(rel, createJsonPath(path));
+  return SchemaEx.getValue(rel, SchemaEx.createJsonPath(path));
 };
 
 /**
@@ -378,8 +381,11 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  * Get the canonical URI of the relation. Returns `URI.URI` — today always an EID,
  * but future entity kinds may surface other URI schemes; narrow with `EID.parse(uri)`
  * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
+ *
+ * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
+export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI =>
+  internal.getUri(entity, options);
 
 /**
  * @returns The DXN of the relation's type.
@@ -468,7 +474,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the relation.
@@ -477,7 +483,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the relation is deleted.
@@ -570,3 +576,9 @@ export type Version = internal.EntityVersion;
  * Accepts both reactive relations and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom = objInternal.makeRelation;

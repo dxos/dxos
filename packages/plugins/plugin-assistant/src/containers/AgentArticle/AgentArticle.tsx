@@ -11,9 +11,8 @@ import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -54,10 +53,10 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const artifacts = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(agent).pipe((agent) =>
+        Obj.atom(agent).pipe((agent) =>
           Atom.make((get) => {
             return get(agent)
-              .artifacts.map((artifact) => get(AtomRef.make(artifact.data)))
+              .artifacts.map((artifact) => get(artifact.data.atom))
               .filter(isNonNullable);
           }),
         ),
@@ -66,9 +65,13 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   );
 
   const inputFeed = useAtomValue(
-    AtomObj.make(agent).pipe((_) =>
+    Obj.atom(agent).pipe((_) =>
       Atom.make((get) =>
-        Option.fromNullable(get(_).feed).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+        Option.fromNullable(get(_).feed).pipe(
+          Option.map((ref) => ref.atom),
+          Option.map(get),
+          Option.getOrUndefined,
+        ),
       ),
     ),
   );
@@ -143,17 +146,17 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
   return (
     <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
       <Card.Header>
-        <Card.IconBlock padding>
-          <Card.Icon icon={icon} />
-        </Card.IconBlock>
+        <Card.Block>
+          <Icon icon={icon} />
+        </Card.Block>
         <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-        <Card.IconBlock padding>
+        <Card.Block end>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
-        </Card.IconBlock>
+        </Card.Block>
       </Card.Header>
       <Card.Body>
         <Surface.Surface

@@ -7,27 +7,29 @@ import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
-import { AppPlugin } from '../../plugin';
+import { AppPlugin } from '../../app-framework';
 
 export const Number = Capability.make<number>('org.dxos.test.generator.number');
 
 export const CountEvent = ActivationEvent.make('org.dxos.test.generator.count');
 
-export const createPluginId = (id: string) => `org.dxos.test.generator.${id}`;
+export const createPluginId = (id: string): DXN.DXN => DXN.make(`org.dxos.test.generator.${id}`);
 
-export const createAlertOperation = (id: string) =>
+export const createAlertOperation = (id: DXN.DXN) =>
   Operation.make({
-    meta: { key: `${createPluginId(id)}.operation.alert`, name: 'Alert' },
+    meta: { key: DXN.make(`${DXN.getName(id)}.operation.alert`), name: 'Alert' },
     input: Schema.Void,
     output: Schema.Void,
   });
 
 export const createNumberPlugin = (id: string) => {
+  const pluginId: DXN.DXN = DXN.tryMake(id) ?? DXN.make(id);
   const number = Math.floor(Math.random() * 100);
-  const AlertOperation = createAlertOperation(id);
+  const AlertOperation = createAlertOperation(pluginId);
 
-  return Plugin.define({ id, name: `Plugin ${id}` }).pipe(
+  return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
     AppPlugin.addOperationHandlerModule({
       activate: () =>
         Effect.succeed(

@@ -10,27 +10,32 @@ import React, { type ComponentProps, useMemo } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { findAnnotation } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
+import { SchemaEx } from '@dxos/effect';
+import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
-import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
+import { CustomTokenDialog, IntegrationArticle, IntegrationSettingsArticle, SyncTargetsDialog } from '#containers';
 import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
-import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { INTEGRATIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'integration-article',
+        id: 'integrationsSectionArticle',
+        filter: AppSurface.literal(AppSurface.Article, INTEGRATIONS_SECTION_TYPE),
+        component: () => <IntegrationSettingsArticle />,
+      }),
+      Surface.create({
+        id: 'integrationArticle',
         filter: AppSurface.object(AppSurface.Article, Integration.Integration),
         component: ({ data, role }) => (
           <IntegrationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'integration-auth',
+        id: 'integrationAuth',
         role: 'integration--auth',
         filter: (
           data,
@@ -49,27 +54,24 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'sync-targets-dialog',
-        filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
-          AppSurface.Dialog,
-          SYNC_TARGETS_DIALOG,
-        ),
-        component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
+        id: 'syncTargetsDialog',
+        filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
+        component: ({ data }) => <SyncTargetsDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'custom-token-dialog',
+        id: 'customTokenDialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'integration-provider-selector',
+        id: 'integrationProviderSelector',
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;
           if (!fieldAst) {
             return false;
           }
-          const annotation = findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
           return !!annotation;
         },
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
@@ -81,7 +83,7 @@ export default Capability.makeModule(() =>
           if (!fieldPropertyAst) {
             return null;
           }
-          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldRendererProps;
           return <SelectField {...props} options={options} />;
         },
       }),

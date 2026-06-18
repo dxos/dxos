@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 import * as Message from './Message';
 
@@ -43,7 +43,7 @@ export const Thread = Schema.Struct({
   status: ThreadStatus.pipe(Schema.optional),
   messages: Schema.Array(Ref.Ref(Message.Message)),
   agent: Schema.optional(AgentConfig),
-}).pipe(SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.thread', '0.2.0')));
+}).pipe(HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.thread', '0.2.0')));
 
 export type Thread = Type.InstanceType<typeof Thread>;
 export const make = ({

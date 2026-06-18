@@ -3,6 +3,7 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
@@ -10,21 +11,22 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost, MeshEchoReplicator, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { EchoHost, MeshEchoReplicator, SpaceManager, valueEncoding } from '@dxos/echo-host';
+import { SqliteMetadataStore } from '@dxos/echo-host';
+import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { Keyring } from '@dxos/keyring';
-import { type LevelDB } from '@dxos/kv-store';
-import { createTestLevel } from '@dxos/kv-store/testing';
+import { SqliteKeyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
+import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeProps } from '../services';
+import { SqliteStorage } from '../services/sqlite-storage';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 
 //
@@ -49,11 +51,9 @@ export const createServiceContext = async ({
     const signalContext = new MemorySignalManagerContext();
     return new MemorySignalManager(signalContext);
   },
-  storage = createStorage({ type: StorageType.RAM }),
   runtimeProps,
 }: {
   signalManagerFactory?: () => Promise<SignalManager>;
-  storage?: Storage;
   runtimeProps?: ServiceContextRuntimeProps;
 } = {}) => {
   const signalManager = await signalManagerFactory();
@@ -61,8 +61,6 @@ export const createServiceContext = async ({
     signalManager,
     transportFactory: MemoryTransportFactory,
   });
-  const level = createTestLevel();
-  await level.open();
 
   const runtime = ManagedRuntime.make(
     SqlTransaction.layer
@@ -70,7 +68,7 @@ export const createServiceContext = async ({
       .pipe(Layer.orDie),
   ).runtimeEffect;
 
-  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
+  return new ServiceContext(networkManager, signalManager, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeProps,
   });
@@ -116,16 +114,14 @@ export type TestPeerOpts = {
 };
 
 export type TestPeerProps = {
-  storage?: Storage;
-  level?: LevelDB;
   feedStore?: FeedStore<any>;
-  metadataStore?: MetadataStore;
-  keyring?: Keyring;
+  metadataStore?: SqliteMetadataStore;
+  keyring?: SqliteKeyring;
   networkManager?: SwarmNetworkManager;
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
   signingContext?: SigningContext;
-  blobStore?: BlobStore;
+  blobStore?: SqliteBlobStore;
   echoHost?: EchoHost;
   meshEchoReplicator?: MeshEchoReplicator;
   invitationsManager?: InvitationsManager;
@@ -138,6 +134,7 @@ export class TestPeer {
       .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
       .pipe(Layer.orDie),
   );
+  private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.runtimeEffect });
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
@@ -148,22 +145,14 @@ export class TestPeer {
     return this._props;
   }
 
-  get storage() {
-    return (this._props.storage ??= createStorage({ type: this._opts.dataStore }));
-  }
-
   get keyring() {
-    return (this._props.keyring ??= new Keyring(this.storage.createDirectory('keyring')));
-  }
-
-  get level() {
-    return (this._props.level ??= createTestLevel());
+    return (this._props.keyring ??= new SqliteKeyring({ runtime: this._runtime.runtimeEffect }));
   }
 
   get feedStore() {
     return (this._props.feedStore ??= new FeedStore({
       factory: new FeedFactory({
-        root: this.storage.createDirectory('feeds'),
+        root: this._feedStorage.createDirectory('feeds'),
         signer: this.keyring,
         hypercore: {
           valueEncoding,
@@ -173,11 +162,11 @@ export class TestPeer {
   }
 
   get metadataStore() {
-    return (this._props.metadataStore ??= new MetadataStore(this.storage.createDirectory('metadata')));
+    return (this._props.metadataStore ??= new SqliteMetadataStore({ runtime: this._runtime.runtimeEffect }));
   }
 
   get blobStore() {
-    return (this._props.blobStore ??= new BlobStore(this.storage.createDirectory('blobs')));
+    return (this._props.blobStore ??= new SqliteBlobStore({ runtime: this._runtime.runtimeEffect }));
   }
 
   get networkManager() {
@@ -202,7 +191,6 @@ export class TestPeer {
 
   get echoHost() {
     return (this._props.echoHost ??= new EchoHost({
-      kv: this.level,
       runtime: this._runtime.runtimeEffect,
     }));
   }
@@ -242,6 +230,7 @@ export class TestPeer {
   }
 
   async createIdentity(): Promise<void> {
+    await this.migrate();
     this._props.signingContext ??= await createSigningContext(this.keyring);
     this.networkManager.setPeerInfo({
       identityKey: this._props.signingContext.identityKey.toHex(),
@@ -249,14 +238,18 @@ export class TestPeer {
     });
   }
 
+  async migrate(): Promise<void> {
+    await RuntimeProvider.runPromise(this._runtime.runtimeEffect)(
+      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
+    );
+  }
+
   async destroy(): Promise<void> {
-    await this.level.close();
-    await this.storage.reset();
     await this._runtime.dispose();
   }
 }
 
-export const createSigningContext = async (keyring: Keyring): Promise<SigningContext> => {
+export const createSigningContext = async (keyring: SqliteKeyring): Promise<SigningContext> => {
   const identityKey = await keyring.createKey();
   const deviceKey = await keyring.createKey();
 

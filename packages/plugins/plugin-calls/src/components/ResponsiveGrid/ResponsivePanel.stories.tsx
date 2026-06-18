@@ -13,7 +13,7 @@ import { VideoObject as VideoObjectComponent } from '../Media';
 import { ResponsivePanel } from './ResponsivePanel';
 
 const meta = {
-  title: 'plugins/plugin-thread/components/ResponsivePanel',
+  title: 'plugins/plugin-calls/components/ResponsivePanel',
   component: ResponsivePanel,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

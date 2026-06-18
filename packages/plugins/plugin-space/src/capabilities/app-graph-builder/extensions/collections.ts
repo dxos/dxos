@@ -6,18 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNodeMatcher,
-  LayoutOperation,
-  Segments,
-  getObjectPathFromObject,
-  toUrlPath,
-} from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Obj, Type } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
@@ -32,9 +24,6 @@ import {
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
   REMOVE_FROM_COLLECTION_LABEL,
-  createObjectNode,
-  getCollectionGraphNodePartials,
-  getDynamicLabel,
 } from './shared';
 
 //
@@ -52,7 +41,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   return yield* Effect.all([
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
-      id: 'collections-section',
+      id: 'collectionsSection',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -60,19 +49,21 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed([]);
         }
 
-        const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
+        get(Obj.atom(space.properties));
+        const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+          Option.getOrUndefined,
+        );
         if (collectionRef) {
-          get(AtomObj.make(collectionRef));
+          get(Obj.atom(collectionRef));
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
+          ? AppNode.getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
           : undefined;
 
         return Effect.succeed([
           Node.make({
-            id: Segments.collections,
+            id: Paths.Segments.collections,
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
@@ -103,9 +94,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const ephemeralState = get(ephemeralAtom);
 
-        const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
-        const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
+        get(Obj.atom(space.properties));
+        const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+          Option.getOrUndefined,
+        );
+        const collection = collectionRef ? get(Obj.atom(collectionRef)) : undefined;
         if (!collection) {
           return Effect.succeed([]);
         }
@@ -114,7 +107,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         const objects = rawRefs
           .map((ref: any) => {
-            get(AtomObj.make(ref));
+            get(Obj.atom(ref));
             return ref.target;
           })
           .filter(isNonNullable);
@@ -122,7 +115,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         return Effect.succeed(
           objects
             .map((object: Obj.Unknown) =>
-              createObjectNode({
+              AppNode.makeObject({
+                get,
                 db: space.db,
                 object,
                 navigable: ephemeralState.navigableCollections,
@@ -143,12 +137,12 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
-        const collectionSnapshot = get(AtomObj.make(collection));
+        const collectionSnapshot = get(Obj.atom(collection));
         const refs = collectionSnapshot.objects ?? [];
 
         const objects = refs
           .map((ref: any) => {
-            get(AtomObj.make(ref));
+            get(Obj.atom(ref));
             return ref.target;
           })
           .filter(isNonNullable);
@@ -158,7 +152,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             .map(
               (object: Obj.Unknown) =>
                 db &&
-                createObjectNode({
+                AppNode.makeObject({
+                  get,
                   object,
                   db,
                   navigable: ephemeralState.navigableCollections,
@@ -174,7 +169,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Object actions.
     GraphBuilder.createExtension({
-      id: 'object-actions',
+      id: 'objectActions',
       match: (node) => {
         return node.data != null &&
           Obj.getDatabase(node.data) &&
@@ -210,6 +205,31 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           }),
         );
       },
+    }),
+
+    // Action on the collections section header to create a new collection.
+    GraphBuilder.createExtension({
+      id: 'collectionsSectionActions',
+      match: (node) => {
+        const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+        return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+      },
+      actions: (space) =>
+        Effect.succeed([
+          Node.makeAction({
+            id: 'create-collection',
+            data: () =>
+              Operation.invoke(SpaceOperation.OpenCreateObject, {
+                target: space.db,
+                typename: Type.getTypename(Collection.Collection),
+              }),
+            properties: {
+              label: ['add-object.label', { ns: Type.getTypename(Collection.Collection) }],
+              icon: 'ph--plus--regular',
+              disposition: 'list-item-primary',
+            },
+          }),
+        ]),
     }),
   ]);
 });
@@ -259,7 +279,7 @@ const constructObjectActions = ({
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
-        label: getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
+        label: AppNode.getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
@@ -268,7 +288,7 @@ const constructObjectActions = ({
     ...(parentCollection && !Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: 'remove-from-collection',
+            id: 'removeFromCollection',
             data: () =>
               Effect.gen(function* () {
                 const index = parentCollection.objects.findIndex((ref: any) => ref.target === object);
@@ -282,7 +302,7 @@ const constructObjectActions = ({
 
                   if (isActive) {
                     yield* Operation.invoke(LayoutOperation.Open, {
-                      subject: [getObjectPathFromObject(object)],
+                      subject: [Paths.getObjectPathFromObject(object)],
                     });
                   }
                 }
@@ -304,7 +324,7 @@ const constructObjectActions = ({
           target: parentCollection,
         }),
       properties: {
-        label: getDynamicLabel('delete object label', typename, { defaultValue: 'Delete' }),
+        label: AppNode.getDynamicLabel('delete-object.label', typename, { defaultValue: 'Delete' }),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,
@@ -314,10 +334,10 @@ const constructObjectActions = ({
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: 'copy-link',
+            id: 'copyLink',
             data: () =>
               Effect.promise(async () => {
-                const url = new URL(toUrlPath(nodeId), shareableLinkOrigin);
+                const url = new URL(Paths.toUrlPath(nodeId), shareableLinkOrigin);
                 await navigator.clipboard.writeText(url.toString());
               }),
             properties: {
@@ -331,7 +351,7 @@ const constructObjectActions = ({
       : []),
     Node.makeAction({
       id: LayoutOperation.Expose.meta.key,
-      data: () => Operation.invoke(LayoutOperation.Expose, { subject: getObjectPathFromObject(object) }),
+      data: () => Operation.invoke(LayoutOperation.Expose, { subject: Paths.getObjectPathFromObject(object) }),
       properties: {
         label: EXPOSE_OBJECT_LABEL,
         icon: 'ph--eye--regular',

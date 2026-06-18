@@ -4,19 +4,33 @@ name: CallsPlugin
 version: 0.1.0
 ---
 
-WebRTC video / audio conferencing for `DXOS` Composer.
+WebRTC video / audio conferencing for `DXOS` Composer, plus a slim, persistent
+`Call` (a session/room) so the "where" of a conversation is known ahead of time.
 
-`plugin-calls` owns everything required to join, render, and leave a multi-party
-real-time call. It carries no persistent schema of its own — calls are attached
-to existing objects (typically `Channel`, but pluggable) via a `roomId` derived
-from the object's DXN. Persistent meeting records, transcripts and summaries
-live in `plugin-meeting`, which composes on top of this plugin's
-`CallsCapabilities.Manager` and `Extension`.
+`plugin-calls` is **meeting-agnostic**: it owns everything required to join,
+render, and leave a multi-party real-time call, and a slim persistent `Call`
+ECHO type that holds only a transport descriptor (`{ name?, created, transport }`).
+The live transport (Cloudflare Calls / WebRTC) is one pluggable
+`CallTransportProvider`; the `Call` persists which transport it uses and that
+provider's reconnection config (e.g. SFU room id) so a call is **resumable**.
+This mirrors the `Channel.backend` pluggable-backend pattern in `plugin-thread`.
 
-This plugin is the result of extracting all video-call functionality out of
-`plugin-thread`. After the split `plugin-thread` is concerned with chat,
-threaded comments, and the `Channel` ECHO type only; `plugin-calls` is
-concerned with the live call surface.
+A `Call` carries **no** notes / summary / transcript / participants — those live
+on the `Meeting` hub in **`plugin-meeting`**, which references a `Call` via
+`Meeting.call?: Ref<Call>`. Because `plugin-calls` knows nothing about meetings,
+a `Call` can also be started directly from other contexts (e.g. a chat `Channel`).
+
+Plugin boundaries:
+- Video-call functionality was extracted out of `plugin-thread`. After that
+  split `plugin-thread` owns chat, threaded comments and the `Channel` ECHO type
+  only; `plugin-calls` owns the live call surface.
+- The persistent meeting record (notes / summary / transcript / participants) and
+  its Event linkage live in **`plugin-meeting`** (`@dxos/plugin-meeting`), which
+  depends on `plugin-calls` + `plugin-transcription`. `plugin-calls` does **not**
+  depend on either. (An earlier iteration merged the two; they are separate again
+  so `Call` is reusable without a `Meeting`.)
+- Transcription is delegated to `plugin-transcription`; `plugin-calls` does not
+  implement speech-to-text. It exposes `SpeakingMonitor` (now in `@dxos/av`).
 
 ## Extensions
 
@@ -34,6 +48,31 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `capability`| `org.dxos.mdl.capability@1.0`  |
 
 ## Types
+
+```mdl
+type Call
+  desc: |
+    Slim, meeting-agnostic persistent session/room. Holds only a transport
+    descriptor so the "where" is known ahead of time and the call is resumable.
+    Notes / summary / transcript / participants live on the `Meeting` hub in
+    plugin-meeting, NOT here. Live state (joined peers, media tracks) is
+    runtime-only, owned by `CallManager`.
+  fields:
+    name?: string
+    created: string                  # ISO-8601 timestamp
+    transport: CallTransport         # selected provider + reconnection config
+```
+
+```mdl
+type CallTransport
+  desc: |
+    Selects a CallTransportProvider and holds that provider's persistent config.
+    Mirrors `Channel.backend`. `config` is provider-owned (e.g. the Cloudflare
+    SFU room id) and is what makes a Call resumable.
+  fields:
+    kind: string                     # provider id, e.g. org.dxos.call.transport.cloudflare
+    config: Ref<Obj.Unknown>         # provider-owned reconnection state
+```
 
 ```mdl
 type RoomId
@@ -144,6 +183,21 @@ type SpeakingHandle
   fields: {}
 ```
 
+```mdl
+type CallTransportProvider
+  desc: |
+    Contract implemented per live-transport, contributed via
+    CallsCapabilities.CallTransportProvider. The built-in Cloudflare provider
+    wraps CallManager + CallsService. Methods (declared on the capability
+    interface, not as schema fields):
+      makeConfig(roomId: string) -> Obj.Unknown   # persisted into Call.transport.config
+      join(call: Call)                            # establish live session
+      leave(call: Call)
+  fields:
+    kind: string                     # stable provider id
+    label: string                    # human-readable
+```
+
 ## Capabilities
 
 ```mdl
@@ -155,12 +209,22 @@ capability CallsCapabilities.Manager
   type: CallManager
   events: [client-ready]
 
-capability CallsCapabilities.Extension
+capability CallsCapabilities.EventHandler
   desc: |
-    Pluggable per-call lifecycle callback. Contributors (e.g. plugin-meeting,
-    plugin-transcription) react to join / leave / state changes without
-    being coupled to the host object.
+    Pluggable per-call lifecycle callback. Contributors (e.g. the in-plugin
+    transcription orchestrator, plugin-transcription) react to join / leave /
+    state changes without being coupled to the host object.
   type: CallProperties
+  multi: true
+
+capability CallsCapabilities.CallTransportProvider
+  desc: |
+    Pluggable live-transport for a Call, keyed by `kind`. Mirrors
+    plugin-thread's `ChannelBackendProvider`. The Cloudflare/WebRTC stack
+    (CallManager + CallsService) is the built-in provider
+    `org.dxos.call.transport.cloudflare`. A `Call.transport.kind` selects the
+    provider; `makeConfig` produces the persisted reconnection config.
+  type: CallTransportProvider
   multi: true
 ```
 
@@ -320,8 +384,8 @@ service SpeakingMonitor
 ```mdl
 op startCall
   desc: |
-    Joins the call for `roomId`, invoking `Extension.onJoin` for every
-    registered extension after the local session is established.
+    Joins the call for `roomId`, invoking `EventHandler.onJoin` for every
+    registered EventHandler after the local session is established.
   input:
     roomId: RoomId
     channel?: Channel             # passed through to extensions
@@ -337,7 +401,7 @@ op startCall
 op leaveCall
   desc: |
     Tears down the local session, turns off audio/video/screenshare,
-    and invokes `Extension.onLeave` for every registered extension.
+    and invokes `EventHandler.onLeave` for every registered EventHandler.
   input:
     roomId?: RoomId
   effects: [device, network]
@@ -381,6 +445,20 @@ op pinParticipant
     identityDid: string
     pinned: boolean
   requires: [CallsCapabilities.Manager]
+```
+
+```mdl
+op provisionCall
+  desc: |
+    Creates a slim persistent Call in the space, selecting a transport provider
+    and persisting its reconnection config (the room/link), without starting a
+    live session. Returns the Call. Meeting/Event linkage (Meeting.call,
+    Meeting --AnchoredTo--> Event) is plugin-meeting's concern, not this op's.
+  input:
+    space: Space
+    transportKind?: string           # defaults to the Cloudflare provider
+  output: Call
+  effects: [echo:write]
 ```
 
 ## Features
@@ -451,27 +529,27 @@ feat F-4: Media Controls
 ```mdl
 feat F-5: Extension Lifecycle
 
-  req F-5.1: Plugins may register CallsCapabilities.Extension with optional
+  req F-5.1: Plugins may register CallsCapabilities.EventHandler with optional
              onJoin / onLeave / onCallStateUpdated / onMediaStateUpdated
              callbacks.
   req F-5.2:
     when: op:startCall completes
-    then: every registered Extension.onJoin is invoked once with
+    then: every registered EventHandler.onJoin is invoked once with
           { channel, roomId }
 
   req F-5.3:
     when: CallState changes
-    then: every registered Extension.onCallStateUpdated is invoked with the
+    then: every registered EventHandler.onCallStateUpdated is invoked with the
           new state
 
   req F-5.4:
     when: local MediaState changes (e.g. mic toggled, speech detected)
-    then: every registered Extension.onMediaStateUpdated is invoked with
+    then: every registered EventHandler.onMediaStateUpdated is invoked with
           [mediaState, isSpeaking]
 
   req F-5.5:
     when: op:leaveCall runs
-    then: every registered Extension.onLeave is invoked with the prior roomId
+    then: every registered EventHandler.onLeave is invoked with the prior roomId
 ```
 
 ```mdl
@@ -515,8 +593,62 @@ feat F-8: Independence from plugin-thread
 
   req F-8.4: Existing consumers of `ThreadCapabilities.CallManager` /
              `CallExtension` migrate to `CallsCapabilities.Manager` /
-             `CallsCapabilities.Extension`. The thread capability names
+             `CallsCapabilities.EventHandler`. The thread capability names
              are removed.
+```
+
+```mdl
+feat F-9: Slim Persistent Call
+
+  req F-9.1: The `Call` ECHO type persists ONLY `name?`, `created`, and
+             `transport`. It carries no notes / summary / transcript /
+             participants — those are owned by `Meeting` in plugin-meeting.
+
+  req F-9.2:
+    when: op:provisionCall runs
+    then: a Call is written to the space with transport.kind set and
+          transport.config produced by the provider's makeConfig (the room/link)
+
+  req F-9.3:
+    when: a Call article is opened
+    then: the CallArticle renders the live video/participant grid (not a notes
+          or summary editor)
+
+  req F-9.4: plugin-calls does NOT depend on plugin-meeting or
+             plugin-transcription; a `Call` is usable from any context (e.g. a
+             chat `Channel`) without a `Meeting`.
+```
+
+```mdl
+feat F-10: Pluggable Call Transport
+
+  req F-10.1: The live Cloudflare/WebRTC stack is registered as the built-in
+              CallsCapabilities.CallTransportProvider
+              `org.dxos.call.transport.cloudflare`.
+
+  req F-10.2:
+    when: a Call is joined
+    then: the provider matching Call.transport.kind is resolved; join(call)
+          establishes the live session using Call.transport.config
+
+  req F-10.3:
+    when: no transportKind is supplied to op:provisionCall
+    then: the Cloudflare provider is selected by default
+
+  req F-10.4: A Call persists enough transport config to be re-joined after the
+              live session ends (resumable), without re-deriving room id from a
+              host object.
+```
+
+```mdl
+feat F-11: Event / Meeting linkage (out of scope — see plugin-meeting)
+
+  req F-11.1: `Call` has no knowledge of `Event` or `Meeting`. The hub `Meeting`
+              references a `Call` via `Meeting.call?: Ref<Call>`, and
+              `Meeting --AnchoredTo--> Event` (occurrence-keyed) links it to the
+              calendar. That relation, the "Attach Meeting" flow, and recurrence
+              are specified in **plugin-meeting** (and the cross-plugin AUDIT),
+              not here.
 ```
 
 ## Acceptance
@@ -552,7 +684,7 @@ test T-3: Leave a call
     - MediaManager.stop is called for audio / video / screenshare
     - CallState.joined === false
     - "Active Call" companion disappears
-    - every registered Extension.onLeave(R) is invoked
+    - every registered EventHandler.onLeave(R) is invoked
 ```
 
 ```mdl
@@ -568,7 +700,7 @@ test T-4: Display-name gate
 
 ```mdl
 test T-5: Extension receives lifecycle callbacks
-  given: a contributor has registered CallsCapabilities.Extension with
+  given: a contributor has registered CallsCapabilities.EventHandler with
          onJoin / onLeave callbacks
   when: a call is started then ended
   then:
@@ -602,7 +734,7 @@ test T-8: SpeakingMonitor signal
   when: the user speaks above the threshold for 300ms
   then:
     - CallState.self.isSpeaking === true
-    - Extension.onMediaStateUpdated is invoked with isSpeaking === true
+    - EventHandler.onMediaStateUpdated is invoked with isSpeaking === true
 ```
 
 ```mdl
@@ -613,6 +745,28 @@ test T-9: Devtools surface displays call diagnostics
     - CallState is displayed (joined, users, audio tracks)
     - MediaState is displayed (audio, video, screenshare info)
     - WebRTC stats from @peermetrics/webrtc-stats are visible
+```
+
+```mdl
+test T-10: Provision a slim persistent Call
+  given: a DXOS space is available
+  when: op:provisionCall is invoked with no transportKind
+  then:
+    - a Call is written to the space
+    - Call.transport.kind === org.dxos.call.transport.cloudflare
+    - Call.transport.config is a resolvable Ref
+    - Call.created is set
+    - the Call has no notes / summary / transcript / participants fields
+```
+
+```mdl
+test T-13: Resume a Call after the live session ends
+  given: a Call that was joined then left (live session torn down)
+  when: the Call is joined again
+  then:
+    - the transport provider for Call.transport.kind is resolved
+    - join uses the persisted Call.transport.config (no host-object roomId
+      derivation required)
 ```
 
 ---

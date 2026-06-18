@@ -4,10 +4,17 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { AgentPrompt, LinearBlueprint, PlanningBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import {
+  AgentPrompt,
+  DelegationBlueprint,
+  LinearBlueprint,
+  PlanningBlueprint,
+  WebSearchBlueprint,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
@@ -15,12 +22,12 @@ import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessBlueprint, ChessOperation } from '@dxos/plugin-chess';
+import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { MapBlueprint } from '@dxos/plugin-map';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
-import { ThreadBlueprint } from '@dxos/plugin-thread';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text, ViewModel } from '@dxos/schema';
@@ -55,7 +62,9 @@ import {
   ScriptModule,
   TasksModule,
   TokenManagerModule,
+  TraceModule,
   TriggersModule,
+  ContextModule,
 } from '../components';
 import {
   ModuleContainer,
@@ -138,6 +147,10 @@ const addSpellingMistakes = (text: string, n: number): string => {
   return words.join(' ');
 };
 
+//
+// Tests
+//
+
 export const Default: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
@@ -155,18 +168,74 @@ export const Default: Story = {
 
 export const WithPlanning: Story = {
   decorators: getDecorators({
+    config: config.remote,
+    createAgent: true,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
         plugins: [MarkdownPlugin()],
       };
     },
-    config: config.remote,
-    createAgent: true,
   }),
   args: {
     modules: [[ChatModule]],
     blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
+  },
+};
+
+/**
+ * Two surfaces over a shared space: the conversational ChatModule (left) and the activity
+ * TraceModule (right). Prompt the supervisor to delegate work to a sub-agent; DelegateTask records
+ * it as an in-progress plan task and the sub-agent process surfaces as a nested lane in the trace.
+ */
+export const WithSubAgents: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    // TODO(burdon): Move instructions to blueprint?
+    createAgent: {
+      name: 'Supervisor',
+      instructions: 'You delegate units of work to sub-agents using the available tools.',
+    },
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
+      return {
+        plugins: [MarkdownPlugin()],
+      };
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TraceModule, ContextModule]],
+    blueprints: [DelegationBlueprint.key, PlanningBlueprint.key, MarkdownBlueprint.key],
+  },
+};
+
+/**
+ * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work,
+ * then waits for the supervisor to run the sub-agent and fold its result back into the conversation.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`);
+ * run it manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithSubAgentsTest: Story = {
+  ...WithSubAgents,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
+    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    if (!editor) {
+      throw new Error('Chat editor not found.');
+    }
+
+    // Enter a prompt that delegates work to a sub-agent and submit it.
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.keyboard('{Enter}');
+
+    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
+    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
   },
 };
 
@@ -186,16 +255,18 @@ export const WithWebSearch: Story = {
   },
 };
 
-// Test with prompt: Propose changes to my document based on the style guide.
+/**
+ * Test with prompt: Propose changes to my document based on the style guide.
+ */
 export const WithMarkdown: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
+      const [{ MarkdownPlugin }, { CommentsPlugin }] = await Promise.all([
         import('@dxos/plugin-markdown/plugin'),
-        import('@dxos/plugin-thread/plugin'),
+        import('@dxos/plugin-comments/plugin'),
       ]);
       return {
-        plugins: [MarkdownPlugin(), ThreadPlugin()],
+        plugins: [MarkdownPlugin(), CommentsPlugin()],
       };
     },
     config: config.remote, // TODO(burdon): Issue making persistent.
@@ -221,7 +292,7 @@ export const WithMarkdown: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, ThreadBlueprint.key],
+    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, CommentBlueprint.key],
   },
 };
 
@@ -815,11 +886,12 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
+      const tagRef = Ref.make(tag);
       const tagUri = Obj.getURI(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagUri];
+          Obj.getMeta(person).tags = [tagRef];
         });
       });
 
@@ -843,7 +915,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagUri];
+          Obj.getMeta(research).tags = [tagRef];
         });
       });
 
@@ -851,7 +923,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagUri];
+          Obj.getMeta(organization).tags = [tagRef];
         });
       });
 

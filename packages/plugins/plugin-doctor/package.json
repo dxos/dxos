@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-doctor",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Self-introspection blueprint: query the browser tab's own logs.",
   "homepage": "https://dxos.org",
@@ -92,13 +92,13 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",

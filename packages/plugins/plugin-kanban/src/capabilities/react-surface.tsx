@@ -11,8 +11,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Database, Obj, Type } from '@dxos/echo';
-import { findAnnotation } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { SchemaEx } from '@dxos/effect';
+import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
@@ -30,13 +30,13 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: 'create-initial-schema-form-[pivot-column]',
+        id: 'createInitialSchemaForm',
         role: 'form-input',
         filter: (
           data,
@@ -46,7 +46,10 @@ export default Capability.makeModule(() =>
           target: Database.Database | Collection.Collection | undefined;
           fieldPropertyAst?: SchemaAST.AST;
         } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>(
+            (data.schema as Schema.Schema.All).ast,
+            PivotColumnAnnotationId,
+          );
           return !!annotation;
         },
         component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
@@ -55,7 +58,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           if (!db) {
             return null;

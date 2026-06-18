@@ -10,7 +10,6 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect, useM
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
@@ -60,7 +59,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
             return spaces
               .filter((space: any) => get(CreateAtom.fromObservable(space.state)) === SpaceState.SPACE_READY)
               .map((space) => {
-                const propertiesSnapshot = get(AtomObj.make(space.properties));
+                const propertiesSnapshot = get(Obj.atom(space.properties));
                 return {
                   id: space.id,
                   type: 'org.dxos.type.space',
@@ -84,7 +83,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {
-            const objects = get(AtomQuery.make(space.db, Query.type(TestSchema.Expando, { type: 'test' })));
+            const objects = get(space.db.query(Query.type(TestSchema.Expando, { type: 'test' })).atom);
             return objects.map((object) => ({
               id: object.id,
               type: 'org.dxos.type.test',

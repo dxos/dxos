@@ -14,15 +14,16 @@ import React, {
   type CSSProperties,
   type PropsWithChildren,
   type ReactNode,
+  type Ref,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { type AllowedAxis } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { type AllowedAxis, composable, composableProps } from '@dxos/react-ui';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
@@ -81,12 +82,19 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
+/** Imperative handle for scrolling a stack to an item without changing the current/selected item. */
+export type MosaicScrollController = {
+  scrollToItem: (id: string) => void;
+};
+
 type MosaicContainerProps = PropsWithChildren<
   Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
     asChild?: boolean;
     /** Support autoscrolling container when dragging. */
     autoScroll?: HTMLElement | null;
     withFocus?: boolean;
+    /** Imperative handle to scroll the stack to an item (decoupled from selection). */
+    controllerRef?: Ref<MosaicScrollController>;
     /** Controlled current-item ID. */
     currentId?: string;
     /** Called when a tile requests to become current. */
@@ -99,6 +107,9 @@ type MosaicContainerProps = PropsWithChildren<
   }
 >;
 
+/**
+ * Container for a Mosaic layout.
+ */
 // TODO(burdon): Make generic.
 const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
   (
@@ -109,6 +120,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       asChild,
       autoScroll: autoscrollElement,
       withFocus,
+      controllerRef,
       currentId,
       onCurrentChange,
       selectedIds,
@@ -147,6 +159,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const registerScrollTo = useCallback((fn: ((id: string) => void) | undefined) => {
       scrollToRef.current = fn;
     }, []);
+
+    // Imperative scroll-to-item, decoupled from selection (e.g. a calendar scrolling the stack to a day).
+    useImperativeHandle(controllerRef, () => ({ scrollToItem: (id: string) => scrollToRef.current?.(id) }), []);
 
     // When currentId changes, scroll the matching item into view.
     useEffect(() => {

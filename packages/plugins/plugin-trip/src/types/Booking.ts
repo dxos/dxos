@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Account, Provider } from '@dxos/types';
 
 /**
@@ -31,10 +31,7 @@ export const Booking = Schema.Struct({
   rawPayload: Schema.optional(Schema.String),
 }).pipe(
   LabelAnnotation.set(['confirmationCode']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--ticket--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.trip.booking', '0.1.0')),
 );
 

@@ -13,7 +13,7 @@ Import from `@dxos/assistant/testing`.
 
 `AssistantTestLayer` composes:
 
-- **AI** — `TestAiService` (memoized by default; see below), default model `@anthropic/claude-opus-4-6`.
+- **AI** — `TestAiService` (memoized by default; see below), default model `ai.claude.model.claude-opus-4-6`.
 - **Tool execution** — `ToolExecutionServices` and `OpaqueToolkit.providerLayer`.
 - **Blueprint registry** — `Blueprint.RegistryService` seeded with optional `blueprints`.
 - **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/assistant/src/testing/layer.ts`).
@@ -25,15 +25,15 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 
 ### Important options
 
-| Option                        | Role                                                                                                                                                                                                                    |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `operationHandlers`           | `OperationHandlerSet` (or merged sets) registered via `OperationHandlerSet.provide` so `Operation.invoke` resolves your operations.                                                                                     |
-| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                          |
-| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                  |
-| `toolkits`                    | Extra toolkits (e.g. `OpaqueToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                              |
-| `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. Use `'edge-remote'` to route LLM calls through the DXOS Edge service so no Anthropic API key is required locally. |
-| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                      |
-| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                                                                                  |
+| Option                        | Role                                                                                                                                                                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `operationHandlers`           | `OperationHandlerSet` (or merged sets) registered via `OperationHandlerSet.provide` so `Operation.invoke` resolves your operations.                                                                                                                                       |
+| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                                                                            |
+| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                                                                    |
+| `toolkits`                    | Extra toolkits (e.g. `OpaqueToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                                                                                |
+| `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. Defaults to `'direct'`, which calls Anthropic directly using the `DX_ANTHROPIC_API_KEY` env var (set it for cache regeneration; not needed for normal cached runs). |
+| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                                                                        |
+| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                                                                                                                                    |
 
 Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
@@ -79,9 +79,13 @@ Effects that use memoization **must** end with **`TestHelpers.provideTestContext
 
 `Effect.fnUntraced(..., Effect.provide(TestLayer), TestHelpers.provideTestContext)`.
 
-### Using `edge-remote` to avoid local API keys
+### Real LLM calls and `DX_ANTHROPIC_API_KEY`
 
-Set `aiServicePreset: 'edge-remote'` to route LLM calls through the DXOS Edge service instead of calling Anthropic directly. This means no local Anthropic API key is required. Works for both direct operation invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/blueprints/blueprint-manager/blueprint.test.ts`.
+The default `aiServicePreset: 'direct'` calls the Anthropic API directly. Set `DX_ANTHROPIC_API_KEY`
+(via `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
+memoized cache with `ALLOW_LLM_GENERATION=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
+(the latter breaks Claude Code). Normal cached runs need no key. Works for both direct operation
+invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/blueprints/blueprint-manager/blueprint.test.ts`.
 
 ## General test structure
 
@@ -91,7 +95,7 @@ Use `@effect/vitest` (`describe`, `it.effect`, `it.scoped`) and `Effect.fnUntrac
 
 ### Determinism
 
-Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs.
+Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs. The PRNG is **shared across all tests in the same file** — memos and fixtures that embed object IDs only match when tests run in file order. When regenerating memoized LLM cache, never use vitest `-t` for a single test; regenerate the whole test file (see `regenerate-memoized-llm` skill).
 
 ### Database and invocation flow
 

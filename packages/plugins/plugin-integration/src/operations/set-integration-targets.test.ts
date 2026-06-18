@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
@@ -43,7 +43,7 @@ describe('SetIntegrationTargets', () => {
         integration: Ref.make(integration),
         selected,
       })
-      .pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+      .pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
   test('appends remote-id selections not previously in targets', async ({ expect }) => {
     const { db, token } = await setup();

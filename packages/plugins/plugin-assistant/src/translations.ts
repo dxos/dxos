@@ -53,6 +53,9 @@ export const translations: Resource[] = [
       },
       [Type.getTypename(Chat.Chat)]: {
         'typename.label': 'AI Chat',
+        'typename.label_zero': 'AI Chats',
+        'typename.label_one': 'AI Chat',
+        'typename.label_other': 'AI Chats',
         'object-name.placeholder': 'New AI Chat',
         'add-object.label': 'Add AI chat',
         'rename-object.label': 'Rename AI Chat',
@@ -107,7 +110,6 @@ export const translations: Resource[] = [
 
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
-        'reset-blueprints.label': 'Reset blueprints',
         'import-compute-operations.label': 'Import compute operations',
         'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
 
@@ -119,6 +121,7 @@ export const translations: Resource[] = [
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
+        'create-chat.label': 'New AI Chat',
 
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
@@ -152,6 +155,7 @@ export const translations: Resource[] = [
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
+        'ai-service-error.label': 'AI service error',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
@@ -182,6 +186,13 @@ export const translations: Resource[] = [
         'instructions.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
+
+        // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-draft-doc.label': 'Draft a new document',
+        'space-home.suggestion-data-type.label': 'Create a new data type',
+        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.prompt.placeholder': 'Ask the assistant anything…',
       },
     },
   },

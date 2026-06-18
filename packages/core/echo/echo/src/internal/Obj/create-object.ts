@@ -12,14 +12,14 @@ import { defineHiddenProperty } from '../common/proxy';
 import {
   EntityKind,
   KindId,
-  MetaId,
-  type EntityMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
   getStaticTypeSchema,
   setSchema,
   setType,
 } from '../common/types';
+import { type EntityMeta } from '../common/types/meta';
+import { MetaId } from '../common/types/model-symbols';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -111,7 +111,12 @@ export const createObject: {
         ? EntityKind.Relation
         : EntityKind.Object;
   defineHiddenProperty(obj, KindId, kind);
-  defineHiddenProperty(obj, MetaId, { keys: [], ...metaOverride });
+  defineHiddenProperty(obj, MetaId, {
+    ...metaOverride,
+    keys: metaOverride?.keys ?? [],
+    tags: metaOverride?.tags ?? [],
+    annotations: metaOverride?.annotations ?? {},
+  });
   setSchema(obj, schema);
   // If the caller passed a type entity (recognised via the schema slot), keep
   // a reference to it on the instance for `Obj.getType` / `Relation.getType`.

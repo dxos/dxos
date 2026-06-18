@@ -1,7 +1,7 @@
 ---
 description: check CI is passing
 agent: build
-model: anthropic/claude-sonnet-4-0
+model: anthropic/claude-sonnet-4-6
 ---
 
 Check CI is passing for current PR.

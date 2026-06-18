@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '../../util';
 import { ResetDialog } from './ResetDialog';
 
 const meta = {
@@ -37,9 +37,9 @@ export const Default: Story = {
 export const WithError: Story = {
   args: {
     defaultOpen: true,
-    onReset: async () => console.log('reset'),
     error: Object.assign(new Error('Failed to load storage'), { name: 'StorageError' }),
     logStore: createLogStore(),
     onRefresh: () => console.log('refresh'),
+    onReset: async () => console.log('reset'),
   },
 };

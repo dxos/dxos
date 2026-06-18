@@ -26,8 +26,8 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint, Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { type Blueprint, Trace, Operation } from '@dxos/compute';
+import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
@@ -44,7 +44,7 @@ export type RunRequirements =
   | ToolResolverService
   | Database.Service
   | Operation.Service
-  | OperationRegistry.Service
+  | Registry.Service
   | Trace.TraceService;
 
 export type Options = {
@@ -207,7 +207,7 @@ export class Request {
     toolkit: opaqueToolkit,
   }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
-      log.info('request', {
+      log('request', {
         system: { snippet: createSnippet(system), length: system.length },
         pending: this._pending.length,
         history: this._history.length,
@@ -269,7 +269,7 @@ export class Request {
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
-      log.info('messages', { messages });
+      log('messages', { messages });
 
       const toolCalls = this.getToolCalls();
 

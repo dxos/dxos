@@ -11,7 +11,6 @@ import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import {
-  type ATTR_META,
   type ATTR_PARENT,
   type ATTR_TYPE,
   ATTR_DELETED,
@@ -21,10 +20,8 @@ import {
   ATTR_SELF_URI_LEGACY,
   EntityKind,
   KindId,
-  type MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
-  type EntityMeta,
   ObjectVersionId,
   type ParentId,
   RelationSourceDXNId,
@@ -36,6 +33,8 @@ import {
   TypeId,
   type Version,
 } from '../common/types';
+import { type ATTR_META, type EntityMeta } from '../common/types/meta';
+import { type MetaId } from '../common/types/model-symbols';
 
 export {
   ATTR_DELETED,

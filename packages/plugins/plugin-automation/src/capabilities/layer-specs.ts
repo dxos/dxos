@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -10,11 +10,10 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Registry } from '@dxos/echo';
 import {
-  AgentService,
   FeedTraceSink,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
@@ -37,7 +36,7 @@ import { invariant } from '@dxos/invariant';
  * Gathers contributed {@link Capabilities.OperationHandler} sets from the
  * {@link Capability.Service} and exposes them through the
  * {@link OperationHandlerSet.OperationHandlerProvider} tag so space-affinity
- * specs (e.g. {@link OperationRegistrySpec}) can consume them through the
+ * specs (e.g. {@link OperationsToRegistrySpec}) can consume them through the
  * normal LayerStack resolution path.
  */
 const OperationHandlerProviderSpec = LayerSpec.make(
@@ -59,20 +58,17 @@ const OperationHandlerProviderSpec = LayerSpec.make(
     ),
 );
 
-const BlueprintRegistrySpec = LayerSpec.make(
+const RegistrySpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service],
-    provides: [Blueprint.RegistryService],
+    requires: [ClientService],
+    provides: [Registry.Service],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        const capabilities = yield* Capability.Service;
-        const blueprints = capabilities
-          .getAll(AppCapabilities.BlueprintDefinition)
-          .flatMap((blueprint) => blueprint.make());
-        return Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints));
+        const client = yield* ClientService;
+        return Layer.succeed(Registry.Service, client.graph.registry);
       }),
     ),
 );
@@ -97,22 +93,23 @@ const OpaqueToolkitSpec = LayerSpec.make(
     ),
 );
 
-const AgentServiceSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [ProcessManager.ProcessManagerService],
-    provides: [AgentService.AgentService],
-  },
-  () => AgentService.layer(),
-);
-
-const OperationRegistrySpec = LayerSpec.make(
+const OperationsToRegistrySpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [Database.Service, OperationHandlerSet.OperationHandlerProvider],
-    provides: [OperationRegistry.Service],
+    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider],
+    provides: [Registry.Service],
   },
-  () => OperationRegistry.layer,
+  () =>
+    Layer.effect(
+      Registry.Service,
+      Effect.gen(function* () {
+        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const registry = yield* Registry.Service;
+        const handlers = yield* handlerSet.handlers;
+        registry.add(handlers.map(Operation.serialize));
+        return registry;
+      }),
+    ),
 );
 
 /**
@@ -177,7 +174,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
       Feed.FeedService,
       TriggerStateStore,
       ProcessManager.ProcessManagerService,
-      Registry.AtomRegistry,
+      AtomRegistry.AtomRegistry,
     ],
     provides: [TriggerDispatcher],
   },
@@ -187,10 +184,9 @@ const TriggerDispatcherSpec = LayerSpec.make(
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-    Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
-    Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
-    Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, OperationsToRegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
     Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),

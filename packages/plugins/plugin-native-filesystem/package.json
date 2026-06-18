@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-native-filesystem",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "private": true,
   "description": "Composer plugin for native filesystem access via Tauri.",
   "homepage": "https://dxos.org",
@@ -86,8 +86,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

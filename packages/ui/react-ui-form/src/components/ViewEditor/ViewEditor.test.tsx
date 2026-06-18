@@ -3,14 +3,14 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Type, View } from '@dxos/echo';
-import { isInstanceOf } from '@dxos/echo/internal';
+import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { ProjectionModel } from '@dxos/schema';
 
-import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
 
@@ -35,8 +35,12 @@ const waitForViewEditor = async () => {
 };
 
 describe('ViewEditor', () => {
-  afterEach(() => {
-    cleanup();
+  afterEach(async () => {
+    // Wrap cleanup in async act() so React fully drains the scheduler
+    // (including setImmediate callbacks) before happy-dom tears down window.
+    await act(async () => {
+      cleanup();
+    });
   });
 
   test('renders view editor', async () => {

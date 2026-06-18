@@ -42,13 +42,13 @@ export const make = ({
       name: 'Ollama',
     },
     Effect.succeed({
-      '@google/gemma-3-27b': createModelLayer('gemma3:27b'),
-      'deepseek-r1:latest': createModelLayer('deepseek-r1:latest'),
-      'llama3.2:1b': createModelLayer('llama3.2:1b'),
-      'llama3:70b': createModelLayer('llama3:70b'),
-      'qwen2.5:14b': createModelLayer('qwen2.5:14b'),
-      'gpt-oss:20b': createModelLayer('gpt-oss:20b'),
-      'gemma4:latest': createModelLayer('gemma4:latest'),
+      'ai.google.model.gemma-3-27b': createModelLayer('gemma3:27b'),
+      'ai.ollama.model.deepseek-r1:latest': createModelLayer('deepseek-r1:latest'),
+      'ai.ollama.model.llama3.2:1b': createModelLayer('llama3.2:1b'),
+      'ai.ollama.model.llama3:70b': createModelLayer('llama3:70b'),
+      'ai.ollama.model.qwen2.5:14b': createModelLayer('qwen2.5:14b'),
+      'ai.ollama.model.gpt-oss:20b': createModelLayer('gpt-oss:20b'),
+      'ai.ollama.model.gemma4:latest': createModelLayer('gemma4:latest'),
     } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>),
   );
 };

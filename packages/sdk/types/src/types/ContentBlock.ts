@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -130,7 +131,12 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
    * JSON encoding is preferred.
    * Missing on error.
    */
-  result: Schema.optional(Schema.String),
+  result: Schema.optional(
+    Schema.Union(
+      Schema.String,
+      Schema.suspend(() => ContentBlockResult),
+    ),
+  ),
 
   // TODO(dmaretskyi): Use discriminated union.
   // result: Schema.Union(
@@ -153,6 +159,26 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
 });
 
 export type ToolResult = Schema.Schema.Type<typeof ToolResult>;
+
+/**
+ * Tool Result as set of content blocks.
+ * Useful for returning images and files.
+ */
+export const ContentBlockResult = Schema.TaggedStruct('~@dxos/types/ContentBlock.ContentBlockResult', {
+  content: Schema.Array(
+    Schema.Union(
+      Text,
+      Schema.suspend(() => Image),
+      Schema.suspend(() => File),
+    ),
+  ),
+});
+export interface ContentBlockResult extends Schema.Schema.Type<typeof ContentBlockResult> {}
+
+export const isContentBlockResult = (result: unknown): result is ContentBlockResult => {
+  return Predicate.isTagged('~@dxos/types/ContentBlock.ContentBlockResult')(result);
+};
+
 /**
  * GPT Summary
  */

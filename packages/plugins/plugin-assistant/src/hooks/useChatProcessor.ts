@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
@@ -12,10 +12,10 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint, Credential, OperationRegistry, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { Credential, ServiceResolver } from '@dxos/compute';
+import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -30,7 +30,7 @@ export type UseChatProcessorProps = {
   chat?: Chat.Chat;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
-  blueprintRegistry?: Blueprint.Registry;
+  registry?: Registry.Registry;
   settings?: Assistant.Settings;
 };
 
@@ -42,7 +42,7 @@ export const useChatProcessor = ({
   chat,
   preset,
   runtime,
-  blueprintRegistry,
+  registry,
   settings,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
@@ -58,13 +58,13 @@ export const useChatProcessor = ({
       return;
     }
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await runAndForwardErrors(
+    const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const session = new AiSession.Session({
       feed: feedTarget,
       runtime,
-      registry: observableRegistry as Registry.Registry,
+      registry: observableRegistry,
     });
     await session.open();
     setSession(session);
@@ -89,7 +89,7 @@ export const useChatProcessor = ({
       Credential.CredentialsService,
       AiService.AiService,
       AgentService.AgentService,
-      OperationRegistry.Service,
+      Registry.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 
@@ -97,10 +97,10 @@ export const useChatProcessor = ({
     return new AiChatProcessor(session, runtime, feed, spaceLayer, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
-      blueprintRegistry,
+      registry,
       model: preset?.model,
     });
-  }, [runtime, session, blueprintRegistry, preset, feed, space?.id]);
+  }, [runtime, session, registry, preset, chat, feed, space?.id]);
 
   return processor;
 };

@@ -45,6 +45,7 @@ export namespace Devtools {
     export const id = `${Devtools.id}.client`;
     export const Config = `${Devtools.Client.id}.config`;
     export const Storage = `${Devtools.Client.id}.storage`;
+    export const Sqlite = `${Devtools.Client.id}.sqlite`;
     export const Logs = `${Devtools.Client.id}.logs`;
     export const Diagnostics = `${Devtools.Client.id}.diagnostics`;
   }
@@ -64,6 +65,7 @@ export namespace Devtools {
     export const Feeds = `${Devtools.Echo.id}.feeds`;
     export const Objects = `${Devtools.Echo.id}.objects`;
     export const Schema = `${Devtools.Echo.id}.schema`;
+    export const Registry = `${Devtools.Echo.id}.registry`;
     export const Automerge = `${Devtools.Echo.id}.automerge`;
     export const Queues = `${Devtools.Echo.id}.queues`;
     export const Members = `${Devtools.Echo.id}.members`;

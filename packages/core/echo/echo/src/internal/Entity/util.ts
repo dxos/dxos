@@ -12,7 +12,6 @@ import { type InternalObjectProps, SelfURIId } from './model';
 
 /**
  * Returns the EID of an object.
- * Normalizes any legacy `dxn:echo:` / `dxn:queue:` form stored in `SelfURIId`.
  *
  * @internal
  */

@@ -6,9 +6,9 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type JsonProp, type JsonSchemaType, type Mutable, toEffectSchema } from '@dxos/echo/internal';
-import { getSnapshot } from '@dxos/echo/internal';
-import { getValue, setValue } from '@dxos/effect';
+import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
+import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';
@@ -84,7 +84,7 @@ export type DraftRow<T extends TableRow = TableRow> = {
 };
 
 // TODO(burdon): Use schema types.
-export type TableRow = Record<JsonProp, any> & { id: string };
+export type TableRow = Record<SchemaEx.JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
@@ -209,10 +209,15 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._cellUpdateCounter = Atom.make<number>(0);
 
     // Create derived atom for persisted sort from view.query.ast.
-    this._persistedSort = Atom.make((_get) => {
-      // Note: This depends on the view being loaded and the projection being set.
-      // The view is loaded in _open().
-      const viewSnapshot = Obj.getSnapshot(this.view);
+    this._persistedSort = Atom.make((get) => {
+      // Subscribe to the view ref's atom so this recomputes once the reference resolves; the view
+      // is loaded asynchronously in _open() and is absent before then (and after disposal).
+      const view = get(this._object.view.atom);
+      if (!view) {
+        return undefined;
+      }
+
+      const viewSnapshot = Obj.getSnapshot(view);
       const ast = viewSnapshot.query.ast;
       const orders = extractOrder(ast);
 
@@ -257,8 +262,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const fieldProjection = this._projection.getFieldProjection(field.id);
 
       const sorted = [...rows].sort((a, b) => {
-        const aValue = getValue(a, field.path);
-        const bValue = getValue(b, field.path);
+        const aValue = SchemaEx.getValue(a, field.path);
+        const bValue = SchemaEx.getValue(b, field.path);
         return compareValues(aValue, bValue, fieldProjection.props.format, sort.direction);
       });
 
@@ -622,14 +627,14 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     if (plane === 'frozenRowsEnd') {
       // Get data from draft row
       if (row >= 0 && row < this._registry.get(this._draftRows).length) {
-        value = getValue(this._registry.get(this._draftRows)[row].data, field.path);
+        value = SchemaEx.getValue(this._registry.get(this._draftRows)[row].data, field.path);
       } else {
         return undefined;
       }
     } else {
       // Get data from regular row (use sorted rows for display index)
       const sortedRows = this._registry.get(this._sortedRows);
-      value = getValue(sortedRows[row], field.path);
+      value = SchemaEx.getValue(sortedRows[row], field.path);
     }
 
     if (value == null) {
@@ -643,7 +648,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
           return ''; // TODO(burdon): Show error.
         }
 
-        return getValue(value.target, field.referencePath);
+        return SchemaEx.getValue(value.target, field.referencePath);
       }
 
       default: {
@@ -676,7 +681,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
       const draftRow = this._registry.get(this._draftRows)[row];
       const snapshot = { ...draftRow.data };
-      setValue(snapshot, field.path, transformedValue);
+      SchemaEx.setValue(snapshot, field.path, transformedValue);
 
       const validationErrors = this.validateDraftRowData(snapshot);
       // TODO(thure): These errors sometimes result in a useless message like “is missing” (what is missing?)
@@ -691,8 +696,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const currentRow = this._registry.get(this._rows)[row];
       invariant(currentRow, 'Invalid row index');
 
-      const snapshot = { ...getSnapshot(currentRow) };
-      setValue(snapshot, field.path, transformedValue);
+      // TableRow is a generic type; cast to Obj.Unknown for Echo introspection APIs.
+      const snapshot = { ...getSnapshot(currentRow as unknown as Obj.Unknown) };
+      SchemaEx.setValue(snapshot, field.path, transformedValue);
 
       const type = Obj.getType(currentRow as unknown as Obj.Unknown);
       invariant(type);
@@ -700,9 +706,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
       const validationResult = validateSchema(schema, snapshot);
       if (validationResult && validationResult.length > 0) {
-        const error = validationResult[0];
-        invariant(error.path === field.path);
-        return { valid: false, error: error.message };
+        const error = validationResult.find((err) => err.path === field.path);
+        if (error) {
+          return { valid: false, error: error.message };
+        }
       }
 
       return { valid: true };
@@ -728,7 +735,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     if (plane === 'frozenRowsEnd') {
       // Update draft row data (draft rows are plain objects, not ECHO objects).
       if (row >= 0 && row < this._registry.get(this._draftRows).length) {
-        setValue(this._registry.get(this._draftRows)[row].data, field.path, transformedValue);
+        SchemaEx.setValue(this._registry.get(this._draftRows)[row].data, field.path, transformedValue);
         // Re-validate the draft row after the update
         this.validateDraftRow(row);
       }
@@ -737,7 +744,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const sortedRows = this._registry.get(this._sortedRows);
       const rowData = sortedRows[row];
       this._change.row(rowData, (mutableRow) => {
-        setValue(mutableRow, field.path, transformedValue);
+        SchemaEx.setValue(mutableRow, field.path, transformedValue);
       });
     }
   };
@@ -753,10 +760,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const sortedRows = this._registry.get(this._sortedRows);
     const rowData = sortedRows[row];
 
-    const value = getValue(rowData, field.path);
+    const value = SchemaEx.getValue(rowData, field.path);
     const updatedValue = update(value);
     this._change.row(rowData, (mutableRow) => {
-      setValue(mutableRow, field.path, updatedValue);
+      SchemaEx.setValue(mutableRow, field.path, updatedValue);
     });
   }
 

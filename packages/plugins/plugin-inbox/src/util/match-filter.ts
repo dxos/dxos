@@ -35,8 +35,7 @@ const matchesAst = (ast: any, message: Message.Message, tags: string[]): boolean
       return matchesText(ast.text ?? '', message);
     case 'object': {
       // ast.typename is null for Filter.everything() / Filter.props() (match any type).
-      // For Filter.typename()/Filter.type() it's a fully-qualified DXN string we compare
-      // against the message's DXN-qualified typename.
+      // For Filter.type() it's a fully-qualified type URI we compare against the message's type URI.
       if (ast.typename) {
         let messageTypeDXN: string | undefined;
         try {

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
@@ -20,9 +21,15 @@ import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import type * as Type from '../../Type';
-import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import {
+  ReferenceAnnotationId,
+  getSchemaURI,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
+} from '../Annotation/annotations';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
+import * as RefAtoms from './atoms';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
@@ -215,6 +222,13 @@ export interface Ref<T> extends Pipeable.Pipeable {
   noInline(): Ref<T>;
 
   /**
+   * Read-only atom for the ref target.
+   * Resolves once when the target loads; does NOT subscribe to target object mutations.
+   * Use `Obj.atom(ref)` if you need reactive snapshots that update on every object mutation.
+   */
+  get atom(): Atom.Atom<T | undefined>;
+
+  /**
    * Serializes the reference to a JSON object.
    * The serialization format is compatible with the IPLD-style encoded references.
    * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),
@@ -366,22 +380,79 @@ const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined => 
   );
 };
 
+/**
+ * Load-source ceiling for a resolution request. Cheaper tiers are always probed first; the
+ * ceiling caps how far a request is allowed to reach:
+ * - `working-set`: synchronous, in-memory only. A miss settles `unavailable` immediately.
+ * - `disk`: probe the working set, then local storage; never the network.
+ * - `network`: probe the working set, disk, then fetch from peers.
+ *
+ * `unavailable` is always relative to the requested ceiling (disk-unavailable ≠ network-unavailable).
+ */
+export type RefSource = 'working-set' | 'disk' | 'network';
+
+/**
+ * A stateful, closure-aware handle to an in-flight (or settled) reference resolution.
+ *
+ * `ready` means the entity is FULLY USABLE: its own body and its strong-dependency closure are all
+ * materialized. The body-vs-closure split is internal; `requesting` transparently covers "a
+ * dependency is still loading".
+ */
+export interface RefResolverRequest {
+  /**
+   * `pending` is a one-way entry state (never re-entered). `requesting` means the body and/or
+   * closure is still loading. `ready` means fully usable. `unavailable` means unreachable at the
+   * requested ceiling.
+   */
+  readonly state: 'pending' | 'requesting' | 'ready' | 'unavailable';
+
+  /**
+   * Fires (deferred to a microtask) whenever {@link state} changes.
+   */
+  readonly stateChanged: Event<void>;
+
+  /**
+   * Synchronous snapshot of the resolved entity; defined iff `state === 'ready'`.
+   */
+  getResult(): AnyProperties | undefined;
+
+  /**
+   * Settles when `state ∈ {ready, unavailable}`.
+   */
+  wait(): Promise<AnyProperties | undefined>;
+
+  /**
+   * Decrements the refcount on the shared load op(s); cancels the underlying IO at zero.
+   */
+  abort(): void;
+}
+
 export interface RefResolver {
+  /**
+   * Resolve a reference, returning a stateful handle. `source` is a required ceiling; cheaper
+   * tiers are always probed first.
+   */
+  resolve(uri: URI.URI, options: { source: RefSource }): RefResolverRequest;
+
   /**
    * Resolve ref synchronously from the objects in the working set.
    *
    * @param uri
    * @param load If true the resolver should attempt to load the object from disk.
    * @param onLoad Callback to call when the object is loaded.
+   * @deprecated Use {@link resolve} with `{ source: 'working-set' }`. Removed in Task 11.
    */
   resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined;
 
   /**
    * Resolver ref asynchronously.
+   * @deprecated Use {@link resolve} with `{ source: 'network' }`. Removed in Task 11.
    */
-  resolve(uri: URI.URI): Promise<AnyProperties | undefined>;
+  resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined>;
 
-  // TODO(dmaretskyi): Combine with `resolve`.
+  /**
+   * @deprecated Use {@link resolve} + `Type.getSchema`. Removed in Task 11.
+   */
   resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
 
   /**
@@ -390,9 +461,25 @@ export interface RefResolver {
    * via `Obj.getType` / `Entity.getType`. Optional — resolvers that only
    * carry raw schemas may leave this unimplemented; the deserializer falls
    * back to leaving the type entity unset.
+   * @deprecated Use {@link resolve}. Removed in Task 11.
    */
   resolveType?(uri: URI.URI): Promise<unknown | undefined>;
 }
+
+/**
+ * A settled {@link RefResolverRequest} with a fixed `state` and `result`, used by resolvers
+ * whose backends are fully synchronous (e.g. {@link StaticRefResolver}).
+ */
+export const makeSettledRequest = (
+  state: RefResolverRequest['state'],
+  result: AnyProperties | undefined,
+): RefResolverRequest => ({
+  state,
+  stateChanged: new Event<void>(),
+  getResult: () => (state === 'ready' ? result : undefined),
+  wait: async () => (state === 'ready' ? result : undefined),
+  abort: () => {},
+});
 
 export class RefImpl<T> implements Ref<T> {
   #uri: URI.URI;
@@ -451,7 +538,7 @@ export class RefImpl<T> implements Ref<T> {
       return this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    const obj = await this.#resolver.resolve(this.#uri);
+    const obj = await this.#resolver.resolveLegacy(this.#uri);
     if (obj == null) {
       throw new Error('Object not found');
     }
@@ -466,7 +553,7 @@ export class RefImpl<T> implements Ref<T> {
       return this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    return (await this.#resolver.resolve(this.#uri)) as T | undefined;
+    return (await this.#resolver.resolveLegacy(this.#uri)) as T | undefined;
   }
 
   /**
@@ -531,6 +618,10 @@ export class RefImpl<T> implements Ref<T> {
   /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
   [Equal.symbol](that: Equal.Equal): boolean {
     return that instanceof RefImpl && this.#uri === that.uri;
+  }
+
+  get atom(): Atom.Atom<T | undefined> {
+    return RefAtoms.refSimpleFamily(this);
   }
 
   /**
@@ -606,27 +697,29 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  resolveSync(uri: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
-    const echoUri = EID.tryParse(uri);
-    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
-    if (id == null) {
-      return undefined;
-    }
-
-    return this.objects.get(id);
+  resolve(uri: URI.URI, _options: { source: RefSource }): RefResolverRequest {
+    const obj = this.#lookup(uri);
+    return makeSettledRequest(obj ? 'ready' : 'unavailable', obj);
   }
 
-  async resolve(uri: URI.URI): Promise<AnyProperties | undefined> {
-    const echoUri = EID.tryParse(uri);
-    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
-    if (id == null) {
-      return undefined;
-    }
+  resolveSync(uri: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
+    return this.#lookup(uri);
+  }
 
-    return this.objects.get(id);
+  async resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined> {
+    return this.#lookup(uri);
   }
 
   async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
     return this.schemas.get(uri);
+  }
+
+  #lookup(uri: URI.URI): AnyProperties | undefined {
+    const echoUri = EID.tryParse(uri);
+    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
+    if (id == null) {
+      return undefined;
+    }
+    return this.objects.get(id);
   }
 }

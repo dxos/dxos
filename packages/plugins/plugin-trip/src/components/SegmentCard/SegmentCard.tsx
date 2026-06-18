@@ -5,9 +5,11 @@
 import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
-import { Card, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -79,12 +81,15 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const date = Segment.getPrimaryDate(segment);
   const kind = Segment.getKind(segment);
   const icon = Segment.kindIcon(kind);
+  // Tint the kind glyph with the object's type-level hue (Segment.IconAnnotation).
+  const hue = Obj.getIcon(segment)?.hue;
+  const iconStyles = hue ? getStyles(hue) : undefined;
   const flightDetails = segment.details._tag === 'flight' ? segment.details : undefined;
 
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-subdued-separator'
       id={segment.id}
       data={data}
       location={location}
@@ -92,24 +97,25 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Icon icon={icon} />
+            <Card.Block>
+              <Icon icon={icon} classNames={iconStyles?.fg} />
+            </Card.Block>
             <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
           {flightDetails ? (
             <Card.Body>
-              <Form.Root
-                schema={Segment.FlightDetails}
-                defaultValues={flightDetails}
-                layout='static'
-                readonly
-                tooltips={false}
-              >
-                <Form.Viewport>
-                  <Form.Content>
-                    <Form.Layout template={FLIGHT_LAYOUT} />
-                  </Form.Content>
-                </Form.Viewport>
+              <Form.Root schema={Segment.FlightDetails} defaultValues={flightDetails} layout='static' readonly>
+                {/*
+                 * No `Form.Viewport`: it would nest its own full-bleed Column +
+                 * gutter, so the fields wouldn't line up with the header. Rendering
+                 * `Form.Content` directly lets `withColumn.center()` place the body
+                 * in the Card's content column — aligned under the title, matching
+                 * the `Card.Row` route/date branch.
+                 */}
+                <Form.Content>
+                  <Form.Layout template={FLIGHT_LAYOUT} />
+                </Form.Content>
               </Form.Root>
             </Card.Body>
           ) : (
@@ -121,7 +127,10 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                   </Card.Row>
                 )}
                 {date && (
-                  <Card.Row icon='ph--calendar--regular'>
+                  <Card.Row>
+                    <Card.Block>
+                      <Icon icon='ph--calendar--regular' />
+                    </Card.Block>
                     <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}

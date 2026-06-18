@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyEntity } from '@dxos/echo/internal';
+import { type AnyEntity } from '@dxos/echo/Type';
 import { type EID, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 

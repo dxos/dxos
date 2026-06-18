@@ -16,7 +16,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-db';
+import { createDocAccessor } from '@dxos/echo-client';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
@@ -173,9 +173,10 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       return item.onSelect({ view, head: view.state.selection.main.head });
     }
   }, []);
+  const getView = useCallback(() => view ?? null, [view]);
 
   return (
-    <EditorMenuProvider view={view} groups={commandGroups} onSelect={handleSelect}>
+    <EditorMenuProvider getView={getView} groups={commandGroups} onSelect={handleSelect}>
       <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef)}>
         {children}
       </div>

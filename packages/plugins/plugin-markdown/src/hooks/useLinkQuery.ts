@@ -6,7 +6,8 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
+import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
@@ -21,8 +22,8 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       Filter.or(
         ...(db ? db.graph.registry.list().filter(Type.isType) : [])
           .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
-          .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-          .map((schema) => Filter.typename(Type.getTypename(schema))),
+          .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+          .map((schema) => Filter.type(Type.getURI(schema))),
       ),
     [db],
   );

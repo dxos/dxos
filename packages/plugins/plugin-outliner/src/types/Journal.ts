@@ -6,8 +6,8 @@ import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { updateText } from '@dxos/echo-db';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { updateText } from '@dxos/echo-client';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
@@ -16,7 +16,7 @@ export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')));
+}).pipe(HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')));
 
 export type JournalEntry = Type.InstanceType<typeof JournalEntry>;
 
@@ -26,10 +26,7 @@ export const Journal = Schema.Struct({
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--calendar-check--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--calendar-check--regular', hue: 'indigo' }),
   Type.makeObject(DXN.make('org.dxos.type.journal', '0.1.0')),
 );
 

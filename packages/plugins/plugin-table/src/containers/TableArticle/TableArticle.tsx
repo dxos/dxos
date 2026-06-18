@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { useAppGraph, useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -28,7 +28,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
 
@@ -44,8 +44,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const db = Obj.getDatabase(object);
     const [view] = useObject(object.view);
     const queryAst = view?.query?.ast;
-    const typename = getTypenameFromQuery(queryAst);
-    const schema = useType(db, typename);
+    const typeUri = getTypeURIFromQuery(queryAst);
+    const schema = useType(db, typeUri);
     // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
     const queriedObjects = useQueryWorkaround(db, queryAst, schema);
@@ -103,7 +103,9 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] })),
+          Match.when('open', () =>
+            invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] }),
+          ),
           Match.orElseAbsurd,
         ),
       [invokePromise],

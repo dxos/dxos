@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
 import { Integration } from '@dxos/plugin-integration';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -178,7 +178,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // 1. Discovery: descriptors only — NO local Kanbans created yet.
     const discovered = await getTrelloBoardsHandler
       .handler({ integration: Ref.make(integration) })
-      .pipe(Effect.provide(layer), runAndForwardErrors);
+      .pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(discovered.targets).toHaveLength(2);
     const boardA = discovered.targets.find((t) => t.id === 'board-a')!;
     expect(boardA.name).toBe('Board A');
@@ -198,7 +198,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // 3. Sync: lazily materializes board A's Kanban + reconciles its cards.
     const result = await syncTrelloBoardHandler
       .handler({ integration: Ref.make(integration) })
-      .pipe(stubOperationService, Effect.provide(layer), runAndForwardErrors);
+      .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
     expect(result.pulled.added).toBe(1);
 
     // Only board A's Kanban exists — board B was never selected.
@@ -228,7 +228,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
 
     const discovered = await getTrelloBoardsHandler
       .handler({ integration: Ref.make(integration) })
-      .pipe(Effect.provide(layer), runAndForwardErrors);
+      .pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     // Select both boards by recording `{ remoteId, name }` entries.
     Obj.update(integration, (integration) => {
@@ -237,7 +237,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
 
     await syncTrelloBoardHandler
       .handler({ integration: Ref.make(integration) })
-      .pipe(stubOperationService, Effect.provide(layer), runAndForwardErrors);
+      .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     const targetA = integration.targets.find((t) => t.remoteId === 'board-a');
     const targetB = integration.targets.find((t) => t.remoteId === 'board-b');

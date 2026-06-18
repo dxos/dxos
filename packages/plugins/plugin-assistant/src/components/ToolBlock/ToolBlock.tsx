@@ -65,7 +65,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
               title,
               content: {
                 ...block,
-                result: safeParseJson(block.result),
+                result: typeof block.result === 'string' ? safeParseJson(block.result) : block.result,
               },
             };
           }
@@ -123,21 +123,29 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   }, []);
 
   return (
-    <TogglePanel.Root classNames='w-full rounded-xs border border-subdued-separator' open={open} onChangeOpen={setOpen}>
-      <TogglePanel.Header classNames='text-sm text-placeholder'>
-        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
-      </TogglePanel.Header>
-      <TogglePanel.Content classNames='grid grid-cols-[32px_1fr]'>
-        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-        <JsonHighlighter
-          data={items[selected]?.content}
-          classNames='p-1 text-xs bg-transparent'
-          replacer={{
-            maxDepth: 3,
-            maxArrayLen: 10,
-            maxStringLen: 128,
-          }}
-        />
+    <TogglePanel.Root open={open} onChangeOpen={setOpen}>
+      <TogglePanel.Content classNames='w-full rounded-xs border border-subdued-separator'>
+        <TogglePanel.Header classNames='text-sm text-placeholder'>
+          <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
+        </TogglePanel.Header>
+        <TogglePanel.Body classNames='grid grid-cols-[32px_1fr]'>
+          <NumericTabs
+            ref={tabsRef}
+            classNames='p-1'
+            length={items.length}
+            selected={selected}
+            onSelect={handleSelect}
+          />
+          <JsonHighlighter
+            data={items[selected]?.content}
+            classNames='p-1 text-xs bg-transparent'
+            replacer={{
+              maxDepth: 3,
+              maxArrayLen: 10,
+              maxStringLen: 128,
+            }}
+          />
+        </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>
   );

@@ -11,6 +11,8 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   'OperationHandler',
   () => import('./operation-handler'),
 );
+export const RegistrySync = Capability.lazy('RegistrySync', () => import('./registry-sync'));
+export const Templates = Capability.lazy('Templates', () => import('./templates'));
 export const TriggerRuntimeController = Capability.lazy(
   'TriggerRuntimeController',
   () => import('./trigger-runtime-controller'),

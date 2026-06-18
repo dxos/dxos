@@ -6,17 +6,25 @@ import browser from 'webextension-polyfill';
 
 import { Domino } from '@dxos/ui';
 
-import { type ClipKind } from '../clip';
-import { CLIP_KINDS, type ClipKindDef } from './kinds';
-
 const ROOT_ATTR = 'data-dxos-crx-picker';
 const Z_TOP = Number.MAX_SAFE_INTEGER.toString();
 
 /**
- * Result of a user interaction with the picker. The click resolves with
- * either a picked element + kind, or `cancelled` when the user hits Esc.
+ * A toolbar entry offered after the user freezes an element. Mirrors the
+ * page-action descriptor fields the picker needs (id for invocation, label +
+ * phosphor icon for rendering).
  */
-export type PickerResult = { status: 'picked'; element: Element; kind: ClipKind } | { status: 'cancelled' };
+export type PickerAction = {
+  id: string;
+  label: string;
+  icon: string;
+};
+
+/**
+ * Result of a user interaction with the picker. The click resolves with
+ * either a picked element + action id, or `cancelled` when the user hits Esc.
+ */
+export type PickerResult = { status: 'picked'; element: Element; actionId: string } | { status: 'cancelled' };
 
 // Resolve the icon sprite shipped with the extension so `Domino.svg()` works
 // when this module is imported from a content script on an arbitrary page.
@@ -125,11 +133,12 @@ const describeElement = (el: Element, width: number, height: number): string => 
  * re-targets any event we dispatch to our own host element so hit-testing
  * never picks our own chrome.
  *
- * Idempotent — a second call while one is active returns the same promise.
+ * Idempotent — a second call while one is active returns the in-flight
+ * promise and ignores the new action list.
  */
 let active: Promise<PickerResult> | null = null;
 
-export const startPicker = (): Promise<PickerResult> => {
+export const startPicker = (actions: readonly PickerAction[]): Promise<PickerResult> => {
   if (active) {
     return active;
   }
@@ -202,11 +211,11 @@ export const startPicker = (): Promise<PickerResult> => {
       tb.style.visibility = 'visible';
     };
 
-    const populateToolbar = (kinds: readonly ClipKindDef[], el: Element) => {
+    const populateToolbar = (entries: readonly PickerAction[], el: Element) => {
       toolbar.root.replaceChildren();
-      for (const def of kinds) {
+      for (const entry of entries) {
         toolbar.append(
-          createButton(def.label, def.icon, () => finish({ status: 'picked', element: el, kind: def.kind })),
+          createButton(entry.label, entry.icon, () => finish({ status: 'picked', element: el, actionId: entry.id })),
         );
       }
       toolbar.append(createButton('Cancel', null, () => finish({ status: 'cancelled' })));
@@ -217,7 +226,7 @@ export const startPicker = (): Promise<PickerResult> => {
       const rect = el.getBoundingClientRect();
       drawOutline(rect, true);
       hideLabel();
-      populateToolbar(CLIP_KINDS, el);
+      populateToolbar(actions, el);
       positionToolbar(rect);
     };
 

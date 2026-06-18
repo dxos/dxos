@@ -7,95 +7,66 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
+import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Filter, Type } from '@dxos/echo';
-import { AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
+import { getMagazinesPath } from '../paths';
+
+const magazineTypename = Type.getTypename(Magazine.Magazine);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
-    const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
-        const state = get(selectionManager.state);
-        const selection = state.selections[nodeId];
-        return selection?.mode === 'single' ? selection.id : undefined;
+        const selection = get(viewState.atom(selectionAspect, nodeId));
+        return selection.mode === 'single' ? selection.id : undefined;
       }),
     );
 
     const extensions = yield* Effect.all([
-      // Show Subscription.Subscription objects as nodes under each space.
+      TypeSection.createTypeSectionExtension(Magazine.Magazine, { position: 'first' }),
+
+      // Add-magazine action on the Magazines section header.
       GraphBuilder.createExtension({
-        id: 'subscription-feeds',
-        match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Subscription)));
-          if (feeds.length === 0) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
-            Node.make({
-              id: 'feeds',
-              type: 'feeds', // TODO(burdon): Const.
-              data: 'feeds-root', // TODO(burdon): Const.
-              properties: { label: 'Feeds', icon: 'ph--rss--regular', role: 'branch', position: 'first' },
-              nodes: feeds
-                .map((feed: Subscription.Subscription) =>
-                  createObjectNode({
-                    db: space.db,
-                    object: feed,
-                  }),
-                )
-                .filter((node): node is NonNullable<typeof node> => node !== null),
-            }),
-          ]);
+        id: 'magazinesSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === magazineTypename && space ? Option.some(space) : Option.none();
         },
-      }),
-
-      // Companion panel: resolve the selected feed from the SubscriptionsArticle.
-      GraphBuilder.createExtension({
-        id: 'subscription-feeds-companion',
-        match: NodeMatcher.whenNodeType('feeds'),
-        connector: (matched, get) => {
-          const space = getActiveSpace(capabilities.get(ClientCapabilities.Client), capabilities);
-          const db = space?.db;
-          if (!db) {
-            return Effect.succeed([]);
-          }
-
-          // Resolve the selected feed from the attention selection.
-          const feedId = get(selectedId(matched.id));
-          const selectedFeed = feedId
-            ? get(AtomQuery.make(db, Filter.and(Filter.type(Subscription.Subscription), Filter.id(feedId))))[0]
-            : undefined;
-
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: 'feed',
-              label: ['feed-companion.label', { ns: meta.id }],
-              icon: 'ph--article--regular',
-              data: selectedFeed,
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-magazine',
+              data: () =>
+                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: space.db,
+                  typename: magazineTypename,
+                  initialFormValues: { feeds: [undefined] },
+                  targetNodeId: getMagazinesPath(space.db.spaceId),
+                }),
+              properties: {
+                label: ['add-object.label', { ns: magazineTypename }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
             }),
-          ]);
-        },
+          ]),
       }),
 
       // Companion panel: resolve the selected Post under a Magazine node.
       GraphBuilder.createExtension({
-        id: 'magazine-post',
+        id: 'magazinePost',
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })
@@ -106,7 +77,7 @@ export default Capability.makeModule(
           let post: Subscription.Post | undefined;
           if (postId) {
             for (const ref of magazine.posts) {
-              const resolved = get(AtomRef.make(ref)) as Subscription.Post | undefined;
+              const resolved = get(ref.atom) as Subscription.Post | undefined;
               if (resolved?.id === postId) {
                 post = resolved;
                 break;
@@ -126,14 +97,19 @@ export default Capability.makeModule(
 
       // Actions on each Subscription.Subscription node.
       GraphBuilder.createExtension({
-        id: 'feed-actions',
+        id: 'feedActions',
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),
         actions: (feed) =>
           Effect.succeed([
             {
               id: 'sync',
-              data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
+              data: () =>
+                Operation.invoke(
+                  FeedOperation.SyncFeed,
+                  { feed: Ref.make(feed) },
+                  { spaceId: Obj.getDatabase(feed)?.spaceId },
+                ),
               properties: {
                 label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

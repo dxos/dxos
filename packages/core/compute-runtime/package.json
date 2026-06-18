@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute-runtime",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Compute runtime: process manager, layer stack and runtime-level service resolution.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,18 +42,16 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/kv-store": "workspace:*",
     "@dxos/types": "workspace:*",
     "@effect/vitest": "catalog:",

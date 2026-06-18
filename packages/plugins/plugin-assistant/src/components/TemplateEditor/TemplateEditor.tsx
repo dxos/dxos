@@ -6,11 +6,12 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
-import { type Template } from '@dxos/compute';
-import { createDocAccessor } from '@dxos/echo-db';
+import { type Ref } from '@dxos/echo';
+import { createDocAccessor } from '@dxos/echo-client';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -26,16 +27,17 @@ import { handlebars, xmlDecorator } from './extensions';
 
 export type TemplateEditorProps = {
   id: string;
-  template: Template.Template;
+  /** Markdown + Handlebars source text. */
+  source?: Ref.Ref<Text.Text>;
   lineNumbers?: boolean;
 };
 
 export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
-  ({ classNames, id, template, lineNumbers = true, ...props }, forwardedRef) => {
+  ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const { parentRef } = useTextEditor(() => {
-      const target = template.source?.target;
+      const target = source?.target;
       if (!target) {
         return {};
       }
@@ -63,7 +65,7 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
           syntaxHighlighting(defaultHighlightStyle),
         ].filter(isNonNullable),
       };
-    }, [themeMode, template.source?.target, lineNumbers]);
+    }, [themeMode, source?.target, lineNumbers]);
 
     return (
       <div

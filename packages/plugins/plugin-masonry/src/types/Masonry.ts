@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ViewAnnotation } from '@dxos/schema';
 
 const MasonrySchema = Schema.Struct({
@@ -27,10 +27,7 @@ const MasonrySchema = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--wall--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--wall--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.masonry', '0.1.0')),
 );
 

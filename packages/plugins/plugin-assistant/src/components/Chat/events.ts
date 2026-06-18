@@ -34,6 +34,13 @@ export type ChatEvent =
       object: Obj.Unknown;
     }
   //
+  // Errors
+  //
+  | {
+      type: 'error';
+      error: Error;
+    }
+  //
   // UX
   //
   | {

@@ -9,7 +9,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Agent } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -48,7 +47,7 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
   const existingSubscriptions = useAtomValue(
     useMemo(
       () =>
-        AtomObj.make(agent).pipe((_) =>
+        Obj.atom(agent).pipe((_) =>
           Atom.make((get) => {
             const agentObj = get(_);
             const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>

@@ -139,13 +139,10 @@ export const PluginItem = ({
       aria-describedby={descriptionId}
       classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
     >
-      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.surface)}>
-        <Icon
-          classNames={mx('row-start-2 cursor-pointer', styles.foreground)}
-          icon={icon}
-          size={14}
-          onClick={handleClick}
-        />
+      <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
+        <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
+          <Icon classNames={styles.fg} icon={icon} size={14} />
+        </div>
       </div>
 
       <div className={mx(gridRows, 'min-w-0')}>
@@ -160,7 +157,7 @@ export const PluginItem = ({
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag) => (
-            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
+            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>
           ))}

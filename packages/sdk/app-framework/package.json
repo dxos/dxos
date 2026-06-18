@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -95,17 +95,18 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -119,11 +120,15 @@
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "babel-preset-solid": "catalog:",
+    "cjs-module-lexer": "catalog:",
+    "esbuild": "catalog:",
+    "idb-keyval": "catalog:",
+    "solid-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
@@ -136,7 +141,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "typedoc": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",

@@ -17,7 +17,7 @@ const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
 
 const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-modal-surface rounded-md p-1',
+    'dx-popover-surface rounded-md p-1',
     surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
@@ -32,14 +32,10 @@ const grid: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('gap-y-1
 
 const header: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-const icon: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-1 grid place-items-center', ...etc);
+const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 truncate font-medium', ...etc);
 
-const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
-  mx('col-start-2 overflow-hidden truncate font-medium', ...etc);
-
-const close: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-3', ...etc);
-
-const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 text-description', ...etc);
+const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+  mx('col-start-2 overflow-hidden text-description', ...etc);
 
 const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('flex gap-2 mbs-1', ...etc);
 
@@ -48,9 +44,7 @@ export const toastTheme: Theme<ToastStyleProps> = {
   root,
   grid,
   header,
-  icon,
   title,
-  close,
   description,
   actions,
 };
