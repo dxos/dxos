@@ -86,11 +86,17 @@ export type ProcessorRequest = {
 /** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
 const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
 
+/** An actionable next-step a chat error surfaces in its toast; the label key is resolved by the chat UI. */
+export type ChatErrorAction = { readonly labelKey: string };
+
 /**
- * Display error for an over-quota (HTTP 429) rejection. The distinct type lets the chat UI offer an
- * actionable link to the usage dashboard for this case without string-matching the message.
+ * Display error for an over-quota (HTTP 429) rejection. Declares an {@link action} so the chat toast can
+ * offer a usage-dashboard link declaratively — the UI renders whatever action an error declares rather
+ * than branching on the error type.
  */
-export class AiUsageQuotaError extends Error {}
+export class AiUsageQuotaError extends Error {
+  readonly action: ChatErrorAction = { labelKey: 'view-usage.label' };
+}
 
 /**
  * Matches an over-quota rejection (EDGE responds 429) in error text. The typed

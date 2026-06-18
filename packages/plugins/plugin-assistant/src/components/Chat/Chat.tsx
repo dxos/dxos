@@ -225,6 +225,8 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
+  // The toast renders whatever action the error declares (data-driven) rather than branching on type.
+  const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
   const debugView = viewType === 'debug';
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
@@ -283,16 +285,16 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
           {t('ai-service-error.label')}
         </Toast.Title>
         <Toast.Description>{toastError?.message}</Toast.Description>
-        {toastError instanceof AiUsageQuotaError && onViewUsage && (
+        {toastAction && onViewUsage && (
           <Toast.Actions>
-            <Toast.Action altText={t('view-usage.label')} asChild>
+            <Toast.Action altText={t(toastAction.labelKey)} asChild>
               <Button
                 onClick={() => {
                   setToastError(undefined);
                   onViewUsage();
                 }}
               >
-                {t('view-usage.label')}
+                {t(toastAction.labelKey)}
               </Button>
             </Toast.Action>
           </Toast.Actions>

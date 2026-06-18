@@ -32,6 +32,7 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
   const { t } = useTranslation(pluginMeta.id);
   const [open, setOpen] = useState(true);
   const error = parseError(rawError);
+  const action = error instanceof AiUsageQuotaError ? error.action : undefined;
 
   return (
     <Toast.Provider>
@@ -42,10 +43,10 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
           {t('ai-service-error.label')}
         </Toast.Title>
         <Toast.Description>{error.message}</Toast.Description>
-        {error instanceof AiUsageQuotaError && (
+        {action && (
           <Toast.Actions>
-            <Toast.Action altText={t('view-usage.label')} asChild>
-              <Button onClick={() => setOpen(false)}>{t('view-usage.label')}</Button>
+            <Toast.Action altText={t(action.labelKey)} asChild>
+              <Button onClick={() => setOpen(false)}>{t(action.labelKey)}</Button>
             </Toast.Action>
           </Toast.Actions>
         )}
