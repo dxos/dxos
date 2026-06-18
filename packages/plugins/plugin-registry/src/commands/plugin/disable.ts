@@ -11,7 +11,7 @@ import { Plugin } from '@dxos/app-framework';
 import { CommandConfig } from '@dxos/cli-util';
 import { invariant } from '@dxos/invariant';
 
-import { saveEnabledPlugins } from '../storage';
+import { saveEnabledPlugins } from '../../storage';
 
 export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const { json, profile } = yield* CommandConfig;

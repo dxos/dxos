@@ -17,7 +17,7 @@ import {
   type TranscriptMessageEnricher,
   type TranscriptionManager as TranscriptionManagerType,
 } from '../transcriber';
-import * as Settings from './Settings';
+import * as SettingsType from './Settings';
 
 export type TranscriberProviderProps = {
   audioStreamTrack: MediaStreamTrack;
