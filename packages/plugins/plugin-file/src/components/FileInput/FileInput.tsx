@@ -14,7 +14,7 @@ import { meta } from '#meta';
 import { FileAction, MAX_FILE_SIZE } from '#types';
 
 export type FileInputProps = {
-  schema: Schema.Schema.Any;
+  schema: Schema.Schema.All;
   onChange: (file: File) => void;
 };
 

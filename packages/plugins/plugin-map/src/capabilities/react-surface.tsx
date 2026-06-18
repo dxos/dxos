@@ -3,8 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -63,22 +61,15 @@ export default Capability.makeModule(() =>
       Surface.create({
         // TODO(burdon): Why this title?
         id: 'surface.createInitialSchemaForm',
-        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
-          const { schema } = data as { schema?: Schema.Schema.All };
-          if (!schema?.ast) {
-            return false;
-          }
-          return !!SchemaEx.findAnnotation<boolean>(schema.ast, LocationAnnotationId);
-        }),
-        component: ({ data: rawData, ...inputProps }) => {
-          // FormInput data is untyped at framework level; casts align with what the filter validates.
-          const ast = rawData.fieldPropertyAst as SchemaAST.AST | undefined;
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, LocationAnnotationId)),
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
           const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
-          const target = rawData.target;
+          const target = data.target;
           const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
           const { typename } = useFormValues('MapForm');
 

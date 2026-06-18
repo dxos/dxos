@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -59,14 +58,9 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationProviderSelector',
-        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
-          // FormInput token is Record<string,unknown>; cast to access the AST field at this type-system boundary.
-          const { fieldPropertyAst } = data as { fieldPropertyAst?: SchemaAST.AST };
-          if (!fieldPropertyAst) {
-            return false;
-          }
-          return !!SchemaEx.findAnnotation<boolean>(fieldPropertyAst, IntegrationProviderAnnotationId);
-        }),
+        filter: AppSurface.formInputByField(
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, IntegrationProviderAnnotationId),
+        ),
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
           const providers = useCapabilities(IntegrationProvider).flat();
           const options = useMemo(

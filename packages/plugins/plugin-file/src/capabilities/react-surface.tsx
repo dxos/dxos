@@ -3,8 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -32,19 +30,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'createForm',
-        filter: Surface.makeFilter(AppSurface.FormInput, (data) => {
-          const { schema } = data as { schema?: Schema.Schema.All };
-          if (!schema?.ast) {
-            return false;
-          }
-          return !!SchemaEx.findAnnotation<Record<string, string[]>>(schema.ast, FileAction.UploadAnnotationId);
-        }),
-        component: ({ data: rawData, ...props }) => {
-          // FormInput data is untyped at framework level; cast matches what the filter validates.
-          const { schema, fieldPropertyAst: ast } = rawData as {
-            schema: Schema.Schema.Any;
-            fieldPropertyAst?: SchemaAST.AST;
-          };
+        filter: AppSurface.formInputBySchema(
+          (ast) => !!SchemaEx.findAnnotation<Record<string, string[]>>(ast, FileAction.UploadAnnotationId),
+        ),
+        component: ({ data, ...props }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
@@ -55,7 +45,7 @@ export default Capability.makeModule(() =>
             [ast, inputProps.onValueChange],
           );
 
-          return <FileInput schema={schema} onChange={handleChange} />;
+          return <FileInput schema={data.schema} onChange={handleChange} />;
         },
       }),
       Surface.create({

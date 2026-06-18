@@ -168,7 +168,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           Surface.create({
             id: 'storyNavigation',
             filter: Surface.makeFilter(AppSurface.Navigation, (data) => typeof data.current === 'string'),
-            component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
+            component: ({ data, ref }) => <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />,
           }),
           Surface.create({
             id: 'storyArticle',
@@ -264,7 +264,7 @@ type NavContainerProps = {
   current?: string;
 };
 
-const NavContainer = forwardRef<HTMLElement, NavContainerProps>((_props, forwardedRef) => {
+const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forwardedRef) => {
   const { graph } = useAppGraph();
   const layout = useLayout();
   const { invokePromise } = useOperationInvoker();
@@ -272,9 +272,8 @@ const NavContainer = forwardRef<HTMLElement, NavContainerProps>((_props, forward
   const items = useConnections(graph, Node.RootId, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
-  // Surface passes Ref<HTMLElement>; this component always renders a div so narrowing to HTMLDivElement is safe.
   return (
-    <div className='dx-container overflow-y-auto p-2' ref={forwardedRef as React.Ref<HTMLDivElement>}>
+    <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
       <List>
         {items.map((node) => (
           <ListItem.Root

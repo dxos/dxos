@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
+
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -509,8 +512,27 @@ export const StatusIndicator: Surface.RoleToken<Record<string, unknown>> = Surfa
   'org.dxos.role.statusIndicator',
 );
 
+/**
+ * Data passed to FormInput surface components by `useInputSurfaceLookup`.
+ * Extra fields from `baseData` are accessible as `unknown` via the index signature.
+ */
+export type FormInputData = {
+  prop: string;
+  schema: Schema.Schema.All;
+  fieldPropertyAst?: SchemaAST.AST;
+  [key: string]: unknown;
+};
+
 /** Role token for the `formInput` role (was `form-input`). */
-export const FormInput: Surface.RoleToken<Record<string, unknown>> = Surface.makeType('org.dxos.role.formInput');
+export const FormInput: Surface.RoleToken<FormInputData> = Surface.makeType('org.dxos.role.formInput');
+
+/** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
+export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
+
+/** Filter FormInput surfaces by a predicate on the schema's root AST. */
+export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, (data) => predicate(data.schema.ast));
 
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
 export const NavtreeItemEnd: Surface.RoleToken<Record<string, unknown>> =
