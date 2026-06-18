@@ -59,7 +59,11 @@
             "description": "Optional icon reference: Phosphor icon key with an optional theme hue.",
             "required": ["key"],
             "properties": {
-              "key": { "type": "string", "description": "Phosphor icon name (e.g. ph--compass-tool--regular).", "maxLength": 64 },
+              "key": {
+                "type": "string",
+                "description": "Phosphor icon name (e.g. ph--compass-tool--regular).",
+                "maxLength": 64
+              },
               "hue": { "type": "string", "description": "Theme hue hint (e.g. blue, amber).", "maxLength": 32 }
             }
           },
