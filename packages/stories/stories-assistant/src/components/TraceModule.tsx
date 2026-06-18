@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { TracePanel } from '@dxos/plugin-assistant/components';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { type ModuleProps } from './types';
@@ -13,7 +12,7 @@ import { type ModuleProps } from './types';
 /**
  * Renders the assistant `TracePanel` (process tree + execution-graph timeline) for the story space.
  */
-export const TraceModule = (_: ModuleProps) => {
+export const TraceModule = ({ space }: ModuleProps) => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
@@ -22,7 +21,7 @@ export const TraceModule = (_: ModuleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <Surface.Surface type={AppSurface.deckCompanion('trace')} data={{ subject: 'trace' }} />
+        <TracePanel space={space} attendableId={space.id} />
       </Panel.Content>
     </Panel.Root>
   );
