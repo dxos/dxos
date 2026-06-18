@@ -268,8 +268,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'typenameFormInput',
-        filter: Surface.makeFilter(
-          AppSurface.FormInput,
+        filter: AppSurface.formInput(
           (data) =>
             data.prop === 'typename' && !!SchemaEx.findAnnotation(data.schema.ast, TypeInputOptionsAnnotationId),
         ),

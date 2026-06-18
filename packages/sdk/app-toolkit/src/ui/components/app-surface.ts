@@ -526,6 +526,10 @@ export type FormInputData = {
 /** Role token for the `formInput` role (was `form-input`). */
 export const FormInput: Surface.RoleToken<FormInputData> = Surface.makeType('org.dxos.role.formInput');
 
+/** Filter FormInput surfaces by a typed data predicate. */
+export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, predicate);
+
 /** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
 export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
   Surface.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
