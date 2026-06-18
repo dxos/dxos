@@ -35,15 +35,10 @@ export type DependencyMap = Schema.Schema.Type<typeof DependencyMapSchema>;
 export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
 
 /**
- * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
- *
- * Emitted by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
- * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime — the entry
- * module ({@link PLUGIN_ENTRY_FILENAME}) plus any sibling CSS, code-split chunks,
- * fonts, etc. — so the host can eagerly precache the whole bundle for offline use.
- * Paths in `assets` are relative to the manifest's URL.
+ * Display and discovery metadata common to all plugin schema shapes.
+ * Spread into {@link PluginManifestSchema}; re-exported to `config2` for use in `PluginMeta`.
  */
-export const PluginManifestSchema = Schema.Struct({
+export const PluginMetaBaseSchema = Schema.Struct({
   id: Schema.String.pipe(Schema.nonEmptyString()),
   name: Schema.String.pipe(Schema.nonEmptyString()),
   description: Schema.optional(Schema.String),
@@ -53,6 +48,20 @@ export const PluginManifestSchema = Schema.Struct({
   screenshots: Schema.optional(Schema.Array(ScreenshotSchema)),
   tags: Schema.optional(Schema.Array(Schema.String)),
   icon: Schema.optional(IconSchema),
+});
+export type PluginMetaBase = Schema.Schema.Type<typeof PluginMetaBaseSchema>;
+
+/**
+ * Shape of the manifest-asset JSON the registry service fetches from each plugin's latest release.
+ *
+ * Emitted by `@dxos/app-framework/vite-plugin`'s `composerPlugin` (see
+ * `MANIFEST_ASSET_NAME`). Lists every file the plugin needs at runtime — the entry
+ * module ({@link PLUGIN_ENTRY_FILENAME}) plus any sibling CSS, code-split chunks,
+ * fonts, etc. — so the host can eagerly precache the whole bundle for offline use.
+ * Paths in `assets` are relative to the manifest's URL.
+ */
+export const PluginManifestSchema = Schema.Struct({
+  ...PluginMetaBaseSchema.fields,
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
   version: Schema.String.pipe(Schema.nonEmptyString()),
   /**
