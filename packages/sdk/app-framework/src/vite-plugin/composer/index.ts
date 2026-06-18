@@ -119,7 +119,7 @@ export type ComposerPluginOptions = {
   config?: string;
   /**
    * Plugin metadata. Optional — when omitted it is derived from the project's `dx.config.ts`
-   * (`@dxos/protocols` `Config2`) plus the `package.json` version and resolved dependencies. When
+   * (`@dxos/protocols` `Config2.Config`) plus the `package.json` version and resolved dependencies. When
    * present (explicitly or derived), a `manifest.json` asset is emitted alongside the bundle listing
    * every emitted file. The host fetches this manifest at install time and persists the declared
    * assets in its offline cache so the plugin works without network. The bundle's entry module is
@@ -148,7 +148,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
   const projectRoot = process.cwd();
 
-  // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2`). When the caller
+  // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller
   // doesn't pass `meta` explicitly, load + validate the config and derive a `BuildMeta` from it
   // (augmented with the package `version` and a resolved dependency snapshot). Resolved once,
   // lazily, so the synchronous plugin factory stays sync; the manifest hooks await it.

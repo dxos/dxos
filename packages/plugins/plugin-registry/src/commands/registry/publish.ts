@@ -18,13 +18,13 @@ import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin'
 import { type Client, ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { PluginMeta } from '@dxos/protocols';
+import { Config2 } from '@dxos/protocols';
 
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
 
-/** Manifest emitted by the build (subset consumed here). Extends `PluginMeta` with build-time fields. */
+/** Manifest emitted by the build (subset consumed here). Extends `Config2.Plugin` with build-time fields. */
 const ManifestSchema = Schema.Struct({
-  ...PluginMeta.fields,
+  ...Config2.Plugin.fields,
   version: Schema.String.pipe(Schema.nonEmptyString()),
   dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
 });

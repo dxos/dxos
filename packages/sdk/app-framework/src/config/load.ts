@@ -14,7 +14,7 @@ import { Config2 } from '@dxos/protocols';
 
 const CONFIG_BASENAMES = ['dx.config.ts', 'dx.config.mjs', 'dx.config.js'];
 
-const decodeConfig2 = Schema.decodeUnknownSync(Config2);
+const decodeConfig2 = Schema.decodeUnknownSync(Config2.Config);
 
 /**
  * Resolves the first `dx.config.{ts,mjs,js}` found under `dir`, or `undefined` if none exist.
@@ -31,7 +31,7 @@ export const findDxConfigFile = (dir: string): string | undefined =>
  * default export against the `Config2` schema (a malformed config throws a `Schema` parse error).
  * Node-only (esbuild + filesystem); used by `composerPlugin` and `dx registry publish`.
  */
-export const loadDxConfig = async (filePath: string): Promise<Config2> => {
+export const loadDxConfig = async (filePath: string): Promise<Config2.Config> => {
   const result = await build({
     entryPoints: [filePath],
     bundle: true,

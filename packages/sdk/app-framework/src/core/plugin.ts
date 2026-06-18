@@ -10,7 +10,7 @@ import * as Pipeable from 'effect/Pipeable';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { type Config2, type PluginMeta } from '@dxos/protocols';
+import { Config2 } from '@dxos/protocols';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -150,25 +150,25 @@ class PluginModuleImpl implements PluginModule {
 }
 
 /**
- * Runtime plugin metadata — exactly {@link PluginMeta} from `@dxos/protocols`, the same schema
+ * Runtime plugin metadata — exactly {@link Config2.Plugin} from `@dxos/protocols`, the same schema
  * used in `dx.config.ts`. `id` and `version` are derived from a canonical DXN by {@link makeMeta};
  * use {@link getURI} when a typed DXN is needed.
  */
-export type Meta = PluginMeta;
+export type Meta = Config2.Plugin;
 
 /**
- * Options for {@link makeMeta}: {@link PluginMeta} content fields (minus `id` and `version`,
+ * Options for {@link makeMeta}: {@link Config2.Plugin} content fields (minus `id` and `version`,
  * which are derived from `key`) plus the canonical DXN `key`.
  * `icon` accepts a bare string key as a legacy convenience — it is normalised to `{ key }`.
  * `iconHue` is a legacy convenience for the `icon.hue` field.
  * `screenshots` accepts bare URL strings as a legacy convenience — normalised to `{ dark: url }`.
  */
-export type MakeMetaOptions = Omit<PluginMeta, 'id' | 'version' | 'icon' | 'screenshots'> & {
+export type MakeMetaOptions = Omit<Config2.Plugin, 'id' | 'version' | 'icon' | 'screenshots'> & {
   key: DXN.DXN;
   /** Version string override. If omitted, derived from `key`. */
   version?: string;
   /** Icon key string (legacy) or canonical `{ key, hue? }` object. */
-  icon?: string | PluginMeta['icon'];
+  icon?: string | Config2.Plugin['icon'];
   /** @deprecated Pass `icon: { key, hue }` instead. */
   iconHue?: string;
   /** Screenshot URL strings (legacy) or canonical `{ light?, dark? }` objects. Accepts readonly arrays. */
@@ -190,7 +190,7 @@ export const makeMeta = (options: MakeMetaOptions): Meta => {
   const { key, version: versionOverride, iconHue, icon, screenshots, ...rest } = options;
   const iconKey = typeof icon === 'string' ? icon : icon?.key;
   const resolvedHue = iconHue ?? (typeof icon === 'object' && icon !== null ? icon.hue : undefined);
-  const iconObj: PluginMeta['icon'] = iconKey !== undefined ? { key: iconKey, hue: resolvedHue } : undefined;
+  const iconObj: Config2.Plugin['icon'] = iconKey !== undefined ? { key: iconKey, hue: resolvedHue } : undefined;
   const normalizedScreenshots = screenshots?.map((s) => (typeof s === 'string' ? { dark: s } : s));
   return {
     ...rest,
@@ -205,10 +205,10 @@ export const makeMeta = (options: MakeMetaOptions): Meta => {
 export const getURI = (meta: Meta): DXN.DXN => DXN.make(meta.id, meta.version);
 
 /**
- * Derives a runtime {@link Meta} from a loaded `dx.config.ts` (the `@dxos/protocols` `Config2`).
+ * Derives a runtime {@link Meta} from a loaded `dx.config.ts` (the `@dxos/protocols` `Config2.Config`).
  * `id` and `version` are derived from the canonical DXN; the remaining authored fields map through.
  */
-export const getMetaFromConfig = ({ plugin }: Config2): Meta => {
+export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
   const { id, ...rest } = plugin;
   return makeMeta({ key: DXN.make(id), ...rest });
 };
