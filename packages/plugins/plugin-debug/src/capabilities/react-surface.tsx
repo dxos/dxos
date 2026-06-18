@@ -110,7 +110,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        filter: AppSurface.subject(AppSurface.Article, (value): value is SpaceDebug => isSpaceDebug(value)),
+        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
         component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
@@ -144,7 +144,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'appGraph',
-        filter: AppSurface.subject(AppSurface.Article, (value): value is GraphDebug => isGraphDebug(value)),
+        filter: AppSurface.subject(AppSurface.Article, isGraphDebug),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({

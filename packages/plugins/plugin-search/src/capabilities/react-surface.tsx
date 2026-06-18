@@ -52,7 +52,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${SEARCH_DIALOG}.search`,
-        filter: AppSurface.subject(AppSurface.deckCompanion('search'), (value): value is Space => isSpace(value)),
+        filter: AppSurface.subject(AppSurface.deckCompanion('search'), isSpace),
         component: ({ data }) => {
           const space = data.subject;
           if (!space) {
