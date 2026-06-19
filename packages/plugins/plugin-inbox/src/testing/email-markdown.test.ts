@@ -25,6 +25,7 @@ const decodeQuotedPrintable = (input: string): string => {
       bytes.push(ch.charCodeAt(0));
     }
   }
+
   return Buffer.from(bytes).toString('utf-8');
 };
 
