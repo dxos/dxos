@@ -25,6 +25,8 @@ export namespace Position {
 export const byPosition = <T extends { position?: Position }>({ position: a }: T, { position: b }: T): -1 | 0 | 1 => {
   const aVal = a ?? 0;
   const bVal = b ?? 0;
-  if (aVal === bVal) return 0;
+  if (aVal === bVal) {
+    return 0;
+  }
   return aVal < bVal ? -1 : 1;
 };
