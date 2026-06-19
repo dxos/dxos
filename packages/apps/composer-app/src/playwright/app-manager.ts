@@ -264,8 +264,12 @@ export class AppManager {
 
   async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
     const section = this.currentWorkspace.getByTestId(testId);
-    await section.waitFor({ state: 'attached', timeout });
-    await section.getByRole('button').first().click({ delay });
+    await section.waitFor({ state: 'visible', timeout });
+    const toggle = section.getByTestId('treeItem.toggle');
+    // Only expand if not already open — clicking a closed section would collapse it.
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+      await toggle.click({ delay });
+    }
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
@@ -313,6 +317,7 @@ export class AppManager {
   }
 
   async deleteObject(nth = 0): Promise<void> {
+    await this.getObjectLinks().nth(nth).hover();
     await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');

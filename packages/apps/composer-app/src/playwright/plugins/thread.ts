@@ -2,12 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {
   createComment: async (page: Page, plankLocator: Locator, comment: string) => {
-    await plankLocator.getByTestId('comments.comment.add').click();
+    const addButton = plankLocator.getByTestId('comments.comment.add');
+    // The selectionAspect is updated via a 100ms debounce after the CodeMirror selection dispatch,
+    // which controls the disabled state. Explicitly wait for enabled before clicking.
+    await expect(addButton).toBeEnabled();
+    await addButton.click();
     const currentThread = Thread.getCurrentThread(page);
     // Wait for the newly-created draft thread to appear with aria-current="location".
     // After the click, there is a brief window where React has not yet re-rendered
@@ -31,7 +36,11 @@ export const Thread = {
 
   getCurrentThread: (page: Page) => page.locator('[data-testid=thread][aria-current="location"]'),
 
-  deleteThread: (thread: Locator) => thread.getByTestId('thread.delete').click(),
+  deleteThread: async (thread: Locator) => {
+    // Thread.Header uses hoverableControls — the delete button is opacity:0 until hovered.
+    await thread.hover();
+    await thread.getByTestId('thread.delete').click();
+  },
 
   getMessages: (thread: Locator) => thread.getByTestId('thread.message'),
 
