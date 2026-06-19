@@ -96,12 +96,12 @@ export const createTypeSectionExtension = (
         return Effect.succeed([]);
       }
 
-      // Reactivity is scoped to this type's order; unrelated space.properties changes don't re-run the connector.
-      // The atom emits an immutable snapshot of the stored order: each ref as its uri (no target load).
-      const storedUris =
+      // Re-emits when space.properties changes; the stored order is a list of object refs (uri read without
+      // loading the target).
+      const storedRefs =
         get(Annotation.atomProperty(space.properties, AppAnnotation.SectionOrderAnnotation, typename)) ?? [];
-      const order = storedUris
-        .map((uri) => (EID.isEID(uri) ? EID.getEntityId(uri) : undefined))
+      const order = storedRefs
+        .map((ref) => (EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined))
         .filter((id): id is string => id !== undefined);
       // Objects not in the stored order follow in query order.
       const orderedObjects = inferObjectOrder(
