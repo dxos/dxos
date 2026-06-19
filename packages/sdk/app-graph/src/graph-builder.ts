@@ -198,12 +198,7 @@ class GraphBuilderImpl implements GraphBuilder {
     );
     if (ids.length > 0) {
       const sortedIds = [...nodes]
-        .sort((a, b) =>
-          Position.compare(
-            { position: a.properties?.position },
-            { position: b.properties?.position },
-          ),
-        )
+        .sort((a, b) => Position.compare({ position: a.properties?.position }, { position: b.properties?.position }))
         .map((n) => n.id);
       Graph.sortEdges(this._graph, id, relation, sortedIds);
     }
