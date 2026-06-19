@@ -3,9 +3,16 @@
 //
 
 import { act, renderHook } from '@testing-library/react';
+import { type FocusEvent } from 'react';
 import { describe, test, vi } from 'vitest';
 
 import { useListSelection } from './useListSelection';
+
+// Minimal synthetic focus event exposing only the fields the selection-follows-focus handler reads.
+// Constructing a partial event for a unit test is a genuine type boundary (React synthesizes the rest).
+const focusEvent = (
+  fields: Pick<FocusEvent<HTMLElement>, 'currentTarget' | 'relatedTarget'>,
+): FocusEvent<HTMLElement> => fields as FocusEvent<HTMLElement>;
 
 describe('useListSelection', () => {
   describe('single mode', () => {
@@ -36,12 +43,14 @@ describe('useListSelection', () => {
       const { result } = renderHook(() => useListSelection({ mode: 'single', value: 'b', onValueChange }));
 
       // Entry focus (e.g. a popover auto-focusing on open): relatedTarget is outside the list.
-      act(() => result.current.bind('a').rowProps.onFocus?.({ currentTarget: optionA, relatedTarget: outside } as any));
+      act(() =>
+        result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: outside })),
+      );
       expect(onValueChange).not.toHaveBeenCalled();
 
       // Navigation within the list: relatedTarget is inside the list, so selection follows focus.
       act(() =>
-        result.current.bind('a').rowProps.onFocus?.({ currentTarget: optionA, relatedTarget: container } as any),
+        result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: container })),
       );
       expect(onValueChange).toHaveBeenLastCalledWith('a');
 
