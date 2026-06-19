@@ -10,9 +10,9 @@ import * as Option from 'effect/Option';
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
-import { type TreeData } from '@dxos/react-ui-list';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
+import { type TreeData } from '@dxos/react-ui-list';
 import { inferObjectOrder, Position } from '@dxos/util';
 
 import { Paths } from '../app';
