@@ -5,7 +5,7 @@
     "main": {
       "type": "record",
       "key": "any",
-      "description": "Trust attestation issued by a curator DID about a verified publisher. The rkey is the verified DID. Records authored by anyone other than the configured curator DID are ignored by the registry indexer.",
+      "description": "Trust attestation issued by a curator DID about a verified publisher. The rkey MUST equal the verified publisher DID (enforced by the registry indexer — records where rkey ≠ subject are rejected). Records authored by anyone other than the configured curator DID are also ignored.",
       "record": {
         "type": "object",
         "required": ["subject", "handle", "displayName", "createdAt"],

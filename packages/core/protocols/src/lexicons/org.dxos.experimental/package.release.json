@@ -27,8 +27,8 @@
           },
           "manifestHash": {
             "type": "string",
-            "description": "Optional integrity hash of the module manifest (e.g. sha256-<base64>).",
-            "maxLength": 256
+            "description": "Multibase-encoded multihash of the module manifest. SHA2-256 with base58btc multibase prefix is preferred (e.g. 'zQm...' — 47 chars). The registry indexer MAY fetch the manifest and verify the hash at index time.",
+            "maxLength": 128
           },
           "dependencies": {
             "type": "unknown",
