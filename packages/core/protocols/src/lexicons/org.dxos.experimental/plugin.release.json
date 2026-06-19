@@ -1,18 +1,18 @@
 {
   "lexicon": 1,
-  "id": "org.dxos.experimental.package.release",
+  "id": "org.dxos.experimental.plugin.release",
   "defs": {
     "main": {
       "type": "record",
       "key": "any",
-      "description": "Release record for a versioned artifact of an org.dxos.experimental.package.profile. Conventionally keyed as '<key>:<version>'. One record per version; conceptually single-write (a new version is a new record), though the author retains write access — integrity is anchored by manifestHash rather than enforced immutability.",
+      "description": "Release record for a versioned artifact of an org.dxos.experimental.plugin.profile. Conventionally keyed as '<key>:<version>'. One record per version; conceptually single-write (a new version is a new record), though the author retains write access — integrity is anchored by manifestHash rather than enforced immutability.",
       "record": {
         "type": "object",
-        "required": ["package", "version", "moduleUrl", "createdAt"],
+        "required": ["pluginKey", "version", "moduleUrl", "createdAt"],
         "properties": {
-          "package": {
+          "pluginKey": {
             "type": "string",
-            "description": "Key of the parent package.profile record authored by the same DID.",
+            "description": "Key of the parent plugin.profile record authored by the same DID.",
             "maxLength": 63
           },
           "version": {

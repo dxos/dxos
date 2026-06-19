@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, Message } from '@dxos/types';
@@ -45,7 +44,7 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
       invariant(space, 'Space not found');
       const feed = Channel.getFeed(channel);
       invariant(feed, 'Channel is not feed-backed');
-      yield* Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(space.db)));
+      yield* Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)));
     }),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,
 };

@@ -8,7 +8,7 @@ import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation, type Routine } from '@dxos/compute';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -99,7 +99,7 @@ const usePromptHandler = (routine: Routine.Routine) => {
 
   return useSpaceCallback(
     db?.spaceId,
-    [Database.Service, Feed.FeedService] as const,
+    [Database.Service] as const,
     () => {
       invariant(data);
       return Operation.invoke(AgentPrompt, data);

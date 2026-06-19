@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -14,7 +13,6 @@ import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from '../testing';
-import { createFeedServiceLayer } from './feed-service';
 
 describe('Feed', () => {
   let builder: EchoTestBuilder;
@@ -30,7 +28,7 @@ describe('Feed', () => {
   test('remove items from a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'removable' }));
@@ -66,7 +64,7 @@ describe('Feed', () => {
   test('query items in a feed', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'queryable' }));
@@ -84,7 +82,7 @@ describe('Feed', () => {
   test('feed objects have database returned with Obj.getDatabase', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'database-test' }));
@@ -105,7 +103,7 @@ describe('Feed', () => {
   test('getParent returns Feed object for appended items', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'parent-test' }));
@@ -122,7 +120,7 @@ describe('Feed', () => {
   test('getParent returns Feed object for queried items', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'parent-query-test' }));
@@ -144,7 +142,7 @@ describe('Feed', () => {
   test('query.subscribe fires with current results when fire: true', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'subscribable' }));
@@ -168,7 +166,7 @@ describe('Feed', () => {
   test('query.subscribe fires when items are appended', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'reactive' }));
@@ -194,7 +192,7 @@ describe('Feed', () => {
   test('sync flushes the feed without throwing', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'syncable' }));
@@ -218,7 +216,7 @@ describe('Feed', () => {
       types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
     });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'posts' }));
@@ -260,7 +258,7 @@ describe('Feed', () => {
       types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
     });
     await using db1 = await peer.createDatabase(spaceKey);
-    const testLayer1 = Layer.merge(Database.layer(db1), createFeedServiceLayer(db1));
+    const testLayer1 = Database.layer(db1);
 
     let postRefUri = '';
     let containerId = '';
@@ -307,7 +305,7 @@ describe('Feed', () => {
     test('Feed.append assigns data and trace namespaces in feed store', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
-      const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+      const testLayer = Database.layer(db);
 
       let dataFeed!: Feed.Feed;
       let traceFeed!: Feed.Feed;
@@ -341,7 +339,7 @@ describe('Feed', () => {
     test('Feed.query reads trace feed items from trace namespace', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
-      const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+      const testLayer = Database.layer(db);
 
       let traceFeed!: Feed.Feed;
       await Effect.gen(function* () {
@@ -368,7 +366,7 @@ describe('Feed', () => {
     test('queue service reads trace feed items from trace namespace', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
-      const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+      const testLayer = Database.layer(db);
 
       let traceFeed!: Feed.Feed;
       await Effect.gen(function* () {

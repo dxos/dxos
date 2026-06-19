@@ -37,7 +37,7 @@ export const AppendChannelMessage = Operation.make({
     name: 'Append Channel Message',
     icon: 'ph--chat-text--regular',
   },
-  // Note: Feed.FeedService is provided inside the handler from space.db, not at the
+  // Note: Database.Service is provided inside the handler from space.db, not at the
   // operation level — the runtime can't fulfill it without a space context.
   services: [Capability.Service],
   input: Schema.Struct({

@@ -14,7 +14,7 @@ import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Tag } from '@dxos/echo';
+import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { type SpaceId } from '@dxos/keys';
@@ -130,7 +130,7 @@ const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: Mo
         },
         { spaceId },
       );
-    }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService))),
+    }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
   );
 
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {

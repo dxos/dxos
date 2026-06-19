@@ -8,6 +8,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/AgentService.ts'
       - '--entryPoint=src/StorageService.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--platform=neutral'

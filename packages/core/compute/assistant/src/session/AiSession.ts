@@ -52,7 +52,7 @@ export type RunProps<R = never> = {
 
 export type Options = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Feed.FeedService>;
+  runtime: Runtime.Runtime<Database.Service>;
   /** @effect-atom/atom-react Registry for reactive state. */
   registry?: AtomRegistry.Registry;
 };
@@ -73,7 +73,7 @@ export class Session extends Resource {
    */
   private readonly _binder: AiContext.Binder;
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+  private readonly _runtime: Runtime.Runtime<Database.Service>;
   private readonly _sessionLoader = new SessionLoader();
 
   public constructor(options: Options) {
@@ -238,11 +238,11 @@ export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Ser
    */
   static layerNewFeed = (
     options?: Omit<Options, 'feed' | 'runtime'>,
-  ): Layer.Layer<Service | AiContext.Service, never, Database.Service | Feed.FeedService> =>
+  ): Layer.Layer<Service | AiContext.Service, never, Database.Service> =>
     Layer.unwrapScoped(
       Effect.gen(function* () {
         const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         return Service.layer({ ...options, feed, runtime });
       }),
     );

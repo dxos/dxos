@@ -15,7 +15,5 @@ export interface CompletionGuard {
    * When the agent has a plan with outstanding work, returns a markdown summary for an ephemeral
    * stop/continue check. Returns `undefined` when completion can proceed without the check.
    */
-  readonly getIncompletePlanSummary: (
-    feed: Feed.Feed,
-  ) => Effect.Effect<string | undefined, never, Database.Service | Feed.FeedService>;
+  readonly getIncompletePlanSummary: (feed: Feed.Feed) => Effect.Effect<string | undefined, never, Database.Service>;
 }

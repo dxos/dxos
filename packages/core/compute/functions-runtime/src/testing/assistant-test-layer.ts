@@ -15,6 +15,7 @@ import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/
 import { TestAiService } from '@dxos/ai/testing';
 import { AiContext, AiSession, CompleteBlock } from '@dxos/assistant';
 import {
+  AgentService,
   Blueprint,
   Credential,
   Operation,
@@ -34,7 +35,7 @@ import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { AgentService } from '../agent-service';
+import { AgentService as AgentServiceRuntime } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
@@ -72,7 +73,7 @@ interface TestLayerOptions {
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
-  agent?: AgentService.AgentServiceOptions;
+  agent?: AgentServiceRuntime.AgentServiceOptions;
 
   /**
    * Extra services to make available in the service resolver.
@@ -83,7 +84,6 @@ interface TestLayerOptions {
 
 export type AssistantTestServices =
   | LanguageModel.LanguageModel
-  | Feed.FeedService
   | Credential.CredentialsService
   | AgentService.AgentService
   | AiService.AiService
@@ -108,12 +108,12 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
-  const agentOptions: AgentService.AgentServiceOptions = { ...options.agent };
+  const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
   agentOptions.model ??= resolvedModel;
 
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(AgentService.layer(agentOptions)),
+    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
@@ -141,8 +141,8 @@ export const AssistantTestServiceResolverLayer = ({
   Layer.scoped(
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
-      const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
-        Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+      const services = yield* Effect.context<Database.Service>().pipe(
+        Effect.map(Context.pick(Database.Service)),
         Effect.map(Layer.succeedContext),
       );
 
@@ -155,7 +155,7 @@ export const AssistantTestServiceResolverLayer = ({
               return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
             }
             const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Feed.FeedService>();
+            const runtime = yield* Effect.runtime<Database.Service>();
             const binder = yield* EffectEx.acquireReleaseResource(
               () =>
                 new AiContext.Binder({
@@ -172,7 +172,7 @@ export const AssistantTestServiceResolverLayer = ({
               return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
             }
             const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Feed.FeedService>();
+            const runtime = yield* Effect.runtime<Database.Service>();
             const session = yield* EffectEx.acquireReleaseResource(
               () =>
                 new AiSession.Session({
@@ -186,7 +186,6 @@ export const AssistantTestServiceResolverLayer = ({
         yield* ServiceResolver.fromRequirements(
           Database.Service,
           OpaqueToolkit.OpaqueToolkitProvider,
-          Feed.FeedService,
           AiService.AiService,
           Registry.Service,
           Credential.CredentialsService,
@@ -244,7 +243,7 @@ export const AssistantTestBaseLayer = ({
 
 const AssistantTestTracingLayer = (
   mode: 'noop' | 'console' | 'pretty' | 'feed',
-): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service | Feed.FeedService> =>
+): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service> =>
   Match.value(mode).pipe(
     Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
     Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),

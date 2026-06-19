@@ -50,7 +50,6 @@ export const AgentPrompt = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    Feed.FeedService,
     OpaqueToolkit.OpaqueToolkitProvider,
     Registry.Service,
     Trace.TraceService,

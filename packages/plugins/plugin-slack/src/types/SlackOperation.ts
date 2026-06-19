@@ -38,9 +38,8 @@ export const GetSlackChannels = Operation.make({
     description: 'List Slack conversations reachable from an integration without materializing local Channels.',
     icon: 'ph--slack-logo--regular',
   },
-  // Database.Service / Feed.FeedService are provided inside the handler from
-  // the integration's database and the resolved space's queues — same pattern
-  // as plugin-thread's `AppendChannelMessage`.
+  // Database.Service is provided inside the handler from the integration's
+  // database and the resolved space's queues — same pattern as plugin-thread's `AppendChannelMessage`.
   services: [Capability.Service],
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
