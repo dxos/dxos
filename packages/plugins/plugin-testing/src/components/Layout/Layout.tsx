@@ -193,7 +193,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}
-                  {layout.popoverKind === 'base' && (
+                  {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
                     <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                   )}
                 </Popover.Viewport>
