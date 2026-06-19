@@ -3,17 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { isSpace, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
+import { Annotation, Obj } from '@dxos/echo';
+import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
+import { WelcomeDismissedAnnotation } from '../annotations';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -25,7 +30,8 @@ const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.pro
 const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.profile.key }];
 const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.profile.key }];
 const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.profile.key }];
-const SPACE_HOME_NODE_LABEL: LabelTuple = ['space-home-node.label', { ns: meta.profile.key }];
+const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.profile.key }];
+const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.profile.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -134,34 +140,56 @@ export default Capability.makeModule(
         },
       }),
 
-      // Per-space Home virtual node, hoisted to the top of every space's navtree. The node is fully
-      // virtual (no backing ECHO object); the matching Article surface uses `useActiveSpace()` to
-      // resolve the space. The extension is positioned `first` so its node is inserted ahead of
-      // other `position: 'first'` siblings (Settings, Collections).
+      // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
+      // by plugin-space: type === SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
+      // conditional on the personal space and the welcome not being dismissed — read reactively via
+      // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
-        id: 'spaceHome',
-        position: 'first',
-        match: AppNodeMatcher.whenSpace,
-        // NOTE: The connector re-evaluates whenever the space node emits (e.g. when the assistant writes
-        // feed/queue data). `addNodeImpl` dedupes properties by reference, so the static `properties` and
-        // its `label` array MUST be stable singletons — otherwise each re-eval mints a "changed" node,
-        // remounting the Home Article surface (and its cross-origin welcome iframe) and freezing the app.
-        connector: (space) =>
-          Effect.succeed([
-            {
-              id: Paths.SPACE_HOME_SEGMENT,
-              type: SPACE_HOME_NODE_TYPE,
-              data: SPACE_HOME_NODE_TYPE,
+        id: 'spaceHomeActions',
+        match: (node): Option.Option<Space> => {
+          const space = (node.properties as { space?: unknown }).space;
+          return node.type === SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
+        },
+        actions: (space, get) => {
+          const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;
+          const isDismissed = properties
+            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+            : false;
+          const showActions = AppSpace.isPersonalSpace(space) && !isDismissed;
+          if (!showActions) {
+            return Effect.succeed([]);
+          }
+
+          return Effect.succeed([
+            Node.makeAction({
+              id: HelpOperation.Start.meta.key,
+              data: Effect.fnUntraced(function* () {
+                yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, showHints: true }));
+                yield* Operation.invoke(HelpOperation.Start);
+              }),
               properties: {
-                label: SPACE_HOME_NODE_LABEL,
-                icon: 'ph--house--regular',
-                iconHue: 'cyan',
-                position: 'first',
-                draggable: false,
-                droppable: false,
+                label: START_TOUR_LABEL,
+                icon: 'ph--path--regular',
+                iconOnly: false,
+                disposition: 'toolbar',
+                testId: 'supportPlugin.startTour',
               },
-            } satisfies Node.NodeArg<string>,
-          ]),
+            }),
+            Node.makeAction({
+              id: HelpOperation.HideWelcome.meta.key,
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(HelpOperation.HideWelcome, { space });
+              }),
+              properties: {
+                label: HIDE_WELCOME_LABEL,
+                icon: 'ph--eye-slash--regular',
+                iconOnly: false,
+                disposition: 'toolbar',
+                testId: 'supportPlugin.hideWelcome',
+              },
+            }),
+          ]);
+        },
       }),
     ]);
 

@@ -14,8 +14,3 @@ export const DISCORD_SERVICE_URL = 'https://discord-service.dxos.workers.dev';
 export const GITHUB_NEW_ISSUE_URL = 'https://github.com/dxos/dxos/issues/new';
 
 export const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
-
-/**
- * Free-form node type tag for the virtual Home node. Avoids the ECHO-object node matchers in app-graph.
- */
-export const SPACE_HOME_NODE_TYPE = `${meta.profile.key}.space-home-node`;
