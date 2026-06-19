@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
 
@@ -65,7 +65,7 @@ export const Sheet = Schema.Struct({
   ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
-  AppAnnotation.CollectionItemAnnotation.set(true),
+  CollectionItemAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.sheet', '0.1.0')),
 );
 

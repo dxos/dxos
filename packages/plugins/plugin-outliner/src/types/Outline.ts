@@ -6,16 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { Text } from '@dxos/schema';
+import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
 export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--tree-structure--regular', hue: 'indigo' }),
-  AppAnnotation.CollectionItemAnnotation.set(true),
+  CollectionItemAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.outline', '0.1.0')),
 );
 

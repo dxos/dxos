@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
-
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',
@@ -30,10 +29,4 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
 export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
   schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
-});
-
-/** Marks a schema type as eligible to live inside / be dropped into collections. */
-export const CollectionItemAnnotation = Annotation.make({
-  id: 'org.dxos.space.collectionItem',
-  schema: Schema.Boolean,
 });

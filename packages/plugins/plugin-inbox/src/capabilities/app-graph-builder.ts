@@ -19,7 +19,7 @@ import { Integration } from '@dxos/plugin-integration';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Event, Message } from '@dxos/types';
-import { kebabize, Position } from '@dxos/util';
+import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
 import { InboxOperation } from '#types';

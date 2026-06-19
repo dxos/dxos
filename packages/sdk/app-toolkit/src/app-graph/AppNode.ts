@@ -14,6 +14,7 @@ import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
+import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
 import { NotFound } from '../app';
@@ -77,7 +78,7 @@ export const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.ite
 
 /**
  * Returns true when the object is eligible to live inside a collection:
- * collections are always eligible; other types require {@link AppAnnotation.CollectionItemAnnotation}.
+ * collections are always eligible; other types require {@link CollectionItemAnnotation}.
  */
 export const isCollectionItem = (object: Obj.Unknown): boolean => {
   if (Obj.instanceOf(Collection.Collection, object)) {
@@ -87,7 +88,7 @@ export const isCollectionItem = (object: Obj.Unknown): boolean => {
   if (!type) {
     return false;
   }
-  return AppAnnotation.CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
+  return CollectionItemAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
 };
 
 /** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
