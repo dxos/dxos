@@ -43,10 +43,13 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
   const nameRef = useRef(name);
   nameRef.current = name;
   const cancelledRef = useRef(false);
+  // Enter commits then closes, which unmounts and runs the cleanup commit; guard against a duplicate write.
+  const committedRef = useRef(false);
 
   const commit = useCallback(() => {
     try {
-      if (!cancelledRef.current) {
+      if (!cancelledRef.current && !committedRef.current) {
+        committedRef.current = true;
         setName(subject, nameRef.current);
       }
     } catch (err) {
