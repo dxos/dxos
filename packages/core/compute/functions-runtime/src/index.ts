@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-// Re-exports the agent-service barrel: `AgentService` namespace (createSession/getSession/layer),
-// `AGENT_PROCESS_KEY`, and the delegation types (`Delegation`, `DelegationStrategy`).
+// Re-exports the agent-service barrel: `AgentService` namespace (API from @dxos/compute +
+// createSession/layer), `AGENT_PROCESS_KEY`, and the delegation types.
 export * from './agent-service';
 export * from './executor';
 export { ProcessManager } from './process';
