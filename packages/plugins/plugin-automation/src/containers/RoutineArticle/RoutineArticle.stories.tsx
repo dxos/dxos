@@ -18,7 +18,6 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
 import { RoutineArticle } from './RoutineArticle';
 
 const DefaultStory = () => {
@@ -32,7 +31,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/RoutineArticle',
+  title: 'plugins/plugin-automation/containers/RoutineArticle',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -58,7 +57,6 @@ const meta = {
             }),
         }),
         AutomationPlugin(),
-        AssistantPlugin(),
       ],
     }),
   ],

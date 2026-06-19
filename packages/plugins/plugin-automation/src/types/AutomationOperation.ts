@@ -7,8 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
-import { Database, DXN, Obj } from '@dxos/echo';
+import { Chat } from '@dxos/assistant-toolkit';
+import { Operation, Routine } from '@dxos/compute';
+import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
 // references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
@@ -57,5 +58,30 @@ export const CreateAutomation = Operation.make({
     id: Schema.String,
     subject: Schema.Array(Schema.String),
     object: Obj.Unknown,
+  }),
+});
+
+export const RunPromptInNewChat = Operation.make({
+  meta: {
+    key: makeKey('runPromptInNewChat'),
+    name: 'Run Prompt In New Chat',
+    icon: 'ph--chat-text--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    /** Context objects to bind to the new chat. */
+    objects: Schema.optional(Schema.Array(Obj.Unknown)),
+    /** Blueprint keys to look up and bind to the new chat. */
+    blueprints: Schema.optional(Schema.Array(Schema.String)),
+    /** Raw instructions or an existing Routine object reference. */
+    prompt: Schema.Union(Schema.String, Ref.Ref(Routine.Routine)),
+    /**
+     * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
+     */
+    background: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Struct({
+    object: Type.getSchema(Chat.Chat),
   }),
 });

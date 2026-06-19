@@ -10,7 +10,6 @@ import { Magazine } from '#types';
 
 const operations = [FeedOperation.FetchArticleContent];
 
-// TODO(burdon): This is just sync? Use routine?
 const make = () =>
   Blueprint.make({
     key: Magazine.BLUEPRINT_KEY,

@@ -18,6 +18,7 @@ import * as Blueprint from './Blueprint';
 export const Routine = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
+
   input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
     description: 'Input schema',
   }),
@@ -29,6 +30,7 @@ export const Routine = Schema.Struct({
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
   ),
+
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(

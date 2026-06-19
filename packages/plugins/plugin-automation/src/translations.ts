@@ -26,6 +26,11 @@ export const translations = [
         'automation-panel.label': 'Automations',
         'create-panel.template.placeholder': 'Search templates...',
 
+        'command.placeholder': 'Enter slash command...',
+        'template.placeholder': 'Enter template...',
+        'run-prompt.label': 'Run prompt',
+        'routine-running.label': 'Running…',
+
         'automation-name.label': 'Name',
         'general.title': 'General',
         'general.description': 'Name and status.',

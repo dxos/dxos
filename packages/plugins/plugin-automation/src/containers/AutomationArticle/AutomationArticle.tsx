@@ -32,9 +32,7 @@ import { ParentLabelAnnotation } from '@dxos/schema';
 import { meta } from '#meta';
 import { Automation } from '#types';
 
-import { describeCron, fromCron, toCron } from '../../components/CronBuilder/cron';
-import { CronBuilder } from '../../components/CronBuilder/CronBuilder';
-import { type CronSpecType, FrequencyDefaults } from '../../components/CronBuilder/schema';
+import { type CronSpecType, CronBuilder, FrequencyDefaults, describeCron, fromCron, toCron } from '../../components';
 
 const RUN_ROUTINE_DXN = 'org.dxos.function.prompt';
 
@@ -161,7 +159,6 @@ const TriggerTestingSection = ({ space, trigger }: TriggerTestingSectionProps) =
 
   const spec = Obj.getSnapshot(trigger).spec;
   const kind = spec?.kind;
-
   const cursor = kind === 'feed' ? Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id : undefined;
 
   const handleForceRun = useCallback(async () => {
@@ -255,11 +252,14 @@ const OperationAction = Schema.Struct({
   kind: Schema.Literal('operation'),
   operation: Ref.Ref(Operation.PersistentOperation).pipe(Schema.annotations({ title: 'Operation' }), Schema.optional),
 });
+
 const RoutineAction = Schema.Struct({
   kind: Schema.Literal('routine'),
   routine: Ref.Ref(Routine.Routine).pipe(Schema.annotations({ title: 'Routine' }), Schema.optional),
 });
+
 const ActionForm = Schema.Union(OperationAction, RoutineAction);
+
 type ActionFormValues = Schema.Schema.Type<typeof ActionForm>;
 
 // Flat view of the form values (see `TriggerFormInput`): reach the variant fields that `Partial<T>` drops.

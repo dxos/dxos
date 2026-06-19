@@ -12,6 +12,7 @@ import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
@@ -19,8 +20,8 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatPath } from '../paths';
 
-const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewChat> =
-  AssistantOperation.RunPromptInNewChat.pipe(
+const handler: Operation.WithHandler<typeof AutomationOperation.RunPromptInNewChat> =
+  AutomationOperation.RunPromptInNewChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(
         function* ({ db, prompt, objects, blueprints, background }) {

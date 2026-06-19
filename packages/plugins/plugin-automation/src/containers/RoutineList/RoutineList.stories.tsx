@@ -22,8 +22,6 @@ import { Organization } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
-import { TracePanel } from '../TracePanel';
 import { RoutineList } from './RoutineList';
 
 // TODO(burdon): Factor out (see assistant-stories)
@@ -63,15 +61,12 @@ const DefaultStory = () => {
       <Panel.Toolbar className='flex p-1 items-center'>
         <RoutineList subject={subject} role='toolbar-input' attendableId='story' />
       </Panel.Toolbar>
-      <Panel.Content>
-        <TracePanel role='article' space={space} attendableId={space.id} />
-      </Panel.Content>
     </Panel.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/RoutineList',
+  title: 'plugins/plugin-automation/containers/RoutineList',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -112,7 +107,6 @@ const meta = {
             }),
         }),
 
-        AssistantPlugin(),
         AutomationPlugin(),
       ],
     }),

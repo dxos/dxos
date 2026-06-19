@@ -26,7 +26,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/RoutineProperties',
+  title: 'plugins/plugin-automation/components/RoutineProperties',
   render: DefaultStory,
   decorators: [
     withTheme(),

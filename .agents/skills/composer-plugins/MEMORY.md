@@ -4,6 +4,15 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-19 — plugin-automation / plugin-assistant (move Routine/Blueprint/Template UI down)
+
+- Moving UI DOWN the dep graph: plugin-assistant already deps plugin-automation, so Routine/Blueprint/Template containers+components moved INTO automation; assistant re-imports nothing (surfaces moved too). Check the existing edge direction first (`node -e` on package.json) before deciding which way code can move.
+- An operation's DEFINITION and its HANDLER can live in different plugins. `RunPromptInNewChat` def moved to `automation/types` (AutomationOperation), handler stays in plugin-assistant importing it via `@dxos/plugin-automation/types`. This is the only non-cyclic way for a lower plugin's UI (RoutineList) to dispatch a higher plugin's chat op. The op KEY namespace changes (`automation.operation.*`) — acceptable in a restructure.
+- **plugin-automation `tsconfig.json` does NOT exclude `*.stories.tsx`** (unlike plugin-assistant which does) → `plugin-automation:build` TYPECHECKS stories. Moved stories must only import packages automation deps; had to add `@dxos/assistant` devDep (story used `createSystemPrompt`) and strip `AssistantPlugin`/`TracePanel` (assistant-only, can't move down) from RoutineArticle/RoutineList stories.
+- When moving a publicly-imported component, add the matching subpath EXPORT to the destination (`./components`, `./types`) AND repoint every external consumer in the same change (plugin-script, plugin-feed, stories-assistant imported `TemplateEditor` from `@dxos/plugin-assistant/components`; plugin-trip imported `AssistantOperation` from `@dxos/plugin-assistant` root). Add the new `@dxos/plugin-automation` dep to consumers that lacked it (plugin-feed, plugin-trip).
+- `createSystemPrompt` lives only in `@dxos/assistant`, not re-exported by `@dxos/assistant-toolkit`.
+- moon `compile` entryPoints for `src/components/index.ts` / `src/containers/index.ts` / `src/types/index.ts` were already present in automation's moon.yml — only package.json `exports` needed the new `./components` + `./types` subpaths.
+
 ## 2026-06-18 — plugin-assistant (chat failure / error-toast story)
 
 - To DEMO an error toast, prefer a PRESENTATIONAL story: render `Toast.Provider`/`Toast.Viewport`/`Toast.Root` directly and feed `Toast.Description` from the real `parseError(rawError)`, title via `useTranslation(meta.id)('ai-service-error.label')`. Deterministic + screenshotable + zero console noise.
