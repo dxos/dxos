@@ -202,7 +202,7 @@ export default Capability.makeModule(
                   );
                   const { subject } = yield* Operation.invoke(
                     SpaceOperation.AddObject,
-                    { object: chat, target: space.db, hidden: true, targetNodeId: getChatsPath(space.db.spaceId) },
+                    { object: chat, target: space.db, targetNodeId: getChatsPath(space.db.spaceId) },
                     { spaceId: space.db.spaceId },
                   );
                   yield* Operation.invoke(

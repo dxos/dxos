@@ -31,3 +31,9 @@ export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
   schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
 });
+
+/** Marks a schema type as eligible to live inside / be dropped into collections. */
+export const CollectionItemAnnotation = Annotation.make({
+  id: 'org.dxos.space.collectionItem',
+  schema: Schema.Boolean,
+});

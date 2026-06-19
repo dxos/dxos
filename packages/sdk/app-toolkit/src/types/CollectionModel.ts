@@ -12,20 +12,20 @@ import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { AppAnnotation } from '../echo';
+import * as AppNode from '../app-graph/AppNode';
 
 type AddProps = {
   object: Obj.Unknown;
   target?: Collection.Collection;
-  hidden?: boolean;
 };
 
-export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
+export const add = Effect.fn(function* ({ object, target }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {
     Obj.update(target, (target) => {
       target.objects.push(objectRef);
     });
-  } else if (hidden) {
+  } else if (!AppNode.isCollectionItem(object)) {
     yield* Database.add(object);
   } else {
     const objects = yield* Database.query(Query.type(SpaceProperties)).run;

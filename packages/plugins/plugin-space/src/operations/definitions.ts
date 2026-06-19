@@ -168,7 +168,6 @@ export namespace SpaceOperation {
       target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
         description: 'The database or collection to add to.',
       }),
-      hidden: Schema.optional(Schema.Boolean),
       targetNodeId: Schema.optional(
         Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
       ),

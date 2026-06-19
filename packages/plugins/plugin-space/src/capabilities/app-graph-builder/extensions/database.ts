@@ -159,6 +159,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
               get,
               db: space.db,
               object,
+              draggable: false,
               droppable: false,
             }),
           )
@@ -193,6 +194,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
                 get,
                 db: space.db,
                 object,
+                draggable: false,
                 droppable: false,
               });
             })

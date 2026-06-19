@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
@@ -23,7 +23,6 @@ import {
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
-  REMOVE_FROM_COLLECTION_LABEL,
 } from './shared';
 
 //
@@ -287,37 +286,6 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    ...(parentCollection && !Obj.instanceOf(Collection.Collection, object)
-      ? [
-          Node.makeAction({
-            id: 'removeFromCollection',
-            data: () =>
-              Effect.gen(function* () {
-                const index = parentCollection.objects.findIndex((ref: any) => ref.target === object);
-                if (index !== -1) {
-                  const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
-                  const isActive = layout.active.includes(nodeId);
-
-                  Obj.update(parentCollection, (parentCollection) => {
-                    parentCollection.objects.splice(index, 1);
-                  });
-
-                  if (isActive) {
-                    yield* Operation.invoke(LayoutOperation.Open, {
-                      subject: [Paths.getObjectPathFromObject(object)],
-                    });
-                  }
-                }
-              }),
-            properties: {
-              label: REMOVE_FROM_COLLECTION_LABEL,
-              icon: 'ph--minus-circle--regular',
-              disposition: 'list-item',
-              testId: 'spacePlugin.removeFromCollection',
-            },
-          }),
-        ]
-      : []),
     Node.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>

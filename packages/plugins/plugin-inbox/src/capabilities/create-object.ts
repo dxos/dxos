@@ -39,7 +39,7 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
+
               targetNodeId: options.targetNodeId,
             });
           }),
@@ -53,7 +53,7 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
+
               targetNodeId: options.targetNodeId ?? getCalendarsPath(options.db.spaceId),
             });
           }),
@@ -66,7 +66,7 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              hidden: true,
+
               targetNodeId: options.targetNodeId,
             });
           }),
