@@ -29,7 +29,7 @@ export const AgentPrompt = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default ai.claude.model.claude-opus-4-6
+     * @default ai.claude.model.claude-opus-4-8
      */
     model: Schema.optional(ModelName),
 

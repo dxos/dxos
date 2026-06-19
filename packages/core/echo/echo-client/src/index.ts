@@ -7,10 +7,8 @@ export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 export * from './automerge';
 export * from './client';
 export {
-  CoreDatabase,
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
-  type CoreDatabaseProps,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,
@@ -41,11 +39,11 @@ export {
 export { type Selection, type SubscriptionHandle, type UpdateInfo, createSubscription } from './echo-handler';
 export { getDXNWithSpaceKey, findObjectWithForeignKey, matchKeys } from './echo-handler';
 export { ObjectVersion, getVersion } from './echo-handler';
+export * from './feed';
 export * from './guarded-scope';
 export * from './hypergraph';
 export * from './proxy-db';
 export * from './query';
-export * from './queue';
 export * from './registry';
 export * from './serialized-space';
 export * from './serializer';

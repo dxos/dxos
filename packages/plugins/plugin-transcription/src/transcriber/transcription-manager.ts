@@ -77,7 +77,7 @@ export class TranscriptionManager extends Resource {
 
   setFeed(space: Space, feed: Feed.Feed): this {
     this._feed = feed;
-    this._feedServiceLayer = createFeedServiceLayer(space.queues);
+    this._feedServiceLayer = createFeedServiceLayer(space.db);
     return this;
   }
 

@@ -60,6 +60,13 @@ export type Options = {
    * This is useful for streaming the output to a queue.
    */
   onOutput?: (message: Message.Message) => Effect.Effect<void, never, never>;
+
+  /**
+   * When false, turn messages are not appended to the feed or written as persisted trace blocks.
+   *
+   * @default true
+   */
+  persist?: boolean;
 };
 
 export type RunProps<R = never> = {
@@ -139,6 +146,9 @@ export class Request {
     Effect.gen(this, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
+      if (this._options.persist === false) {
+        return message;
+      }
       for (const block of message.blocks) {
         log('write complete block', {
           messageId: message.id,

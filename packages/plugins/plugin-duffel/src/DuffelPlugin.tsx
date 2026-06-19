@@ -12,7 +12,7 @@ import { translations } from '#translations';
 export const DuffelPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    id: `${meta.id}/duffel`,
+    id: `${meta.profile.key}/duffel`,
     activatesOn: ActivationEvents.Startup,
     activate: Duffel,
   }),

@@ -20,7 +20,7 @@ import { getPluginPath, meta } from '#meta';
 import { useDisableConfirmation } from '../../hooks';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
-  const haystack = `${plugin.meta.name ?? ''} ${plugin.meta.id}`.toLowerCase();
+  const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();
   return haystack.includes(query);
 };
 
@@ -67,7 +67,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);

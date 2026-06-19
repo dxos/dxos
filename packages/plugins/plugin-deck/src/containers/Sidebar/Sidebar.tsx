@@ -14,7 +14,7 @@ import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
 
-const label = ['sidebar.title', { ns: meta.id }] satisfies Label;
+const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export const Sidebar = () => {
   const { state, deck } = useDeckState();

@@ -31,7 +31,7 @@ export type AutomationCompanionProps = {
  * created from a template dropdown (no dialog).
  */
 export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const templates = useCapabilities(AutomationCapabilities.Template);
   // Only offer templates applicable to this companion's subject (e.g. a CRM template needs a Mailbox).
   const applicableTemplates = useMemo(

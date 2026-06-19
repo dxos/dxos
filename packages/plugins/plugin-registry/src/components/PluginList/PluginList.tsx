@@ -39,11 +39,11 @@ export const PluginList = ({
     <List classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'>
       {plugins.map((plugin) => (
         <PluginItem
-          key={plugin.meta.id}
+          key={plugin.meta.profile.key}
           plugin={plugin}
-          extraTags={extraTagsById?.[plugin.meta.id]}
-          hasUpdate={updateAvailableIds?.has(plugin.meta.id)}
-          failure={failuresById?.[plugin.meta.id]}
+          extraTags={extraTagsById?.[plugin.meta.profile.key]}
+          hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
+          failure={failuresById?.[plugin.meta.profile.key]}
           {...props}
         />
       ))}

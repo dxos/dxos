@@ -9,6 +9,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
+import { getSpace } from '@dxos/client/echo';
 import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -17,7 +18,7 @@ import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 
 import {
@@ -215,7 +216,7 @@ const CHAT_THREAD_NAME = 'Chat.Thread';
 type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();
@@ -316,11 +317,23 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: plan
   const parent = chat ? Obj.getParent(chat) : undefined;
   const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
   const plan = planProp ?? agent?.plan.target;
+  const space = chat ? getSpace(chat) : undefined;
+  const traceMessages = useTraceMessages(space);
+  const conversationId = chat?.feed?.target?.id;
   if (!plan) {
     return null;
   }
 
-  return <TaskList {...props} plan={plan} ref={forwardedRef} />;
+  return (
+    <TaskList
+      {...props}
+      plan={plan}
+      space={space}
+      traceMessages={traceMessages}
+      conversationId={conversationId}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;

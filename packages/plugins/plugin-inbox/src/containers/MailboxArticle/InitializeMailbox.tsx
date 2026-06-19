@@ -20,7 +20,7 @@ export type InitializeMailboxProps = {
 
 export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxProps>(
   ({ mailbox, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     return (
       <Initialize
         {...props}
@@ -36,7 +36,7 @@ export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxPro
 InitializeMailbox.displayName = 'InitializeMailbox';
 
 export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <InitializeAction
       target={mailbox}
@@ -45,8 +45,8 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
       operation={InboxOperation.GoogleMailSync}
       syncLabel={t('sync-mailbox.label')}
       notify={{
-        success: ['sync-mailbox-success.title', { ns: meta.id }],
-        error: ['sync-mailbox-error.title', { ns: meta.id }],
+        success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
+        error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
       }}
     />
   );

@@ -10,7 +10,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Stacks',
         'settings.title': 'Stack settings',
         'settings.separation.label': 'Separate sections',

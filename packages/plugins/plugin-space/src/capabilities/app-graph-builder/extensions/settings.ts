@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppNode, AppNodeMatcher, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppNode, AppNodeMatcher, AppSpace } from '@dxos/app-toolkit';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -31,7 +31,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
         AppNode.makeSection({
           id: SETTINGS_SECTION_ID,
           type: SETTINGS_SECTION_TYPE,
-          label: ['settings-section.label', { ns: meta.id }],
+          label: ['settings-section.label', { ns: meta.profile.key }],
           icon: 'ph--sliders--regular',
           iconHue: 'indigo',
           space,
@@ -45,14 +45,14 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     id: 'settingsSections',
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) => {
-      const personal = isPersonalSpace(space);
+      const personal = AppSpace.isPersonalSpace(space);
       return Effect.succeed([
         Node.make({
           id: 'general',
-          type: `${meta.id}.general`,
-          data: `${meta.id}.general`,
+          type: `${meta.profile.key}.general`,
+          data: `${meta.profile.key}.general`,
           properties: {
-            label: ['space-settings-properties.label', { ns: meta.id }],
+            label: ['space-settings-properties.label', { ns: meta.profile.key }],
             icon: 'ph--brackets-curly--regular',
             iconHue: 'indigo',
             space,
@@ -63,10 +63,10 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           ? [
               Node.make({
                 id: 'members',
-                type: `${meta.id}.members`,
-                data: `${meta.id}.members`,
+                type: `${meta.profile.key}.members`,
+                data: `${meta.profile.key}.members`,
                 properties: {
-                  label: ['members-panel.label', { ns: meta.id }],
+                  label: ['members-panel.label', { ns: meta.profile.key }],
                   icon: 'ph--users--regular',
                   iconHue: 'indigo',
                   space,

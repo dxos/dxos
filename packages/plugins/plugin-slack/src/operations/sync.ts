@@ -249,9 +249,8 @@ const TARGET_CONCURRENCY = 3;
  * with the next; targets are processed in parallel up to `TARGET_CONCURRENCY`.
  *
  * `Database.Service` and `Feed.FeedService` are provided inside the handler.
- * The integration's `target` ref carries the database; the space (and its
- * `queues`, used to build `Feed.FeedService`) is resolved via the Client
- * capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
+ * The integration's `target` ref carries the database; the space db is resolved
+ * via the Client capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
  */
 const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = SlackOperation.SyncSlackChannel.pipe(
   Operation.withHandler(
@@ -422,7 +421,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           return { pulled };
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.provide(createFeedServiceLayer(space.queues)),
+          Effect.provide(createFeedServiceLayer(space.db)),
           Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration)),
         ),
       );
@@ -430,9 +429,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       if (outcome._tag === 'Right') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-success.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
             icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.id }],
+            title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
         return outcome.right;
@@ -440,9 +439,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
         const message = formatSlackSyncFailure(outcome.left);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-error.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
             icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.id }],
+            title: ['sync-toast.error.label', { ns: meta.profile.key }],
             description: message,
           }),
         );

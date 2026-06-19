@@ -13,7 +13,7 @@ import { Actor, Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChannel = Operation.make({
   meta: { key: makeKey('createChannel'), name: 'Create Channel', icon: 'ph--hash--regular' },
@@ -37,7 +37,7 @@ export const AppendChannelMessage = Operation.make({
     name: 'Append Channel Message',
     icon: 'ph--chat-text--regular',
   },
-  // Note: Feed.FeedService is provided inside the handler from space.queues, not at the
+  // Note: Feed.FeedService is provided inside the handler from space.db, not at the
   // operation level — the runtime can't fulfill it without a space context.
   services: [Capability.Service],
   input: Schema.Struct({

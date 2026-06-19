@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete generation',
         'object-deleted.label': 'Generation deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Generator',
         'generate.label': 'Generate',
         'generating.label': 'Generating…',

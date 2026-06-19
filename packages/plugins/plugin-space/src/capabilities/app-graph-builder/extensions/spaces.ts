@@ -5,14 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNodeMatcher,
-  getActiveSpace,
-  getPersonalSpace,
-  isExemplarSpace,
-  isPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, Paths } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -24,11 +17,10 @@ import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SPACE_TYPE, SpaceCapabilities } from '#types';
+import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
 
 import { SHARED, getSpaceDisplayName } from '../../../util';
 import {
-  CACHEABLE_PROPS,
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
@@ -42,11 +34,39 @@ import {
 // Extension Factory
 //
 
-/** Creates space-related extensions: primary actions, space nodes, and space actions. */
+// The label tuple must be a module-level singleton: connectors re-evaluate whenever the matched
+// node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
+// to re-emit the node and remount the Home article on every evaluation.
+const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
+
+/** Creates space-related extensions: primary actions, space nodes, space actions, and the Home node. */
 export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
+    GraphBuilder.createExtension({
+      id: 'spaceHome',
+      position: 'first',
+      match: AppNodeMatcher.whenSpace,
+      connector: (space) =>
+        Effect.succeed([
+          {
+            id: Paths.SPACE_HOME_SEGMENT,
+            type: SPACE_HOME_NODE_TYPE,
+            data: SPACE_HOME_NODE_TYPE,
+            properties: {
+              label: SPACE_HOME_NODE_LABEL,
+              icon: 'ph--house--regular',
+              iconHue: 'cyan',
+              position: 'first',
+              draggable: false,
+              droppable: false,
+              space,
+            },
+          } satisfies Node.NodeArg<typeof SPACE_HOME_NODE_TYPE>,
+        ]),
+    }),
+
     GraphBuilder.createExtension({
       id: 'primaryActions',
       position: 'first',
@@ -57,7 +77,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
-              label: ['create-space.label', { ns: meta.id }],
+              label: ['create-space.label', { ns: meta.profile.key }],
               icon: 'ph--plus--regular',
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
@@ -67,7 +87,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
-              label: ['join-space.label', { ns: meta.id }],
+              label: ['join-space.label', { ns: meta.profile.key }],
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
@@ -77,7 +97,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenImportSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
             properties: {
-              label: ['import-space.label', { ns: meta.id }],
+              label: ['import-space.label', { ns: meta.profile.key }],
               icon: 'ph--upload--regular',
               testId: 'spacePlugin.importSpace',
             },
@@ -86,13 +106,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
               }
             }),
             properties: {
-              label: ['export-space-binary.label', { ns: meta.id }],
+              label: ['export-space-binary.label', { ns: meta.profile.key }],
               icon: 'ph--download--regular',
               testId: 'spacePlugin.exportSpaceBinary',
             },
@@ -101,13 +121,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
               }
             }),
             properties: {
-              label: ['export-space-json.label', { ns: meta.id }],
+              label: ['export-space-json.label', { ns: meta.profile.key }],
               icon: 'ph--download--regular',
               testId: 'spacePlugin.exportSpaceJson',
             },
@@ -116,13 +136,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
             }),
             properties: {
-              label: ['share-space.label', { ns: meta.id }],
+              label: ['share-space.label', { ns: meta.profile.key }],
               icon: 'ph--users--regular',
               testId: 'spacePlugin.shareSpace',
               keyBinding: {
@@ -135,13 +155,13 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }
             }),
             properties: {
-              label: ['open-current-space-settings.label', { ns: meta.id }],
+              label: ['open-current-space-settings.label', { ns: meta.profile.key }],
               icon: 'ph--faders--regular',
               keyBinding: {
                 macos: 'meta+shift+,',
@@ -162,7 +182,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
 
         const spaces = get(spacesAtom);
-        const personalSpace = getPersonalSpace(client);
+        const personalSpace = AppSpace.getPersonalSpace(client);
 
         if (!spaces || !personalSpace) {
           return Effect.succeed([]);
@@ -197,12 +217,15 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => spaceStates[idx] !== SpaceState.SPACE_INACTIVE)
-              .filter((space) => space.tags.length === 0 || isPersonalSpace(space) || isExemplarSpace(space))
+              .filter(
+                (space) =>
+                  space.tags.length === 0 || AppSpace.isPersonalSpace(space) || AppSpace.isExemplarSpace(space),
+              )
               .map((space) =>
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  personal: isPersonalSpace(space),
+                  personal: AppSpace.isPersonalSpace(space),
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,
@@ -291,7 +314,7 @@ const constructSpaceNode = ({
   return Node.make({
     id: space.id,
     type: SPACE_TYPE,
-    cacheable: CACHEABLE_PROPS,
+    cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {
       label: getSpaceDisplayName(space, { personal, namesCache }),

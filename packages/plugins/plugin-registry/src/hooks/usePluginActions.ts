@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
-import { type PluginManager, type Registry, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, type PluginManager, UrlLoader } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
@@ -21,8 +21,8 @@ export type PluginActionsProps = {
   pluginId: string;
   isInstalled: boolean;
   moduleUrl: string | undefined;
-  catalogEntry: Registry.Plugin | undefined;
-  pickerVersions: readonly Registry.PluginVersion[];
+  catalogEntry: Plugin.Meta | undefined;
+  pickerVersions: readonly Plugin.Release[];
   selectedVersionTag: string | undefined;
   syncInstalledVersion: () => void;
 };
@@ -101,9 +101,9 @@ export const usePluginActions = ({
     setInstalling(true);
     void Effect.gen(function* () {
       const added = yield* manager.add(moduleUrl);
-      yield* manager.enable(added.meta.id);
-      if (catalogEntry) {
-        UrlLoader.setInstalledVersion(added.meta.id, catalogEntry.version);
+      yield* manager.enable(added.meta.profile.key);
+      if (catalogEntry?.release?.version) {
+        UrlLoader.setInstalledVersion(added.meta.profile.key, catalogEntry.release.version);
       }
     }).pipe(
       Effect.ensuring(
@@ -125,8 +125,10 @@ export const usePluginActions = ({
     void Effect.gen(function* () {
       yield* manager.remove(pluginId);
       const added = yield* manager.add(moduleUrl);
-      yield* manager.enable(added.meta.id);
-      UrlLoader.setInstalledVersion(added.meta.id, catalogEntry.version);
+      yield* manager.enable(added.meta.profile.key);
+      if (catalogEntry.release?.version) {
+        UrlLoader.setInstalledVersion(added.meta.profile.key, catalogEntry.release.version);
+      }
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {
@@ -139,7 +141,7 @@ export const usePluginActions = ({
   }, [manager, pluginId, moduleUrl, catalogEntry, syncInstalledVersion]);
 
   const handleInstallVersion = useCallback(() => {
-    const version = pickerVersions.find((candidate) => candidate.tag === selectedVersionTag);
+    const version = pickerVersions.find((candidate) => candidate.version === selectedVersionTag);
     if (!version || !version.moduleUrl) {
       return;
     }
@@ -151,8 +153,8 @@ export const usePluginActions = ({
         yield* manager.remove(pluginId);
       }
       const added = yield* manager.add(version.moduleUrl);
-      yield* manager.enable(added.meta.id);
-      UrlLoader.setInstalledVersion(added.meta.id, version.tag);
+      yield* manager.enable(added.meta.profile.key);
+      UrlLoader.setInstalledVersion(added.meta.profile.key, version.version);
     }).pipe(
       Effect.ensuring(
         Effect.sync(() => {

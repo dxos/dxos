@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete dream',
         'object-deleted.label': 'Dream deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Zen',
         'unmute-button.label': 'Unmute',
         'mute-button.label': 'Mute',

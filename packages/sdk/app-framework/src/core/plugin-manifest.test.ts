@@ -10,12 +10,12 @@ describe('PluginManifest', () => {
   describe('parse', () => {
     test('resolves entry and assets relative to manifest URL', ({ expect }) => {
       const resolved = PluginManifest.parse('https://example.com/plugins/foo/manifest.json', {
-        id: 'com.example.foo',
+        key: 'com.example.foo',
         name: 'Foo',
         version: '1.0.0',
         assets: ['index.mjs', 'style.css', 'chunks/lib-abc.js'],
       });
-      expect(resolved.id).toBe('com.example.foo');
+      expect(resolved.key).toBe('com.example.foo');
       expect(resolved.dev).toBe(false);
       expect(resolved.entryUrl).toBe('https://example.com/plugins/foo/index.mjs');
       expect(resolved.assetUrls).toEqual([
@@ -28,7 +28,7 @@ describe('PluginManifest', () => {
     test('throws if the canonical entry filename is not listed in assets', ({ expect }) => {
       expect(() =>
         PluginManifest.parse('https://example.com/manifest.json', {
-          id: 'a',
+          key: 'a',
           name: 'A',
           version: '0.0.1',
           assets: ['style.css'],
@@ -48,7 +48,7 @@ describe('PluginManifest', () => {
 
     test('devEntry flips dev mode and resolves the entry against the manifest URL', ({ expect }) => {
       const resolved = PluginManifest.parse('http://localhost:3967/manifest.json', {
-        id: 'com.example.foo',
+        key: 'com.example.foo',
         name: 'Foo',
         version: '0.0.0-dev',
         assets: [],
@@ -63,7 +63,7 @@ describe('PluginManifest', () => {
       // No `index.mjs` in assets — would throw without devEntry.
       expect(() =>
         PluginManifest.parse('http://localhost:3967/manifest.json', {
-          id: 'a',
+          key: 'a',
           name: 'A',
           version: '0.0.0-dev',
           assets: [],

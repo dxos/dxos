@@ -262,7 +262,7 @@ feat F-5: Presentation via react-ui-thread
     the plugin MUST NOT re-implement message tiles or the composer.
 
   req F-5.2: Object/reference message blocks MUST be rendered by an Object tile the plugin
-    injects into Thread.Root (Surface, type AppSurface.Card). react-ui-thread MUST stay free
+    injects into Thread.Root (Surface, type AppSurface.CardContent). react-ui-thread MUST stay free
     of @dxos/app-framework.
 
 feat F-6: Independence

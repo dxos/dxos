@@ -20,7 +20,7 @@ export type InitializeCalendarProps = {
 
 export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarProps>(
   ({ calendar, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     return (
       <Initialize
         {...props}
@@ -36,7 +36,7 @@ export const InitializeCalendar = composable<HTMLDivElement, InitializeCalendarP
 InitializeCalendar.displayName = 'InitializeCalendar';
 
 export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <InitializeAction
       target={calendar}
@@ -45,8 +45,8 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
       operation={InboxOperation.GoogleCalendarSync}
       syncLabel={t('sync-calendar.label')}
       notify={{
-        success: ['sync-calendar-success.title', { ns: meta.id }],
-        error: ['sync-calendar-error.title', { ns: meta.id }],
+        success: ['sync-calendar-success.title', { ns: meta.profile.key }],
+        error: ['sync-calendar-error.title', { ns: meta.profile.key }],
       }}
     />
   );

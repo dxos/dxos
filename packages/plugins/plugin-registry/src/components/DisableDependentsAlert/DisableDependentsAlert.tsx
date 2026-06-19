@@ -36,7 +36,7 @@ export const DisableDependentsAlert = ({
   onResolvePluginName,
   onConfirm,
 }: DisableDependentsAlertProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const resolveName = onResolvePluginName ?? ((id: string) => id);
   return (
     <AlertDialog.Content>

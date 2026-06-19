@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'doctorDiagnostics',
         filter: AppSurface.literal(
-          Surface.makeType<{ subject: string }>(`deck-companion--${DIAGNOSTICS_DECK_COMPANION_ID}`),
+          AppSurface.deckCompanion(DIAGNOSTICS_DECK_COMPANION_ID),
           DIAGNOSTICS_DECK_COMPANION_ID,
         ),
         component: () => <DiagnosticsPanel />,

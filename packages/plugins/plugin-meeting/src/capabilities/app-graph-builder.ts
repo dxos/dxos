@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -63,7 +63,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['share-call-link.label', { ns: meta.id }],
+                label: ['share-call-link.label', { ns: meta.profile.key }],
                 icon: 'ph--share-network--regular',
               },
             },
@@ -89,7 +89,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeCompanion({
               id: 'meeting',
-              label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
+              label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.profile.key }],
               icon: 'ph--handshake--regular',
               data,
               position: 'first',
@@ -146,8 +146,8 @@ export default Capability.makeModule(
               }),
               properties: {
                 label: enabled
-                  ? ['stop-transcription.label', { ns: meta.id }]
-                  : ['start-transcription.label', { ns: meta.id }],
+                  ? ['stop-transcription.label', { ns: meta.profile.key }]
+                  : ['start-transcription.label', { ns: meta.profile.key }],
                 icon: 'ph--subtitles--regular',
                 disposition: 'toolbar',
               },
@@ -164,7 +164,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeCompanion({
               id: 'transcript',
-              label: ['transcript-companion.label', { ns: meta.id }],
+              label: ['transcript-companion.label', { ns: meta.profile.key }],
               icon: 'ph--subtitles--regular',
               data: get(Obj.atom(meeting.transcript)),
               position: 'first',
@@ -189,7 +189,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeCompanion({
               id: 'meeting',
-              label: ['meeting-companion.label', { ns: meta.id }],
+              label: ['meeting-companion.label', { ns: meta.profile.key }],
               icon: 'ph--handshake--regular',
               data: meeting,
               position: 'first',
@@ -223,10 +223,10 @@ export default Capability.makeModule(
               {
                 id: 'action.openMeetingForEvent',
                 data: Effect.fnUntraced(function* () {
-                  yield* invoker.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(meeting)] });
+                  yield* invoker.invoke(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(meeting)] });
                 }),
                 properties: {
-                  label: ['open-meeting-for-event.label', { ns: meta.id }],
+                  label: ['open-meeting-for-event.label', { ns: meta.profile.key }],
                   icon: 'ph--handshake--regular',
                   // Surface in the Event article toolbar (not just the node context menu).
                   disposition: 'toolbar',
@@ -241,7 +241,7 @@ export default Capability.makeModule(
                 yield* invoker.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
               }),
               properties: {
-                label: ['create-meeting-for-event.label', { ns: meta.id }],
+                label: ['create-meeting-for-event.label', { ns: meta.profile.key }],
                 icon: 'ph--handshake--regular',
                 // Surface in the Event article toolbar (not just the node context menu).
                 disposition: 'toolbar',

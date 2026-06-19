@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Effect from 'effect/Effect';
@@ -9,22 +9,20 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { Settings, MeetingCapabilities } from '#types';
+import { MeetingCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Settings.Settings,
-      defaultValue: () => ({
-        entityExtraction: true,
-      }),
+      defaultValue: () => ({}),
     });
 
     return [
       Capability.contributes(MeetingCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.id,
+        prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

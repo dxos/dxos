@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { type Atom } from '@effect-atom/atom-react';
+
 import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
@@ -15,6 +17,7 @@ import {
   type TranscriptMessageEnricher,
   type TranscriptionManager as TranscriptionManagerType,
 } from '../transcriber';
+import * as Settings$ from './Settings'; // eslint-disable-line
 
 export type TranscriberProviderProps = {
   audioStreamTrack: MediaStreamTrack;
@@ -32,8 +35,10 @@ export type TranscriptionManagerProviderProps = {
 
 export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManagerType;
 
-export const TranscriberProvider = Capability.make<TranscriberProvider>(`${meta.id}.capability.transcriber`);
+export const TranscriberProvider = Capability.make<TranscriberProvider>(`${meta.profile.key}.capability.transcriber`);
 
 export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
-  `${meta.id}.capability.transcription-manager`,
+  `${meta.profile.key}.capability.transcription-manager`,
 );
+
+export const Settings = Capability.make<Atom.Writable<Settings$.Settings>>(`${meta.profile.key}.capability.settings`);

@@ -14,7 +14,7 @@ import { Settings } from '#types';
 export type GeneratorSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const GeneratorSettings = ({ settings, onSettingsChange }: GeneratorSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('plugin.name')}>

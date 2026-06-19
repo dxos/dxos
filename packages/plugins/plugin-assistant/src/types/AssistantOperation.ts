@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChat = Operation.make({
   meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular' },

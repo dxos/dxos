@@ -15,17 +15,19 @@ import { type NavTreeItemColumnsProps } from '../types';
 import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
   const flattenedActions = useActions(item);
   const allActions = useMemo(() => getListActions(flattenedActions), [flattenedActions]);
 
-  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
+  const anchored = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}`;
+  const ActionRoot = anchored ? Popover.Anchor : Fragment;
 
   return (
-    <div className='contents dx-app-no-drag'>
+    // `data-popover-anchor` lets the enclosing row highlight itself while a popover (e.g. rename) is open on it.
+    <div className='contents dx-app-no-drag' {...(anchored && { 'data-popover-anchor': '' })}>
       <ActionRoot>
         {allActions.length === 1 ? (
           <Treegrid.Cell classNames='contents'>

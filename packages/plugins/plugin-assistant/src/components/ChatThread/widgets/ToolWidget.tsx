@@ -23,7 +23,7 @@ export type ToolWidgetProps = XmlWidgetProps<{
 }>;
 
 export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const items = useMemo<ToolPanelProps['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;

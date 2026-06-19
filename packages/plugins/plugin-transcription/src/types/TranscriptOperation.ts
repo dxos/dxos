@@ -14,7 +14,7 @@ import { Message, Transcript } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create Transcript', icon: 'ph--microphone--regular' },
@@ -77,6 +77,22 @@ export const Summarize = Operation.make({
     }),
   }),
   services: [AiService.AiService],
+});
+
+export const EnrichMessage = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.function.transcription.enrichMessage'),
+    name: 'Enrich Transcript Message',
+    description: 'Extract proper nouns from a transcript message and link them to objects in the space.',
+    icon: 'ph--text-t--regular',
+  },
+  input: Schema.Struct({
+    message: Type.getSchema(Message.Message),
+  }),
+  output: Schema.Struct({
+    message: Type.getSchema(Message.Message),
+  }),
+  services: [AiService.AiService, Database.Service],
 });
 
 export const SentenceNormalizationInput = Schema.Struct({

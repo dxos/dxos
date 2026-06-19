@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Node } from '@dxos/app-graph';
-import { createTypeSectionPaths } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { linkedSegment } from '@dxos/react-ui-attention/types';
 
 import { Calendar } from '#types';
 
-const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = createTypeSectionPaths(Calendar.Calendar);
+const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Paths.createTypeSectionPaths(
+  Calendar.Calendar,
+);
 
 /** Well-known local segment names (private — use the path helpers below). */
 const Segments = {
@@ -21,7 +22,7 @@ const Segments = {
 export const getMailboxesSectionId = (): string => Segments.mailboxes;
 
 /** Canonical qualified path to the mailboxes section of a space. */
-export const getMailboxesPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.mailboxes}`;
+export const getMailboxesPath = (spaceId: string): string => Paths.getSpacePath(spaceId, Segments.mailboxes);
 
 /** Canonical qualified path to a specific mailbox within a space. */
 export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
@@ -62,5 +63,11 @@ export const getCalendarEventPath = (spaceId: string, calendarId: string, eventI
  * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
  */
 export const getCalendarRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
+
+/**
+ * Builds the node ID for an event's companion node by appending the pre-computed linked segment
+ * to the calendar's attendable ID. The segment must already be a linked segment (see EventArticle).
+ */
+export const getEventNodeId = (attendableId: string, eventSegment: string): string => `${attendableId}/${eventSegment}`;
 
 export { getCalendarsPath, getCalendarPath };

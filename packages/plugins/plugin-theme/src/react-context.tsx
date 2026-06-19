@@ -45,7 +45,7 @@ export default Capability.makeModule(
     return Capability.contributes(
       Capabilities.ReactContext,
       {
-        id: meta.id,
+        id: meta.profile.key,
         context: ({ children }: { children?: ReactNode }) => {
           const _resources = useCapabilities(AppCapabilities.Translations);
           const { themeMode } = useAtomValue(themeAtom);

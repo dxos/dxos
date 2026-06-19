@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
@@ -72,11 +72,11 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['channel-toolbar.title', { ns: meta.id }] });
+    const builder = MenuBuilder.make().root({ label: ['channel-toolbar.title', { ns: meta.profile.key }] });
     if (canStartCall) {
       builder.action(
         'start-video-call',
-        { label: ['start-video-call.menu', { ns: meta.id }], icon: 'ph--video-camera--regular' },
+        { label: ['start-video-call.menu', { ns: meta.profile.key }], icon: 'ph--video-camera--regular' },
         () => {
           void handleStartCall();
         },
@@ -114,7 +114,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       )}
       {showCall ? (
         <Panel.Content>
-          <Surface.Surface role='article' data={{ subject: { roomId: id }, attendableId }} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
         </Panel.Content>
       ) : (
         <Panel.Content asChild>

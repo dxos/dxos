@@ -125,7 +125,7 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
@@ -238,7 +238,7 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { data } = useWidgetContext();
   if (!data?.instant_invite) {
     return null;

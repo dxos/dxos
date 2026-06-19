@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, RootCollectionAnnotation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
@@ -73,7 +73,8 @@ type GraphDebug = {
   root: string;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}.space` && isSpace(data.space);
+const isSpaceDebug = (data: any): data is SpaceDebug =>
+  data?.type === `${meta.profile.key}.space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => {
   const graph = data?.graph;
   return (
@@ -95,7 +96,7 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return (
@@ -110,8 +111,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        role: 'article',
-        filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
         component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
@@ -123,8 +123,9 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)
-                  ?.target;
+                Annotation.get(data.subject.space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
@@ -144,8 +145,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'appGraph',
-        role: 'article',
-        filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, isGraphDebug),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
@@ -161,12 +161,17 @@ export default Capability.makeModule(
       Surface.create({
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
+        filter: AppSurface.oneOf(
+          AppSurface.subject(AppSurface.Article, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+          AppSurface.subject(AppSurface.Section, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+        ),
         position: 'first',
-        filter: (data): data is { subject: Obj.Unknown } => {
-          const settings = registry.get(settingsAtom);
-          return Obj.isObject(data.subject) && !!settings.wireframe;
-        },
         component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
@@ -181,15 +186,12 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('devtools')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
         id: 'spaceObjects',
-        filter: AppSurface.literal(
-          Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
-          'space-objects',
-        ),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -202,7 +204,7 @@ export default Capability.makeModule(
 
       Surface.create({
         id: 'debugStatus',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: 'first',
         component: () => <DebugStatus />,
       }),
@@ -438,7 +440,7 @@ export default Capability.makeModule(
               log.info('script created', { result: createResult });
               if (createResult.data?.object) {
                 await invokePromise(LayoutOperation.Open, {
-                  subject: [getObjectPathFromObject(createResult.data.object)],
+                  subject: [Paths.getObjectPathFromObject(createResult.data.object)],
                 });
               }
             },

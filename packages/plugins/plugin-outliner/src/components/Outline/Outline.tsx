@@ -117,7 +117,7 @@ type OutlineContentProps = {};
 
 const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ children, ...props }, forwardedRef) => {
   const { id, text, scrollable, showSelected, autoFocus, viewRef } = useOutlineContext(OUTLINE_CONTENT_NAME);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
 
   const { parentRef, focusAttributes, view } = useTextEditor(

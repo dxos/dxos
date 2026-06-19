@@ -11,6 +11,8 @@ import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
+import { PlaygroundRoles } from '../roles';
+
 const Item = ({
   id,
   disabled,
@@ -55,9 +57,9 @@ export const Main = () => {
     <List itemSizes='one'>
       {plugins.map((plugin) => (
         <Item
-          key={plugin.meta.id}
-          id={plugin.meta.id}
-          disabled={core.includes(plugin.meta.id)}
+          key={plugin.meta.profile.key}
+          id={plugin.meta.profile.key}
+          disabled={core.includes(plugin.meta.profile.key)}
           onRemove={handleRemove}
         />
       ))}
@@ -71,7 +73,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.main',
-        role: 'primary',
+        filter: Surface.makeFilter(PlaygroundRoles.Primary),
         component: Main,
       }),
     ),

@@ -190,7 +190,7 @@ export type AnyInput = Unknown | Snapshot;
  * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  */
 export const getURI = (entity: AnyInput, options?: internal.GetURIOptions): URI.URI =>
-  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity) : internal.getUri(entity as Unknown, options);
+  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity, options) : internal.getUri(entity as Unknown, options);
 
 /**
  * Get the DXN of an entity's type. For object/relation instances this is the URI

@@ -449,7 +449,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             return { pulled };
           }).pipe(
             Effect.provide(Database.layer(db)),
-            Effect.provide(createFeedServiceLayer(space.queues)),
+            Effect.provide(createFeedServiceLayer(space.db)),
             Effect.provide(makeDiscordLayer(integration)),
           ),
         );
@@ -457,9 +457,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         if (outcome._tag === 'Right') {
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.id}.sync-success.${toastIdSuffix}`,
+              id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
               icon: 'ph--check--regular',
-              title: ['sync-toast.success.label', { ns: meta.id }],
+              title: ['sync-toast.success.label', { ns: meta.profile.key }],
             }),
           );
           return outcome.right;
@@ -467,9 +467,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           const message = formatDiscordSyncFailure(outcome.left);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.id}.sync-error.${toastIdSuffix}`,
+              id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
               icon: 'ph--warning--regular',
-              title: ['sync-toast.error.label', { ns: meta.id }],
+              title: ['sync-toast.error.label', { ns: meta.profile.key }],
               description: message,
             }),
           );

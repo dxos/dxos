@@ -22,7 +22,7 @@ test.describe('Stack tests', () => {
     await host.page.waitForTimeout(500);
     await host.openPluginRegistry();
     await host.openRegistryCategory('recommended');
-    await host.enablePlugin(StackPlugin.meta.id);
+    await host.enablePlugin(StackPlugin.meta.profile.key);
   });
 
   test.afterEach(async () => {

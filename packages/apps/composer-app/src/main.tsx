@@ -15,10 +15,11 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { EdgeHttpClient } from '@dxos/edge-client';
+// TODO(wittjosiah): Restore with EdgeRegistryPluginProvider below once edge ATProto registry is deployed.
+// import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -30,20 +31,25 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { ResetDialog } from './components';
-import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
-import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
-import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
-import { showDevRssBanner } from './dev-rss-banner';
-import { downloadLogs } from './log-download';
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
-import { startupProfiler } from './profiler';
-import { translations } from './translations';
 import {
+  APP_KEY,
+  LOG_STORE_DB_NAME,
+  PARAM_LOG_LEVEL,
+  PARAM_PROFILER,
+  PARAM_SAFE_MODE,
   defaultStorageIsEmpty,
+  downloadLogs,
+  initializeObservability,
   isFalse,
   isTrue,
   runStorageResetMigration,
+  setSafeModeUrl,
+  setupConfig,
   shouldRunStorageResetMigration,
+  showDevRssBanner,
+  startupProfiler,
+  translations,
 } from './util';
 
 declare global {
@@ -370,17 +376,17 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createWorker: () =>
-      new SharedWorker(new URL('./shared-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/shared-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createDedicatedWorker: () =>
-      new Worker(new URL('./dedicated-worker', import.meta.url), {
+      new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createCoordinatorWorker: () =>
-      new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+      new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-coordinator-worker',
       }),
@@ -448,8 +454,10 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
+  // TODO(wittjosiah): Re-enable once edge ATProto registry is deployed (restore EdgeRegistryPluginProvider + EdgeHttpClient imports).
+  // const edgeUrl = config.values.runtime?.services?.edge?.url;
+  // const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
+  const pluginRegistryProvider = undefined;
 
   profiler?.mark('plugins:end');
   profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');

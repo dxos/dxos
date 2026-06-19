@@ -123,6 +123,7 @@
   "files": [
     "assets",
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],

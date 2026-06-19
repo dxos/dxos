@@ -111,7 +111,7 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spaces',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
@@ -318,6 +318,8 @@ export const translations = [
         'qr.label': 'QR Code',
         'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
+        'space-home-node.label': 'Home',
+        'space-home.recent.heading': 'Recent',
       },
     },
   },

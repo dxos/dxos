@@ -5,4 +5,5 @@
 export * from './capabilities';
 export * from './events';
 export * from './form';
+export * from './surface';
 export * from './types';

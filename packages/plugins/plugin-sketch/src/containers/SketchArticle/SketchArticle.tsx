@@ -4,7 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { Panel, Flex } from '@dxos/react-ui';
@@ -27,9 +27,9 @@ export const SketchArticle = ({ role, attendableId, subject: sketch, settings }:
   const { hasAttention } = useAttention(attendableId);
 
   const props = {
-    readonly: role === 'slide',
-    autoZoom: role === 'section' ? true : undefined,
-    maxZoom: role === 'slide' ? 1.5 : undefined,
+    readonly: role === AppSurface.Slide.role,
+    autoZoom: role === AppSurface.Section.role ? true : undefined,
+    maxZoom: role === AppSurface.Slide.role ? 1.5 : undefined,
   };
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
@@ -37,7 +37,7 @@ export const SketchArticle = ({ role, attendableId, subject: sketch, settings }:
   const actions = useActions(graph, id);
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
-  const Comp = role === 'section' ? Container : Article;
+  const Comp = role === AppSurface.Section.role ? Container : Article;
 
   return (
     <Comp>

@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete sheet',
         'object-deleted.label': 'Sheet deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Sheets',
         'cell.placeholder': 'Cell value...',
 

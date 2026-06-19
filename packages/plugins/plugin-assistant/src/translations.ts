@@ -80,7 +80,7 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.id]: {
+      [meta.profile.key]: {
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -186,6 +186,13 @@ export const translations: Resource[] = [
         'instructions.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
+
+        // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-draft-doc.label': 'Draft a new document',
+        'space-home.suggestion-data-type.label': 'Create a new data type',
+        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.prompt.placeholder': 'Ask the assistant anything…',
       },
     },
   },

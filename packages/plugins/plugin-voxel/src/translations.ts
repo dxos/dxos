@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete voxel world',
         'object-deleted.label': 'Voxel world deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Voxel',
       },
     },

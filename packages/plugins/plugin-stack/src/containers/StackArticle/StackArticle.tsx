@@ -43,7 +43,7 @@ type StackArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 export const StackArticle = ({ attendableId, subject: collection }: StackArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   // TODO(wittjosiah): Re-implement stack views with relations.
@@ -94,7 +94,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
     async (id: string, position: AddSectionPosition) => {
       // TODO(wittjosiah): Use object creation dialog.
       await invokePromise(LayoutOperation.UpdateDialog, {
-        subject: `${meta.id}.AddSectionDialog`,
+        subject: `${meta.profile.key}.AddSectionDialog`,
         blockAlign: 'start',
         props: {
           path: id,

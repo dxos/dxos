@@ -149,7 +149,7 @@ type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
 };
 
 const SelectType = ({ options, onChange }: SelectTypeProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
@@ -197,7 +197,7 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'
 };
 
 const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>

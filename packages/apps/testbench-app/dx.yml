@@ -1,11 +1,4 @@
 version: 1
-package:
-  modules:
-    - name: testbench-app
-      type: dxos:type/app
-      build:
-        command: moon run testbench-app:bundle
-        outdir: out/testbench-app
 runtime:
   client:
     storage:

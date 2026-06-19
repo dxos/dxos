@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { allTypesQuery, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSpace, LayoutOperation, TypeOptions } from '@dxos/app-toolkit';
 import { PluginRegistryButton, useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
@@ -27,7 +27,7 @@ import { SpaceCapabilities } from '#types';
 
 import { getSpaceDisplayName } from '../../util';
 
-export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
+export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'initialFormValues'> & {
   views?: boolean;
@@ -45,7 +45,7 @@ export const CreateObjectDialog = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: CreateObjectDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
@@ -57,12 +57,15 @@ export const CreateObjectDialog = ({
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-  const allTypes = useQuery(db, allTypesQuery);
+  const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
   const spaceLabel = useMemo(
     () =>
       space &&
-      toLocalizedString(getSpaceDisplayName(space, { personal: space.id === getPersonalSpace(client)?.id }), t),
+      toLocalizedString(
+        getSpaceDisplayName(space, { personal: space.id === AppSpace.getPersonalSpace(client)?.id }),
+        t,
+      ),
     [space, client, t],
   );
 
@@ -86,7 +89,7 @@ export const CreateObjectDialog = ({
       for (const entry of contributions) {
         entries.push(entry);
         if (owningPlugin) {
-          pluginByEntryId.set(entry.id, owningPlugin.meta.name);
+          pluginByEntryId.set(entry.id, owningPlugin.meta.profile.name);
         }
       }
     }
@@ -205,7 +208,7 @@ export const CreateObjectDialog = ({
           target={target}
           typename={typename}
           initialFormValues={initialFormValues}
-          defaultSpaceId={getPersonalSpace(client)?.id ?? client.spaces.get()[0]?.id}
+          defaultSpaceId={AppSpace.getPersonalSpace(client)?.id ?? client.spaces.get()[0]?.id}
           resolve={resolve}
           onCreateObject={handleCreateObject}
           onTargetChange={setTarget}

@@ -26,8 +26,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#types';
-import { getMode } from '#types';
+import { DeckOperation, getMode, Keyshortcuts } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
 import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
@@ -105,7 +104,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
     <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface role='keyshortcuts' />
+      <Surface.Surface type={Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );
@@ -273,7 +272,7 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div
       className={mx(

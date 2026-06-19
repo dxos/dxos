@@ -84,7 +84,7 @@ export const createTemplateSelector =
     builder.group(
       'template',
       {
-        label: ['template.label', { ns: meta.id }],
+        label: ['template.label', { ns: meta.profile.key }],
         icon: selected?.icon ?? 'ph--cube--regular',
         iconOnly: true,
         variant: 'dropdownMenu',
@@ -123,7 +123,7 @@ export const createEditorActions =
       .action(
         'add-object',
         {
-          label: ['action.add-object.label', { ns: meta.id }],
+          label: ['action.add-object.label', { ns: meta.profile.key }],
           icon: 'ph--plus--regular',
         },
         actions.onAdd,
@@ -131,7 +131,7 @@ export const createEditorActions =
       .action(
         'delete-object',
         {
-          label: ['action.delete-object.label', { ns: meta.id }],
+          label: ['action.delete-object.label', { ns: meta.profile.key }],
           icon: 'ph--trash--regular',
           disabled: selectionCount === 0,
         },
@@ -141,7 +141,7 @@ export const createEditorActions =
       .action(
         'join-objects',
         {
-          label: ['action.join-objects.label', { ns: meta.id }],
+          label: ['action.join-objects.label', { ns: meta.profile.key }],
           icon: 'ph--unite-square--regular',
           disabled: selectionCount < 2,
         },
@@ -150,7 +150,7 @@ export const createEditorActions =
       .action(
         'subtract-objects',
         {
-          label: ['action.subtract-objects.label', { ns: meta.id }],
+          label: ['action.subtract-objects.label', { ns: meta.profile.key }],
           icon: 'ph--subtract-square--regular',
           disabled: selectionCount < 2,
         },
@@ -160,7 +160,7 @@ export const createEditorActions =
       .action(
         'import',
         {
-          label: ['action.import.label', { ns: meta.id }],
+          label: ['action.import.label', { ns: meta.profile.key }],
           icon: 'ph--upload-simple--regular',
         },
         actions.onImport,
@@ -168,7 +168,7 @@ export const createEditorActions =
       .action(
         'export',
         {
-          label: ['action.export.label', { ns: meta.id }],
+          label: ['action.export.label', { ns: meta.profile.key }],
           icon: 'ph--download-simple--regular',
           disabled: selectionCount === 0,
         },

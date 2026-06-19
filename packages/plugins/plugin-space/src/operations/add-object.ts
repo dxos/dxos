@@ -3,14 +3,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import {
-  CollectionModel,
-  getCollectionsPath,
-  getObjectPath,
-  getTypePath,
-  getTypeSlug,
-  getTypeSlugFromUri,
-} from '@dxos/app-toolkit';
+import { CollectionModel, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -62,14 +55,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // Graph type nodes are keyed by a slash-free slug (entity id for stored types, typename for
       // static); resolve the object's own type slug rather than filing it under its (human) typename.
       const objectType = Obj.getType(object);
-      const typeSlug = objectType ? getTypeSlug(objectType) : typename;
+      const typeSlug = objectType ? Paths.getTypeSlug(objectType) : typename;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,
         objectId: object.id,
         nodeId: input.targetNodeId,
         typename,
         typeSlug,
-        viewTargetSlug: viewTargetUri ? getTypeSlugFromUri(viewTargetUri) : undefined,
+        viewTargetSlug: viewTargetUri ? Paths.getTypeSlugFromUri(viewTargetUri) : undefined,
       });
 
       return {
@@ -94,13 +87,13 @@ const getSubjectPathForNewObject = (props: {
 }): string => {
   const { nodeId, typename, typeSlug, viewTargetSlug, spaceId, objectId } = props;
   if (typeof nodeId === 'string') {
-    return `${nodeId}/${objectId}`;
+    return Paths.getCollectionObjectPath(nodeId, objectId);
   }
   if (typename === Type.getTypename(Collection.Collection)) {
-    return getCollectionsPath(spaceId, objectId);
+    return Paths.getCollectionsPath(spaceId, objectId);
   }
   if (viewTargetSlug) {
-    return getTypePath(spaceId, viewTargetSlug, objectId);
+    return Paths.getTypePath(spaceId, viewTargetSlug, objectId);
   }
-  return getObjectPath(spaceId, typeSlug, objectId);
+  return Paths.getObjectPath(spaceId, typeSlug, objectId);
 };

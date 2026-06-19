@@ -7,9 +7,17 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
+import { Process } from '@dxos/compute';
 import { storageServiceLayer } from '@dxos/compute-runtime';
 
-import { AlarmManager, computeAlarmDelay, makeAlarmToolkit, resolveWakeAt } from './agent-process';
+import {
+  AlarmManager,
+  computeAlarmDelay,
+  isAgentWorkPending,
+  makeAlarmToolkit,
+  parseContinueDecision,
+  resolveWakeAt,
+} from './agent-process';
 
 const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
 
@@ -211,4 +219,82 @@ describe('AlarmToolkit handlers', () => {
       expect(alarmManager.wakeAt).toBe(null);
     }),
   );
+});
+
+// The completion decision (`maybeComplete` → `ctx.succeed()`) is exercised at two levels: the
+// `isAgentWorkPending` suite below covers the predicate the process consults (queue / alarm /
+// delegations / pending tool results), and `AgentService.test.ts` covers the process reaching a
+// terminal state and respawning for a follow-up turn end-to-end.
+
+describe('parseContinueDecision', () => {
+  it('continues when the model says continue', ({ expect }) => {
+    expect(parseContinueDecision('continue')).toBe(true);
+    expect(parseContinueDecision('The agent should continue.')).toBe(true);
+  });
+
+  it('stops when the model says stop', ({ expect }) => {
+    expect(parseContinueDecision('stop')).toBe(false);
+    expect(parseContinueDecision('stop now')).toBe(false);
+  });
+
+  it('defaults to continue when ambiguous', ({ expect }) => {
+    expect(parseContinueDecision('yes')).toBe(true);
+    expect(parseContinueDecision('')).toBe(true);
+  });
+});
+
+describe('isAgentWorkPending', () => {
+  const makeSnapshot = (overrides: Partial<Parameters<typeof isAgentWorkPending>[0]> = {}) => {
+    const storageService = Effect.runSync(makeStorage);
+    const alarmManager = new AlarmManager({ storageService, setAlarm: () => {} });
+    return {
+      inputQueue: [],
+      alarmManager,
+      delegations: [],
+      toolCallManager: {
+        hasPendingToolResults: () => false,
+      },
+      ...overrides,
+    } satisfies Parameters<typeof isAgentWorkPending>[0];
+  };
+
+  it('is idle when nothing is pending', ({ expect }) => {
+    expect(isAgentWorkPending(makeSnapshot())).toBe(false);
+  });
+
+  it('is pending when the input queue has work', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          inputQueue: [{ _tag: 'prompt', content: 'hello' }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('is pending when a self-wake alarm is scheduled', ({ expect }) => {
+    const snapshot = makeSnapshot();
+    Effect.runSync(snapshot.alarmManager.setWakeAt(NOW + 60_000));
+    expect(isAgentWorkPending(snapshot)).toBe(true);
+  });
+
+  it('is pending when subprocess delegations are in flight', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          delegations: [{ pid: Process.ID.make('child-1'), id: 'task-1' }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('is pending when tool results have not been delivered', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          toolCallManager: { hasPendingToolResults: () => true },
+        }),
+      ),
+    ).toBe(true);
+  });
 });

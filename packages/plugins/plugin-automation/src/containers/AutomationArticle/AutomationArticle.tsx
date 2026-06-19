@@ -2,15 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { type ReactNode, useCallback, useMemo } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import { Operation, Routine, ServiceResolver, Trigger, TriggerEvent } from '@dxos/compute';
+import { Context } from '@dxos/context';
 import { type Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { KEY_FEED_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { DXN } from '@dxos/keys';
-import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
+import { type Space, getSpace, useObject, useQuery } from '@dxos/react-client/echo';
+import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import {
   Form,
   type FormFieldRendererProps,
@@ -19,19 +26,25 @@ import {
   SelectField,
   Settings,
 } from '@dxos/react-ui-form';
+import { Accordion } from '@dxos/react-ui-list';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
+
+import { describeCron, fromCron, toCron } from '../../components/CronBuilder/cron';
+import { CronBuilder } from '../../components/CronBuilder/CronBuilder';
+import { type CronSpecType, FrequencyDefaults } from '../../components/CronBuilder/schema';
 
 const RUN_ROUTINE_DXN = 'org.dxos.function.prompt';
 
 export type AutomationArticleProps = AppSurface.ObjectArticleProps<Automation.Automation>;
 
 export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(subject);
   const trigger = usePrimaryTrigger(subject);
+  const space = getSpace(subject);
 
   if (!db) {
     return null;
@@ -48,6 +61,7 @@ export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => 
       <Settings.Section title={t('trigger-picker.title')} description={t('trigger-picker.description')}>
         <Settings.Panel>
           <TriggerSection db={db} automation={subject} trigger={trigger} />
+          {space && trigger && <TriggerTestingSection space={space} trigger={trigger} />}
         </Settings.Panel>
       </Settings.Section>
 
@@ -105,7 +119,7 @@ const EnabledField = ({
   messageKey,
   ...props
 }: FormFieldRendererProps & { canEnable: boolean; messageKey?: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div className='flex items-center gap-2 pt-form-padding'>
       <Input.Root>
@@ -118,6 +132,113 @@ const EnabledField = ({
       <span className='text-sm'>{props.label}</span>
       {!canEnable && messageKey && <span className='text-sm text-description'>{t(messageKey)}</span>}
     </div>
+  );
+};
+
+//
+// Trigger testing section
+//
+
+type TriggerTestingSectionProps = {
+  space: Space;
+  trigger: Trigger.Trigger;
+};
+
+const TESTING_ITEM = { id: 'testing' };
+
+/**
+ * Collapsed "Testing" section within the Trigger panel. Provides kind-specific manual
+ * affordances: force-run for timer triggers, cursor reset for feed triggers.
+ * Not rendered for trigger kinds with no applicable action (email, webhook, subscription).
+ */
+const TriggerTestingSection = ({ space, trigger }: TriggerTestingSectionProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const client = useClient();
+  const processManagerRuntime = useProcessManagerRuntime();
+  const [properties] = useObject(space.properties);
+  const computeEnvironment = properties.computeEnvironment ?? 'local';
+  const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
+
+  const spec = Obj.getSnapshot(trigger).spec;
+  const kind = spec?.kind;
+
+  const cursor = kind === 'feed' ? Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id : undefined;
+
+  const handleForceRun = useCallback(async () => {
+    if (computeEnvironment === 'disabled') {
+      return;
+    }
+    if (computeEnvironment === 'local') {
+      await processManagerRuntime
+        .runPromise(
+          Effect.gen(function* () {
+            const dispatcher = yield* TriggerDispatcher;
+            yield* dispatcher.invokeTrigger({
+              trigger,
+              event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent,
+            });
+          }).pipe(Effect.provide(ServiceResolver.provide({ space: space.id }, TriggerDispatcher))),
+        )
+        .catch((error: unknown) => log.catch(error));
+      return;
+    }
+    await functionsServiceClient
+      .forceRunCronTrigger(Context.default(), space.id, trigger.id)
+      .catch((error: unknown) => log.catch(error));
+  }, [computeEnvironment, functionsServiceClient, processManagerRuntime, space.id, trigger]);
+
+  const handleResetCursor = useCallback(async () => {
+    Obj.update(trigger, (trigger) => {
+      Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
+    });
+    await space.db.flush({ indexes: true });
+  }, [space.db, trigger]);
+
+  if (kind !== 'timer' && kind !== 'feed') {
+    return null;
+  }
+
+  return (
+    <Accordion.Root items={[TESTING_ITEM]}>
+      {({ items }) =>
+        items.map((item) => (
+          <Accordion.Item key={item.id} item={item}>
+            <Accordion.ItemHeader>{t('testing.title')}</Accordion.ItemHeader>
+            <Accordion.ItemBody>
+              {kind === 'timer' && (
+                <IconButton
+                  icon='ph--play--regular'
+                  label={t('force-run.label')}
+                  disabled={computeEnvironment === 'disabled'}
+                  onClick={handleForceRun}
+                />
+              )}
+              {kind === 'feed' && (
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <IconButton
+                      icon='ph--arrow-clockwise--regular'
+                      label={t('reset-cursor.label')}
+                      disabled={!cursor}
+                    />
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content side='top'>
+                      <DropdownMenu.Viewport>
+                        <DropdownMenu.Item onClick={handleResetCursor}>
+                          {t('reset-cursor-confirm.label')}
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Viewport>
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              )}
+            </Accordion.ItemBody>
+          </Accordion.Item>
+        ))
+      }
+    </Accordion.Root>
   );
 };
 
@@ -191,7 +312,7 @@ const ActionInputEditor = ({
   operation: Operation.PersistentOperation;
   trigger: Trigger.Trigger;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const effectSchema = useMemo(
     () => (operation.inputSchema ? JsonSchema.toEffectSchema(operation.inputSchema) : undefined),
     [operation.inputSchema],
@@ -269,11 +390,14 @@ const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput =>
     ? { kind: 'feed', feed: spec.feed }
     : { kind: 'timer', cron: spec?.kind === 'timer' ? spec.cron : '' };
 
+// Fallback cron used when no schedule has been set yet.
+const DEFAULT_TIMER_CRON = toCron(FrequencyDefaults.daily);
+
 // Build a trigger spec from the form's values. Returned as just the two specs we construct (not the full
 // `Trigger.Spec` union) so the subscription spec's deep readonly query AST never enters the type and the
 // result stays assignable to the mutable `trigger.spec`.
 const triggerFormSpec = (values: TriggerFormInput): Trigger.TimerSpec | Trigger.FeedSpec =>
-  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron ?? '');
+  values.kind === 'feed' ? { kind: 'feed', feed: values.feed } : Trigger.specTimer(values.cron || DEFAULT_TIMER_CRON);
 
 export const TriggerSection = ({
   db,
@@ -284,31 +408,22 @@ export const TriggerSection = ({
   automation: Automation.Automation;
   trigger?: Trigger.Trigger;
 }) => {
-  const { t } = useTranslation(meta.id);
-  const { defaultValues, fieldMap, handleValuesChanged, handleRemove } = useTriggerForm(db, automation, trigger);
+  const { defaultValues, fieldMap, handleValuesChanged } = useTriggerForm(db, automation, trigger);
 
   return (
-    <div className='flex flex-col gap-2'>
-      <Form.Root
-        // Remount when the bound trigger changes so the uncontrolled form picks up its spec.
-        key={trigger?.id ?? 'new'}
-        schema={TriggerForm}
-        defaultValues={defaultValues}
-        db={db}
-        fieldMap={fieldMap}
-        onValuesChanged={handleValuesChanged}
-      >
-        <Form.Content>
-          <Form.FieldSet />
-        </Form.Content>
-      </Form.Root>
-      {trigger && (
-        <Button variant='ghost' classNames='gap-1 self-start' onClick={handleRemove}>
-          <Icon icon='ph--trash--regular' size={4} />
-          <span>{t('remove-trigger.label')}</span>
-        </Button>
-      )}
-    </div>
+    <Form.Root
+      // Remount when the bound trigger changes so the uncontrolled form picks up its spec.
+      key={trigger?.id ?? 'new'}
+      schema={TriggerForm}
+      defaultValues={defaultValues}
+      db={db}
+      fieldMap={fieldMap}
+      onValuesChanged={handleValuesChanged}
+    >
+      <Form.Content>
+        <Form.FieldSet />
+      </Form.Content>
+    </Form.Root>
   );
 };
 
@@ -335,7 +450,7 @@ export const AutomationInlineForm = ({
   automation: Automation.Automation;
   db: Database.Database;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const trigger = usePrimaryTrigger(automation);
 
   return (
@@ -352,6 +467,34 @@ export const AutomationInlineForm = ({
     </div>
   );
 };
+
+//
+// Cron field
+//
+
+/** Renders the CronBuilder with a live cronstrue description below it. */
+const CronField = (props: FormFieldRendererProps) => {
+  const existingCron = props.getValue() as string | undefined;
+  const initialSpec = useMemo(() => (existingCron ? fromCron(existingCron) : FrequencyDefaults.daily), []);
+  const [description, setDescription] = useState(() => describeCron(existingCron ?? toCron(initialSpec)));
+
+  const handleChange = useCallback(
+    (spec: CronSpecType, cron: string) => {
+      setDescription(describeCron(cron));
+      props.onValueChange(props.type, cron);
+    },
+    [props.type, props.onValueChange],
+  );
+
+  return (
+    <div className='flex flex-col gap-1 mbs-2'>
+      <CronBuilder value={initialSpec} onChange={handleChange} />
+      <p className='text-sm text-description pli-1 text-right'>{description}</p>
+    </div>
+  );
+};
+
+CronField.displayName = 'AutomationArticle.CronField';
 
 //
 // Hooks
@@ -389,7 +532,6 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
   // Read once per trigger identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<GeneralFormValues>>(
     () => ({ name: auto.name, enabled: (trigger?.enabled ?? false) && canEnable }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [automation, trigger],
   );
 
@@ -412,7 +554,7 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
 
 /** Form state for the Action section: pick an operation|routine and bind it to the trigger's function/input. */
 const useActionForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(automation);
   // Query by typename DXN so results stay untyped (`Entity.Any[]`), as RefField.useResults expects.
   const operations = useQuery(
@@ -458,7 +600,6 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
       return { kind: 'operation', operation: auto.runnable };
     }
     return { kind: 'operation' };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [automation, trigger]);
 
   const handleValuesChanged = useCallback(
@@ -503,7 +644,7 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
 
 /** Form state for the Trigger section: the timer|feed spec, plus create-on-first-edit and remove handlers. */
 const useTriggerForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const kindOptions = useMemo(
     () => [
       { value: 'timer', label: t('trigger-kind.timer.label') },
@@ -512,15 +653,14 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
     [t],
   );
   const fieldMap = useMemo<FormFieldMap>(
-    () => ({ kind: (props) => <SelectField {...props} options={kindOptions} /> }),
+    () => ({
+      kind: (props) => <SelectField {...props} options={kindOptions} />,
+      cron: (props) => <CronField {...props} />,
+    }),
     [kindOptions],
   );
   // Read once per trigger identity (uncontrolled Form); default to an empty timer spec.
-  const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => triggerFormValues(trigger?.spec),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [trigger],
-  );
+  const defaultValues = useMemo<Partial<TriggerFormValues>>(() => triggerFormValues(trigger?.spec), [trigger]);
 
   const handleValuesChanged = useCallback(
     (values: Partial<TriggerFormValues>) => {
@@ -543,17 +683,7 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
     [db, automation, trigger],
   );
 
-  const handleRemove = useCallback(() => {
-    if (!trigger) {
-      return;
-    }
-    Obj.update(automation, (automation) => {
-      automation.triggers = automation.triggers.filter((ref) => ref.target?.id !== trigger.id);
-    });
-    db.remove(trigger);
-  }, [db, automation, trigger]);
-
-  return { defaultValues, fieldMap, handleValuesChanged, handleRemove };
+  return { defaultValues, fieldMap, handleValuesChanged };
 };
 
 //

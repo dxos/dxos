@@ -21,7 +21,7 @@ export const translations = [
         'rename-object.label': 'Rename automation',
         'delete-object.label': 'Delete automation',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Automation',
         'automation-panel.label': 'Automations',
         'create-panel.template.placeholder': 'Search templates...',
@@ -38,7 +38,7 @@ export const translations = [
         'trigger-picker.title': 'Trigger',
         'trigger-picker.description': 'When this automation runs.',
         'trigger-kind.placeholder': 'Select trigger type',
-        'trigger-kind.timer.label': 'Schedule (cron)',
+        'trigger-kind.timer.label': 'Schedule',
         'trigger-kind.feed.label': 'Feed',
         'cron.placeholder': '0 0 * * *',
         'feed.placeholder': 'Select a feed',
@@ -52,6 +52,11 @@ export const translations = [
         'no-automations.message': 'No automations for this object.',
         'automation-not-associated.message': 'Not yet associated with this object.',
         'automation-detached.message': 'No longer associated with this object.',
+
+        'testing.title': 'Testing',
+        'force-run.label': 'Force run',
+        'reset-cursor.label': 'Reset feed cursor',
+        'reset-cursor-confirm.label': 'Confirm reset feed cursor',
 
         'automation-verbose.label': 'Manage automations',
         'automation.description': 'Manage where automations in this space run.',

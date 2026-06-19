@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { blank } from '../templates';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Automation.Automation),
+      TypeSection.createTypeSectionExtension(Automation.Automation),
       GraphBuilder.createExtension({
         id: 'automationsSectionActions',
         match: (node) => {
@@ -61,8 +61,8 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'automations',
-              type: `${meta.id}.space-settings-automation`,
-              label: ['automation-panel.label', { ns: meta.id }],
+              type: `${meta.profile.key}.space-settings-automation`,
+              label: ['automation-panel.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               iconHue: 'indigo',
               position: 'last',
@@ -76,7 +76,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('automation'),
-              label: ['automation-companion.label', { ns: meta.id }],
+              label: ['automation-companion.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
               position: 'last',

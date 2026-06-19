@@ -26,12 +26,15 @@ import {
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
+
+import { findInCause } from '../util/error-cause';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -88,6 +91,13 @@ export type ProcessorRequest = {
  * to avoid leaking implementation detail.
  */
 const parseError = (err: unknown): Error => {
+  const quotaError = findInCause(err, UsageQuotaExceededError.is);
+  if (quotaError) {
+    return new Error(quotaError.message?.trim() || 'You have reached your AI usage limit for this period.', {
+      cause: err,
+    });
+  }
+
   let message: string | undefined;
   if (AiError.isAiError(err)) {
     message = err.description?.trim() || err.message;
@@ -263,6 +273,7 @@ export class AiChatProcessor {
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
         if (Cause.isInterruptedOnly(exit.cause)) {
+          this.#discardStreaming();
           return;
         }
 
@@ -300,6 +311,7 @@ export class AiChatProcessor {
     );
 
     this.#requestFiber = undefined;
+    this.#discardStreaming();
     this.#registry.set(this.active, false);
   }
 
@@ -388,6 +400,14 @@ export class AiChatProcessor {
       }
       return [...errors, event];
     });
+  }
+
+  /**
+   * Drop in-flight streaming messages (cancel/interrupt — partial blocks are discarded).
+   */
+  #discardStreaming() {
+    this.#registry.set(this.#streaming, []);
+    this.#finalizedIds.clear();
   }
 
   /**

@@ -7,15 +7,7 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNode,
-  LayoutOperation,
-  createTypeSectionExtension,
-  createTypeSectionPathResolver,
-  getActiveSpace,
-  getPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace, LayoutOperation, TypeSection } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation, Routine } from '@dxos/compute';
@@ -61,7 +53,7 @@ export default Capability.makeModule(
                   yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db.spaceId });
                 }),
               properties: {
-                label: ['chat-update-name.label', { ns: meta.id }],
+                label: ['chat-update-name.label', { ns: meta.profile.key }],
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
@@ -80,7 +72,7 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+                const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
                 if (!space) {
                   return;
                 }
@@ -100,7 +92,7 @@ export default Capability.makeModule(
                 yield* Database.flush();
               }),
               properties: {
-                label: ['import-compute-operations.label', { ns: meta.id }],
+                label: ['import-compute-operations.label', { ns: meta.profile.key }],
                 icon: 'ph--download-simple--regular',
               },
             }),
@@ -108,7 +100,7 @@ export default Capability.makeModule(
               id: AssistantOperation.ToggleTracePanelDebug.meta.key,
               data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
               properties: {
-                label: ['toggle-trace-panel-debug.label', { ns: meta.id }],
+                label: ['toggle-trace-panel-debug.label', { ns: meta.profile.key }],
                 icon: 'ph--brackets-curly--regular',
               },
             }),
@@ -139,7 +131,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
-                label: ['assistant-chat.label', { ns: meta.id }],
+                label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
                 position: 'first',
@@ -158,7 +150,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'invocations',
-              label: ['invocations.label', { ns: meta.id }],
+              label: ['invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
             }),
@@ -172,7 +164,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('trace'),
-              label: ['trace.label', { ns: meta.id }],
+              label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
               position: 'last',
@@ -181,7 +173,7 @@ export default Capability.makeModule(
       }),
 
       // Section node: standalone Chat.Chat objects per space (companions are excluded).
-      createTypeSectionExtension(Chat.Chat, {
+      TypeSection.createTypeSectionExtension(Chat.Chat, {
         // Exclude chats that are the source of a CompanionTo relation; those belong to
         // their primary object's companion panel and should not appear in the top-level list.
         query: Query.without(
@@ -220,7 +212,7 @@ export default Capability.makeModule(
                   );
                 }),
               properties: {
-                label: ['create-chat.label', { ns: meta.id }],
+                label: ['create-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
@@ -231,7 +223,10 @@ export default Capability.makeModule(
 
     return [
       Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
-      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Chat.Chat)),
+      Capability.contributes(
+        AppCapabilities.NavigationPathResolver,
+        TypeSection.createTypeSectionPathResolver(Chat.Chat),
+      ),
     ];
   }),
 );

@@ -33,7 +33,7 @@ export type EditMessageProps = {
 
 export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
   ({ message, extensions, onSend, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 

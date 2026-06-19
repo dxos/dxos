@@ -38,7 +38,7 @@ export type UploadResult = {
   readonly data: File.FileData;
 };
 
-export const Backend = Capability.make<Backend>(`${meta.id}.capability.backend`);
+export const Backend = Capability.make<Backend>(`${meta.profile.key}.capability.backend`);
 
 /**
  * Resolves an external URL (e.g. `wnfs://…`) into a renderable URL (a
@@ -51,6 +51,8 @@ export type UrlResolver = {
   readonly resolve: (url: string, file: File.File, space?: Space) => Promise<string | undefined>;
 };
 
-export const UrlResolver = Capability.make<UrlResolver>(`${meta.id}.capability.url-resolver`);
+export const UrlResolver = Capability.make<UrlResolver>(`${meta.profile.key}.capability.url-resolver`);
 
-export const SettingsAtom = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
+export const SettingsAtom = Capability.make<Atom.Writable<Settings.Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);

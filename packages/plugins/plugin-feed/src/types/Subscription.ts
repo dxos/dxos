@@ -357,7 +357,7 @@ const ensureContentFeed = (subscription: Subscription): Feed.Feed => {
  * `contentFeed`, lazily creating the feed on first use.
  */
 export const appendPostContent = async (
-  space: Space,
+  space: Pick<Space, 'db'>,
   subscription: Subscription,
   entry: {
     post: Post | Obj.Snapshot<Post>;
@@ -376,7 +376,7 @@ export const appendPostContent = async (
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
   await Feed.append(echoFeed, [content]).pipe(
-    Effect.provide(createFeedServiceLayer(space.queues)),
+    Effect.provide(createFeedServiceLayer(space.db)),
     EffectEx.runAndForwardErrors,
   );
 };

@@ -20,12 +20,28 @@ export const MANIFEST_ASSET_NAME = 'manifest.json';
 export const ENTRY_FILENAME = PLUGIN_ENTRY_FILENAME;
 
 /**
- * Plugin metadata required to emit a manifest at build time.
+ * Flat plugin metadata emitted into `manifest.json` at build time (the shape validated by
+ * `@dxos/protocols` `PluginManifestSchema`).
  *
- * Extends `Plugin.Meta` with a build-time `version` field that is not
- * relevant to the runtime plugin definition itself.
+ * The runtime {@link Plugin.Meta} nests its display/identity fields under `profile`; the build
+ * manifest is intentionally flat, so this is the {@link Plugin.Profile} content plus build-time fields:
+ * the package `version`, and a `dependencies` snapshot (every declared dependency resolved to its
+ * concrete installed version). The host derives SDK compatibility from the subset of `dependencies`
+ * it shares with the plugin (the externalized `@dxos/*` packages); the rest are recorded for transparency.
  */
-export type BuildMeta = Plugin.Meta & { version: string };
+export type BuildMeta = Plugin.Profile & { version: string; dependencies?: Record<string, string> };
+
+/**
+ * Flattens a runtime {@link Plugin.Meta}'s `profile` and augments it with the build-time fields
+ * needed to emit `manifest.json`: the package `version` (from the publishing project's `package.json`)
+ * and an optional resolved `dependencies` snapshot. Produces the {@link BuildMeta} that `composerPlugin`
+ * serializes.
+ */
+export const toBuildMeta = (meta: Plugin.Meta, version: string, dependencies?: Record<string, string>): BuildMeta => ({
+  ...meta.profile,
+  version,
+  ...(dependencies ? { dependencies } : {}),
+});
 
 /**
  * Serializes a plugin's public metadata + bundle layout into the format consumed
@@ -46,14 +62,9 @@ export const serializeManifest = (
   meta: BuildMeta,
   { assets, devEntry }: { assets: readonly string[]; devEntry?: string },
 ): string => {
-  // The published manifest is keyed by the bare NSID `id`; the `key` DXN is an
-  // in-process convenience and is intentionally omitted to keep the registry
-  // wire-format stable. `version` is the build-time package version (may be a
-  // non-semver dev tag), carried by `BuildMeta` rather than derived from `key`.
-  const { key: _key, ...rest } = meta;
   return JSON.stringify(
     {
-      ...rest,
+      ...meta,
       assets,
       ...(devEntry !== undefined ? { devEntry } : {}),
     },

@@ -32,7 +32,7 @@ export type PromptEditorProps = {
  * CodeMirror instance ourselves.
  */
 export const PromptEditor = ({ id, text, placeholder }: PromptEditorProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () =>
