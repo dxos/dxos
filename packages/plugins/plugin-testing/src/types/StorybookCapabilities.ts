@@ -29,7 +29,7 @@ export type LayoutStateProps = {
   popoverVariant?: 'virtual' | 'react';
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
-  popoverKind?: 'base' | 'card';
+  popoverKind?: 'base' | 'card' | 'rename';
   popoverTitle?: Label;
   popoverContent?: any;
 

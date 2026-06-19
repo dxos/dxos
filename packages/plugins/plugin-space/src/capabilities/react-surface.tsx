@@ -29,17 +29,16 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
-  EntityRenamePopover,
   ObjectCardStack,
   ObjectProperties,
   RecordArticle,
   RelatedArticle,
+  RenamePopover,
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
   SpaceHomeRecent,
   SpacePresence,
-  SpaceRenamePopover,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
@@ -61,8 +60,7 @@ import {
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
-  ENTITY_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
+  RENAME_POPOVER,
 } from '../constants';
 
 type ReactSurfaceOptions = {
@@ -306,14 +304,9 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: SPACE_RENAME_POPOVER,
-        filter: AppSurface.component<Space>(AppSurface.Popover, SPACE_RENAME_POPOVER),
-        component: ({ data }) => <SpaceRenamePopover space={data.props} />,
-      }),
-      Surface.create({
-        id: ENTITY_RENAME_POPOVER,
-        filter: AppSurface.component<Entity.Unknown>(AppSurface.Popover, ENTITY_RENAME_POPOVER),
-        component: ({ data }) => <EntityRenamePopover entity={data.props} />,
+        id: RENAME_POPOVER,
+        filter: AppSurface.component<Space | Entity.Unknown>(AppSurface.Popover, RENAME_POPOVER),
+        component: ({ data }) => <RenamePopover subject={data.props} />,
       }),
       Surface.create({
         id: 'menuFooter',

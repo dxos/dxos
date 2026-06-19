@@ -92,7 +92,7 @@ export const EphemeralDeckState = Schema.Struct({
   popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
-  popoverKind: Schema.optional(Schema.Literal('base', 'card')),
+  popoverKind: Schema.optional(Schema.Literal('base', 'card', 'rename')),
   popoverTitle: Schema.optional(Translations.Label.annotations({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
