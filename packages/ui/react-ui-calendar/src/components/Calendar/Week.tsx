@@ -382,10 +382,10 @@ const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
                   {draftHere &&
                     draggedEvent &&
                     !dayEvents.some((event) => event.id === draggedEvent.id) &&
-                    renderEvent(draggedEvent, day, draft!.start, draft!.end, 0, 1)}
+                    renderEvent(draggedEvent, day, draftHere.start, draftHere.end, 0, 1)}
 
                   {/* Pending create rectangle. */}
-                  {draftHere && draft && !draft.eventId && <PendingBlock start={draft.start} end={draft.end} />}
+                  {draftHere && !draftHere.eventId && <PendingBlock start={draftHere.start} end={draftHere.end} />}
                 </div>
               );
             })}
