@@ -26,7 +26,7 @@ export type SearchPropertiesProps = {
  * selector is duplicated here. The masonry results live in the article.
  */
 export const SearchProperties = ({ search }: SearchPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const database = Obj.getDatabase(search);
 

@@ -20,7 +20,7 @@ export const VoxelPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -15,7 +15,7 @@ import { VersionInfo } from '#types';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <header

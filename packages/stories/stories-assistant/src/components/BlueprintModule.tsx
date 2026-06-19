@@ -15,7 +15,7 @@ import { descriptionMessage, mx } from '@dxos/ui-theme';
 import { type ModuleProps } from './types';
 
 export const BlueprintModule = ({ space }: ModuleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [blueprint] = useQuery(space.db, Filter.type(Blueprint.Blueprint));
   if (!blueprint?.instructions) {
     return <p className={mx(descriptionMessage, 'm-trim-md')}>{t('no-blueprint.message')}</p>;

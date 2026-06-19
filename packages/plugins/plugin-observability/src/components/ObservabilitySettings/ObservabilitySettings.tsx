@@ -14,11 +14,11 @@ import { Settings } from '#types';
 export type ObservabilitySettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const ObservabilitySettings = ({ settings, onSettingsChange }: ObservabilitySettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <Message.Root valence='info'>
           <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>

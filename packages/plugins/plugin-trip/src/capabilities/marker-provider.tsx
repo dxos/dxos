@@ -167,7 +167,7 @@ const useTripMarkers = (subject: Trip.Trip, { attendableId }: { attendableId?: s
 
 /** Provider plotting a {@link Trip.Trip}'s segments. */
 export const tripMarkerProvider: MapCapabilities.MarkerProvider = {
-  id: `${meta.id}/segments`,
+  id: `${meta.profile.key}/segments`,
   match: (subject) => Trip.instanceOf(subject),
   useMarkers: useTripMarkers,
 };

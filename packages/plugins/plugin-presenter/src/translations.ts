@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Presenter',
         'settings.title': 'Presenter settings',
         'toggle-presentation.label': 'Present',

@@ -57,9 +57,9 @@ export const Main = () => {
     <List itemSizes='one'>
       {plugins.map((plugin) => (
         <Item
-          key={plugin.meta.id}
-          id={plugin.meta.id}
-          disabled={core.includes(plugin.meta.id)}
+          key={plugin.meta.profile.key}
+          id={plugin.meta.profile.key}
+          disabled={core.includes(plugin.meta.profile.key)}
           onRemove={handleRemove}
         />
       ))}

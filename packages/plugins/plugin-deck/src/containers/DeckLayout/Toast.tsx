@@ -21,7 +21,7 @@ export const Toast = ({
   onAction,
   onOpenChange,
 }: LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
   // unmounting abruptly. Both the close button and Radix's own timeout/swipe route through here.

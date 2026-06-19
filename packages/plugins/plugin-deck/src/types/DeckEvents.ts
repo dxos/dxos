@@ -12,7 +12,7 @@ import { meta } from '#meta';
 import * as DeckCapabilities from './DeckCapabilities';
 
 export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
-  `${meta.id}.state-ready`,
+  `${meta.profile.key}.state-ready`,
 );
 
 /** Fired when DeckSettings capability is ready. */

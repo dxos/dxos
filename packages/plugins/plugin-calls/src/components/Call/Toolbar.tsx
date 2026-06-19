@@ -44,7 +44,7 @@ export const Toolbar = ({
   onJoin,
   onLeave,
 }: ToolbarProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const call = useCapability(CallsCapabilities.Manager);

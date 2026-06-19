@@ -29,7 +29,7 @@ export type ResultCardProps = {
  */
 export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, starred = false, onToggleStar, classNames, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     // Subscribe so the card re-renders when the result (or its image) loads.
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];

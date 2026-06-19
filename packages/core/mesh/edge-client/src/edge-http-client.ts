@@ -28,7 +28,6 @@ import {
   type FeedProtocol,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
-  type GetPluginVersionsResponseBody,
   type GetPluginsResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -61,6 +60,12 @@ export type EdgeQueryQueueResponse = {
   objects?: unknown[];
   nextCursor?: string;
   prevCursor?: string;
+};
+
+export type UploadPluginBundleRequest = {
+  slug: string;
+  version: string;
+  files: { path: string; content: string }[];
 };
 
 export type TriggersDispatcherStatus = {
@@ -379,14 +384,21 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 
-  public async getRegistryPluginVersions(
+  /**
+   * Uploads a built plugin bundle to the registry's R2-backed hosting. Authenticated
+   * with the caller's hub identity (verifiable presentation) — `setIdentity` must
+   * have been called. Returns the canonical `moduleUrl` (the hosted `manifest.json`).
+   */
+  public async uploadPluginBundle(
     ctx: Context,
-    repo: string,
+    request: UploadPluginBundleRequest,
     args?: EdgeHttpCallArgs,
-  ): Promise<GetPluginVersionsResponseBody> {
-    return this._call(ctx, new URL(`/registry/plugins/${encodeURIComponent(repo)}/versions`, this.baseUrl), {
+  ): Promise<{ moduleUrl: string }> {
+    return this._call(ctx, new URL('/registry/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
       ...args,
-      method: 'GET',
     });
   }
 

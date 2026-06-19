@@ -57,7 +57,7 @@ export const KanbanBoardRoot = ({
   onCardRemove,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
   const view = kanban?.spec.kind === 'view' ? kanban.spec.view.target : undefined;

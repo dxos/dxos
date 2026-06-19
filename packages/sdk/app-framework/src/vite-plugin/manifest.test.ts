@@ -12,7 +12,7 @@ import { type BuildMeta, serializeManifest } from './manifest';
 // Build a `BuildMeta` (runtime `Meta` plus the build-time `version`, which may be a
 // non-semver dev tag and so lives outside the `key` DXN).
 const buildMeta = (options: Plugin.MakeMetaOptions, version: string): BuildMeta => ({
-  ...Plugin.makeMeta(options),
+  ...Plugin.makeMeta(options).profile,
   version,
 });
 
@@ -23,7 +23,7 @@ describe('serializeManifest', () => {
       { assets: ['index.mjs', 'style.css', 'chunks/lib-abc.js'] },
     );
     expect(JSON.parse(json)).toEqual({
-      id: 'org.example.plugin',
+      key: 'org.example.plugin',
       name: 'Example',
       description: 'Demo',
       tags: ['new'],
@@ -38,7 +38,7 @@ describe('serializeManifest', () => {
       devEntry: 'src/plugin.tsx',
     });
     expect(JSON.parse(json)).toEqual({
-      id: 'org.example.plugin',
+      key: 'org.example.plugin',
       name: 'Example',
       version: '0.0.0-dev',
       assets: [],

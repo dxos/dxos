@@ -57,7 +57,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['close-current.label', { ns: meta.id }],
+                label: ['close-current.label', { ns: meta.profile.key }],
                 icon: 'ph--x--regular',
               },
             };
@@ -72,7 +72,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
               }),
               properties: {
-                label: ['close-others.label', { ns: meta.id }],
+                label: ['close-others.label', { ns: meta.profile.key }],
                 icon: 'ph--x-square--regular',
               },
             };
@@ -84,7 +84,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(LayoutOperation.Close, { subject: deck.active });
               }),
               properties: {
-                label: ['close-all.label', { ns: meta.id }],
+                label: ['close-all.label', { ns: meta.profile.key }],
                 icon: 'ph--x-circle--regular',
               },
             };
@@ -105,7 +105,7 @@ export default Capability.makeModule(
                   state.sidebarState === 'expanded'
                     ? 'collapse-navigation-sidebar.label'
                     : 'open-navigation-sidebar.label',
-                  { ns: meta.id },
+                  { ns: meta.profile.key },
                 ],
                 icon: 'ph--sidebar--regular',
                 keyBinding: {

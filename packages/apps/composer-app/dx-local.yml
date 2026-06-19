@@ -5,6 +5,14 @@ runtime:
     # devtoolsProxy: wss://192.168.50.25:8080/host
     # disableP2pReplication: true
 
+  app:
+    env:
+      # Disable PWA/service-worker in local dev — VitePWA doesn't register a SW
+      # in vite serve mode, so navigator.serviceWorker.ready never resolves and
+      # the registry Install action hangs indefinitely. The noop cache is used
+      # instead; plugins still load, they just don't get an offline guarantee.
+      DX_PWA: 'false'
+
   services:
     agentHosting:
       type: LOCAL_TESTING

@@ -39,12 +39,16 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/platform-bun": "catalog:",
     "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:"
+    "@effect/printer-ansi": "catalog:",
+    "get-port-please": "catalog:"
   },
   "devDependencies": {
     "effect": "catalog:",

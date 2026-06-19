@@ -15,7 +15,7 @@ import { Assistant } from '#types';
 export type AssistantSettingsProps = AppSurface.SettingsArticleProps<Assistant.Settings>;
 
 export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const fieldMap = useMemo(
     () => ({
       modelDefaults: {
@@ -29,7 +29,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.FieldSet<Assistant.Settings>
           readonly={!onSettingsChange}
           schema={Assistant.Settings}

@@ -59,11 +59,11 @@ export const useMessageActions = ({
   return useMenuBuilder(
     (get) =>
       MenuBuilder.make()
-        .root({ label: ['message-toolbar.label', { ns: meta.id }] })
-        .subgraph(onOpen && openGroup({ ns: meta.id, labelKey: 'message-toolbar-open.menu', onOpen }))
+        .root({ label: ['message-toolbar.label', { ns: meta.profile.key }] })
+        .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen }))
         .subgraph(
           viewModeGroup({
-            ns: meta.id,
+            ns: meta.profile.key,
             viewMode,
             setViewMode,
             modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
@@ -73,7 +73,7 @@ export const useMessageActions = ({
           b.action(
             'load-images',
             {
-              label: ['message-toolbar-load-images.menu', { ns: meta.id }],
+              label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
               icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
               iconOnly: true,
               checked: loadRemoteImages,
@@ -88,7 +88,7 @@ export const useMessageActions = ({
               b.action(
                 'reply',
                 {
-                  label: ['message-toolbar-reply.menu', { ns: meta.id }],
+                  label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-up-left--regular',
                 },
                 onReply,
@@ -100,7 +100,7 @@ export const useMessageActions = ({
               b.action(
                 'replyAll',
                 {
-                  label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
+                  label: ['message-toolbar-reply-all.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-double-up-left--regular',
                 },
                 onReplyAll,
@@ -112,7 +112,7 @@ export const useMessageActions = ({
               b.action(
                 'forward',
                 {
-                  label: ['message-toolbar-forward.menu', { ns: meta.id }],
+                  label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-up-right--regular',
                 },
                 onForward,
@@ -124,7 +124,7 @@ export const useMessageActions = ({
             return b.group(
               'extract',
               {
-                label: ['message-toolbar-extract.menu', { ns: meta.id }],
+                label: ['message-toolbar-extract.menu', { ns: meta.profile.key }],
                 icon: 'ph--magic-wand--regular',
                 iconOnly: true,
                 variant: 'dropdownMenu',
@@ -142,7 +142,7 @@ export const useMessageActions = ({
           b.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction }));
 
           if (onDelete) {
-            deleteAction(b, { ns: meta.id, labelKey: 'message-toolbar-delete.menu', onDelete });
+            deleteAction(b, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
           }
         })
         .build(),

@@ -56,14 +56,14 @@ export const PlankHeading = memo(
     actions = [],
     debug = false,
   }: PlankHeadingProps) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { graph, onAdjust, onUpdateCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--circle-dashed--regular';
     const label = pending
       ? t('pending.heading')
-      : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.id }], t);
+      : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.profile.key }], t);
 
     const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
 
@@ -110,7 +110,7 @@ export const PlankHeading = memo(
     const handleAction = useCallback(
       (action: StackItemSigilAction) => {
         if (typeof action.data === 'function') {
-          void runAction(action as Node.Action, { parent: node, caller: meta.id });
+          void runAction(action as Node.Action, { parent: node, caller: meta.profile.key });
         }
       },
       [node, runAction],
@@ -123,7 +123,7 @@ export const PlankHeading = memo(
       [onAdjust, id],
     );
 
-    const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = node && popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {

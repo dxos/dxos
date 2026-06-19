@@ -8,6 +8,7 @@
   },
   "exclude": [],
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [

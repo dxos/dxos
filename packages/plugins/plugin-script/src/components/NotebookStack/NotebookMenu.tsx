@@ -17,7 +17,7 @@ export type NotebookMenuProps = {
 
 // TODO(burdon): Better way to organize menu?
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.Content>

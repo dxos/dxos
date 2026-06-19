@@ -50,7 +50,7 @@ export const useAlignState = (stateAtom: ToolbarStateAtom) => {
 
 const createAlignGroupAction = (value?: AlignValue) =>
   createMenuItemGroup('align', {
-    label: ['align.label', { ns: meta.id }],
+    label: ['align.label', { ns: meta.profile.key }],
     variant: 'toggleGroup',
     selectCardinality: 'single',
     value: `${alignKey}--${value}`,
@@ -104,7 +104,7 @@ const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackR
         key: alignKey,
         value: alignValue as AlignValue,
         checked: state[alignKey] === alignValue,
-        label: [`range-value.${alignValue}.label`, { ns: meta.id }],
+        label: [`range-value.${alignValue}.label`, { ns: meta.profile.key }],
         icon,
         testId: `grid.toolbar.${alignKey}.${alignValue}`,
       },

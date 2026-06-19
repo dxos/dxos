@@ -139,7 +139,7 @@ const UsageSkeleton = () => (
  * per limit with a usage meter, plus a collapsible raw-response viewer. Pure — all data via props.
  */
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [rawExpanded, setRawExpanded] = useState(false);
 
   // One display row per limit, shorter windows first. A `null` amount means unlimited (rendered without a meter).

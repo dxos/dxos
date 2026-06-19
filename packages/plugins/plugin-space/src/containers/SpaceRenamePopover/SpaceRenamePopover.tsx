@@ -13,10 +13,10 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const SPACE_RENAME_POPOVER = `${meta.id}.SpaceRenamePopover`;
+export const SPACE_RENAME_POPOVER = `${meta.profile.key}.SpaceRenamePopover`;
 
 export const SpaceRenamePopover = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(space.properties.name ?? '');
   const { invokePromise } = useOperationInvoker();

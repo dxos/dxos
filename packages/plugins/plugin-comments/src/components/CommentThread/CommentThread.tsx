@@ -57,7 +57,7 @@ export const CommentThread = ({
   onThreadDelete,
   onAcceptProposal,
 }: CommentThreadProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const identity = useIdentity();
   const space = getSpace(anchor);
   const members = useMembers(space?.key);

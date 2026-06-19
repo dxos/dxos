@@ -151,11 +151,11 @@ export const GitHubAction = () => {
       if (!popup) {
         log.warn('github-issue: popup blocked');
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.github-issue-popup-blocked`,
+          id: `${meta.profile.key}.github-issue-popup-blocked`,
           icon: 'ph--warning--regular',
           duration: 8000,
-          title: ['github-issue-popup-blocked-toast.label', { ns: meta.id }],
-          description: ['github-issue-popup-blocked-toast.description', { ns: meta.id }],
+          title: ['github-issue-popup-blocked-toast.label', { ns: meta.profile.key }],
+          description: ['github-issue-popup-blocked-toast.description', { ns: meta.profile.key }],
           closeLabel: ['close.label', { ns: osTranslations }],
         });
         return;
@@ -166,13 +166,13 @@ export const GitHubAction = () => {
       popup.location.href = url;
 
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}.github-issue-success`,
+        id: `${meta.profile.key}.github-issue-success`,
         icon: 'ph--github-logo--regular',
         duration: 5000,
-        title: ['github-issue-toast.label', { ns: meta.id }],
+        title: ['github-issue-toast.label', { ns: meta.profile.key }],
         description: imageRequestedButFailed
-          ? ['github-issue-toast-no-screenshot.description', { ns: meta.id }]
-          : ['github-issue-toast.description', { ns: meta.id }],
+          ? ['github-issue-toast-no-screenshot.description', { ns: meta.profile.key }]
+          : ['github-issue-toast.description', { ns: meta.profile.key }],
         closeLabel: ['close.label', { ns: osTranslations }],
       });
     },

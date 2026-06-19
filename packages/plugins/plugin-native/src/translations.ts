@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'update-ready.label': 'Ready to update',
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Update',

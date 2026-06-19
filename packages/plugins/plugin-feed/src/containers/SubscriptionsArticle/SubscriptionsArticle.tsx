@@ -22,7 +22,7 @@ import { Subscription } from '#types';
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
 

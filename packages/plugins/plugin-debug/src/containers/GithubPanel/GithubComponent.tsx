@@ -90,7 +90,7 @@ const Root = ({ repo = DEFAULT_REPO, limit = DEFAULT_LIMIT, children }: GithubCo
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { repo, pulls, unavailable } = useComponentContext();
   return (
     <header className='flex items-center justify-between gap-1 px-4 py-3 bg-modal-surface border-b border-subdued-separator'>
@@ -169,7 +169,7 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
     <IconButton

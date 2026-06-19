@@ -75,7 +75,7 @@ const threadComponents = { Object: ObjectTile };
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);

@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 import { meta } from '#meta';
 
 // Convention: prefix all operation keys with the plugin's meta.id to avoid collisions.
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 // `Operation.make` creates a typed operation definition.
 // - `meta.key`: globally unique identifier used for routing and invocation.

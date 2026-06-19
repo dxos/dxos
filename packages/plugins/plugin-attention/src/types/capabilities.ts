@@ -8,6 +8,6 @@ import { type AttentionManager, type ViewStateManager } from '@dxos/react-ui-att
 import { meta } from '#meta';
 
 export namespace AttentionCapabilities {
-  export const Attention = Capability.make<AttentionManager>(`${meta.id}.capability.attention`);
-  export const ViewState = Capability.make<ViewStateManager>(`${meta.id}.capability.viewState`);
+  export const Attention = Capability.make<AttentionManager>(`${meta.profile.key}.capability.attention`);
+  export const ViewState = Capability.make<ViewStateManager>(`${meta.profile.key}.capability.view-state`);
 }

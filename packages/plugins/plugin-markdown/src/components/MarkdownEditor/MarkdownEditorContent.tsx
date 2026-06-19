@@ -73,7 +73,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const registry = useContext(RegistryContext);
 

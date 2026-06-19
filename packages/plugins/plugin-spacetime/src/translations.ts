@@ -28,7 +28,7 @@ export const translations = [
         'typename.label_one': 'Object',
         'typename.label_other': 'Objects',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spacetime',
 
         'settings.title': 'Spacetime settings',

@@ -38,7 +38,7 @@ export default Capability.makeModule(
               const spaceId = Obj.getDatabase(integration)?.spaceId;
               actions.push(
                 Node.makeAction({
-                  id: `${meta.id}.sync-integration.${integration.id}`,
+                  id: `${meta.profile.key}.sync-integration.${integration.id}`,
                   data: () =>
                     Operation.invoke(
                       sync,
@@ -48,7 +48,7 @@ export default Capability.makeModule(
                       { spaceId },
                     ),
                   properties: {
-                    label: ['sync-integration.label', { ns: meta.id }],
+                    label: ['sync-integration.label', { ns: meta.profile.key }],
                     icon: 'ph--arrows-clockwise--regular',
                     disposition: 'list-item',
                   },
@@ -57,13 +57,13 @@ export default Capability.makeModule(
             }
             actions.push(
               Node.makeAction({
-                id: `${meta.id}.delete-integration.${integration.id}`,
+                id: `${meta.profile.key}.delete-integration.${integration.id}`,
                 data: () =>
                   Operation.invoke(SpaceOperation.RemoveObjects, {
                     objects: [integration as unknown as Obj.Unknown],
                   }),
                 properties: {
-                  label: ['delete-integration.label', { ns: meta.id }],
+                  label: ['delete-integration.label', { ns: meta.profile.key }],
                   icon: 'ph--trash--regular',
                   disposition: 'list-item',
                   testId: 'integrationPlugin.deleteIntegration',
@@ -87,7 +87,7 @@ export default Capability.makeModule(
               type: INTEGRATIONS_SECTION_TYPE,
               data: INTEGRATIONS_SECTION_TYPE,
               properties: {
-                label: ['space-panel.name', { ns: meta.id }],
+                label: ['space-panel.name', { ns: meta.profile.key }],
                 icon: 'ph--plugs--regular',
                 iconHue: 'indigo',
                 draggable: false,
