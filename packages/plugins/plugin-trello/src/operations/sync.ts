@@ -5,7 +5,9 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
+import { IntegrationSync, LayoutOperation } from '@dxos/app-toolkit';
+
+const { mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } = IntegrationSync;
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -699,9 +701,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       if (outcome._tag === 'Right') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-success.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
             icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.id }],
+            title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
         return outcome.right;
@@ -709,9 +711,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         const message = formatTrelloSyncFailure(outcome.left);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-error.${toastIdSuffix}`,
+            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
             icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.id }],
+            title: ['sync-toast.error.label', { ns: meta.profile.key }],
             description: message,
           }),
         );

@@ -15,7 +15,7 @@ import { HelpCapabilities, type Tour } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* (steps?: Tour.Step[]) {
     return Capability.contributes(Capabilities.ReactRoot, {
-      id: meta.id,
+      id: meta.profile.key,
       root: () => {
         const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
         return (

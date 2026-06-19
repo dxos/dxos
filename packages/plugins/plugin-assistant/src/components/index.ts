@@ -7,6 +7,7 @@ import { type ComponentType, lazy } from 'react';
 
 export * from './AgentProperties';
 export * from './Chat';
+export { TracePanel } from '../containers/TracePanel/TracePanel';
 export * from './ProcessTree';
 export * from './TaskList';
 export * from './TemplateEditor';

@@ -9,7 +9,6 @@ import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Database, Feed, Filter, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -28,7 +27,7 @@ import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 random.seed(1);
 
-type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService | Feed.FeedService>;
+type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
 type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
@@ -60,15 +59,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
         }
 
         setDone(true);
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            Database.layer(space.db),
-            Feed.ContextFeedService.layer(feed),
-            createFeedServiceLayer(space.queues),
-          ),
-        ),
-      ),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), Feed.ContextFeedService.layer(feed)))),
     );
 
     return () => {

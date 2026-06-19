@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppSpace, Paths, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -25,7 +25,7 @@ const SpaceFormSchema = SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
@@ -78,7 +78,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication],
   );
 
-  const personal = isPersonalSpace(space);
+  const personal = AppSpace.isPersonalSpace(space);
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
@@ -146,7 +146,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: AppSpace.isPersonalSpace(space) })));
   }, [space, repairs]);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -155,9 +155,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     try {
       await invokePromise(SpaceOperation.Delete, { space });
       setDeleteConfirmOpen(false);
-      const personalSpace = getPersonalSpace(client);
+      const personalSpace = AppSpace.getPersonalSpace(client);
       if (personalSpace) {
-        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
       }
     } catch (err) {
       log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });
@@ -174,7 +174,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     <Settings.Viewport>
       <Settings.Section
         title={t('space-properties-settings-verbose.label')}
-        description={t('space-properties-settings.description', { ns: meta.id })}
+        description={t('space-properties-settings.description', { ns: meta.profile.key })}
       >
         <Form.Root
           key={space.id}

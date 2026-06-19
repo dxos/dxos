@@ -24,19 +24,18 @@ import {
 export type PluginArticleProps = { subject: Plugin.Plugin };
 
 export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
-  const pluginId = plugin.meta.id;
+  const pluginId = plugin.meta.profile.key;
   const manager = usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
   const { invokePromise } = useOperationInvoker();
 
-  const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
+  const { catalogEntry, moduleUrl } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
   const { pickerVersions, selectedVersionTag, setSelectedVersionTag } = useVersionPicker({
     provider,
     pluginId,
-    repo,
     moduleUrl,
     installedVersionTag,
   });
@@ -44,11 +43,14 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const enabled = manager.getEnabled().includes(pluginId);
   const failed = useAtomValue(manager.failed);
   const failure = useMemo(() => failed.find((entry) => entry.id === pluginId), [failed, pluginId]);
-  const isInstalled = useMemo(() => plugins.some((candidate) => candidate.meta.id === pluginId), [plugins, pluginId]);
+  const isInstalled = useMemo(
+    () => plugins.some((candidate) => candidate.meta.profile.key === pluginId),
+    [plugins, pluginId],
+  );
   const isCore = manager.getCore().includes(pluginId);
   const canUninstall = isInstalled && !isCore && remotePluginIds.has(pluginId);
   const hasUpdate =
-    isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
+    isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.release?.version;
 
   // Recompute graph slices whenever the plugin list changes, so installs /
   // removals through other surfaces (or this article's own actions) keep the
@@ -66,7 +68,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   // only loaded when it is activated, so the always-available `meta.name`
   // from the registered plugin set is the right source for chip labels.
   const handleResolvePluginName = useCallback(
-    (id: string): string => plugins.find((candidate) => candidate.meta.id === id)?.meta.name ?? id,
+    (id: string): string => plugins.find((candidate) => candidate.meta.profile.key === id)?.meta.profile.name ?? id,
     [plugins],
   );
 

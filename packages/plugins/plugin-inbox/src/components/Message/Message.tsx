@@ -8,6 +8,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRedu
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -160,7 +161,7 @@ const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
           role: 'none',
           classNames: [
             'overflow-hidden grid',
-            role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+            role === AppSurface.Section.role ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
           ],
         })}
         ref={forwardedRef}

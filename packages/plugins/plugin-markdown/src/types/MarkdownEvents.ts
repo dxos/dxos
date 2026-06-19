@@ -10,5 +10,5 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { meta } from '#meta';
 
 export const SetupExtensions: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
-  `${meta.id}.event.setup-extensions`,
+  `${meta.profile.key}.event.setup-extensions`,
 );

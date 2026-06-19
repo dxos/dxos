@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Ref, Type, DXN } from '@dxos/echo';
+import { Database, Ref, Type, DXN } from '@dxos/echo';
 import { Message, Transcript } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create Transcript', icon: 'ph--microphone--regular' },
@@ -53,7 +53,7 @@ export const Open = Operation.make({
   output: Schema.Struct({
     content: Schema.String,
   }),
-  services: [Database.Service, Feed.FeedService],
+  services: [Database.Service],
 });
 
 export const Summarize = Operation.make({

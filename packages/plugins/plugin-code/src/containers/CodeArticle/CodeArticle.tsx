@@ -65,7 +65,7 @@ const languageForPath = (path: string) => {
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const invoker = useOperationInvoker();
     const [buildRunState, updateBuildRun] = useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;

@@ -13,9 +13,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Process, Trace } from '@dxos/compute';
-import { Filter, Query } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { Process } from '@dxos/compute';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
@@ -27,6 +25,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
+import { useTraceMessages, getTraceMessagesAtom } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -175,33 +174,6 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
   return useAtomValue(atom);
 };
 
-/**
- * Atom of the raw trace messages for a space — the exact `Trace.Message[]` fed into
- * `buildExecutionGraph`. Shared by the execution graph and the debug trace export.
- */
-const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Message[]> =>
-  pipe(
-    space.db.query(FeedTraceSink.query).atom,
-    Atom.map(
-      (feeds) =>
-        // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-        space.db.query(
-          feeds.length > 0
-            ? Query.type(Trace.Message).from(feeds[0])
-            : (Query.select(Filter.nothing()) as Query.Query<never>),
-        ).atom,
-    ),
-    (atom) => Atom.make((get) => get(get(atom))),
-  );
-
-/**
- * Returns the raw trace messages for a space (used by the debug trace export).
- */
-const useTraceMessages = (space: Space): readonly Trace.Message[] => {
-  const atom = useMemo(() => getTraceMessagesAtom(space), [space]);
-  return useAtomValue(atom);
-};
-
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
@@ -250,6 +222,7 @@ const ProcessTreeContainer = ({
   return (
     <ProcessTree
       processes={processesDeferred}
+      depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
     />

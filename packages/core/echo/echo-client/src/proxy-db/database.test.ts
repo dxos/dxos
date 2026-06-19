@@ -237,7 +237,7 @@ describe('Database', () => {
 
     db.add(task);
     await db.flush();
-    expect(getObjectCore(task).database).to.exist;
+    expect(getObjectCore(task).entityManager).to.exist;
 
     const tasks = await db.query(Filter.type(TestSchema.Task)).run();
     expect(tasks).to.have.length(1);

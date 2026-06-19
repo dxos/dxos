@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
@@ -19,7 +19,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const JOIN_DIALOG = `${meta.id}.JoinDialog`;
+export const JOIN_DIALOG = `${meta.profile.key}.JoinDialog`;
 
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
@@ -29,7 +29,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const { graph } = useAppGraph();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -40,10 +40,10 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await Promise.all([
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.join-success`,
+          id: `${meta.profile.key}.join-success`,
           duration: 5_000,
-          title: ['join-success.label', { ns: meta.id }],
-          closeLabel: ['dismiss.label', { ns: meta.id }],
+          title: ['join-success.label', { ns: meta.profile.key }],
+          closeLabel: ['dismiss.label', { ns: meta.profile.key }],
         }),
         invokePromise(LayoutOperation.UpdateDialog, { state: false }),
       ]);
@@ -61,7 +61,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
 
       const target = result?.target;
       if (target) {
@@ -74,8 +74,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         ]);
       } else {
         await invokePromise(LayoutOperation.Open, {
-          subject: [getSpaceHomePath(space.id)],
-          workspace: getSpacePath(space.id),
+          subject: [Paths.getSpaceHomePath(space.id)],
+          workspace: Paths.getSpacePath(space.id),
         });
       }
 

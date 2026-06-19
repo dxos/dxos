@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { Template } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
@@ -65,7 +65,7 @@ export const Magazine = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--newspaper-clipping--regular', hue: 'indigo' }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.magazine', '0.1.0')),
 );
 

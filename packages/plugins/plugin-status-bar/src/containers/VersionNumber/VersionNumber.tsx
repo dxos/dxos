@@ -16,7 +16,7 @@ export type VersionNumberProps = {};
 const VERSION_REGEX = /([\d.]+)/;
 
 export const VersionNumber = (_props: VersionNumberProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp } = config.values.runtime?.app?.build ?? {};
   const [_, short] = version?.match(VERSION_REGEX) ?? [];

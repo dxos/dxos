@@ -28,6 +28,12 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
 
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
+  /**
+   * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
+   * Use when executing against an in-memory working set without SQL index access.
+   * TextSelector and TimestampSelector remain as-is so the caller can detect them and bail.
+   */
+  noIndexes?: boolean;
 };
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
@@ -164,15 +170,16 @@ export class QueryPlanner {
             },
           ]);
         } else if (filter.typename) {
+          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned;
+          // the type predicate is enforced by the FilterStep that already follows.
+          const selector: QueryPlan.Selector = this._options.noIndexes
+            ? { _tag: 'WildcardSelector' }
+            : { _tag: 'TypeSelector', typename: [filter.typename], inverted: false };
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
               scope: context.scope,
-              selector: {
-                _tag: 'TypeSelector',
-                typename: [filter.typename],
-                inverted: false,
-              },
+              selector,
             },
             ...this._generateDeletedHandlingSteps(context),
             // TODO(dmaretskyi): Normally we could skip filtering by typename here, but since the index does not separate schema versions, we need to do additional filter to only select the correct version.
@@ -411,15 +418,16 @@ export class QueryPlanner {
             return filter.typename;
           });
 
+          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned;
+          // the type predicate is enforced by the FilterStep that already follows.
+          const orSelector: QueryPlan.Selector = this._options.noIndexes
+            ? { _tag: 'WildcardSelector' }
+            : { _tag: 'TypeSelector', typename: typenames, inverted: context.selectionInverted };
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
               scope: context.scope,
-              selector: {
-                _tag: 'TypeSelector',
-                typename: typenames,
-                inverted: context.selectionInverted,
-              },
+              selector: orSelector,
             },
             ...this._generateDeletedHandlingSteps(context),
             {

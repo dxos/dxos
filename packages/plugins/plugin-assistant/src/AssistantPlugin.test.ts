@@ -18,11 +18,11 @@ import {
   BlueprintManagerBlueprint,
   DatabaseBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { AgentService, Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
+import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -37,7 +37,7 @@ import { meta } from './meta';
 
 EntityId.dangerouslyDisableRandomness();
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -151,7 +151,7 @@ describe('AssistantPlugin', () => {
           { spaceId: personalSpace.id },
         );
         expect(result).toEqual({ capital: 'paris' });
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
     );
   });
 
@@ -180,7 +180,7 @@ describe('AssistantPlugin', () => {
           (_) => Blueprint.resolve(_.key),
         );
 
-        const agent = yield* AgentService.createSession({
+        const agent = yield* AgentServiceRuntime.createSession({
           blueprints,
         });
         yield* agent.submitPrompt('Hello');
@@ -190,7 +190,6 @@ describe('AssistantPlugin', () => {
           ServiceResolver.provide(
             { space: personalSpace.id },
             Database.Service,
-            Feed.FeedService,
             AgentService.AgentService,
             Registry.Service,
           ),

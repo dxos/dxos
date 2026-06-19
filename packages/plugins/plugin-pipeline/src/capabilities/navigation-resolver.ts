@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createTypeSectionPathResolver } from '@dxos/app-toolkit';
+import { AppCapabilities, TypeSection } from '@dxos/app-toolkit';
 import { Pipeline } from '@dxos/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(
       AppCapabilities.NavigationPathResolver,
-      createTypeSectionPathResolver(Pipeline.Pipeline),
+      TypeSection.createTypeSectionPathResolver(Pipeline.Pipeline),
     );
   }),
 );

@@ -49,7 +49,7 @@ export type BookingSearchProps = {
 };
 
 export const BookingSearch = ({ segment }: BookingSearchProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const kind = Segment.getKind(segment);
 

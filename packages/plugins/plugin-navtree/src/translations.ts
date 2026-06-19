@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'app-menu.label': 'App menu',
         'open-commands.label': 'Search commands',
         'commands-dialog.title': 'Commands',

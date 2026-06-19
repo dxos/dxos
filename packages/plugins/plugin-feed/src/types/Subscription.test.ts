@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
@@ -26,7 +25,7 @@ describe('per-Post state keyed by entity id', () => {
   });
 
   const loadQueuePost = async () => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Subscription.Subscription, Subscription.Post, StateMap.StateMap, TagIndex.TagIndex],
     });
 
@@ -39,11 +38,9 @@ describe('per-Post state keyed by entity id', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
     return { db, subscription, queuePost: queuePost! };
@@ -81,7 +78,7 @@ describe('PostContent reverse-ref lookup', () => {
   });
 
   test('findPostContent resolves via post ref and reverse-ref index', async () => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [
         Feed.Feed,
         Subscription.Subscription,
@@ -92,7 +89,7 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { queues } as Space;
+    const space = { db };
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -103,11 +100,9 @@ describe('PostContent reverse-ref lookup', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
 
@@ -125,7 +120,7 @@ describe('PostContent reverse-ref lookup', () => {
   });
 
   test('queryPostContentForPost returns newest entry after refresh append', async () => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [
         Feed.Feed,
         Subscription.Subscription,
@@ -135,7 +130,7 @@ describe('PostContent reverse-ref lookup', () => {
         TagIndex.TagIndex,
       ],
     });
-    const space = { queues } as Space;
+    const space = { db };
 
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
     await db.flush();
@@ -146,11 +141,9 @@ describe('PostContent reverse-ref lookup', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(
-      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
-    );
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(queues))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
 

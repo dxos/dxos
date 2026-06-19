@@ -16,9 +16,17 @@ import { meta } from '#meta';
 
 export * as Settings from './Settings';
 
-export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
+export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
+
+/**
+ * Type tag and subject literal for the per-space virtual Home node. Used as both the
+ * graph node `type` and its `data` (subject) so a single constant identifies the node
+ * at the graph layer and at the article surface filter layer. The associated {@link Space}
+ * is on `properties.space`.
+ */
+export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
 
 /** Type for the per-space virtual "Settings" section. Single source of truth is `AppNodeMatcher.SETTINGS_SECTION_TYPE`. */
 export const SETTINGS_SECTION_TYPE = AppNodeMatcher.SETTINGS_SECTION_TYPE;

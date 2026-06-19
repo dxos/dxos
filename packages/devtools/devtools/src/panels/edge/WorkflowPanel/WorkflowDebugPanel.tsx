@@ -10,7 +10,6 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
-import { makeFeedService } from '@dxos/echo-client';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
@@ -240,7 +239,6 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
         },
       },
       database: Database.makeService(space.db),
-      feeds: makeFeedService(space.queues),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();

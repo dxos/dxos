@@ -84,17 +84,18 @@ When asked to create a new plugin, start with a minimal skeleton before adding f
 
 1. `PLUGIN.mdl` — specification starter with initial feature/requirement blocks.
 2. `README.md` — brief description of the plugin's purpose.
-3. `package.json` — with `"private": true`, `#imports` aliases, and minimal dependencies.
-4. `moon.yml` — with `compile` entry points.
+3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
+4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
 5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
 6. `src/translations.ts` — initial translation resources.
-7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules.
-8. `src/index.ts` — exports only meta and plugin.
-9. `src/types/` — one schema type with `make()` factory.
-10. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
-11. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-13. `src/components/` — empty barrel, ready for primitives.
+7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
+8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
+9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
+10. `src/types/` — one schema type with `make()` factory.
+11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
+13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+14. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, blueprints, settings, etc.).
@@ -108,7 +109,8 @@ plugin-foo/
   moon.yml
   PLUGIN.mdl
   src/
-    index.ts                # Root entrypoint; exports only the plugin and meta.
+    index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
+    plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
     meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
     translations.ts         # i18n resources keyed by typename and meta.id.
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
@@ -425,7 +427,8 @@ moon run plugin-foo:test-storybook
 ## General Rules
 
 - `src/components/` and `src/containers/` should contain only index files and subdirectories.
-- `src/index.ts` exports only the plugin and meta. Keep it minimal.
+- **Two-entrypoint rule**: `src/index.ts` exports only `meta` and types/operations — never the plugin instance. `src/plugin.ts` holds the `Plugin.lazy()` wrapper and is the `./plugin` subpath. Consumers import from `@dxos/plugin-foo/plugin`; the root entry is for types/operations only.
+- `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

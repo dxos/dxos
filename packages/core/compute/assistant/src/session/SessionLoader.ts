@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import * as SessionLink from './SessionLink';
@@ -21,7 +21,7 @@ export class SessionLoader {
   reifyHistory(
     feed: Feed.Feed,
     messages: Message.Message[],
-  ): Effect.Effect<Message.Message[], never, Feed.FeedService> {
+  ): Effect.Effect<Message.Message[], never, Database.Service> {
     return Effect.gen(function* () {
       const links = yield* Feed.runQuery(feed, Filter.type(SessionLink.SessionLink));
       const sessionLinks = links.filter(Obj.instanceOf(SessionLink.SessionLink));

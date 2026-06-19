@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -35,8 +35,6 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Magazine.Magazine, { position: 'first' }),
-
       // Add-magazine action on the Magazines section header.
       GraphBuilder.createExtension({
         id: 'magazinesSectionActions',
@@ -87,7 +85,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('post'),
-              label: ['post-companion.label', { ns: meta.id }],
+              label: ['post-companion.label', { ns: meta.profile.key }],
               icon: 'ph--article--regular',
               data: post,
             }),
@@ -111,7 +109,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(feed)?.spaceId },
                 ),
               properties: {
-                label: ['sync-feed.label', { ns: meta.id }],
+                label: ['sync-feed.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

@@ -13,7 +13,7 @@ import { meta } from '#meta';
 export type CollectionSectionProps = AppSurface.ObjectSectionProps<Collection.Collection>;
 
 export const CollectionSection = ({ role, subject }: CollectionSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // TODO(wittjosiah): Better placeholder.
   return (

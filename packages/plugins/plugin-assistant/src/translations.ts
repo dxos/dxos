@@ -52,15 +52,15 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Sequence deleted',
       },
       [Type.getTypename(Chat.Chat)]: {
-        'typename.label': 'AI Chat',
-        'typename.label_zero': 'AI Chats',
-        'typename.label_one': 'AI Chat',
-        'typename.label_other': 'AI Chats',
-        'object-name.placeholder': 'New AI Chat',
-        'add-object.label': 'Add AI chat',
-        'rename-object.label': 'Rename AI Chat',
-        'delete-object.label': 'Delete AI Chat',
-        'object-deleted.label': 'AI Chat deleted',
+        'typename.label': 'AI Conversation',
+        'typename.label_zero': 'AI Conversations',
+        'typename.label_one': 'AI Conversation',
+        'typename.label_other': 'AI Conversations',
+        'object-name.placeholder': 'New AI conversation',
+        'add-object.label': 'Add AI conversation',
+        'rename-object.label': 'Rename AI conversation',
+        'delete-object.label': 'Delete AI conversation',
+        'object-deleted.label': 'AI conversation deleted',
       },
       [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
@@ -80,7 +80,7 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.id]: {
+      [meta.profile.key]: {
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -156,6 +156,7 @@ export const translations: Resource[] = [
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
         'ai-service-error.label': 'AI service error',
+        'view-usage.label': 'View usage',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
@@ -186,6 +187,13 @@ export const translations: Resource[] = [
         'instructions.placeholder': 'Enter instructions, goals, and constraints for the assistant.',
         'reset-history.button': 'Reset',
         'subscriptions.label': 'Subscriptions',
+
+        // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-draft-doc.label': 'Draft a new document',
+        'space-home.suggestion-data-type.label': 'Create a new data type',
+        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.prompt.placeholder': 'Ask the assistant anything…',
       },
     },
   },

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -37,7 +37,7 @@ export type DebugSettingsProps = AppSurface.SettingsArticleProps<
 >;
 
 export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
@@ -65,7 +65,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = getPersonalSpace(client);
+      const personalSpace = AppSpace.getPersonalSpace(client);
       if (!personalSpace) {
         log.error('no personal space available for upload');
         return;
@@ -153,7 +153,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.Item title={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
           <Input.Switch
             disabled={!onSettingsChange}

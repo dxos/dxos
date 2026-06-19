@@ -8,8 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Feed, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -33,8 +32,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
       const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
-      const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+      const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
       const binder = new AiContext.Binder({ feed, runtime, registry });
 
       // Bind default blueprints via registry refs — no DB clone needed since the ECHO ref

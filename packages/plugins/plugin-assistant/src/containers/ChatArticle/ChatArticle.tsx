@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { useRegistry } from '@dxos/react-client/echo';
+import { ClientOperation } from '@dxos/plugin-client';
+import { useObject, useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -33,10 +34,20 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const [online, setOnline] = useOnline();
     const { preset, ...chatProps } = usePresets(online);
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
-    const pendingSubmitted = useRef(false);
+
+    // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
+    // a direct `chat.viewType` read in render does not establish a reactive dependency.
+    const [chatViewType] = useObject(chat, 'viewType');
+    const viewType = (chatViewType as Assistant.ChatView | undefined) ?? settings.chatView;
+
+    const { invokePromise } = useOperationInvoker();
+    const handleViewUsage = useCallback(() => {
+      void invokePromise(ClientOperation.OpenUsage, undefined);
+    }, [invokePromise]);
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
+    const pendingSubmitted = useRef(false);
     useEffect(() => {
       pendingSubmitted.current = false;
     }, [attendableId]);
@@ -59,9 +70,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       }
     }, [processor, attendableId, atomRegistry, stateAtom]);
 
-    const feedTarget = chat?.feed.target;
-    const view = (chat?.view as Assistant.ChatView | undefined) ?? settings.chatView;
-
     if (!processor) {
       return null;
     }
@@ -69,7 +77,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     return (
       <ChatComponent.Root
         chat={chat}
-        feed={feedTarget}
+        feed={chat?.feed.target}
         db={space?.db}
         processor={processor}
         onEvent={onEvent}
@@ -82,8 +90,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content>
             <ChatComponent.Content>
               <div className='dx-container relative'>
-                <ChatComponent.Thread viewType={view} />
-                {view !== 'summary' && (
+                <ChatComponent.Thread viewType={viewType} onViewUsage={handleViewUsage} />
+                {viewType !== 'summary' && (
                   <div className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
                       <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />

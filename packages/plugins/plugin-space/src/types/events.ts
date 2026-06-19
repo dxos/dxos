@@ -8,9 +8,9 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { meta } from '#meta';
 
 export namespace SpaceEvents {
-  export const StateReady = AppActivationEvents.createStateEvent(`${meta.id}.event.state-ready`);
-  export const SetupSettingsPanel = ActivationEvent.make(`${meta.id}.event.setup-settings-panel`);
-  export const PersonalSpaceReady = ActivationEvent.make(`${meta.id}.event.default-space-ready`);
-  export const SpaceCreated = ActivationEvent.make(`${meta.id}.event.space-created`);
-  export const TypeAdded = ActivationEvent.make(`${meta.id}.event.type-added`);
+  export const StateReady = AppActivationEvents.createStateEvent(`${meta.profile.key}.event.state-ready`);
+  export const SetupSettingsPanel = ActivationEvent.make(`${meta.profile.key}.event.setupSettingsPanel`);
+  export const PersonalSpaceReady = ActivationEvent.make(`${meta.profile.key}.event.defaultSpaceReady`);
+  export const SpaceCreated = ActivationEvent.make(`${meta.profile.key}.event.spaceCreated`);
+  export const TypeAdded = ActivationEvent.make(`${meta.profile.key}.event.typeAdded`);
 }

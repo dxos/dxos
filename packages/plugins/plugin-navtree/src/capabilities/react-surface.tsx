@@ -23,28 +23,21 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'navigation',
-        role: 'navigation',
-        filter: (data): data is { popoverAnchorId?: string; current: string } => typeof data.current === 'string',
-        component: ({ data, ref }) => {
-          return (
-            <NavTreeContainer
-              tab={data.current}
-              popoverAnchorId={data.popoverAnchorId as string | undefined}
-              ref={ref}
-            />
-          );
-        },
+        filter: Surface.makeFilter(AppSurface.Navigation),
+        component: ({ data, ref }) => (
+          <NavTreeContainer tab={data.current} popoverAnchorId={data.popoverAnchorId} ref={ref} />
+        ),
       }),
       Surface.create({
         id: 'documentTitle',
-        role: 'document-title',
+        filter: Surface.makeFilter(AppSurface.DocumentTitle),
         component: ({ data }) => (
           <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
         ),
       }),
       Surface.create({
         id: 'searchInput',
-        role: 'search-input',
+        filter: Surface.makeFilter(AppSurface.SearchInput),
         position: 'last',
         component: () => <CommandsTrigger />,
       }),

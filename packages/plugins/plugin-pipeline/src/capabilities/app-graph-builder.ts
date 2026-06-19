@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
@@ -21,7 +21,7 @@ import { getPipelinesPath } from '../paths';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Pipeline.Pipeline),
+      TypeSection.createTypeSectionExtension(Pipeline.Pipeline),
 
       GraphBuilder.createExtension({
         id: 'pipelinesSectionActions',
@@ -55,13 +55,13 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'invocations',
-              label: ['pipeline-invocations.label', { ns: meta.id }],
+              label: ['pipeline-invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
             }),
             AppNode.makeCompanion({
               id: 'automation',
-              label: ['pipeline-automation.label', { ns: meta.id }],
+              label: ['pipeline-automation.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
             }),

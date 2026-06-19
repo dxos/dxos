@@ -22,13 +22,13 @@ export const PresenterPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: PresenterSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.addModule({
-    id: `${meta.id}/markdown`,
+    id: `${meta.profile.key}/markdown`,
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: MarkdownExtension,
   }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

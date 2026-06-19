@@ -31,7 +31,7 @@ export const translations = [
       },
 
       // Plugin-specific translations.
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Sample',
         'create-sample-item.label': 'Create sample item',
         'archive-item.label': 'Archive item',

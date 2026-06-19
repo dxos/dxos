@@ -349,6 +349,9 @@
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-onboarding"
+    },
+    {
       "path": "../../plugins/plugin-osrm"
     },
     {

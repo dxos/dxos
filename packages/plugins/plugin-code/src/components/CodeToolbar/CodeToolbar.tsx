@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -40,7 +41,7 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
   const menuActions = useMenuActions(menuCreator);
 
   return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+    <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Menu.Toolbar />
       </Menu.Root>
@@ -68,13 +69,13 @@ const createToolbarActions = ({
   Atom.make(() => ({
     nodes: [
       createMenuAction('build', onBuild, {
-        label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.id }],
+        label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.profile.key }],
         icon: 'ph--hammer--regular',
         disabled: anyBusy,
         testId: 'code-toolbar.build',
       }),
       createMenuAction('run', onRun, {
-        label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: meta.id }],
+        label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: meta.profile.key }],
         icon: 'ph--play--regular',
         disabled: anyBusy || !canRun,
         testId: 'code-toolbar.run',

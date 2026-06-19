@@ -38,7 +38,6 @@ export const trace = Command.make(
   ({ functionId, spaceId, localTriggers }) =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
-      const feedService = yield* Feed.FeedService;
       log.info('Starting invocation trace...');
 
       const logBuffer = createLogBuffer();
@@ -72,12 +71,7 @@ export const trace = Command.make(
         app: () => (
           // TODO(wittjosiah): Rather than pass db and feedService probably should have some sort of context provider then introduce hooks for interacting with the db and feeds.
           <App focusElements={['table']} logBuffer={logBuffer} theme={theme}>
-            <Trace
-              db={db}
-              feedService={feedService}
-              feed={traceFeed ? Option.some(traceFeed) : Option.none()}
-              functionId={functionId}
-            />
+            <Trace db={db} feed={traceFeed ? Option.some(traceFeed) : Option.none()} functionId={functionId} />
           </App>
         ),
         focusElements: ['table'],

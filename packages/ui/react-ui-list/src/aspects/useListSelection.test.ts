@@ -3,9 +3,16 @@
 //
 
 import { act, renderHook } from '@testing-library/react';
+import { type FocusEvent } from 'react';
 import { describe, test, vi } from 'vitest';
 
 import { useListSelection } from './useListSelection';
+
+// Minimal synthetic focus event exposing only the fields the selection-follows-focus handler reads.
+// Constructing a partial event for a unit test is a genuine type boundary (React synthesizes the rest).
+const focusEvent = (
+  fields: Pick<FocusEvent<HTMLElement>, 'currentTarget' | 'relatedTarget'>,
+): FocusEvent<HTMLElement> => fields as FocusEvent<HTMLElement>;
 
 describe('useListSelection', () => {
   describe('single mode', () => {
@@ -21,6 +28,34 @@ describe('useListSelection', () => {
       const { result } = renderHook(() => useListSelection({ mode: 'single', onValueChange }));
       act(() => result.current.bind('a').rowProps.onFocus?.({} as any));
       expect(onValueChange).toHaveBeenLastCalledWith('a');
+    });
+
+    test('focus entering the list from outside does not change selection', ({ expect }) => {
+      const onValueChange = vi.fn();
+      // A listbox with one option, and an unrelated element outside it.
+      const container = document.createElement('div');
+      container.setAttribute('role', 'listbox');
+      const optionA = document.createElement('div');
+      const outside = document.createElement('div');
+      container.append(optionA);
+      document.body.append(container, outside);
+
+      const { result } = renderHook(() => useListSelection({ mode: 'single', value: 'b', onValueChange }));
+
+      // Entry focus (e.g. a popover auto-focusing on open): relatedTarget is outside the list.
+      act(() =>
+        result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: outside })),
+      );
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      // Navigation within the list: relatedTarget is inside the list, so selection follows focus.
+      act(() =>
+        result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: container })),
+      );
+      expect(onValueChange).toHaveBeenLastCalledWith('a');
+
+      container.remove();
+      outside.remove();
     });
 
     test('disabled rows do not update selection on click', ({ expect }) => {

@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities } from '@dxos/app-framework';
-import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { PresenterOperation } from '#types';
+
+import { getPresentationPath } from '../paths';
 
 /**
  * Enters or exits presentation for the given object. When `state` is omitted the
@@ -27,8 +28,8 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
           return;
         }
 
-        const objectPath = getObjectPathFromObject(object);
-        const presenterId = `${objectPath}/${linkedSegment('presenter')}`;
+        const objectPath = Paths.getObjectPathFromObject(object);
+        const presenterId = getPresentationPath(objectPath);
         const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         const deck = deckState.decks[deckState.activeDeck];
         const presenting = Boolean(deck?.fullscreen && deck?.solo === presenterId);
@@ -40,7 +41,7 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
           }
           yield* Operation.invoke(LayoutOperation.Open, {
             subject: [presenterId],
-            workspace: getSpacePath(db.spaceId),
+            workspace: Paths.getSpacePath(db.spaceId),
           });
         } else {
           if (deck?.fullscreen) {
@@ -48,7 +49,7 @@ const handler: Operation.WithHandler<typeof PresenterOperation.TogglePresentatio
           }
           yield* Operation.invoke(LayoutOperation.Open, {
             subject: [objectPath],
-            workspace: getSpacePath(db.spaceId),
+            workspace: Paths.getSpacePath(db.spaceId),
           });
         }
       }),

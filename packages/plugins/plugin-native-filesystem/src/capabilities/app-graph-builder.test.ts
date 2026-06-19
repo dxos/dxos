@@ -16,7 +16,7 @@ import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState }
 import { MockFilesystemManager } from '../testing/mock-filesystem-manager';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
-const FILESYSTEM_TYPE = `${meta.id}.workspace`;
+const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 
 describe('native filesystem app graph builder', () => {
   test('shows nested directories and files when expanded', async ({ expect }) => {

@@ -19,8 +19,8 @@ export type GridRegistry = {
 };
 
 export const ComputeGraphRegistry = Capability.make<ComputeGraphRegistryType>(
-  `${meta.id}.capability.compute-graph-registry`,
+  `${meta.profile.key}.capability.compute-graph-registry`,
 );
 
 /** Registry of active grid instances keyed by attendable ID. */
-export const GridInstances = Capability.make<GridRegistry>(`${meta.id}.capability.grid-instances`);
+export const GridInstances = Capability.make<GridRegistry>(`${meta.profile.key}.capability.grid-instances`);

@@ -2,16 +2,58 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { type Plugin as VitePlugin } from 'vite';
 
-import { PLUGIN_DEV_SERVER_PORT } from '../../core';
-import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest } from '../manifest';
+import { PLUGIN_DEV_SERVER_PORT, Plugin } from '../../core';
+import { findDxConfigFile, loadDxConfig } from '../load';
+import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
 export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
+
+/** Reads `version` from the project's `package.json`; falls back to `0.0.0`. */
+const readPackageVersion = (dir: string): string => {
+  try {
+    return JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+};
+
+/**
+ * Snapshot the project's declared `dependencies`, resolving each to its concrete
+ * installed version (read from `node_modules/<name>/package.json`) so the manifest
+ * records exactly what the plugin was built against — the host derives SDK
+ * compatibility from the `@dxos/*` subset. Falls back to the declared spec when a
+ * dependency can't be resolved on disk.
+ */
+const readResolvedDependencies = (dir: string): Record<string, string> | undefined => {
+  try {
+    const declared = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf-8')).dependencies as
+      | Record<string, string>
+      | undefined;
+    if (!declared) {
+      return undefined;
+    }
+    const resolved: Record<string, string> = {};
+    for (const name of Object.keys(declared)) {
+      try {
+        const version = JSON.parse(readFileSync(join(dir, 'node_modules', name, 'package.json'), 'utf-8')).version;
+        resolved[name] = typeof version === 'string' ? version : declared[name];
+      } catch {
+        resolved[name] = declared[name];
+      }
+    }
+    return Object.keys(resolved).length > 0 ? resolved : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * Whether an import should be externalized by the plugin bundle.
@@ -71,10 +113,17 @@ export type ComposerPluginOptions = {
   /** Dev server port. Defaults to {@link PLUGIN_DEV_SERVER_PORT}. */
   port?: number;
   /**
-   * Plugin metadata. When provided, a `manifest.json` asset is emitted alongside the bundle
-   * listing every emitted file. The host fetches this manifest at install time and persists
-   * the declared assets in its offline cache so the plugin works without network. The bundle's
-   * entry module is always written as {@link ENTRY_FILENAME} (`index.mjs`).
+   * Path to the project's `dx.config.ts`. Defaults to auto-discovery in the project root
+   * (`dx.config.{ts,mjs,js}`). Used only to derive the manifest metadata.
+   */
+  config?: string;
+  /**
+   * Plugin metadata. Optional — when omitted it is derived from the project's `dx.config.ts`
+   * (`@dxos/protocols` `Config2.Config`) plus the `package.json` version and resolved dependencies. When
+   * present (explicitly or derived), a `manifest.json` asset is emitted alongside the bundle listing
+   * every emitted file. The host fetches this manifest at install time and persists the declared
+   * assets in its offline cache so the plugin works without network. The bundle's entry module is
+   * always written as {@link ENTRY_FILENAME} (`index.mjs`).
    */
   meta?: BuildMeta;
 };
@@ -97,7 +146,25 @@ export type ComposerPluginOptions = {
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
   const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
-  const meta = options?.meta;
+  const projectRoot = process.cwd();
+
+  // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller
+  // doesn't pass `meta` explicitly, load + validate the config and derive a `BuildMeta` from it
+  // (augmented with the package `version` and a resolved dependency snapshot). Resolved once,
+  // lazily, so the synchronous plugin factory stays sync; the manifest hooks await it.
+  const metaPromise: Promise<BuildMeta | undefined> = options?.meta
+    ? Promise.resolve(options.meta)
+    : Promise.resolve(options?.config ?? findDxConfigFile(projectRoot)).then((configFile) =>
+        configFile
+          ? loadDxConfig(configFile).then((config) =>
+              toBuildMeta(
+                Plugin.getMetaFromConfig(config),
+                readPackageVersion(projectRoot),
+                readResolvedDependencies(projectRoot),
+              ),
+            )
+          : undefined,
+      );
   const resolved = new Set<string>();
   let base = '/';
 
@@ -246,61 +313,67 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     },
   ];
 
-  if (meta) {
-    // Emit `manifest.json` alongside the built module listing every emitted asset, so the
-    // dist directory can be uploaded as-is to a GitHub Release for the DXOS community
-    // registry to pick up. The host loader fetches this file at install time and eagerly
-    // caches every listed asset for offline use.
-    plugins.push({
-      name: 'composer-plugin:emit-manifest',
-      apply: 'build',
-      // `enforce: 'post'` is load-bearing: vite's CSS extraction plugin emits sibling
-      // `.css` assets in its own `generateBundle` hook. Without `post`, ours runs first
-      // and sees only the JS chunks — the manifest then omits CSS, so the host can't
-      // inject `<link>` tags for the plugin's stylesheet at install time.
-      enforce: 'post',
-      generateBundle(_options, bundle) {
-        // Source maps are large and only fetched when devtools opens — exclude them
-        // from the manifest so the host doesn't precache megabytes of debug data.
-        const assets = Object.keys(bundle)
-          .filter((name) => name !== MANIFEST_ASSET_NAME && !name.endsWith('.map'))
-          .sort();
-        this.emitFile({
-          type: 'asset',
-          fileName: MANIFEST_ASSET_NAME,
-          source: serializeManifest(meta, { assets }),
-        });
-      },
-    });
+  // Emit `manifest.json` alongside the built module listing every emitted asset, so the
+  // dist directory can be uploaded as-is to a GitHub Release for the DXOS community
+  // registry to pick up. The host loader fetches this file at install time and eagerly
+  // caches every listed asset for offline use. No-ops when no `dx.config.ts`/`meta` resolves.
+  plugins.push({
+    name: 'composer-plugin:emit-manifest',
+    apply: 'build',
+    // `enforce: 'post'` is load-bearing: vite's CSS extraction plugin emits sibling
+    // `.css` assets in its own `generateBundle` hook. Without `post`, ours runs first
+    // and sees only the JS chunks — the manifest then omits CSS, so the host can't
+    // inject `<link>` tags for the plugin's stylesheet at install time.
+    enforce: 'post',
+    async generateBundle(_options, bundle) {
+      const meta = await metaPromise;
+      if (!meta) {
+        return;
+      }
+      // Source maps are large and only fetched when devtools opens — exclude them
+      // from the manifest so the host doesn't precache megabytes of debug data.
+      const assets = Object.keys(bundle)
+        .filter((name) => name !== MANIFEST_ASSET_NAME && !name.endsWith('.map'))
+        .sort();
+      this.emitFile({
+        type: 'asset',
+        fileName: MANIFEST_ASSET_NAME,
+        source: serializeManifest(meta, { assets }),
+      });
+    },
+  });
 
-    // Dev-server manifest. `vite dev` can't enumerate transitive chunks/CSS up front
-    // (they resolve on demand), so we serve a `devEntry`-flavored manifest at the dev
-    // root and let the host loader skip eager caching + static stylesheet injection.
-    // The host imports `entry` directly from the dev server, where Vite handles
-    // JSX transforms, externalization, and runtime CSS injection.
-    plugins.push({
-      name: 'composer-plugin:serve-manifest',
-      apply: 'serve',
-      configureServer(server) {
-        const body = serializeManifest(meta, { assets: [], devEntry: entry.replace(/^\.?\//, '') });
-        server.middlewares.use(`/${MANIFEST_ASSET_NAME}`, (req, res, next) => {
-          // Only intercept the bare manifest URL — let any sub-paths fall through.
-          if (req.url && req.url !== '/' && req.url !== '') {
-            return next();
-          }
-          // CORS mirrors `server.cors: true` (see plugin config above) so the host
-          // app at a different origin can read the manifest. Vite's built-in CORS
-          // covers most paths but middlewares mounted before its `cors` middleware
-          // need to set the header themselves.
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Content-Type', 'application/json');
-          res.setHeader('Cache-Control', 'no-store');
-          res.statusCode = 200;
-          res.end(body);
-        });
-      },
-    });
-  }
+  // Dev-server manifest. `vite dev` can't enumerate transitive chunks/CSS up front
+  // (they resolve on demand), so we serve a `devEntry`-flavored manifest at the dev
+  // root and let the host loader skip eager caching + static stylesheet injection.
+  // The host imports `entry` directly from the dev server, where Vite handles
+  // JSX transforms, externalization, and runtime CSS injection.
+  plugins.push({
+    name: 'composer-plugin:serve-manifest',
+    apply: 'serve',
+    async configureServer(server) {
+      const meta = await metaPromise;
+      if (!meta) {
+        return;
+      }
+      const body = serializeManifest(meta, { assets: [], devEntry: entry.replace(/^\.?\//, '') });
+      server.middlewares.use(`/${MANIFEST_ASSET_NAME}`, (req, res, next) => {
+        // Only intercept the bare manifest URL — let any sub-paths fall through.
+        if (req.url && req.url !== '/' && req.url !== '') {
+          return next();
+        }
+        // CORS mirrors `server.cors: true` (see plugin config above) so the host
+        // app at a different origin can read the manifest. Vite's built-in CORS
+        // covers most paths but middlewares mounted before its `cors` middleware
+        // need to set the header themselves.
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        res.statusCode = 200;
+        res.end(body);
+      });
+    },
+  });
 
   return plugins;
 };

@@ -24,13 +24,13 @@ export const DoctorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.addModule({
-    id: `${meta.id}/diagnostic-providers`,
+    id: `${meta.profile.key}/diagnostic-providers`,
     activatesOn: ActivationEvents.Startup,
     activate: DiagnosticProviders,
   }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

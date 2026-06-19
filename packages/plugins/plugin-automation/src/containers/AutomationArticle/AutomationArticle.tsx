@@ -2,15 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import { Operation, Routine, ServiceResolver, Trigger, TriggerEvent } from '@dxos/compute';
+import { Context } from '@dxos/context';
 import { type Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { KEY_FEED_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { DXN } from '@dxos/keys';
-import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
+import { type Space, getSpace, useObject, useQuery } from '@dxos/react-client/echo';
+import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import {
   Form,
   type FormFieldRendererProps,
@@ -19,6 +26,7 @@ import {
   SelectField,
   Settings,
 } from '@dxos/react-ui-form';
+import { Accordion } from '@dxos/react-ui-list';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -33,9 +41,10 @@ const RUN_ROUTINE_DXN = 'org.dxos.function.prompt';
 export type AutomationArticleProps = AppSurface.ObjectArticleProps<Automation.Automation>;
 
 export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(subject);
   const trigger = usePrimaryTrigger(subject);
+  const space = getSpace(subject);
 
   if (!db) {
     return null;
@@ -52,6 +61,7 @@ export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => 
       <Settings.Section title={t('trigger-picker.title')} description={t('trigger-picker.description')}>
         <Settings.Panel>
           <TriggerSection db={db} automation={subject} trigger={trigger} />
+          {space && trigger && <TriggerTestingSection space={space} trigger={trigger} />}
         </Settings.Panel>
       </Settings.Section>
 
@@ -109,7 +119,7 @@ const EnabledField = ({
   messageKey,
   ...props
 }: FormFieldRendererProps & { canEnable: boolean; messageKey?: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div className='flex items-center gap-2 pt-form-padding'>
       <Input.Root>
@@ -122,6 +132,113 @@ const EnabledField = ({
       <span className='text-sm'>{props.label}</span>
       {!canEnable && messageKey && <span className='text-sm text-description'>{t(messageKey)}</span>}
     </div>
+  );
+};
+
+//
+// Trigger testing section
+//
+
+type TriggerTestingSectionProps = {
+  space: Space;
+  trigger: Trigger.Trigger;
+};
+
+const TESTING_ITEM = { id: 'testing' };
+
+/**
+ * Collapsed "Testing" section within the Trigger panel. Provides kind-specific manual
+ * affordances: force-run for timer triggers, cursor reset for feed triggers.
+ * Not rendered for trigger kinds with no applicable action (email, webhook, subscription).
+ */
+const TriggerTestingSection = ({ space, trigger }: TriggerTestingSectionProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const client = useClient();
+  const processManagerRuntime = useProcessManagerRuntime();
+  const [properties] = useObject(space.properties);
+  const computeEnvironment = properties.computeEnvironment ?? 'local';
+  const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
+
+  const spec = Obj.getSnapshot(trigger).spec;
+  const kind = spec?.kind;
+
+  const cursor = kind === 'feed' ? Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id : undefined;
+
+  const handleForceRun = useCallback(async () => {
+    if (computeEnvironment === 'disabled') {
+      return;
+    }
+    if (computeEnvironment === 'local') {
+      await processManagerRuntime
+        .runPromise(
+          Effect.gen(function* () {
+            const dispatcher = yield* TriggerDispatcher;
+            yield* dispatcher.invokeTrigger({
+              trigger,
+              event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent,
+            });
+          }).pipe(Effect.provide(ServiceResolver.provide({ space: space.id }, TriggerDispatcher))),
+        )
+        .catch((error: unknown) => log.catch(error));
+      return;
+    }
+    await functionsServiceClient
+      .forceRunCronTrigger(Context.default(), space.id, trigger.id)
+      .catch((error: unknown) => log.catch(error));
+  }, [computeEnvironment, functionsServiceClient, processManagerRuntime, space.id, trigger]);
+
+  const handleResetCursor = useCallback(async () => {
+    Obj.update(trigger, (trigger) => {
+      Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
+    });
+    await space.db.flush({ indexes: true });
+  }, [space.db, trigger]);
+
+  if (kind !== 'timer' && kind !== 'feed') {
+    return null;
+  }
+
+  return (
+    <Accordion.Root items={[TESTING_ITEM]}>
+      {({ items }) =>
+        items.map((item) => (
+          <Accordion.Item key={item.id} item={item}>
+            <Accordion.ItemHeader>{t('testing.title')}</Accordion.ItemHeader>
+            <Accordion.ItemBody>
+              {kind === 'timer' && (
+                <IconButton
+                  icon='ph--play--regular'
+                  label={t('force-run.label')}
+                  disabled={computeEnvironment === 'disabled'}
+                  onClick={handleForceRun}
+                />
+              )}
+              {kind === 'feed' && (
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <IconButton
+                      icon='ph--arrow-clockwise--regular'
+                      label={t('reset-cursor.label')}
+                      disabled={!cursor}
+                    />
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content side='top'>
+                      <DropdownMenu.Viewport>
+                        <DropdownMenu.Item onClick={handleResetCursor}>
+                          {t('reset-cursor-confirm.label')}
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Viewport>
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              )}
+            </Accordion.ItemBody>
+          </Accordion.Item>
+        ))
+      }
+    </Accordion.Root>
   );
 };
 
@@ -195,7 +312,7 @@ const ActionInputEditor = ({
   operation: Operation.PersistentOperation;
   trigger: Trigger.Trigger;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const effectSchema = useMemo(
     () => (operation.inputSchema ? JsonSchema.toEffectSchema(operation.inputSchema) : undefined),
     [operation.inputSchema],
@@ -333,7 +450,7 @@ export const AutomationInlineForm = ({
   automation: Automation.Automation;
   db: Database.Database;
 }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const trigger = usePrimaryTrigger(automation);
 
   return (
@@ -437,7 +554,7 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
 
 /** Form state for the Action section: pick an operation|routine and bind it to the trigger's function/input. */
 const useActionForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(automation);
   // Query by typename DXN so results stay untyped (`Entity.Any[]`), as RefField.useResults expects.
   const operations = useQuery(
@@ -527,7 +644,7 @@ const useActionForm = (db: Database.Database, automation: Automation.Automation,
 
 /** Form state for the Trigger section: the timer|feed spec, plus create-on-first-edit and remove handlers. */
 const useTriggerForm = (db: Database.Database, automation: Automation.Automation, trigger?: Trigger.Trigger) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const kindOptions = useMemo(
     () => [
       { value: 'timer', label: t('trigger-kind.timer.label') },

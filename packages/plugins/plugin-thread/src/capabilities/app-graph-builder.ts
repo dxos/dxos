@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
@@ -26,7 +26,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Channel.Channel),
+      TypeSection.createTypeSectionExtension(Channel.Channel),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
@@ -45,7 +45,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: 'chat',
-              label: ['channel-companion.label', { ns: meta.id }],
+              label: ['channel-companion.label', { ns: meta.profile.key }],
               icon: 'ph--hash--regular',
               data: 'chat',
               position: 'first',

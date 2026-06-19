@@ -12,7 +12,7 @@ import { type SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-export const Blockstore = Capability.make<BlockstoreInterface>(`${meta.id}.capability.blockstore`);
+export const Blockstore = Capability.make<BlockstoreInterface>(`${meta.profile.key}.capability.blockstore`);
 
 export type Instances = Record<SpaceId, { directory: PrivateDirectory; forest: PrivateForest }>;
-export const Instances = Capability.make<Instances>(`${meta.id}.capability.instances`);
+export const Instances = Capability.make<Instances>(`${meta.profile.key}.capability.instances`);

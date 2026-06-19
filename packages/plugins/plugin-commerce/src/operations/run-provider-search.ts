@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { createFeedServiceLayer, getSpace } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -84,8 +84,8 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       const feed = yield* Database.load(search.feed);
       const space = getSpace(search);
       invariant(space, 'Search is not in a space.');
-      const feedServiceLayer = createFeedServiceLayer(space.queues);
-      const existing = yield* Feed.runQuery(feed, Filter.type(Result.Result)).pipe(Effect.provide(feedServiceLayer));
+      const databaseLayer = Database.layer(space.db);
+      const existing = yield* Feed.runQuery(feed, Filter.type(Result.Result)).pipe(Effect.provide(databaseLayer));
       const seen = new Set(existing.map((result) => result.url));
 
       const now = new Date().toISOString();
@@ -109,7 +109,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
         );
       }
       if (fresh.length > 0) {
-        yield* Feed.append(feed, fresh).pipe(Effect.provide(feedServiceLayer));
+        yield* Feed.append(feed, fresh).pipe(Effect.provide(databaseLayer));
       }
       return fresh.length;
     }),

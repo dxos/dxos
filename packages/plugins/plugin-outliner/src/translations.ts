@@ -33,7 +33,7 @@ export const translations = [
         'delete-object.label': 'Delete outline',
         'object-deleted.label': 'Outline deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Outliner',
         'delete-object.label': 'Delete object',
         'create-outline.label': 'Create outline',

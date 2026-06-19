@@ -87,7 +87,7 @@ type LightboxViewportProps = ThemedClassName<{}>;
  * over it. Owns the `ScrollArea.Root` (via `Masonry.Content`).
  */
 const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((props, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { gallery, onDelete, Tile, emptyMessage } = useLightboxContext(`${LIGHTBOX_NAME}.Viewport`);
   const refs = gallery?.images ?? [];
 

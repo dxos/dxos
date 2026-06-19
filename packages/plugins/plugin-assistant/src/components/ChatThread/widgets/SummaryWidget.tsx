@@ -14,7 +14,7 @@ import { MessageThreadContext } from '../sync';
 import { styles } from './defaults';
 
 export const SummaryWidget = ({ children }: XmlWidgetProps<MessageThreadContext>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <TogglePanel.Root>

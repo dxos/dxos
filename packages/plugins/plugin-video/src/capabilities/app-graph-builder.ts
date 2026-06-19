@@ -45,7 +45,7 @@ export default Capability.makeModule(
                 return yield* Operation.invoke(ops.FetchTranscript, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
-              label: ['fetch-transcript.label', { ns: meta.id }],
+              label: ['fetch-transcript.label', { ns: meta.profile.key }],
               icon: 'ph--closed-captioning--regular',
               disposition: 'list-item',
             },
@@ -58,7 +58,7 @@ export default Capability.makeModule(
                 return yield* Operation.invoke(ops.Transcribe, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
-              label: ['transcribe.label', { ns: meta.id }],
+              label: ['transcribe.label', { ns: meta.profile.key }],
               icon: 'ph--subtitles--regular',
               disposition: 'list-item',
             },
@@ -71,7 +71,7 @@ export default Capability.makeModule(
                 return yield* Operation.invoke(ops.Summarize, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
-              label: ['summarize.label', { ns: meta.id }],
+              label: ['summarize.label', { ns: meta.profile.key }],
               icon: 'ph--text-align-left--regular',
               disposition: 'list-item',
             },

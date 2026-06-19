@@ -36,7 +36,7 @@ export type NavbarActions = {
  * Derives everything from graph connection atoms for proper reactivity.
  */
 export const useNavbarActions = (): NavbarActions => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const stateAtom = useCapability(SimpleLayoutCapabilities.State);

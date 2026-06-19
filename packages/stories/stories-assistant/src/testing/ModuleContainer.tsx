@@ -7,11 +7,11 @@ import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, getActiveSpaceId, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-client';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';
@@ -41,8 +41,8 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
   // deck-companion surface) resolve to this space. Done here, from the React tree, because the
   // plugin-module activation context resolves a different AtomRegistry than the one the UI reads.
   useEffect(() => {
-    if (space && getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
-      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: getSpacePath(space.id) });
+    if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
+      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: Paths.getSpacePath(space.id) });
     }
   }, [space, layoutState, atomRegistry]);
 
@@ -72,9 +72,8 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       .filter(isNonNullable);
 
     const feedTarget = await chat.feed.load();
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));

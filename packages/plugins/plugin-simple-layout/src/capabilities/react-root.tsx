@@ -13,7 +13,7 @@ import { meta } from '#meta';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactRoot, {
-      id: meta.id,
+      id: meta.profile.key,
       root: () => {
         return <SimpleLayout />;
       },

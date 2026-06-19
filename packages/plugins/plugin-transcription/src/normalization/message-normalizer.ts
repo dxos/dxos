@@ -7,7 +7,7 @@ import type * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Feed, Filter } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -22,7 +22,7 @@ const MAX_RANGE_ID_COUNT = 10;
 export type SegmentsNormalizerProps = {
   functionExecutor: FunctionExecutor;
   feed: Feed.Feed;
-  feedRuntime: Runtime.Runtime<Feed.FeedService>;
+  feedRuntime: Runtime.Runtime<Database.Service>;
   startingCursor: QueueCursor;
 };
 
@@ -36,7 +36,7 @@ export class MessageNormalizer extends Resource {
   private readonly _functionExecutor: FunctionExecutor;
 
   private _feed: Feed.Feed;
-  private _feedRuntime: Runtime.Runtime<Feed.FeedService>;
+  private _feedRuntime: Runtime.Runtime<Database.Service>;
   private _cursor: QueueCursor;
   private _messagesToProcess: MessageWithRangeId[] = [];
   private _normalizationTask?: DeferredTask;

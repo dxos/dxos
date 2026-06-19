@@ -22,7 +22,7 @@ type Status = 'idle' | 'busy' | 'error';
 export type GenerationArticleProps = AppSurface.ObjectArticleProps<Generation.Generation>;
 
 export const GenerationArticle = ({ role, subject, attendableId }: GenerationArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [generation] = useObject(subject);
   const settings = useAtomCapability(GeneratorCapabilities.Settings);
   const apiKey = settings?.apiKey;
@@ -91,7 +91,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
         .action(
           'generate',
           {
-            label: [busy ? 'generating.label' : 'generate.label', { ns: meta.id }],
+            label: [busy ? 'generating.label' : 'generate.label', { ns: meta.profile.key }],
             icon: busy ? 'ph--spinner-gap--regular' : 'ph--play--regular',
             iconOnly: true,
             iconClassNames: busy ? 'animate-spin' : undefined,
@@ -102,7 +102,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
         .action(
           'delete',
           {
-            label: ['delete-media.label', { ns: meta.id }],
+            label: ['delete-media.label', { ns: meta.profile.key }],
             icon: 'ph--trash--regular',
             iconOnly: true,
             disabled: !hasMedia || busy,

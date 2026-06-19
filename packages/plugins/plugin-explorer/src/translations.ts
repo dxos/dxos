@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete explorer',
         'object-deleted.label': 'Explorer deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Explorer',
         'object-title.label': 'Title',
       },

@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { useEffect, useMemo } from 'react';
 
-import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
@@ -106,11 +106,9 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
     if (!space || !feed || !running) {
       return;
     }
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
-
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
+        await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);

@@ -14,7 +14,7 @@ import { InboxCapabilities, Settings } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({
         conversations: false,
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contributes(InboxCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.id,
+        prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

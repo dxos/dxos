@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { APP_DOMAIN } from '@dxos/app-toolkit';
+import { NativePasskey } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
@@ -52,6 +52,7 @@ import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
 import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
@@ -88,11 +89,9 @@ import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
 import { isTruthy } from '@dxos/util';
 
-import { steps } from './help';
-import { downloadLogs } from './log-download';
-import { WelcomePlugin } from './plugins';
+import { downloadLogs, steps } from './util';
 
-const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
+const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
 export type State = {
   appKey: string;
@@ -116,46 +115,46 @@ export type PluginConfig = State & {
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
-    AssistantPlugin.meta.id,
-    CommentsPlugin.meta.id,
-    CrmPlugin.meta.id,
-    FeedPlugin.meta.id,
-    FilePlugin.meta.id,
-    InboxPlugin.meta.id,
-    KanbanPlugin.meta.id,
-    MarkdownPlugin.meta.id,
-    MasonryPlugin.meta.id,
-    SheetPlugin.meta.id,
-    SketchPlugin.meta.id,
-    TablePlugin.meta.id,
-    ThreadPlugin.meta.id,
+    AssistantPlugin.meta.profile.key,
+    CommentsPlugin.meta.profile.key,
+    FilePlugin.meta.profile.key,
+    InboxPlugin.meta.profile.key,
+    KanbanPlugin.meta.profile.key,
+    MarkdownPlugin.meta.profile.key,
+    MasonryPlugin.meta.profile.key,
+    SearchPlugin.meta.profile.key,
+    SheetPlugin.meta.profile.key,
+    SketchPlugin.meta.profile.key,
+    TablePlugin.meta.profile.key,
+    ThreadPlugin.meta.profile.key,
 
     // Dev
-    isDev && DebugPlugin.meta.id,
+    isDev && DebugPlugin.meta.profile.key,
 
     // Local
-    isLocal && SamplePlugin.meta.id,
+    isLocal && SamplePlugin.meta.profile.key,
 
     // Labs
     (isDev || isLabs) && [
-      BookmarksPlugin.meta.id,
-      CallsPlugin.meta.id,
-      MeetingPlugin.meta.id,
-      CodePlugin.meta.id,
-      DuffelPlugin.meta.id,
-      GalleryPlugin.meta.id,
-      GamePlugin.meta.id,
-      IrohBeaconPlugin.meta.id,
-      OsrmPlugin.meta.id,
-      OutlinerPlugin.meta.id,
-      PipelinePlugin.meta.id,
-      CommercePlugin.meta.id,
-      SearchPlugin.meta.id,
-      SequencerPlugin.meta.id,
-      SidekickPlugin.meta.id,
-      TranscriptionPlugin.meta.id,
-      VideoPlugin.meta.id,
-      ZenPlugin.meta.id,
+      BookmarksPlugin.meta.profile.key,
+      CallsPlugin.meta.profile.key,
+      MeetingPlugin.meta.profile.key,
+      CodePlugin.meta.profile.key,
+      DuffelPlugin.meta.profile.key,
+      FeedPlugin.meta.profile.key,
+      GalleryPlugin.meta.profile.key,
+      GamePlugin.meta.profile.key,
+      IrohBeaconPlugin.meta.profile.key,
+      OsrmPlugin.meta.profile.key,
+      OutlinerPlugin.meta.profile.key,
+      PipelinePlugin.meta.profile.key,
+      CommercePlugin.meta.profile.key,
+      CrmPlugin.meta.profile.key,
+      SequencerPlugin.meta.profile.key,
+      SidekickPlugin.meta.profile.key,
+      TranscriptionPlugin.meta.profile.key,
+      VideoPlugin.meta.profile.key,
+      ZenPlugin.meta.profile.key,
     ],
   ]
     .filter(isTruthy)
@@ -264,7 +263,7 @@ export const getPlugins = ({
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
-    WelcomePlugin({ generateExemplarSpace: !isLocal }),
+    OnboardingPlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),

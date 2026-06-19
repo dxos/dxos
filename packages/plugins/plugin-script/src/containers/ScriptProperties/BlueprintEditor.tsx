@@ -19,7 +19,7 @@ import { meta } from '#meta';
 export type BlueprintEditorProps = { object: Script.Script };
 
 export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(object);
   const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const blueprints = useQuery(db, Filter.type(Blueprint.Blueprint));

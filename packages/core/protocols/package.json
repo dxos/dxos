@@ -37,7 +37,8 @@
     "./buf/*": {
       "browser": "./dist/src/buf/proto/gen/*.js",
       "import": "./dist/src/buf/proto/gen/*.js"
-    }
+    },
+    "./lexicons/*": "./src/lexicons/*"
   },
   "types": "dist/src/index.d.ts",
   "files": [

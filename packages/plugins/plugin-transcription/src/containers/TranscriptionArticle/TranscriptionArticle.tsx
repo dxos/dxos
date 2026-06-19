@@ -36,7 +36,7 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
         .action(
           'toggle-recording',
           {
-            label: [recording ? 'stop-recording.label' : 'start-recording.label', { ns: meta.id }],
+            label: [recording ? 'stop-recording.label' : 'start-recording.label', { ns: meta.profile.key }],
             icon: recording ? 'ph--stop-circle--regular' : 'ph--microphone--regular',
             disposition: 'toolbar',
             testId: 'transcription.toggle-recording',

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -41,7 +41,7 @@ const SheetArticleInner = ({
 
   return (
     <Sheet.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
-      <Panel.Root classNames={role === 'section' && 'aspect-aquare'}>
+      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square'}>
         <Panel.Toolbar asChild>
           <Sheet.Toolbar />
         </Panel.Toolbar>

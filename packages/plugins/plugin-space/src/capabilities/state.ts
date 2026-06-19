@@ -25,7 +25,7 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}.state`,
+      key: `${meta.profile.key}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),
     });

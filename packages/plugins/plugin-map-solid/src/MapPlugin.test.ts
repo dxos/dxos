@@ -17,6 +17,6 @@ describe('MapPlugin', () => {
     await using harness = await createTestApp({
       plugins: [ProcessManagerPlugin(), MapPlugin()],
     });
-    expect(harness.manager.getEnabled()).toContain(meta.id);
+    expect(harness.manager.getEnabled()).toContain(meta.profile.key);
   });
 });

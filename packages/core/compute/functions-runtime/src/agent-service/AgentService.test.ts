@@ -14,7 +14,8 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
+import { Blueprint, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
+import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -24,6 +25,7 @@ import { trim } from '@dxos/util';
 
 import { ProcessManager } from '../index';
 import * as ResearchService from '../testing/ResearchService';
+import { AGENT_PROCESS_KEY } from './agent-process';
 import * as AgentService from './AgentService';
 import { type DelegationStrategy } from './delegation-strategy';
 
@@ -214,14 +216,14 @@ describe('Agent Service', () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
+        yield* hydrate();
 
         // Hydrate returns immediately; redelivery re-issues the research tool on a fresh child.
         // Drain all queued tasks (orphaned pre-restart + live child).
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeAllTasks();
 
-        agent = yield* AgentService.getSession(agent.feed);
+        agent = yield* getSession(agent.feed);
         yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer()),
@@ -246,13 +248,13 @@ describe('Agent Service', () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
+        yield* hydrate();
 
         // Redelivery may re-issue tools from the interrupted turn.
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeAllTasks();
 
-        agent = yield* AgentService.getSession(agent.feed);
+        agent = yield* getSession(agent.feed);
         yield* agent.waitForCompletion();
 
         const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
@@ -277,11 +279,11 @@ describe('Agent Service', () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
+        yield* hydrate();
 
         // The rehydrated agent is bound to the same feed, so a follow-up that only makes sense
         // with prior context resolves against the pre-restart turn.
-        agent = yield* AgentService.getSession(agent.feed);
+        agent = yield* getSession(agent.feed);
         yield* agent.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* agent.waitForCompletion();
 
@@ -304,8 +306,8 @@ describe('Agent Service', () => {
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
         yield* processManager.startup();
-        yield* AgentService.hydrate();
-        yield* AgentService.hydrate();
+        yield* hydrate();
+        yield* hydrate();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
@@ -482,6 +484,48 @@ When you receive a wake-up notification that your alarm fired, acknowledge it br
           .map(Message.extractText)
           .join('\n');
         expect(forkText.toLocaleLowerCase()).toContain('france');
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  // Placed last (like the fork test) so it does not perturb the shared deterministic ID stream of
+  // the memoized tests above.
+  it.scoped(
+    'agent process succeeds when idle and respawns for a follow-up turn',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+
+        const agent = yield* AgentService.createSession();
+        const target = Obj.getURI(agent.feed);
+
+        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* agent.waitForCompletion();
+
+        // With no queued work, alarms, delegations, or undelivered tool results, the process calls
+        // `ctx.succeed()` (see `maybeComplete` / `isAgentWorkPending`) and reaches a terminal state
+        // instead of idling.
+        const [firstHandle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        const firstPid = String(firstHandle.pid);
+        yield* Effect.promise(async () => {
+          await expect.poll(() => firstHandle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+        });
+
+        // A follow-up turn does not reuse the succeeded process: `getSession` skips terminal handles
+        // and spawns a fresh one, which replays conversation history from the feed.
+        const followUp = yield* getSession(agent.feed);
+        yield* followUp.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+        yield* followUp.waitForCompletion();
+
+        const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
+
+        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const text = messages.map(Message.extractText).join('\n');
+        expect(text.toLocaleLowerCase()).toContain('france');
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,

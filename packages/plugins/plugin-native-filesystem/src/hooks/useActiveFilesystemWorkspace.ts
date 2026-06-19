@@ -3,14 +3,14 @@
 //
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { getWorkspaceFromPath } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 
 import { NativeFilesystemCapabilities, type FilesystemWorkspace } from '#types';
 
 /** Extracts the raw workspace id from a qualified graph path (e.g. `root/fs:dir` → `fs:dir`). */
 const getWorkspaceId = (qualifiedPath: string): string => {
-  const workspacePath = getWorkspaceFromPath(qualifiedPath);
+  const workspacePath = Paths.getWorkspaceFromPath(qualifiedPath);
   const separatorIndex = workspacePath.indexOf('/');
   return separatorIndex === -1 ? workspacePath : workspacePath.slice(separatorIndex + 1);
 };

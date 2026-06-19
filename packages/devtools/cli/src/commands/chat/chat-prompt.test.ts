@@ -33,10 +33,10 @@ describe('dx chat --prompt (non-interactive)', () => {
       });
       // Exit 0: the chat command emits a friendly Console.error then returns
       // (it doesn't fail the effect). The friendly hint should mention
-      // `dx halo create` so the user knows what to do next.
+      // `dx account login` so the user knows what to do next.
       expect(status).toBe(0);
       const combined = stdout + stderr;
-      expect(combined).toMatch(/halo create|space create/);
+      expect(combined).toMatch(/account login|space create/);
     });
   });
 });

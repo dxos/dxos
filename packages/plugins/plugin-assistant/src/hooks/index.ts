@@ -16,5 +16,7 @@ export * from './useFlush';
 export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
+export * from './useTraceMessages';
+export * from './useProcessEphemeralStatus';
 
 export { type AiChatProcessor } from '../processor';

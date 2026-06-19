@@ -169,7 +169,11 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                 <Board.Content>
                   {items?.map((item, index) => (
                     <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                      <Surface.Surface type={AppSurface.Card} data={{ subject: item, editable: true }} limit={1} />
+                      <Surface.Surface
+                        type={AppSurface.CardContent}
+                        data={{ subject: item, editable: true }}
+                        limit={1}
+                      />
                     </Board.Cell>
                   ))}
                 </Board.Content>

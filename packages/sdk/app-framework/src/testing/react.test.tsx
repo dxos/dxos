@@ -16,6 +16,8 @@ import { render, renderSurface } from './react';
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' });
 
+const GreetingRole = Surface.makeType<{ message: string }>('org.dxos.test.role.greeting');
+
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
@@ -25,7 +27,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
             id: 'greeting',
-            role: 'greeting',
+            filter: Surface.makeFilter(GreetingRole),
             component: ({ data }) => <span data-testid='greeting'>hello {data.message}</span>,
           }),
         ]),
@@ -43,7 +45,7 @@ describe('testing/react', () => {
 
   test('renderSurface mounts a surface registered by a plugin', async ({ expect }) => {
     await using harness = await createTestApp({ plugins: [TestPlugin()] });
-    const view = renderSurface(harness, { role: 'greeting', data: { message: 'plugins' } });
+    const view = renderSurface(harness, { type: GreetingRole, data: { message: 'plugins' } });
     const node = await view.findByTestId('greeting');
     expect(node.textContent).toBe('hello plugins');
   });

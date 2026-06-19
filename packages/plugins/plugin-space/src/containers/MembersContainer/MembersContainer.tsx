@@ -7,7 +7,7 @@ import React, { type Dispatch, type SetStateAction, useMemo, useState } from 're
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -48,7 +48,7 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
   const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
@@ -64,8 +64,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
-    ?.objects[0]?.target;
+  const target = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+    ?.target?.objects[0]?.target;
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
@@ -210,7 +210,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
           <QR

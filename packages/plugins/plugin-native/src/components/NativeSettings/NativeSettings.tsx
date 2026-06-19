@@ -28,7 +28,7 @@ type UpdateActions = {
 type UpdateRow = { description: string; button: ReactNode };
 
 export const NativeSettings = (_props: NativeSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(NativeCapabilities.UpdateManager);
   const status = useAtomValue(manager.status);
 

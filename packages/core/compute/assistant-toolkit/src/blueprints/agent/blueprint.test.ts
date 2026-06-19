@@ -93,7 +93,7 @@ describe('Agent', () => {
 
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(
           () => new AiSession.Session({ feed: chatFeed, runtime }),
         );
@@ -133,7 +133,7 @@ describe('Agent', () => {
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(
           () => new AiSession.Session({ feed: chatFeed, runtime }),
         );
@@ -288,7 +288,7 @@ describe('Agent', () => {
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(
           () => new AiSession.Session({ feed: chatFeed, runtime }),
         );
