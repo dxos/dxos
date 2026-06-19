@@ -15,7 +15,7 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 export const Chat = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-  view: Schema.String.pipe(Schema.optional),
+  viewType: Schema.String.pipe(Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'sky' }),
