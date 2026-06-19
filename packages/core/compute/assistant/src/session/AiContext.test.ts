@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { describe, it } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { DXN, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -14,7 +14,7 @@ import * as AiContext from './AiContext';
 describe('AiContext.Binder', () => {
   const TestLayer = TestDatabaseLayer({ types: [Feed.Feed] });
 
-  it('should handle bind with Ref', async () => {
+  test('should handle bind with Ref', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
       const runtime = yield* Effect.runtime<Database.Service>();
