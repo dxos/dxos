@@ -307,8 +307,8 @@ export class AppManager {
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
     await this.page.keyboard.press('Enter');
-    await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
-    await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+    await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
+    await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
