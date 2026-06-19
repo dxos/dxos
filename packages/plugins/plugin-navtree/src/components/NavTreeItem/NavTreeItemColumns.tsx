@@ -22,10 +22,12 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const flattenedActions = useActions(item);
   const allActions = useMemo(() => getListActions(flattenedActions), [flattenedActions]);
 
-  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
+  const anchored = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}`;
+  const ActionRoot = anchored ? Popover.Anchor : Fragment;
 
   return (
-    <div className='contents dx-app-no-drag'>
+    // `data-popover-anchor` lets the enclosing row highlight itself while a popover (e.g. rename) is open on it.
+    <div className='contents dx-app-no-drag' {...(anchored && { 'data-popover-anchor': '' })}>
       <ActionRoot>
         {allActions.length === 1 ? (
           <Treegrid.Cell classNames='contents'>

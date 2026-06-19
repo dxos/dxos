@@ -15,6 +15,7 @@ import {
   Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
+  useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -55,9 +56,12 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
     }
   }, [state.popoverOpen, state.popoverAnchorId, state.popoverAnchor, state.popoverContent]);
 
+  // The rename popover is modal so other navtree item menus are inert while it is open.
+  const modal = state.popoverKind === 'rename';
+
   return (
     <DeckPopoverProvider setOpen={setOpen}>
-      <Popover.Root modal={false} open={open}>
+      <Popover.Root modal={modal} open={open}>
         {state.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
         {children}
       </Popover.Root>
@@ -76,8 +80,14 @@ export const PopoverContent = () => {
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
   const content = state.popoverContent;
-  // A base popover renders a plugin-provided component; everything else falls through to the card.
-  const isBasePopover = state.popoverKind === 'base' && !!content && 'component' in content;
+  // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
+  const isComponentPopover =
+    (state.popoverKind === 'base' || state.popoverKind === 'rename') && !!content && 'component' in content;
+  const isRename = state.popoverKind === 'rename';
+
+  // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
+  const [isLg] = useMediaQuery('lg', { fallback: [true] });
+  const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -107,15 +117,22 @@ export const PopoverContent = () => {
   return (
     <Popover.Portal>
       <Popover.Content
-        side={state.popoverSide}
+        side={side}
         sticky='always'
         hideWhenDetached
-        onOpenAutoFocus={(event) => event.preventDefault()}
+        // Rename focuses its input; other popovers keep focus where it was.
+        onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
+        // Reuse the dialog's enter/exit motion so the rename popover does not flicker on open.
+        classNames={
+          isRename
+            ? ['data-[state=open]:animate-slide-up-and-fade', 'data-[state=closed]:animate-slide-down-and-fade']
+            : undefined
+        }
       >
         <Popover.Viewport>
-          {isBasePopover && content && 'component' in content ? (
+          {isComponentPopover && content && 'component' in content ? (
             /* Base popover: a plugin-provided component (e.g. editor link preview). */
             <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
           ) : (
