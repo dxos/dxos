@@ -28,16 +28,6 @@ import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type CompletionGuard } from './completion-guard';
 import { type DelegationStrategy } from './delegation-strategy';
 
-// Re-export the pure API from @dxos/compute so callers using this namespace get the full surface.
-export {
-  AgentService,
-  type GetSessionOptions,
-  getSession,
-  hydrate,
-  type Service,
-  type Session,
-} from '@dxos/compute/AgentService';
-
 const isTerminalProcess = (state: Process.State): boolean =>
   state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
 

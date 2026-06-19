@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayerSpec } from '@dxos/compute';
+import { AgentService, LayerSpec } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { AgentService } from '@dxos/functions-runtime';
+import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 //
@@ -29,7 +29,7 @@ const AgentServiceSpec = LayerSpec.make(
         // Optional supervisor behaviour, contributed by a plugin that knows the agent/plan model.
         const strategies = yield* Capability.getAll(AutomationCapabilities.AgentDelegationStrategy);
         const completionGuards = yield* Capability.getAll(AutomationCapabilities.AgentCompletionGuard);
-        return AgentService.layer({
+        return AgentServiceRuntime.layer({
           delegationStrategy: strategies[0],
           completionGuard: completionGuards[0],
         });

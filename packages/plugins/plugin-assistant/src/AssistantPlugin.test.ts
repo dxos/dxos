@@ -18,11 +18,11 @@ import {
   BlueprintManagerBlueprint,
   DatabaseBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { AgentService, Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
+import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
 import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -180,7 +180,7 @@ describe('AssistantPlugin', () => {
           (_) => Blueprint.resolve(_.key),
         );
 
-        const agent = yield* AgentService.createSession({
+        const agent = yield* AgentServiceRuntime.createSession({
           blueprints,
         });
         yield* agent.submitPrompt('Hello');
