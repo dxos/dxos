@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { Position, byPosition } from './position';
+import * as Position from './Position';
 
 type TestItem = {
   id: number;
-  position?: Position;
+  position?: Position.Position;
 };
 
-describe('byPosition', () => {
+describe('Position.compare', () => {
   test('should keep items with same position in their original order', ({ expect }) => {
     const items: TestItem[] = [
       { id: 1 },
@@ -22,7 +22,7 @@ describe('byPosition', () => {
       { id: 6, position: Position.last },
     ];
 
-    const sorted = [...items].sort(byPosition);
+    const sorted = [...items].sort(Position.compare);
 
     expect(sorted.findIndex((item) => item.id === 3)).toBeLessThan(sorted.findIndex((item) => item.id === 4));
     expect(sorted.findIndex((item) => item.id === 1)).toBeLessThan(sorted.findIndex((item) => item.id === 2));
@@ -32,7 +32,7 @@ describe('byPosition', () => {
   test('should place Position.first items before items in natural order', ({ expect }) => {
     const items: TestItem[] = [{ id: 1 }, { id: 2, position: Position.first }];
 
-    const sorted = [...items].sort(byPosition);
+    const sorted = [...items].sort(Position.compare);
     expect(sorted[0].position).toBe(Position.first);
     expect(sorted[1].position).toBeUndefined();
   });
@@ -40,7 +40,7 @@ describe('byPosition', () => {
   test('should place Position.last items after items in natural order', ({ expect }) => {
     const items: TestItem[] = [{ id: 1, position: Position.last }, { id: 2 }];
 
-    const sorted = [...items].sort(byPosition);
+    const sorted = [...items].sort(Position.compare);
     expect(sorted[0].position).toBeUndefined();
     expect(sorted[1].position).toBe(Position.last);
   });
@@ -48,7 +48,7 @@ describe('byPosition', () => {
   test('should treat items without position as natural order', ({ expect }) => {
     const items: TestItem[] = [{ id: 1 }, { id: 2, position: Position.first }, { id: 3, position: Position.last }];
 
-    const sorted = [...items].sort(byPosition);
+    const sorted = [...items].sort(Position.compare);
     expect(sorted[0].position).toBe(Position.first);
     expect(sorted[1].position).toBeUndefined();
     expect(sorted[2].position).toBe(Position.last);
@@ -64,7 +64,7 @@ describe('byPosition', () => {
       { id: 6, position: Position.last },
     ];
 
-    const sorted = [...items].sort(byPosition);
+    const sorted = [...items].sort(Position.compare);
 
     expect(sorted[0].position).toBe(Position.first);
     expect(sorted[1].position).toBe(Position.first);
@@ -85,7 +85,7 @@ describe('byPosition', () => {
       { id: 5, position: -1 },
     ];
 
-    const sorted = [...items].sort(byPosition);
+    const sorted = [...items].sort(Position.compare);
 
     expect(sorted[0].id).toBe(3); // Position.first = -Infinity
     expect(sorted[1].id).toBe(5); // -1
@@ -96,11 +96,11 @@ describe('byPosition', () => {
 
   test('should handle empty arrays', ({ expect }) => {
     const items: TestItem[] = [];
-    expect(() => [...items].sort(byPosition)).not.toThrow();
+    expect(() => [...items].sort(Position.compare)).not.toThrow();
   });
 
   test('should handle single item arrays', ({ expect }) => {
     const items: TestItem[] = [{ id: 1 }];
-    expect(() => [...items].sort(byPosition)).not.toThrow();
+    expect(() => [...items].sort(Position.compare)).not.toThrow();
   });
 });

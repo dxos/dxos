@@ -44,7 +44,7 @@ export const createTypeSectionExtension = (
   type: Type.AnyEntity,
   options?: {
     /** Position hint for the section in the sidebar. */
-    position?: Position;
+    position?: Position.Position;
     /**
      * Override the default `Filter.type(type)` query.
      * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).
