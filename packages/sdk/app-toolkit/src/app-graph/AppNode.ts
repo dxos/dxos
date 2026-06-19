@@ -187,6 +187,7 @@ export const makeObject = ({
   droppable = true,
   navigable = false,
   onRearrange,
+  canDrop: canDropOverride,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.Context;
@@ -198,6 +199,8 @@ export const makeObject = ({
   navigable?: boolean;
   /** Rearrange callback invoked with the next sibling order on drop. */
   onRearrange?: (nextOrder: unknown[]) => void;
+  /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
+  canDrop?: (source: TreeData) => boolean;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -248,7 +251,7 @@ export const makeObject = ({
     blockInstructionCache.set(objectUri, blockInstruction);
   }
 
-  const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
+  const canDrop = droppable ? (canDropOverride ?? CAN_DROP_OBJECT) : undefined;
 
   return {
     id: object.id,
