@@ -12,6 +12,7 @@ import { type Space } from '@dxos/client/echo';
 import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
+import { inferObjectOrder } from '@dxos/util';
 
 import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';
@@ -19,23 +20,24 @@ import { AppNodeMatcher } from '../app-graph';
 import { AppNode } from '../app-graph';
 import { AppAnnotation } from '../echo';
 
-type SectionOrderMap = Record<string, Ref.Ref<Obj.Unknown>[]>;
-
-const EMPTY_SECTION_ORDER: SectionOrderMap = {};
-
 /** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
 export const makeSectionRearrangeCallback = AppNode.createFactory(
   (space: Space, typename: string) => (nextOrder: unknown[]) => {
-    const objects = nextOrder.filter(Obj.isObject);
-    const current = Annotation.get(space.properties, AppAnnotation.SectionOrderAnnotation).pipe(
-      Option.getOrElse(() => EMPTY_SECTION_ORDER),
-    );
-    Obj.update(space.properties, (props) => {
-      Annotation.set(props, AppAnnotation.SectionOrderAnnotation, {
-        ...current,
-        [typename]: objects.map(Ref.make),
+    const refs = nextOrder.filter(Obj.isObject).map(Ref.make);
+    if (Option.isNone(Annotation.get(space.properties, AppAnnotation.SectionOrderAnnotation))) {
+      Obj.update(space.properties, (props) => {
+        Annotation.set(props, AppAnnotation.SectionOrderAnnotation, { [typename]: refs });
       });
-    });
+    } else {
+      // Splice in place so only this type's array changes; Annotation.update validates the result.
+      Annotation.update(space.properties, AppAnnotation.SectionOrderAnnotation, (order) => {
+        if (order[typename]) {
+          order[typename].splice(0, order[typename].length, ...refs);
+        } else {
+          order[typename] = refs;
+        }
+      });
+    }
   },
   (space, typename) => `${typename}:${space.id}`,
 );
@@ -94,24 +96,18 @@ export const createTypeSectionExtension = (
         return Effect.succeed([]);
       }
 
-      // Subscribe so the connector re-runs when section order changes.
-      get(Obj.atom(space.properties));
-      const sectionOrderMap = Annotation.get(space.properties, AppAnnotation.SectionOrderAnnotation).pipe(
-        Option.getOrElse(() => EMPTY_SECTION_ORDER),
-      );
-      const storedRefs = sectionOrderMap[typename] ?? [];
-      // Extract entity IDs from ref URIs without loading targets (target is a lazy resolver).
-      const orderedIds = storedRefs
-        .map((ref) => (EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined))
+      // Reactivity is scoped to this type's order; unrelated space.properties changes don't re-run the connector.
+      // The atom emits an immutable snapshot of the stored order: each ref as its uri (no target load).
+      const storedUris =
+        get(Annotation.atomProperty(space.properties, AppAnnotation.SectionOrderAnnotation, typename)) ?? [];
+      const order = storedUris
+        .map((uri) => (EID.isEID(uri) ? EID.getEntityId(uri) : undefined))
         .filter((id): id is string => id !== undefined);
-      const orderMap = new Map(orderedIds.map((id, index) => [id, index]));
-
-      const orderedObjects = objects.toSorted((a, b) => {
-        const ia = orderMap.has(a.id) ? orderMap.get(a.id)! : Infinity;
-        const ib = orderMap.has(b.id) ? orderMap.get(b.id)! : Infinity;
-        if (ia !== ib) { return ia - ib; }
-        return a.id.localeCompare(b.id);
-      });
+      // Objects not in the stored order follow in query order.
+      const orderedObjects = inferObjectOrder(
+        Object.fromEntries(objects.map((object): [string, Obj.Unknown] => [object.id, object])),
+        order,
+      );
 
       const onRearrange = makeSectionRearrangeCallback(space, typename);
 

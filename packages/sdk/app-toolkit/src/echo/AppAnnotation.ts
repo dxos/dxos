@@ -27,9 +27,7 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
 });
 
 /** Per-type object ordering stored on space.properties, keyed by typename. */
-export const SectionOrderAnnotation = Annotation.make<Record<string, Ref.Ref<Obj.Unknown>[]>>({
+export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
-  schema: Schema.mutable(
-    Schema.Record({ key: Schema.String, value: Schema.mutable(Schema.Array(Ref.Ref(Obj.Unknown))) }),
-  ),
+  schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
 });

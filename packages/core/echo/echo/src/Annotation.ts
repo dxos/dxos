@@ -41,6 +41,7 @@ import * as Types from 'effect/Types';
 
 import * as Entity from './Entity';
 import * as internalAnnotations from './internal/Annotation';
+import * as annotationAtoms from './internal/Annotation/atoms';
 
 export const TypeId = '~@dxos/echo/Annotation' as const;
 export type TypeId = typeof TypeId;
@@ -121,13 +122,17 @@ export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotatio
  * Get the value of an annotation from an entity instance or snapshot.
  * For schema-level reads use the annotation instance method (e.g. `ColorAnnotation.get(schema)`).
  * For getting an annotation value from a dictionary, use `getDictionary`.
+ *
+ * The value is exposed as `Mutable<T>` so its arrays/records can be spliced/pushed in place inside an
+ * `Obj.update` callback (the reactive proxy enforces read-only access outside one). `Mutable` preserves
+ * Refs and primitives, so for those annotation types the result is identical to `T`.
  */
 export const get: {
-  <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
-  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>): Option.Option<T>;
+  <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<Entity.Mutable<T>>;
+  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>): Option.Option<Entity.Mutable<T>>;
 } = Function.dual<
-  <T>(annotation: Annotation<T>) => (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>,
-  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>) => Option.Option<T>
+  <T>(annotation: Annotation<T>) => (target: Entity.Unknown | Entity.Snapshot) => Option.Option<Entity.Mutable<T>>,
+  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>) => Option.Option<Entity.Mutable<T>>
 >(2, (target, annotation) => {
   return internalAnnotations.get(target, annotation);
 });
@@ -147,6 +152,18 @@ export const set: {
   return internalAnnotations.set(target, annotation, value);
 });
 
+/**
+ * Mutate an existing annotation value in place via a callback, wrapping the mutation in a change
+ * transaction (like `Obj.update`). The result is validated against the annotation's schema. Use when
+ * only an annotation needs to change; to mutate it alongside other changes (unvalidated), call
+ * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent.
+ */
+export const update = <T>(
+  target: Entity.Unknown,
+  annotation: Annotation<T>,
+  mutator: (value: Entity.Mutable<T>) => void,
+): void => internalAnnotations.update(target, annotation, mutator);
+
 export const getFromAst: {
   <T>(annotation: Annotation<T>): (ast: SchemaAST.AST) => Option.Option<T>;
   <T>(ast: SchemaAST.AST, annotation: Annotation<T>): Option.Option<T>;
@@ -156,6 +173,18 @@ export const getFromAst: {
 >(2, (ast, annotation) => {
   return internalAnnotations.getFromAst(ast, annotation);
 });
+
+/**
+ * Reactive atom for an annotation value on an entity instance.
+ * Fires only when the annotation value changes (mirrors `Obj.atom`, scoped to one annotation).
+ */
+export const atom = annotationAtoms.makeAtom;
+
+/**
+ * Reactive atom for a single key of a record-valued annotation on an entity instance.
+ * Reactivity is scoped to that key, and the value type is preserved (mirrors `Obj.atomProperty`).
+ */
+export const atomProperty = annotationAtoms.makeProperty;
 
 /**
  * Set of annotation values.

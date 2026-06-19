@@ -2,15 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Obj from './Obj';
+import * as Ref from './Ref';
 import * as Type from './Type';
 
 describe('Annotation', () => {
@@ -434,6 +436,266 @@ describe('Annotation', () => {
 
       const snapshot = Obj.getSnapshot(person);
       expect(Option.getOrThrow(Annotation.get(snapshot, ColorAnnotation))).toBe('snapshot-color');
+    });
+  });
+
+  describe('atom', () => {
+    // Record-valued annotation mirroring a per-key ordering (e.g. SectionOrderAnnotation).
+    const OrderAnnotation = Annotation.make({
+      id: 'org.dxos.test.order',
+      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+    });
+    const Container = Schema.Struct({ name: Schema.String }).pipe(
+      Type.makeObject(DXN.make('com.example.type.container', '0.1.0')),
+    );
+
+    const setOrder = (obj: Obj.Unknown, order: Record<string, string[]>) =>
+      Obj.update(obj, (obj) => {
+        Annotation.set(obj, OrderAnnotation, order);
+      });
+
+    test('atomProperty reads the typed slice for a key', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      setOrder(obj, { typeA: ['x', 'y'], typeB: ['m'] });
+
+      const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+      expect(registry.get(atomA)).toEqual(['x', 'y']);
+    });
+
+    test('atomProperty returns undefined for a missing key or annotation', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+
+      const missingAnnotation = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+      expect(registry.get(missingAnnotation)).toBeUndefined();
+
+      setOrder(obj, { typeA: ['x'] });
+      const missingKey = Annotation.atomProperty(obj, OrderAnnotation, 'typeZ');
+      expect(registry.get(missingKey)).toBeUndefined();
+    });
+
+    test('atomProperty updates when its own key changes', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      setOrder(obj, { typeA: ['x', 'y'] });
+
+      const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+      let fires = 0;
+      registry.subscribe(atomA, () => {
+        fires++;
+      });
+      expect(registry.get(atomA)).toEqual(['x', 'y']);
+
+      setOrder(obj, { typeA: ['y', 'x'] });
+      expect(registry.get(atomA)).toEqual(['y', 'x']);
+      expect(fires).toBeGreaterThan(0);
+    });
+
+    test('atomProperty reactivity is scoped to its own key', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      setOrder(obj, { typeA: ['x', 'y'], typeB: ['m'] });
+
+      const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+      const before = registry.get(atomA);
+      let fires = 0;
+      registry.subscribe(atomA, () => {
+        fires++;
+      });
+
+      // Change a different key; the typeA atom must not recompute.
+      setOrder(obj, { typeA: ['x', 'y'], typeB: ['m', 'n'] });
+      const after = registry.get(atomA);
+
+      expect(after).toBe(before);
+      expect(fires).toBe(0);
+    });
+
+    test('atom exposes the whole annotation value as an Option', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+
+      const wholeAtom = Annotation.atom(obj, OrderAnnotation);
+      expect(Option.isNone(registry.get(wholeAtom))).toBe(true);
+
+      setOrder(obj, { typeA: ['x'] });
+      expect(Option.getOrThrow(registry.get(wholeAtom))).toEqual({ typeA: ['x'] });
+    });
+  });
+
+  describe('reactive in-place mutation', () => {
+    const OrderAnnotation = Annotation.make({
+      id: 'org.dxos.test.mutable-order',
+      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+    });
+    const RefOrderAnnotation = Annotation.make({
+      id: 'org.dxos.test.mutable-ref-order',
+      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+    });
+    const Item = Schema.Struct({ name: Schema.String }).pipe(
+      Type.makeObject(DXN.make('com.example.type.mutableItem', '0.1.0')),
+    );
+    const Container = Schema.Struct({ name: Schema.String }).pipe(
+      Type.makeObject(DXN.make('com.example.type.mutableContainer', '0.1.0')),
+    );
+
+    test('push to an annotation array in place without Annotation.set', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y'] }));
+
+      const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+      expect(registry.get(atomA)).toEqual(['x', 'y']);
+
+      Obj.update(obj, (obj) => {
+        const order = Annotation.get(obj, OrderAnnotation).pipe(Option.getOrThrow);
+        order.typeA.push('z');
+      });
+
+      expect(registry.get(atomA)).toEqual(['x', 'y', 'z']);
+    });
+
+    test('splice an annotation array in place reorders the value', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y', 'z'] }));
+
+      const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+
+      Obj.update(obj, (obj) => {
+        const order = Annotation.get(obj, OrderAnnotation).pipe(Option.getOrThrow);
+        order.typeA.splice(0, order.typeA.length, 'z', 'x', 'y');
+      });
+
+      expect(registry.get(atomA)).toEqual(['z', 'x', 'y']);
+    });
+
+    test('in-place mutation of one key leaves other keys untouched', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x'], typeB: ['m'] }));
+
+      Obj.update(obj, (obj) => {
+        const order = Annotation.get(obj, OrderAnnotation).pipe(Option.getOrThrow);
+        order.typeA.push('y');
+      });
+
+      expect(Option.getOrThrow(Annotation.get(obj, OrderAnnotation))).toEqual({ typeA: ['x', 'y'], typeB: ['m'] });
+    });
+
+    test('push a Ref to an annotation array in place', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      const a = Obj.make(Item, { name: 'a' });
+      const b = Obj.make(Item, { name: 'b' });
+      Obj.update(obj, (obj) => Annotation.set(obj, RefOrderAnnotation, { typeA: [Ref.make(a)] }));
+
+      Obj.update(obj, (obj) => {
+        const order = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+        order.typeA.push(Ref.make(b));
+      });
+
+      const result = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+      expect(result.typeA.map((ref) => ref.target?.id)).toEqual([a.id, b.id]);
+    });
+
+    test('atomProperty notifies subscribers when a Ref array is reordered in place', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      const a = Obj.make(Item, { name: 'a' });
+      const b = Obj.make(Item, { name: 'b' });
+      const c = Obj.make(Item, { name: 'c' });
+      Obj.update(obj, (obj) =>
+        Annotation.set(obj, RefOrderAnnotation, { typeA: [Ref.make(a), Ref.make(b), Ref.make(c)] }),
+      );
+
+      const atomA = Annotation.atomProperty(obj, RefOrderAnnotation, 'typeA');
+      let fires = 0;
+      registry.subscribe(atomA, () => {
+        fires++;
+      });
+      registry.get(atomA);
+
+      Obj.update(obj, (obj) => {
+        const order = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+        order.typeA.splice(0, order.typeA.length, Ref.make(c), Ref.make(a), Ref.make(b));
+      });
+
+      expect(fires).toBeGreaterThan(0);
+      // The atom emits an immutable snapshot: refs as their uris.
+      expect(registry.get(atomA)?.map((uri) => (EID.isEID(uri) ? EID.getEntityId(uri) : undefined))).toEqual([
+        c.id,
+        a.id,
+        b.id,
+      ]);
+    });
+
+    test('reorder detection does not serialize ref targets (tolerates cyclic targets)', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      const a = Obj.make(Item, { name: 'a' });
+      // The annotation on `obj` holds a ref back to `obj`, so a loaded target forms a cycle —
+      // serializing it whole would throw; the gate must compare ref identity (uri) only.
+      Obj.update(obj, (obj) => Annotation.set(obj, RefOrderAnnotation, { typeA: [Ref.make(a), Ref.make(obj)] }));
+
+      const atomA = Annotation.atomProperty(obj, RefOrderAnnotation, 'typeA');
+      let fires = 0;
+      registry.subscribe(atomA, () => {
+        fires++;
+      });
+      registry.get(atomA);
+
+      Obj.update(obj, (obj) => {
+        const order = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+        order.typeA.splice(0, order.typeA.length, Ref.make(obj), Ref.make(a));
+      });
+
+      expect(fires).toBeGreaterThan(0);
+    });
+
+    test('Annotation.update mutates in place (wraps its own change)', ({ expect }) => {
+      const registry = Registry.make();
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y'] }));
+
+      const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
+
+      // No surrounding Obj.update — Annotation.update opens its own change transaction.
+      Annotation.update(obj, OrderAnnotation, (order) => {
+        order.typeA.push('z');
+      });
+
+      expect(registry.get(atomA)).toEqual(['x', 'y', 'z']);
+    });
+
+    test('Annotation.update is a no-op when the annotation is absent', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      let called = false;
+      Annotation.update(obj, OrderAnnotation, () => {
+        called = true;
+      });
+
+      expect(called).toBe(false);
+      expect(Option.isNone(Annotation.get(obj, OrderAnnotation))).toBe(true);
+    });
+
+    test('Annotation.update validates the mutated value against the annotation schema', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x'] }));
+
+      expect(() =>
+        Annotation.update(obj, OrderAnnotation, (order) => {
+          // Pushing a number into a string array violates the annotation schema.
+          (order.typeA as unknown[]).push(42);
+        }),
+      ).toThrow();
+    });
+
+    test('set validates the value against the annotation schema', ({ expect }) => {
+      const obj = Obj.make(Container, { name: 'A' });
+      Obj.update(obj, (obj) => {
+        // OrderAnnotation values must be string arrays; a number element violates the schema.
+        expect(() => Annotation.set(obj, OrderAnnotation, { typeA: [1 as unknown as string] })).toThrow();
+      });
     });
   });
 });
