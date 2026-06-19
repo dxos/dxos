@@ -9,7 +9,8 @@ import { Operation, Script, Trigger } from '@dxos/compute';
 import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { getAutomationsSettingsPath } from '../paths';
+import { meta } from '#meta';
+
 import { AutomationOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFromTemplate> =
@@ -59,7 +60,7 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
           hidden: true,
         });
         yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [getAutomationsSettingsPath(db.spaceId)],
+          subject: [`${Paths.getSpacePath(db.spaceId)}/settings/${meta.profile.key}.automations`],
           workspace: Paths.getSpacePath(db.spaceId),
         });
       }),

@@ -13,7 +13,7 @@ import { WorkspaceSettingsContainer } from '#containers';
 import { useActiveFilesystemWorkspace } from '#hooks';
 import { meta } from '#meta';
 
-const GENERAL_TYPE = `${meta.id}.general`;
+const GENERAL_TYPE = `${meta.profile.key}.general`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

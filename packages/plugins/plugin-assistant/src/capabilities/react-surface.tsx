@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
           return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -118,7 +118,7 @@ export default Capability.makeModule(() =>
 
           return (
             <Panel.Root role={role} className='dx-document'>
-              <Panel.Content asChild>
+              <Panel.Content>
                 <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={target} detailAxis='block' />
               </Panel.Content>
             </Panel.Root>

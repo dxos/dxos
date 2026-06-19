@@ -71,12 +71,12 @@ export const useSyncTargetsChecklist = (
     } catch (err) {
       log.catch(err);
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/get-sync-targets-error`,
+        id: `${meta.profile.key}/get-sync-targets-error`,
         icon: 'ph--warning--regular',
         duration: 5_000,
-        title: ['get-sync-targets-error.title', { ns: meta.id }],
+        title: ['get-sync-targets-error.title', { ns: meta.profile.key }],
         description: String((err as Error).message ?? err),
-        closeLabel: ['close.label', { ns: meta.id }],
+        closeLabel: ['close.label', { ns: meta.profile.key }],
       });
     } finally {
       setLoading(false);

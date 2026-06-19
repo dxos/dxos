@@ -21,7 +21,7 @@ export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provid
  * Provider node's graph actions (e.g. Regenerate, which runs the blueprint agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
@@ -114,7 +114,7 @@ const useMenuActions = (
       // Boundary: the menu's ActionExecutor surfaces a structural menu-action node, while the graph
       // runner needs the nominal `Node.Action`. The objects are the same graph actions the builder
       // produced (filtered to `disposition: 'toolbar'`), so the coercion is safe here.
-      void runAction(action as Node.Action, { caller: meta.id });
+      void runAction(action as Node.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

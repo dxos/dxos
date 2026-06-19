@@ -10,7 +10,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 export const NavTreeDocumentTitle = ({ node }: { node?: Node.Node }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   useEffect(() => {
     document.title = node ? toLocalizedString(node.properties.label, t) : t('current-app.name', { ns: osTranslations });
   }, [node?.properties?.label]);

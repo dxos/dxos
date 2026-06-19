@@ -16,7 +16,7 @@ import { meta } from '#meta';
 import { Provider, RequestMapping, ResultMapping } from './Provider';
 import { Search } from './Search';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Fetches a page's HTML, rendering via the composer-crx extension when available. Hosted by the

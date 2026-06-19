@@ -81,7 +81,8 @@ export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => 
   };
 };
 
-export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const RefTypeId: unique symbol = Symbol.for('@dxos/echo/internal/Ref') as any;
 
 /**
  * Reference Schema.
@@ -253,7 +254,7 @@ export declare namespace Ref {
 }
 
 Ref.isRef = (obj: any): obj is Ref<any> => {
-  return obj && typeof obj === 'object' && RefTypeId in obj;
+  return obj != null && typeof obj === 'object' && RefTypeId in obj;
 };
 
 Ref.hasEntityId = (id: EntityId) => (ref: Ref<any>) => {
@@ -278,7 +279,8 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   const id = obj.id;
   invariant(EntityId.isValid(id), 'Invalid object ID');
   const uri = EID.make({ entityId: id });
-  return new RefImpl(uri, obj);
+  const ref = new RefImpl(uri, obj);
+  return ref;
 };
 
 Ref.fromURI = (uri: URI.URI): Ref<any> => {

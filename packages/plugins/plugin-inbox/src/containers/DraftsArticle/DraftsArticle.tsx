@@ -30,7 +30,7 @@ export type DraftsArticleProps = AppSurface.SpaceArticleProps<{
  */
 // TODO(wittjosiah): Reconcile implementation with MailboxArticle.
 export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const id = attendableId ?? Obj.getURI(mailbox);

@@ -22,7 +22,7 @@ export type FunctionPublishingProps = { object: Script.Script };
 
 // TODO(burdon): Move to separate tab?
 export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(object);
 

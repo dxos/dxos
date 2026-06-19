@@ -9,4 +9,4 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
-export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(meta.id);
+export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(meta.profile.key);

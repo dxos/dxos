@@ -25,7 +25,7 @@ const CardStory = () => {
   );
 
   return (
-    <CardContainer role='popover' icon={pluginMeta.icon}>
+    <CardContainer role='popover' icon={pluginMeta.profile.icon?.key}>
       <BookmarkCard role='card--content' subject={bookmark} />
     </CardContainer>
   );

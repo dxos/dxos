@@ -94,7 +94,7 @@ export type UseAppOptions = {
  * );
  *
  * @param params.pluginLoader A function which loads new plugins.
- * @param params.plugins All plugins available to the application. Plugins whose `meta.tags` includes `'system'` are treated as core (force-enabled, not user-toggleable).
+ * @param params.plugins All plugins available to the application. Plugins whose `meta.profile.tags` includes `'system'` are treated as core (force-enabled, not user-toggleable).
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
@@ -123,7 +123,7 @@ export const useApp = ({
       pluginLoaderProp ??
       ((id: string) =>
         Effect.sync(() => {
-          const plugin = plugins.find((plugin) => plugin.meta.id === id);
+          const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
           invariant(plugin, `Plugin not found: ${id}`);
           return { plugin };
         })),

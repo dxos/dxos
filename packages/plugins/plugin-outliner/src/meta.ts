@@ -4,29 +4,9 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
-import { trim } from '@dxos/util';
 
-export const meta = Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.outliner'),
-  name: 'Outliner',
-  author: 'DXOS',
-  description: trim`
-    Tree-structured note-taking editor for organizing ideas hierarchically.
-    Each Outline is backed by an ECHO CRDT Text object so edits merge automatically across peers in real time.
-    Indent and outdent list items with Tab / Shift-Tab, use hashtags for inline tagging, and delete items via the editor context menu.
+import config from '../dx.config';
 
-    The plugin also provides a Journal — a date-keyed collection of entries where each day's notes are an independent outline.
-    A collapsible calendar sidebar lets you navigate between dates, and the journal auto-creates today's entry on first focus.
-    Entries render newest-first in a scrollable list so recent notes are always at hand.
+export const meta = Plugin.getMetaFromConfig(config);
 
-    A Quick Journal Entry dialog (accessible as a global operation) lets you append a checkbox bullet to today's entry without leaving your current context.
-    Invoking the operation from an AI blueprint or keyboard shortcut creates the Journal and today's entry automatically if they do not yet exist.
-  `,
-  icon: 'ph--tree-structure--regular',
-  iconHue: 'indigo',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',
-  spec: 'PLUGIN.mdl',
-  tags: ['labs'],
-});
-
-export const QUICK_ENTRY_DIALOG = DXN.make(`${meta.id}.quickEntryDialog`);
+export const QUICK_ENTRY_DIALOG = DXN.make(`${meta.profile.key}.quickEntryDialog`);

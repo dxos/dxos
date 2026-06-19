@@ -53,7 +53,7 @@ export default Capability.makeModule(
                   yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db.spaceId });
                 }),
               properties: {
-                label: ['chat-update-name.label', { ns: meta.id }],
+                label: ['chat-update-name.label', { ns: meta.profile.key }],
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
@@ -92,7 +92,7 @@ export default Capability.makeModule(
                 yield* Database.flush();
               }),
               properties: {
-                label: ['import-compute-operations.label', { ns: meta.id }],
+                label: ['import-compute-operations.label', { ns: meta.profile.key }],
                 icon: 'ph--download-simple--regular',
               },
             }),
@@ -100,7 +100,7 @@ export default Capability.makeModule(
               id: AssistantOperation.ToggleTracePanelDebug.meta.key,
               data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
               properties: {
-                label: ['toggle-trace-panel-debug.label', { ns: meta.id }],
+                label: ['toggle-trace-panel-debug.label', { ns: meta.profile.key }],
                 icon: 'ph--brackets-curly--regular',
               },
             }),
@@ -131,7 +131,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
-                label: ['assistant-chat.label', { ns: meta.id }],
+                label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
                 position: 'first',
@@ -150,7 +150,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'invocations',
-              label: ['invocations.label', { ns: meta.id }],
+              label: ['invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
             }),
@@ -164,9 +164,9 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('trace'),
-              label: ['trace.label', { ns: meta.id }],
+              label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
-              data: 'trace' as const,
+              data: 'trace',
               position: 'last',
             }),
           ]),
@@ -212,7 +212,7 @@ export default Capability.makeModule(
                   );
                 }),
               properties: {
-                label: ['create-chat.label', { ns: meta.id }],
+                label: ['create-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },

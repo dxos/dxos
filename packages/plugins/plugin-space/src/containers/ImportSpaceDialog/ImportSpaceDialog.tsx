@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
 export const ImportSpaceDialog = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleFile = useCallback(

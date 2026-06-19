@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const types = useQuerySpaceTypes(space);
 
   return (

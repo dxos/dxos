@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete board',
         'object-deleted.label': 'Board deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Board',
       },
     },

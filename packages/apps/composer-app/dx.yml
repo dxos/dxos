@@ -1,16 +1,5 @@
 version: 1
 
-package:
-  modules:
-    - name: composer
-      type: dxos:type/app
-      displayName: Composer
-      description: Composer is an open-source, extensible environment for bringing together knowledge from all systems.
-      tags:
-        - showcase
-      build:
-        command: moon run composer-app:bundle
-
 runtime:
   client:
     storage:

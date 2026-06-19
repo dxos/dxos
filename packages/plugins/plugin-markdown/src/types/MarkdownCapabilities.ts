@@ -36,16 +36,18 @@ export type EditorViewRegistry = {
   get: (attendableId: string) => EditorViewEntry | undefined;
 };
 
-export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.id}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.profile.key}.capability.settings`);
 
 /** Persisted state atom for view mode per document. */
-export const State = Capability.make<Atom.Writable<MarkdownState>>(`${meta.id}.capability.state`);
+export const State = Capability.make<Atom.Writable<MarkdownState>>(`${meta.profile.key}.capability.state`);
 
 /** Editor state store for cursor positions, scroll state, etc. */
-export const EditorState = Capability.make<EditorStateStore>(`${meta.id}.capability.editorState`);
+export const EditorState = Capability.make<EditorStateStore>(`${meta.profile.key}.capability.editor-state`);
 
 /** Registry of active EditorView instances keyed by attendable ID. */
-export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.id}.capability.editorViews`);
+export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.profile.key}.capability.editor-views`);
 
 // TODO(burdon): Move to ./types (external API)?
-export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}.capability.extensions`);
+export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
+  `${meta.profile.key}.capability.extensions`,
+);

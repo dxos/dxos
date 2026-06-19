@@ -96,7 +96,7 @@ type VariantPickerProps = {
 };
 
 const VariantPicker = ({ variants, onSelect }: VariantPickerProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({
     items: sorted,

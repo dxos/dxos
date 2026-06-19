@@ -31,7 +31,7 @@ type SpaceScopedProps = {
  * contributor (plugin-assistant) fills the empty state instead.
  */
 export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const schemas = useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
@@ -72,7 +72,7 @@ export const SpaceHomeRecent = ({ space }: SpaceScopedProps) => {
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
   const label = toLocalizedString(
     Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),

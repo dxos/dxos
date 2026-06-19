@@ -14,11 +14,11 @@ import { type Settings } from '#types';
 export type SpacetimeSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const SpacetimeSettings = ({ settings, onSettingsChange }: SpacetimeSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}></SettingsForm.Section>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}></SettingsForm.Section>
     </SettingsForm.Viewport>
   );
 };

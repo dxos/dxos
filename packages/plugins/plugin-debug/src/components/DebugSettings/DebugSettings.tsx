@@ -37,7 +37,7 @@ export type DebugSettingsProps = AppSurface.SettingsArticleProps<
 >;
 
 export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
@@ -153,7 +153,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.Item title={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
           <Input.Switch
             disabled={!onSettingsChange}

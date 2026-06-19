@@ -86,22 +86,22 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
 
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.discord-feedback-success`,
+          id: `${meta.profile.key}.discord-feedback-success`,
           icon: 'ph--discord-logo--regular',
           duration: 5000,
-          title: ['discord-feedback-toast.label', { ns: meta.id }],
-          description: ['discord-feedback-toast.description', { ns: meta.id }],
+          title: ['discord-feedback-toast.label', { ns: meta.profile.key }],
+          description: ['discord-feedback-toast.description', { ns: meta.profile.key }],
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       } catch {
         popup?.close();
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.feedback-success`,
+          id: `${meta.profile.key}.feedback-success`,
           icon: 'ph--paper-plane-tilt--regular',
           duration: 3000,
-          title: ['feedback-toast.label', { ns: meta.id }],
-          description: ['feedback-toast.description', { ns: meta.id }],
+          title: ['feedback-toast.label', { ns: meta.profile.key }],
+          description: ['feedback-toast.description', { ns: meta.profile.key }],
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       }

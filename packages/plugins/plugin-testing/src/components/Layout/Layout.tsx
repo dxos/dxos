@@ -29,7 +29,7 @@ import { StorybookCapabilities } from '#types';
 const debounce_delay = 100;
 
 const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Toast.Root
       data-testid={toast.id}
@@ -59,7 +59,7 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
 };
 
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
   const stateAtom = useCapability(StorybookCapabilities.LayoutState);
@@ -193,7 +193,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}
-                  {layout.popoverKind === 'base' && (
+                  {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
                     <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                   )}
                 </Popover.Viewport>
@@ -212,7 +212,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const ErrorFallback = ({ error }: { error?: Error }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const errorString = error?.toString() ?? '';
   return (
     <div

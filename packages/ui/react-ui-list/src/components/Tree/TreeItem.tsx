@@ -316,6 +316,8 @@ const RawTreeItem = <T extends { id: string } = any>({
         aria-current={current ? ('' as 'page') : undefined}
         classNames={mx(
           'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-current-surface',
+          // Highlight the row while a descendant marks an open popover anchor (e.g. inline rename).
+          'has-[[data-popover-anchor]]:bg-current-surface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,

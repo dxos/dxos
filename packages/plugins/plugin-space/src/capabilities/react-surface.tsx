@@ -29,17 +29,16 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
-  EntityRenamePopover,
   ObjectCardStack,
   ObjectProperties,
   RecordArticle,
   RelatedArticle,
+  RenamePopover,
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
   SpaceHomeRecent,
   SpacePresence,
-  SpaceRenamePopover,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
@@ -61,8 +60,7 @@ import {
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
-  ENTITY_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
+  RENAME_POPOVER,
 } from '../constants';
 
 type ReactSurfaceOptions = {
@@ -98,7 +96,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: () => {
           const spaces = useSpaces();
           const { invokePromise } = useOperationInvoker();
@@ -128,7 +126,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsProperties',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.general`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
           if (!space) {
@@ -141,7 +139,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'spaceSettingsMembers',
         position: 'first',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -153,7 +151,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsSchema',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.id}.schema`),
+        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.schema`),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
@@ -306,14 +304,9 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: SPACE_RENAME_POPOVER,
-        filter: AppSurface.component<Space>(AppSurface.Popover, SPACE_RENAME_POPOVER),
-        component: ({ data }) => <SpaceRenamePopover space={data.props} />,
-      }),
-      Surface.create({
-        id: ENTITY_RENAME_POPOVER,
-        filter: AppSurface.component<Entity.Unknown>(AppSurface.Popover, ENTITY_RENAME_POPOVER),
-        component: ({ data }) => <EntityRenamePopover entity={data.props} />,
+        id: RENAME_POPOVER,
+        filter: AppSurface.component<Space | Entity.Unknown>(AppSurface.Popover, RENAME_POPOVER),
+        component: ({ data }) => <RenamePopover subject={data.props} />,
       }),
       Surface.create({
         id: 'menuFooter',

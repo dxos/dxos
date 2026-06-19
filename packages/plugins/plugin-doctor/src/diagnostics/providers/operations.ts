@@ -40,8 +40,8 @@ export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
  */
 export const operationsServicesDiagnostic: DiagnosticProvider = {
   id: 'operations-services',
-  label: ['diagnostic.operations-services.label', { ns: meta.id }],
-  description: ['diagnostic.operations-services.description', { ns: meta.id }],
+  label: ['diagnostic.operations-services.label', { ns: meta.profile.key }],
+  description: ['diagnostic.operations-services.description', { ns: meta.profile.key }],
   run: async ({ client, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const spaces = getReadySpaces(client);

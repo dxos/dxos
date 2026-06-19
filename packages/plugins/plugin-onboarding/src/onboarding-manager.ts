@@ -220,13 +220,13 @@ export class OnboardingManager {
 
     await this._invokePromise(LayoutOperation.AddToast, {
       id: 'passkey-setup-toast',
-      title: ['passkey-setup-toast.title', { ns: meta.id }],
-      description: ['passkey-setup-toast.description', { ns: meta.id }],
+      title: ['passkey-setup-toast.title', { ns: meta.profile.key }],
+      description: ['passkey-setup-toast.description', { ns: meta.profile.key }],
       duration: Infinity,
       icon: 'ph--key--regular',
       closeLabel: ['close.label', { ns: osTranslations }],
-      actionLabel: ['passkey-setup-toast-action.label', { ns: meta.id }],
-      actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.id }],
+      actionLabel: ['passkey-setup-toast-action.label', { ns: meta.profile.key }],
+      actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.profile.key }],
       onAction: async () => {
         await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {

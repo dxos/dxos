@@ -22,7 +22,7 @@ export type ProfileGridProps = {
 };
 
 export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <Form.Section label={t('profiles.title')}>

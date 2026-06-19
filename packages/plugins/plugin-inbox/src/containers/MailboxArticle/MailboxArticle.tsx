@@ -67,13 +67,13 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['mailbox-toolbar.title', { ns: meta.id }] })
+        .root({ label: ['mailbox-toolbar.title', { ns: meta.profile.key }] })
         .action(
           'sortAscending',
           {
             type: 'sortDescending',
             icon: sortDescending.value ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-            label: ['mailbox-toolbar-sort.menu', { ns: meta.id }],
+            label: ['mailbox-toolbar-sort.menu', { ns: meta.profile.key }],
           },
           () => sortDescending.set((value) => !value),
         )
@@ -82,7 +82,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           {
             type: 'loadImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
-            label: ['message-toolbar-load-images.menu', { ns: meta.id }],
+            label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
             checked: loadRemoteImages,
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
@@ -92,7 +92,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           {
             type: 'composeEmail',
             icon: 'ph--pen--regular',
-            label: ['compose-email.label', { ns: meta.id }],
+            label: ['compose-email.label', { ns: meta.profile.key }],
           },
           handleCompose,
         )
@@ -327,7 +327,7 @@ const MailboxFilter = ({
   editorRef,
   saveButtonRef,
 }: MailboxFilterProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <>
       <QueryEditor

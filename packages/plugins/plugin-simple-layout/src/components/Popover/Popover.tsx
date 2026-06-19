@@ -55,7 +55,7 @@ export const PopoverRoot = ({ children }: PropsWithChildren) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, updateState } = useSimpleLayoutState();
   const { setOpen } = useLayoutPopoverContext('PopoverContent');
   const handleClose = useCallback(() => {
@@ -102,9 +102,11 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
-            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
-          )}
+          {(state.popoverKind === 'base' || state.popoverKind === 'rename') &&
+            state.popoverContent &&
+            'component' in state.popoverContent && (
+              <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
+            )}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='dx-card-popover'>
               <Card.Header>

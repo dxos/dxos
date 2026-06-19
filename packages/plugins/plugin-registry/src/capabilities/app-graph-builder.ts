@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type Registry, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { DXN } from '@dxos/keys';
@@ -21,19 +21,19 @@ import { LOAD_PLUGIN_DIALOG } from '../containers';
  * modules and only exists so the article surface can render details for
  * registry plugins that haven't been installed yet.
  */
-const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
+const toDisplayPlugin = (entry: Plugin.Meta): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: Plugin.makeMeta({
-      key: DXN.make(entry.id),
-      name: entry.name,
-      description: entry.description,
-      homePage: entry.homePage,
-      source: entry.source,
-      screenshots: entry.screenshots,
-      tags: entry.tags,
-      icon: entry.icon,
-      iconHue: entry.iconHue,
+      key: DXN.make(entry.profile.key),
+      name: entry.profile.name,
+      description: entry.profile.description,
+      homePage: entry.profile.homePage,
+      source: entry.profile.source,
+      screenshots: entry.profile.screenshots,
+      tags: entry.profile.tags,
+      icon: entry.profile.icon,
+      author: entry.profile.author,
     }),
     modules: [],
   }) as Plugin.Plugin;
@@ -52,7 +52,7 @@ export default Capability.makeModule(
               id: 'openRegistry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
               properties: {
-                label: ['open-plugin-registry.label', { ns: meta.id }],
+                label: ['open-plugin-registry.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'menu',
               },
@@ -77,9 +77,9 @@ export default Capability.makeModule(
           return Effect.succeed([
             Node.make({
               id: REGISTRY_ID,
-              type: meta.id,
+              type: meta.profile.key,
               properties: {
-                label: ['plugin-registry.label', { ns: meta.id }],
+                label: ['plugin-registry.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
                 position: 'first',
@@ -91,7 +91,7 @@ export default Capability.makeModule(
                   type: 'category',
                   data: registryCategoryId('bundled'),
                   properties: {
-                    label: ['bundled-plugins.label', { ns: meta.id }],
+                    label: ['bundled-plugins.label', { ns: meta.profile.key }],
                     icon: 'ph--squares-four--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.bundled',
@@ -103,7 +103,7 @@ export default Capability.makeModule(
                   type: 'category',
                   data: registryCategoryId('installed'),
                   properties: {
-                    label: ['installed-plugins.label', { ns: meta.id }],
+                    label: ['installed-plugins.label', { ns: meta.profile.key }],
                     icon: 'ph--check--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.installed',
@@ -115,7 +115,7 @@ export default Capability.makeModule(
                   type: 'category',
                   data: registryCategoryId('recommended'),
                   properties: {
-                    label: ['recommended-plugins.label', { ns: meta.id }],
+                    label: ['recommended-plugins.label', { ns: meta.profile.key }],
                     icon: 'ph--star--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.recommended',
@@ -127,25 +127,29 @@ export default Capability.makeModule(
                   type: 'category',
                   data: registryCategoryId('labs'),
                   properties: {
-                    label: ['labs-plugins.label', { ns: meta.id }],
+                    label: ['labs-plugins.label', { ns: meta.profile.key }],
                     icon: 'ph--flask--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.labs',
                     count: categoryCount(registryCategoryId('labs')),
                   },
                 }),
-                Node.make({
-                  id: registryCategoryId('registry'),
-                  type: 'category',
-                  data: registryCategoryId('registry'),
-                  properties: {
-                    label: ['registry-plugins.label', { ns: meta.id }],
-                    icon: 'ph--users-three--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.registry',
-                    count: registryCount,
-                  },
-                }),
+                ...(registryCount > 0
+                  ? [
+                      Node.make({
+                        id: registryCategoryId('registry'),
+                        type: 'category',
+                        data: registryCategoryId('registry'),
+                        properties: {
+                          label: ['registry-plugins.label', { ns: meta.profile.key }],
+                          icon: 'ph--users-three--regular',
+                          key: REGISTRY_KEY,
+                          testId: 'pluginRegistry.registry',
+                          count: registryCount,
+                        },
+                      }),
+                    ]
+                  : []),
               ],
             }),
           ]);
@@ -165,7 +169,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['load-by-url.label', { ns: meta.id }],
+                label: ['load-by-url.label', { ns: meta.profile.key }],
                 icon: 'ph--cloud-arrow-down--regular',
                 disposition: 'list-item-primary',
               },
@@ -177,16 +181,16 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
-          const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.id));
+          const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.profile.key));
 
           const installedNodes = manager.getPlugins().map((plugin) =>
             Node.make({
-              id: plugin.meta.id,
+              id: plugin.meta.profile.key,
               type: 'org.dxos.plugin',
               data: plugin,
               properties: {
-                label: plugin.meta.name ?? plugin.meta.id,
-                icon: plugin.meta.icon ?? 'ph--circle--regular',
+                label: plugin.meta.profile.name ?? plugin.meta.profile.key,
+                icon: plugin.meta.profile.icon?.key ?? 'ph--circle--regular',
                 disposition: 'hidden',
               },
             }),
@@ -194,16 +198,16 @@ export default Capability.makeModule(
 
           const registryEntries = get(manager.pluginRegistry.plugins).entries;
           const registryNodes = registryEntries
-            .filter((entry) => !installedIds.has(DXN.make(entry.id)))
+            .filter((entry) => !installedIds.has(DXN.make(entry.profile.key)))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({
-                id: plugin.meta.id,
+                id: plugin.meta.profile.key,
                 type: 'org.dxos.plugin',
                 data: plugin,
                 properties: {
-                  label: plugin.meta.name ?? plugin.meta.id,
-                  icon: plugin.meta.icon ?? 'ph--circle--regular',
+                  label: plugin.meta.profile.name ?? plugin.meta.profile.key,
+                  icon: plugin.meta.profile.icon?.key ?? 'ph--circle--regular',
                   disposition: 'hidden',
                 },
               });

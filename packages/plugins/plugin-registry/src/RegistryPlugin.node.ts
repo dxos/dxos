@@ -7,11 +7,11 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
-import { plugin } from './commands';
+import { plugin, registry } from './commands';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommandModule({
-    commands: [plugin],
+    commands: [plugin, registry],
   }),
   Plugin.make,
 );

@@ -1,16 +1,5 @@
 version: 1
 
-package:
-  modules:
-    - name: todomvc
-      type: dxos:type/app
-      displayName: TodoMVC
-      description: Collaborative TodoMVC with DXOS.
-      tags:
-        - demo
-      build:
-        command: moon run todomvc:bundle
-
 runtime:
   client:
     storage:

@@ -34,10 +34,10 @@ export type State = {
   zoom?: number;
 };
 
-export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
+export const State = Capability.make<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
 
 /** Writable settings atom (also surfaced as a settings form via `AppCapabilities.Settings`). */
-export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.profile.key}.capability.settings`);
 
 //
 // Marker providers
@@ -70,4 +70,4 @@ export type MarkerProvider = {
   useMarkers: (subject: any, options: { attendableId?: string }) => MarkerSet;
 };
 
-export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.id}.capability.markerProvider`);
+export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.profile.key}.capability.marker-provider`);

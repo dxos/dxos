@@ -34,7 +34,7 @@ export type ChatOptionsProps = ChatPresetProps & {
  * Manages the runtime context for the chat.
  */
 export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className='flex'>
@@ -104,7 +104,7 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
 };
 
 const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const blueprints = useBlueprints({ registry, db });
   const activeBlueprints = useActiveBlueprints({ context });
@@ -140,7 +140,7 @@ const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'regi
 };
 
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [view, setView] = useObject(chat, 'view');
   const value = (view as Assistant.ChatView | undefined) ?? 'normal';
 
@@ -163,7 +163,7 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
       <Listbox.Content aria-label={t('options.chat-model.title')}>
@@ -183,7 +183,7 @@ type McpServersPanelProps = {
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
@@ -234,7 +234,7 @@ type McpServerRowProps = {
  * switch in sync with mutations made through the returned setter.
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
 
   return (
@@ -262,7 +262,7 @@ type McpServerFormProps = {
 };
 
 const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [protocol, setProtocol] = useState<'sse' | 'http'>('sse');
@@ -333,7 +333,7 @@ const ANY = '__any__' as const;
 
 /** @private */
 export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);

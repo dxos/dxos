@@ -57,7 +57,7 @@ const NotebookSection = ({
   onCellDelete,
   ...props
 }: NotebookSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const resizable = cell.type === 'query';
 
   return (

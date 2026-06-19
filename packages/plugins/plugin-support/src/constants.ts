@@ -4,7 +4,7 @@
 
 import { meta } from '#meta';
 
-export const SHORTCUTS_DIALOG = `${meta.id}.ShortcutsDialog`;
+export const SHORTCUTS_DIALOG = `${meta.profile.key}.ShortcutsDialog`;
 
 export const DXOS_GUILD_ID = '837138313172353095';
 
