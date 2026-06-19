@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -110,7 +110,7 @@ export default Capability.makeModule(
           return Effect.succeed(
             integrations
               .map((integration) =>
-                createObjectNode({
+                AppNode.makeObject({
                   get,
                   db: space.db,
                   object: integration,

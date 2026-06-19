@@ -6,18 +6,17 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { Lightbox } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
 
-import { GALLERY_SHOW_SEGMENT } from '../../paths';
+import { getGalleryShowPath } from '../../paths';
 
 export type GalleryShowProps = {
   gallery: Gallery.Gallery;
@@ -35,8 +34,8 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
     if (!invokePromise) {
       return;
     }
-    const objectPath = getObjectPathFromObject(subject);
-    const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
+    const objectPath = Paths.getObjectPathFromObject(subject);
+    const showId = getGalleryShowPath(objectPath);
     const db = Obj.getDatabase(subject);
     if (deck?.fullscreen) {
       // Match the ID used to enter fullscreen (see GalleryArticle.handleShow / app-graph-builder).
@@ -44,7 +43,7 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
     }
     await invokePromise(LayoutOperation.Open, {
       subject: [objectPath],
-      workspace: db ? getSpacePath(db.spaceId) : undefined,
+      workspace: db ? Paths.getSpacePath(db.spaceId) : undefined,
     });
   }, [subject, deck, invokePromise]);
 

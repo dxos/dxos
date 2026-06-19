@@ -226,6 +226,7 @@ const enableQueryIndexes = (services: { QueryService?: any }) =>
           { kind: IndexKind.Kind.SCHEMA_MATCH },
           { kind: IndexKind.Kind.GRAPH },
           { kind: IndexKind.Kind.VECTOR },
+          { kind: IndexKind.Kind.FULL_TEXT },
         ],
       }),
     );

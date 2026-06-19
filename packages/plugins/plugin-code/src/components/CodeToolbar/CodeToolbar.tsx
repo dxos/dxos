@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuRootProps, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 
@@ -40,7 +41,7 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
   const menuActions = useMenuActions(menuCreator);
 
   return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+    <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Menu.Toolbar />
       </Menu.Root>

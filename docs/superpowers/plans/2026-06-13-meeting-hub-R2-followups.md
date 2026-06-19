@@ -56,7 +56,7 @@ shippable; none block the current PR. Design reference: `packages/plugins/plugin
 ### 5. `summarizeMeeting` runtime hardening
 
 - **What:** `MeetingOperation.Summarize` is now wired but assumes an `AiService` is configured at
-  runtime (the transcription handler self-provides `ai.claude.model.claude-sonnet-4-0`). Add graceful
+  runtime (the transcription handler self-provides `ai.claude.model.claude-sonnet-4-6`). Add graceful
   failure / user feedback when no AI client is available, and surface progress in `MeetingArticle`.
 - **Where:** `plugin-meeting/src/operations/summarize.ts`, `MeetingArticle.tsx`.
 

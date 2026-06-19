@@ -1,0 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+export * as AppActivationEvents from './AppActivationEvents';
+export * as AppCapabilities from './AppCapabilities';
+export * as AppPlugin from './AppPlugin';

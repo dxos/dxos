@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './surface';
 export * from './types';
 
 export * as Map from './Map';

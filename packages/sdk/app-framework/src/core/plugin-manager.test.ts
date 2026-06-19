@@ -377,7 +377,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects when activate throws before returning Effect', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('org.dxos.test.defect-immediate');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defectImmediate');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -542,7 +542,7 @@ describe('PluginManager', () => {
   it.effect('should not fire an unknown event', () =>
     Effect.gen(function* () {
       const manager = PluginManager.make({ pluginLoader });
-      const UnknownEvent = ActivationEvent.make('unknown');
+      const UnknownEvent = ActivationEvent.make('org.dxos.test.unknown');
       const result = yield* manager.activate(UnknownEvent);
       assert.isFalse(result);
     }),
@@ -939,8 +939,8 @@ describe('PluginManager', () => {
   it.effect('should prevent concurrent loads of the same module via semaphore', () =>
     Effect.gen(function* () {
       // Two different events that both can trigger the same module.
-      const EventA = ActivationEvent.make('org.dxos.test.event-a');
-      const EventB = ActivationEvent.make('org.dxos.test.event-b');
+      const EventA = ActivationEvent.make('org.dxos.test.eventA');
+      const EventB = ActivationEvent.make('org.dxos.test.eventB');
 
       let activateCallCount = 0;
       const ConcurrentPlugin = Plugin.define(
@@ -1492,7 +1492,7 @@ describe('PluginManager', () => {
 
     it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
       Effect.gen(function* () {
-        const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
+        const SlowEvent = ActivationEvent.make('org.dxos.test.activationTimeout');
         const SlowPlugin = Plugin.define(
           Plugin.makeMeta({
             key: DXN.make('org.dxos.test.slowActivation'),
@@ -1585,7 +1585,7 @@ describe('PluginManager', () => {
 
     it.effect('records non-timeout activation errors as reason: error', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
+        const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
         const FailingPlugin = Plugin.define(
           Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
         ).pipe(
@@ -1617,7 +1617,7 @@ describe('PluginManager', () => {
 
     it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
+        const FailingEvent = ActivationEvent.make('org.dxos.test.coreFail');
         const CorePlugin = Plugin.define(
           Plugin.makeMeta({ key: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] }),
         ).pipe(

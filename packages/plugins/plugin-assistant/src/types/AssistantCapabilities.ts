@@ -31,5 +31,5 @@ export const State = Capability.make<Atom.Writable<AssistantState>>(`${meta.id}.
 
 /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
 export const CompanionChatCache = Capability.make<Atom.Writable<Record<string, Obj.Unknown | undefined>>>(
-  `${meta.id}.capability.companion-chat-cache`,
+  `${meta.id}.capability.companionChatCache`,
 );

@@ -5,13 +5,12 @@
 import React, { useCallback } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Lightbox } from '#components';
@@ -19,7 +18,7 @@ import { meta } from '#meta';
 import { Gallery } from '#types';
 
 import { useFileUpload } from '../../hooks';
-import { GALLERY_SHOW_SEGMENT } from '../../paths';
+import { getGalleryShowPath } from '../../paths';
 
 export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
 
@@ -60,10 +59,10 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     if (!db || !invokePromise) {
       return;
     }
-    const objectPath = getObjectPathFromObject(subject);
-    const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
+    const objectPath = Paths.getObjectPathFromObject(subject);
+    const showId = getGalleryShowPath(objectPath);
     await invokePromise(DeckOperation.Adjust, { type: 'solo--fullscreen' as const, id: showId });
-    await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: getSpacePath(db.spaceId) });
+    await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: Paths.getSpacePath(db.spaceId) });
   }, [subject, invokePromise]);
 
   const menuActions = useMenuBuilder(

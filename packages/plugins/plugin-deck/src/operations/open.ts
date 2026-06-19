@@ -6,13 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  createEdgeExistenceChecker,
-  expandPath,
-  validateNavigationTarget,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, EID, Obj } from '@dxos/echo';
@@ -56,13 +50,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           }
         : undefined;
       const checkRemoteExistence = client
-        ? createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body))
+        ? NotFound.createEdgeExistenceChecker((spaceId, body) =>
+            client.edge.http.execQuery(new Context(), spaceId, body),
+          )
         : undefined;
 
       // Immediate: skip 404 / resolver checks but still expand the path (same as validate’s first step).
       if (input.navigation === 'immediate') {
         for (const subjectId of input.subject) {
-          expandPath(graph, subjectId);
+          NotFound.expandPath(graph, subjectId);
         }
       }
 
@@ -70,7 +66,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         input.subject.map((subjectId) =>
           input.navigation === 'immediate'
             ? Effect.succeed(subjectId)
-            : validateNavigationTarget({ graph, subjectId, pathResolvers, checkLocalExistence, checkRemoteExistence }),
+            : NotFound.validateNavigationTarget({
+                graph,
+                subjectId,
+                pathResolvers,
+                checkLocalExistence,
+                checkRemoteExistence,
+              }),
         ),
       );
       input = { ...input, subject: validatedSubjects };

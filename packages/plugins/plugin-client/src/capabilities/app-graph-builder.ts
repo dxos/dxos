@@ -104,6 +104,15 @@ export default Capability.makeModule(
                   icon: 'ph--ticket--regular',
                 },
               }),
+              Node.make({
+                id: Account.Usage,
+                data: Account.Usage,
+                type: meta.id,
+                properties: {
+                  label: ['usage-panel.label', { ns: meta.id }],
+                  icon: 'ph--chart-bar--regular',
+                },
+              }),
             ],
           }),
         ];

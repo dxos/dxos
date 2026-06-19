@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
@@ -17,6 +17,8 @@ import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { getChannelsPath } from '../paths';
+
 const channelTypename = Type.getTypename(Channel.Channel);
 
 export default Capability.makeModule(
@@ -24,7 +26,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Channel.Channel),
+      TypeSection.createTypeSectionExtension(Channel.Channel),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
@@ -66,6 +68,7 @@ export default Capability.makeModule(
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: space.db,
                   typename: channelTypename,
+                  targetNodeId: getChannelsPath(space.db.spaceId),
                 }),
               properties: {
                 label: ['add-object.label', { ns: channelTypename }],

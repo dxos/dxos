@@ -47,18 +47,18 @@ export namespace SpaceCapabilities {
 
   /** Transient/ephemeral state (not persisted). */
   export const EphemeralState = Capability.make<Atom.Writable<SpaceEphemeralState>>(
-    `${meta.id}.capability.ephemeral-state`,
+    `${meta.id}.capability.ephemeralState`,
   );
 
   export type SettingsSection = { id: string; label: Label; position?: Position };
-  export const SettingsSection = Capability.make<SettingsSection>(`${meta.id}.capability.settings-section`);
+  export const SettingsSection = Capability.make<SettingsSection>(`${meta.id}.capability.settingsSection`);
 
   export type OnCreateSpace = (params: {
     space: Space;
     isDefault: boolean;
     rootCollection: Collection.Collection;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}.capability.on-space-created`);
+  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}.capability.onSpaceCreated`);
 
   export type OnTypeAdded = (params: {
     db: Database.Database;
@@ -66,7 +66,7 @@ export namespace SpaceCapabilities {
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.id}.capability.on-type-added`);
+  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.id}.capability.onTypeAdded`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
@@ -88,7 +88,7 @@ export namespace SpaceCapabilities {
      */
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
-  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.id}.capability.create-object`);
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.id}.capability.createObject`);
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */
   export type CreateObjectCustomPanelProps = {

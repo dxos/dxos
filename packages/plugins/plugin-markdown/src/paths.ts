@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createTypeSectionPaths } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 
 import { Markdown } from '#types';
 
-const { getSectionPath: getDocumentsPath, getObjectPath: getDocumentPath } = createTypeSectionPaths(Markdown.Document);
+const { getSectionPath: getDocumentsPath, getObjectPath: getDocumentPath } = Paths.createTypeSectionPaths(
+  Markdown.Document,
+);
 
 export { getDocumentsPath, getDocumentPath };

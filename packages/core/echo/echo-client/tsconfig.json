@@ -71,6 +71,9 @@
     },
     {
       "path": "../echo-protocol"
+    },
+    {
+      "path": "../index-core"
     }
   ]
 }

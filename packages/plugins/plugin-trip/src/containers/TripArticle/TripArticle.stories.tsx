@@ -14,6 +14,7 @@ import { Filter } from '@dxos/echo';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { MapInline } from '@dxos/plugin-map';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -218,7 +219,7 @@ const MapStory = () => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <Surface.Surface role='map' data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+      <Surface.Surface type={MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
     </AttendableContainer>
   );
 };

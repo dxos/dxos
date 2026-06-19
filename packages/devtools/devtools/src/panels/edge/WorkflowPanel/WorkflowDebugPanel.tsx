@@ -240,7 +240,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
         },
       },
       database: Database.makeService(space.db),
-      feeds: makeFeedService(space.queues),
+      feeds: makeFeedService(space.db),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();

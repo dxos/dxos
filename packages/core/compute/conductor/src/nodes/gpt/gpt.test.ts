@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Trace } from '@dxos/compute';
-import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { createTestServices } from '@dxos/functions-runtime/testing';
@@ -20,7 +21,7 @@ const ENABLE_LOGGING = true;
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   describe('common', () => {
-    let builder: EchoTestBuilder, services: ServiceContainer, db: Database.Database;
+    let builder: EchoTestBuilder, services: ServiceContainer, db: EchoDatabase;
     beforeEach(async (ctx) => {
       builder = await new EchoTestBuilder().open();
       ({ db } = await builder.createDatabase());

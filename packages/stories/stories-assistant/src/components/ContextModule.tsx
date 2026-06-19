@@ -119,7 +119,7 @@ const Tile = ({ data }: { data: ContextItem }) => {
   // Render via a card Surface (PreviewPlugin provides the generic `card--content` fallback).
   return (
     <Card.Root>
-      <Surface.Surface type={AppSurface.Card} limit={1} data={{ subject }} />
+      <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject }} />
     </Card.Root>
   );
 };

@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -136,7 +136,7 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemState = get(stateAtom);
           const client = capabilities.get(ClientCapabilities.Client);
-          const personalSpace = getPersonalSpace(client);
+          const personalSpace = AppSpace.getPersonalSpace(client);
 
           if (!state.workspaces.length || !personalSpace) {
             return Effect.succeed([]);

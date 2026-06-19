@@ -62,7 +62,7 @@ component MasonryContainer
     objects: EchoObject[]        # live query results
     results: EchoObject[]        # search-filtered subset of objects
   slots:
-    card?: ReactNode             # injected via AppSurface.Card per object
+    card?: ReactNode             # injected via AppSurface.CardContent per object
   actions:
     handleSearch(query: string)  # filters results client-side
   layout: |
@@ -89,14 +89,14 @@ component Item
     icon: string               # resolved from schema IconAnnotation
     objectMenuItems: MenuItem[] # contributed by other plugins
   slots:
-    cardBody?: ReactNode        # AppSurface.Card surface for the object
+    cardBody?: ReactNode        # AppSurface.CardContent surface for the object
   actions:
     openMenu()
   layout: |
     ┌────────────────────────┐
     │ [icon] Label  [⋮ menu] │  ← Card.Toolbar
     ├────────────────────────┤
-    │ [cardBody slot]        │  ← Surface.Surface(AppSurface.Card)
+    │ [cardBody slot]        │  ← Surface.Surface(AppSurface.CardContent)
     └────────────────────────┘
 ```
 
@@ -174,7 +174,7 @@ feat F-4: Card Surface Delegation
 
   req F-4.1:
     when: an Item is rendered
-    then: AppSurface.Card surface is opened for the object, allowing other
+    then: AppSurface.CardContent surface is opened for the object, allowing other
           plugins to supply rich card body content
 
   req F-4.2:
@@ -253,7 +253,7 @@ test T-6: Reactive update on peer write
 
 ```mdl
 test T-7: Card body delegated to Surface
-  given: a plugin that provides AppSurface.Card for Note objects
+  given: a plugin that provides AppSurface.CardContent for Note objects
   when: a Note appears in the masonry grid
   then: the Note card renders the plugin-provided body below the Card.Toolbar
 ```

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
@@ -15,7 +15,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 import { Gallery } from '#types';
 
-import { GALLERY_SHOW_SEGMENT } from '../paths';
+import { GALLERY_SHOW_SEGMENT, getGalleryShowPath } from '../paths';
 
 const SHOW_ACTION_ID = `${meta.id}.action.show`;
 
@@ -38,14 +38,14 @@ export default Capability.makeModule(
         if (!db) {
           return Effect.succeed([]);
         }
-        const objectPath = getObjectPathFromObject(object);
+        const objectPath = Paths.getObjectPathFromObject(object);
         return Effect.succeed([
           {
             id: SHOW_ACTION_ID,
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const showId = `${objectPath}/${linkedSegment(GALLERY_SHOW_SEGMENT)}`;
+              const showId = getGalleryShowPath(objectPath);
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,
@@ -54,7 +54,7 @@ export default Capability.makeModule(
               }
               yield* Operation.invoke(LayoutOperation.Open, {
                 subject: [showId],
-                workspace: getSpacePath(db.spaceId),
+                workspace: Paths.getSpacePath(db.spaceId),
               });
             }),
             properties: {

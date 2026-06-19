@@ -23,6 +23,8 @@ export const RenamePopover: ComponentType<any> = lazy(() => import('./RenamePopo
 export const SchemaContainer: ComponentType<any> = lazy(() => import('./SchemaContainer'));
 export const SmallPresenceLive: ComponentType<any> = lazy(() => import('./SmallPresenceLive'));
 export const SpacePresence: ComponentType<any> = lazy(() => import('./SpacePresence'));
+export const SpaceHomeArticle: ComponentType<any> = lazy(() => import('./SpaceHomeArticle'));
+export const SpaceHomeRecent: ComponentType<any> = lazy(() => import('./SpaceHomeRecent'));
 export const SpaceSettingsContainer: ComponentType<any> = lazy(() => import('./SpaceSettingsContainer'));
 export const SyncStatus: ComponentType<any> = lazy(() => import('./SyncStatus'));
 export const ViewEditor: ComponentType<any> = lazy(() => import('./ViewEditor'));

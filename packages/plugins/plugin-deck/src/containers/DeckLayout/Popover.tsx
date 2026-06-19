@@ -164,7 +164,7 @@ export const PopoverContent = () => {
                 </Card.Header>
 
                 {content && 'subject' in content ? (
-                  <Surface.Surface type={AppSurface.Card} data={content} limit={1} />
+                  <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
                 ) : (
                   <Card.Body classNames='min-bs-8'>
                     <Card.Row>

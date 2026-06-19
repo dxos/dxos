@@ -7,13 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNode,
-  AppNodeMatcher,
-  createTypeSectionExtension,
-  getSpaceIdFromPath,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -37,7 +31,7 @@ import {
   MAILBOX_DRAFTS_NODE_DATA,
   MAILBOX_DRAFTS_TYPE,
 } from '../constants';
-import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
+import { getAllMailId, getCalendarsPath, getDraftsId, getMailboxesSectionId, getMailboxesPath } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -82,7 +76,7 @@ const createFeedObjectNodeExtension = <Parent extends Obj.Unknown, Child extends
 
         const segments = qualifiedId.split('/');
         const childId = getLinkedVariant(qualifiedId);
-        const spaceId = getSpaceIdFromPath(qualifiedId);
+        const spaceId = Paths.getSpaceIdFromPath(qualifiedId);
         const segmentName = config.parentSegmentName ?? Type.getTypename(config.parentType);
         const segmentIdx = segments.indexOf(segmentName);
         const parentId = segmentIdx >= 0 ? segments[segmentIdx + 1] : undefined;
@@ -347,7 +341,32 @@ export default Capability.makeModule(
         nodeIcon: 'ph--envelope-open--regular',
       }),
 
-      createTypeSectionExtension(Calendar.Calendar),
+      GraphBuilder.createExtension({
+        id: 'mailboxesSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-mailbox',
+              data: () =>
+                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: space.db,
+                  typename: Type.getTypename(Mailbox.Mailbox),
+                  targetNodeId: getMailboxesPath(space.db.spaceId),
+                }),
+              properties: {
+                label: ['add-object.label', { ns: Type.getTypename(Mailbox.Mailbox) }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
+            }),
+          ]),
+      }),
+
+      TypeSection.createTypeSectionExtension(Calendar.Calendar),
 
       GraphBuilder.createExtension({
         id: 'calendarsSectionActions',
@@ -363,6 +382,7 @@ export default Capability.makeModule(
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: space.db,
                   typename: calendarTypename,
+                  targetNodeId: getCalendarsPath(space.db.spaceId),
                 }),
               properties: {
                 label: ['add-object.label', { ns: calendarTypename }],

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 
 import { REGISTRY_ID } from '#meta';
@@ -13,7 +13,7 @@ const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry
   SettingsOperation.OpenPluginRegistry.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* () {
-        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(REGISTRY_ID) });
+        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(REGISTRY_ID) });
       }),
     ),
   );
