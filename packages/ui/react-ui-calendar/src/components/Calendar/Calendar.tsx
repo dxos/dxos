@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { type Day, addDays, format, startOfDay, startOfWeek } from 'date-fns';
+import { addDays, format, startOfDay } from 'date-fns';
 import React, {
-  type Dispatch,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type PropsWithChildren,
-  type SetStateAction,
   forwardRef,
   useCallback,
   useEffect,
@@ -28,10 +25,20 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { getDate, getRowIndex, isSameDay } from './util';
+import {
+  type CalendarContextValue,
+  type CalendarController,
+  CalendarContextProvider,
+  type CalendarScrollEvent,
+  type Range,
+  useCalendarContext,
+} from './context';
+import { getDate, getRowIndex, gridEpoch, isSameDay } from './util';
+import { CalendarWeek, type CalendarEvent, type CalendarWeekProps } from './Week';
+import { Weekdays } from './Weekdays';
 
 const maxRows = 50 * 100;
-const start = new Date('1970-01-01');
+const start = gridEpoch;
 const size = 40;
 const defaultWidth = 7 * size;
 
@@ -49,15 +56,6 @@ const DATE_CLASS_NAMES = {
 //
 // Range
 //
-
-/**
- * Inclusive date range. `from <= to`. Both endpoints are anchored at the
- * start of their day; callers should not rely on time-of-day precision.
- */
-export type Range = {
-  from: Date;
-  to: Date;
-};
 
 /** Normalize an ordered pair of dates into a Range (start-of-day, from <= to). */
 const makeRange = (a: Date, b: Date): Range => {
@@ -89,44 +87,6 @@ const cellDate = (el: Element | null): Date | undefined => {
 };
 
 //
-// Context
-//
-
-type CalendarEvent = {
-  /** `scroll` brings a date into view; `select` also sets it as the grid's selected day. */
-  type: 'scroll' | 'select';
-  date: Date;
-};
-
-type CalendarContextValue = {
-  weekStartsOn: Day;
-  event: Event<CalendarEvent>;
-  index: number | undefined;
-  setIndex: Dispatch<SetStateAction<number | undefined>>;
-  selected: Date | undefined;
-  setSelected: Dispatch<SetStateAction<Date | undefined>>;
-  /** Committed date range, set by the most recent drag or shift+arrow selection. */
-  range: Range | undefined;
-  setRange: Dispatch<SetStateAction<Range | undefined>>;
-  /** Live drag preview; non-undefined only while the user is dragging. */
-  pendingRange: Range | undefined;
-  setPendingRange: Dispatch<SetStateAction<Range | undefined>>;
-};
-
-const [CalendarContextProvider, useCalendarContext] = createContext<CalendarContextValue>('Calendar');
-
-//
-// Controller
-//
-
-type CalendarController = {
-  /** Bring a date into view without changing the selection. */
-  scrollTo: (date: Date) => void;
-  /** Set the grid's selected day (and scroll it into view) — e.g. when the active event changes. */
-  select: (date: Date) => void;
-};
-
-//
 // Root
 //
 
@@ -134,7 +94,7 @@ type CalendarRootProps = PropsWithChildren<Partial<Pick<CalendarContextValue, 'w
 
 const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
   ({ children, weekStartsOn = 1 }, forwardedRef) => {
-    const event = useMemo(() => new Event<CalendarEvent>(), []);
+    const event = useMemo(() => new Event<CalendarScrollEvent>(), []);
     const [selected, setSelected] = useState<Date | undefined>();
     const [index, setIndex] = useState<number | undefined>();
     const [range, setRange] = useState<Range | undefined>();
@@ -197,7 +157,6 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
         classNames: ['shrink-0 grid! grid-cols-3 items-center bg-toolbar-surface', classNames],
       })}
       ref={forwardedRef}
-      style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
         <IconButton
@@ -314,14 +273,6 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
       });
     }, [event, start, weekStartsOn, scrollMargin, setSelected]);
-
-    const days = useMemo(() => {
-      const weekStart = startOfWeek(new Date(), { weekStartsOn });
-      return Array.from({ length: 7 }, (_, i) => {
-        const day = addDays(weekStart, i);
-        return format(day, 'EEE'); // Short day name (Mon, Tue, etc.)
-      });
-    }, []);
 
     //
     // Selection refs.
@@ -695,12 +646,8 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         onKeyDown={handleKeyDown}
       >
         {/* Day of week labels */}
-        <div className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
-          {days.map((date, i) => (
-            <div key={i} className='flex justify-center p-2 text-sm font-thin'>
-              {date}
-            </div>
-          ))}
+        <div style={{ width: defaultWidth }}>
+          <Weekdays weekStartsOn={weekStartsOn} columnWidth={size} />
         </div>
 
         {/* Grid */}
@@ -734,6 +681,15 @@ export const Calendar = {
   Root: CalendarRoot,
   Toolbar: CalendarToolbar,
   Grid: CalendarGrid,
+  Week: CalendarWeek,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarToolbarProps, CalendarGridProps };
+export type {
+  CalendarController,
+  CalendarEvent,
+  CalendarGridProps,
+  CalendarRootProps,
+  CalendarToolbarProps,
+  CalendarWeekProps,
+  Range,
+};
