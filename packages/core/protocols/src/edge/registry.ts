@@ -61,6 +61,10 @@ export const PluginReleaseSchema = Schema.Struct({
    * SDK compatibility from the `@dxos/*` subset to decide whether to offer this release.
    */
   dependencies: Schema.optional(DependencyMapSchema),
+  /** Key of the parent `plugin.profile` record authored by the same DID (the plugin's NSID rkey). */
+  pluginKey: Schema.optional(Schema.String),
+  /** SHA-256 content hash of the published `manifest.json`, prefixed with `sha256-`. */
+  manifestHash: Schema.optional(Schema.String),
   /** ISO-8601 timestamp from the ATProto record. */
   createdAt: Schema.optional(Schema.String),
 });
