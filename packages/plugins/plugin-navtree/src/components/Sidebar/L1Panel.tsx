@@ -85,14 +85,18 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
 
   const renderSeparatorBefore = useCallback(
     (currentId: string, prevId: string | undefined) => {
-      if (!prevId) return <Separator subdued classNames='col-[tree-row] mx-3 my-0.5' />;
+      if (!prevId) {
+        return <Separator subdued classNames='col-[tree-row] mx-3 my-0.5' />;
+      }
       const currentPos = Option.getOrUndefined(Graph.getNode(graph, currentId))?.properties.position;
       const prevPos = Option.getOrUndefined(Graph.getNode(graph, prevId))?.properties.position;
       // Group positions into hundred-level tiers (300, 301, 302 → same tier).
       // Non-finite sentinels (Position.first/last) are their own tiers.
       const tier = (pos: number | undefined) =>
         pos === undefined || pos === 0 ? 0 : !isFinite(pos) ? pos : Math.floor(pos / 100);
-      if (tier(currentPos) === tier(prevPos)) return null;
+      if (tier(currentPos) === tier(prevPos)) {
+        return null;
+      }
       return <Separator subdued classNames='col-[tree-row] mx-3 my-0.5' />;
     },
     [graph],
