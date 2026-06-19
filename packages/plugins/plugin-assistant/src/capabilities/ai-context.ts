@@ -21,7 +21,7 @@ import { EffectEx } from '@dxos/effect';
 const AiContextSpec = LayerSpec.make(
   {
     affinity: 'process',
-    requires: [Database.Service, Feed.FeedService],
+    requires: [Database.Service],
     provides: [AiContext.Service],
   },
   (context) =>
@@ -36,7 +36,7 @@ const AiContextSpec = LayerSpec.make(
           );
         }
         const feed = yield* Database.resolve(EID.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return { binder };
       }),

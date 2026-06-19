@@ -13,8 +13,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { Credential, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Registry } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -57,9 +56,8 @@ export const useChatProcessor = ({
     if (!feedTarget) {
       return;
     }
-    const feedServiceLayer = createFeedServiceLayer(space.db);
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({
       feed: feedTarget,
@@ -85,7 +83,6 @@ export const useChatProcessor = ({
     const spaceLayer = ServiceResolver.provide(
       { space: space.id },
       Database.Service,
-      Feed.FeedService,
       Credential.CredentialsService,
       AiService.AiService,
       AgentService.AgentService,

@@ -147,7 +147,7 @@ export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framew
  * const resolver = yield* Capability.get(Capabilities.ServiceResolver);
  * yield* effect.pipe(
  *   Effect.provide(
- *     ServiceResolver.provide({ space }, Database.Service, Feed.FeedService).pipe(
+ *     ServiceResolver.provide({ space }, Database.Service).pipe(
  *       Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, resolver)),
  *     ),
  *   ),

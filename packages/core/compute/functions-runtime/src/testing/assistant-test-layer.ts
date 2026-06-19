@@ -83,7 +83,6 @@ interface TestLayerOptions {
 
 export type AssistantTestServices =
   | LanguageModel.LanguageModel
-  | Feed.FeedService
   | Credential.CredentialsService
   | AgentService.AgentService
   | AiService.AiService
@@ -141,8 +140,8 @@ export const AssistantTestServiceResolverLayer = ({
   Layer.scoped(
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
-      const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
-        Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+      const services = yield* Effect.context<Database.Service>().pipe(
+        Effect.map(Context.pick(Database.Service)),
         Effect.map(Layer.succeedContext),
       );
 
@@ -155,7 +154,7 @@ export const AssistantTestServiceResolverLayer = ({
               return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
             }
             const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Feed.FeedService>();
+            const runtime = yield* Effect.runtime<Database.Service>();
             const binder = yield* EffectEx.acquireReleaseResource(
               () =>
                 new AiContext.Binder({
@@ -172,7 +171,7 @@ export const AssistantTestServiceResolverLayer = ({
               return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
             }
             const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Feed.FeedService>();
+            const runtime = yield* Effect.runtime<Database.Service>();
             const session = yield* EffectEx.acquireReleaseResource(
               () =>
                 new AiSession.Session({
@@ -186,7 +185,6 @@ export const AssistantTestServiceResolverLayer = ({
         yield* ServiceResolver.fromRequirements(
           Database.Service,
           OpaqueToolkit.OpaqueToolkitProvider,
-          Feed.FeedService,
           AiService.AiService,
           Registry.Service,
           Credential.CredentialsService,
@@ -244,7 +242,7 @@ export const AssistantTestBaseLayer = ({
 
 const AssistantTestTracingLayer = (
   mode: 'noop' | 'console' | 'pretty' | 'feed',
-): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service | Feed.FeedService> =>
+): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service> =>
   Match.value(mode).pipe(
     Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
     Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),

@@ -156,7 +156,6 @@ export const gptNode = defineComputeNode({
       ToolExecutionService.layerEmpty,
       Layer.succeed(Trace.TraceService, trace),
       Layer.succeed(Database.Service, yield* Database.Service),
-      Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
       Layer.succeed(Operation.Service, yield* Operation.Service),
       Layer.succeed(Registry.Service, yield* Registry.Service),
     );

@@ -53,12 +53,12 @@ export interface Session {
   /**
    * Gets the context objects from the agent.
    */
-  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
+  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service>;
 
   /**
    * Adds context objects to the agent.
    */
-  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Database.Service>;
 
   /**
    * Submits a prompt to the agent.
@@ -107,17 +107,15 @@ export interface CreateSessionOptions {
 
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<
-  Session,
-  Blueprint.NotFoundError,
-  Database.Service | Feed.FeedService | Registry.Service | AgentService
-> = Effect.fn('createSession')(function* (opts) {
+) => Effect.Effect<Session, Blueprint.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
+  'createSession',
+)(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
     Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());
-  const runtime = yield* Effect.runtime<Feed.FeedService>();
+  const runtime = yield* Effect.runtime<Database.Service>();
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
   yield* Effect.promise(() =>
@@ -273,13 +271,13 @@ const makeSession = (
   feed,
   getContext: () =>
     Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const runtime = yield* Effect.runtime<Database.Service>();
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const runtime = yield* Effect.runtime<Database.Service>();
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({

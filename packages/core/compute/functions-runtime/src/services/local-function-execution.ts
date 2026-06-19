@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Query } from '@dxos/echo';
+import { Database, Filter, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { FunctionInvocationService, type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -29,7 +29,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const ai = yield* AiService.AiService;
       const credentials = yield* Credential.CredentialsService;
       const database = yield* Database.Service;
-      const feedService = yield* Feed.FeedService;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
         invokeFunction: <I, O>(functionDef: Operation.Definition<I, O>, input: I): Effect.Effect<O> =>
@@ -42,7 +41,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               Effect.provideService(AiService.AiService, ai),
               Effect.provideService(Credential.CredentialsService, credentials),
               Effect.provideService(Database.Service, database),
-              Effect.provideService(Feed.FeedService, feedService),
               Effect.provideService(FunctionInvocationService, functionInvocationService),
               Effect.provideService(Operation.Service, {
                 invoke: (op: any, ...args: any[]) => functionInvocationService.invokeFunction(op, args[0]),

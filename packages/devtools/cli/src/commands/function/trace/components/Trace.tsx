@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
@@ -24,7 +23,6 @@ import { theme } from '../../../../theme';
 
 export type TraceProps = {
   db: Database.Database;
-  feedService: Context.Tag.Service<Feed.FeedService>;
   feed: Option.Option<Feed.Feed>;
   functionId: Option.Option<string>;
 };
@@ -38,7 +36,7 @@ export const Trace = (props: TraceProps) => {
   useFunctionQuery(props.db, setFunctions);
   useInvocationsSubscription(
     () => props.feed,
-    () => props.feedService,
+    () => props.db,
     props.functionId,
     setInvocations,
     selectedInvocation,
@@ -188,7 +186,7 @@ const useFunctionQuery = (
 // Effect: Subscribe to invocations using the query API (which handles polling automatically).
 const useInvocationsSubscription = (
   traceFeed: () => Option.Option<Feed.Feed>,
-  feedService: () => Context.Tag.Service<Feed.FeedService>,
+  db: () => Database.Database,
   functionId: Option.Option<string>,
   setInvocations: (invocations: InvocationSpan[]) => void,
   selectedInvocation: () => InvocationSpan | undefined,
@@ -203,7 +201,7 @@ const useInvocationsSubscription = (
 
     // Query both start and end events from the trace feed.
     // The query subscription automatically handles polling via beginPolling().
-    const query = feedService().query(
+    const query = db().queryFeed(
       feed.value,
       Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)),
     );

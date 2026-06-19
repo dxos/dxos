@@ -39,7 +39,6 @@ export {
 export { type Selection, type SubscriptionHandle, type UpdateInfo, createSubscription } from './echo-handler';
 export { getDXNWithSpaceKey, findObjectWithForeignKey, matchKeys } from './echo-handler';
 export { ObjectVersion, getVersion } from './echo-handler';
-export * from './feed';
 export * from './guarded-scope';
 export * from './hypergraph';
 export * from './proxy-db';
