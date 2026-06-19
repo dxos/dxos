@@ -21,6 +21,7 @@ import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Position } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
@@ -245,7 +246,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
-                position: 'first',
+                position: Position.first,
               }),
               AppNode.makeCompanion({
                 id: linkedSegment('beta'),

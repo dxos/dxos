@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { NodeMatcher, GraphBuilder } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -34,7 +35,7 @@ export default Capability.makeModule(
                     label: ['call-panel.label', { ns: meta.profile.key }],
                     icon: 'ph--video-conference--regular',
                     data: null,
-                    position: 'first',
+                    position: Position.first,
                   }),
                 ]
               : [],

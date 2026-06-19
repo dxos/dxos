@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { type CapabilityManager } from '../../../core';
 import { isSurfaceAvailable } from './SurfaceComponent';
 import { type RoleToken, type SurfaceFilter, create, isSurfaceFilter, makeFilter, makeType } from './types';
+import { Position } from '@dxos/util';
 
 describe('Surface.makeType', () => {
   test('creates a role token with the given NSID', ({ expect }) => {
@@ -76,8 +77,8 @@ describe('create', () => {
   test('passes position through untouched', ({ expect }) => {
     const token = makeType<Record<string, any>>('org.dxos.test.role.r');
     const filter: SurfaceFilter<Record<string, any>> = { bindings: [{ role: token.role, guard: () => true }] };
-    const def = create({ id: 'pos', filter, component: () => null, position: 'last' });
-    expect(def.position).toBe('last');
+    const def = create({ id: 'pos', filter, component: () => null, position: Position.last });
+    expect(def.position).toBe(Position.last);
   });
 });
 

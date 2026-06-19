@@ -11,6 +11,7 @@ import { GraphBuilder, Node } from '@dxos/app-graph';
 import { Annotation, Filter, Key, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
+import { Position } from '@dxos/util';
 
 import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';
@@ -43,7 +44,7 @@ export const createTypeSectionExtension = (
   type: Type.AnyEntity,
   options?: {
     /** Position hint for the section in the sidebar. */
-    position?: 'first' | 'last';
+    position?: Position;
     /**
      * Override the default `Filter.type(type)` query.
      * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).

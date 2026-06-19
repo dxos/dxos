@@ -8,6 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Position } from '@dxos/util';
 
 import { FeedArticle, FeedProperties, MagazineArticle, MagazineProperties, PostArticle, PostCard } from '#containers';
 import { Magazine, Subscription } from '#types';
@@ -43,7 +44,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'postCard',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Subscription.Post),
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
       }),

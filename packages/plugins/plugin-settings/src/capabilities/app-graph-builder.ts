@@ -8,7 +8,7 @@ import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-fram
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, Paths, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -54,7 +54,7 @@ export default Capability.makeModule(
                 label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
                 disposition: 'pin-end',
-                position: 'first',
+                position: Position.first,
                 testId: 'treeView.appSettings',
               },
             }),

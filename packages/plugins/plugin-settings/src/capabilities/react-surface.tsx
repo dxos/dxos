@@ -10,6 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
+import { Position } from '@dxos/util';
 
 /**
  * Generic settings surface rendered for any plugin that contributes an
@@ -18,7 +19,7 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
  * fields need not register a bespoke settings surface.
  *
  * No section title is rendered: the settings plank heading already names the
- * plugin. Registered with `position: 'last'` so a plugin-specific surface
+ * plugin. Registered with `position: Position.last` so a plugin-specific surface
  * (matching by prefix) always wins under the settings article's `limit={1}`
  * dispatch.
  */
@@ -41,7 +42,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'defaultPluginSettings',
-        position: 'last',
+        position: Position.last,
         filter: AppSurface.settings(AppSurface.Article),
         component: ({ data: { subject } }) => <DefaultSettings subject={subject} />,
       }),

@@ -11,6 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Position } from '@dxos/util';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
@@ -37,7 +38,7 @@ export const capabilities: Capability.Any[] = [
     Surface.create({
       id: 'pluginDefault',
       filter: Surface.makeFilter(AppSurface.CardContent),
-      position: 'last',
+      position: Position.last,
       component: ({ data }) => (
         <Card.Body>
           <Syntax.Root data={data}>
