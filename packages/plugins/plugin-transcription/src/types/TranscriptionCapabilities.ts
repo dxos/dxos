@@ -17,7 +17,7 @@ import {
   type TranscriptMessageEnricher,
   type TranscriptionManager as TranscriptionManagerType,
 } from '../transcriber';
-import * as SettingsType from './Settings';
+import * as Settings$ from './Settings'; // eslint-disable-line
 
 export type TranscriberProviderProps = {
   audioStreamTrack: MediaStreamTrack;
@@ -41,6 +41,6 @@ export const TranscriptionManagerProvider = Capability.make<TranscriptionManager
   `${meta.profile.key}.capability.transcription-manager`,
 );
 
-export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(
+export const Settings = Capability.make<Atom.Writable<Settings$.Settings>>(
   `${meta.profile.key}.capability.settings`,
 );
