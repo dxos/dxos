@@ -59,11 +59,6 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
  * registered via {@link AppCapabilities.NavigationPathResolver} for deep-link support.
  *
  * // TODO(wittjosiah): Simplify this idiom — five coordinated pieces across multiple files is a high bar.
- *
- * @idiom org.dxos.app-toolkit.typeSection
- *   applies: Dedicated sidebar sections that list objects of a single ECHO type under a space
- *   instead-of: Only surfacing the type in plugin-space's generic database subtree, which buries it and reduces discoverability for the app user
- *   uses: {@link createTypeSectionExtension}, {@link Paths.createTypeSectionPaths}, {@link createTypeSectionPathResolver}, {@link AppNodeMatcher.whenSpace}, {@link Filter.type}, {@link AppNode.makeObject}
  */
 export const createTypeSectionExtension = (
   type: Type.AnyEntity,
@@ -174,11 +169,6 @@ export const createTypeSectionExtension = (
  * ```ts
  * targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
  * ```
- *
- * @idiom org.dxos.app-toolkit.typeSectionPathResolver
- *   applies: Plugins that expose a type section via {@link createTypeSectionExtension} and need navigation to the type section instead of falling back to the generic database section.
- *   instead-of: Navigating to the database section after object creation, or getting a 404 on deep-link and page reload before the graph has populated.
- *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link Paths.createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
 export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabilities.NavigationPathResolver => {
   const typename = Type.getTypename(type);

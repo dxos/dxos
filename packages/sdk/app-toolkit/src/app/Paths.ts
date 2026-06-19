@@ -188,11 +188,6 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  *
  * @deprecated Moving away from the generic type-section pattern; top-level sections will all be
  * custom going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel.
- *
- * @idiom org.dxos.app-toolkit.typeSectionPath
- *   applies: Navigating to or linking to objects of a plugin-specific ECHO type
- *   instead-of: Building path strings with template literals at the call site
- *   uses: {@link createTypeSectionPaths}
  */
 export const createTypeSectionPaths = (type: Type.AnyEntity) => {
   const typename = Type.getTypename(type);
