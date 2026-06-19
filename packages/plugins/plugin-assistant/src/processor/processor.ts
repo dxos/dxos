@@ -24,11 +24,10 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
+import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -102,7 +101,7 @@ export class AiUsageQuotaError extends Error {
  * {@link UsageQuotaExceededError} is wrapped deep in the cause chain and does not survive the
  * agent-process boundary — the failure is rendered to a string via `Cause.pretty`, which drops
  * nested causes — so detection also relies on the HTTP 429 that `@effect/ai`'s
- * {@link AiError.HttpResponseError} embeds in its message (e.g. "... (429 POST ...)").
+ * {@link AiError.HttpResponseError} embeds in its message (e.g. "... (429 POST ...").
  */
 const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota exceeded/i;
 
