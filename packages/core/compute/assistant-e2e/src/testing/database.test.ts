@@ -31,7 +31,7 @@ Closest match: Index: conversation
 
 */
 // TODO(dmaretskyi): Fix memoization issue.
-describe.skip('Database', () => {
+describe('Database', () => {
   it.effect(
     'create and query',
     agentTest({

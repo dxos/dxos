@@ -61,9 +61,6 @@ export const Exec = Operation.make({
     timeout: Schema.optional(Schema.Number).annotations({
       description: 'Timeout in milliseconds.',
     }),
-    stdin: Schema.optional(Schema.String).annotations({
-      description: 'Data to pass on standard input.',
-    }),
   }),
   output: Schema.Struct({
     stdout: Schema.String,

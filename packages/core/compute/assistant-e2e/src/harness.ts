@@ -69,8 +69,11 @@ interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints'
   /** Additional plugins registered after the default composer plugin set. */
   plugins?: Plugin.Plugin[];
 
-  /** Edge service preset for plugins that call the local EDGE worker (e.g. sandbox). */
+  /** Edge service preset for ClientPlugin config. */
   edge?: ConfigPresetOptions['edge'];
+
+  /** Sandbox service preset for ClientPlugin config (`runtime.services.sandbox.url`). */
+  sandbox?: ConfigPresetOptions['sandbox'];
 
   /** Additional ECHO types registered with ClientPlugin. */
   clientTypes?: ClientOptions['types'];
@@ -93,9 +96,9 @@ const makeMemoizedAiServiceMiddleware = (
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
-        // Space keys are derived from a fresh keypair every run, so canonicalize them for matching
-        // and substitute the live values back into memoized responses on a cache hit.
-        dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN],
+        // Space keys and entity IDs differ across runs; canonicalize for matching and
+        // substitute live values back into memoized responses on a cache hit.
+        dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN, MemoizedLanguageModel.ENTITY_ID_PATTERN],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),
@@ -112,7 +115,9 @@ const DEFAULT_CLIENT_TYPES: Type.AnyEntity[] = [
 
 const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions): Promise<Plugin.Plugin[]> => [
   ClientPlugin({
-    ...(options.edge ? { config: configPreset({ edge: options.edge }) } : {}),
+    ...(options.edge || options.sandbox
+      ? { config: configPreset({ edge: options.edge, sandbox: options.sandbox }) }
+      : {}),
     types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
   AssistantPlugin({
@@ -181,6 +186,10 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
+        // TODO(dmaretskyi): Subscribe to trace feed and log ai messages.
+        // Effect.gen(function* () {
+        // }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService)));
+
         if (options.expect === 'failure') {
           const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
             runAgentPrompt(harness, prompt, model, personalSpace.id).then(
@@ -188,6 +197,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
               (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
             ),
           );
+          console.log('exit', exit);
           if (!Exit.isFailure(exit)) {
             return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
           }

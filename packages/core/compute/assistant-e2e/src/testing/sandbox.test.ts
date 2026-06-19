@@ -4,29 +4,28 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Obj } from '@dxos/echo';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { Sandbox } from '@dxos/plugin-sandbox/types';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout } from '../harness';
-
-Obj.ID.dangerouslyDisableRandomness();
+import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
 
 /**
- * Prereq: local EDGE at http://localhost:8787 with the sandbox service enabled.
+ * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
+ * Entity IDs must be unique per run (do not call `Obj.ID.dangerouslyDisableRandomness`) so sandbox-service
+ * KV does not reject the same sandboxId under a new space from a prior run.
  * Regenerate memoized conversations with:
- *   ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test -- src/testing/sandbox.test.ts
+ *   ALLOW_LLM_GENERATION=1 VITEST_TAGS_FILTER='functions-e2e' moon run assistant-e2e:test -- src/testing/sandbox.test.ts
  */
 describe('Sandbox', { tags: ['functions-e2e'] }, () => {
   it.effect(
     'creates a sandbox and runs a shell command',
     agentTest({
-      edge: 'local',
+      sandbox: 'local',
       plugins: [SandboxPlugin()],
       clientTypes: [Sandbox.Sandbox],
       instructions: trim`
-        The database starts empty. The sandbox service is available at http://localhost:8787.
+        The database starts empty. The sandbox service is available at http://localhost:8792.
 
         Enable the sandbox blueprint (key: org.dxos.blueprint.sandbox) using the blueprint manager.
 
@@ -43,6 +42,6 @@ describe('Sandbox', { tags: ['functions-e2e'] }, () => {
         'Exec completes with exit code 0 and stdout containing "hello world".',
       ],
     }),
-    { timeout: agentTestTimeout() },
+    { timeout: agentTestTimeout() ?? DEFAULT_TEST_TIMEOUT },
   );
 });
