@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Routine } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
+import { Routine, Trigger } from '@dxos/compute';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -35,25 +35,37 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Routine.Routine],
+          types: [Routine.Routine, Trigger.Trigger],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
 
-              space.db.add(
+              const routine = space.db.add(
                 Routine.make({
                   name: 'Summarize',
-                  description: 'Summarize the selected object.',
                   instructions: 'Create a new markdown document that is a summary of the selected object.',
                 }),
               );
+
+              // Seed an inline trigger so the owned-ref array form renders on mount.
+              const trigger = space.db.add(
+                Trigger.make({
+                  enabled: false,
+                  spec: Trigger.specTimer('0 0 * * *'),
+                  function: Ref.make(routine),
+                }),
+              );
+              Obj.setParent(trigger, routine);
+              Obj.update(routine, (routine) => {
+                routine.triggers = [Ref.make(trigger)];
+              });
             }),
         }),
         AutomationPlugin(),

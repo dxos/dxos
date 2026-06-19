@@ -35,11 +35,11 @@ export type FormFieldSetProps<T extends AnyProperties> = {
    * (linear rendering then takes over).
    */
   layoutName?: string;
-} & Pick<FormHandlerProps<T>, 'schema'> &
-  Pick<FormFieldProps, 'path' | 'autoFocus'> &
-  FormFieldOptions &
+} & FormFieldOptions &
   CreateOptions &
-  Pick<RefFieldDataProps, 'useType' | 'getOptions' | 'onCreate'>;
+  Pick<FormHandlerProps<T>, 'schema'> &
+  Pick<FormFieldProps, 'path' | 'autoFocus'> &
+  Pick<RefFieldDataProps, 'useType' | 'getOptions' | 'onCreate' | 'getCreateDefaults'>;
 
 /**
  * Renders a set of form fields derived from a schema object.
@@ -130,7 +130,7 @@ export const FormFieldSet = ({
 
   // Nested field sets render inside an indented, bordered container with a collapse toggle.
   if (collapsible) {
-    return <div className='border border-subdued-separator rounded-sm mb-1'>{content}</div>;
+    return <div className='border border-subdued-separator rounded-sm my-1.5'>{content}</div>;
   }
 
   return content;

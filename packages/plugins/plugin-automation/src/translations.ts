@@ -4,11 +4,15 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 import { Automation } from '#types';
 
-export const translations = [
+export const translations: Resource[] = [
+  ...componentsTranslations,
+  ...formTranslations,
   {
     'en-US': {
       [Type.getTypename(Automation.Automation)]: {

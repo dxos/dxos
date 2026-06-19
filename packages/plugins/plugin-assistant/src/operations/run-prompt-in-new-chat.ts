@@ -67,7 +67,6 @@ const handler: Operation.WithHandler<typeof AutomationOperation.RunPromptInNewCh
                     Routine.make({
                       instructions: prompt,
                       blueprints: [],
-                      context: [],
                     }),
                   )
                 : prompt;

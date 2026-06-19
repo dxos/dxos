@@ -18,7 +18,7 @@ import { type FormFieldRendererProps } from '#types';
 import { FormFieldLabel } from '../../FormFieldWrapper';
 
 const editorClassNames =
-  'transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2';
+  'min-h-[6lh] transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2';
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.
@@ -76,6 +76,7 @@ export const MarkdownField = ({
       const reference = value as Ref.Ref<any> | undefined;
       return reference ? <RefStaticText reference={reference} /> : null;
     }
+
     return <p className='whitespace-pre-wrap'>{(value as string | undefined) ?? ''}</p>;
   };
 
@@ -94,6 +95,7 @@ const RefStaticText = ({ reference }: { reference: Ref.Ref<any> }) => {
   if (!text?.content) {
     return null;
   }
+
   return <p className='whitespace-pre-wrap'>{text.content}</p>;
 };
 

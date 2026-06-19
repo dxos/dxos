@@ -51,7 +51,6 @@ describe('Agent prompt (composer plugin harness)', () => {
               name: 'chat-mode-test',
               instructions: 'Reply with a single word: ack.',
               blueprints: [],
-              context: [],
             }),
           );
           yield* Database.flush();

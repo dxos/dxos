@@ -46,8 +46,8 @@ export const CronBuilder = ({ value, onChange, readonly }: CronBuilderProps) => 
   return (
     <Form.Root<CronBuilderSchemaType>
       schema={CronBuilderSchema}
-      defaultValues={defaultValues}
       readonly={readonly}
+      defaultValues={defaultValues}
       fieldMap={fieldMap}
       onValuesChanged={handleValuesChanged}
     >

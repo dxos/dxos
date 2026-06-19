@@ -71,10 +71,6 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
               If you are unable to query -- fail.
               Do not list schemas first.
             `,
-        input: Schema.Struct({}),
-        output: Schema.Struct({
-          count: Schema.Number,
-        }),
         blueprints: [Ref.make(databaseBlueprint)],
         context: [],
       }),

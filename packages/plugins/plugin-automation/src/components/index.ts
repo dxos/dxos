@@ -7,5 +7,6 @@ import { type ComponentType, lazy } from 'react';
 export * from './CreateAutomationPanel';
 export * from './CronBuilder';
 export * from './TemplateEditor';
+export * from './TriggerEditor';
 
 export const RoutineProperties: ComponentType<any> = lazy(() => import('./RoutineProperties'));

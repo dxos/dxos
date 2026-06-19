@@ -29,6 +29,7 @@ export type AutomationCompanionProps = {
  * Renders the automations connected to an object as an accordion (see `useConnectedAutomations` for the
  * session-stable list it draws from), flagging non-associated rows with a warning badge. New automations are
  * created from a template dropdown (no dialog).
+ * @deprecated
  */
 export const AutomationCompanion = ({ db, object }: AutomationCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);

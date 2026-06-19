@@ -60,8 +60,15 @@ export type FormFieldProps = {
    */
   path?: (string | number)[];
   autoFocus?: boolean;
+
+  /**
+   * Force a `Ref` field to render its target inline (a nested form) instead of the picker.
+   * Set by `ArrayField` for owned-ref arrays (`FormCreateAnnotation`); equivalent to
+   * `FormInlineAnnotation` but driven by the parent array rather than the element's own AST.
+   */
+  refInline?: boolean;
 } & FormFieldOptions &
-  Pick<RefFieldDataProps, 'getOptions' | 'onCreate' | 'useType'> &
+  Pick<RefFieldDataProps, 'getOptions' | 'onCreate' | 'useType' | 'getCreateDefaults'> &
   CreateOptions;
 
 export const FormField = (props: FormFieldProps) => {
@@ -85,6 +92,7 @@ export const FormField = (props: FormFieldProps) => {
     useType,
     getOptions,
     onCreate,
+    refInline,
   } = props;
   const { t } = useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
@@ -190,8 +198,10 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
-    // Inline a single referenced object's own fields (nested form) instead of a picker.
-    const inline = Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
+    // Inline a single referenced object's own fields (nested form) instead of a picker. `refInline` lets a
+    // parent (e.g. an owned-ref `ArrayField`) force this for elements whose own AST carries no annotation.
+    const inline =
+      refInline || Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
     if (inline && !refProps.isArray) {
       return <InlineRefField {...fieldProps} {...refProps} db={db} useType={useType} onCreate={onCreate} />;
     }
@@ -227,6 +237,7 @@ export const FormField = (props: FormFieldProps) => {
       const schema = Schema.make(typeLiteral);
       return (
         <FormFieldSet
+          db={db}
           schema={schema}
           path={path}
           readonly={readonly}
@@ -239,7 +250,6 @@ export const FormField = (props: FormFieldProps) => {
           createOptionLabel={createOptionLabel}
           createOptionIcon={createOptionIcon}
           createInitialValuePath={createInitialValuePath}
-          db={db}
           useType={useType}
           getOptions={getOptions}
           onCreate={onCreate}

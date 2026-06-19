@@ -112,6 +112,13 @@ export type RefFieldDataProps = {
    * object is then wired into this slot's form value as a Ref.
    */
   onCreate?: (schema: Type.AnyEntity, values: any) => Obj.Unknown | Promise<Obj.Unknown> | undefined | void;
+  /**
+   * Supply default values for a newly-created owned object when the user clicks "add" on an owned-ref
+   * array field (see `FormCreateAnnotation`). Keyed by the field's json path so a container can pre-populate
+   * the new object (e.g. a back-reference to the parent). The returned values are passed to
+   * `onCreate(schema, values)` before the object is persisted.
+   */
+  getCreateDefaults?: (props: { jsonPath: string; schema: Type.AnyEntity }) => Record<string, unknown> | undefined;
 };
 
 /**
