@@ -15,23 +15,22 @@ import { getDictionary } from './dictionary';
 /**
  * Get the value of an annotation from an entity instance or snapshot.
  *
- * The value is exposed as `Mutable<T>`: for a live entity the reactive proxy returns the stored value
- * directly (live Refs, mutable arrays), so it can be spliced/pushed in place inside an `Obj.update`
- * callback (the proxy enforces read-only access outside one). Snapshots return a decoded detached copy.
+ * The value is read-only (schema types are readonly by default). To mutate it, use {@link update}
+ * (which reads it as mutable inside a change transaction); the reactive proxy rejects mutation of the
+ * live value outside an `Obj.update`. Snapshots return a decoded detached copy.
  */
 export const get = <T>(
   target: Entity.Unknown | Entity.Snapshot,
   annotation: Annotation.Annotation<T>,
-): Option.Option<Mutable<T>> => {
+): Option.Option<T> => {
   if (isSnapshot(target)) {
-    // Detached decoded copy; typed mutably for a uniform return shape.
-    return getDictionary(getMetaChecked(target).annotations, annotation) as Option.Option<Mutable<T>>;
+    return getDictionary(getMetaChecked(target).annotations, annotation);
   }
   if (isEntity(target)) {
     const annotations = getMetaChecked(target).annotations;
     // The dictionary slot is typed `unknown`; at runtime it holds the annotation's live value
-    // (the proxy codecs nested refs in both directions), so the read coerces to the mutable form.
-    return annotation.key in annotations ? Option.some(annotations[annotation.key] as Mutable<T>) : Option.none();
+    // (the proxy codecs nested refs in both directions), so the read coerces to the declared type.
+    return annotation.key in annotations ? Option.some(annotations[annotation.key] as T) : Option.none();
   }
   throw new TypeError('Target is not an annotation target.');
 };
@@ -67,10 +66,12 @@ export const update = <T>(
   change(target, (mutable) => {
     const current = get(mutable, annotation);
     if (Option.isSome(current)) {
-      mutator(current.value);
+      // `get` returns the value read-only; inside this change transaction the live value is mutable.
+      const value = current.value as Mutable<T>;
+      mutator(value);
       // Validate against the annotation's own schema — the dictionary slot is untyped, so the proxy
       // can't. Schema validation checks ref structure only (not targets), so it is cycle-safe.
-      Schema.validateSync(annotation.schema)(current.value);
+      Schema.validateSync(annotation.schema)(value);
     }
   });
 };

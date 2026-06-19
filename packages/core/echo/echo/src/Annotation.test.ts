@@ -541,8 +541,7 @@ describe('Annotation', () => {
       const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
       expect(registry.get(atomA)).toEqual(['x', 'y']);
 
-      Obj.update(obj, (obj) => {
-        const order = Annotation.get(obj, OrderAnnotation).pipe(Option.getOrThrow);
+      Annotation.update(obj, OrderAnnotation, (order) => {
         order.typeA.push('z');
       });
 
@@ -556,8 +555,7 @@ describe('Annotation', () => {
 
       const atomA = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
 
-      Obj.update(obj, (obj) => {
-        const order = Annotation.get(obj, OrderAnnotation).pipe(Option.getOrThrow);
+      Annotation.update(obj, OrderAnnotation, (order) => {
         order.typeA.splice(0, order.typeA.length, 'z', 'x', 'y');
       });
 
@@ -568,8 +566,7 @@ describe('Annotation', () => {
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x'], typeB: ['m'] }));
 
-      Obj.update(obj, (obj) => {
-        const order = Annotation.get(obj, OrderAnnotation).pipe(Option.getOrThrow);
+      Annotation.update(obj, OrderAnnotation, (order) => {
         order.typeA.push('y');
       });
 
@@ -582,8 +579,7 @@ describe('Annotation', () => {
       const b = Obj.make(Item, { name: 'b' });
       Obj.update(obj, (obj) => Annotation.set(obj, RefOrderAnnotation, { typeA: [Ref.make(a)] }));
 
-      Obj.update(obj, (obj) => {
-        const order = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+      Annotation.update(obj, RefOrderAnnotation, (order) => {
         order.typeA.push(Ref.make(b));
       });
 
@@ -608,8 +604,7 @@ describe('Annotation', () => {
       });
       registry.get(atomA);
 
-      Obj.update(obj, (obj) => {
-        const order = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+      Annotation.update(obj, RefOrderAnnotation, (order) => {
         order.typeA.splice(0, order.typeA.length, Ref.make(c), Ref.make(a), Ref.make(b));
       });
 
@@ -633,8 +628,7 @@ describe('Annotation', () => {
       });
       registry.get(atomA);
 
-      Obj.update(obj, (obj) => {
-        const order = Annotation.get(obj, RefOrderAnnotation).pipe(Option.getOrThrow);
+      Annotation.update(obj, RefOrderAnnotation, (order) => {
         order.typeA.splice(0, order.typeA.length, Ref.make(obj), Ref.make(a));
       });
 

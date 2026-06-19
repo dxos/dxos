@@ -123,16 +123,17 @@ export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotatio
  * For schema-level reads use the annotation instance method (e.g. `ColorAnnotation.get(schema)`).
  * For getting an annotation value from a dictionary, use `getDictionary`.
  *
- * The value is exposed as `Mutable<T>` so its arrays/records can be spliced/pushed in place inside an
- * `Obj.update` callback (the reactive proxy enforces read-only access outside one). `Mutable` preserves
- * Refs and primitives, so for those annotation types the result is identical to `T`.
+ * The value is read-only (schema types are readonly by default): to mutate an annotation (including
+ * in-place array splices) use `Annotation.update` or `Annotation.set`, which open a change transaction.
+ * A read-only return is sound regardless of context — the reactive proxy rejects mutation outside an
+ * `Obj.update`.
  */
 export const get: {
-  <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<Entity.Mutable<T>>;
-  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>): Option.Option<Entity.Mutable<T>>;
+  <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
+  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>): Option.Option<T>;
 } = Function.dual<
-  <T>(annotation: Annotation<T>) => (target: Entity.Unknown | Entity.Snapshot) => Option.Option<Entity.Mutable<T>>,
-  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>) => Option.Option<Entity.Mutable<T>>
+  <T>(annotation: Annotation<T>) => (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>,
+  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>) => Option.Option<T>
 >(2, (target, annotation) => {
   return internalAnnotations.get(target, annotation);
 });

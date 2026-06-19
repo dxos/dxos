@@ -10,7 +10,7 @@ import { assertArgument } from '@dxos/invariant';
 import type * as Annotation from '../../Annotation';
 import type * as Entity from '../../Entity';
 import { snapshotForComparison } from '../common/atom-snapshot';
-import { type Mutable, subscribe } from '../common/proxy/reactive';
+import { subscribe } from '../common/proxy/reactive';
 import { isEntity } from '../Entity';
 import { get as getAnnotation } from './entity-dictionary';
 
@@ -20,10 +20,10 @@ import { get as getAnnotation } from './entity-dictionary';
  * (so an in-place array mutation is observed) and dedupes primitive values via `!==`.
  */
 const annotationFamily = Atom.family((target: Entity.Unknown) =>
-  Atom.family(<T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<Mutable<T>>> => {
-    const read = (): Option.Option<Mutable<T>> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
+  Atom.family(<T>(annotation: Annotation.Annotation<T>): Atom.Atom<Option.Option<T>> => {
+    const read = (): Option.Option<T> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
 
-    return Atom.make<Option.Option<Mutable<T>>>((get) => {
+    return Atom.make<Option.Option<T>>((get) => {
       let previous = read();
 
       const unsubscribe = subscribe(target, () => {
@@ -45,14 +45,14 @@ const annotationFamily = Atom.family((target: Entity.Unknown) =>
  */
 const annotationPropertyFamily = Atom.family((target: Entity.Unknown) =>
   Atom.family(<V>(annotation: Annotation.Annotation<Record<string, V>>) =>
-    Atom.family((key: string): Atom.Atom<Mutable<V> | undefined> => {
-      const read = (): Mutable<V> | undefined =>
+    Atom.family((key: string): Atom.Atom<V | undefined> => {
+      const read = (): V | undefined =>
         getAnnotation(target, annotation).pipe(
           Option.map((value) => snapshotForComparison(value[key])),
           Option.getOrUndefined,
         );
 
-      return Atom.make<Mutable<V> | undefined>((get) => {
+      return Atom.make<V | undefined>((get) => {
         let previous = read();
 
         const unsubscribe = subscribe(target, () => {
@@ -81,7 +81,7 @@ const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
 export const makeAtom = <T>(
   target: Entity.Unknown,
   annotation: Annotation.Annotation<T>,
-): Atom.Atom<Option.Option<Mutable<T>>> => {
+): Atom.Atom<Option.Option<T>> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
   return annotationFamily(target)(annotation);
 };
@@ -93,7 +93,7 @@ export const makeProperty = <V>(
   target: Entity.Unknown,
   annotation: Annotation.Annotation<Record<string, V>>,
   key: string,
-): Atom.Atom<Mutable<V> | undefined> => {
+): Atom.Atom<V | undefined> => {
   assertArgument(isEntity(target), 'target', 'Must be a reactive ECHO entity');
   return annotationPropertyFamily(target)(annotation)(key);
 };

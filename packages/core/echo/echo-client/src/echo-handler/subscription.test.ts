@@ -210,8 +210,7 @@ describe('create subscription', () => {
     });
 
     // Splice/push the annotation array in place (no Annotation.set).
-    Obj.update(task, (task) => {
-      const order = Annotation.get(task, OrderAnnotation).pipe(Option.getOrThrow);
+    Annotation.update(task, OrderAnnotation, (order) => {
       order.typeA.push('z');
     });
 
@@ -240,8 +239,7 @@ describe('create subscription', () => {
     });
     registry.get(atomA);
 
-    Obj.update(task, (task) => {
-      const order = Annotation.get(task, OrderAnnotation).pipe(Option.getOrThrow);
+    Annotation.update(task, OrderAnnotation, (order) => {
       order.typeA.push('z');
     });
 
@@ -269,8 +267,7 @@ describe('create subscription', () => {
     });
     registry.get(derived);
 
-    Obj.update(task, (task) => {
-      const order = Annotation.get(task, OrderAnnotation).pipe(Option.getOrThrow);
+    Annotation.update(task, OrderAnnotation, (order) => {
       order.typeA.push('z');
     });
 
