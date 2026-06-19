@@ -685,7 +685,8 @@ describe('Annotation', () => {
       expect(() =>
         Annotation.update(obj, OrderAnnotation, (order) => {
           // Pushing a number into a string array violates the annotation schema.
-          (order.typeA as unknown[]).push(42);
+          // @ts-expect-error intentional type violation to exercise runtime validation
+          order.typeA.push(42);
         }),
       ).toThrow();
     });
@@ -694,7 +695,8 @@ describe('Annotation', () => {
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => {
         // OrderAnnotation values must be string arrays; a number element violates the schema.
-        expect(() => Annotation.set(obj, OrderAnnotation, { typeA: [1 as unknown as string] })).toThrow();
+        // @ts-expect-error intentional type violation to exercise runtime validation
+        expect(() => Annotation.set(obj, OrderAnnotation, { typeA: [1] })).toThrow();
       });
     });
   });
