@@ -48,6 +48,7 @@ test.describe('Basic tests', () => {
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
+    await expect(host.getObjectLinks()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
 
