@@ -4,10 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { Position } from '@dxos/util';
+
 import { type CapabilityManager } from '../../../core';
 import { isSurfaceAvailable } from './SurfaceComponent';
 import { type RoleToken, type SurfaceFilter, create, isSurfaceFilter, makeFilter, makeType } from './types';
-import { Position } from '@dxos/util';
 
 describe('Surface.makeType', () => {
   test('creates a role token with the given NSID', ({ expect }) => {
