@@ -11,8 +11,8 @@ import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { AppAnnotation } from '../echo';
 import * as AppNode from '../app-graph/AppNode';
+import { AppAnnotation } from '../echo';
 
 type AddProps = {
   object: Obj.Unknown;
