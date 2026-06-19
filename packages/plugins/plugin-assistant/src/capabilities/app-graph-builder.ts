@@ -166,7 +166,7 @@ export default Capability.makeModule(
               id: linkedSegment('trace'),
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
-              data: 'trace' as const,
+              data: 'trace',
               position: 'last',
             }),
           ]),
