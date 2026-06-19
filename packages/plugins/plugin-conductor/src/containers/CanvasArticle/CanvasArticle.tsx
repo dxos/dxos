@@ -12,7 +12,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
 import { ComputeGraphModel } from '@dxos/conductor';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
@@ -97,7 +97,6 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
       { space: spaceId },
       AiService.AiService,
       Database.Service,
-      Feed.FeedService,
       Credential.CredentialsService,
       Operation.Service,
       OperationRegistry.Service,

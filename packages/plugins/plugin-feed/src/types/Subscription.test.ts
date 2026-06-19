@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
@@ -39,9 +38,9 @@ describe('per-Post state keyed by entity id', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))));
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
     return { db, subscription, queuePost: queuePost! };
@@ -101,9 +100,9 @@ describe('PostContent reverse-ref lookup', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))));
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
 
@@ -142,9 +141,9 @@ describe('PostContent reverse-ref lookup', () => {
       link: 'https://example.com/a',
       source: Ref.make(subscription),
     });
-    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(db))));
+    await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(createFeedServiceLayer(db))),
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
 

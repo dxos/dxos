@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Registry } from '@dxos/echo';
+import { Database, Registry } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { ConfiguredCredentialsService, FunctionInvocationService } from '@dxos/functions';
 import { entries } from '@dxos/util';
@@ -29,7 +29,6 @@ const SERVICES = {
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
   registryService: Registry.Service,
-  feeds: Feed.FeedService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
 /**
@@ -102,8 +101,6 @@ export class ServiceContainer {
       this._services.database != null
         ? Layer.succeed(Database.Service, this._services.database)
         : Database.notAvailable;
-    const feeds =
-      this._services.feeds != null ? Layer.succeed(Feed.FeedService, this._services.feeds) : Feed.notAvailable;
     const trace = Layer.succeed(Trace.TraceService, this._services.trace ?? Trace.noopWriter);
     const functionCallService = Layer.succeed(
       RemoteFunctionExecutionService,
@@ -122,7 +119,6 @@ export class ServiceContainer {
       ai,
       credentials,
       database,
-      feeds,
       trace,
       functionCallService,
       operationService,

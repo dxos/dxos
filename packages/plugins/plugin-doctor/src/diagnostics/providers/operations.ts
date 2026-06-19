@@ -5,7 +5,7 @@
 import { AiService } from '@dxos/ai';
 import { AiContext, AiSession } from '@dxos/assistant';
 import { Credential, Operation, StorageService, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Filter, Obj, Registry } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
 
 import { meta } from '#meta';
@@ -27,7 +27,6 @@ export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
     Registry.Service,
     Credential.CredentialsService,
     Database.Service,
-    Feed.FeedService,
     FunctionInvocationService,
     Operation.Service,
     StorageService.StorageService,

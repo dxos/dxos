@@ -32,7 +32,6 @@ import { type Space } from '@dxos/client/echo';
 import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -326,7 +325,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           AgentBlueprint.make(),
         ).pipe(
           Effect.provide(
-            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService).pipe(
+            ServiceResolver.provide({ space: space.id }, Database.Service).pipe(
               Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
             ),
           ),
@@ -337,8 +336,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const chat = yield* Effect.promise(() => agent.chat!.load());
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const feedServiceLayer = createFeedServiceLayer(space.db);
-          const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+          const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
           yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
@@ -373,8 +371,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
                 name,
                 feed: Ref.make(feed),
               });
-              const feedServiceLayer = createFeedServiceLayer(space.db);
-              const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+              const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
               const binder = new AiContext.Binder({ feed, runtime, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.

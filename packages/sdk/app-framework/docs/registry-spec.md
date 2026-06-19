@@ -31,13 +31,13 @@ and will be renamed to a final namespace before promotion (see [Versioning](#ver
 
 The machine-readable lexicons are the canonical definition:
 
-- **Lexicon JSON** — `packages/sdk/edge-protocol/lexicons/org.dxos.experimental/*.json` (edge repo).
+- **Lexicon JSON** — `packages/core/protocols/src/lexicons/org.dxos.experimental/*.json` (dxos repo).
   These are the source of truth.
-- **Effect-Schema validators** — `packages/sdk/edge-protocol/src/registry.ts`
-  (edge repo). Decoders used at the indexing/validation seam to reject malformed records before they
-  enter the store. These mirror the JSON lexicons and live alongside them in the protocol package.
-- **`PluginView`** — `packages/core/protocols/src/edge/registry.ts` (dxos repo). The catalog shape
-  the indexer serves to Composer.
+- **`PluginView` + view schemas** — `packages/core/protocols/src/edge/registry.ts` (dxos repo). The
+  catalog shape the indexer serves to Composer, plus the shared profile/release view schemas.
+- **Effect-Schema validators** — `packages/services/registry-service/src/registry/atproto/schema.ts`
+  (edge repo). Indexer-side decoders that extend the view schemas with the raw ATProto record fields
+  (`pluginKey`, `manifestHash`), used to reject malformed records before they enter the store.
 - **CLI writers** — `packages/plugins/plugin-registry/src/commands/registry/` (dxos repo). The `dx`
   CLI assembles record bodies and writes them via XRPC.
 - **App-view / indexer** — `packages/services/registry-service/src/registry/atproto/{indexer,curator,backfill}.ts`
@@ -59,7 +59,7 @@ The machine-readable lexicons are the canonical definition:
                                    └─────────────┘
 ```
 
-1. A publisher writes `package.profile` / `package.release` records (and a one-time
+1. A publisher writes `plugin.profile` / `plugin.release` records (and a one-time
    `publisher.profile`) to their own PDS using the `dx` CLI.
 2. A verifier writes `publisher.verification` records, one per trusted DID, to their own PDS.
 3. The indexer learns the verified-DID set, then ingests matching records from verified publishers —
@@ -73,8 +73,8 @@ The machine-readable lexicons are the canonical definition:
 | ---------------------------------------------- | ----------------- | --------- | -------------------------------------- |
 | `org.dxos.experimental.publisher.profile`      | `self`            | publisher | Identity-level publisher metadata.     |
 | `org.dxos.experimental.publisher.verification` | `<verified DID>`  | verifier  | A trust attestation about a publisher. |
-| `org.dxos.experimental.package.profile`        | `<key>`           | publisher | Plugin metadata (one per key per DID). |
-| `org.dxos.experimental.package.release`        | `<key>:<version>` | publisher | A versioned artifact of a package.     |
+| `org.dxos.experimental.plugin.profile`         | `<key>`           | publisher | Plugin metadata (one per key per DID). |
+| `org.dxos.experimental.plugin.release`         | `<key>:<version>` | publisher | A versioned artifact of a plugin.      |
 
 All record bodies carry a `$type` field set to the NSID (standard ATProto convention; stamped by
 the CLI on write). All records live in the author's own repo and are therefore mutable by that
@@ -111,7 +111,7 @@ policy applied at indexing time, not a write-time restriction (see [Trust model]
 
 Written by `dx registry verify`.
 
-### `package.profile`
+### `plugin.profile`
 
 Mutable metadata for a discoverable plugin. `rkey = <key>` (reverse-domain NSID, e.g.
 `org.dxos.plugin.excalidraw`). The `key` field is the plugin's globally-unique identifier and
@@ -134,16 +134,16 @@ matches the `key` in `dx.config.ts`.
 Written by `dx registry publish` (from the manifest emitted by `composerPlugin` reading `dx.config.ts`)
 or `dx registry publish-package`.
 
-### `package.release`
+### `plugin.release`
 
-A record for one version of a package. `rkey = <key>:<version>`. Conceptually append-only: a new
+A record for one version of a plugin. `rkey = <key>:<version>`. Conceptually append-only: a new
 version is a new record, and the registry treats the first release seen per `(did, key, version)`
 as canonical — but the author technically retains write access to it (see
 [Integrity & tamper detection](#integrity--tamper-detection)).
 
 | Field          | Required | Type              | Constraints | Notes                                                                                                             |
 | -------------- | -------- | ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `package`      | yes      | string            | ≤63 chars   | Key of the parent `package.profile` authored by the same DID.                                                     |
+| `pluginKey`    | yes      | string            | ≤63 chars   | Key of the parent `plugin.profile` authored by the same DID.                                                      |
 | `version`      | yes      | string            | ≤32 chars   | Semver subset without build metadata; pre-release suffixes allowed (`1.2.3-rc.1`). Taken from `package.json`.     |
 | `moduleUrl`    | yes      | string (uri)      | non-empty   | HTTPS URL of the module entrypoint / `manifest.json`. v0 trusts the publisher; content addressing is a follow-on. |
 | `manifestHash` | no       | string            | ≤256 chars  | Integrity hash of the module manifest, e.g. `sha256-<base64>`.                                                    |
@@ -162,7 +162,7 @@ makes the catalog trustworthy is the **indexing policy**, not a write gate:
 
 - **Today (single verifier).** The indexer is configured with one trusted verifier DID
   (`REGISTRY_CURATOR_DID`) and honors `publisher.verification` records **only** from that DID. The
-  verified-DID set is the set of `subject`s across that verifier's records. A `package.*` or
+  verified-DID set is the set of `subject`s across that verifier's records. A `plugin.*` or
   `publisher.profile` record is indexed only if its author DID is in the verified set. This is a
   deliberate moderation simplification while the registry is young — not a protocol restriction.
 - **Revocation.** Deleting the verification record removes the publisher from the verified set on the
@@ -179,7 +179,7 @@ until a trusted verifier vouches for them.
 ## Integrity & tamper detection
 
 Immutability is an **app-view guarantee, not an AT Protocol one.** Like every AT Protocol repo, a
-publisher owns their PDS records and can mutate or delete any of them — including `package.release` —
+publisher owns their PDS records and can mutate or delete any of them — including `plugin.release` —
 and no protocol mechanism makes a record cryptographically immutable. Enforcement therefore lives at
 the **registry app-view** (the edge service that indexes the firehose and serves the catalog to
 Composer): the PDS is the mutable source, and the app-view is the canonical, immutable view of what
@@ -199,7 +199,7 @@ What the app-view enforces:
 
 What stays mutable (the AT Protocol layer):
 
-- The PDS `package.release` record is written with `putRecord` (upsert), and the publisher can change
+- The PDS `plugin.release` record is written with `putRecord` (upsert), and the publisher can change
   its `moduleUrl` / `manifestHash` at will. That is fine — the app-view's pin means such a change is not
   re-served (the PDS is the mutable source; the app-view is the canonical view).
 
@@ -217,9 +217,9 @@ publisher-trusted at the record level (the hosted bundle itself is already immut
 
 - **Bootstrap / backfill.** On first run (and periodically), the indexer walks the verifier's repo
   for verification records to compute the verified-DID set, then lists each verified publisher's repo
-  for `package.*` records (`runBackfill`). The catalog (`GET /registry/plugins`) collects releases
-  per `(authorDid, package-key)` — grouped by the release's `package` field, **not** by parsing the
-  rkey — newest-first, anchored by `at://<authorDid>/org.dxos.experimental.package.profile/<key>`.
+  for `plugin.*` records (`runBackfill`). The catalog (`GET /registry/plugins`) collects releases
+  per `(authorDid, pluginKey)` — grouped by the release's `pluginKey` field, **not** by parsing the
+  rkey — newest-first, anchored by `at://<authorDid>/org.dxos.experimental.plugin.profile/<key>`.
 - **Live updates.** The indexer subscribes to the Jetstream firehose; commits for the four NSIDs are
   validated (Effect-Schema) and written/deleted in DO storage, keyed by `record:<nsid>|<did>|<rkey>`.
 - **Validation seam.** Malformed records are rejected at ingestion against the Effect-Schema mirrors
@@ -257,7 +257,7 @@ works if it was built against an SDK compatible with what Composer ships. DXOS s
 **Mechanism — the manifest dependency snapshot.** The build (`composerPlugin`) auto-populates a
 `dependencies` map into the plugin's `manifest.json`: every declared dependency resolved to its
 concrete installed version (`{ "@dxos/app-framework": "0.8.3", "react": "19.2.0", … }`). This flows
-into the `package.release` record and the catalog (`PluginRelease.dependencies`). The host computes
+into the `plugin.release` record and the catalog (`PluginRelease.dependencies`). The host computes
 compatibility from the **subset it shares with the plugin** — the externalized `@dxos/*` packages —
 comparing each against its own shipped version under a policy (pre-1.0: **same minor**; post-1.0:
 caret). The remaining (bundled) deps are recorded for transparency/audit. A release with no
@@ -296,9 +296,9 @@ runtime sandbox surface is defined. (rkey conventions now match emdash, includin
 ## Schema reconciliation
 
 The JSON lexicons, the Effect-Schema validators, `PluginView`, and the CLI previously had field-level
-drift on `package.profile`. All items listed here are resolved.
+drift on `plugin.profile`. All items listed here are resolved.
 
-- **`slug` → `key`** — the identity field on `package.profile` is now named `key` everywhere: the
+- **`slug` → `key`** — the identity field on `plugin.profile` is now named `key` everywhere: the
   lexicon, the Effect-Schema validator, `PluginProfileSchema` in `@dxos/protocols`, the CLI flags
   (`--key`), and the runtime `Plugin.Meta.profile.key`.
 - **`homepage` → `homePage`** — camelCase alignment across the lexicon, validator, `PluginProfileSchema`,
@@ -308,12 +308,12 @@ drift on `package.profile`. All items listed here are resolved.
 - **`screenshots`** — unified as `{ light?, dark? }[]` (object-only form) across `dx.config.ts`,
   `PluginProfileSchema`, the validator, and the indexer projection. Plain URL strings are no longer
   accepted at authoring time; use `{ dark: 'url' }` or `{ light: 'url', dark: 'url' }`.
-- **`dependsOn`** — added to `package.profile` (author-declared runtime plugin deps, NSIDs),
+- **`dependsOn`** — added to `plugin.profile` (author-declared runtime plugin deps, NSIDs),
   `PluginProfileSchema`, the validator, and `dx.config.ts`.
-- **`spec`** — added to `package.profile` (relative path to a bundled MDL spec),
+- **`spec`** — added to `plugin.profile` (relative path to a bundled MDL spec),
   `PluginProfileSchema`, the validator, and `dx.config.ts`.
-- **`dependencies`** (SDK-compat snapshot on `package.release`) — `composerPlugin` emits the full
-  resolved dependency map into `manifest.json`; the CLI writes it into the `package.release` record;
+- **`dependencies`** (SDK-compat snapshot on `plugin.release`) — `composerPlugin` emits the full
+  resolved dependency map into `manifest.json`; the CLI writes it into the `plugin.release` record;
   the validator preserves it in storage; `PluginReleaseSchema` in `@dxos/protocols` types it.
 
 ## Open questions & follow-ons

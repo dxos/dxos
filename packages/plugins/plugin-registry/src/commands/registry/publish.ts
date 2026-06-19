@@ -43,8 +43,8 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
  * Reads the build/publish orchestration from `dx.config.ts`, runs the declared build command,
  * reads the emitted `manifest.json`, hosts the bundle (default: upload the build
  * output to the DXOS edge registry; override with `publish.assetBaseUrl` to point
- * at your own already-hosted directory), then writes the `package.profile` and
- * `package.release` records to the authenticated publisher's PDS. Release
+ * at your own already-hosted directory), then writes the `plugin.profile` and
+ * `plugin.release` records to the authenticated publisher's PDS. Release
  * integrity is anchored by `manifestHash` (sha256 of `manifest.json`) in the
  * signed release record.
  */
@@ -181,11 +181,11 @@ export const publish = Command.make(
           profile.spec = manifest.spec;
         }
 
-        const profileResult = yield* putRecord(session, NSID.PackageProfile, key, profile);
+        const profileResult = yield* putRecord(session, NSID.PluginProfile, key, profile);
         yield* Console.log(`Profile    ${profileResult.uri}`);
 
-        const releaseResult = yield* putRecord(session, NSID.PackageRelease, `${key}:${version}`, {
-          package: key,
+        const releaseResult = yield* putRecord(session, NSID.PluginRelease, `${key}:${version}`, {
+          pluginKey: key,
           version,
           moduleUrl,
           manifestHash,

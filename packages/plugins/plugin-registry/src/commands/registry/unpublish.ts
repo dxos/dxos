@@ -17,8 +17,8 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, deleteRecord, listRecords, resolveSessi
 const rkeyOf = (uri: string): string => uri.split('/').pop() ?? '';
 
 /**
- * `dx registry unpublish` — removes a package from the authenticated user's PDS:
- * deletes the `package.profile` (rkey = key) and every `package.release`
+ * `dx registry unpublish` — removes a plugin from the authenticated user's PDS:
+ * deletes the `plugin.profile` (rkey = key) and every `plugin.release`
  * (rkey = `<key>:<version>`). The registry indexer unindexes on its next sweep.
  * Hosted bundles in edge R2 are immutable and are not removed.
  */
@@ -31,7 +31,7 @@ export const unpublish = Command.make(
       Options.optional,
     ),
     key: Options.text('key').pipe(
-      Options.withDescription('Package key (the profile rkey). Removes its profile and all releases.'),
+      Options.withDescription('Plugin key (the profile rkey). Removes its profile and all releases.'),
     ),
   },
   (options) =>
@@ -49,12 +49,12 @@ export const unpublish = Command.make(
         let cursor: string | undefined;
         let deletedReleases = 0;
         do {
-          const releases = yield* listRecords(session, NSID.PackageRelease, { limit: 100, cursor });
+          const releases = yield* listRecords(session, NSID.PluginRelease, { limit: 100, cursor });
           cursor = releases.cursor;
           for (const record of releases.records) {
             const rkey = rkeyOf(record.uri);
             if (rkey.startsWith(`${key}:`)) {
-              yield* deleteRecord(session, NSID.PackageRelease, rkey);
+              yield* deleteRecord(session, NSID.PluginRelease, rkey);
               yield* Console.log(`Deleted release ${rkey}`);
               deletedReleases += 1;
             }
@@ -62,7 +62,7 @@ export const unpublish = Command.make(
         } while (cursor !== undefined);
 
         // Delete the profile (rkey = key).
-        yield* deleteRecord(session, NSID.PackageProfile, key);
+        yield* deleteRecord(session, NSID.PluginProfile, key);
         yield* Console.log(`Deleted profile ${key} (${deletedReleases} release(s) removed)`);
       }),
       Effect.provide(FetchHttpClient.layer),

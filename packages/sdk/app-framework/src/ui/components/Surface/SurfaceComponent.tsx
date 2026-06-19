@@ -37,7 +37,7 @@ import {
   type WebComponentDefinition,
 } from './types';
 
-const DEBUG = import.meta.env.VITE_DEBUG;
+const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 

@@ -9,7 +9,6 @@ import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -248,7 +247,7 @@ const TARGET_CONCURRENCY = 3;
  * Failure on one target writes `lastError` on that target only and continues
  * with the next; targets are processed in parallel up to `TARGET_CONCURRENCY`.
  *
- * `Database.Service` and `Feed.FeedService` are provided inside the handler.
+ * `Database.Service` is provided inside the handler.
  * The integration's `target` ref carries the database; the space db is resolved
  * via the Client capability — same shape as `plugin-thread`'s `AppendChannelMessage`.
  */
@@ -421,7 +420,6 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           return { pulled };
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.provide(createFeedServiceLayer(space.db)),
           Effect.provide(SlackApi.SlackCredentials.fromIntegration(integration)),
         ),
       );

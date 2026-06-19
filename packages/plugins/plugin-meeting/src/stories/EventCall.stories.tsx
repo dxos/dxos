@@ -11,8 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -161,13 +160,13 @@ const meta = {
                   endDate: new Date(now.getTime() + 3 * hour).toISOString(),
                 }),
               ];
-              yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(space.db)));
+              yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(space.db)));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
               // Re-read via the feed query so the event objects have their full echo URI set (via
               // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
               // space-qualified ref that findMeetingForEvent can match.
               const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
-                Effect.provide(createFeedServiceLayer(space.db)),
+                Effect.provide(Database.layer(space.db)),
               );
               const event = synced[0];
 

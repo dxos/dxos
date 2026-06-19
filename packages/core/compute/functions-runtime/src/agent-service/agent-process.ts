@@ -87,7 +87,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Operation.Service,
         Registry.Service,
         StorageService.StorageService,
-        Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
         // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
@@ -101,7 +100,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;

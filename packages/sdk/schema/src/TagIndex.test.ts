@@ -4,12 +4,10 @@
 
 import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
@@ -136,7 +134,7 @@ describe('TagIndex (feed integration)', () => {
   test('tags immutable feed objects and filters the feed by tag', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, Item, Host, TagIndex.TagIndex] });
     const db = await peer.createDatabase();
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(db));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());

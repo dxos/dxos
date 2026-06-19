@@ -58,7 +58,7 @@ describe('Blueprint binding resolution (registry refs)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
 
         // Bind the routine's own registry ref (the fix) and persist it to the feed.
         const writer = new AiContext.Binder({ feed, runtime });
@@ -103,7 +103,7 @@ describe('Blueprint binding resolution (registry refs)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
 
         // The pre-fix behaviour: re-wrap the resolved blueprint with `Ref.make`, minting an
         // EID ref that addresses a blueprint which only exists in the registry.

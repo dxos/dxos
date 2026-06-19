@@ -1,11 +1,11 @@
 {
   "lexicon": 1,
-  "id": "org.dxos.experimental.package.profile",
+  "id": "org.dxos.experimental.plugin.profile",
   "defs": {
     "main": {
       "type": "record",
       "key": "literal:key",
-      "description": "Mutable metadata for a discoverable plugin/module published on the DXOS experimental registry. The rkey is the plugin key (reverse-domain NSID, e.g. org.dxos.plugin.excalidraw). Companion org.dxos.experimental.package.release records carry versioned artifacts.",
+      "description": "Mutable metadata for a discoverable plugin/module published on the DXOS experimental registry. The rkey is the plugin key (reverse-domain NSID, e.g. org.dxos.plugin.excalidraw). Companion org.dxos.experimental.plugin.release records carry versioned artifacts.",
       "record": {
         "type": "object",
         "required": ["key", "name", "createdAt"],

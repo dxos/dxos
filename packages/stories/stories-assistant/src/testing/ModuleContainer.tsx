@@ -10,8 +10,8 @@ import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities, AppSpace, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-client';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';
@@ -72,9 +72,8 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       .filter(isNonNullable);
 
     const feedTarget = await chat.feed.load();
-    const feedServiceLayer = createFeedServiceLayer(space.db);
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));

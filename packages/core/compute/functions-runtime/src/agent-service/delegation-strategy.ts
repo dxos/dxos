@@ -30,7 +30,7 @@ export interface Delegation {
 /**
  * Services the strategy callbacks may use. The hosting {@link AgentProcess} provides these.
  */
-export type StrategyServices = Database.Service | Feed.FeedService;
+export type StrategyServices = Database.Service;
 
 /**
  * Turns a conversational agent process into a supervisor: after each turn it reconciles outstanding

@@ -97,7 +97,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // capabilities), minus the delegation blueprint itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
       const inheritedBlueprints = yield* Effect.gen(function* () {
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return binder.getBlueprints().filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
       }).pipe(Effect.scoped);
