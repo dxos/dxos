@@ -42,14 +42,14 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
   // Commit the latest value when the popover is dismissed (Enter, click-outside, or blur), unless cancelled.
   const nameRef = useRef(name);
   nameRef.current = name;
+  const initialNameRef = useRef(name);
   const cancelledRef = useRef(false);
-  // Enter commits then closes, which unmounts and runs the cleanup commit; guard against a duplicate write.
+  // Enter commits then closes, which unmounts and runs the dismissal cleanup; guard against a duplicate write.
   const committedRef = useRef(false);
 
-  const commit = useCallback(() => {
+  const write = useCallback(() => {
     try {
-      if (!cancelledRef.current && !committedRef.current) {
-        committedRef.current = true;
+      if (!cancelledRef.current && nameRef.current !== initialNameRef.current) {
         setName(subject, nameRef.current);
       }
     } catch (err) {
@@ -57,7 +57,25 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
     }
   }, [subject]);
 
-  useEffect(() => commit, [commit]);
+  const commit = useCallback(() => {
+    if (!committedRef.current) {
+      committedRef.current = true;
+      write();
+    }
+  }, [write]);
+
+  // Commit the latest value on dismissal (click-outside/blur) when the component unmounts, unless Enter
+  // already committed or Escape cancelled. This must not set committedRef: under StrictMode the mount-time
+  // setup/cleanup/setup cycle runs this cleanup before any interaction, and flipping the guard there would
+  // suppress the real Enter commit.
+  useEffect(
+    () => () => {
+      if (!committedRef.current) {
+        write();
+      }
+    },
+    [write],
+  );
 
   const close = useCallback(() => {
     void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });
