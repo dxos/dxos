@@ -507,8 +507,9 @@ message Runtime {
     optional Ai ai = 16;
     optional Hub hub = 17;
 
-    /// EDGE service configurations keyed by `EdgeService.name`
-    /// (e.g. "calls", "transcription", "image", "discord", "cors-proxy").
+    /// EDGE service configurations keyed by `EdgeService.name`. The canonical set
+    /// of valid names is the `EdgeServiceName` enum in
+    /// packages/sdk/config/src/edge-services.ts (e.g. "calls", "image", "discord").
     /// Supersedes per-service URL constants; see packages/sdk/config/AUDIT.md.
     repeated EdgeService edge_services = 18;
   }
