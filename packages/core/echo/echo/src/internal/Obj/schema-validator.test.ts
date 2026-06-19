@@ -131,7 +131,7 @@ describe('schema-validator', () => {
       });
     });
 
-    test('walking into an Unknown-typed value does not warn', () => {
+    test('walking into an Unknown-typed value does not warn', ({ expect }) => {
       // Mirrors the annotation Dictionary (Record<string, Unknown>): nested keys/indices under an
       // Unknown slot are all valid, so the validator must not log "unknown property" while walking them.
       const schema = Schema.Struct({ dict: Schema.Record({ key: Schema.String, value: Schema.Unknown }) });
