@@ -81,19 +81,55 @@ export type ProcessorRequest = {
   options?: ProcessorRequestOptions;
 };
 
+/** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
+const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
+
+/** An actionable next-step a chat error surfaces in its toast; the label key is resolved by the chat UI. */
+export type ChatErrorAction = { readonly labelKey: string };
+
+/**
+ * Display error for an over-quota (HTTP 429) rejection. Declares an {@link action} so the chat toast can
+ * offer a usage-dashboard link declaratively — the UI renders whatever action an error declares rather
+ * than branching on the error type.
+ */
+export class AiUsageQuotaError extends Error {
+  readonly action: ChatErrorAction = { labelKey: 'view-usage.label' };
+}
+
+/**
+ * Matches an over-quota rejection (EDGE responds 429) in error text. The typed
+ * {@link UsageQuotaExceededError} is wrapped deep in the cause chain and does not survive the
+ * agent-process boundary — the failure is rendered to a string via `Cause.pretty`, which drops
+ * nested causes — so detection also relies on the HTTP 429 that `@effect/ai`'s
+ * {@link AiError.HttpResponseError} embeds in its message (e.g. "... (429 POST ...").
+ */
+const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota exceeded/i;
+
+/** Whether an error denotes an over-quota (HTTP 429) rejection, detected by typed status or message text. */
+const isQuotaError = (err: unknown): boolean => {
+  if (AiError.isAiError(err)) {
+    if (err._tag === 'HttpResponseError' && err.response.status === 429) {
+      return true;
+    }
+    return QUOTA_PATTERN.test(err.description ?? err.message);
+  }
+  return typeof err === 'string' && QUOTA_PATTERN.test(err);
+};
+
 /**
  * Maps a failure from the agent fiber to an error suitable for display.
- * {@link AiError}s originate from the AI service and are actionable by the user
+ * An over-quota (HTTP 429) rejection is surfaced as an actionable usage-limit message; the typed
+ * {@link UsageQuotaExceededError} only survives on the direct path, so {@link isQuotaError} also
+ * recognizes the stringified 429 the chat receives across the agent-process boundary.
+ * Other {@link AiError}s originate from the AI service and are actionable by the user
  * (e.g., "model 'x' not found", "Connection refused"), so their detail is propagated.
  * Any other failure is treated as an internal/unexpected error and reported generically
  * to avoid leaking implementation detail.
  */
-const parseError = (err: unknown): Error => {
+export const parseError = (err: unknown): Error => {
   const quotaError = findInCause(err, UsageQuotaExceededError.is);
-  if (quotaError) {
-    return new Error(quotaError.message?.trim() || 'You have reached your AI usage limit for this period.', {
-      cause: err,
-    });
+  if (quotaError || isQuotaError(err)) {
+    return new AiUsageQuotaError(quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, { cause: err });
   }
 
   let message: string | undefined;
