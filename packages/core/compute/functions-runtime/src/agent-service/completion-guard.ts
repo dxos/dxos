@@ -17,5 +17,5 @@ export interface CompletionGuard {
    */
   readonly getIncompletePlanSummary: (
     feed: Feed.Feed,
-  ) => Effect.Effect<string | undefined, never, Database.Service | Feed.FeedService>;
+  ) => Effect.Effect<string | undefined, never, Database.Service>;
 }

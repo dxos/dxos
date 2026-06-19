@@ -4,12 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -203,7 +201,7 @@ const meta = {
                 );
               }
             }).pipe(
-              Effect.provide(Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.db))),
+              Effect.provide(Database.layer(personalSpace.db)),
             );
           }),
         }),

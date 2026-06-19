@@ -2,48 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import { describe, it } from 'vitest';
 
-import { DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
 import * as AiContext from './AiContext';
 
-const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
-  const mockFeedService: Context.Tag.Service<Feed.FeedService> = {
-    append: async () => {},
-    remove: async () => {},
-    query: () =>
-      ({
-        subscribe: () => () => {},
-        results: [],
-        run: async () => [],
-      }) as any,
-    sync: async () => {},
-    getSyncState: async () => ({ blocksToPull: 0, blocksToPush: 0, totalBlocks: 0 }),
-  };
-  const layer = Layer.succeed(Feed.FeedService, mockFeedService);
-  return Effect.runSync(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(layer)));
-};
-
 describe('AiContext.Binder', () => {
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed] });
+
   it('should handle bind with Ref', async () => {
-    const feed = Feed.make();
-    const runtime = createMockFeedRuntime();
-    const binder = new AiContext.Binder({ feed, runtime });
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.runtime<Database.Service>();
 
-    const TestSchema = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.type.example', '0.1.0')));
+      const TestSchema = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.type.example', '0.1.0')));
 
-    const obj = Obj.make(TestSchema, {});
-    const ref = Ref.make(obj);
+      const obj = Obj.make(TestSchema, {});
+      const ref = Ref.make(obj);
 
-    await binder.bind({
-      blueprints: [],
-      objects: [ref],
-    });
+      const binder = new AiContext.Binder({ feed, runtime });
+
+      yield* Effect.promise(() =>
+        binder.bind({
+          blueprints: [],
+          objects: [ref],
+        }),
+      );
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
   });
 });

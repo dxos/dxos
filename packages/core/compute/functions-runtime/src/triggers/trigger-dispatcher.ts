@@ -100,7 +100,6 @@ type TriggerDispatcherServices =
   | Registry.AtomRegistry
   | ProcessManager.Service
   | TriggerStateStore
-  | Feed.FeedService
   | Database.Service;
 
 export type InvocationsState = {

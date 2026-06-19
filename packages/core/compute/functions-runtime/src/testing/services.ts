@@ -7,7 +7,7 @@ import type * as Context from 'effect/Context';
 import type { Space } from '@dxos/client/echo';
 import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { type EchoDatabase, makeFeedService } from '@dxos/echo-client';
+import { type EchoDatabase } from '@dxos/echo-client';
 import { ConfiguredCredentialsService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
@@ -74,13 +74,11 @@ export const createTestServices = ({
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && !!db), 'space', 'space can be provided only if db is not');
 
-  const feedDb = space?.internal.db ?? db;
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
     trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
-    feeds: feedDb ? makeFeedService(feedDb) : undefined,
   });
 };
 

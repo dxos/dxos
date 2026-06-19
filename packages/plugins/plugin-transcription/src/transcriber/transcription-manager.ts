@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { synchronized } from '@dxos/async';
-import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -57,7 +57,7 @@ export class TranscriptionManager extends Resource {
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _feed?: Feed.Feed = undefined;
-  private _feedServiceLayer?: Layer.Layer<Feed.FeedService> = undefined;
+  private _feedServiceLayer?: Layer.Layer<Database.Service> = undefined;
   private _enabledAtom = Atom.make(false);
 
   constructor(options: TranscriptionManagerOptions) {
@@ -77,7 +77,7 @@ export class TranscriptionManager extends Resource {
 
   setFeed(space: Space, feed: Feed.Feed): this {
     this._feed = feed;
-    this._feedServiceLayer = createFeedServiceLayer(space.db);
+    this._feedServiceLayer = Database.layer(space.db);
     return this;
   }
 

@@ -13,7 +13,6 @@ import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { makeFeedService } from '../feed/feed-service';
 import type { DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from './echo-test-builder';
 
@@ -35,11 +34,11 @@ export type TestDatabaseOptions = {
    */
   spaceKey?: PublicKey | 'fixed';
   storagePath?: string;
-  onInit?: () => Effect.Effect<void, never, Database.Service | Feed.FeedService>;
+  onInit?: () => Effect.Effect<void, never, Database.Service>;
 };
 
 export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}): Layer.Layer<
-  Database.Service | Feed.FeedService,
+  Database.Service,
   never,
   never
 > =>
@@ -69,10 +68,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           );
 
           if (onInit) {
-            yield* onInit().pipe(
-              Effect.provideService(Database.Service, Database.makeService(db)),
-              Effect.provideService(Feed.FeedService, makeFeedService(db)),
-            );
+            yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
           }
         } else {
           const resolvedKey = PublicKey.from(testMetadata.key);
@@ -84,16 +80,10 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
       } else {
         db = yield* Effect.promise(() => peer.createDatabase(key));
         if (onInit) {
-          yield* onInit().pipe(
-            Effect.provideService(Database.Service, Database.makeService(db)),
-            Effect.provideService(Feed.FeedService, makeFeedService(db)),
-          );
+          yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
         }
       }
 
-      return Context.mergeAll(
-        Context.make(Database.Service, Database.makeService(db)),
-        Context.make(Feed.FeedService, makeFeedService(db)),
-      );
+      return Context.make(Database.Service, Database.makeService(db));
     }),
   );

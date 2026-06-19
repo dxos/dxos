@@ -14,7 +14,6 @@ import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { Operation } from '@dxos/compute';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { Feed } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -240,7 +239,6 @@ const ServiceLayer = Layer.empty.pipe(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer(),
       configuredCredentialsLayer([]),
-      Feed.notAvailable,
     ),
   ),
   Layer.orDie,

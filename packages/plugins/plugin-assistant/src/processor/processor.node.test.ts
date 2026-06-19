@@ -26,7 +26,7 @@ describe('Chat processor', () => {
       function* ({ expect }) {
         const feed = Feed.make();
         yield* Database.add(feed);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
         const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any);

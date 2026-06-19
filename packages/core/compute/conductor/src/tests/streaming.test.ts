@@ -11,7 +11,6 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Operation, Trace } from '@dxos/compute';
-import { Feed } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -39,7 +38,6 @@ const TestLayer = Layer.empty.pipe(
       TestAiService(),
       TestDatabaseLayer(),
       configuredCredentialsLayer([]),
-      Feed.notAvailable,
       Trace.writerLayerNoop,
     ),
   ),

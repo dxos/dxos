@@ -42,13 +42,13 @@ export class FeedTraceSink extends Context.Tag('@dxos/functions-runtime/FeedTrac
 /**
  * Layer that resolves a space's trace feed, wires up a buffered flushing
  * writer, and exposes it as {@link FeedTraceSink}. Requires ambient
- * {@link Database.Service} and {@link Feed.FeedService} (per-space).
+ * {@link Database.Service} (per-space).
  */
-export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service | Feed.FeedService> = Layer.scopedContext(
+export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = Layer.scopedContext(
   Effect.gen(function* () {
     const feed = yield* getOrCreateTraceFeed();
 
-    const runtime = yield* Effect.runtime<Feed.FeedService>();
+    const runtime = yield* Effect.runtime<Database.Service>();
     let buffer: Trace.Message[] = [];
     let flushMore = false;
     let flushFiber: Fiber.RuntimeFiber<void> | undefined;
@@ -135,7 +135,7 @@ export const layerDirect: Layer.Layer<Trace.TraceSink, never, FeedTraceSink> = L
 export const layerLiveWithDirectSink: Layer.Layer<
   Trace.TraceSink | FeedTraceSink,
   never,
-  Database.Service | Feed.FeedService
+  Database.Service
 > = layerDirect.pipe(Layer.provideMerge(layerLive));
 
 export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* () {

@@ -126,7 +126,7 @@ export const makeInitialized = (
   props: MakeProps,
   // TODO(burdon): Reconcile with props.blueprints.
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
+): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
     const agent = yield* Database.add(
       Obj.make(Agent, {
@@ -140,7 +140,7 @@ export const makeInitialized = (
       }),
     );
     const feed = yield* Database.add(Feed.make());
-    const runtime = yield* Effect.runtime<Feed.FeedService>();
+    const runtime = yield* Effect.runtime<Database.Service>();
     const contextBinder = new AiContext.Binder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
     const agentBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
@@ -183,7 +183,7 @@ export const makeInitialized = (
  */
 export const resetChatHistory = (
   agent: Agent,
-): Effect.Effect<void, EntityNotFoundError, Feed.FeedService | Database.Service> =>
+): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     invariant(agent.chat, 'Agent must have an existing chat to reset.');
 
@@ -191,7 +191,7 @@ export const resetChatHistory = (
       Effect.map((_) => _.feed),
       Effect.flatMap(Database.load),
     );
-    const runtime = yield* Effect.runtime<Feed.FeedService>();
+    const runtime = yield* Effect.runtime<Database.Service>();
     const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
         new AiContext.Binder({

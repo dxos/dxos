@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation } from '@dxos/compute';
-import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { Database, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { Agent } from '../../../types';
@@ -28,7 +28,6 @@ export const AgentWorker = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    Feed.FeedService,
     Registry.Service,
     Trace.TraceService,
     OpaqueToolkit.OpaqueToolkitProvider,
@@ -48,7 +47,7 @@ export const Qualifier = Operation.make({
     event: TriggerEvent.TriggerEvent,
   }),
   output: Schema.Void,
-  services: [AiService.AiService, Database.Service, Feed.FeedService],
+  services: [AiService.AiService, Database.Service],
 });
 
 export const GetContext = Operation.make({

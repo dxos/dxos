@@ -10,8 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Query } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -82,7 +81,7 @@ const meta = {
                   blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
                 }),
               ];
-              yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.db)));
+              yield* Feed.append(feed, seed).pipe(Effect.provide(Database.layer(personalSpace.db)));
             }),
         }),
         SpacePlugin({}),

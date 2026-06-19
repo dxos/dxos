@@ -53,7 +53,6 @@ export type AiChatServices =
  */
 export type SpaceServices =
   | Database.Service
-  | Feed.FeedService
   | Credential.CredentialsService
   | AiService.AiService
   | AgentService.AgentService

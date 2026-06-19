@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Feed, Ref, Registry } from '@dxos/echo';
+import { Database, DXN, Ref, Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -24,7 +24,7 @@ export const SyncFeed = Operation.make({
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Feed.FeedService, Database.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     feed: Ref.Ref(Subscription.Subscription),
   }),

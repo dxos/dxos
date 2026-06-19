@@ -10,7 +10,6 @@ import { AiContext, SessionLink } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -29,10 +28,10 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found.');
 
-      const feedServiceLayer = createFeedServiceLayer(space.db);
+      const dbLayer = Database.layer(space.db);
 
       const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(
-        Effect.provide(feedServiceLayer),
+        Effect.provide(dbLayer),
       );
 
       // Sort chronologically to find the last message.
@@ -58,13 +57,13 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
             feedRef: Ref.make(sourceFeed),
             messageId: lastMessage.id,
           }),
-        ]).pipe(Effect.provide(feedServiceLayer));
+        ]).pipe(Effect.provide(dbLayer));
       }
 
       // Copy source chat's blueprint and object bindings to the new feed.
       // Sort chronologically so add/remove events are applied in the correct order.
       const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
-        Effect.provide(feedServiceLayer),
+        Effect.provide(dbLayer),
       )).filter(Obj.instanceOf(AiContext.Binding));
 
       if (sourceBindings.length > 0) {
@@ -83,7 +82,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
             blueprints: { added: Array.from(blueprintRefMap.values()), removed: [] },
             objects: { added: Array.from(objectRefMap.values()), removed: [] },
           }),
-        ]).pipe(Effect.provide(feedServiceLayer));
+        ]).pipe(Effect.provide(dbLayer));
       }
 
       if (companionTo) {

@@ -7,8 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { type Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
@@ -376,7 +376,7 @@ export const appendPostContent = async (
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
   await Feed.append(echoFeed, [content]).pipe(
-    Effect.provide(createFeedServiceLayer(space.db)),
+    Effect.provide(Database.layer(space.db)),
     EffectEx.runAndForwardErrors,
   );
 };

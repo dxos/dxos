@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Ref, DXN } from '@dxos/echo';
+import { Database, Ref, DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
@@ -269,7 +269,7 @@ export const InspectInvocations = Operation.make({
       description: 'Total number of invocations found.',
     }),
   }),
-  services: [Database.Service, Feed.FeedService],
+  services: [Database.Service],
 });
 
 const DeployedFunctionSchema = Schema.Struct({

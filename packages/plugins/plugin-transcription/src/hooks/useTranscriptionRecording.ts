@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
@@ -68,8 +67,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
         }
       }
 
-      const feedServiceLayer = createFeedServiceLayer(space.db);
-      await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
+      await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
     },
     [space, feed, identity, invokePromise, settings],
   );

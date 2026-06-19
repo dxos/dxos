@@ -38,7 +38,6 @@ export const trace = Command.make(
   ({ functionId, spaceId, localTriggers }) =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
-      const feedService = yield* Feed.FeedService;
       log.info('Starting invocation trace...');
 
       const logBuffer = createLogBuffer();
@@ -74,7 +73,6 @@ export const trace = Command.make(
           <App focusElements={['table']} logBuffer={logBuffer} theme={theme}>
             <Trace
               db={db}
-              feedService={feedService}
               feed={traceFeed ? Option.some(traceFeed) : Option.none()}
               functionId={functionId}
             />

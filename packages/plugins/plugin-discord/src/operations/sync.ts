@@ -10,7 +10,6 @@ import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -449,7 +448,6 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             return { pulled };
           }).pipe(
             Effect.provide(Database.layer(db)),
-            Effect.provide(createFeedServiceLayer(space.db)),
             Effect.provide(makeDiscordLayer(integration)),
           ),
         );

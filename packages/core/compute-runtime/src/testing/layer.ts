@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as NodeFs from 'node:fs';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
-import { type DatabaseImpl, makeFeedService } from '@dxos/echo-client';
+import { type DatabaseImpl } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
@@ -33,11 +33,11 @@ export type TestDatabaseOptions = {
    */
   spaceKey?: PublicKey | 'fixed';
   storagePath?: string;
-  onInit?: () => Effect.Effect<void, never, Database.Service | Feed.FeedService>;
+  onInit?: () => Effect.Effect<void, never, Database.Service>;
 };
 
 export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}): Layer.Layer<
-  Database.Service | Feed.FeedService,
+  Database.Service,
   never,
   never
 > =>
@@ -72,7 +72,6 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           if (onInit) {
             yield* onInit().pipe(
               Effect.provideService(Database.Service, Database.makeService(db)),
-              Effect.provideService(Feed.FeedService, makeFeedService(db)),
             );
           }
         } else {
@@ -87,14 +86,10 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
         if (onInit) {
           yield* onInit().pipe(
             Effect.provideService(Database.Service, Database.makeService(db)),
-            Effect.provideService(Feed.FeedService, makeFeedService(db)),
           );
         }
       }
 
-      return Context.mergeAll(
-        Context.make(Database.Service, Database.makeService(db)),
-        Context.make(Feed.FeedService, makeFeedService(db)),
-      );
+      return Context.make(Database.Service, Database.makeService(db));
     }),
   );

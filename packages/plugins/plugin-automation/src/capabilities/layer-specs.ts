@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Registry } from '@dxos/echo';
+import { Database, Registry } from '@dxos/echo';
 import {
   FeedTraceSink,
   RemoteFunctionExecutionService,
@@ -135,7 +135,7 @@ const TriggerStateStoreSpec = LayerSpec.make(
 const FeedTraceSinkSpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [Database.Service, Feed.FeedService],
+    requires: [Database.Service],
     provides: [FeedTraceSink.FeedTraceSink],
   },
   () => FeedTraceSink.layerLive,
@@ -171,7 +171,6 @@ const TriggerDispatcherSpec = LayerSpec.make(
     affinity: 'space',
     requires: [
       Database.Service,
-      Feed.FeedService,
       TriggerStateStore,
       ProcessManager.ProcessManagerService,
       AtomRegistry.AtomRegistry,

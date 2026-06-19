@@ -19,7 +19,7 @@ import {
   DatabaseBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
@@ -151,7 +151,7 @@ describe('AssistantPlugin', () => {
           { spaceId: personalSpace.id },
         );
         expect(result).toEqual({ capital: 'paris' });
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
     );
   });
 
@@ -190,7 +190,6 @@ describe('AssistantPlugin', () => {
           ServiceResolver.provide(
             { space: personalSpace.id },
             Database.Service,
-            Feed.FeedService,
             AgentService.AgentService,
             Registry.Service,
           ),
