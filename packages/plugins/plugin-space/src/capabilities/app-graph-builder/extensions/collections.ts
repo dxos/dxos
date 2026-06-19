@@ -210,7 +210,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Action on the collections section header to create a new collection.
+    // Action on the collections section header to add an object to the space's root collection.
     GraphBuilder.createExtension({
       id: 'collectionsSectionActions',
       match: (node) => {
@@ -220,16 +220,26 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       actions: (space) =>
         Effect.succeed([
           Node.makeAction({
-            id: 'create-collection',
+            id: SpaceOperation.OpenCreateObject.meta.key,
             data: () =>
-              Operation.invoke(SpaceOperation.OpenCreateObject, {
-                target: space.db,
-                typename: Type.getTypename(Collection.Collection),
+              Effect.gen(function* () {
+                // Target the root collection so the create dialog offers collection-eligible types, like
+                // any other collection; fall back to the space db if it hasn't been created yet.
+                const rootCollection = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
+                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  // Qualified id of the collections section node (root/<spaceId>/collections), so the new
+                  // object's navigation path resolves under the section — the bare segment would not.
+                  target: rootCollection ?? space.db,
+                  targetNodeId: Paths.getCollectionsPath(space.id),
+                });
               }),
             properties: {
-              label: ['add-object.label', { ns: Type.getTypename(Collection.Collection) }],
+              label: CREATE_OBJECT_IN_COLLECTION_LABEL,
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
+              testId: 'spacePlugin.createObject',
             },
           }),
         ]),
