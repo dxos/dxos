@@ -136,10 +136,20 @@ export const useListSelection: {
             setSelected(id, mode === 'multi' ? !selected : true);
           },
           ...(trackFocus && {
-            onFocus: () => {
-              if (!disabled && !selected) {
-                setSelected(id, true);
+            onFocus: (event: FocusEvent) => {
+              if (disabled || selected) {
+                return;
               }
+              // Selection follows focus only while navigating *between* options within the list.
+              // Focus entering the list from outside (e.g. a popover auto-focusing on open) must
+              // not change selection, or it would clobber the controlled value when entry focus
+              // lands on a non-selected option. Detect entry via `relatedTarget`: a synthetic event
+              // without DOM context (unit tests) falls through to the original follow-focus path.
+              const container = event.currentTarget?.closest?.('[role="listbox"],[role="list"],[role="grid"]');
+              if (container && !container.contains(event.relatedTarget)) {
+                return;
+              }
+              setSelected(id, true);
             },
           }),
         },

@@ -65,7 +65,7 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
               <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport classNames={mx('flex grid grid-rows-[1fr_40px] w-full')}>
+                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
@@ -141,7 +141,7 @@ const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'regi
 
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const { t } = useTranslation(meta.profile.key);
-  const [view, setView] = useObject(chat, 'view');
+  const [view, setView] = useObject(chat, 'viewType');
   const value = (view as Assistant.ChatView | undefined) ?? 'normal';
 
   return (

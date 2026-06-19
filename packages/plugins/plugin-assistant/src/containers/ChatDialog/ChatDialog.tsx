@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
-import { useRegistry } from '@dxos/react-client/echo';
+import { useObject, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
@@ -30,6 +30,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { preset, ...chatProps } = usePresets(online);
   const registry = useRegistry();
   const processor = useChatProcessor({ chat, preset, runtime, registry, settings });
+  // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.
+  const [chatViewType] = useObject(chat, 'viewType');
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
@@ -56,7 +58,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
         <NaturalChatDialog.Content>
-          <Chat.Thread viewType={(chat.view as Assistant.ChatView | undefined) ?? settings.chatView} />
+          <Chat.Thread viewType={(chatViewType as Assistant.ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
           <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
