@@ -14,7 +14,7 @@ import * as Record from 'effect/Record';
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
+import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
 
 import { scheduleTask, yieldOrContinue } from '#scheduler';
 
@@ -63,7 +63,7 @@ export type ActionGroupsExtension = (
 
 export type BuilderExtension = Readonly<{
   id: string;
-  position?: Position;
+  position?: Position.Position;
   relation?: Node.RelationInput;
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
@@ -198,9 +198,7 @@ class GraphBuilderImpl implements GraphBuilder {
     );
     if (ids.length > 0) {
       const sortedIds = [...nodes]
-        .sort((a, b) =>
-          byPosition(a.properties ?? ({} as { position?: Position }), b.properties ?? ({} as { position?: Position })),
-        )
+        .sort((a, b) => Position.compare({ position: a.properties?.position }, { position: b.properties?.position }))
         .map((n) => n.id);
       Graph.sortEdges(this._graph, id, relation, sortedIds);
     }
@@ -233,7 +231,7 @@ class GraphBuilderImpl implements GraphBuilder {
       return Function.pipe(
         get(this._extensions),
         Record.values,
-        Array.sortBy(byPosition),
+        Array.sortBy(Position.compare),
         Array.map(({ resolver }) => resolver),
         Array.filter(isNonNullable),
         Array.map((resolver) => get(resolver(id))),
@@ -256,7 +254,7 @@ class GraphBuilderImpl implements GraphBuilder {
       const extensions = Function.pipe(
         get(this._extensions),
         Record.values,
-        Array.sortBy(byPosition),
+        Array.sortBy(Position.compare),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
             Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
@@ -558,7 +556,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
 export type CreateExtensionRawOptions = {
   id: string;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
@@ -696,7 +694,7 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
   resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
 };
 
 /**
@@ -821,7 +819,7 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
   connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
 };
 
 /**

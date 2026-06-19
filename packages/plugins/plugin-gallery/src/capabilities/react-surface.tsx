@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Position } from '@dxos/util';
 
 import { GalleryArticle, GalleryShow } from '#containers';
 import { meta } from '#meta';
@@ -26,7 +27,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'show',
-        position: 'first',
+        position: Position.first,
         filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Gallery.Gallery }> =>

@@ -18,6 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -134,7 +135,7 @@ export default Capability.makeModule(
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
-                position: 'first',
+                position: Position.first,
               }),
             ];
           }),
@@ -167,7 +168,7 @@ export default Capability.makeModule(
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),

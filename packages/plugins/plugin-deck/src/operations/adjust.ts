@@ -11,7 +11,7 @@ import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
@@ -66,7 +66,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           Option.map((node) =>
             Graph.getConnections(graph, node.id, 'child')
               .filter((n) => n.type === PLANK_COMPANION_TYPE)
-              .toSorted((a, b) => byPosition(a.properties, b.properties)),
+              .toSorted((a, b) => Position.compare(a.properties, b.properties)),
           ),
           Option.flatMap((companions) => (companions.length > 0 ? Option.some(companions[0]) : Option.none())),
         );

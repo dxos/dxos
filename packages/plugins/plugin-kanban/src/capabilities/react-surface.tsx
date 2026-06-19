@@ -11,6 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { Position } from '@dxos/util';
 
 import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
@@ -29,7 +30,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'objectProperties',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),

@@ -14,6 +14,7 @@ import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -48,7 +49,7 @@ export default Capability.makeModule(
               label: ['channel-companion.label', { ns: meta.profile.key }],
               icon: 'ph--hash--regular',
               data: 'chat',
-              position: 'first',
+              position: Position.first,
             }),
           ]);
         },

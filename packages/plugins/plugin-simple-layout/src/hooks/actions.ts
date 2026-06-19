@@ -9,7 +9,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { SimpleLayoutCapabilities } from '#types';
 
@@ -48,7 +48,7 @@ export const createCompanionActions = (
   const activeConnections = activeId ? get(graph.connections(activeId, 'child')) : [];
   const companions = activeConnections
     .filter((node: Node.Node) => node.type === PLANK_COMPANION_TYPE)
-    .toSorted((a: Node.Node, b: Node.Node) => byPosition(a.properties, b.properties));
+    .toSorted((a: Node.Node, b: Node.Node) => Position.compare(a.properties, b.properties));
 
   const nodes: ActionGraphProps['nodes'] = [];
   const edges: ActionGraphProps['edges'] = [];
