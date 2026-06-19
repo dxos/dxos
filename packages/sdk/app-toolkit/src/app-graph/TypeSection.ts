@@ -8,7 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { GraphBuilder, Node } from '@dxos/app-graph';
-import { Annotation, Filter, Key, Obj, Query, Type } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 
@@ -16,6 +17,28 @@ import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';
 import { AppNodeMatcher } from '../app-graph';
 import { AppNode } from '../app-graph';
+import { AppAnnotation } from '../echo';
+
+type SectionOrderMap = Record<string, Ref.Ref<Obj.Unknown>[]>;
+
+const EMPTY_SECTION_ORDER: SectionOrderMap = {};
+
+/** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
+export const makeSectionRearrangeCallback = AppNode.createFactory(
+  (space: Space, typename: string) => (nextOrder: unknown[]) => {
+    const objects = nextOrder.filter(Obj.isObject);
+    const current = Annotation.get(space.properties, AppAnnotation.SectionOrderAnnotation).pipe(
+      Option.getOrElse(() => EMPTY_SECTION_ORDER),
+    );
+    Obj.update(space.properties, (props) => {
+      Annotation.set(props, AppAnnotation.SectionOrderAnnotation, {
+        ...current,
+        [typename]: objects.map(Ref.make),
+      });
+    });
+  },
+  (space, typename) => `${typename}:${space.id}`,
+);
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under
@@ -71,6 +94,27 @@ export const createTypeSectionExtension = (
         return Effect.succeed([]);
       }
 
+      // Subscribe so the connector re-runs when section order changes.
+      get(Obj.atom(space.properties));
+      const sectionOrderMap = Annotation.get(space.properties, AppAnnotation.SectionOrderAnnotation).pipe(
+        Option.getOrElse(() => EMPTY_SECTION_ORDER),
+      );
+      const storedRefs = sectionOrderMap[typename] ?? [];
+      // Extract entity IDs from ref URIs without loading targets (target is a lazy resolver).
+      const orderedIds = storedRefs
+        .map((ref) => (EID.isEID(ref.uri) ? EID.getEntityId(ref.uri) : undefined))
+        .filter((id): id is string => id !== undefined);
+      const orderMap = new Map(orderedIds.map((id, index) => [id, index]));
+
+      const orderedObjects = objects.toSorted((a, b) => {
+        const ia = orderMap.has(a.id) ? orderMap.get(a.id)! : Infinity;
+        const ib = orderMap.has(b.id) ? orderMap.get(b.id)! : Infinity;
+        if (ia !== ib) { return ia - ib; }
+        return a.id.localeCompare(b.id);
+      });
+
+      const onRearrange = makeSectionRearrangeCallback(space, typename);
+
       // Mirror AppNode.makeObject: look up the registered Type.Type entity to read icon/hue.
       // Raw schema classes don't carry annotations reliably; the registry copy does.
       const typeEntity = space.db.graph.registry
@@ -102,8 +146,8 @@ export const createTypeSectionExtension = (
             testId,
             ...(options?.position ? { position: options.position } : {}),
           },
-          nodes: objects
-            .map((object) => AppNode.makeObject({ get, db: space.db, object }))
+          nodes: orderedObjects
+            .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange }))
             .filter((node): node is NonNullable<typeof node> => node !== null),
         }),
       ]);

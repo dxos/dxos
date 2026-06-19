@@ -609,6 +609,40 @@ describe('GraphBuilder', () => {
 
         expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v2');
       });
+
+      test('are reordered when connector re-runs with different child order', async ({ expect }) => {
+        const makeMultiParent = (childIds: string[]): Node.NodeArg<any> => ({
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: childIds.map((cid) => ({ id: cid, type: EXAMPLE_TYPE, data: cid })),
+        });
+
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [makeMultiParent(['c1', 'c2', 'c3'])]);
+        await GraphBuilder.flush(builder);
+
+        {
+          const children = registry.get(graph.connections('root/parent-node', 'child'));
+          expect(children.map((n) => n.id)).to.deep.equal([
+            'root/parent-node/c1',
+            'root/parent-node/c2',
+            'root/parent-node/c3',
+          ]);
+        }
+
+        registry.set(nodesAtom, [makeMultiParent(['c3', 'c1', 'c2'])]);
+        await GraphBuilder.flush(builder);
+
+        {
+          const children = registry.get(graph.connections('root/parent-node', 'child'));
+          expect(children.map((n) => n.id)).to.deep.equal([
+            'root/parent-node/c3',
+            'root/parent-node/c1',
+            'root/parent-node/c2',
+          ]);
+        }
+      });
     });
 
     test('sort edges', async () => {

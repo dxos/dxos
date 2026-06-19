@@ -120,7 +120,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 db: space.db,
                 object,
                 navigable: ephemeralState.navigableCollections,
-                parentCollection: collectionRef?.target,
+                onRearrange: collectionRef?.target
+                  ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
+                  : undefined,
               }),
             )
             .filter(isNonNullable),
@@ -157,7 +159,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   object,
                   db,
                   navigable: ephemeralState.navigableCollections,
-                  parentCollection: collection,
+                  onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
                 }),
             )
             .filter(isNonNullable),

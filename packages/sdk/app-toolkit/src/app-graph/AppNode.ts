@@ -81,7 +81,16 @@ export const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.ite
 
 export const blockInstructionCache = new Map<string, (source: TreeData, instruction: Instruction) => boolean>();
 export const collectionPartialsCache = new Map<string, ReturnType<typeof buildCollectionPartials>>();
-export const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
+
+/** Stable rearrange callback that reorders a Collection's objects array. Keyed by collection URI. */
+export const makeCollectionRearrangeCallback = createFactory(
+  (collection: Collection.Collection) => (nextOrder: unknown[]) => {
+    Obj.update(collection, (collection) => {
+      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+    });
+  },
+  (collection) => Obj.getURI(collection),
+);
 
 //
 // Collection partials.
@@ -153,7 +162,7 @@ export const makeObject = ({
   disposition,
   droppable = true,
   navigable = false,
-  parentCollection,
+  onRearrange,
 }: {
   /** Atom context from the enclosing connector — registers reactive subscriptions so property changes re-run the connector. */
   get: Atom.Context;
@@ -162,7 +171,8 @@ export const makeObject = ({
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
-  parentCollection?: Collection.Collection;
+  /** Rearrange callback invoked with the next sibling order on drop. */
+  onRearrange?: (nextOrder: unknown[]) => void;
 }) => {
   const typename = Obj.getTypename(object);
   if (!typename) {
@@ -205,20 +215,6 @@ export const makeObject = ({
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
-
-  let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
-  if (parentCollection) {
-    const collectionUri = Obj.getURI(parentCollection);
-    onRearrange = rearrangeCache.get(collectionUri);
-    if (!onRearrange) {
-      onRearrange = (nextOrder: unknown[]) => {
-        Obj.update(parentCollection, (parentCollection) => {
-          parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
-        });
-      };
-      rearrangeCache.set(collectionUri, onRearrange);
-    }
-  }
 
   const objectUri = Obj.getURI(object);
   let blockInstruction = blockInstructionCache.get(objectUri);

@@ -917,6 +917,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
     addNodesImpl(graph, nodes);
     const _edges = nodes.map((node) => ({ source: id, target: node.id, relation: 'child' as const }));
     addEdgesImpl(graph, _edges);
+    sortEdgesImpl(graph, id, 'child', nodes.map((n) => n.id));
   }
 
   if (edges) {
