@@ -375,8 +375,5 @@ export const appendPostContent = async (
     ...(entry.imageUrl ? { imageUrl: entry.imageUrl } : {}),
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
-  await Feed.append(echoFeed, [content]).pipe(
-    Effect.provide(Database.layer(space.db)),
-    EffectEx.runAndForwardErrors,
-  );
+  await Feed.append(echoFeed, [content]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
 };

@@ -19,11 +19,7 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
   });
 };
 
-export type MessageGenerator = Effect.Effect<
-  void,
-  never,
-  Database.Service | Feed.ContextFeedService
->;
+export type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {

@@ -96,11 +96,7 @@ interface ScheduledTrigger {
   nextExecution: Date;
 }
 
-type TriggerDispatcherServices =
-  | Registry.AtomRegistry
-  | ProcessManager.Service
-  | TriggerStateStore
-  | Database.Service;
+type TriggerDispatcherServices = Registry.AtomRegistry | ProcessManager.Service | TriggerStateStore | Database.Service;
 
 export type InvocationsState = {
   invocationId: EntityId;

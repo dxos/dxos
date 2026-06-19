@@ -446,10 +446,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               pulled = { added: pulled.added + result.added };
             }
             return { pulled };
-          }).pipe(
-            Effect.provide(Database.layer(db)),
-            Effect.provide(makeDiscordLayer(integration)),
-          ),
+          }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayer(integration))),
         );
 
         if (outcome._tag === 'Right') {

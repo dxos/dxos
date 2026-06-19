@@ -200,9 +200,7 @@ const meta = {
                   }),
                 );
               }
-            }).pipe(
-              Effect.provide(Database.layer(personalSpace.db)),
-            );
+            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
           }),
         }),
         InboxPlugin(),

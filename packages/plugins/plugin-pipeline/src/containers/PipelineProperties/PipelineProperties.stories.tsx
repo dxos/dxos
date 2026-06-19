@@ -126,9 +126,7 @@ const meta = {
               // Generate sample Contacts.
               const factory = createObjectFactory(personalSpace.db, random as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
-            }).pipe(
-              Effect.provide(Database.layer(personalSpace.db)),
-            );
+            }).pipe(Effect.provide(Database.layer(personalSpace.db)));
           }),
         }),
         PreviewPlugin(),

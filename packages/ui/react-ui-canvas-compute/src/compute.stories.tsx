@@ -235,11 +235,7 @@ const ServiceLayer = Layer.empty.pipe(
     ),
   ),
   Layer.provideMerge(
-    Layer.mergeAll(
-      AiServiceTestingPreset('direct'),
-      TestDatabaseLayer(),
-      configuredCredentialsLayer([]),
-    ),
+    Layer.mergeAll(AiServiceTestingPreset('direct'), TestDatabaseLayer(), configuredCredentialsLayer([])),
   ),
   Layer.orDie,
 );

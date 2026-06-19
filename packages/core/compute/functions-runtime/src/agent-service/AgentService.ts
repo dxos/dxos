@@ -107,11 +107,9 @@ export interface CreateSessionOptions {
 
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<
-  Session,
-  Blueprint.NotFoundError,
-  Database.Service | Registry.Service | AgentService
-> = Effect.fn('createSession')(function* (opts) {
+) => Effect.Effect<Session, Blueprint.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
+  'createSession',
+)(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
     Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
   );

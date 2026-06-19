@@ -147,9 +147,9 @@ export const getQueueUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj
  * ```
  */
 export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, Database.Service> =>
-  Database.Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, items))),
-  ).pipe(Effect.withSpan('Feed.append'));
+  Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, items)))).pipe(
+    Effect.withSpan('Feed.append'),
+  );
 
 /**
  * Removes items from a feed.
@@ -160,9 +160,19 @@ export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void,
  * ```
  */
 // TODO(dmaretskyi): Should we allow snapshots here? - what does it mean to remove a snapshot?
-export const remove = (feed: Feed, items: (Entity.Unknown | Obj.Snapshot)[]): Effect.Effect<void, never, Database.Service> =>
+export const remove = (
+  feed: Feed,
+  items: (Entity.Unknown | Obj.Snapshot)[],
+): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.removeFeedItemsByIds(feed, items.map((item) => item.id)))),
+    Effect.flatMap(({ db }) =>
+      Effect.promise(() =>
+        db.removeFeedItemsByIds(
+          feed,
+          items.map((item) => item.id),
+        ),
+      ),
+    ),
   ).pipe(Effect.withSpan('Feed.remove'));
 
 /**
@@ -219,9 +229,9 @@ export const runQuery: {
  * ```
  */
 export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, never, Database.Service> =>
-  Database.Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.syncFeed(feed, options))),
-  ).pipe(Effect.withSpan('Feed.sync'));
+  Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.syncFeed(feed, options)))).pipe(
+    Effect.withSpan('Feed.sync'),
+  );
 
 /**
  * Returns queue replication backlog for the feed's namespace.
@@ -232,9 +242,9 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
  * ```
  */
 export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Database.Service> =>
-  Database.Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed))),
-  ).pipe(Effect.withSpan('Feed.getSyncState'));
+  Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed)))).pipe(
+    Effect.withSpan('Feed.getSyncState'),
+  );
 
 /**
  * Creates a cursor for iterating over feed items.
@@ -261,8 +271,9 @@ export const next = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<T, nev
  * Returns the next item from a feed cursor as an Option.
  * Currently stubbed — cursor operations are not yet implemented.
  */
-export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<Option.Option<T>, never, Database.Service> =>
-  Effect.die('Feed.nextOption is not yet implemented');
+export const nextOption = <T = Obj.Snapshot>(
+  _cursor: Cursor<T>,
+): Effect.Effect<Option.Option<T>, never, Database.Service> => Effect.die('Feed.nextOption is not yet implemented');
 
 /**
  * Sets the local retention policy for a feed.

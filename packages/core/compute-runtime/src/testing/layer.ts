@@ -70,9 +70,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           NodeFs.writeFileSync(metaPath, JSON.stringify({ key: key.toHex(), rootUrl: db.rootUrl }));
 
           if (onInit) {
-            yield* onInit().pipe(
-              Effect.provideService(Database.Service, Database.makeService(db)),
-            );
+            yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
           }
         } else {
           const resolvedKey = PublicKey.from(testMetadata.key);
@@ -84,9 +82,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
       } else {
         db = yield* Effect.promise(() => peer.createDatabase(key));
         if (onInit) {
-          yield* onInit().pipe(
-            Effect.provideService(Database.Service, Database.makeService(db)),
-          );
+          yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
         }
       }
 

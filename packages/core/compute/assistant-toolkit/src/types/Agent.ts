@@ -181,9 +181,7 @@ export const makeInitialized = (
  * @param agent - The agent whose chat history should be reset. Must have an existing chat.
  * @returns An Effect that resets the chat history.
  */
-export const resetChatHistory = (
-  agent: Agent,
-): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
+export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFoundError, Database.Service> =>
   Effect.gen(function* () {
     invariant(agent.chat, 'Agent must have an existing chat to reset.');
 

@@ -31,8 +31,6 @@ export const initializeMailbox = async (space: Space, count = 0): Promise<Mailbo
   }
 
   const { messages } = new Builder().createMessages(count, { links: { space }, threads: 10 }).build();
-  await EffectEx.runAndForwardErrors(
-    Feed.append(feed, messages).pipe(Effect.provide(Database.layer(space.db))),
-  );
+  await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(space.db))));
   return mailbox;
 };

@@ -169,12 +169,7 @@ const RemoteFunctionExecutionSpec = LayerSpec.make(
 const TriggerDispatcherSpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [
-      Database.Service,
-      TriggerStateStore,
-      ProcessManager.ProcessManagerService,
-      AtomRegistry.AtomRegistry,
-    ],
+    requires: [Database.Service, TriggerStateStore, ProcessManager.ProcessManagerService, AtomRegistry.AtomRegistry],
     provides: [TriggerDispatcher],
   },
   () => TriggerDispatcher.layer({ timeControl: 'natural' }),

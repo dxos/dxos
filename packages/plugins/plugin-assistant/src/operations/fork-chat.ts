@@ -30,9 +30,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       const dbLayer = Database.layer(space.db);
 
-      const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(
-        Effect.provide(dbLayer),
-      );
+      const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(Effect.provide(dbLayer));
 
       // Sort chronologically to find the last message.
       const sorted = messages

@@ -132,11 +132,8 @@ export const layerDirect: Layer.Layer<Trace.TraceSink, never, FeedTraceSink> = L
  * Convenience that combines {@link layerLive} and {@link layerDirect} — the
  * pre-refactor shape of `layerLive` (provides both services).
  */
-export const layerLiveWithDirectSink: Layer.Layer<
-  Trace.TraceSink | FeedTraceSink,
-  never,
-  Database.Service
-> = layerDirect.pipe(Layer.provideMerge(layerLive));
+export const layerLiveWithDirectSink: Layer.Layer<Trace.TraceSink | FeedTraceSink, never, Database.Service> =
+  layerDirect.pipe(Layer.provideMerge(layerLive));
 
 export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* () {
   const feeds = yield* Database.query(query).run;

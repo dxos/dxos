@@ -59,14 +59,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
         }
 
         setDone(true);
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            Database.layer(space.db),
-            Feed.ContextFeedService.layer(feed),
-          ),
-        ),
-      ),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), Feed.ContextFeedService.layer(feed)))),
     );
 
     return () => {

@@ -27,9 +27,7 @@ const TestLayer = Layer.empty.pipe(
       registryLayerNoop,
     ),
   ),
-  Layer.provideMerge(
-    Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([])),
-  ),
+  Layer.provideMerge(Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]))),
 );
 
 describe('ValueBag', () => {

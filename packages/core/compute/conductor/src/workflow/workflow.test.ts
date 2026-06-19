@@ -42,12 +42,7 @@ const TestLayer = Layer.mergeAll(
   registryLayerNoop,
 ).pipe(
   Layer.provideMerge(
-    Layer.mergeAll(
-      TestAiService(),
-      TestDatabaseLayer(),
-      configuredCredentialsLayer([]),
-      Trace.writerLayerNoop,
-    ),
+    Layer.mergeAll(TestAiService(), TestDatabaseLayer(), configuredCredentialsLayer([]), Trace.writerLayerNoop),
   ),
 );
 
