@@ -200,8 +200,8 @@ class GraphBuilderImpl implements GraphBuilder {
       const sortedIds = [...nodes]
         .sort((a, b) =>
           Position.compare(
-            a.properties ?? ({} as { position?: Position.Position }),
-            b.properties ?? ({} as { position?: Position.Position }),
+            { position: a.properties?.position },
+            { position: b.properties?.position },
           ),
         )
         .map((n) => n.id);

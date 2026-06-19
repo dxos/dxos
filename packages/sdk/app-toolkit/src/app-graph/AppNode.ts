@@ -47,7 +47,7 @@ export function createFactory<TArgs extends any[], T>(
 ): (...args: TArgs) => T {
   const cache = new Map<string, T>();
   return (...args: TArgs) => {
-    const key = keyFn ? keyFn(...args) : (args[0] as string);
+    const key = keyFn ? keyFn(...args) : String(args[0]);
     if (cache.has(key)) {
       return cache.get(key)!;
     }
