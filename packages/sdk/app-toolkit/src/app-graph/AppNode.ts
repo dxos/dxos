@@ -47,7 +47,7 @@ export function createFactory<TArgs extends any[], T>(
 ): (...args: TArgs) => T {
   const cache = new Map<string, T>();
   return (...args: TArgs) => {
-    const key = keyFn ? keyFn(...args) : (args[0] as string);
+    const key = keyFn ? keyFn(...args) : String(args[0]);
     if (cache.has(key)) {
       return cache.get(key)!;
     }
@@ -296,7 +296,7 @@ export const makeCompanion = <TData = string>({
   label: Translations.Label;
   icon: string;
   data: TData;
-  position?: Position;
+  position?: Position.Position;
 }): Node.NodeArg<TData> => ({
   id,
   type: PLANK_COMPANION_TYPE,
@@ -322,7 +322,7 @@ export const makeDeckCompanion = <TData = any>({
   label: Translations.Label;
   icon: string;
   data: TData;
-  position?: Position;
+  position?: Position.Position;
   joyride?: string;
 }): Node.NodeArg<TData> => ({
   id,
@@ -358,7 +358,7 @@ export const makeSection = ({
   icon: string;
   iconHue?: string;
   space: Space;
-  position?: Position;
+  position?: Position.Position;
   testId?: string;
 }): Node.NodeArg<null> => ({
   id,
@@ -399,7 +399,7 @@ export const makeSettingsPanel = ({
   icon: string;
   /** Hue for the panel's icon. Omit to leave unset (default rendering). */
   iconHue?: string;
-  position?: Position;
+  position?: Position.Position;
 }): Node.NodeArg<string> => ({
   id,
   type,

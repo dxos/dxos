@@ -50,7 +50,7 @@ export namespace SpaceCapabilities {
     `${meta.profile.key}.capability.ephemeral-state`,
   );
 
-  export type SettingsSection = { id: string; label: Label; position?: Position };
+  export type SettingsSection = { id: string; label: Label; position?: Position.Position };
   export const SettingsSection = Capability.make<SettingsSection>(`${meta.profile.key}.capability.settings-section`);
 
   export type OnCreateSpace = (params: {

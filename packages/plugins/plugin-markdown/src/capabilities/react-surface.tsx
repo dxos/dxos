@@ -19,6 +19,7 @@ import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
+import { Position } from '@dxos/util';
 
 import { MarkdownSettings } from '#components';
 import { MarkdownCard, EditableMarkdownCard, MarkdownArticle, type MarkdownArticleProps } from '#containers';
@@ -79,7 +80,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.editable',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(
           AppSurface.CardContent,
           [Markdown.Document, Text.Text],

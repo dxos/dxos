@@ -17,6 +17,7 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
+import { Position } from '@dxos/util';
 
 import { SpaceSettings } from '#components';
 import {
@@ -84,13 +85,13 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'collectionFallback',
-        position: 'last',
+        position: Position.last,
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
         id: 'recordArticle',
-        position: 'last',
+        position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
@@ -138,7 +139,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsMembers',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
         component: () => {
           const space = useActiveSpace();
@@ -324,7 +325,7 @@ export default Capability.makeModule(
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
         id: 'navtreePresenceFallback',
-        position: 'last',
+        position: Position.last,
         filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
@@ -336,7 +337,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'navbarPresence',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.subject(
           AppSurface.NavbarEnd,
           (value): value is Space | Obj.Unknown => isSpace(value) || Obj.isObject(value),

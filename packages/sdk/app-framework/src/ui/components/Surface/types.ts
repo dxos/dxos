@@ -214,7 +214,7 @@ export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
   kind: 'react';
   id: string;
   role: string | string[];
-  position?: Position;
+  position?: Position.Position;
   component: ComponentFunction<T>;
   filter?: (data: Record<string, unknown>, role?: string) => data is T;
 }>;
@@ -229,7 +229,7 @@ export type WebComponentDefinition<T extends Record<string, any> = any> = Readon
   kind: 'web-component';
   id: string;
   role: string | string[];
-  position?: Position;
+  position?: Position.Position;
   /**
    * The tag name of the Web Component to render.
    * The Web Component will receive the same props as React surfaces via properties/attributes.
@@ -250,7 +250,7 @@ export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly
   id: string;
   filter: SurfaceFilter<T>;
   component: ComponentFunction<T>;
-  position?: Position;
+  position?: Position.Position;
 }>;
 
 /**
@@ -260,7 +260,7 @@ export type TypedWebComponentDefinition<T extends Record<string, any> = any> = R
   id: string;
   filter: SurfaceFilter<T>;
   tagName: string;
-  position?: Position;
+  position?: Position.Position;
 }>;
 
 const expandBindings = <T extends Record<string, any>>(

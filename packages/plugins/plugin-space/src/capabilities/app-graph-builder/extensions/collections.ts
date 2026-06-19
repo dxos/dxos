@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -70,7 +70,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               icon: 'ph--folder--regular',
               iconHue: 'amber',
               role: 'branch',
-              position: 'first',
+              position: 200,
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
               droppable: false,

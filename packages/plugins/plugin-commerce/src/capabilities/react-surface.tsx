@@ -8,6 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Position } from '@dxos/util';
 
 import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '../containers';
 import { Provider, Result, Search } from '../types';
@@ -17,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'resultCard',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Result.Result),
         component: ({ data }) => <ResultCard subject={data.subject} />,
       }),
@@ -30,7 +31,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'objectProperties',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
         component: ({ data }) => <SearchProperties search={data.subject} />,
       }),

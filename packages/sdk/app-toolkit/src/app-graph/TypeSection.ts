@@ -12,7 +12,7 @@ import { type Space } from '@dxos/client/echo';
 import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import { inferObjectOrder } from '@dxos/util';
+import { inferObjectOrder, Position } from '@dxos/util';
 
 import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';
@@ -68,7 +68,7 @@ export const createTypeSectionExtension = (
   type: Type.AnyEntity,
   options?: {
     /** Position hint for the section in the sidebar. */
-    position?: 'first' | 'last';
+    position?: Position.Position;
     /**
      * Override the default `Filter.type(type)` query.
      * Use to narrow or exclude objects (e.g. `Query.without` to hide companion-linked chats).

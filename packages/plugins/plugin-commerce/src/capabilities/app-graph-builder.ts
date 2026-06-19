@@ -11,6 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
+import { Position } from '@dxos/util';
 
 import { meta } from '../meta';
 import { Provider, Search, SearchOperation } from '../types';
@@ -38,7 +39,7 @@ export default Capability.makeModule(
                 label: ['providers.label', { ns: meta.profile.key }],
                 icon: 'ph--globe--regular',
                 role: 'branch',
-                position: 'first',
+                position: Position.first,
               },
               nodes: providers
                 .map((provider: Provider.Provider) =>
