@@ -41,6 +41,4 @@ export const TranscriptionManagerProvider = Capability.make<TranscriptionManager
   `${meta.profile.key}.capability.transcription-manager`,
 );
 
-export const Settings = Capability.make<Atom.Writable<Settings$.Settings>>(
-  `${meta.profile.key}.capability.settings`,
-);
+export const Settings = Capability.make<Atom.Writable<Settings$.Settings>>(`${meta.profile.key}.capability.settings`);
