@@ -48,7 +48,7 @@ export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
 // ─── ATProto-native registry view ────────────────────────────────────────────
 
 /**
- * A single installable release of a plugin, projected from a `package.release`
+ * A single installable release of a plugin, projected from a `plugin.release`
  * ATProto record.
  */
 export const PluginReleaseSchema = Schema.Struct({
@@ -61,16 +61,18 @@ export const PluginReleaseSchema = Schema.Struct({
    * SDK compatibility from the `@dxos/*` subset to decide whether to offer this release.
    */
   dependencies: Schema.optional(DependencyMapSchema),
+  /** ISO-8601 timestamp from the ATProto record. */
+  createdAt: Schema.optional(Schema.String),
 });
 export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
 
 /**
- * Verbatim content of a `package.profile` ATProto record. `key` is the record's rkey (a reverse-domain
+ * Verbatim content of a `plugin.profile` ATProto record. `key` is the record's rkey (a reverse-domain
  * NSID), denormalized into the body. Version-independent identity + display metadata; provenance
  * (`author`) is resolved separately from the publisher DID/handle.
  */
 export const PluginProfileSchema = Schema.Struct({
-  /** Reverse-domain NSID — the plugin's globally-unique key and the `package.profile` rkey (e.g. `org.dxos.plugin.excalidraw`). */
+  /** Reverse-domain NSID — the plugin's globally-unique key and the `plugin.profile` rkey (e.g. `org.dxos.plugin.excalidraw`). */
   key: Schema.String.pipe(Schema.nonEmptyString()),
   /** Plugin display name. */
   name: Schema.String.pipe(Schema.nonEmptyString()),
@@ -90,6 +92,8 @@ export const PluginProfileSchema = Schema.Struct({
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
   /** Relative path inside the package to a bundled MDL spec (consumed by plugin-code). */
   spec: Schema.optional(Schema.String),
+  /** ISO-8601 timestamp from the ATProto record. */
+  createdAt: Schema.optional(Schema.String),
 });
 export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
 
@@ -97,7 +101,7 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
  * A single hydrated plugin entry returned by `GET /registry/plugins`.
  *
  * This is an indexer-assembled *view* — analogous to emdash's `PackageView` — projected
- * from four ATProto record types: `package.profile`, `package.release`,
+ * from four ATProto record types: `plugin.profile`, `plugin.release`,
  * `publisher.profile`, and `publisher.verification`. It is NOT a direct serialization
  * of any single ATProto record.
  *
@@ -113,7 +117,7 @@ export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
 export const PluginViewSchema = Schema.Struct({
   // ── Addressing / provenance (indexer-derived) ────────────────────────────
   /**
-   * `at://` URI of the source `package.profile` record.
+   * `at://` URI of the source `plugin.profile` record.
    * Globally unique and stable — never changes after the record is published.
    */
   uri: Schema.String.pipe(Schema.nonEmptyString()),
@@ -135,7 +139,7 @@ export const PluginViewSchema = Schema.Struct({
   // ── Verbatim profile record content ─────────────────────────────────────
   profile: PluginProfileSchema,
 
-  // ── Releases (projected from package.release records) ───────────────────
+  // ── Releases (projected from plugin.release records) ────────────────────
   /**
    * All known releases for this package, ordered newest-first.
    * Powers the version picker directly — no separate endpoint needed.
@@ -189,8 +193,8 @@ export type PublisherVerification = Schema.Schema.Type<typeof PublisherVerificat
 
 /** NSID constants for the four `org.dxos.experimental.*` record collections. */
 export const NSID = {
-  PackageProfile: 'org.dxos.experimental.package.profile',
-  PackageRelease: 'org.dxos.experimental.package.release',
+  PluginProfile: 'org.dxos.experimental.plugin.profile',
+  PluginRelease: 'org.dxos.experimental.plugin.release',
   PublisherProfile: 'org.dxos.experimental.publisher.profile',
   PublisherVerification: 'org.dxos.experimental.publisher.verification',
 } as const;
@@ -198,8 +202,8 @@ export const NSID = {
 export type RegistryNsid = (typeof NSID)[keyof typeof NSID];
 
 export const ALL_NSIDS: readonly RegistryNsid[] = [
-  NSID.PackageProfile,
-  NSID.PackageRelease,
+  NSID.PluginProfile,
+  NSID.PluginRelease,
   NSID.PublisherProfile,
   NSID.PublisherVerification,
 ];
