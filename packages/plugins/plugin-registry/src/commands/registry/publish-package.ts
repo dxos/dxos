@@ -17,7 +17,7 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 
 /**
  * `dx registry publish-package` — publishes both the mutable
- * `package.profile` (rkey = key) and a `package.release`
+ * `plugin.profile` (rkey = key) and a `plugin.release`
  * (rkey = `<key>:<version>`) record to the authenticated user's PDS.
  *
  * The two writes are independent `putRecord` (upsert) calls; if the second fails the
@@ -94,12 +94,12 @@ export const publishPackage = Command.make(
           createdAt,
         };
 
-        const profileResult = yield* putRecord(session, NSID.PackageProfile, options.key, profile);
+        const profileResult = yield* putRecord(session, NSID.PluginProfile, options.key, profile);
         yield* Console.log(`Profile  ${profileResult.uri}`);
 
         const manifestHash = Option.getOrUndefined(options.manifestHash);
-        const release: PluginRelease & { package: string; createdAt: string } = {
-          package: options.key,
+        const release: PluginRelease & { pluginKey: string; manifestHash?: string; createdAt: string } = {
+          pluginKey: options.key,
           version: options.version,
           moduleUrl: options.moduleUrl,
           createdAt,
@@ -108,7 +108,7 @@ export const publishPackage = Command.make(
 
         const releaseResult = yield* putRecord(
           session,
-          NSID.PackageRelease,
+          NSID.PluginRelease,
           `${options.key}:${options.version}`,
           release,
         );

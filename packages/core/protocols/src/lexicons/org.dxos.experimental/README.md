@@ -6,8 +6,8 @@ Experimental AT Protocol lexicons for the DXOS plugin registry. The `experimenta
 
 | NSID                                           | rkey               | Purpose                                               |
 | ---------------------------------------------- | ------------------ | ----------------------------------------------------- |
-| `org.dxos.experimental.package.profile`        | `<key>`            | Mutable package metadata (one per key per DID).       |
-| `org.dxos.experimental.package.release`        | `<key>:<version>`  | Versioned artifact record (conceptually single-write).|
+| `org.dxos.experimental.plugin.profile`         | `<key>`            | Mutable plugin metadata (one per key per DID).        |
+| `org.dxos.experimental.plugin.release`         | `<key>:<version>`  | Versioned artifact record (conceptually single-write).|
 | `org.dxos.experimental.publisher.profile`      | `self`             | Identity-level publisher metadata.                    |
 | `org.dxos.experimental.publisher.verification` | `<verified DID>`   | Trust attestation about a publisher.                  |
 
