@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createCredential, signPresentation } from '@dxos/credentials';
+import { createCredential, createDidFromIdentityKey, signPresentation } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -17,6 +17,7 @@ import type { EdgeIdentity } from './edge-identity';
 export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): Promise<EdgeIdentity> => {
   return {
     identityKey: key.toHex(),
+    identityDid: await createDidFromIdentityKey(key),
     peerKey: key.toHex(),
     presentCredentials: async ({ challenge }) => {
       return signPresentation({
@@ -69,6 +70,7 @@ export const createChainEdgeIdentity = async (
 
   return {
     identityKey: identityKey.toHex(),
+    identityDid: await createDidFromIdentityKey(identityKey),
     peerKey: peerKey.toHex(),
     presentCredentials: async ({ challenge }) => {
       // TODO: make chain required after device invitation flow update release

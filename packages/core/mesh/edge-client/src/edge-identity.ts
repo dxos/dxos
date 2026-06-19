@@ -10,6 +10,12 @@ export interface EdgeIdentity {
   peerKey: string;
   identityKey: string;
   /**
+   * Identity DID (`did:halo:…`) sent as the public identity segment of the edge WebSocket path.
+   * Optional for backward compatibility: when absent the hex `identityKey` is sent instead, and
+   * the edge router accepts either form (each validated against the presentation).
+   */
+  identityDid?: string;
+  /**
    * Returns credential presentation issued by the identity key.
    * Presentation must have the provided challenge.
    * Presentation may include ServiceAccess credentials.
