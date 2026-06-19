@@ -14,7 +14,7 @@ import { Markdown, MarkdownCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Markdown.Settings,
       defaultValue: () => ({
         defaultViewMode: 'preview' as const,
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contributes(MarkdownCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.id,
+        prefix: meta.profile.key,
         schema: Markdown.Settings,
         atom: settingsAtom,
       }),

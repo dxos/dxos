@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SpacetimeSettings settings={settings} onSettingsChange={updateSettings} />;

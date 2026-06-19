@@ -19,7 +19,7 @@ import { FeedOperation, Subscription } from '#types';
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
 export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
@@ -68,7 +68,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [`${Paths.getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
+      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.automation.automations')],
       workspace: Paths.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);

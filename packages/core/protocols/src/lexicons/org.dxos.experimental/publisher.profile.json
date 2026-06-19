@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "org.dxos.experimental.publisher.profile",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "literal:self",
+      "description": "Identity-level metadata about a registry publisher. One record per DID, rkey = 'self'.",
+      "record": {
+        "type": "object",
+        "required": ["displayName"],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable name shown alongside the publisher's packages.",
+            "maxLength": 128
+          },
+          "bio": {
+            "type": "string",
+            "description": "Optional short description.",
+            "maxLength": 512
+          },
+          "homepageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional canonical homepage."
+          },
+          "contact": {
+            "type": "string",
+            "description": "Optional contact channel (email, handle, etc.).",
+            "maxLength": 256
+          }
+        }
+      }
+    }
+  }
+}

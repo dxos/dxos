@@ -37,7 +37,7 @@ type OfferTileProps = Pick<MosaicTileProps<OfferTileData>, 'data' | 'location' |
 const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, current }, forwardedRef) => {
   const { offer, onSelect } = data;
   const { setCurrentId } = useMosaicContainer('OfferTile');
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(offer.id);

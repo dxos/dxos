@@ -30,7 +30,7 @@ export type DrawerActions = {
  * Builds the drawer actions including companion tabs and toolbar buttons.
  */
 export const useDrawerActions = (consumerName: string): DrawerActions => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const stateAtom = useCapability(SimpleLayoutCapabilities.State);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();

@@ -21,7 +21,7 @@ export type AgentPropertiesProps = {
 };
 
 export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
 
   // Build a filter matching objects of any schema annotated as a feed.

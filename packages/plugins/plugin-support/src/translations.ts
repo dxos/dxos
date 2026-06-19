@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete ticket',
         'object-deleted.label': 'Ticket deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Support',
         'title.label': 'Title',
         'body.label': 'Description',

@@ -15,7 +15,7 @@ export const TriggerTemplate = Schema.Union(
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${meta.id}.action.create-trigger-from-template`,
+    `${meta.profile.key}.action.create-trigger-from-template`,
     {
       input: Schema.Struct({
         db: Database.Database,

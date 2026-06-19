@@ -13,6 +13,6 @@ import { meta } from '#meta';
  * `properties` meta (via {@link Annotation.set}) so it replicates across the user's devices.
  */
 export const WelcomeDismissedAnnotation = Annotation.make({
-  id: `${meta.id}.welcomeDismissed`,
+  id: `${meta.profile.key}.welcomeDismissed`,
   schema: Schema.Boolean,
 });

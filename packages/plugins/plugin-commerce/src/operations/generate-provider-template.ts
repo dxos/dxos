@@ -15,7 +15,7 @@ import { ProviderBlueprint } from '../blueprints';
 import { meta } from '../meta';
 import { Provider, SearchOperation } from '../types';
 
-const TOAST_ID = `${meta.id}/regenerate`;
+const TOAST_ID = `${meta.profile.key}/regenerate`;
 
 /**
  * Runs the provider blueprint agent: materializes the {@link ProviderBlueprint} as an ECHO
@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--sparkle--regular',
-          title: ['regenerate.toast.pending.title', { ns: meta.id }],
+          title: ['regenerate.toast.pending.title', { ns: meta.profile.key }],
         });
 
         const program = Effect.gen(function* () {
@@ -87,8 +87,8 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
               yield* Operation.invoke(LayoutOperation.AddToast, {
                 id: TOAST_ID,
                 icon: 'ph--warning--regular',
-                title: ['regenerate.toast.error.title', { ns: meta.id }],
-                description: ['regenerate.toast.error.description', { ns: meta.id }],
+                title: ['regenerate.toast.error.title', { ns: meta.profile.key }],
+                description: ['regenerate.toast.error.description', { ns: meta.profile.key }],
               });
             }),
           ),
@@ -104,10 +104,10 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--check-circle--regular',
-          title: ['regenerate.toast.success.title', { ns: meta.id }],
+          title: ['regenerate.toast.success.title', { ns: meta.profile.key }],
           description: [
             fieldCount > 0 ? 'regenerate.toast.success.description' : 'regenerate.toast.empty.description',
-            { ns: meta.id, count: fieldCount },
+            { ns: meta.profile.key, count: fieldCount },
           ],
         });
 

@@ -30,7 +30,7 @@ export const ChatActions = ({
   debug,
   onEvent,
 }: ChatActionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className={mx('flex items-center', classNames)}>
@@ -68,7 +68,9 @@ export const ChatActions = ({
         icon='ph--x--regular'
         iconOnly
         label={t('cancel-processing.button')}
-        onClick={() => onEvent?.({ type: 'cancel' })}
+        onClick={() => {
+          onEvent?.({ type: 'cancel' });
+        }}
       />
     </div>
   );

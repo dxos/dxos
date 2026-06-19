@@ -31,7 +31,7 @@ export default Capability.makeModule(
               id: 'root',
               data: () => Operation.invoke(SettingsOperation.Open, {}),
               properties: {
-                label: ['plugin-settings.label', { ns: meta.id }],
+                label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
                 disposition: 'menu',
                 keyBinding: {
@@ -49,9 +49,9 @@ export default Capability.makeModule(
           Effect.succeed([
             Node.make({
               id: SETTINGS_ID,
-              type: meta.id,
+              type: meta.profile.key,
               properties: {
-                label: ['plugin-settings.label', { ns: meta.id }],
+                label: ['plugin-settings.label', { ns: meta.profile.key }],
                 icon: 'ph--gear--regular',
                 disposition: 'pin-end',
                 position: 'first',
@@ -70,7 +70,7 @@ export default Capability.makeModule(
             manager
               .getPlugins()
               .map((plugin: Plugin$.Plugin): [Plugin$.Meta, AppCapabilities.Settings] | null => {
-                const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
+                const settings = allSettings.find((s) => s.prefix === plugin.meta.profile.key);
                 if (!settings) {
                   return null;
                 }
@@ -78,16 +78,20 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
-              .sort(([a], [b]) => (a.name ?? a.id).localeCompare(b.name ?? b.id, undefined, { sensitivity: 'base' }))
+              .sort(([a], [b]) =>
+                (a.profile.name ?? a.profile.key).localeCompare(b.profile.name ?? b.profile.key, undefined, {
+                  sensitivity: 'base',
+                }),
+              )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
                 Node.make({
-                  id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+                  id: `${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,
                   properties: {
-                    label: meta.name ?? meta.id,
-                    icon: meta.icon ?? 'ph--circle--regular',
-                    iconHue: meta.iconHue,
+                    label: meta.profile.name ?? meta.profile.key,
+                    icon: meta.profile.icon?.key ?? 'ph--circle--regular',
+                    iconHue: meta.profile.icon?.hue,
                   },
                 }),
               ),

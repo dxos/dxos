@@ -30,7 +30,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}.state`,
+      key: `${meta.profile.key}.state`,
       schema: MarkdownCapabilities.StateSchema,
       defaultValue: () => ({ viewMode: {} }),
     });

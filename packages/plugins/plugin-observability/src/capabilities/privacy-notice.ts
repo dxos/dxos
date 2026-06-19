@@ -31,15 +31,15 @@ export default Capability.makeModule(
     if (!state.notified && notify) {
       yield* Effect.tryPromise(() =>
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.notice`,
-          title: ['observability-toast.label', { ns: meta.id }],
-          description: ['observability-toast.description', { ns: meta.id }],
+          id: `${meta.profile.key}.notice`,
+          title: ['observability-toast.label', { ns: meta.profile.key }],
+          description: ['observability-toast.description', { ns: meta.profile.key }],
           duration: Infinity,
           icon: 'ph--info--regular',
-          actionLabel: ['observability-toast-action.label', { ns: meta.id }],
-          actionAlt: ['observability-toast-action.alt', { ns: meta.id }],
-          closeLabel: ['observability-toast-close.label', { ns: meta.id }],
-          onAction: () => invokePromise(SettingsOperation.Open, { plugin: meta.id }),
+          actionLabel: ['observability-toast-action.label', { ns: meta.profile.key }],
+          actionAlt: ['observability-toast-action.alt', { ns: meta.profile.key }],
+          closeLabel: ['observability-toast-close.label', { ns: meta.profile.key }],
+          onAction: () => invokePromise(SettingsOperation.Open, { plugin: meta.profile.key }),
         }),
       );
       registry.set(stateAtom, { ...registry.get(stateAtom), notified: true });

@@ -29,7 +29,7 @@ type FailureToastProps = {
  * class. The toast is held open (controlled) so it can be reviewed; production auto-dismisses after 20s.
  */
 const FailureToast = ({ rawError }: FailureToastProps) => {
-  const { t } = useTranslation(pluginMeta.id);
+  const { t } = useTranslation(pluginMeta.profile.key);
   const [open, setOpen] = useState(true);
   const error = parseError(rawError);
   const action = error instanceof AiUsageQuotaError ? error.action : undefined;

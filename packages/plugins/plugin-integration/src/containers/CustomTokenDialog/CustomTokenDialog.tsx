@@ -35,7 +35,7 @@ export type CustomTokenDialogProps = {
  * compatibility; the surface id is `PROVIDER_FORM_DIALOG`.
  */
 export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: CustomTokenDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invoke } = useOperationInvoker();
   const coordinator = useCapability(IntegrationCoordinator);
   const providers = useCapabilities(IntegrationProvider).flat();

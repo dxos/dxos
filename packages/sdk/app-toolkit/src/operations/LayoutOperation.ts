@@ -140,6 +140,14 @@ const PopoverBaseWithKind = Schema.Union(
       }),
     ),
   ),
+  // A modal, focused popover anchored to a navtree row for inline rename.
+  PopoverBaseInput.pipe(
+    Schema.extend(
+      Schema.Struct({
+        kind: Schema.Literal('rename'),
+      }),
+    ),
+  ),
 );
 
 export const UpdatePopover = Operation.make({

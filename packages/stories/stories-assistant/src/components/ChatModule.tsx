@@ -35,9 +35,9 @@ export const ChatModule = ({ space }: ModuleProps) => {
 
   const feedTarget = chat?.feed?.target;
 
-  // Honor the view mode selected in ChatOptions (persisted on `chat.view`). Subscribe via
+  // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
-  const [viewValue] = useObject(chat, 'view');
+  const [viewValue] = useObject(chat, 'viewType');
   const view = Assistant.ChatViews.find((value) => value === viewValue);
 
   if (!chat || !processor) {

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './account';
 export * from './config';
 export * from './device';
 export * from './edge';

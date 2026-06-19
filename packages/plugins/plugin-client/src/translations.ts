@@ -11,7 +11,7 @@ import { meta } from '#meta';
 const pluginTranslations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'account.label': 'User profile',
         'profile.label': 'Profile',
         'profile.description': 'User profile and account settings.',

@@ -16,7 +16,7 @@ export type RelatedContactsProps = {
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   if (!contacts.length) {
     return null;
   }

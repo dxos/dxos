@@ -18,7 +18,7 @@ import { Event as EventType } from '@dxos/types';
 import { Event, type EventHeaderProps, ObjectArticle, useTargetIntegration } from '#components';
 import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
 
-import { getCalendarEventPath } from '../../paths';
+import { getCalendarEventPath, getEventNodeId } from '../../paths';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);
@@ -74,7 +74,7 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
   // TODO(wittjosiah): This is very convoluted, find a simpler way to make this work.
   const eventSegment = linkedSegment(event.id);
   const isEventNode = !!attendableId?.endsWith(`/${eventSegment}`);
-  const nodeId = isEventNode ? attendableId : attendableId ? `${attendableId}/${eventSegment}` : undefined;
+  const nodeId = isEventNode ? attendableId : attendableId ? getEventNodeId(attendableId, eventSegment) : undefined;
 
   useEffect(() => {
     if (isEventNode || !nodeId) {

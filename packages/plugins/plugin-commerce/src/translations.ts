@@ -33,7 +33,7 @@ export const translations = [
         'typename.label': 'Result',
         'typename.label_other': 'Results',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Commerce',
         'run-search.label': 'Run search',
         'analyze-provider.label': 'Analyze provider',

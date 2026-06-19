@@ -17,7 +17,7 @@ import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, 
 
 export type TestAppOptions = {
   /**
-   * Plugins to register. Plugins whose `meta.tags` includes `'system'` are treated as core
+   * Plugins to register. Plugins whose `meta.profile.tags` includes `'system'` are treated as core
    * (force-enabled). For test convenience, plugins without a `'system'` tag are enabled by
    * default unless `enabled` is provided.
    */
@@ -97,7 +97,9 @@ const DEFAULT_TIMEOUT_MS = 5_000;
 export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> => {
   const {
     plugins,
-    enabled = plugins.filter(({ meta }) => !meta.tags?.includes('system')).map((plugin) => plugin.meta.id),
+    enabled = plugins
+      .filter(({ meta }) => !meta.profile.tags?.includes('system'))
+      .map((plugin) => plugin.meta.profile.key),
     setupEvents = [],
     autoStart = true,
     registerFrameworkCapabilities = true,
@@ -105,7 +107,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
 
   const pluginLoader = (id: string) =>
     Effect.sync(() => {
-      const plugin = plugins.find((plugin) => plugin.meta.id === id);
+      const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);
       invariant(plugin, `Plugin not found: ${id}`);
       return { plugin };
     });

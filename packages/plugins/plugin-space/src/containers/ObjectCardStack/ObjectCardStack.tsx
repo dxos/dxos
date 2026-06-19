@@ -24,7 +24,7 @@ export type ObjectCardStackProps = {
  * @deprecated Use Mosaic Board components.
  */
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(({ objectId, view }, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(view);
   const typeUri = view.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const type = useType(db, typeUri);

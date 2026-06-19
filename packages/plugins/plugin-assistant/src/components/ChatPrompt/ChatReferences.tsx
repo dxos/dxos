@@ -18,7 +18,7 @@ export type ChatReferencesProps = ThemedClassName<{
 }>;
 
 export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { objects, onUpdateObject } = useContextObjects({ db, context });
 
   return (

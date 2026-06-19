@@ -30,7 +30,7 @@ export namespace CollectionOperation {
   });
 }
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Operations for the Space plugin.

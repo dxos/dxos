@@ -21,6 +21,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -92,6 +93,8 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "effect": "catalog:"
   },

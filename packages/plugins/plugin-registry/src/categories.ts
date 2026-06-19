@@ -27,13 +27,14 @@ export const getCategoryPredicate = (
 ): PluginPredicate => {
   switch (category) {
     case registryCategoryId('bundled'):
-      return ({ meta }) => !core.includes(meta.id) && !remoteIds.has(meta.id);
+      return ({ meta }) => !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key);
     case registryCategoryId('installed'):
-      return ({ meta }) => !core.includes(meta.id) && enabled.includes(meta.id);
+      return ({ meta }) => !core.includes(meta.profile.key) && enabled.includes(meta.profile.key);
     case registryCategoryId('recommended'):
-      return ({ meta }) => !core.includes(meta.id) && !remoteIds.has(meta.id) && !meta.tags?.includes('labs');
+      return ({ meta }) =>
+        !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key) && !meta.profile.tags?.includes('labs');
     case registryCategoryId('labs'):
-      return ({ meta }) => meta.tags?.includes('labs') ?? false;
+      return ({ meta }) => meta.profile.tags?.includes('labs') ?? false;
     default:
       return () => false;
   }

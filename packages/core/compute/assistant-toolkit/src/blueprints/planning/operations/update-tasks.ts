@@ -14,9 +14,10 @@ import { trim } from '@dxos/util';
 import { Plan, Agent } from '../../../types';
 import INSTRUCTIONS from './update-tasks.md?raw';
 
-// Omit `delegated` (and `chat`) from the LLM-facing schema: delegation is set only by the
-// delegation tool, never by ordinary planning, and keeping it out leaves the tool schema unchanged.
-const SimpleTask = Plan.Task.omit('chat', 'delegated');
+// Omit `chat`, `delegated`, and `agentPid` from the LLM-facing schema: these are set by the
+// delegation tool / runtime, never by ordinary planning, and keeping them out leaves the tool
+// schema unchanged.
+const SimpleTask = Plan.Task.omit('chat', 'delegated', 'agentPid');
 
 export const UpdateTasks = Operation.make({
   meta: {

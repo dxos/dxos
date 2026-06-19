@@ -92,7 +92,7 @@ export const EphemeralDeckState = Schema.Struct({
   popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
-  popoverKind: Schema.optional(Schema.Literal('base', 'card')),
+  popoverKind: Schema.optional(Schema.Literal('base', 'card', 'rename')),
   popoverTitle: Schema.optional(Translations.Label.annotations({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),
@@ -127,16 +127,19 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}.action.adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.profile.key}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
-    input: Schema.Struct({
-      id: Schema.String,
-      size: Schema.Number,
-    }),
-    output: Schema.Void,
-  }) {}
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(
+    `${meta.profile.key}.action.update-plank-size`,
+    {
+      input: Schema.Struct({
+        id: Schema.String,
+        size: Schema.Number,
+      }),
+      output: Schema.Void,
+    },
+  ) {}
 }

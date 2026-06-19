@@ -72,7 +72,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('comments'),
-              label: ['comments.label', { ns: meta.id }],
+              label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
               position: 'first',
@@ -120,7 +120,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['add-comment.label', { ns: meta.id }],
+                label: ['add-comment.label', { ns: meta.profile.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 disabled,

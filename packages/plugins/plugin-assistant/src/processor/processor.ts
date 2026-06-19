@@ -309,6 +309,7 @@ export class AiChatProcessor {
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
         if (Cause.isInterruptedOnly(exit.cause)) {
+          this.#discardStreaming();
           return;
         }
 
@@ -346,6 +347,7 @@ export class AiChatProcessor {
     );
 
     this.#requestFiber = undefined;
+    this.#discardStreaming();
     this.#registry.set(this.active, false);
   }
 
@@ -434,6 +436,14 @@ export class AiChatProcessor {
       }
       return [...errors, event];
     });
+  }
+
+  /**
+   * Drop in-flight streaming messages (cancel/interrupt — partial blocks are discarded).
+   */
+  #discardStreaming() {
+    this.#registry.set(this.#streaming, []);
+    this.#finalizedIds.clear();
   }
 
   /**

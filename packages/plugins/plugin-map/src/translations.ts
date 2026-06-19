@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete map',
         'object-deleted.label': 'Map deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Maps',
         'toggle-type.label': 'Toggle view',
         'map.companion.label': 'Map',

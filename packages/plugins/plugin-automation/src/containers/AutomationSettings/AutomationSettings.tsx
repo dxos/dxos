@@ -20,12 +20,12 @@ export type AutomationSettingsProps = AppSurface.SpaceArticleProps;
  * automations execute.
  */
 export const AutomationSettings = ({ space }: AutomationSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Settings.Viewport>
       <Settings.Section
-        title={t('automation-verbose.label', { ns: meta.id })}
-        description={t('automation.description', { ns: meta.id })}
+        title={t('automation-verbose.label', { ns: meta.profile.key })}
+        description={t('automation.description', { ns: meta.profile.key })}
       >
         <TriggersSettings space={space} />
       </Settings.Section>

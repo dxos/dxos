@@ -5,53 +5,45 @@
 import * as Effect from 'effect/Effect';
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { type Registry, UrlLoader } from '@dxos/app-framework';
+import { type Plugin, type Registry, UrlLoader } from '@dxos/app-framework';
 import { EffectEx } from '@dxos/effect';
 
 /**
  * Owns the version picker's state machine: fetches the available versions list
- * from the provider, prepends the installed version when the catalog stub omits
- * it, and keeps the selection clamped to whatever's currently in the list (so
- * an external update doesn't strand the trigger on a tag that's no longer
- * available).
+ * from the provider (served from the inlined `releases` array on each entry —
+ * no separate endpoint needed) and keeps the selection clamped to whatever's
+ * currently in the list so an external update doesn't strand the trigger on a
+ * tag that's no longer available.
  */
 export const useVersionPicker = ({
   provider,
   pluginId,
-  repo,
   moduleUrl,
   installedVersionTag,
 }: {
   provider: Registry.Manager;
   pluginId: string;
-  repo: string | undefined;
   moduleUrl: string | undefined;
   installedVersionTag: string | undefined;
 }): {
-  pickerVersions: readonly Registry.PluginVersion[];
+  pickerVersions: readonly Plugin.Release[];
   selectedVersionTag: string | undefined;
   setSelectedVersionTag: Dispatch<SetStateAction<string | undefined>>;
 } => {
-  const [versions, setVersions] = useState<readonly Registry.PluginVersion[]>([]);
+  const [versions, setVersions] = useState<readonly Plugin.Release[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
 
-  // Load version list once the catalog entry's repo is known. Reset state
-  // when `repo` is absent or the fetch fails so a previous plugin's
-  // versions don't leak into the picker for the current plugin. The
-  // `cancelled` flag guards against a stale in-flight `listVersions`
-  // response overwriting the newer state after `repo`/`pluginId` changes.
+  // Load version list whenever pluginId changes. The `cancelled` flag guards
+  // against a stale in-flight response overwriting newer state when the user
+  // navigates between plugins quickly.
   useEffect(() => {
-    if (!repo) {
-      setVersions([]);
-      setSelectedVersionTag(undefined);
-      return;
-    }
-    // Clear stale picker state before fetching so the UI doesn't display the
-    // previous plugin's versions/selection while `listVersions` is pending.
     setVersions([]);
     setSelectedVersionTag(undefined);
+    if (!pluginId) {
+      return;
+    }
     let cancelled = false;
-    void provider.listVersions(repo).pipe(
+    void provider.listVersions(pluginId).pipe(
       Effect.match({
         onSuccess: (vs) => {
           if (cancelled) {
@@ -60,7 +52,7 @@ export const useVersionPicker = ({
           setVersions(vs);
           // Default selection: the currently installed version, or the latest.
           const installedVersion = UrlLoader.getInstalledVersion(pluginId);
-          setSelectedVersionTag(installedVersion ?? vs[0]?.tag);
+          setSelectedVersionTag(installedVersion ?? vs[0]?.version);
         },
         onFailure: () => {
           if (cancelled) {
@@ -75,19 +67,19 @@ export const useVersionPicker = ({
     return () => {
       cancelled = true;
     };
-  }, [provider, repo, pluginId]);
+  }, [provider, pluginId]);
 
   // Make sure the picker always lists the installed version, even if the catalog
   // hasn't surfaced it (the current `listVersions` stub only returns latest).
-  const pickerVersions = useMemo<readonly Registry.PluginVersion[]>(() => {
+  const pickerVersions = useMemo<readonly Plugin.Release[]>(() => {
     if (!installedVersionTag) {
       return versions;
     }
-    if (versions.some((entry) => entry.tag === installedVersionTag)) {
+    if (versions.some((entry) => entry.version === installedVersionTag)) {
       return versions;
     }
-    const installedEntry: Registry.PluginVersion = {
-      tag: installedVersionTag,
+    const installedEntry: Plugin.Release = {
+      version: installedVersionTag,
       // Picker won't be re-installing this entry unless the user selects + clicks Install,
       // and the catalog moduleUrl is the closest stand-in we have.
       moduleUrl: moduleUrl ?? '',
@@ -102,10 +94,10 @@ export const useVersionPicker = ({
     if (pickerVersions.length === 0) {
       return;
     }
-    if (selectedVersionTag && pickerVersions.some((entry) => entry.tag === selectedVersionTag)) {
+    if (selectedVersionTag && pickerVersions.some((entry) => entry.version === selectedVersionTag)) {
       return;
     }
-    setSelectedVersionTag(installedVersionTag ?? pickerVersions[0]?.tag);
+    setSelectedVersionTag(installedVersionTag ?? pickerVersions[0]?.version);
   }, [pickerVersions, selectedVersionTag, installedVersionTag]);
 
   return { pickerVersions, selectedVersionTag, setSelectedVersionTag };

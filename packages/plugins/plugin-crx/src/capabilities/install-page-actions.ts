@@ -25,17 +25,17 @@ export default Capability.makeModule(
     installPageActionListeners(capabilityManager, invoker, (ack) => {
       if (ack.ok) {
         void invoker.invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.page-action-${ack.objectId ?? ack.id}`,
-          title: ['toast.page-action.success.title', { ns: meta.id }],
+          id: `${meta.profile.key}.page-action-${ack.objectId ?? ack.id}`,
+          title: ['toast.page-action.success.title', { ns: meta.profile.key }],
         });
         if (ack.objectId && Settings.withDefaults(registry.get(settingsAtom)).autoOpenAfterClip) {
           void invoker.invokePromise(LayoutOperation.Open, { subject: [ack.objectId] });
         }
       } else {
         void invoker.invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.page-action-error-${Date.now()}`,
-          title: ['toast.page-action.error.title', { ns: meta.id }],
-          description: [`toast.error.${ack.error}.message`, { ns: meta.id }],
+          id: `${meta.profile.key}.page-action-error-${Date.now()}`,
+          title: ['toast.page-action.error.title', { ns: meta.profile.key }],
+          description: [`toast.error.${ack.error}.message`, { ns: meta.profile.key }],
         });
       }
     });

@@ -8,6 +8,7 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
@@ -79,7 +80,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    role: 'article',
+    role: AppSurface.Article.role,
     subject: undefined as any,
   },
 };

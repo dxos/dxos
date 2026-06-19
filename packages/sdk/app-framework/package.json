@@ -61,6 +61,11 @@
       "node": "./dist/lib/node-esm/url-loader/index.mjs",
       "types": "./dist/types/src/url-loader/index.d.ts"
     },
+    "./config": {
+      "browser": "./dist/lib/browser/config/index.mjs",
+      "node": "./dist/lib/node-esm/config/index.mjs",
+      "types": "./dist/types/src/config/index.d.ts"
+    },
     "./vite-plugin": {
       "import": "./dist/plugin/node-esm/index.mjs",
       "types": "./dist/types/src/vite-plugin/index.d.ts"

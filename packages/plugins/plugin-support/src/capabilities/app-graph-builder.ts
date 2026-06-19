@@ -25,13 +25,13 @@ import { SHORTCUTS_DIALOG } from '../constants';
 // rebuilt inline on every evaluation always compares unequal, so the graph re-emits the node, remounting
 // the node's surface (and any cross-origin iframe it hosts) and freezing the app.
 type LabelTuple = [string, { ns: string }];
-const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.id }];
-const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.id }];
-const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.id }];
-const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.id }];
-const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.id }];
-const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.id }];
-const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.id }];
+const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.profile.key }];
+const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.profile.key }];
+const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.profile.key }];
+const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.profile.key }];
+const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.profile.key }];
+const START_TOUR_LABEL: LabelTuple = ['start-tour.button', { ns: meta.profile.key }];
+const HIDE_WELCOME_LABEL: LabelTuple = ['hide-welcome.button', { ns: meta.profile.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

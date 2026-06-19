@@ -10,7 +10,7 @@ import { AppCapabilities, AppSpace, Paths, type AppCapabilities as AppCaps } fro
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
+import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
 
@@ -25,7 +25,7 @@ export default Capability.makeModule(
         if (!query?.dxn) {
           return [
             {
-              path: `${Paths.getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+              path: getPluginSettingsSectionPath(meta.profile.key),
               label: 'Spaces settings',
               type: 'settings',
             },

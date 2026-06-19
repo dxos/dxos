@@ -44,21 +44,21 @@ const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = Inbox
       yield* dispatch(integrationObj).pipe(
         Effect.tap(() =>
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/sync-contacts-success`,
+            id: `${meta.profile.key}/sync-contacts-success`,
             icon: 'ph--check--regular',
             duration: 3_000,
-            title: ['sync-contacts-success.title', { ns: meta.id }],
-            closeLabel: ['close.label', { ns: meta.id }],
+            title: ['sync-contacts-success.title', { ns: meta.profile.key }],
+            closeLabel: ['close.label', { ns: meta.profile.key }],
           }),
         ),
         Effect.catchAll((error) => {
           log.catch(error);
           return Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/sync-contacts-error`,
+            id: `${meta.profile.key}/sync-contacts-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync-contacts-error.title', { ns: meta.id }],
-            closeLabel: ['close.label', { ns: meta.id }],
+            title: ['sync-contacts-error.title', { ns: meta.profile.key }],
+            closeLabel: ['close.label', { ns: meta.profile.key }],
           });
         }),
       );

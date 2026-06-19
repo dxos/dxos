@@ -128,7 +128,14 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           spawn: Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
             const fiber = yield* invoker.invokeFiber(AgentPrompt, { prompt: Ref.make(routine), input: {} });
-            return fiber.pid;
+            const pid = fiber.pid;
+            Obj.update(plan, (plan) => {
+              const taskRecord = plan.tasks.find((taskRecord) => taskRecord.id === task.id);
+              if (taskRecord) {
+                taskRecord.agentPid = pid;
+              }
+            });
+            return pid;
           }),
         });
       }

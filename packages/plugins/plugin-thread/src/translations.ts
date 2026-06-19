@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete channel',
         'object-deleted.label': 'Channel deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Chat',
         'channel-title.label': 'Title',
         'message.placeholder': 'Reply…',

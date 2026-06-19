@@ -13,7 +13,7 @@ import { COMMANDS_DIALOG, meta } from '#meta';
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Button
       classNames='m-1 px-1 lg:px-2'

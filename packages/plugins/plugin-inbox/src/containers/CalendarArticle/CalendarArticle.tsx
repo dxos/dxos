@@ -32,7 +32,7 @@ const byDate =
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
@@ -177,17 +177,17 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   const menuActions = useMenuBuilder(() => {
     let builder = MenuBuilder.make()
-      .root({ label: ['calendar-toolbar.menu', { ns: meta.id }] })
+      .root({ label: ['calendar-toolbar.menu', { ns: meta.profile.key }] })
       .action(
         'create-event',
-        { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--pen--regular' },
+        { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
         handleCreate,
       );
     if (draftEvents.length > 0) {
       builder = builder.action(
         'sync-draft',
         {
-          label: ['calendar-toolbar-sync.menu', { ns: meta.id }],
+          label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
           icon: 'ph--cloud-arrow-up--regular',
           // Pushing drafts to Google Calendar requires an integration targeting this calendar.
           disabled: !integration,

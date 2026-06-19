@@ -47,11 +47,13 @@ export default Capability.makeModule(
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
-          const { id, name, spec } = plugin.meta;
+          const { key: slug, name, spec } = plugin.meta.profile;
           if (!spec) {
             return Effect.succeed([]);
           }
-          const content = get(pluginAssetsAtom).find((entry) => entry.pluginId === id && entry.path === spec)?.content;
+          const content = get(pluginAssetsAtom).find(
+            (entry) => entry.pluginId === slug && entry.path === spec,
+          )?.content;
           if (!content) {
             return Effect.succeed([]);
           }
@@ -59,9 +61,9 @@ export default Capability.makeModule(
             Node.make({
               id: 'spec',
               type: PLUGIN_SPEC_TYPE,
-              data: makePluginSpecSubject({ pluginId: id, name, content }),
+              data: makePluginSpecSubject({ pluginId: slug, name, content }),
               properties: {
-                label: ['plugin-spec.label', { ns: meta.id }],
+                label: ['plugin-spec.label', { ns: meta.profile.key }],
                 icon: 'ph--file-code--regular',
                 disposition: 'hidden',
               },
@@ -84,7 +86,7 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: getCodeProjectsSectionId(),
               type: CODE_PROJECTS_SECTION_TYPE,
-              label: ['code-projects-section.label', { ns: meta.id }],
+              label: ['code-projects-section.label', { ns: meta.profile.key }],
               icon: 'ph--code--regular',
               iconHue: 'indigo',
               space,
@@ -124,7 +126,7 @@ export default Capability.makeModule(
                     type: CODE_PROJECT_SPEC_TYPE,
                     data: spec ?? null,
                     properties: {
-                      label: ['spec.label', { ns: meta.id }],
+                      label: ['spec.label', { ns: meta.profile.key }],
                       icon: 'ph--file-text--regular',
                       iconHue: 'indigo',
                     },
@@ -134,7 +136,7 @@ export default Capability.makeModule(
                     type: CODE_PROJECT_BUILD_TYPE,
                     data: project,
                     properties: {
-                      label: ['build.label', { ns: meta.id }],
+                      label: ['build.label', { ns: meta.profile.key }],
                       icon: 'ph--app-window--regular',
                       iconHue: 'indigo',
                     },
