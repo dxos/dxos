@@ -40,7 +40,9 @@ describe('useListSelection', () => {
       expect(onValueChange).not.toHaveBeenCalled();
 
       // Navigation within the list: relatedTarget is inside the list, so selection follows focus.
-      act(() => result.current.bind('a').rowProps.onFocus?.({ currentTarget: optionA, relatedTarget: container } as any));
+      act(() =>
+        result.current.bind('a').rowProps.onFocus?.({ currentTarget: optionA, relatedTarget: container } as any),
+      );
       expect(onValueChange).toHaveBeenLastCalledWith('a');
 
       container.remove();
