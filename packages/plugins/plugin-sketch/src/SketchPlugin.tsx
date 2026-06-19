@@ -5,13 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import {
-  CommentConfig,
-  CreateObject,
-  OperationHandler,
-  ReactSurface,
-  SketchSettings,
-} from '#capabilities';
+import { CommentConfig, CreateObject, OperationHandler, ReactSurface, SketchSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sketch } from '#types';
