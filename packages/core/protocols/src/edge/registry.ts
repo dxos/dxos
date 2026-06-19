@@ -61,6 +61,12 @@ export const PluginReleaseSchema = Schema.Struct({
    * SDK compatibility from the `@dxos/*` subset to decide whether to offer this release.
    */
   dependencies: Schema.optional(DependencyMapSchema),
+  /** ATProto repo/package identifier the bundle was published under. */
+  package: Schema.optional(Schema.String),
+  /** SHA-256 hex digest of the uploaded bundle, for integrity verification. */
+  manifestHash: Schema.optional(Schema.String),
+  /** ISO-8601 timestamp from the ATProto record. */
+  createdAt: Schema.optional(Schema.String),
 });
 export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
 
@@ -90,6 +96,8 @@ export const PluginProfileSchema = Schema.Struct({
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
   /** Relative path inside the package to a bundled MDL spec (consumed by plugin-code). */
   spec: Schema.optional(Schema.String),
+  /** ISO-8601 timestamp from the ATProto record. */
+  createdAt: Schema.optional(Schema.String),
 });
 export type PluginProfile = Schema.Schema.Type<typeof PluginProfileSchema>;
 
