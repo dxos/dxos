@@ -10,6 +10,7 @@ import * as Option from 'effect/Option';
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Filter, Key, Obj, Ref, Query, Type } from '@dxos/echo';
+import { type TreeData } from '@dxos/react-ui-list';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { inferObjectOrder, Position } from '@dxos/util';
@@ -87,6 +88,10 @@ export const createTypeSectionExtension = (
 
   const label = AppNode.getDynamicLabel('typename.label', typename, { count: 2 });
 
+  // Only allow reordering within this section — reject drops from other type sections.
+  const canDropSameType = (source: TreeData) =>
+    Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename;
+
   return GraphBuilder.createExtension({
     id: typename,
     match: AppNodeMatcher.whenSpace,
@@ -138,12 +143,14 @@ export const createTypeSectionExtension = (
             icon,
             ...(iconHue ? { iconHue } : {}),
             role: 'branch',
+            draggable: false,
+            droppable: false,
             space,
             testId,
             ...(options?.position ? { position: options.position } : {}),
           },
           nodes: orderedObjects
-            .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange }))
+            .map((object) => AppNode.makeObject({ get, db: space.db, object, onRearrange, canDrop: canDropSameType }))
             .filter((node): node is NonNullable<typeof node> => node !== null),
         }),
       ]);
