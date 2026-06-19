@@ -6,8 +6,6 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
-  AppGraphBuilder,
-  NavigationResolver,
   CommentConfig,
   CreateObject,
   OperationHandler,
@@ -22,8 +20,6 @@ import { Sketch } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

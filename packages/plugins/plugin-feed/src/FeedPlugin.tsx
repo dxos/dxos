@@ -11,7 +11,6 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   CreateObject,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
@@ -27,7 +26,6 @@ export const FeedPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
