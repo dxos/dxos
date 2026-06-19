@@ -102,9 +102,11 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
-            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
-          )}
+          {(state.popoverKind === 'base' || state.popoverKind === 'rename') &&
+            state.popoverContent &&
+            'component' in state.popoverContent && (
+              <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
+            )}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='dx-card-popover'>
               <Card.Header>
