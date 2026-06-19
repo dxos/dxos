@@ -23,6 +23,30 @@ describe('useListSelection', () => {
       expect(onValueChange).toHaveBeenLastCalledWith('a');
     });
 
+    test('focus entering the list from outside does not change selection', ({ expect }) => {
+      const onValueChange = vi.fn();
+      // A listbox with one option, and an unrelated element outside it.
+      const container = document.createElement('div');
+      container.setAttribute('role', 'listbox');
+      const optionA = document.createElement('div');
+      const outside = document.createElement('div');
+      container.append(optionA);
+      document.body.append(container, outside);
+
+      const { result } = renderHook(() => useListSelection({ mode: 'single', value: 'b', onValueChange }));
+
+      // Entry focus (e.g. a popover auto-focusing on open): relatedTarget is outside the list.
+      act(() => result.current.bind('a').rowProps.onFocus?.({ currentTarget: optionA, relatedTarget: outside } as any));
+      expect(onValueChange).not.toHaveBeenCalled();
+
+      // Navigation within the list: relatedTarget is inside the list, so selection follows focus.
+      act(() => result.current.bind('a').rowProps.onFocus?.({ currentTarget: optionA, relatedTarget: container } as any));
+      expect(onValueChange).toHaveBeenLastCalledWith('a');
+
+      container.remove();
+      outside.remove();
+    });
+
     test('disabled rows do not update selection on click', ({ expect }) => {
       const onValueChange = vi.fn();
       const { result } = renderHook(() => useListSelection({ mode: 'single', onValueChange }));
