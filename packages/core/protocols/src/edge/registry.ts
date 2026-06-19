@@ -185,6 +185,26 @@ export const PublisherVerificationSchema = Schema.Struct({
 });
 export type PublisherVerification = Schema.Schema.Type<typeof PublisherVerificationSchema>;
 
+// ─── ATProto raw-record shapes ───────────────────────────────────────────────
+
+const Datetime = Schema.String.pipe(Schema.nonEmptyString());
+
+/** Verbatim content of a `package.profile` ATProto record as written to the PDS. */
+export const PackageProfileRecordSchema = Schema.Struct({
+  ...PluginProfileSchema.fields,
+  createdAt: Datetime,
+});
+export type PackageProfileRecord = Schema.Schema.Type<typeof PackageProfileRecordSchema>;
+
+/** Verbatim content of a `package.release` ATProto record as written to the PDS. */
+export const PackageReleaseRecordSchema = Schema.Struct({
+  ...PluginReleaseSchema.fields,
+  package: Schema.String,
+  manifestHash: Schema.optional(Schema.String),
+  createdAt: Datetime,
+});
+export type PackageReleaseRecord = Schema.Schema.Type<typeof PackageReleaseRecordSchema>;
+
 // ─── NSID constants ───────────────────────────────────────────────────────────
 
 /** NSID constants for the four `org.dxos.experimental.*` record collections. */
