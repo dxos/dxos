@@ -9,6 +9,7 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Query } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
@@ -81,7 +82,7 @@ const meta = {
                   blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
                 }),
               ];
-              yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+              yield* Feed.append(feed, seed).pipe(Effect.provide(createFeedServiceLayer(personalSpace.db)));
             }),
         }),
         SpacePlugin({}),
@@ -104,7 +105,7 @@ export const Default: Story = {
     // Fixed room for testing.
     subject: undefined,
     attendableId: 'story',
-    role: 'article',
+    role: AppSurface.Article.role,
     roomId: '04a1d1911703b8e929d0649021a965',
   },
 };

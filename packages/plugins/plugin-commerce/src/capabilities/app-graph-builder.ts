@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -42,7 +42,7 @@ export default Capability.makeModule(
               },
               nodes: providers
                 .map((provider: Provider.Provider) =>
-                  createObjectNode({
+                  AppNode.makeObject({
                     get,
                     db: space.db,
                     object: provider,

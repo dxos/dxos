@@ -13,6 +13,7 @@ import { meta } from '#meta';
 
 import * as Settings from './Settings';
 
+export * from './surface';
 export * as Settings from './Settings';
 
 export type DebugPluginOptions = {

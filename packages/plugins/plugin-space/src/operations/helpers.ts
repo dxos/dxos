@@ -7,4 +7,4 @@ export type SpaceOperationConfig = {
   observability: boolean;
 };
 
-export const SpaceOperationConfig = Capability.make<SpaceOperationConfig>('org.dxos.plugin.space.operation-config');
+export const SpaceOperationConfig = Capability.make<SpaceOperationConfig>('org.dxos.plugin.space.operationConfig');

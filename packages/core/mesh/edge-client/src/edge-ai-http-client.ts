@@ -32,9 +32,70 @@ export class ByokError extends BaseError.extend('ByokError', 'BYOK authenticatio
 }
 
 /**
+ * Thrown by {@link EdgeAiHttpClient} when EDGE rejects an AI request with 429 because the
+ * authenticated profile exceeded a metering limit. Wrapped as the `cause` of an
+ * {@link HttpClientError.ResponseError} so it survives `@effect/ai`'s error mapping.
+ */
+export class UsageQuotaExceededError extends BaseError.extend('UsageQuotaExceededError', 'Usage quota exceeded') {}
+
+/**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
  */
 export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
+
+type AnthropicMessagesPayload = {
+  tools?: ReadonlyArray<Record<string, unknown>>;
+};
+
+const isUserDefinedAnthropicTool = (tool: Record<string, unknown>): boolean =>
+  tool.input_schema != null && typeof tool.input_schema === 'object';
+
+/**
+ * Enables Anthropic fine-grained tool input streaming for client-defined tools.
+ * Provider tools (bash, web_search, etc.) are left unchanged.
+ */
+export const patchAnthropicMessagesRequestBody = (body: BodyInit | undefined): BodyInit | undefined => {
+  if (body == null) {
+    return body;
+  }
+
+  const decodeBody = (): string | undefined => {
+    if (typeof body === 'string') {
+      return body;
+    }
+    if (body instanceof Uint8Array) {
+      return new TextDecoder().decode(body);
+    }
+    return undefined;
+  };
+
+  const text = decodeBody();
+  if (text == null) {
+    return body;
+  }
+
+  try {
+    const payload = JSON.parse(text) as AnthropicMessagesPayload;
+    if (!Array.isArray(payload.tools)) {
+      return body;
+    }
+
+    payload.tools = payload.tools.map((tool) =>
+      isUserDefinedAnthropicTool(tool) ? { ...tool, eager_input_streaming: true } : tool,
+    );
+
+    const patched = JSON.stringify(payload);
+    return typeof body === 'string' ? patched : new TextEncoder().encode(patched);
+  } catch {
+    return body;
+  }
+};
+
+const readStreamBody = (stream: ReadableStream<Uint8Array>): Effect.Effect<string | undefined> =>
+  Effect.promise(async () => {
+    const response = new Response(stream);
+    return await response.text();
+  });
 
 /**
  * An `@effect/platform` {@link HttpClient.HttpClient} that routes requests through the
@@ -67,7 +128,7 @@ export class EdgeAiHttpClient {
                 ...options,
                 method: request.method,
                 headers,
-                body,
+                body: patchAnthropicMessagesRequestBody(body),
                 signal,
               }),
             ),
@@ -107,6 +168,27 @@ export class EdgeAiHttpClient {
                 ),
               );
             }
+            // Platform quota (not BYOK): reserve/commit rejected the request before upstream AI.
+            if (!carriedByok && response.status === 429) {
+              return Effect.tryPromise({
+                try: () => response.clone().json() as Promise<{ error?: { message?: string } } | undefined>,
+                catch: () => undefined,
+              }).pipe(
+                Effect.orElseSucceed(() => undefined),
+                Effect.flatMap((body) =>
+                  Effect.fail(
+                    new HttpClientError.ResponseError({
+                      request,
+                      response: httpResponse,
+                      reason: 'StatusCode',
+                      cause: new UsageQuotaExceededError({
+                        message: body?.error?.message,
+                      }),
+                    }),
+                  ),
+                ),
+              );
+            }
             return Effect.succeed(httpResponse);
           }),
         );
@@ -118,7 +200,10 @@ export class EdgeAiHttpClient {
         case 'FormData':
           return send(request.body.formData);
         case 'Stream':
-          return Stream.toReadableStreamEffect(request.body.stream).pipe(Effect.flatMap(send));
+          return Stream.toReadableStreamEffect(request.body.stream).pipe(
+            Effect.flatMap((readable) => readStreamBody(readable)),
+            Effect.flatMap((text) => send(text)),
+          );
       }
 
       return send(undefined);

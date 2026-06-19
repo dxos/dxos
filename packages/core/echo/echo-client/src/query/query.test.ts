@@ -647,7 +647,7 @@ describe('Query', () => {
 
       const obj = initialDb.add(createTestObject({ value: 1 }));
       await initialDb.flush();
-      await initialDb.coreDatabase.updateIndexes();
+      await initialDb.updateIndexes();
 
       const createdAt = Obj.getMeta(obj).createdAt;
       const objectId = obj.id;
@@ -657,7 +657,7 @@ describe('Query', () => {
 
       const db = await peer.openLastDatabase();
       await db.flush();
-      await db.coreDatabase.updateIndexes();
+      await db.updateIndexes();
 
       const results = await db.query(Query.select(Filter.everything())).run();
       const reloaded = results.find((o) => o.id === objectId);
@@ -773,43 +773,52 @@ describe('Query', () => {
         name: Schema.String,
       }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
 
-      const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, ContactV1, ContactV2] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const feed = db.add(Feed.make({}));
 
       const contactV1 = Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' });
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
-      await queue.append([contactV1, contactV2]);
+      await db.appendToFeed(feed, [contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person')))).run();
+      const both = await db
+        .query(Query.select(Filter.type(DXN.make('com.example.type.person'))).from(Scope.feed(Feed.getQueueUri(feed)!)))
+        .run();
       expect(both).toHaveLength(2);
 
-      const v1 = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person', '0.1.0')))).run();
+      const v1 = await db
+        .query(
+          Query.select(Filter.type(DXN.make('com.example.type.person', '0.1.0'))).from(
+            Scope.feed(Feed.getQueueUri(feed)!),
+          ),
+        )
+        .run();
       expect(v1).toEqual([contactV1]);
 
-      const v2 = await queue.query(Query.select(Filter.type(DXN.make('com.example.type.person', '0.2.0')))).run();
+      const v2 = await db
+        .query(
+          Query.select(Filter.type(DXN.make('com.example.type.person', '0.2.0'))).from(
+            Scope.feed(Feed.getQueueUri(feed)!),
+          ),
+        )
+        .run();
       expect(v2).toEqual([contactV2]);
     });
 
     test('sqlIndex: type selector loads queue-backed objects', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const feed = db.add(Feed.make({}));
 
       const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
-      await queue.append([task]);
+      await db.appendToFeed(feed, [task]);
 
       await db.flush();
 
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from([
-            {
-              _tag: 'feed' as const,
-              feedUri: queue.uri,
-            },
+            Scope.feed(Feed.getQueueUri(feed)!),
           ]),
         )
         .first();
@@ -822,24 +831,22 @@ describe('Query', () => {
     });
 
     test('query options with 2 spaces and 2 queues', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task, TestSchema.Person] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task, TestSchema.Person] });
 
       const db1 = await peer.createDatabase();
-      const queueFactory1 = peer.client.constructQueueFactory(db1.spaceId);
-      const queue1 = queueFactory1.create();
+      const feed1 = db1.add(Feed.make({}));
 
       const db2 = await peer.createDatabase();
-      const queueFactory2 = peer.client.constructQueueFactory(db2.spaceId);
-      const queue2 = queueFactory2.create();
+      const feed2 = db2.add(Feed.make({}));
 
       const spaceTask1 = db1.add(Obj.make(TestSchema.Task, { title: 'space1-task' }));
       const spacePerson1 = db1.add(Obj.make(TestSchema.Person, { name: 'space1-person' }));
       const queueTask1 = Obj.make(TestSchema.Task, { title: 'queue1-task' });
-      await queue1.append([queueTask1]);
+      await db1.appendToFeed(feed1, [queueTask1]);
 
       const spaceTask2 = db2.add(Obj.make(TestSchema.Task, { title: 'space2-task' }));
       const queueTask2 = Obj.make(TestSchema.Task, { title: 'queue2-task' });
-      await queue2.append([queueTask2]);
+      await db2.appendToFeed(feed2, [queueTask2]);
 
       await db1.flush();
       await db2.flush();
@@ -869,7 +876,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
-              Scope.feed(queue1.uri),
+              Scope.feed(Feed.getQueueUri(feed1)!),
             ]),
           )
           .run();
@@ -883,7 +890,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
-              Scope.feed(queue2.uri),
+              Scope.feed(Feed.getQueueUri(feed2)!),
             ]),
           )
           .run();
@@ -897,8 +904,8 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
-              Scope.feed(queue1.uri),
-              Scope.feed(queue2.uri),
+              Scope.feed(Feed.getQueueUri(feed1)!),
+              Scope.feed(Feed.getQueueUri(feed2)!),
             ]),
           )
           .run();
@@ -994,13 +1001,12 @@ describe('Query', () => {
     });
 
     test('from(db, { includeFeeds: true }) includes feeds in full-text search', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const feed = db.add(Feed.make({}));
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
       await db.flush();
 
       const withFeeds: TestSchema.Task[] = await db
@@ -1017,15 +1023,14 @@ describe('Query', () => {
     });
 
     test('Filter.type with includeFeeds includes trace subspace queue results', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      // Trace queues now use EID (echo://spaceId/queueId), not a DXN with ':trace:'.
-      const traceQueue = queues.create({ subspaceTag: 'trace' });
-      expect(traceQueue.uri).toMatch(/^echo:\/\//);
+      // Feed queues use EID (echo://spaceId/queueId), not a DXN with ':trace:'.
+      const feed = db.add(Feed.make({}));
+      expect(Feed.getQueueUri(feed)!).toMatch(/^echo:\/\//);
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace Task' });
-      await traceQueue.append([traceTask]);
+      await db.appendToFeed(feed, [traceTask]);
       await db.flush();
 
       const results: TestSchema.Task[] = await db
@@ -1039,14 +1044,13 @@ describe('Query', () => {
     });
 
     test('Filter.text with includeFeeds includes trace subspace queue results', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      // Trace queues now use EID (echo://spaceId/queueId), not a DXN with ':trace:'.
-      const traceQueue = queues.create({ subspaceTag: 'trace' });
+      // Feed queues use EID (echo://spaceId/queueId), not a DXN with ':trace:'.
+      const feed = db.add(Feed.make({}));
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
-      await traceQueue.append([traceTask]);
+      await db.appendToFeed(feed, [traceTask]);
       await db.flush();
 
       const results: TestSchema.Task[] = await db
@@ -1099,16 +1103,13 @@ describe('Query', () => {
     test('from(feed) scopes query to feed items', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
 
       // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([
+      await db.appendToFeed(feed, [
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
@@ -1123,15 +1124,12 @@ describe('Query', () => {
     test('from(feed) with Filter.id scopes to feed', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([feedItem]);
+      await db.appendToFeed(feed, [feedItem]);
       await db.flush();
 
       // Filter.id for a feed item should find it when scoped to feed.
@@ -1173,14 +1171,11 @@ describe('Query', () => {
     test('Query.type(...).from(feed) scopes query to feed items', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([
+      await db.appendToFeed(feed, [
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
@@ -1260,7 +1255,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
+      root = db.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
@@ -1288,7 +1283,7 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const rootDocHandle = db.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
@@ -1323,7 +1318,7 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const rootDocHandle = db.getSpaceRootDocHandle();
       const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       // Wait for documents to be ready before accessing url and objects.
@@ -1345,7 +1340,7 @@ describe('Query', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      await db.coreDatabase.updateIndexes();
+      await db.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 
@@ -1900,15 +1895,12 @@ describe('Query', () => {
     test('traverse to children of a feed returns feed queue items', async () => {
       const feedPeer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const feedDb = await feedPeer.createDatabase();
-      const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
 
       const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
 
       // Space-only task (should NOT appear as a child of the feed).
       feedDb.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
-      await queue.append([
+      await feedDb.appendToFeed(feed, [
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
@@ -2188,13 +2180,12 @@ describe('Query', () => {
     });
 
     test('full-text search in queues via indexer2', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const feed = db.add(Feed.make({}));
 
       // Add objects to the queue.
-      await queue.append([
+      await db.appendToFeed(feed, [
         Obj.make(TestSchema.Task, { title: 'Introduction to TypeScript' }),
         Obj.make(TestSchema.Task, { title: 'Getting Started with React' }),
         Obj.make(TestSchema.Task, { title: 'Advanced Python Programming' }),
@@ -2207,12 +2198,7 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
-              {
-                _tag: 'feed' as const,
-                feedUri: queue.uri,
-              },
-            ]),
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
           )
           .run();
         expect(objects).toHaveLength(1);
@@ -2222,14 +2208,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(
-            Query.select(Filter.text('React', { type: 'full-text' })).from([
-              {
-                _tag: 'feed' as const,
-                feedUri: queue.uri,
-              },
-            ]),
-          )
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -2239,12 +2218,7 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([
-              {
-                _tag: 'feed' as const,
-                feedUri: queue.uri,
-              },
-            ]),
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
           )
           .run();
         expect(objects).toHaveLength(0);
@@ -2252,16 +2226,15 @@ describe('Query', () => {
     });
 
     test('full-text search with allFeedsFromSpaces via indexer2', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const feed = db.add(Feed.make({}));
 
       // Add objects to the database (space objects).
       db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
 
       // Add objects to the queue.
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
       await db.flush();
@@ -2286,22 +2259,16 @@ describe('Query', () => {
     });
 
     test('full-text search from queue returns valid echo objects', async () => {
-      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
+      const feed = db.add(Feed.make({}));
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
-      await queue.append([task]);
+      await db.appendToFeed(feed, [task]);
       await db.flush();
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
-            {
-              _tag: 'feed' as const,
-              feedUri: queue.uri,
-            },
-          ]),
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
         )
         .first();
       expect(obj).toBeDefined();
@@ -2950,13 +2917,10 @@ describe('Query', () => {
     test('object in feed', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
       const feed = db.add(Feed.make({ name: 'test-feed' }));
       await db.flush();
 
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
       await db.flush();
 
       const objects = await db.query(Query.select(Filter.childOf(feed)).from(db, { includeFeeds: true })).run();
@@ -2967,7 +2931,6 @@ describe('Query', () => {
     test('A -> Feed -> B: childOf([A]) matches B', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
       const parentObj = db.add(Obj.make(TestSchema.Expando, { name: 'ParentA' }));
       const feed = db.add(
         Obj.make(Feed.Feed, {
@@ -2977,9 +2940,7 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
       await db.flush();
 
       const objects = await db.query(Query.select(Filter.childOf(parentObj)).from(db, { includeFeeds: true })).run();
@@ -2990,7 +2951,6 @@ describe('Query', () => {
     test('childOf with type filter prevents Feed from being returned', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
       const parentObj = db.add(Obj.make(TestSchema.Expando, { name: 'ParentA' }));
       const feed = db.add(
         Obj.make(Feed.Feed, {
@@ -3000,9 +2960,7 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDXN = Feed.getQueueUri(feed)!;
-      const queue = queues.get(feedDXN);
-      await queue.append([Obj.make(TestSchema.Task, { title: 'Task from feed' })]);
+      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Task from feed' })]);
       await db.flush();
 
       const objects = await db
@@ -3020,18 +2978,12 @@ describe('Query', () => {
     test('negative test with 2 feeds - items from only one matching filter', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task, TestSchema.Person] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
       const feed1 = db.add(Feed.make({ name: 'feed-1' }));
       const feed2 = db.add(Feed.make({ name: 'feed-2' }));
       await db.flush();
 
-      const feedDXN1 = Feed.getQueueUri(feed1)!;
-      const feedDXN2 = Feed.getQueueUri(feed2)!;
-      const queue1 = queues.get(feedDXN1);
-      const queue2 = queues.get(feedDXN2);
-
-      await queue1.append([Obj.make(TestSchema.Task, { title: 'Task in feed 1' })]);
-      await queue2.append([Obj.make(TestSchema.Task, { title: 'Task in feed 2' })]);
+      await db.appendToFeed(feed1, [Obj.make(TestSchema.Task, { title: 'Task in feed 1' })]);
+      await db.appendToFeed(feed2, [Obj.make(TestSchema.Task, { title: 'Task in feed 2' })]);
       await db.flush();
 
       const objects1 = await db.query(Query.select(Filter.childOf(feed1)).from(db, { includeFeeds: true })).run();
@@ -3051,15 +3003,16 @@ describe('Query', () => {
       // before filtering would not contain any of the feed items and the result would be empty.
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
-      const queues = peer.client.constructQueueFactory(db.spaceId);
       const feed = db.add(Feed.make({ name: 'limited-feed' }));
       for (let i = 0; i < 50; i++) {
         db.add(Obj.make(TestSchema.Expando, { name: `decoy-${i}` }));
       }
       await db.flush();
 
-      const queue = queues.get(Feed.getQueueUri(feed)!);
-      await queue.append([Obj.make(TestSchema.Task, { title: 'A' }), Obj.make(TestSchema.Task, { title: 'B' })]);
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Task, { title: 'A' }),
+        Obj.make(TestSchema.Task, { title: 'B' }),
+      ]);
       await db.flush();
 
       const objects = await db

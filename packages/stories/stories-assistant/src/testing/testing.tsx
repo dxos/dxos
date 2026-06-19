@@ -17,7 +17,7 @@ import {
 } from '@dxos/app-framework';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -313,7 +313,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via
       // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
       // activation context resolves a different AtomRegistry than the UI).
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
 
       // Create agent.
       if (createAgent) {
@@ -337,7 +337,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const chat = yield* Effect.promise(() => agent.chat!.load());
           const feed = yield* Effect.promise(() => chat.feed.load());
-          const feedServiceLayer = createFeedServiceLayer(space.queues);
+          const feedServiceLayer = createFeedServiceLayer(space.db);
           const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
@@ -373,7 +373,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
                 name,
                 feed: Ref.make(feed),
               });
-              const feedServiceLayer = createFeedServiceLayer(space.queues);
+              const feedServiceLayer = createFeedServiceLayer(space.db);
               const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
               const binder = new AiContext.Binder({ feed, runtime, registry });
 

@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
 
-export const Manager = Capability.make<CallManagerImpl>(`${meta.id}.capability.call-manager`);
+export const Manager = Capability.make<CallManagerImpl>(`${meta.id}.capability.callManager`);
 
 // TODO(wittjosiah): These callbacks could be intents once we support broadcast.
 export type CallProperties = {
@@ -21,7 +21,7 @@ export type CallProperties = {
   onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
 };
 
-export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
+export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.callExtension`);
 
 /**
  * Pluggable live-transport for a call, keyed by `kind`. A call is identified by
@@ -40,7 +40,7 @@ export type CallTransportProvider = {
 };
 
 export const CallTransportProvider = Capability.make<CallTransportProvider>(
-  `${meta.id}.capability.call-transport-provider`,
+  `${meta.id}.capability.callTransportProvider`,
 );
 
 export type Call = { roomId: string };

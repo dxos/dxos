@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -101,7 +101,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         </Panel.Toolbar>
         <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
           <Surface.Surface
-            role='section'
+            type={AppSurface.Section}
             data={{
               subject,
               attendableId,
@@ -182,10 +182,14 @@ const TranscriptTabs = ({
         <Panel.Content>
           <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'transcript' }} limit={1} />
+              <Surface.Surface
+                type={AppSurface.Tabpanel}
+                data={{ subject, attendableId, part: 'transcript' }}
+                limit={1}
+              />
             </Tabs.Panel>
             <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface role='tabpanel' data={{ subject, attendableId, part: 'summary' }} limit={1} />
+              <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
             </Tabs.Panel>
           </Tabs.Viewport>
         </Panel.Content>

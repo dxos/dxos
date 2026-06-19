@@ -190,7 +190,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                         )}
                         <Card.ActionIconButton action='close' onClick={handleClose} />
                       </Card.Header>
-                      <Surface.Surface type={AppSurface.Card} data={layout.popoverContent} limit={1} />
+                      <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}
                   {layout.popoverKind === 'base' && (

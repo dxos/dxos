@@ -9,14 +9,20 @@ import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
-import { type TypeInputOptions, allTypesQuery, filterTypeOptions } from '../../type-options';
+import { TypeOptions } from '../../echo';
 
-export const useTypeOptions = ({ db, annotation }: { db?: Database.Database; annotation: TypeInputOptions }) => {
+export const useTypeOptions = ({
+  db,
+  annotation,
+}: {
+  db?: Database.Database;
+  annotation: TypeOptions.TypeInputOptions;
+}) => {
   const { t } = useTranslation();
-  const types = useQuery(db, allTypesQuery);
+  const types = useQuery(db, TypeOptions.allTypesQuery);
   // `annotation` is recreated each render; depend on its primitive contents, not its identity.
   const options = useMemo(
-    () => filterTypeOptions(types, annotation),
+    () => TypeOptions.filterTypeOptions(types, annotation),
     [types, annotation.location.join(','), annotation.kind.join(',')],
   );
   return useMemo(

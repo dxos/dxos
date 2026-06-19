@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Map } from '@dxos/plugin-map';
 
 export default Capability.makeModule(() =>
@@ -16,10 +16,12 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.createWeb({
         id: 'surface.map',
-        role: ['article', 'section'],
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Map.Map),
+          AppSurface.object(AppSurface.Section, Map.Map),
+        ),
         tagName: 'dx-map-surface',
         position: 'first',
-        filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
       }),
     ]),
   ),

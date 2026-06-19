@@ -5,6 +5,7 @@
 import { Chess as ChessJS } from 'chess.js';
 import React, { useCallback, useRef, useState } from 'react';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -80,9 +81,9 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
             className={mx(
               'grid h-full w-full',
               showInfo && '@4xl:grid-cols-[1fr_320px] gap-8',
-              role === 'article' && 'p-4',
-              role === 'section' && 'aspect-square',
-              role === 'section' && showInfo && '@4xl:aspect-auto',
+              role === AppSurface.Article.role && 'p-4',
+              role === AppSurface.Section.role && 'aspect-square',
+              role === AppSurface.Section.role && showInfo && '@4xl:aspect-auto',
             )}
           >
             <Chessboard.Content>

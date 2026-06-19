@@ -34,7 +34,7 @@ describe('Search starred tags', () => {
   });
 
   test('starring a feed result via the Search tag index', async ({ expect }) => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Search.Search, Result, TagIndex.TagIndex],
     });
     const search = db.add(Search.make({ name: 'Cars' }));
@@ -42,7 +42,7 @@ describe('Search starred tags', () => {
 
     const feed = search.feed!.target!;
     const result = Obj.make(Result, { title: 'A', url: 'https://x/1', images: [], properties: {} });
-    await queues.get(Feed.getQueueUri(feed)!).append([result]);
+    await db.appendToFeed(feed, [result]);
 
     expect(Search.isStarred(search, result.id, await Search.findStarredUri(db))).toBe(false);
 

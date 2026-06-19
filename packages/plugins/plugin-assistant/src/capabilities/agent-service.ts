@@ -28,7 +28,11 @@ const AgentServiceSpec = LayerSpec.make(
       Effect.gen(function* () {
         // Optional supervisor behaviour, contributed by a plugin that knows the agent/plan model.
         const strategies = yield* Capability.getAll(AutomationCapabilities.AgentDelegationStrategy);
-        return AgentService.layer({ delegationStrategy: strategies[0] });
+        const completionGuards = yield* Capability.getAll(AutomationCapabilities.AgentCompletionGuard);
+        return AgentService.layer({
+          delegationStrategy: strategies[0],
+          completionGuard: completionGuards[0],
+        });
       }),
     ),
 );

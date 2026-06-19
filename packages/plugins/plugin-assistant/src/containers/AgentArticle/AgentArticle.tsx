@@ -160,7 +160,7 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
       </Card.Header>
       <Card.Body>
         <Surface.Surface
-          type={AppSurface.Card}
+          type={AppSurface.CardContent}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />

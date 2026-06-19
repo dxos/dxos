@@ -5,10 +5,12 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+import { VersionInfo } from '#types';
 
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
@@ -29,13 +31,12 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       {variant === 'topbar' && (
         <div className='absolute inset-0 pointer-events-none'>
           <div className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
-            <Surface.Surface role='search-input' limit={1} />
+            <Surface.Surface type={AppSurface.SearchInput} limit={1} />
           </div>
         </div>
       )}
       <span className='grow' />
-      <Surface.Surface role='version-info' limit={1} />
-      <Surface.Surface role='notch-start' limit={1} />
+      <Surface.Surface type={VersionInfo} limit={1} />
     </header>
   );
 };

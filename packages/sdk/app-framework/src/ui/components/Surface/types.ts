@@ -2,16 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { FC, PropsWithChildren, ReactNode, RefCallback } from 'react';
+import type { FC, PropsWithChildren, ReactNode, Ref } from 'react';
 
+import type { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
 /**
- * A typed role token. Carries a role string for runtime dispatch plus a phantom
+ * A typed role token. Carries a role NSID for runtime dispatch plus a phantom
  * data type so consumers using `type={SomeToken}` and providers using
  * `AppSurface.object(SomeToken, ...)` share a single type-level contract.
  *
- * Mint via {@link makeType}.
+ * Mint via {@link makeType}. The `role` field holds the bare NSID (e.g.
+ * `org.dxos.role.article`) — the dispatch key, `data-role` attribute value,
+ * and what `.role` comparisons inside matched components see.
  */
 export type RoleToken<TData> = {
   readonly role: string;
@@ -20,8 +24,8 @@ export type RoleToken<TData> = {
 };
 
 /**
- * One entry in a {@link SurfaceFilter} — a role plus the guard that validates
- * the data shape when the Surface dispatcher is matching that role.
+ * One entry in a {@link SurfaceFilter} — a role NSID plus the guard that
+ * validates the data shape when the Surface dispatcher is matching that role.
  */
 export type SurfaceBinding = {
   readonly role: string;
@@ -52,17 +56,61 @@ export const isSurfaceFilter = (value: unknown): value is SurfaceFilter<any> =>
   typeof value === 'object' && value !== null && Array.isArray((value as { bindings?: unknown }).bindings);
 
 /**
- * Mints a typed role token. Identity is structural; all tokens with the same
- * `role` string are interchangeable at runtime.
+ * Mints a typed role token. The NSID is validated at compile time via
+ * {@link DXN.Name}: the final segment must be camelCase (no hyphens).
+ * Dynamic NSIDs (template-literal / runtime strings) are validated at runtime.
+ *
+ * Identity is structural; all tokens with the same `role` string are
+ * interchangeable at runtime.
  */
-export const makeType = <TData>(role: string): RoleToken<TData> => ({ role });
+export const makeType: {
+  <TData = unknown, T extends string = string>(
+    nsid: [DXN.Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
+  ): RoleToken<TData>;
+} = <TData>(nsid: string): RoleToken<TData> => {
+  // Runtime guard for dynamic NSIDs that bypass the compile-time DXN.Name<T> check.
+  if (
+    typeof nsid !== 'string' ||
+    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z][a-zA-Z0-9]{0,62})$/.test(
+      nsid,
+    )
+  ) {
+    throw new Error(
+      `Invalid role NSID: "${nsid}". Must be a dotted name with a camelCase final segment (no hyphens in the last segment).`,
+    );
+  }
+  return { role: nsid };
+};
 
 /**
- * Props that are passed to the Surface component.
+ * Creates a {@link SurfaceFilter} from a role token and an optional guard.
  *
- * The role can be provided either as a string via `role` or as a typed
- * {@link RoleToken} via `type`. The typed form narrows `data` to the token's
- * declared shape.
+ * When `guard` is omitted the filter matches any data at the token's role
+ * (role-only dispatch). Pass a guard to add runtime data-shape validation on
+ * top of the role match.
+ *
+ * This is the framework-level primitive; `@dxos/app-toolkit` builds richer
+ * domain-aware helpers (ECHO schema checks, literal matching, etc.) on top of it.
+ */
+export const makeFilter = <TData>(token: RoleToken<TData>, guard?: (data: TData) => boolean): SurfaceFilter<TData> => {
+  const boundGuard =
+    guard == null
+      ? () => true
+      : (data: unknown): boolean => {
+          try {
+            return guard(data as TData);
+          } catch (err) {
+            log.catch(err);
+            return false;
+          }
+        };
+  return { bindings: [{ role: token.role, guard: boundGuard }] };
+};
+
+/**
+ * Typed Surface consumer props — carries the role/data-shape contract via a
+ * {@link RoleToken}. The `type` prop is required; the string `role` prop has
+ * been removed from the consumer-facing API.
  */
 export type Props<T extends Record<string, any> = Record<string, unknown>> = {
   /**
@@ -76,22 +124,7 @@ export type Props<T extends Record<string, any> = Record<string, unknown>> = {
    * The placeholder component will be rendered while the surface component is loading.
    */
   placeholder?: ReactNode;
-} & MakeOptional<CoreProps<T>, 'id' | 'data' | 'role'> & {
-    /**
-     * Explicitly disallow `type` on the untyped Props overload — if the caller
-     * provides `type={AppSurface.X}`, TypeScript must route to the typed
-     * overload (where `data` is narrowed by the token). Without this, the
-     * catch-all index signature below would accept any `type` value and mask
-     * the typed overload entirely.
-     */
-    type?: undefined;
-  } /**
-   * Additional props to pass to the component.
-   * These props are not used by Surface itself but may be used by components which resolve the surface.
-   * Exclude known prop names to prevent overriding well-defined props.
-   */ & {
-    [K in keyof Record<string, any>]: K extends keyof CoreProps<T> | 'fallback' | 'placeholder' | 'type' ? never : any;
-  };
+} & MakeOptional<CoreProps<T>, 'id' | 'data'>;
 
 /**
  * Typed Surface consumer props — carries the role/data-shape contract via a
@@ -118,6 +151,8 @@ export type TypedProps<TToken extends RoleToken<any>> = {
 
 /**
  * NOTE: If `[key: string]: unknown` is included in shared types, when re-used other fields become unknown as well.
+ * The `type` prop is the only way to set the role; it is required here and
+ * optional in {@link Props} via MakeOptional.
  */
 export type CoreProps<T extends Record<string, any> = Record<string, unknown>> = PropsWithChildren<{
   /**
@@ -126,12 +161,9 @@ export type CoreProps<T extends Record<string, any> = Record<string, unknown>> =
   id: string;
 
   /**
-   * Role defines how the data should be rendered. For new code, prefer the
-   * typed overload of the Surface component which takes a {@link RoleToken}
-   * via the `type` prop instead — it enforces a role/data contract at compile
-   * time.
+   * The role token defining how the data should be rendered.
    */
-  role: string;
+  type: RoleToken<T>;
 
   /**
    * The data to be rendered by the surface.
@@ -146,9 +178,20 @@ export type CoreProps<T extends Record<string, any> = Record<string, unknown>> =
 }>;
 
 // TODO(burdon): Remove ref since relying on this would be error prone.
-export type ComponentProps<T extends Record<string, any> = Record<string, any>> = CoreProps<T> & {
-  ref?: RefCallback<HTMLElement>;
-} & Record<string, any>;
+export type ComponentProps<T extends Record<string, any> = Record<string, any>> = {
+  /**
+   * The resolved role NSID string (e.g. `org.dxos.role.article`). Present on
+   * matched components only — multi-role containers can branch on this value
+   * by comparing against a token's `.role` (e.g. `role === AppSurface.Section.role`).
+   */
+  role: string;
+  ref?: Ref<HTMLElement>;
+} & PropsWithChildren<{
+  id: string;
+  data: T;
+  limit?: number | undefined;
+}> &
+  Record<string, any>;
 
 /**
  * React component used to render a surface once is has matched.
@@ -163,6 +206,9 @@ export type ComponentFunction<T extends Record<string, any> = Record<string, any
  * The optional `filter` receives the consumer-supplied `role` as its second
  * argument so a single definition can encode role-specific guards (used by the
  * {@link SurfaceFilter}-based `create` overload).
+ *
+ * @internal The `role` field is populated by the framework from the filter
+ *   bindings and is not authored directly.
  */
 export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
   kind: 'react';
@@ -175,6 +221,9 @@ export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
 
 /**
  * Definition of when a Web Component surface should be rendered.
+ *
+ * @internal The `role` field is populated by the framework from the filter
+ *   bindings and is not authored directly.
  */
 export type WebComponentDefinition<T extends Record<string, any> = any> = Readonly<{
   kind: 'web-component';
@@ -250,41 +299,27 @@ const validateLocalId = (id: string): void => {
 };
 
 /**
- * Creates a React surface definition.
+ * Creates a React surface definition from a typed filter.
  */
 export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
-export function create<T extends Record<string, any> = any>(
-  definition: Omit<ReactDefinition<T>, 'kind'>,
-): ReactDefinition<T>;
-export function create<T extends Record<string, any> = any>(
-  definition: TypedReactDefinition<T> | Omit<ReactDefinition<T>, 'kind'>,
-): ReactDefinition<T> {
+export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T> {
   validateLocalId(definition.id);
-  if (isSurfaceFilter(definition.filter)) {
-    const { id, filter, component, position } = definition as TypedReactDefinition<T>;
-    const { role, guard } = expandBindings(filter);
-    return { kind: 'react', id, role, position, component, filter: guard };
-  }
-  return { ...(definition as Omit<ReactDefinition<T>, 'kind'>), kind: 'react' };
+  const { id, filter, component, position } = definition;
+  const { role, guard } = expandBindings(filter);
+  return { kind: 'react', id, role, position, component, filter: guard };
 }
 
 /**
- * Creates a Web Component surface definition.
+ * Creates a Web Component surface definition from a typed filter.
  */
 export function createWeb<T extends Record<string, any> = any>(
   definition: TypedWebComponentDefinition<T>,
 ): WebComponentDefinition<T>;
 export function createWeb<T extends Record<string, any> = any>(
-  definition: Omit<WebComponentDefinition<T>, 'kind'>,
-): WebComponentDefinition<T>;
-export function createWeb<T extends Record<string, any> = any>(
-  definition: TypedWebComponentDefinition<T> | Omit<WebComponentDefinition<T>, 'kind'>,
+  definition: TypedWebComponentDefinition<T>,
 ): WebComponentDefinition<T> {
   validateLocalId(definition.id);
-  if (isSurfaceFilter(definition.filter)) {
-    const { id, filter, tagName, position } = definition as TypedWebComponentDefinition<T>;
-    const { role, guard } = expandBindings(filter);
-    return { kind: 'web-component', id, role, position, tagName, filter: guard };
-  }
-  return { ...(definition as Omit<WebComponentDefinition<T>, 'kind'>), kind: 'web-component' };
+  const { id, filter, tagName, position } = definition;
+  const { role, guard } = expandBindings(filter);
+  return { kind: 'web-component', id, role, position, tagName, filter: guard };
 }

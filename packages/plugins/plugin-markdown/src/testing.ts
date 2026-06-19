@@ -5,7 +5,7 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 
@@ -31,7 +31,7 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
         if (!meta.annotations) {
           meta.annotations = {};
         }
-        Annotation.setDictionary(meta.annotations, RootCollectionAnnotation, Ref.make(collection));
+        Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
       });
     }),
     effect,
