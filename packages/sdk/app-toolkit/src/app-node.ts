@@ -22,6 +22,15 @@ export const makeObject: typeof createObjectNode = createObjectNode;
 // Companion helpers.
 //
 
+export type MakeCompanionProps<TData = string> = {
+  id: string;
+  label: Label;
+  icon: string;
+  data: TData;
+  position?: Position;
+  joyride?: string;
+};
+
 /** Build a plank-level companion panel node. */
 export const makeCompanion = <TData = string>({
   id,
@@ -29,13 +38,7 @@ export const makeCompanion = <TData = string>({
   icon,
   data,
   position,
-}: {
-  id: string;
-  label: Label;
-  icon: string;
-  data: TData;
-  position?: Position;
-}): Node.NodeArg<TData> => ({
+}: MakeCompanionProps<TData>): Node.NodeArg<TData> => ({
   id,
   type: PLANK_COMPANION_TYPE,
   data,
@@ -55,14 +58,7 @@ export const makeDeckCompanion = <TData = any>({
   data,
   position,
   joyride,
-}: {
-  id: string;
-  label: Label;
-  icon: string;
-  data: TData;
-  position?: Position;
-  joyride?: string;
-}): Node.NodeArg<TData> => ({
+}: MakeCompanionProps<TData>): Node.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
   data,
@@ -79,6 +75,17 @@ export const makeDeckCompanion = <TData = any>({
 // Section helpers.
 //
 
+export type MakeSectionProps = {
+  id: string;
+  type: string;
+  label: Label;
+  icon: string;
+  iconHue?: string;
+  space: Space;
+  position?: Position;
+  testId?: string;
+};
+
 /** Build a virtual branch node for a space section (types, collections, mailboxes, etc.). */
 export const makeSection = ({
   id,
@@ -89,16 +96,7 @@ export const makeSection = ({
   space,
   position,
   testId,
-}: {
-  id: string;
-  type: string;
-  label: Label;
-  icon: string;
-  iconHue?: string;
-  space: Space;
-  position?: Position;
-  testId?: string;
-}): Node.NodeArg<null> => ({
+}: MakeSectionProps): Node.NodeArg<null> => ({
   id,
   type,
   data: null,
@@ -119,10 +117,15 @@ export const makeSection = ({
 // Settings helpers.
 //
 
-/**
- * Build a plugin-contributed section node for the space settings panel.
- * @deprecated Use `makeSection` instead.
- */
+export type MakeSettingsPanelProps = {
+  id: string;
+  type: string;
+  label: Label;
+  icon: string;
+  iconHue?: string;
+  position?: Position;
+};
+
 export const makeSettingsPanel = ({
   id,
   type,
@@ -130,15 +133,7 @@ export const makeSettingsPanel = ({
   icon,
   iconHue,
   position,
-}: {
-  id: string;
-  type: string;
-  label: Label;
-  icon: string;
-  /** Hue for the panel's icon. Omit to leave unset (default rendering). */
-  iconHue?: string;
-  position?: Position;
-}): Node.NodeArg<string> => ({
+}: MakeSettingsPanelProps): Node.NodeArg<string> => ({
   id,
   type,
   data: type,
