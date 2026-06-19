@@ -9,6 +9,7 @@ export * from './ChatModule';
 export * from './ChessModule';
 export * from './CommentsModule';
 export * from './ContextModule';
+export * from './EphemeralDebugModule';
 export * from './ExecutionGraphModule';
 export * from './GraphModule';
 export * from './InvocationsModule';

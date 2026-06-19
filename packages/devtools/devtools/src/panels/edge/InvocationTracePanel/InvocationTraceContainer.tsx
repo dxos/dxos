@@ -44,7 +44,6 @@ export type InvocationTraceContainerProps = {
 export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTraceContainerProps>(
   (
     {
-      classNames,
       db,
       feedDXN,
       detailAxis = 'inline',
@@ -173,7 +172,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 
     // TODO(burdon): Use Panel.Root
     return (
-      <div {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
         <PanelContainer
           toolbar={
             showSpaceSelector ? (

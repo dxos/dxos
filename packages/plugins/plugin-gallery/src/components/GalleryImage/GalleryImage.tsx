@@ -19,7 +19,7 @@ export type GalleryImageProps = {
 };
 
 export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const url = useImageUrl(file);
   const alt = file?.name ?? '';
 

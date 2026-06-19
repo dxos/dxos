@@ -20,7 +20,7 @@ import { meta } from './meta';
 // harness activation today.
 describe('InboxPlugin (workerd)', () => {
   test('plugin metadata loads in the workerd runtime', ({ expect }) => {
-    expect(meta.id).toBe('org.dxos.plugin.inbox');
-    expect(meta.name).toBeTypeOf('string');
+    expect(meta.profile.key).toBe('org.dxos.plugin.inbox');
+    expect(meta.profile.name).toBeTypeOf('string');
   });
 });

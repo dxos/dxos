@@ -23,7 +23,7 @@ export type CreateAutomationPanelProps = SpaceCapabilities.CreateObjectCustomPan
  * template's `scaffold`.
  */
 export const CreateAutomationPanel = ({ onCreateObject, templates: templatesProp }: CreateAutomationPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const capabilityTemplates = useCapabilities(AutomationCapabilities.Template);
   const templates = templatesProp ?? capabilityTemplates;
   // The global create dialog has no subject, so subject-required templates (e.g. CRM, which needs a

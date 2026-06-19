@@ -32,7 +32,7 @@ export default Capability.makeModule(
             id: `${view.id}.toggle-map`,
             data: () => Operation.invoke(MapOperation.Toggle, undefined),
             properties: {
-              label: ['toggle-type.label', { ns: meta.id }],
+              label: ['toggle-type.label', { ns: meta.profile.key }],
               icon: 'ph--compass--regular',
             },
           }),
@@ -61,7 +61,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeCompanion({
               id: linkedSegment('map'),
-              label: ['map.companion.label', { ns: meta.id }],
+              label: ['map.companion.label', { ns: meta.profile.key }],
               icon: 'ph--map-trifold--regular',
               data: 'map',
             }),

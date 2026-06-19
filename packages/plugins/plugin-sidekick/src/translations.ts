@@ -31,7 +31,7 @@ export const translations = [
         'rename-object.label': 'Rename sidekick',
         'delete-object.label': 'Delete sidekick',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Sidekick',
         'dashboard.title': 'Sidekick Dashboard',
         'day-ahead.title': 'Day Ahead',

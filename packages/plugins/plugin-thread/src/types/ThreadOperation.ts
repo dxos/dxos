@@ -13,7 +13,7 @@ import { Actor, Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateChannel = Operation.make({
   meta: { key: makeKey('createChannel'), name: 'Create Channel', icon: 'ph--hash--regular' },

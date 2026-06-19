@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "org.dxos.experimental.package.release",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "description": "Release record for a versioned artifact of an org.dxos.experimental.package.profile. Conventionally keyed as '<key>:<version>'. One record per version; conceptually single-write (a new version is a new record), though the author retains write access — integrity is anchored by manifestHash rather than enforced immutability.",
+      "record": {
+        "type": "object",
+        "required": ["package", "version", "moduleUrl", "createdAt"],
+        "properties": {
+          "package": {
+            "type": "string",
+            "description": "Key of the parent package.profile record authored by the same DID.",
+            "maxLength": 63
+          },
+          "version": {
+            "type": "string",
+            "description": "Semver subset without build metadata. Pre-release suffixes allowed (e.g. 1.2.3-rc.1).",
+            "maxLength": 32
+          },
+          "moduleUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "HTTPS URL of the module entrypoint (or manifest.json). v0 trusts the publisher; content addressing is a follow-on."
+          },
+          "manifestHash": {
+            "type": "string",
+            "description": "Multibase-encoded multihash of the module manifest. SHA2-256 with base58btc multibase prefix is preferred (e.g. 'zQm...' — 47 chars). The registry indexer MAY fetch the manifest and verify the hash at index time.",
+            "maxLength": 128
+          },
+          "dependencies": {
+            "type": "unknown",
+            "description": "Optional snapshot of the plugin's declared dependencies resolved to concrete installed versions at build time ({ name: version }). The app-view / Composer derive SDK compatibility from the shared (externalized @dxos/*) subset. Typed 'unknown' because Lexicon has no string-keyed map primitive; the canonical shape is a Record<string,string> enforced by the registry validator."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

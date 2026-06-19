@@ -52,7 +52,7 @@ export const PlankError = ({
  * User facing error fallback.
  */
 export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   useEffect(() => {
     if (error) {

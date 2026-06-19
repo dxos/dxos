@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete video',
         'object-deleted.label': 'Video deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Video',
         'transcribe.label': 'Transcribe via worker',
         'fetch-description-error.message': 'Failed to fetch description.',

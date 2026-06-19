@@ -20,7 +20,7 @@ import { meta } from './meta';
 // today.
 describe('FeedPlugin (workerd)', () => {
   test('plugin metadata loads in the workerd runtime', ({ expect }) => {
-    expect(meta.id).toBe('org.dxos.plugin.feed');
-    expect(meta.name).toBeTypeOf('string');
+    expect(meta.profile.key).toBe('org.dxos.plugin.feed');
+    expect(meta.profile.name).toBeTypeOf('string');
   });
 });

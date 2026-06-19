@@ -22,9 +22,9 @@ import { SupportCompanion } from './SupportCompanion';
 const TestPluginMeta = {
   ...pluginMeta,
   screenshots: [
-    'https://picsum.photos/seed/support-1/800/450',
-    'https://picsum.photos/seed/support-2/800/450',
-    'https://picsum.photos/seed/support-3/800/450',
+    { dark: 'https://picsum.photos/seed/support-1/800/450' },
+    { dark: 'https://picsum.photos/seed/support-2/800/450' },
+    { dark: 'https://picsum.photos/seed/support-3/800/450' },
   ],
 };
 const TestPlugin = Plugin.define(TestPluginMeta).pipe(

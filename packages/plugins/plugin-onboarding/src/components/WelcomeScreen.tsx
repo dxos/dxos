@@ -24,7 +24,7 @@ import { translations } from '../translations';
 import { removeQueryParamByValue } from '../util';
 import { Welcome, WelcomeState } from './Welcome';
 
-export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
+export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const searchProps = new URLSearchParams(window.location.search);

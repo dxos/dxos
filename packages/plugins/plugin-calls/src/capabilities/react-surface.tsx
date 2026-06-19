@@ -9,6 +9,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DevtoolsOverview } from '@dxos/plugin-debug';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
@@ -25,12 +26,12 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'activeCallCompanion',
-        role: 'deck-companion--activeCall',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('activeCall')),
         component: () => <CallSidebar />,
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        role: 'devtools-overview',
+        filter: Surface.makeFilter(DevtoolsOverview),
         component: () => {
           const call = useCapability(CallsCapabilities.Manager);
           const state = useAtomValue(call.stateAtom);

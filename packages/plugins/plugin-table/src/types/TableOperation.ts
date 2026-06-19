@@ -28,7 +28,7 @@ export const CreateTableSchema = Schema.Struct({
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const OnTypeAdded = Operation.make({
   meta: { key: makeKey('onTypeAdded'), name: 'On Type Added', icon: 'ph--table--regular' },

@@ -14,11 +14,11 @@ import { Settings } from '#types';
 export type PresenterSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Settings.Settings}

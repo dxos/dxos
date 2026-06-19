@@ -12,11 +12,15 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/context"
+    },
     {
       "path": "../../common/effect"
     },
@@ -42,6 +46,15 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../devtools/cli-util"
     },
     {
@@ -51,7 +64,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"

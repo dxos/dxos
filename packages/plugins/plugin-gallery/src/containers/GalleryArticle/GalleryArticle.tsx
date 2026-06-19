@@ -71,7 +71,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
         .action(
           'add',
           {
-            label: ['add-image.label', { ns: meta.id }],
+            label: ['add-image.label', { ns: meta.profile.key }],
             icon: 'ph--plus--regular',
             disabled: !canUpload,
             disposition: 'toolbar',
@@ -82,7 +82,7 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
         .action(
           'show',
           {
-            label: ['show.label', { ns: meta.id }],
+            label: ['show.label', { ns: meta.profile.key }],
             icon: 'ph--play--regular',
             disabled: !deckState,
             disposition: 'toolbar',

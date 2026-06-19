@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Browser Extension',
         'settings.title': 'Browser extension',
         'test.title': 'Connection',

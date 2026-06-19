@@ -12,7 +12,7 @@ import { Type, View, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const DeleteCardFieldOutput = Schema.Struct({
   field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),

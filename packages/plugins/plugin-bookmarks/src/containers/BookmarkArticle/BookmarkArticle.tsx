@@ -44,7 +44,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
       { bookmark: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['summarize-error.message', { ns: meta.id }] },
+        notify: { error: ['summarize-error.message', { ns: meta.profile.key }] },
       },
     ).finally(() => setSummarizing(false));
   }, [invokePromise, subject]);
@@ -55,7 +55,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         .action(
           'summarize',
           {
-            label: ['summarize.label', { ns: meta.id }],
+            label: ['summarize.label', { ns: meta.profile.key }],
             icon: 'ph--sparkle--regular',
             disabled: summarizing || !isExternalHttpUrl(bookmark.url),
             disposition: 'toolbar',
@@ -67,7 +67,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         .action(
           'openSource',
           {
-            label: ['open-source.label', { ns: meta.id }],
+            label: ['open-source.label', { ns: meta.profile.key }],
             icon: 'ph--arrow-square-out--regular',
             disabled: !isExternalHttpUrl(bookmark.url),
             disposition: 'toolbar',

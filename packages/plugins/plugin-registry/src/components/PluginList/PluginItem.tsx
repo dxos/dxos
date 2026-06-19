@@ -78,8 +78,10 @@ export const PluginItem = ({
   onSettings,
   failure,
 }: PluginItemProps) => {
-  const { t } = useTranslation(meta.id);
-  const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
+  const { t } = useTranslation(meta.profile.key);
+  const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
+  const icon = rawIcon?.key ?? 'ph--circle--regular';
+  const iconHue = rawIcon?.hue ?? 'neutral';
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];
@@ -156,7 +158,7 @@ export const PluginItem = ({
         </div>
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
-          {displayTags.map((tag) => (
+          {displayTags.map((tag: string) => (
             <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>

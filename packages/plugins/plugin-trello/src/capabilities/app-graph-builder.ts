@@ -65,7 +65,7 @@ export default Capability.makeModule(
                   { spaceId: db.spaceId },
                 ),
               properties: {
-                label: ['sync-this-board.label', { ns: meta.id }],
+                label: ['sync-this-board.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

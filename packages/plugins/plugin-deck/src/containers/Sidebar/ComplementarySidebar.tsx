@@ -6,6 +6,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, type Label, Main, Panel, toLocalizedString, Toolbar, useTranslation } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -19,7 +20,7 @@ import { layoutAppliesTopbar } from '../../util';
 import { PlankErrorFallback, PlankLoading } from '../Plank';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
-const label = ['complementary-sidebar.title', { ns: meta.id }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -27,7 +28,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -117,7 +118,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
-            <Surface.Surface role='status-indicator' />
+            <Surface.Surface type={AppSurface.StatusIndicator} />
           </div>
           <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
@@ -154,7 +155,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (getLinkedVariant(companion.id) !== activeId && !data) {
     return null;
@@ -178,7 +179,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
       </Panel.Toolbar>
       <Panel.Content classNames='bg-r1-surface'>
         <Surface.Surface
-          role={`deck-companion--${getLinkedVariant(companion.id)}`}
+          type={AppSurface.deckCompanion(getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}

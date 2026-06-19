@@ -13,7 +13,7 @@ import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for `GetDiscordChannels.output`. */
 const RemoteTarget = Schema.Struct({

@@ -46,7 +46,7 @@ export const translations = [
         'delete-object.label': 'Delete calendar',
         'object-deleted.label': 'Calendar deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Inbox',
 
         'no-message.message': 'Select a message to view it',

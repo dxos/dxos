@@ -58,7 +58,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeSection({
             id: Paths.Segments.types,
             type: TYPES_SECTION_TYPE,
-            label: ['types-section.label', { ns: meta.id }],
+            label: ['types-section.label', { ns: meta.profile.key }],
             icon: 'ph--database--regular',
             space,
             position: 'last',
@@ -70,7 +70,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: 'database',
+      id: 'types',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -137,7 +137,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           type: TYPE_COLLECTION_TYPE,
           data: { space, typeUri },
           properties: {
-            label: ['type-collection-all.label', { ns: meta.id }],
+            label: ['type-collection-all.label', { ns: meta.profile.key }],
             icon: 'ph--list--regular',
             iconHue: 'neutral',
             role: 'branch',
@@ -175,10 +175,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typeUri) {
           return Option.none();
         }
-        return Option.some({
-          space: node.data.space as Space,
-          typeUri: node.data.typeUri as URI.URI,
-        });
+        return Option.some({ space: node.data.space as Space, typeUri: node.data.typeUri as URI.URI });
       },
       connector: ({ space, typeUri }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -354,7 +351,10 @@ const createSchemaActions = ({
             properties: {
               // Static plugin types carry a per-typename `add-object.label` (e.g. "Add event");
               // database types have no such namespace, so fall back to the plugin's generic label.
-              label: AppNode.getDynamicLabel('add-object.label', Type.getDatabase(type) != null ? meta.id : typename),
+              label: AppNode.getDynamicLabel(
+                'add-object.label',
+                Type.getDatabase(type) != null ? meta.profile.key : typename,
+              ),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',

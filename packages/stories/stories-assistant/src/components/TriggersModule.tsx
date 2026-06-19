@@ -17,7 +17,7 @@ export const TriggersModule = () => {
           type={AppSurface.Article}
           data={{
             attendableId: 'story',
-            subject: `${automationMeta.id}.space-settings-automation`,
+            subject: `${automationMeta.profile.key}.space-settings-automation`,
           }}
         />
       </Panel.Content>

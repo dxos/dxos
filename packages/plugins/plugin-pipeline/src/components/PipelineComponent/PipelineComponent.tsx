@@ -112,7 +112,7 @@ PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
 
 export const PipelineToolbar = composable<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
   return (

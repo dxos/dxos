@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <DeckSettings settings={settings} onSettingsChange={updateSettings} />;
@@ -27,8 +27,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'notFound',
-        role: 'article',
-        filter: (data): data is { attendableId: string } => data.attendableId === NotFound.NOT_FOUND_PATH,
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
         component: () => <NotFoundArticle />,
       }),
     ]),

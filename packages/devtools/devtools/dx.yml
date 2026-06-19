@@ -1,12 +1,5 @@
 version: 1
 
-package:
-  modules:
-    - name: devtools
-      type: dxos:type/app
-      build:
-        command: moon run devtools:bundle
-
 runtime:
   services:
     signaling:

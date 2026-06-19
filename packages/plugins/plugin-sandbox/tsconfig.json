@@ -13,6 +13,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts"
   ],
   "references": [

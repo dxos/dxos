@@ -7,14 +7,13 @@ import * as Command from '@effect/cli/Command';
 import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Match from 'effect/Match';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
-import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
 
-import { printIdentity } from '../util';
+import { printIdentity, waitForState } from '../util';
 
 export const join = Command.make(
   'join',
@@ -75,13 +74,3 @@ const sendInvitation = Effect.fn(function* ({
   yield* waitForState(invitation, Invitation.State.SUCCESS);
   return client.halo.identity.get();
 });
-
-const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
-  Effect.gen(function* () {
-    const latch = yield* Effect.makeLatch();
-    const subscription = invitation.subscribe((invitation) => {
-      Match.value(invitation.state).pipe(Match.when(state, () => Effect.runSync(latch.open)));
-    });
-    yield* latch.await;
-    subscription.unsubscribe();
-  });

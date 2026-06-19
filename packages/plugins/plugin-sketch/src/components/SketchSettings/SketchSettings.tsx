@@ -14,11 +14,11 @@ import { Settings } from '#types';
 export type SketchSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Settings.Settings}

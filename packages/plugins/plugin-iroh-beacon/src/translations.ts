@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Iroh Beacon',
         'beacon-status.label': 'Iroh beacon status',
         'beacon-title.label': 'Iroh Beacon',

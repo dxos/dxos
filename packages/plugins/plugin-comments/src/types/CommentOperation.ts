@@ -14,7 +14,7 @@ import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create Comment Thread', icon: 'ph--chat-text--regular' },

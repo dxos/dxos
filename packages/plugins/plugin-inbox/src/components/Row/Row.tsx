@@ -216,7 +216,7 @@ const PersonAnchorRow = ({
   onContactCreate,
   onRemove,
 }: Omit<RowPersonProps, 'avatar' | 'onClick'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const contactDXN = useActorContact(db, actor);
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 

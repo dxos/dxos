@@ -11,7 +11,11 @@ import { type TranscriptionManager } from '@dxos/plugin-transcription';
 
 import { meta } from '#meta';
 
-import { Meeting } from './index';
+import { Meeting, type Settings as SettingsType } from './index';
+
+export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 export type MeetingState = {
   activeMeeting?: Meeting.Meeting;
@@ -24,4 +28,4 @@ export type MeetingStateStore = {
   updateState: (updater: (current: MeetingState) => MeetingState) => void;
 };
 
-export const State = Capability.make<MeetingStateStore>(`${meta.id}.capability.state`);
+export const State = Capability.make<MeetingStateStore>(`${meta.profile.key}.capability.state`);

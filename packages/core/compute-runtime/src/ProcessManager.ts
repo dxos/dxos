@@ -74,6 +74,13 @@ export interface Handle<I, O> {
    * Subscribe to ephemeral trace messages for this process.
    * Replays buffered events, then streams new ones as they arrive.
    * The stream completes when the process reaches a terminal state.
+   *
+   * When consuming this stream from a short-lived parent effect (e.g. React
+   * `useEffect` that `runPromise(Effect.forEach(subscribe))` and returns), fork
+   * the collector with {@link Effect.forkDaemon}, not {@link Effect.fork} — the
+   * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
+   * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
+   * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).
    */
   subscribeEphemeral(): Stream.Stream<Trace.Message>;
 

@@ -16,7 +16,7 @@ import { type Game, GameCapabilities } from '#types';
 export type GameArticleProps = AppSurface.ObjectArticleProps<Game>;
 
 export const GameArticle = ({ role, attendableId, subject: game }: GameArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const variants = useCapabilities(GameCapabilities.VariantProvider);
   const ref = game.variant as Ref.Ref<Obj.Unknown>;
   // Subscribe via useObject so the article re-renders when the variant ref loads or changes.

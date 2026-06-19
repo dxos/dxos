@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'postCard',
         position: 'first',
-        filter: AppSurface.object(AppSurface.Card, Subscription.Post),
+        filter: AppSurface.object(AppSurface.CardContent, Subscription.Post),
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
       }),
       Surface.create({

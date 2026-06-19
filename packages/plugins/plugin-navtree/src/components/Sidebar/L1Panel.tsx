@@ -34,7 +34,7 @@ export type L1PanelProps = {
  * Space or settings panel.
  */
 const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const title = toLocalizedString(item.properties.label, t);
   const isActivated = useIsActivatedWorkspace(item);
   const shouldRenderContent = isCurrent || isActivated;
@@ -114,7 +114,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
  * Header row.
  */
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path' | 'onBack'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = Paths.isPinnedWorkspace(item.id);
@@ -169,7 +169,7 @@ const MenuActions = ({
 }: {
   item: Node.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (menuActions.length === 0) {
     return null;

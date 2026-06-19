@@ -52,15 +52,15 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Sequence deleted',
       },
       [Type.getTypename(Chat.Chat)]: {
-        'typename.label': 'AI Chat',
-        'typename.label_zero': 'AI Chats',
-        'typename.label_one': 'AI Chat',
-        'typename.label_other': 'AI Chats',
-        'object-name.placeholder': 'New AI Chat',
-        'add-object.label': 'Add AI chat',
-        'rename-object.label': 'Rename AI Chat',
-        'delete-object.label': 'Delete AI Chat',
-        'object-deleted.label': 'AI Chat deleted',
+        'typename.label': 'AI Conversation',
+        'typename.label_zero': 'AI Conversations',
+        'typename.label_one': 'AI Conversation',
+        'typename.label_other': 'AI Conversations',
+        'object-name.placeholder': 'New AI conversation',
+        'add-object.label': 'Add AI conversation',
+        'rename-object.label': 'Rename AI conversation',
+        'delete-object.label': 'Delete AI conversation',
+        'object-deleted.label': 'AI conversation deleted',
       },
       [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
@@ -80,7 +80,7 @@ export const translations: Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.id]: {
+      [meta.profile.key]: {
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
