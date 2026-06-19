@@ -43,7 +43,7 @@ import { AssistantEvents, type AssistantPluginOptions } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-const StateReady = AppActivationEvents.createStateEvent(meta.id);
+const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
@@ -150,7 +150,7 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: IntegrationProvider,
     }),
     AppPlugin.addPluginAssetModule({
-      asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+      asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
     }),
     Plugin.make,
   );

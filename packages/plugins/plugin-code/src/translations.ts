@@ -40,7 +40,7 @@ export const translations = [
         'typename.label_other': 'Source Files',
         'object-name.placeholder': 'New source file',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Code',
         'code-projects-section.label': 'Code Projects',
         'spec.label': 'Spec',

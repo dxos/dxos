@@ -31,7 +31,7 @@ export type TestPanelProps = ThemedClassName<{
 // TODO(burdon): Need persistent history (currently lost when switching tabs).
 export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
   ({ classNames, onInvoke, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const [input, setInput] = useState('');

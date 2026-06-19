@@ -79,14 +79,14 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle(StackPlugin.meta.id).click();
-    await expect(host.getPluginToggle(StackPlugin.meta.id)).toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');
     await host.reset();
 
     await host.openPluginRegistry();
-    await expect(host.getPluginToggle(StackPlugin.meta.id)).not.toBeChecked();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {

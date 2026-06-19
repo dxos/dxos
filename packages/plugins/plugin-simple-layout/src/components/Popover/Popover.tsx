@@ -55,7 +55,7 @@ export const PopoverRoot = ({ children }: PropsWithChildren) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, updateState } = useSimpleLayoutState();
   const { setOpen } = useLayoutPopoverContext('PopoverContent');
   const handleClose = useCallback(() => {

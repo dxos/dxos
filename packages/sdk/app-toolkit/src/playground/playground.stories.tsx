@@ -22,7 +22,7 @@ const plugins = [
   LoggerPlugin(),
   GeneratorPlugin(),
 ];
-const defaults = plugins.map((plugin) => plugin.meta.id);
+const defaults = plugins.map((plugin) => plugin.meta.profile.key);
 
 const DefaultStory = () => {
   const App = useApp({

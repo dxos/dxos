@@ -19,7 +19,7 @@ export type SpaceSettingsProps = {
 };
 
 export const SpaceSettings = ({ spaces, onOpenSpaceSettings }: SpaceSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>

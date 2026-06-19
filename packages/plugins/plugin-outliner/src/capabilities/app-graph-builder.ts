@@ -29,7 +29,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['quick-entry.label', { ns: meta.id }],
+                label: ['quick-entry.label', { ns: meta.profile.key }],
                 icon: 'ph--calendar-plus--regular',
               },
             }),

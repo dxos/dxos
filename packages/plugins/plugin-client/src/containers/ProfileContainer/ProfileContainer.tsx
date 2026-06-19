@@ -33,7 +33,7 @@ const getDefaultEmojiValue = (identity: Identity | null) => hexToEmoji(identity?
 const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayNameDirectly] = useState(identity?.profile?.displayName ?? '');

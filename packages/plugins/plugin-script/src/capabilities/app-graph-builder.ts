@@ -21,7 +21,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'execute',
-              label: ['script-test.label', { ns: meta.id }],
+              label: ['script-test.label', { ns: meta.profile.key }],
               icon: 'ph--terminal--regular',
               data: 'execute',
             }),
@@ -34,7 +34,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'logs',
-              label: ['script-logs.label', { ns: meta.id }],
+              label: ['script-logs.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'logs',
             }),

@@ -12,7 +12,7 @@ import { Integration } from './types';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Integration',
         'space-panel.name': 'Integrations',
         'integrations-verbose.label': 'Manage integrations',

@@ -13,6 +13,6 @@ const { getSectionPath: getAutomationsPath, getObjectPath: getAutomationPath } =
 
 /** Path to the automations settings section for a given space. */
 export const getAutomationsSettingsPath = (spaceId: string): string =>
-  Paths.getSpacePath(spaceId, 'settings', `${meta.id}.automations`);
+  Paths.getSpacePath(spaceId, 'settings', `${meta.profile.key}.automations`);
 
 export { getAutomationsPath, getAutomationPath };

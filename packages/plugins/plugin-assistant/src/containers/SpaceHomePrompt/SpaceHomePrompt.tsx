@@ -30,7 +30,7 @@ type SpaceScopedProps = {
  * back the context-binder UI.
  */
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const registry = useRegistry();

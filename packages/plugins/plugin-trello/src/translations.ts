@@ -7,7 +7,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Trello',
         'sync-now.label': 'Sync now',
         'sync-this-board.label': 'Sync this board',

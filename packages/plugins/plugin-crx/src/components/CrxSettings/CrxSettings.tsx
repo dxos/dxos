@@ -22,7 +22,7 @@ type TestState =
   | { kind: 'error'; message: string };
 
 export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
 
   // Round-trip a ping to the extension and report its identity (or why it failed).

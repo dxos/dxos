@@ -19,7 +19,7 @@ describe('CallsPlugin', () => {
       plugins: [ClientPlugin({}), CallsPlugin()],
     });
 
-    expect(harness.manager.getEnabled()).toContain(meta.id);
+    expect(harness.manager.getEnabled()).toContain(meta.profile.key);
   });
 
   test('node variant loads and is enabled', async ({ expect }) => {
@@ -27,6 +27,6 @@ describe('CallsPlugin', () => {
       plugins: [ClientPlugin({}), CallsPluginNode()],
     });
 
-    expect(harness.manager.getEnabled()).toContain(meta.id);
+    expect(harness.manager.getEnabled()).toContain(meta.profile.key);
   });
 });

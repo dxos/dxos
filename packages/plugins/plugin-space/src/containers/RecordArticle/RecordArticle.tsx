@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { Prompts } from '#types';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
@@ -88,7 +88,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
 };
 
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
   const menuItems = useObjectMenuItems(subject);

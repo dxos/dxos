@@ -28,7 +28,7 @@ export type EventEditorProps = {
  * controlled inputs; mutations go through its update callback.
  */
 export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [data, update] = useObject(event);
 
   const allDay = !!data.allDay;
@@ -269,7 +269,7 @@ type SelectDurationProps = {
 
 /** Duration preset picker. Empty string keeps the control controlled so it clears to the placeholder. */
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Select.Root value={value ?? ''} onValueChange={onValueChange}>
       <Select.TriggerButton placeholder={t('event-duration.placeholder')} />

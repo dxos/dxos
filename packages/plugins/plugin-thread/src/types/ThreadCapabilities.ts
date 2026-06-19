@@ -44,4 +44,4 @@ export interface ChannelBackendProvider {
 }
 
 /** Registry of channel-message backends. Collect with `Capability.getAll`. */
-export const ChannelBackend = Capability.make<ChannelBackendProvider>(`${meta.id}.capability.channelBackend`);
+export const ChannelBackend = Capability.make<ChannelBackendProvider>(`${meta.profile.key}.capability.channel-backend`);

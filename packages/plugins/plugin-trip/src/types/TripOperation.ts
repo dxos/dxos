@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import * as Segment from './Segment';
 import * as Trip from './Trip';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Trip-message extractor as a first-class operation. The handler at

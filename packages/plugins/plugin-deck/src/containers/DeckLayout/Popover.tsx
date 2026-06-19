@@ -70,7 +70,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
   const popoverSubject =

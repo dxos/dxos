@@ -50,7 +50,7 @@ export default Capability.makeModule(
         if (!query?.dxn) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.id),
+              path: getPluginSettingsSectionPath(meta.profile.key),
               label: 'Inbox settings',
               type: 'settings',
             },

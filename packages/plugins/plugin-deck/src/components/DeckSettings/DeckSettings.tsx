@@ -16,11 +16,11 @@ const isSocket = !!(globalThis as any).__args;
 export type DeckSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.FieldSet
           readonly={!onSettingsChange}
           schema={Settings.Settings}

@@ -31,7 +31,7 @@ export default Capability.makeModule(
               ? [
                   AppNode.makeDeckCompanion({
                     id: 'activeCall',
-                    label: ['call-panel.label', { ns: meta.id }],
+                    label: ['call-panel.label', { ns: meta.profile.key }],
                     icon: 'ph--video-conference--regular',
                     data: null,
                     position: 'first',

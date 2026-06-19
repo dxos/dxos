@@ -28,7 +28,7 @@ export type SyncTargetsDialogProps = {
  * Dialog body for picking which remote targets are synced into an Integration.
  */
 export const SyncTargetsDialog = ({ integration, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const initiallySelected = useMemo(() => {

@@ -33,7 +33,7 @@ export type IntegrationAuthButtonProps = {
  * (e.g. inbox / calendar) that detect a missing integration mid-flow.
  */
 export const IntegrationAuthButton = ({ providerId, db, existingTarget }: IntegrationAuthButtonProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const provider = manager.capabilities
     .getAll(IntegrationProvider)

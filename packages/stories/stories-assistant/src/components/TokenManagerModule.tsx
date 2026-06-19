@@ -10,7 +10,7 @@ import { meta } from '@dxos/plugin-integration';
 import { Panel } from '@dxos/react-ui';
 
 export const TokenManagerModule = () => {
-  const data = useMemo(() => ({ attendableId: 'story', subject: `${meta.id}.space-settings` }), []);
+  const data = useMemo(() => ({ attendableId: 'story', subject: `${meta.profile.key}.space-settings` }), []);
 
   return (
     <Panel.Root>

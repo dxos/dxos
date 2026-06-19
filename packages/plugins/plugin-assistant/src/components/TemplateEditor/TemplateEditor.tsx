@@ -34,7 +34,7 @@ export type TemplateEditorProps = {
 
 export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
   ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;

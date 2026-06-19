@@ -9,7 +9,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Filesystem',
         'open-directory.label': 'Open folder',
         'open-directory.description': 'Open a folder from your filesystem as a workspace',

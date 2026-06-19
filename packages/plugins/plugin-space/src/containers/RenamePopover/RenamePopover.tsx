@@ -34,7 +34,7 @@ export type RenamePopoverProps = { subject: RenameSubject };
  * Inline rename popover anchored to a navtree row. Commits on Enter or when dismissed; Escape cancels.
  */
 export const RenamePopover = ({ subject }: RenamePopoverProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const space = isSpace(subject);
   const { invokePromise } = useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));

@@ -50,10 +50,18 @@ export const useEventToolbarActions = ({
   return useMenuBuilder(
     (get) =>
       MenuBuilder.make()
-        .root({ label: ['event-toolbar.menu', { ns: meta.id }] })
-        .subgraph(onOpen && openGroup({ ns: meta.id, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }))
+        .root({ label: ['event-toolbar.menu', { ns: meta.profile.key }] })
         .subgraph(
-          viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'], disabled: editing }),
+          onOpen && openGroup({ ns: meta.profile.key, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }),
+        )
+        .subgraph(
+          viewModeGroup({
+            ns: meta.profile.key,
+            viewMode,
+            setViewMode,
+            modes: ['markdown', 'plain'],
+            disabled: editing,
+          }),
         )
         .separator()
         .menu('more', (b) => {
@@ -64,7 +72,7 @@ export const useEventToolbarActions = ({
             b.action(
               'save',
               {
-                label: ['event-toolbar-save.menu', { ns: meta.id }],
+                label: ['event-toolbar-save.menu', { ns: meta.profile.key }],
                 icon: 'ph--cloud-arrow-up--regular',
                 disabled: saveDisabled,
               },
@@ -73,7 +81,7 @@ export const useEventToolbarActions = ({
           }
 
           if (onDelete) {
-            deleteAction(b, { ns: meta.id, labelKey: 'event-toolbar-delete.menu', onDelete });
+            deleteAction(b, { ns: meta.profile.key, labelKey: 'event-toolbar-delete.menu', onDelete });
           }
         })
         .build(),

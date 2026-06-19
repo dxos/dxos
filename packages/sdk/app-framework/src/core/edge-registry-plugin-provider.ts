@@ -6,31 +6,33 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type PluginEntry } from '@dxos/protocols';
+import { type PluginView } from '@dxos/protocols';
 
+import type * as Plugin from './plugin';
 import * as Registry from './registry';
 
 /**
- * Maps a wire-format `PluginEntry` (from `@dxos/protocols`) to a
- * `Registry.Plugin` (the app-framework domain type).
+ * Maps a wire-format `PluginView` (from `@dxos/protocols`) to a runtime `Plugin.Meta`: the nested
+ * `profile` (the view's profile plus the resolved provenance `author`) and the latest `release`.
  *
- * This is the only translation seam between the two independently-defined type
- * hierarchies — fields are mapped explicitly, with no shared type between them.
+ * This is the one translation seam between the nested wire view and the resolved runtime manifest.
+ * `profile.key` is the composer plugin id — a valid NSID — so `DXN.make(profile.key, release.version)`
+ * reconstructs the canonical plugin DXN.
  */
-const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => ({
-  id: entry.meta.id,
-  name: entry.meta.name,
-  description: entry.meta.description,
-  homePage: entry.meta.homePage,
-  source: entry.meta.source,
-  screenshots: entry.meta.screenshots ? [...entry.meta.screenshots] : undefined,
-  tags: entry.meta.tags ? [...entry.meta.tags] : undefined,
-  icon: entry.meta.icon,
-  iconHue: entry.meta.iconHue,
-  moduleUrl: entry.moduleUrl,
-  repo: entry.repo,
-  version: entry.releaseTag,
-});
+const toRegistryPlugin = (entry: PluginView): Plugin.Meta | null => {
+  if (!entry.releases?.length) {
+    return null;
+  }
+  const latestRelease = entry.releases.find((release) => release.version === entry.latestVersion) ?? entry.releases[0];
+  return {
+    profile: {
+      ...entry.profile,
+      // Provenance: the verified publisher is the author (handle preferred, DID fallback).
+      author: entry.handle ?? entry.did,
+    },
+    release: latestRelease,
+  };
+};
 
 /**
  * Implements `Registry.PluginProvider` against the Edge `/registry` HTTP endpoints.
@@ -41,51 +43,48 @@ const toRegistryPlugin = (entry: PluginEntry): Registry.Plugin => ({
  * cycle. The class needs only the public `EdgeHttpClient` type, so a one-way
  * type-import is enough.
  *
- * `listVersions` is currently a stub: it returns the single latest version derived
- * from the cached plugin list, so the host's version picker has something to render.
- * The wire contract for the real endpoint already exists — see
- * `GetPluginVersionsResponseBodySchema` in `@dxos/protocols/edge/registry` and
- * {@link EdgeHttpClient.getRegistryPluginVersions} — so once Edge ships
- * `GET /registry/plugins/:repo/versions`, swap this stub for a call to
- * `this._client.getRegistryPluginVersions(...)` and map each entry through a
- * `toRegistryPluginVersion` helper (mirror of {@link toRegistryPlugin}).
+ * `listVersions` is served directly from the `releases` array inlined on each
+ * entry — no separate endpoint is needed.
  */
 export class EdgeRegistryPluginProvider implements Registry.PluginProvider {
   // Cached on first load so getPlugin/listVersions can resolve without re-fetching.
-  #cachedPlugins: readonly Registry.Plugin[] = [];
+  #cachedPlugins: readonly Plugin.Meta[] = [];
+  #cachedEntries: readonly PluginView[] = [];
 
   constructor(private readonly _client: EdgeHttpClient) {}
 
-  listPlugins(): Effect.Effect<readonly Registry.Plugin[], Error> {
+  listPlugins(): Effect.Effect<readonly Plugin.Meta[], Error> {
     return Effect.tryPromise({
       try: () => this._client.getRegistryPlugins(Context.default()),
       catch: (error) => (error instanceof Error ? error : new Error(String(error))),
     }).pipe(
       Effect.map((body) => {
-        const plugins = body.plugins.filter((entry) => entry.health === 'ok').map(toRegistryPlugin);
+        this.#cachedEntries = body.plugins;
+        const plugins = body.plugins.map(toRegistryPlugin).filter((entry): entry is Plugin.Meta => entry !== null);
         this.#cachedPlugins = plugins;
         return plugins;
       }),
     );
   }
 
-  listVersions(repo: string): Effect.Effect<readonly Registry.PluginVersion[], Error> {
-    // Stub: return only the currently-known version until Edge implements the versions endpoint.
-    const plugin = this.#cachedPlugins.find((candidate) => candidate.repo === repo);
-    if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${repo}`));
+  listVersions(id: string): Effect.Effect<readonly Plugin.Release[], Error> {
+    const entry = this.#cachedEntries.find((candidate) => candidate.profile.key === id);
+    if (!entry) {
+      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
     }
-    const version: Registry.PluginVersion = { tag: plugin.version, moduleUrl: plugin.moduleUrl };
-    return Effect.succeed([version]);
+    // Releases are already `PluginRelease`-shaped on the wire view; serve them directly.
+    return Effect.succeed(entry.releases);
   }
 
-  getPlugin(repo: string, version?: string): Effect.Effect<Registry.Plugin, Error> {
-    const plugin = this.#cachedPlugins.find((p) => p.repo === repo);
+  getPlugin(id: string, version?: string): Effect.Effect<Plugin.Meta, Error> {
+    const plugin = this.#cachedPlugins.find((candidate) => candidate.profile.key === id);
     if (!plugin) {
-      return Effect.fail(new Error(`Plugin not found in catalog: ${repo}`));
+      return Effect.fail(new Error(`Plugin not found in catalog: ${id}`));
     }
-    if (version && version !== plugin.version) {
-      return Effect.fail(new Error(`Version ${version} not available for ${repo}; only ${plugin.version} is cached`));
+    if (version && version !== plugin.release?.version) {
+      return Effect.fail(
+        new Error(`Version ${version} not available for ${id}; only ${plugin.release?.version} is cached`),
+      );
     }
     return Effect.succeed(plugin);
   }

@@ -17,7 +17,7 @@ import { type BeaconPeer } from '../types';
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
   const state = useAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const onlineCount = state.peers.filter((peer) => peer.online).length;
 
   const iconClass = onlineCount > 0 ? 'text-green-500' : state.status === 'connecting' ? 'animate-pulse' : undefined;
@@ -47,7 +47,7 @@ export const BeaconStatusIndicator = () => {
 
 const BeaconPopover = () => {
   const state = useAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const onlineCount = state.peers.filter((peer) => peer.online).length;
 
   return (

@@ -8,4 +8,4 @@ import { ActivationEvent } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
-export const SetupCompiler = ActivationEvent.make(`${meta.id}.event.setupCompiler`);
+export const SetupCompiler = ActivationEvent.make(`${meta.profile.key}.event.setupCompiler`);

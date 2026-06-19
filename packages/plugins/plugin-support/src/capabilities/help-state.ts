@@ -13,7 +13,7 @@ import { HelpCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const stateAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: HelpCapabilities.StateSchema,
       defaultValue: () => ({
         running: false,

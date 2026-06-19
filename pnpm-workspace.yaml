@@ -521,7 +521,7 @@ catalog:
   ollama: ^0.5.11
   once: ^1.4.0
   openapi-types: ^12.1.3
-  oxc-resolver: ^11.6.0
+  oxc-resolver: ^11.9.0
   papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1

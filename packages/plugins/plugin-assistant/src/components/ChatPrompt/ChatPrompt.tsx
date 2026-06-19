@@ -60,7 +60,7 @@ export const ChatPrompt = ({
   presets,
   preset,
 }: ChatPromptProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);

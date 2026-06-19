@@ -11,11 +11,11 @@ import { meta } from '#meta';
 import { type StackSettingsProps } from '#types';
 
 export const StackSettings = ({ settings }: { settings: StackSettingsProps }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.profile.key })}>
         <SettingsForm.Item title={t('settings.separation.label')} description={t('settings.separation.description')}>
           <Input.Switch
             checked={settings.separation}

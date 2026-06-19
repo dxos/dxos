@@ -5,6 +5,7 @@
     "/node_modules/"
   ],
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [
