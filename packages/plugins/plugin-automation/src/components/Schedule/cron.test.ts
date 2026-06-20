@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { fromCron, toCron } from './cron';
+import { cronToSchedule, fromCron, scheduleToCron, toCron } from './cron';
+import { type ScheduleValue } from './Schedule';
 
 describe('toCron', () => {
   test('minutely: every 15 minutes', ({ expect }) => {
@@ -127,5 +128,33 @@ describe('fromCron', () => {
     for (const spec of specs) {
       expect(fromCron(toCron(spec))).toEqual(spec);
     }
+  });
+});
+
+describe('Schedule <-> cron bridge', () => {
+  test('recurring kinds round-trip through cron', ({ expect }) => {
+    const cases: ScheduleValue[] = [
+      { kind: 'hourly', minute: 5 },
+      { kind: 'daily', time: '09:00' },
+      { kind: 'weekly', time: '09:30', days: ['mon', 'wed'] },
+      { kind: 'monthly', day: 15, time: '08:00' },
+    ];
+
+    for (const value of cases) {
+      const cron = scheduleToCron(value);
+      expect(cron).toBeDefined();
+      expect(cronToSchedule(cron!)).toEqual(value);
+    }
+  });
+
+  test('custom passes the expression through', ({ expect }) => {
+    expect(scheduleToCron({ kind: 'custom', cron: '15 9 * * 1-5' })).toBe('15 9 * * 1-5');
+  });
+
+  test('cron patterns Schedule cannot model fall back to custom', ({ expect }) => {
+    // Sub-hourly interval.
+    expect(cronToSchedule('*/15 * * * *')).toEqual({ kind: 'custom', cron: '*/15 * * * *' });
+    // Multiple days of the month.
+    expect(cronToSchedule('0 8 1,15 * *')).toEqual({ kind: 'custom', cron: '0 8 1,15 * *' });
   });
 });

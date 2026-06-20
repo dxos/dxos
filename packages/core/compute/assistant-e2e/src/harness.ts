@@ -46,7 +46,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints' | 'input' | 'output'> {
+interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
@@ -142,8 +142,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     name: options.name,
     instructions: formatInstructions(options.instructions, options.completionCriteria),
     blueprints: options.blueprints ?? getDefaultBlueprints(),
-    input: options.input,
-    output: options.output,
   });
 
   return Effect.fnUntraced(function* (ctx) {

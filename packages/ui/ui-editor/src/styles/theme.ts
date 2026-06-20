@@ -151,7 +151,6 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--color-subdued-separator)',
     color: 'var(--color-subdued)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {

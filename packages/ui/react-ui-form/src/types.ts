@@ -94,6 +94,8 @@ export type CreateOptions = {
 export type RefOption = {
   id: string;
   label: string;
+  /** Optional secondary line shown beneath the label in the picker list. */
+  description?: string;
   hue?: Palette;
 };
 

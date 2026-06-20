@@ -18,7 +18,6 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../AssistantPlugin';
 import { RoutineArticle } from './RoutineArticle';
 
 const DefaultStory = () => {
@@ -32,11 +31,11 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/RoutineArticle',
+  title: 'plugins/plugin-automation/containers/RoutineArticle',
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -51,14 +50,12 @@ const meta = {
               space.db.add(
                 Routine.make({
                   name: 'Summarize',
-                  description: 'Summarize the selected object.',
                   instructions: 'Create a new markdown document that is a summary of the selected object.',
                 }),
               );
             }),
         }),
         AutomationPlugin(),
-        AssistantPlugin(),
       ],
     }),
   ],

@@ -4,7 +4,8 @@
 
 import cronstrue from 'cronstrue';
 
-import type { CronSpecType, DayOfWeek } from './schema';
+import type { ScheduleValue } from './Schedule';
+import type { CronSpecType, DayOfWeek } from './types';
 
 const DOW_MAP: Record<DayOfWeek, number> = {
   sun: 0,
@@ -134,5 +135,69 @@ export const describeCron = (cron: string): string => {
     return cronstrue.toString(cron, { throwExceptionOnParseError: true });
   } catch {
     return cron;
+  }
+};
+
+//
+// Schedule <-> cron bridge.
+//
+
+const pad = (value: number): string => String(value).padStart(2, '0');
+
+const splitTime = (time: string): { hour: number; minute: number } => {
+  const [hour, minute] = time.split(':').map(Number);
+  return { hour: Number.isFinite(hour) ? hour : 0, minute: Number.isFinite(minute) ? minute : 0 };
+};
+
+const joinTime = (hour: number, minute: number): string => `${pad(hour)}:${pad(minute)}`;
+
+/**
+ * Convert a recurring {@link ScheduleValue} to a 5-field cron expression. The one-time `once` kind has no
+ * cron representation and returns `undefined`.
+ */
+export const scheduleToCron = (value: ScheduleValue): string | undefined => {
+  switch (value.kind) {
+    case 'hourly':
+      return toCron({ frequency: 'hourly', interval: 1, minute: value.minute });
+    case 'daily': {
+      const { hour, minute } = splitTime(value.time);
+      return toCron({ frequency: 'daily', hour, minute });
+    }
+    case 'weekly': {
+      const { hour, minute } = splitTime(value.time);
+      return toCron({ frequency: 'weekly', daysOfWeek: value.days, hour, minute });
+    }
+    case 'monthly': {
+      const { hour, minute } = splitTime(value.time);
+      return toCron({ frequency: 'monthly', daysOfMonth: [value.day], hour, minute });
+    }
+    case 'custom':
+      return toCron({ frequency: 'custom', cronExpression: value.cron });
+  }
+};
+
+/**
+ * Convert a cron expression to a recurring {@link ScheduleValue}. Patterns that Schedule cannot model exactly
+ * (sub-hourly intervals, multi-day months, etc.) fall back to the `custom` kind preserving the raw expression.
+ */
+export const cronToSchedule = (cron: string): ScheduleValue => {
+  const spec = fromCron(cron);
+  switch (spec.frequency) {
+    case 'hourly':
+      // Schedule's hourly runs at the top of every hour; a non-unit interval can't be modelled.
+      return spec.interval === 1 ? { kind: 'hourly', minute: spec.minute } : { kind: 'custom', cron };
+    case 'daily':
+      return { kind: 'daily', time: joinTime(spec.hour, spec.minute) };
+    case 'weekly':
+      return { kind: 'weekly', time: joinTime(spec.hour, spec.minute), days: [...spec.daysOfWeek] };
+    case 'monthly':
+      // Schedule models a single day-of-month; multiple days remain custom.
+      return spec.daysOfMonth.length === 1
+        ? { kind: 'monthly', day: spec.daysOfMonth[0], time: joinTime(spec.hour, spec.minute) }
+        : { kind: 'custom', cron };
+    case 'minutely':
+    case 'custom':
+    default:
+      return { kind: 'custom', cron };
   }
 };

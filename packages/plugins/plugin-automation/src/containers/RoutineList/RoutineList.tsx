@@ -13,7 +13,7 @@ import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
-import { AssistantOperation } from '#types';
+import { AutomationOperation } from '#types';
 
 export type RoutineListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 
@@ -33,7 +33,7 @@ export const RoutineList = ({ subject }: RoutineListProps) => {
             icon='ph--magic-wand--regular'
             label={Obj.getLabel(prompt) ?? Obj.getURI(prompt)}
             onClick={() => {
-              void invokePromise(AssistantOperation.RunPromptInNewChat, {
+              void invokePromise(AutomationOperation.RunPromptInNewChat, {
                 db,
                 prompt: Ref.make(prompt),
                 objects: [subject],

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { TemplateEditor } from '@dxos/plugin-assistant/components';
+import { TemplateEditor } from '@dxos/plugin-automation/components';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, FormFieldLabel } from '@dxos/react-ui-form';
 

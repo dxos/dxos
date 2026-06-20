@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';
@@ -71,12 +70,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
               If you are unable to query -- fail.
               Do not list schemas first.
             `,
-        input: Schema.Struct({}),
-        output: Schema.Struct({
-          count: Schema.Number,
-        }),
         blueprints: [Ref.make(databaseBlueprint)],
-        context: [],
       }),
     );
     const fn = Operation.serialize(AgentPrompt);

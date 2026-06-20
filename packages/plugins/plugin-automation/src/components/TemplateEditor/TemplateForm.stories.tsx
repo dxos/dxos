@@ -52,7 +52,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/TemplateForm',
+  title: 'plugins/plugin-automation/components/TemplateForm',
   component: TemplateForm,
   render: DefaultStory,
   decorators: [

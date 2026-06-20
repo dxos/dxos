@@ -51,10 +51,13 @@ export const specFeed = (feed: Feed.Feed): FeedSpec => ({
  */
 export const SubscriptionSpec = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+
+  // TODO(burdon): Issue.
   query: Schema.Struct({
     raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
   }),
+
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -147,29 +150,31 @@ const TriggerSchema = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
+  // TODO(burdon): Runnable?
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
   function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
+  spec: Schema.optional(Spec),
+  enabled: Schema.optional(Schema.Boolean),
+
+  concurrency: Schema.Number.pipe(
+    Schema.annotations({
+      title: 'Concurrency',
+      default: 1,
+      description: 'Maximum number of concurrent invocations of the trigger.',
+    }),
+    Annotation.FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
 
   /**
    * Only used for workflowSchema.
    * Specifies the input node in the circuit.
    * @deprecated Remove and enforce a single input node in all compute graphSchema.
    */
-  inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
-
-  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
-  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
-  enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
-
-  spec: Schema.optional(Spec),
-
-  concurrency: Schema.optional(
-    Schema.Number.annotations({
-      title: 'Concurrency',
-      default: 1,
-      description:
-        'Maximum number of concurrent invocations of the trigger. For Feed triggers, this will process Feed items in parallel.',
-    }),
+  inputNodeId: Schema.String.pipe(
+    Schema.annotations({ title: 'Input Node ID' }),
+    Annotation.FormInputAnnotation.set(false),
+    Schema.optional,
   ),
 
   /**
@@ -183,7 +188,10 @@ const TriggerSchema = Schema.Struct({
    *   mailbox: { '/': 'echo://AAA/ZZZ' }
    * }
    */
-  input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  input: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(
+    Annotation.FormInputAnnotation.set(false),
+    Schema.optional,
+  ),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
   HiddenAnnotation.set(true),

@@ -133,7 +133,7 @@ honoured by ad-hoc `if (layout === …)` checks scattered across `FormFieldWrapp
 
   ```
   FormFieldSetProps<T> =
-      { label, sort, collapsible, exclude, layoutName }
+      { label, sort, collapsible, filter, layoutName }
     & Pick<FormHandlerProps<T>, 'schema'>
     & Pick<FormFieldProps, 'path'|'autoFocus'>
     & FormFieldOptions

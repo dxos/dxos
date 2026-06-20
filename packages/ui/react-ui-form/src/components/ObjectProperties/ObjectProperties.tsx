@@ -113,6 +113,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 
     return (
       <Form.Root
+        db={db}
         schema={formSchema}
         defaultValues={values as any}
         createTypename={Type.getTypename(Tag.Tag)}
@@ -120,7 +121,6 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         createOptionLabel={['add-tag.label', { ns: translationKey }]}
         createInitialValuePath='label'
         createFieldMap={createFieldMap}
-        db={db}
         onValuesChanged={handleChange}
         onCreate={handleCreate}
         getCreateDefaults={getCreateDefaults}
