@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
-import { type Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Icon, IconBlock, IconButton, useTranslation } from '@dxos/react-ui';
+import { DXN, type Database, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
+import { Icon, IconBlock, IconButton, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
@@ -23,7 +24,7 @@ import {
   scheduleToCron,
   toCron,
 } from '../Schedule';
-import { TriggerKindPicker, type TriggerKind, getTriggerKindIcon } from './TriggerKindPicker';
+import { TriggerKindSelector, type TriggerKind, getTriggerKindIcon } from './TriggerKindSelector';
 
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
@@ -39,6 +40,11 @@ const TimerSpecForm = Schema.Struct({
 
 const SubscriptionSpecForm = Schema.Struct({
   kind: Schema.Literal('subscription'),
+  // The object type to watch; converted to a `Filter.type` query. `typename` renders via a custom select of
+  // the space/registry types (see `TypeSelectField`); `deep`/`delay` map to the subscription's options.
+  typename: Schema.String.pipe(Schema.annotations({ title: 'Type' }), Schema.optional),
+  deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
+  delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
 });
 
 const WebhookSpecForm = Schema.Struct({
@@ -72,21 +78,42 @@ type TriggerFormInput = {
   readonly method?: string;
   readonly port?: number;
   readonly feed?: Ref.Ref<Feed.Feed>;
+  readonly typename?: string;
+  readonly deep?: boolean;
+  readonly delay?: number;
 };
 
 /** Project a trigger spec onto the form's discriminated-union members. */
 const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput => {
   switch (spec?.kind) {
     case 'subscription':
-      return { kind: 'subscription' };
+      // The watched typename is preserved in `query.raw` so the Type select can round-trip it.
+      return {
+        kind: 'subscription',
+        typename: spec.query?.raw,
+        deep: spec.options?.deep,
+        delay: spec.options?.delay,
+      };
     case 'feed':
-      return { kind: 'feed', feed: spec.feed };
+      return {
+        kind: 'feed',
+        feed: spec.feed,
+      };
     case 'webhook':
-      return { kind: 'webhook', method: spec.method, port: spec.port };
+      return {
+        kind: 'webhook',
+        method: spec.method,
+        port: spec.port,
+      };
     case 'email':
-      return { kind: 'email' };
+      return {
+        kind: 'email',
+      };
     case 'timer':
-      return { kind: 'timer', cron: spec.cron };
+      return {
+        kind: 'timer',
+        cron: spec.cron,
+      };
     default:
       // No spec yet: leave the kind unset so the editor shows the variant picker (nothing selected).
       return {};
@@ -96,15 +123,22 @@ const triggerFormValues = (spec?: Trigger.Spec): TriggerFormInput => {
 // Fallback cron used when no schedule has been set yet.
 const DEFAULT_TIMER_CRON = toCron(FrequencyDefaults.daily);
 
-// The Query variant is a stub: it has no editor yet, so selecting it seeds a match-everything subscription
-// (a valid spec that never dispatches usefully until a real query editor lands).
-const DEFAULT_SUBSCRIPTION_QUERY = Query.select(Filter.everything());
+/** Build the subscription query: filter by the chosen type, or match everything until one is picked. */
+const subscriptionQuery = (typename?: string): Query.Any =>
+  typename ? Query.select(Filter.type(DXN.make(typename))) : Query.select(Filter.everything());
 
 /** Build a trigger spec from the form's values. */
 const triggerFormSpec = (values: TriggerFormInput): Trigger.Spec => {
   switch (values.kind) {
-    case 'subscription':
-      return Trigger.specSubscription(DEFAULT_SUBSCRIPTION_QUERY);
+    case 'subscription': {
+      const hasOptions = values.deep != null || values.delay != null;
+      return {
+        kind: 'subscription',
+        // Carry the typename in `raw` so the editor can recover the Type selection on reopen.
+        query: { raw: values.typename, ast: subscriptionQuery(values.typename).ast },
+        options: hasOptions ? { deep: values.deep, delay: values.delay } : undefined,
+      };
+    }
     case 'feed':
       return { kind: 'feed', feed: values.feed };
     case 'webhook':
@@ -117,13 +151,13 @@ const triggerFormSpec = (values: TriggerFormInput): Trigger.Spec => {
   }
 };
 
-export type TriggerEditorProps = {
+export type TriggerEditorProps = ThemedClassName<{
   db: Database.Database;
   automation: Automation.Automation;
   trigger?: Trigger.Trigger;
-};
+}>;
 
-export const TriggerEditor = ({ db, automation, trigger }: TriggerEditorProps) => {
+export const TriggerEditor = ({ classNames, db, automation, trigger }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
     db,
@@ -141,7 +175,7 @@ export const TriggerEditor = ({ db, automation, trigger }: TriggerEditorProps) =
       defaultValues={defaultValues}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.Content>
+      <Form.Content classNames={classNames}>
         {kind && (
           <div className='flex items-center'>
             <IconBlock>
@@ -158,16 +192,29 @@ export const TriggerEditor = ({ db, automation, trigger }: TriggerEditorProps) =
           </div>
         )}
         <Form.FieldSet />
-        {/* {kind === 'subscription' && (
-          <p className='text-sm text-description pli-1 mbs-2'>{t('trigger-kind.query-stub.message')}</p>
-        )}
-        {kind === 'email' && (
-          <p className='text-sm text-description pli-1 mbs-2'>{t('trigger-kind.email-note.message')}</p>
-        )} */}
+        {/* Email triggers have no configuration; surface an explanatory note instead of an empty body. */}
+        {kind === 'email' && <p className='pli-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
       </Form.Content>
     </Form.Root>
   );
 };
+
+/** Selects the ECHO object type to watch (subscription `typename`) from the space + registry schemas. */
+const TypeSelectField = (props: FormFieldRendererProps) => {
+  const types = useQuery(props.db, Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const options = useMemo(
+    () =>
+      types
+        .filter((type) => !Type.isTypeKind(type))
+        .map((type) => Type.getTypename(type))
+        .filter((typename): typename is string => !!typename)
+        .map((typename) => ({ value: typename, label: typename })),
+    [types],
+  );
+  return <SelectField {...props} options={options} />;
+};
+
+TypeSelectField.displayName = 'TriggerEditor.TypeSelectField';
 
 /** Edits the cron via the Schedule picker (recurring kinds only) with a live cronstrue description below it. */
 const CronField = (props: FormFieldRendererProps) => {
@@ -187,10 +234,9 @@ const CronField = (props: FormFieldRendererProps) => {
 
   return (
     <Schedule.Root kinds={RECURRING_KINDS} defaultValue={initial} onValueChange={handleChange}>
-      {/* <Schedule.Header /> */}
+      <Schedule.Header />
       <Schedule.Kind />
       <Schedule.Body />
-      {/* <Schedule.Description /> */}
     </Schedule.Root>
   );
 };
@@ -212,9 +258,10 @@ const useTriggerForm = (db: Database.Database, automation: Automation.Automation
       // Show the variant picker only until a kind is chosen; once selected the row is replaced by that
       // variant's editor (the kind field renders nothing).
       kind: (props) =>
-        props.getValue() ? null : <TriggerKindPicker onChange={(next) => props.onValueChange(props.type, next)} />,
+        props.getValue() ? null : <TriggerKindSelector onChange={(next) => props.onValueChange(props.type, next)} />,
       cron: (props) => <CronField {...props} />,
       method: (props) => <SelectField {...props} options={methodOptions} />,
+      typename: (props) => <TypeSelectField {...props} />,
     }),
     [methodOptions],
   );

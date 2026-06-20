@@ -54,16 +54,16 @@ export const AutomationArticle = ({ role, subject }: AutomationArticleProps) => 
         </Settings.Panel>
       </Settings.Section>
 
-      <Settings.Section title={t('trigger-picker.title')} description={t('trigger-picker.description')}>
+      <Settings.Section title={t('actions.title')} description={t('actions.description')}>
         <Settings.Panel>
-          <TriggerEditor db={db} automation={subject} trigger={trigger} />
-          {space && trigger && <TriggerTestingSection space={space} trigger={trigger} />}
+          <ActionSection db={db} automation={subject} trigger={trigger} />
         </Settings.Panel>
       </Settings.Section>
 
-      <Settings.Section title={t('action.title')} description={t('action.description')}>
+      <Settings.Section title={t('triggers.title')} description={t('triggers.description')}>
         <Settings.Panel>
-          <ActionSection db={db} automation={subject} trigger={trigger} />
+          <TriggerEditor db={db} automation={subject} trigger={trigger} />
+          {space && trigger && <TriggerTestingSection space={space} trigger={trigger} />}
         </Settings.Panel>
       </Settings.Section>
     </Settings.Viewport>
@@ -78,7 +78,7 @@ const GeneralForm = Schema.Struct({
   name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
   enabled: Schema.Boolean.annotations({ title: 'Enabled' }),
 });
-type GeneralFormValues = Schema.Schema.Type<typeof GeneralForm>;
+type GeneralFormV = Schema.Schema.Type<typeof GeneralForm>;
 
 /**
  * Top-level metadata: name plus the enabled toggle. The automation has no `enabled` field of its own —
@@ -426,13 +426,13 @@ const useGeneralForm = (automation: Automation.Automation, trigger?: Trigger.Tri
   );
 
   // Read once per trigger identity; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<GeneralFormValues>>(
+  const defaultValues = useMemo<Partial<GeneralFormV>>(
     () => ({ name: auto.name, enabled: (trigger?.enabled ?? false) && canEnable }),
     [automation, trigger],
   );
 
   const handleValuesChanged = useCallback(
-    (values: Partial<GeneralFormValues>) => {
+    (values: Partial<GeneralFormV>) => {
       updateAuto((automation) => {
         automation.name = values.name;
       });

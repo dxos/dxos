@@ -2,36 +2,37 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, {
-  type PropsWithChildren,
-  type ReactNode,
-  createContext,
-  forwardRef,
-  useCallback,
-  useContext,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, createContext, forwardRef, useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import {
-  Column,
-  Icon,
-  IconButton,
+  composable,
+  composableProps,
   Input,
   ThemedClassName,
   ToggleGroup,
   ToggleGroupItem,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
+import { fromCron, scheduleToCron } from './cron';
 
 //
 // Value model.
 //
 
-export const ScheduleKinds = ['once', 'hourly', 'daily', 'weekly', 'monthly', 'custom'] as const;
+export const ScheduleKinds = [
+  // TODO(burdon): Once cannot be converted to a cron expression.
+  // 'once',
+  'hourly',
+  'daily',
+  'weekly',
+  'monthly',
+  'custom',
+] as const;
 export type ScheduleKind = (typeof ScheduleKinds)[number];
 
 const isScheduleKind = (value: string): value is ScheduleKind => (ScheduleKinds as readonly string[]).includes(value);
@@ -49,17 +50,17 @@ export type Day = (typeof Days)[number]['value'];
 
 /** Discriminated schedule value. Times are `HH:mm` (24h); `once.date` is `YYYY-MM-DDTHH:mm`. */
 export type ScheduleValue =
-  | { kind: 'once'; date?: string }
+  // | { kind: 'once'; date?: string }
   | { kind: 'hourly'; minute: number }
   | { kind: 'daily'; time: string }
   | { kind: 'weekly'; time: string; days: Day[] }
   | { kind: 'monthly'; day: number; time: string }
   | { kind: 'custom'; cron: string };
 
-const DEFAULT_TIME = '09:00';
+const DEFAULT_TIME = '08:00';
 
 const KIND_LABEL_KEYS: Record<ScheduleKind, string> = {
-  once: 'schedule.kind.once.label',
+  // once: 'schedule.kind.once.label',
   hourly: 'schedule.kind.hourly.label',
   daily: 'schedule.kind.daily.label',
   weekly: 'schedule.kind.weekly.label',
@@ -68,9 +69,9 @@ const KIND_LABEL_KEYS: Record<ScheduleKind, string> = {
 };
 
 const DEFAULTS: { [K in ScheduleKind]: Extract<ScheduleValue, { kind: K }> } = {
-  once: {
-    kind: 'once',
-  },
+  // once: {
+  //   kind: 'once',
+  // },
   hourly: {
     kind: 'hourly',
     minute: 0,
@@ -95,11 +96,31 @@ const DEFAULTS: { [K in ScheduleKind]: Extract<ScheduleValue, { kind: K }> } = {
   },
 };
 
-/** Carry the current time across kinds that have one, otherwise fall back to the kind's default. */
+const pad = (value: number): string => String(value).padStart(2, '0');
+
+/**
+ * Switch to a different kind, preserving the current schedule's timing by routing it through its cron
+ * representation. The cron is the canonical carrier: each target kind reuses whatever fields it supports
+ * (time-of-day, weekdays, day-of-month), falling back to the kind's default for fields the cron doesn't hold.
+ */
 const switchKind = (current: ScheduleValue, kind: ScheduleKind): ScheduleValue => {
-  const time = 'time' in current ? current.time : undefined;
-  const next = DEFAULTS[kind];
-  return time && 'time' in next ? { ...next, time } : next;
+  const cron = scheduleToCron(current);
+  const spec = cron ? fromCron(cron) : undefined;
+  const minute = spec && 'minute' in spec ? spec.minute : 0;
+  const hour = spec && 'hour' in spec ? spec.hour : 0;
+  const time = `${pad(hour)}:${pad(minute)}`;
+  switch (kind) {
+    case 'hourly':
+      return { kind: 'hourly', minute };
+    case 'daily':
+      return { kind: 'daily', time };
+    case 'weekly':
+      return { kind: 'weekly', time, days: spec?.frequency === 'weekly' ? [...spec.daysOfWeek] : DEFAULTS.weekly.days };
+    case 'monthly':
+      return { kind: 'monthly', time, day: spec?.frequency === 'monthly' ? spec.daysOfMonth[0] : DEFAULTS.monthly.day };
+    case 'custom':
+      return { kind: 'custom', cron: cron ?? DEFAULTS.custom.cron };
+  }
 };
 
 //
@@ -111,7 +132,6 @@ type ScheduleContextValue = {
   onValueChange: (value: ScheduleValue) => void;
   kinds: readonly ScheduleKind[];
   timezone?: string;
-  onClose?: () => void;
 };
 
 const ScheduleContext = createContext<ScheduleContextValue | null>(null);
@@ -135,8 +155,6 @@ export type ScheduleRootProps = ThemedClassName<
     onValueChange?: (value: ScheduleValue) => void;
     /** Restrict which frequency tabs are offered (defaults to all kinds). */
     kinds?: readonly ScheduleKind[];
-    /** When set, `Schedule.Header` renders a close button that calls this. */
-    onClose?: () => void;
   }>
 >;
 
@@ -145,16 +163,16 @@ export type ScheduleRootProps = ThemedClassName<
  * and the schedule state context. Controllable via `value`/`onValueChange`, or self-managing via
  * `defaultValue`. Compose with `Schedule.Header`, `Schedule.Kind`, `Schedule.Body`, `Schedule.Description`.
  */
-const ScheduleRoot = forwardRef<HTMLDivElement, ScheduleRootProps>(
+const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
   (
-    { children, value, defaultValue, onValueChange, kinds = ScheduleKinds, timezone, onClose, classNames },
+    { children, value: valueProp, defaultValue, onValueChange, kinds = ScheduleKinds, timezone, ...props },
     forwardedRef,
   ) => {
-    const [internal, setInternal] = useState<ScheduleValue>(value ?? defaultValue ?? DEFAULTS.weekly);
+    const [value, setValue] = useState<ScheduleValue>(valueProp ?? defaultValue ?? DEFAULTS.weekly);
 
     const handleValueChange = useCallback(
       (next: ScheduleValue) => {
-        setInternal(next);
+        setValue(next);
         onValueChange?.(next);
       },
       [onValueChange],
@@ -162,11 +180,11 @@ const ScheduleRoot = forwardRef<HTMLDivElement, ScheduleRootProps>(
 
     return (
       <ScheduleContext.Provider
-        value={{ value: value ?? internal, onValueChange: handleValueChange, kinds, timezone, onClose }}
+        value={{ value: valueProp ?? value, onValueChange: handleValueChange, kinds, timezone }}
       >
-        <Column.Root ref={forwardedRef} gutter='md' classNames={mx('gap-y-2', classNames)}>
+        <div {...composableProps(props, { classNames: 'flex flex-col gap-y-2' })} ref={forwardedRef}>
           {children}
-        </Column.Root>
+        </div>
       </ScheduleContext.Provider>
     );
   },
@@ -178,37 +196,17 @@ ScheduleRoot.displayName = 'Schedule.Root';
 // Header
 //
 
-export type ScheduleHeaderProps = { classNames?: string; children?: ReactNode };
+export type ScheduleHeaderProps = { classNames?: string };
 
 /**
  * Summary row laid out on the shared grid: the icon in the leading gutter (column 1), the schedule
  * description (or `children`) in the center column, and an optional close button in the trailing gutter
  * (column 3).
  */
-const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames, children }, forwardedRef) => {
+const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
-  const { value, timezone, onClose } = useScheduleContext('Schedule.Header');
-  return (
-    <Column.Row ref={forwardedRef} classNames={classNames}>
-      <Column.Block>
-        <Icon icon='ph--clock-countdown--regular' />
-      </Column.Block>
-      <h2 className='self-center min-w-0 truncate text-base font-medium'>
-        {children ?? describeSchedule(value, timezone)}
-      </h2>
-      {onClose && (
-        <Column.Block end>
-          <IconButton
-            iconOnly
-            variant='ghost'
-            icon='ph--x--regular'
-            label={t('schedule.close.label')}
-            onClick={onClose}
-          />
-        </Column.Block>
-      )}
-    </Column.Row>
-  );
+  const { value, timezone } = useScheduleContext('Schedule.Header');
+  return <p className={mx('grow truncate', classNames)}>{describeSchedule(value, timezone)}</p>;
 });
 
 ScheduleHeader.displayName = 'Schedule.Header';
@@ -233,15 +231,13 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <Column.Center ref={forwardedRef} classNames={classNames}>
-      <ToggleGroup type='single' value={value.kind} onValueChange={handleKindChange}>
-        {kinds.map((kind) => (
-          <ToggleGroupItem key={kind} value={kind}>
-            {t(KIND_LABEL_KEYS[kind])}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-    </Column.Center>
+    <ToggleGroup type='single' value={value.kind} onValueChange={handleKindChange}>
+      {kinds.map((kind) => (
+        <ToggleGroupItem key={kind} value={kind}>
+          {t(KIND_LABEL_KEYS[kind])}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   );
 });
 
@@ -256,36 +252,10 @@ export type ScheduleBodyProps = ThemedClassName;
 /** Per-kind editor for the active frequency. Rendered as a 3-column row so editors can use the gutters. */
 const ScheduleBody = forwardRef<HTMLDivElement, ScheduleBodyProps>(({ classNames }, forwardedRef) => {
   const { value, onValueChange } = useScheduleContext('Schedule.Body');
-  return (
-    <Column.Row ref={forwardedRef} classNames={classNames}>
-      <ScheduleEditor value={value} onChange={onValueChange} />
-    </Column.Row>
-  );
+  return <ScheduleEditor value={value} onChange={onValueChange} />;
 });
 
 ScheduleBody.displayName = 'Schedule.Body';
-
-//
-// Description
-//
-
-export type ScheduleDescriptionProps = ThemedClassName<PropsWithChildren>;
-
-/** Footer note row. Defaults to the staggered-runs hint. */
-const ScheduleDescription = forwardRef<HTMLParagraphElement, ScheduleDescriptionProps>(
-  ({ classNames, children }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    return (
-      <Column.Center asChild>
-        <p ref={forwardedRef} className={mx('text-sm text-subdued', classNames)}>
-          {children ?? t('schedule.note.message')}
-        </p>
-      </Column.Center>
-    );
-  },
-);
-
-ScheduleDescription.displayName = 'Schedule.Description';
 
 //
 // Namespace.
@@ -296,7 +266,6 @@ export const Schedule = {
   Header: ScheduleHeader,
   Kind: ScheduleKindRow,
   Body: ScheduleBody,
-  Description: ScheduleDescription,
 };
 
 //
@@ -313,24 +282,24 @@ const Field = ({ label, children }: PropsWithChildren<{ label: string }>) => (
 const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (value: ScheduleValue) => void }) => {
   const { t } = useTranslation(meta.profile.key);
   switch (value.kind) {
-    case 'once':
-      // `Input.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
-      // of `Schedule.Body`'s row while still sharing the input context that wires the picker to the field.
-      return (
-        <Input.Root>
-          <Column.Block>
-            <Input.TriggerIcon />
-          </Column.Block>
-          <Field label={t('schedule.at.label')}>
-            <Input.DateTime
-              classNames='min-w-0 overflow-hidden'
-              hourCycle={12}
-              value={value.date ?? ''}
-              onValueChange={(date) => onChange({ kind: 'once', date: date || undefined })}
-            />
-          </Field>
-        </Input.Root>
-      );
+    // case 'once':
+    // `Input.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
+    // of `Schedule.Body`'s row while still sharing the input context that wires the picker to the field.
+    // return (
+    //   <Input.Root>
+    //     <div>
+    //       <Field label={t('schedule.at.label')}>
+    //         <Input.DateTime
+    //           classNames='min-w-0 overflow-hidden'
+    //           hourCycle={12}
+    //           value={value.date ?? ''}
+    //           onValueChange={(date) => onChange({ kind: 'once', date: date || undefined })}
+    //         />
+    //         <Input.TriggerIcon />
+    //       </Field>
+    //     </div>
+    //   </Input.Root>
+    // );
 
     case 'hourly':
       return (
@@ -363,7 +332,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='flex flex-col gap-3'>
+        <div className='flex gap-3'>
           <Field label={t('schedule.at.label')}>
             <Input.Root>
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
@@ -470,10 +439,10 @@ const withZone = (text: string, timezone?: string): string => (timezone ? `${tex
 /** Human-readable summary of the schedule, suitable for the header. */
 export const describeSchedule = (value: ScheduleValue, timezone?: string): string => {
   switch (value.kind) {
-    case 'once':
-      return value.date
-        ? `Runs once at ${formatTime(value.date.slice(11))} on ${value.date.slice(0, 10)}`
-        : 'Runs once';
+    // case 'once':
+    //   return value.date
+    //     ? `Runs once at ${formatTime(value.date.slice(11))} on ${value.date.slice(0, 10)}`
+    //     : 'Runs once';
     case 'hourly':
       return `Runs every hour at minute ${value.minute}`;
     case 'daily':

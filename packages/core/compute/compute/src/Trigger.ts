@@ -51,10 +51,13 @@ export const specFeed = (feed: Feed.Feed): FeedSpec => ({
  */
 export const SubscriptionSpec = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+
+  // TODO(burdon): Issue.
   query: Schema.Struct({
     raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
   }),
+
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).

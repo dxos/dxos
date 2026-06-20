@@ -51,14 +51,16 @@ export const translations: Resource[] = [
         'automation-name.label': 'Name',
         'general.title': 'General',
         'general.description': 'Name and status.',
-        'action.title': 'Action',
-        'action.description': 'What this automation runs.',
+
+        'actions.title': 'Actions',
+        'actions.description': 'What this automation runs.',
         'action.placeholder': 'Select an operation or routine',
         'action-input.label': 'Input',
         'action-kind.operation.label': 'Operation',
         'action-kind.routine.label': 'Routine',
-        'trigger-picker.title': 'Trigger',
-        'trigger-picker.description': 'When this automation runs.',
+
+        'triggers.title': 'Triggers',
+        'triggers.description': 'When this automation runs.',
         'trigger-kind.placeholder': 'Select trigger type',
         'trigger-kind.timer.label': 'Schedule',
         'trigger-kind.timer.description': 'Run on a recurring schedule or once at a future time.',
@@ -73,6 +75,7 @@ export const translations: Resource[] = [
         'trigger-kind.clear.label': 'Clear',
         'trigger-kind.query-stub.message': 'Query editing is not yet available.',
         'trigger-kind.email-note.message': 'Runs whenever a new email is received.',
+
         'method.label': 'Method',
         'port.label': 'Port',
         'cron.placeholder': '0 0 * * *',

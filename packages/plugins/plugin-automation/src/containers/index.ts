@@ -12,4 +12,3 @@ export const AutomationCompanion: ComponentType<any> = lazy(() => import('./Auto
 export const BlueprintArticle: ComponentType<any> = lazy(() => import('./BlueprintArticle'));
 export const RoutineArticle: ComponentType<any> = lazy(() => import('./RoutineArticle'));
 export const RoutineList: ComponentType<any> = lazy(() => import('./RoutineList'));
-export const TriggerSettings: ComponentType<any> = lazy(() => import('./TriggerSettings'));

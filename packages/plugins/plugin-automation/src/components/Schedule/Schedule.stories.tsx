@@ -17,16 +17,14 @@ const DefaultStory = ({ initial }: { initial: ScheduleValue }) => {
   return (
     <div className='p-4 flex flex-col gap-3'>
       <Schedule.Root
-        classNames='bg-card-surface border border-separator rounded-sm'
+        classNames='bg-card-surface border border-separator rounded-sm p-2'
         value={value}
         onValueChange={setValue}
         timezone='EDT'
-        onClose={() => {}}
       >
         <Schedule.Header />
         <Schedule.Kind />
         <Schedule.Body />
-        <Schedule.Description />
       </Schedule.Root>
       <div className='flex flex-col gap-1'>
         <p className='text-xs text-subdued'>Value</p>
@@ -54,10 +52,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Weekly: Story = {
   args: { initial: { kind: 'weekly', time: '09:00', days: ['mon'] } },
-};
-
-export const Once: Story = {
-  args: { initial: { kind: 'once' } },
 };
 
 export const Hourly: Story = {

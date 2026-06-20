@@ -157,8 +157,6 @@ const joinTime = (hour: number, minute: number): string => `${pad(hour)}:${pad(m
  */
 export const scheduleToCron = (value: ScheduleValue): string | undefined => {
   switch (value.kind) {
-    case 'once':
-      return undefined;
     case 'hourly':
       return toCron({ frequency: 'hourly', interval: 1, minute: value.minute });
     case 'daily': {

@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Trigger } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
@@ -19,20 +20,20 @@ import * as Runnable from './Runnable';
 export const Automation = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   description: Schema.String.pipe(Schema.optional),
+
   /**
    * The action to run. A trigger's `function` Ref points directly at this (so EDGE/the dispatcher can run
    * it). `Runnable` is the type seam — currently just Operation; see Runnable.ts.
    */
+  // TODO(burdon): Array.
   runnable: Ref.Ref(Runnable.Runnable).pipe(Schema.optional),
+
   /**
    * Explicit membership, bi-directional with `trigger.function → runnable`. Required (not derived by query)
    * because the runnable may be a shared registry operation referenced by multiple automations, which would
    * conflate triggers. MVP enforces length <= 1.
-   *
-   * Typed as `Obj.Unknown` (not `Trigger`) to avoid pulling query-AST types into the emitted declaration —
-   * the same reason `Trigger.function` uses `Obj.Unknown`. Resolve and narrow with `Obj.instanceOf(Trigger)`.
    */
-  triggers: Schema.Array(Ref.Ref(Obj.Unknown)),
+  triggers: Schema.Array(Ref.Ref(Trigger.Trigger)),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),

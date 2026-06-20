@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Trigger } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -31,7 +31,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <TriggerEditor db={space.db} automation={automation} trigger={trigger} />;
+  return <TriggerEditor classNames='p-2' db={space.db} automation={automation} trigger={trigger} />;
 };
 
 const withSeededSpace = (seed: (space: Space) => void) =>
@@ -64,35 +64,31 @@ export const Empty: Story = {
   ],
 };
 
-/** Existing timer trigger: the picker is replaced by the Schedule editor for the selected variant. */
-export const WithTimerTrigger: Story = {
-  decorators: [
-    withSeededSpace((space) => {
-      const trigger = space.db.add(Trigger.make({ enabled: false, spec: Trigger.specTimer('0 9 * * *') }));
-      const automation = space.db.add(Automation.make({ name: 'Daily Digest', triggers: [] }));
-      Obj.update(automation, (automation) => {
-        automation.triggers = [...automation.triggers, Ref.make(trigger)];
-      });
-    }),
-  ],
+// Reads the automation's primary trigger spec kind. `Automation.triggers` is typed `Ref.Ref(Obj.Unknown)`,
+// so the target is narrowed before reading its spec.
+const primaryTriggerKind = (): string | undefined => {
+  const automation = (window as any)[DEBUG_SYMBOL]?.automation as Automation.Automation | undefined;
+  const target = automation?.triggers?.[0]?.target;
+  return target && Obj.instanceOf(Trigger.Trigger, target) ? target.spec?.kind : undefined;
 };
 
-// Each variant by picker label (regex anchors the card's title; its accessible name also includes the
-// description) paired with the spec discriminant it must produce.
-const VARIANTS: { kind: Trigger.Spec['kind']; name: RegExp }[] = [
-  { kind: 'timer', name: /^Schedule/ },
-  { kind: 'feed', name: /^Feed/ },
-  { kind: 'subscription', name: /^Query/ },
-  { kind: 'webhook', name: /^Webhook/ },
-  { kind: 'email', name: /^Email/ },
-];
+// The spec is written via Obj.update on the next tick, so poll until it settles.
+const waitForKind = async (expected: string | undefined): Promise<void> => {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (primaryTriggerKind() === expected) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`expected spec.kind=${expected}, got ${primaryTriggerKind()}`);
+};
 
 /**
- * Drives the picker to create a trigger of every kind: selecting a card creates/updates the automation's
- * primary trigger with that kind's spec, then Clear reverts to the picker for the next kind. Asserts each
- * selection round-trips to the expected `spec.kind`.
+ * Builds a play story that drives the picker to create a trigger of a single kind: selecting the card creates
+ * the automation's primary trigger with that kind's spec, asserted to round-trip to the expected `spec.kind`.
+ * `name` regex anchors the card's title (its accessible name also includes the description).
  */
-export const CreateEachKindPlay: Story = {
+const createKindStory = (kind: Trigger.Spec['kind'], name: RegExp): Story => ({
   decorators: [
     withSeededSpace((space) => {
       space.db.add(Automation.make({ name: 'Morning Report', triggers: [] }));
@@ -100,36 +96,24 @@ export const CreateEachKindPlay: Story = {
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-
-    const primaryTriggerKind = (): string | undefined => {
-      const automation = (window as any)[DEBUG_SYMBOL]?.automation as Automation.Automation | undefined;
-      // `Automation.triggers` is typed `Ref.Ref(Obj.Unknown)`, so narrow the target to read its spec.
-      const target = automation?.triggers?.[0]?.target;
-      return target && Obj.instanceOf(Trigger.Trigger, target) ? target.spec?.kind : undefined;
-    };
-
-    // The spec is written via Obj.update on the next tick, so poll until it settles.
-    const waitForKind = async (expected: string | undefined): Promise<void> => {
-      for (let attempt = 0; attempt < 100; attempt++) {
-        if (primaryTriggerKind() === expected) {
-          return;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      throw new Error(`expected spec.kind=${expected}, got ${primaryTriggerKind()}`);
-    };
-
-    for (const { kind, name } of VARIANTS) {
-      // Pick the variant (creates the trigger on first selection, updates it thereafter).
-      const card = await canvas.findByRole('radio', { name }, { timeout: 10_000 });
-      await userEvent.click(card);
-      await waitForKind(kind);
-      await expect(primaryTriggerKind()).toBe(kind);
-
-      // Revert to the picker so the next variant can be selected.
-      const clear = await canvas.findByRole('button', { name: /clear/i }, { timeout: 5000 });
-      await userEvent.click(clear);
-      await waitForKind(undefined);
-    }
+    const card = await canvas.findByRole('radio', { name }, { timeout: 10_000 });
+    await userEvent.click(card);
+    await waitForKind(kind);
+    await expect(primaryTriggerKind()).toBe(kind);
   },
-};
+});
+
+/** Create a Schedule (timer) trigger via the picker. */
+export const CreateScheduleTrigger: Story = createKindStory('timer', /^Schedule/);
+
+/** Create a Feed trigger via the picker. */
+export const CreateFeedTrigger: Story = createKindStory('feed', /^Feed/);
+
+/** Create a Query (subscription) trigger via the picker. */
+export const CreateQueryTrigger: Story = createKindStory('subscription', /^Query/);
+
+/** Create a Webhook trigger via the picker. */
+export const CreateWebhookTrigger: Story = createKindStory('webhook', /^Webhook/);
+
+/** Create an Email trigger via the picker. */
+export const CreateEmailTrigger: Story = createKindStory('email', /^Email/);

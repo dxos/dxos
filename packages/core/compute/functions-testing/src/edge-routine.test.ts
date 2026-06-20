@@ -72,7 +72,6 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
               Do not list schemas first.
             `,
         blueprints: [Ref.make(databaseBlueprint)],
-        context: [],
       }),
     );
     const fn = Operation.serialize(AgentPrompt);

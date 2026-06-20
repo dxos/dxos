@@ -24,7 +24,7 @@ export const Routine = Schema.Struct({
     Schema.annotations({ description: 'Describe what the agent should do in each session.' }),
   ),
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
-  // TODO(burdon): Is this still a problem?
+
   // The form owns these: "add" creates a new Trigger and renders it inline (no picker). Typed as
   // `Obj.Unknown` (not `Trigger`) to keep the query-AST-laden Trigger type out of the emitted declaration
   // (see `Automation.triggers`); the create target type is carried by `FormCreateAnnotation` instead.

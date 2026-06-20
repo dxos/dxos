@@ -133,11 +133,6 @@ describe('fromCron', () => {
 });
 
 describe('Schedule <-> cron bridge', () => {
-  test('once has no cron representation', ({ expect }) => {
-    expect(scheduleToCron({ kind: 'once' })).toBeUndefined();
-    expect(scheduleToCron({ kind: 'once', date: '2026-01-01T09:00' })).toBeUndefined();
-  });
-
   test('recurring kinds round-trip through cron', ({ expect }) => {
     const cases: ScheduleValue[] = [
       { kind: 'hourly', minute: 5 },
