@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Routine, Trigger } from '@dxos/compute';
+import { Blueprint, Routine, Trigger } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -15,6 +15,33 @@ import { translations } from '#translations';
 import { Automation } from '#types';
 
 import { AutomationArticle } from './AutomationArticle';
+
+const types = [Automation.Automation, Trigger.Trigger, Routine.Routine, Feed.Feed, Blueprint.Blueprint];
+
+/** Seed a few fake blueprints so the routine action's Blueprints picker has options. */
+const seedBlueprints = (space: Space) => {
+  space.db.add(
+    Blueprint.make({
+      key: 'example.com/blueprint/research',
+      name: 'Research',
+      description: 'Research an organization.',
+    }),
+  );
+  space.db.add(
+    Blueprint.make({
+      key: 'example.com/blueprint/summarize',
+      name: 'Summarize',
+      description: 'Summarize the selected content.',
+    }),
+  );
+  space.db.add(
+    Blueprint.make({
+      key: 'example.com/blueprint/translate',
+      name: 'Translate',
+      description: 'Translate text to another language.',
+    }),
+  );
+};
 
 const DefaultStory = () => {
   const { space } = useClientStory();
@@ -34,8 +61,9 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Automation.Automation, Trigger.Trigger, Routine.Routine, Feed.Feed],
+      types,
       onCreateSpace: async ({ space }) => {
+        seedBlueprints(space);
         space.db.add(Automation.make({ name: 'Morning Report', triggers: [] }));
       },
     }),
@@ -59,8 +87,9 @@ export const WithTimerTrigger: Story = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Automation.Automation, Trigger.Trigger, Routine.Routine, Feed.Feed],
+      types,
       onCreateSpace: async ({ space }) => {
+        seedBlueprints(space);
         const trigger = space.db.add(Trigger.make({ enabled: false, spec: { kind: 'timer', cron: '0 9 * * *' } }));
         const automation = space.db.add(Automation.make({ name: 'Daily Digest', triggers: [] }));
         // Wire the trigger into the automation after both are in the db.
