@@ -177,13 +177,13 @@ component PostArticle
 ## Services
 
 ```mdl
-service MagazineBlueprint
+service MagazineSkill
   desc: |
-    Agent blueprint invoked by the MagazineArticle Curate button.
-    Registered as a BlueprintDefinition capability. The agent reads the
+    Agent skill invoked by the MagazineArticle Curate button.
+    Registered as a SkillDefinition capability. The agent reads the
     Magazine's instructions Text and referenced feeds, selects matching
     Posts, and enriches them.
-  key: org.dxos.blueprint.magazine
+  key: org.dxos.skill.magazine
   ops:
     # All operations are exposed as tools:
     # - ListCandidatePosts
@@ -277,9 +277,9 @@ op CurateMagazine
     added: number
   effects: [echo:write]
   note: >
-    Exists alongside the blueprint. The deterministic path gives the button
+    Exists alongside the skill. The deterministic path gives the button
     an immediate, reliable result without needing an LLM. The agent path
-    (via the blueprint's fine-grained tools) delivers instruction-driven,
+    (via the skill's fine-grained tools) delivers instruction-driven,
     higher-quality curation through chat.
 ```
 
@@ -402,8 +402,8 @@ feat F-7: Future Tagging (schema scaffolding only)
   req F-7.2: MagazineTile renders a tags row conditionally on tags.length > 0.
   req F-7.3: FetchArticleContent is reusable as the input stage for a future TagPosts operation.
   note: >
-    Later features (out of scope): TagPosts operation, a MagazineTagger blueprint
-    (or extension of MagazineBlueprint), tag-filter chips in the toolbar,
+    Later features (out of scope): TagPosts operation, a MagazineTagger skill
+    (or extension of MagazineSkill), tag-filter chips in the toolbar,
     'Find more like this' action, and 'Suggest feeds' action proposing new Feed
     URLs based on accumulated tag distribution.
 ```
@@ -451,14 +451,14 @@ test T-4: Curate flow runs sync then deterministic curation
 ```
 
 ```mdl
-test T-4a: Agent curation via blueprint
-  given: a chat referencing a Magazine whose MagazineBlueprint is active
+test T-4a: Agent curation via skill
+  given: a chat referencing a Magazine whose MagazineSkill is active
   when: the agent is prompted to curate the magazine
   then:
     - Agent calls ListCandidatePosts, FetchArticleContent, AddPostToMagazine
     - Magazine.posts grows by the agent-selected count
   note: >
-    The blueprint path is distinct from the Curate button (T-4). The button
+    The skill path is distinct from the Curate button (T-4). The button
     runs the deterministic CurateMagazine op; agents invoke the fine-grained
     tools through chat.
 ```
@@ -533,7 +533,7 @@ Two curation paths exist side-by-side:
   derived from each Post's existing `description` field (no HTTP, no LLM).
   Chosen for the user-initiated button because it is fast, reliable, and does
   not depend on an LLM runtime being present.
-- **Agent path (blueprint).** The `MagazineBlueprint` exposes three fine-grained
+- **Agent path (skill).** The `MagazineSkill` exposes three fine-grained
   tools (`ListCandidatePosts`, `FetchArticleContent`, `AddPostToMagazine`) and
   an instruction template that tells an agent to consult `Magazine.instructions`
   when selecting Posts. Triggered when an agent chat references the Magazine —
@@ -597,8 +597,8 @@ The tagging feature is strictly additive to this design:
 - `Post.tags` already exists as an optional string array.
 - `FetchArticleContent` is the reusable read-stage for tagging.
 - `MagazineTile` renders a tags row when non-empty — no UI change needed.
-- A `TagPosts` operation and either an extended prompt in `MagazineBlueprint`
-  or a second `MagazineTagger` blueprint will complete the feature in a later
+- A `TagPosts` operation and either an extended prompt in `MagazineSkill`
+  or a second `MagazineTagger` skill will complete the feature in a later
   revision.
 
 Further future work enabled by tags (all out of scope here): tag-filter chips

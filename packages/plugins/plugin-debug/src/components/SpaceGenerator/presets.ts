@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
@@ -158,7 +158,7 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(WebSearchBlueprint.make())],
+              skills: [Ref.make(WebSearchSkill.make())],
             }),
           );
 

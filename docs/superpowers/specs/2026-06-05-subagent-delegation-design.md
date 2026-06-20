@@ -76,7 +76,7 @@ with tests on the real runtime.
 | Layer               | Unit                                                                                                                             | New work                                                                                       |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `compute-runtime`   | **Supervisor process pattern**                                                                                                   | Spawn children, interleave input, wake on child exit, emit derived output. No AI. **Slice 1.** |
-| `assistant-toolkit` | **Delegation blueprint** (`DelegateTask` tool) + Plan-Task linkage + supervisor wiring over `AiSession`                          | **Slice 2.**                                                                                   |
+| `assistant-toolkit` | **Delegation skill** (`DelegateTask` tool) + Plan-Task linkage + supervisor wiring over `AiSession`                          | **Slice 2.**                                                                                   |
 | `plugin-assistant`  | Conversational agent runs as the supervisor; children surface in `ProcessTree`/`TracePanel` (mostly automatic via pid hierarchy) | **Slice 3.**                                                                                   |
 
 ## Data flow
@@ -145,40 +145,40 @@ Verified end-to-end in the `stories-assistant` `WithSubAgents` story.
 
 ## Open questions / follow-ups
 
-- **Blueprint naming.** The `delegation` blueprint (which exposes the `DelegateTask` tool) could be
-  renamed to `supervisor` to match the runtime concept — enabling the blueprint is what makes an
+- **Skill naming.** The `delegation` skill (which exposes the `DelegateTask` tool) could be
+  renamed to `supervisor` to match the runtime concept — enabling the skill is what makes an
   agent a supervisor that can delegate.
 - **Sub-agent lifecycle: ephemeral vs. pooled.** Today each delegated task spawns a _fresh_
   sub-agent from a synthesized minimal `Routine` — ephemeral, isolated, no shared context. The
   alternative is to maintain a **set of long-lived sub-agents** with distinct roles, contexts, and
-  capabilities (blueprints) that the supervisor routes work to. Trade-offs:
+  capabilities (skills) that the supervisor routes work to. Trade-offs:
   - _Ephemeral (current):_ simple, clean isolation per task, no cross-task state leakage; but no
     warm context, repeated setup, and no specialization. Sub-agents now **inherit the supervisor's
-    blueprints** (minus the delegation blueprint), so they share its tools/capabilities.
+    skills** (minus the delegation skill), so they share its tools/capabilities.
   - _Pooled/role-based:_ specialization (e.g. "researcher", "coder"), warm/shared context, reuse
     across tasks; but lifecycle management, routing logic, and context-bleed concerns.
   - Likely resolution: keep ephemeral as the default; introduce optional named sub-agent roles
-    (each a `Routine`/blueprint set) that the supervisor can target when a task names a role.
+    (each a `Routine`/skill set) that the supervisor can target when a task names a role.
 - **Role-based, reusable sub-agents (follow-on).** Today every task spawns a fresh ephemeral
-  sub-agent that inherits the supervisor's full blueprint set. The follow-on is to **define a set of
-  named sub-agents, each with a distinct role and its own context/capabilities (blueprint subset),
+  sub-agent that inherits the supervisor's full skill set. The follow-on is to **define a set of
+  named sub-agents, each with a distinct role and its own context/capabilities (skill subset),
   and reuse them across tasks** rather than synthesizing an anonymous one per task. Open questions:
   - **Definition.** Where do roles live — a `SubAgent`/role ECHO type (role name + instructions +
-    blueprints + context), authored by the user or proposed by the supervisor?
+    skills + context), authored by the user or proposed by the supervisor?
   - **Routing.** How does the supervisor pick a role for a task (LLM choice, tags on the task, an
     explicit `role` field), and what happens when no role fits (fall back to ephemeral)?
   - **Reuse & lifecycle.** Per-role long-lived process vs. fresh process per task with shared
     context; how to bound concurrency, persist role context, and avoid cross-task context bleed.
-  - **Capability scoping.** Per-role blueprint subsets (narrower than "inherit everything") so a
+  - **Capability scoping.** Per-role skill subsets (narrower than "inherit everything") so a
     "researcher" gets web-search and a "writer" gets markdown, etc.
-  - This subsumes blueprint-inheritance "option 3" (per-task/role blueprint selection): roles are
+  - This subsumes skill-inheritance "option 3" (per-task/role skill selection): roles are
     the unit that carries the capability subset.
 - **Notify composition.** Currently a templated append; consider LLM-composed summaries (the design
   always anticipated "templated now, LLM-composed later").
 - **Planning as the home for delegation.** Should delegation be a _feature of planning_ rather than
-  a separate blueprint? I.e. the supervisor keeps the planning blueprint, and planning itself
+  a separate skill? I.e. the supervisor keeps the planning skill, and planning itself
   issues and tracks delegation orders (a task can be marked "delegate" and the supervisor reconciles
-  it). Today delegation is its own blueprint/tool and only `delegated`-marked tasks are reconciled;
+  it). Today delegation is its own skill/tool and only `delegated`-marked tasks are reconciled;
   unifying them would remove the planning-vs-delegation overlap that currently lets the LLM create a
   redundant non-delegated planning task.
 - **Delegating to other users (task/workflow management).** Delegation today targets ephemeral

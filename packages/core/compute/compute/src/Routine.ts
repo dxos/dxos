@@ -9,11 +9,11 @@ import * as Schema from 'effect/Schema';
 import { DXN, Annotation, JsonSchema, Obj, Ref, Type, Format } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Blueprint from './Blueprint';
+import * as Skill from './Skill';
 
 /**
  * Prompt-based operation.
- * May reference blueprints and additional context.
+ * May reference skills and additional context.
  */
 export const Routine = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -29,7 +29,7 @@ export const Routine = Schema.Struct({
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
   ),
-  blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
+  skills: Schema.Array(Ref.Ref(Skill.Skill)),
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
@@ -45,7 +45,7 @@ export type MakeProps = {
   input?: Schema.Schema.AnyNoContext;
   output?: Schema.Schema.AnyNoContext;
   instructions?: string;
-  blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+  skills?: Ref.Ref<Skill.Skill>[];
   context?: any[];
 };
 
@@ -55,7 +55,7 @@ export const make = ({
   input,
   output,
   instructions,
-  blueprints = [],
+  skills = [],
   context = [],
 }: MakeProps): Routine =>
   Obj.make(Routine, {
@@ -64,6 +64,6 @@ export const make = ({
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
     instructions: Ref.make(Text.make({ content: instructions ?? '' })),
-    blueprints,
+    skills,
     context,
   });

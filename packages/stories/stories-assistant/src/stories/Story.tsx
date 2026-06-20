@@ -10,7 +10,7 @@ import { ModuleContainer } from '../testing';
 export type DefaultStoryProps = {
   modules: FC<ModuleProps>[][];
   showContext?: boolean;
-  blueprints?: string[];
+  skills?: string[];
 };
 
 export const DefaultStory = (props: DefaultStoryProps) => {

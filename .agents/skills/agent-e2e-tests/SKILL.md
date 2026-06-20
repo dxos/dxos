@@ -16,11 +16,11 @@ Package: `packages/core/assistant-e2e`
 Every test file follows this exact template:
 
 ```typescript
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/skills';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 import { describe, it } from '@effect/vitest';
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultSkills } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -32,7 +32,7 @@ describe('DescriptiveName', () => {
         instructions: trim`
           Your prompt here.
         `,
-        blueprints: getDefaultBlueprints(),
+        skills: getDefaultSkills(),
       }),
     ),
     { timeout: DEFAULT_TEST_TIMEOUT },
@@ -72,30 +72,30 @@ Use these when describing or fixing agent e2e tests outside the repo, or when pa
 
 1. **Assume an empty database** at the start of every prompt unless the spec says otherwise. Do not assume mailboxes, messages, or any other objects already exist.
 
-2. **Seeding data in the prompt.** If the scenario needs ECHO objects, instruct the agent to create them **at the beginning** of the task. The default prompt stack includes `DatabaseBlueprint` via `getDefaultBlueprints()` — use database/query/create flows from that blueprint, not test setup code.
+2. **Seeding data in the prompt.** If the scenario needs ECHO objects, instruct the agent to create them **at the beginning** of the task. The default prompt stack includes `DatabaseSkill` via `getDefaultSkills()` — use database/query/create flows from that skill, not test setup code.
 
 3. **Tool names.** The prompt may name specific tools or operations (e.g. `org.dxos.plugin.inbox.operation.read-email`) so the agent and reviewers align on what must run.
 
 4. **Completion criteria and tools.** Criteria may require that a given tool **succeeds** (no thrown error / failed exit) and optionally what it **returns** (e.g. empty list, zero rows, specific shape). Prefer “operation X completes successfully; result may be …” when empty data is valid.
 
-5. **Short report format.** If the TypeScript needs **no deviation** from the standard template in [Test File Structure](#test-file-structure) (same imports, `agentTest`, `getDefaultBlueprints`, timeouts, etc.), only output a heading and a pointer to the prompt lines — do not paste the full file:
+5. **Short report format.** If the TypeScript needs **no deviation** from the standard template in [Test File Structure](#test-file-structure) (same imports, `agentTest`, `getDefaultSkills`, timeouts, etc.), only output a heading and a pointer to the prompt lines — do not paste the full file:
 
 <example>
 ```md
-# enables the inbox blueprint and queries emails
+# enables the inbox skill and queries emails
 
 The database starts empty.
 
-First, create a Mailbox object in the space using the database blueprint tools (typename org.dxos.type.mailbox). Give it a clear name.
+First, create a Mailbox object in the space using the database skill tools (typename org.dxos.type.mailbox). Give it a clear name.
 
-Then enable the inbox blueprint (key: org.dxos.blueprint.inbox) using the blueprint manager.
+Then enable the inbox skill (key: org.dxos.skill.inbox) using the skill manager.
 
 Invoke the read-email operation for that mailbox (org.dxos.plugin.inbox.operation.read-email). There are no email messages yet; the tool must still complete successfully and may return empty content.
 
 Completion criteria:
 
 - A Mailbox object exists in the database.
-- The inbox blueprint is successfully enabled, or you report the exact tool error if it cannot be enabled.
+- The inbox skill is successfully enabled, or you report the exact tool error if it cannot be enabled.
 - The read-email operation completes without error; the returned content may be empty (zero emails).
 
 ````
@@ -103,11 +103,11 @@ Completion criteria:
 
 Adjust the heading to match the `it.effect` title and the path/range to the `instructions` / `trim` template (or the whole `Prompt.make` if needed).
 
-## Blueprints
+## Skills
 
-- Use `getDefaultBlueprints()` for standard tests (includes `BlueprintManagerBlueprint` and `DatabaseBlueprint`).
-- Omit `blueprints` from `Prompt.make()` if the test needs no blueprints (e.g., smoke tests).
-- For custom blueprint sets, pass an array of `Ref.make(SomeBlueprint.make())`.
+- Use `getDefaultSkills()` for standard tests (includes `SkillManagerSkill` and `DatabaseSkill`).
+- Omit `skills` from `Prompt.make()` if the test needs no skills (e.g., smoke tests).
+- For custom skill sets, pass an array of `Ref.make(SomeSkill.make())`.
 
 ## Expecting Failure
 
@@ -151,4 +151,4 @@ Memoized conversations are stored in `*.conversations.json` next to each test fi
 | Assuming data exists in the DB                               | Instruct the agent to create required data.                                          |
 | Not committing `*.conversations.json`                        | Always commit updated conversation fixtures.                                         |
 | Pasting entire test files in chat when structure is standard | Use the short report format under **Reports**: heading + `@path (lines)`.            |
-| Assuming pre-seeded data without saying so in the prompt     | State empty DB; seed via database blueprint instructions at the start of the prompt. |
+| Assuming pre-seeded data without saying so in the prompt     | State empty DB; seed via database skill instructions at the start of the prompt. |

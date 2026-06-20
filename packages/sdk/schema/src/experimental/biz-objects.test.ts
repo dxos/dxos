@@ -11,14 +11,14 @@ import { DXN, Obj, Ref, Type } from '@dxos/echo';
 
 // Product Ideas
 // Build self-building knowledge base.
-// - Modules/Blueprints: sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
+// - Modules/Skills: sets of propostitional statements about somethings (a company, person, project, "our challenge", "our toolchain", "problem X", etc.)
 //   - Discuss with colleagues and AI and click to accept/reject premises which are then added to the module.
 //   - Modules are used in reasoning.
 //   - Out of the box: team is assigned a "game" to come up with shared models for everyone else in the team.
 // - New modules can be created on the fly inside the AI and we can collaboratively chat with the model.
 // - Models can referernce each other canonically.
 // - Models include open questions/issues to solve.
-// - Could be product ideas, technical issues; they have a goal; can be associated with tools (blueprints) that can join (temporarily) and do work.
+// - Could be product ideas, technical issues; they have a goal; can be associated with tools (skills) that can join (temporarily) and do work.
 // - Local LLM (offline).
 
 // ## COMPUTE MODEL
@@ -31,9 +31,9 @@ import { DXN, Obj, Ref, Type } from '@dxos/echo';
 // - Follow-up with refactoring.
 
 // UX
-// - Edit Blueprint (schema, prompts, scripts, tool selection).
-// - Drag Blueprint into Chat's context window.
-// - Output Chat responses into Blueprint (in a structured way).
+// - Edit Skill (schema, prompts, scripts, tool selection).
+// - Drag Skill into Chat's context window.
+// - Output Chat responses into Skill (in a structured way).
 // - Schema editor, Outline editor, Document editor, Sheet model.
 
 /**

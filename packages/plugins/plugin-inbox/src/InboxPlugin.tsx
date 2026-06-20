@@ -13,7 +13,7 @@ import { Event, Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
+  SkillDefinition,
   CreateObject,
   InboxSettings,
   IntegrationProvider,
@@ -31,7 +31,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

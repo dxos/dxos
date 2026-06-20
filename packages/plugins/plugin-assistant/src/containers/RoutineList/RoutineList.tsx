@@ -6,10 +6,10 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { DatabaseBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Routine } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
@@ -38,7 +38,7 @@ export const RoutineList = ({ subject }: RoutineListProps) => {
                 prompt: Ref.make(prompt),
                 objects: [subject],
                 // TODO(burdon): Concifgure from Prompt object.
-                blueprints: [DatabaseBlueprint.key, WebSearchBlueprint.key, MarkdownBlueprint.key],
+                skills: [DatabaseSkill.key, WebSearchSkill.key, MarkdownSkill.key],
                 background: true,
               });
             }}

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Skill, Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Automation } from '@dxos/plugin-automation';
 
@@ -16,12 +16,12 @@ const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
 export type ScheduledRoutineOptions = {
   name: string;
   instructions: string;
-  blueprintKeys: readonly string[];
+  skillKeys: readonly string[];
   cron: string;
 };
 
 /**
- * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared AgentPrompt
+ * Scaffold a timer-driven automation: a Routine (instructions + skills) run by the shared AgentPrompt
  * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
  * instructions before activating, and is owned by the automation (cascade-deletes with it); the routine
  * stays independent, since it is edited separately and may be reused.
@@ -29,11 +29,11 @@ export type ScheduledRoutineOptions = {
 export const makeScheduledRoutineAutomation = ({
   name,
   instructions,
-  blueprintKeys,
+  skillKeys,
   cron,
 }: ScheduledRoutineOptions): Effect.Effect<Automation.Automation, Error, Database.Service> =>
   Effect.gen(function* () {
-    const blueprints = blueprintKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
+    const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
     const routine = yield* Database.add(
       Routine.make({
         name,
@@ -42,7 +42,7 @@ export const makeScheduledRoutineAutomation = ({
         // input still validates.
         input: Schema.Unknown,
         output: Schema.Void,
-        blueprints,
+        skills,
         context: [],
       }),
     );

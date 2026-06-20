@@ -71,4 +71,4 @@ dx trigger create subscription --enabled
 
 ## Current Limitations
 
-- Use of Blueprint prompts within a function is not supported.
+- Use of Skill prompts within a function is not supported.

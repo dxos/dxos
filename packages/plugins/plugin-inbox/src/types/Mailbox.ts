@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
  */
 export const GMAIL_TAG_SOURCE = 'google.com/gmail/label';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
+export const SKILL_KEY = 'org.dxos.skill.inbox';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -59,7 +59,7 @@ export const Mailbox = Schema.Struct({
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
   FeedAnnotation.set(true),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),
 );
 

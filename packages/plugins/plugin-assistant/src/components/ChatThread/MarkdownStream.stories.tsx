@@ -54,7 +54,7 @@ const SAMPLE_TOOL_NAMES = [
   'get_project_rules',
   'list_mailboxes',
   'query_inbox',
-  'enable_blueprint',
+  'enable_skill',
   'create_schema',
   'create_project',
   'retry_operation',

@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import {
-  Blueprint,
+  Skill,
   Credential,
   FunctionNotFoundError,
   Operation,
@@ -29,9 +29,9 @@ describe('umbrella re-exports', () => {
     expect(OperationHandlerSet).toBeDefined();
     expect(OperationRegistry).toBeDefined();
 
-    // Blueprint primitives.
-    expect(Blueprint).toBeDefined();
-    expect(Blueprint.make).toBeTypeOf('function');
+    // Skill primitives.
+    expect(Skill).toBeDefined();
+    expect(Skill.make).toBeTypeOf('function');
     expect(Routine).toBeDefined();
     expect(Template).toBeDefined();
 

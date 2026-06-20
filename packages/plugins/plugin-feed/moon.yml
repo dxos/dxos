@@ -13,7 +13,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/FeedPlugin.tsx'
       - '--entryPoint=src/FeedPlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'

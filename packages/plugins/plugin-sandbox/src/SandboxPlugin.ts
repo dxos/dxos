@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { BlueprintDefinition, OperationHandler } from '#capabilities';
+import { SkillDefinition, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { Sandbox } from '#types';
 
@@ -13,7 +13,7 @@ import { Sandbox } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Sandbox.Sandbox] }),
   AppPlugin.addPluginAssetModule({

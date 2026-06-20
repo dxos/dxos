@@ -23,9 +23,9 @@ export default Config2.make({
       referenced feeds in parallel, then runs a single-shot agent pass that selects
       matching posts and returns their ids, which the operation adds mechanically.
       The agent's base methodology — how to select, how to dedup, and the structured
-      output contract — lives in the MagazineBlueprint, resolved from the registry
+      output contract — lives in the MagazineSkill, resolved from the registry
       and combined with the magazine's topic into an ephemeral routine each run; the
-      blueprint also exposes a FetchArticleContent tool the agent may call to read a
+      skill also exposes a FetchArticleContent tool the agent may call to read a
       candidate's full text when title and description are insufficient to judge.
       A short snippet and hero image are derived mechanically from each post for
       display. A Masonry grid renders the curated tiles with images, titles, author

@@ -35,12 +35,12 @@ are _not_ tag-related and stay.
 | `packages/core/ai/src/resolvers/ollama/OllamaResolver.test.ts` (×4)                       | `llm`   |
 | `packages/core/mcp-client/src/McpToolkit.test.ts` (×2)                                    | `llm`   |
 | `packages/core/assistant/src/session/session-ollama.test.ts`                              | `llm`   |
-| `packages/core/assistant-toolkit/src/blueprints/design/blueprint.test.ts`                 | `llm`   |
-| `packages/core/assistant-toolkit/src/blueprints/planning-old/blueprint.test.ts`           | `llm`   |
-| `packages/core/assistant-toolkit/src/blueprints/research/functions/research.test.ts`      | `flaky` |
-| `packages/core/assistant-toolkit/src/blueprints/discord/functions/fetch-messages.test.ts` | `sync`  |
-| `packages/core/assistant-toolkit/src/blueprints/linear/functions/linear.test.ts`          | `sync`  |
-| `packages/core/assistant-toolkit/src/blueprints/browser/blueprint.test.ts`                | `sync`  |
+| `packages/core/assistant-toolkit/src/skills/design/skill.test.ts`                 | `llm`   |
+| `packages/core/assistant-toolkit/src/skills/planning-old/skill.test.ts`           | `llm`   |
+| `packages/core/assistant-toolkit/src/skills/research/functions/research.test.ts`      | `flaky` |
+| `packages/core/assistant-toolkit/src/skills/discord/functions/fetch-messages.test.ts` | `sync`  |
+| `packages/core/assistant-toolkit/src/skills/linear/functions/linear.test.ts`          | `sync`  |
+| `packages/core/assistant-toolkit/src/skills/browser/skill.test.ts`                | `sync`  |
 
 `packages/plugins/plugin-assistant/src/operations/prompt.test.ts` uses
 `test.runIf(TestHelpers.tagEnabled('llm'))(...)` — same tag, different shape.

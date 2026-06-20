@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.sandbox';
+export const SKILL_KEY = 'org.dxos.skill.sandbox';
 
 /**
  * ECHO object representing a persistent sandbox environment.

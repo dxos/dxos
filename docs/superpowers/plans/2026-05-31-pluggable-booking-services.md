@@ -4,7 +4,7 @@
 
 **Goal:** Add a pluggable `BookingService` capability + flight-search UI to `plugin-trip`, and a new `plugin-duffel` that implements it against the Duffel REST API.
 
-**Architecture:** `plugin-trip` defines the `BookingService` capability and transient `SearchQuery`/`Offer` Effect schemas (mirroring the Segment mixin + tagged-union pattern). Search is a first-class **`SearchBookings` operation** (`Operation.make` from `@dxos/compute`) whose handler resolves the contributed `BookingService`s (`Capability.getAll`) and runs the query — invoked by the `BookingSearch` UI and exposed to the assistant via a blueprint tool. On offer-select the UI writes flight details + a `Booking` ECHO object onto the segment. `SegmentArticle` gains a toolbar toggle (Form ⇄ Search). `plugin-duffel` contributes a `BookingService` whose `search` calls Duffel `POST /air/offer_requests?return_offers=true` through the DXOS edge CORS proxy, plus a settings panel for the API key. Scope is search-only — no real order placement. App-graph behavior is unchanged.
+**Architecture:** `plugin-trip` defines the `BookingService` capability and transient `SearchQuery`/`Offer` Effect schemas (mirroring the Segment mixin + tagged-union pattern). Search is a first-class **`SearchBookings` operation** (`Operation.make` from `@dxos/compute`) whose handler resolves the contributed `BookingService`s (`Capability.getAll`) and runs the query — invoked by the `BookingSearch` UI and exposed to the assistant via a skill tool. On offer-select the UI writes flight details + a `Booking` ECHO object onto the segment. `SegmentArticle` gains a toolbar toggle (Form ⇄ Search). `plugin-duffel` contributes a `BookingService` whose `search` calls Duffel `POST /air/offer_requests?return_offers=true` through the DXOS edge CORS proxy, plus a settings panel for the API key. Scope is search-only — no real order placement. App-graph behavior is unchanged.
 
 **Tech Stack:** TypeScript, Effect `Schema`, `@dxos/echo` (`Obj`/`Ref`), `@dxos/app-framework` capabilities, `@dxos/react-ui` + `@dxos/react-ui-form`, `@dxos/edge-client` (`proxyFetchLegacy`), vitest via `moon`, Storybook.
 
@@ -26,11 +26,11 @@
 - Create `packages/plugins/plugin-trip/src/operations/search-bookings.ts` — operation handler.
 - Create `packages/plugins/plugin-trip/src/operations/search-bookings.test.ts`.
 - Modify `packages/plugins/plugin-trip/src/operations/index.ts` — add handler to `TripOperationHandlerSet`.
-- Create `packages/plugins/plugin-trip/src/blueprints/booking-blueprint.ts` — assistant tool.
-- Create `packages/plugins/plugin-trip/src/blueprints/index.ts`.
-- Create `packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts` — contributes the blueprint.
-- Modify `packages/plugins/plugin-trip/src/capabilities/index.ts` — export `BlueprintDefinition`.
-- Modify `packages/plugins/plugin-trip/src/TripPlugin.tsx` — add blueprint module.
+- Create `packages/plugins/plugin-trip/src/skills/booking-skill.ts` — assistant tool.
+- Create `packages/plugins/plugin-trip/src/skills/index.ts`.
+- Create `packages/plugins/plugin-trip/src/capabilities/skill-definition.ts` — contributes the skill.
+- Modify `packages/plugins/plugin-trip/src/capabilities/index.ts` — export `SkillDefinition`.
+- Modify `packages/plugins/plugin-trip/src/TripPlugin.tsx` — add skill module.
 - Create `packages/plugins/plugin-trip/src/containers/BookingSearch/offer-to-segment.ts` — pure offer→details/booking mappers.
 - Create `packages/plugins/plugin-trip/src/containers/BookingSearch/offer-to-segment.test.ts`.
 - Create `packages/plugins/plugin-trip/src/containers/BookingSearch/BookingSearch.tsx` — search container.
@@ -312,7 +312,7 @@ const BOOKING_OPERATION = `${meta.id}.operation`;
 /**
  * Searches for bookings (flights, …) across the enabled `BookingService`s. The handler resolves
  * all contributed services, filters by the query kind and optional provider id, and returns the
- * matching service's offers. Exposed to the assistant via the booking blueprint.
+ * matching service's offers. Exposed to the assistant via the booking skill.
  */
 export const SearchBookings = Operation.make({
   meta: {
@@ -482,40 +482,40 @@ git commit -m "feat(plugin-trip): SearchBookings operation"
 
 ---
 
-### Task 2c: Assistant blueprint for `SearchBookings`
+### Task 2c: Assistant skill for `SearchBookings`
 
-Exposes the operation as an assistant tool (mirrors `plugin-product-search`'s `provider-blueprint.ts` + `blueprint-definition.ts`).
+Exposes the operation as an assistant tool (mirrors `plugin-product-search`'s `provider-skill.ts` + `skill-definition.ts`).
 
 **Files:**
 
-- Create: `packages/plugins/plugin-trip/src/blueprints/booking-blueprint.ts`
-- Create: `packages/plugins/plugin-trip/src/blueprints/index.ts`
-- Create: `packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts`
+- Create: `packages/plugins/plugin-trip/src/skills/booking-skill.ts`
+- Create: `packages/plugins/plugin-trip/src/skills/index.ts`
+- Create: `packages/plugins/plugin-trip/src/capabilities/skill-definition.ts`
 - Modify: `packages/plugins/plugin-trip/src/capabilities/index.ts`
 - Modify: `packages/plugins/plugin-trip/src/TripPlugin.tsx`
 
-- [ ] **Step 1: `blueprints/booking-blueprint.ts`**
+- [ ] **Step 1: `skills/booking-skill.ts`**
 
 ```ts
 //
 // Copyright 2026 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/compute';
+import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
 import { BookingOperation } from '#types';
 
-const BLUEPRINT_KEY = `${meta.id}/blueprint/booking`;
+const SKILL_KEY = `${meta.id}/skill/booking`;
 
 const operations = [BookingOperation.SearchBookings];
 
 const make = () =>
-  Blueprint.make({
-    key: BLUEPRINT_KEY,
+  Skill.make({
+    key: SKILL_KEY,
     name: 'Trip Booking Search',
-    tools: Blueprint.toolDefinitions({ operations }),
+    tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
         You help the user find travel bookings (flights first).
@@ -528,22 +528,22 @@ const make = () =>
     }),
   });
 
-const blueprint: Blueprint.Definition = { key: BLUEPRINT_KEY, make };
+const skill: Skill.Definition = { key: SKILL_KEY, make };
 
-export default blueprint;
+export default skill;
 ```
 
-- [ ] **Step 2: `blueprints/index.ts`**
+- [ ] **Step 2: `skills/index.ts`**
 
 ```ts
 //
 // Copyright 2026 DXOS.org
 //
 
-export { default as BookingBlueprint } from './booking-blueprint';
+export { default as BookingSkill } from './booking-skill';
 ```
 
-- [ ] **Step 3: `capabilities/blueprint-definition.ts`** (mirrors product-search)
+- [ ] **Step 3: `capabilities/skill-definition.ts`** (mirrors product-search)
 
 ```ts
 //
@@ -555,16 +555,16 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type { Blueprint } from '@dxos/compute';
+import type { Skill } from '@dxos/compute';
 
-import { BookingBlueprint } from '../blueprints';
+import { BookingSkill } from '../skills';
 
-const blueprintDefinition = Capability.makeModule<
+const skillDefinition = Capability.makeModule<
   [],
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, BookingBlueprint)]));
+  Capability.Capability<typeof AppCapabilities.SkillDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, BookingSkill)]));
 
-export default blueprintDefinition;
+export default skillDefinition;
 ```
 
 - [ ] **Step 4: Export from capabilities barrel**
@@ -572,47 +572,47 @@ export default blueprintDefinition;
 Modify `packages/plugins/plugin-trip/src/capabilities/index.ts` — add:
 
 ```ts
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 ```
 
 - [ ] **Step 5: Wire the module in `TripPlugin.tsx`**
 
-In `packages/plugins/plugin-trip/src/TripPlugin.tsx`: add `BlueprintDefinition` to the `#capabilities` import, and add the module to the `.pipe(...)` (after `addAppGraphModule`, before `addCreateObjectModule`):
+In `packages/plugins/plugin-trip/src/TripPlugin.tsx`: add `SkillDefinition` to the `#capabilities` import, and add the module to the `.pipe(...)` (after `addAppGraphModule`, before `addCreateObjectModule`):
 
 ```ts
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
 ```
 
-- [ ] **Step 6: Add the `#blueprints` subpath + build entrypoint**
+- [ ] **Step 6: Add the `#skills` subpath + build entrypoint**
 
 In `packages/plugins/plugin-trip/package.json` `imports`, add (after `#meta`):
 
 ```json
-    "#blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
     },
 ```
 
 In `packages/plugins/plugin-trip/moon.yml`, add to the `compile.args` entrypoint list:
 
 ```yaml
-- '--entryPoint=src/blueprints/index.ts'
+- '--entryPoint=src/skills/index.ts'
 ```
 
-(If the blueprint imports use `#blueprints` vs a relative path, prefer the relative `../blueprints` import shown in Step 3 to avoid needing the subpath; the subpath is only required if other packages import the blueprints. Keep Step 6 only if a `#blueprints` import is actually used.)
+(If the skill imports use `#skills` vs a relative path, prefer the relative `../skills` import shown in Step 3 to avoid needing the subpath; the subpath is only required if other packages import the skills. Keep Step 6 only if a `#skills` import is actually used.)
 
 - [ ] **Step 7: Build**
 
 Run: `moon run plugin-trip:build`
-Expected: builds cleanly. (Confirm `AppPlugin.addBlueprintDefinitionModule` and `Blueprint.toolDefinitions` exist — they are used by plugin-product-search.)
+Expected: builds cleanly. (Confirm `AppPlugin.addSkillDefinitionModule` and `Skill.toolDefinitions` exist — they are used by plugin-product-search.)
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add packages/plugins/plugin-trip/src/blueprints packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts packages/plugins/plugin-trip/src/capabilities/index.ts packages/plugins/plugin-trip/src/TripPlugin.tsx packages/plugins/plugin-trip/package.json packages/plugins/plugin-trip/moon.yml
-git commit -m "feat(plugin-trip): expose SearchBookings to the assistant via blueprint"
+git add packages/plugins/plugin-trip/src/skills packages/plugins/plugin-trip/src/capabilities/skill-definition.ts packages/plugins/plugin-trip/src/capabilities/index.ts packages/plugins/plugin-trip/src/TripPlugin.tsx packages/plugins/plugin-trip/package.json packages/plugins/plugin-trip/moon.yml
+git commit -m "feat(plugin-trip): expose SearchBookings to the assistant via skill"
 ```
 
 ---
@@ -2288,6 +2288,6 @@ git commit -m "chore: lint fixes for booking services"
 
 ## Self-Review Notes
 
-- **Spec coverage:** BookingService capability (Tasks 1–2) ✓; generalized SearchQuery/Offer mixin+tagged union (Task 1) ✓; **search as an operation** + in-handler service resolution (Task 2b) ✓; **assistant blueprint tool** (Task 2c) ✓; BookingSearch component invoking the operation + provider picker + offer-select write (Tasks 3–4) ✓; SegmentArticle Form⇄Search toolbar toggle (Task 5) ✓; plugin-duffel settings panel only-UI (Tasks 9, 13, 14) ✓; thin REST client via CORS proxy (Task 11) ✓; search-only, no order (Task 12) ✓; no app-graph change (untouched) ✓; tests for search-bookings + mapping + offer→segment + storybook (Tasks 2b, 3, 7, 10) ✓.
+- **Spec coverage:** BookingService capability (Tasks 1–2) ✓; generalized SearchQuery/Offer mixin+tagged union (Task 1) ✓; **search as an operation** + in-handler service resolution (Task 2b) ✓; **assistant skill tool** (Task 2c) ✓; BookingSearch component invoking the operation + provider picker + offer-select write (Tasks 3–4) ✓; SegmentArticle Form⇄Search toolbar toggle (Task 5) ✓; plugin-duffel settings panel only-UI (Tasks 9, 13, 14) ✓; thin REST client via CORS proxy (Task 11) ✓; search-only, no order (Task 12) ✓; no app-graph change (untouched) ✓; tests for search-bookings + mapping + offer→segment + storybook (Tasks 2b, 3, 7, 10) ✓.
 - **Type consistency:** `SearchBookings` (Task 2b) input/output use `BookingSearch.SearchQuery`/`Offer` (Task 1); handler resolves `TripCapabilities.BookingService` (Task 2) via `Capability.getAll`; component invokes it with the same input shape (Task 4); `offerToFlightDetails`/`offerToBookingProps` (Task 3) match BookingSearch types (Task 1); `offerRequestBody`/`parseOffers` (Task 10) feed `makeDuffelBookingService` (Task 12); `DuffelOfferRequestBody` shared between mapping and client (Tasks 10–11); `MissingApiKeyError` defined in Task 1, thrown in Task 12, surfaced by error-name match in Task 4.
 - **Known risk flags (called out inline):** exact `@dxos/react-ui` import names for `Button`/`Icon`/`Input` (Task 4 Step 4); the `search-bookings.test.ts` `Capability.Service` harness must follow `extract-message.test.ts` (Task 2b Step 2); whether the operation/spawn environment can resolve the browser-contributed `BookingService` (Duffel reads its settings atom via the AtomRegistry) when invoked by the assistant — proven for product-search's `RunSearch`, but verify against the live assistant path (Task 17 Step 4.6); tsconfig reference list correctness (Task 8 Step 2); `Plugin.addModule` accepting a lazy capability module with a dependency (Task 15 Step 3). Each step's build/test command surfaces these immediately.

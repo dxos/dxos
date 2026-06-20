@@ -17,14 +17,14 @@ export const AgentPrompt = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.prompt'),
     name: 'Run Routine',
-    description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
+    description: 'Agentic worker that executes a provided prompt using skills and tools.',
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     prompt: Ref.Ref(Routine.Routine),
 
     /**
-     * When set, runs in this chat (history, queue, and bound context). Routine blueprints and context objects are merged into the conversation for this request.
+     * When set, runs in this chat (history, queue, and bound context). Routine skills and context objects are merged into the conversation for this request.
      */
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 

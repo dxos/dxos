@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create a fully-featured Tic-Tac-Toe plugin for DXOS Composer with configurable board sizes, multiplayer via ECHO, AI opponents (easy/medium/hard), blueprint integration, and playful animations.
+**Goal:** Create a fully-featured Tic-Tac-Toe plugin for DXOS Composer with configurable board sizes, multiplayer via ECHO, AI opponents (easy/medium/hard), skill integration, and playful animations.
 
-**Architecture:** Standard Composer plugin following the `plugin-chess` exemplar. ECHO schema stores game state as a flat board string. Pure game logic functions handle win detection and AI. Operations expose Create, MakeMove, AiMove, Print for blueprint integration. Custom CSS Grid component with SVG markers and Tailwind animations.
+**Architecture:** Standard Composer plugin following the `plugin-chess` exemplar. ECHO schema stores game state as a flat board string. Pure game logic functions handle win detection and AI. Operations expose Create, MakeMove, AiMove, Print for skill integration. Custom CSS Grid component with SVG markers and Tailwind animations.
 
 **Tech Stack:** TypeScript, React, Effect-TS, ECHO Schema, TailwindCSS, Vitest
 
@@ -35,7 +35,7 @@
 - Create: `packages/plugins/plugin-tictactoe/src/components/index.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/operations/index.ts`
 - Create: `packages/plugins/plugin-tictactoe/src/operations/definitions.ts`
-- Create: `packages/plugins/plugin-tictactoe/src/blueprints/index.ts`
+- Create: `packages/plugins/plugin-tictactoe/src/skills/index.ts`
 - Modify: `packages/apps/composer-app/package.json` (add dependency)
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx` (add import)
 
@@ -58,7 +58,7 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": "./src/blueprints/index.ts",
+    "#skills": "./src/skills/index.ts",
     "#capabilities": "./src/capabilities/index.ts",
     "#components": "./src/components/index.ts",
     "#containers": "./src/containers/index.ts",
@@ -96,7 +96,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
+    "@dxos/skills": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -443,19 +443,19 @@ export { Create, MakeMove, AiMove, Print } from './definitions';
 export const TicTacToeHandlers = Handlers;
 ```
 
-- [ ] **Step 10: Create empty blueprint stubs**
+- [ ] **Step 10: Create empty skill stubs**
 
-`src/blueprints/index.ts`:
+`src/skills/index.ts`:
 
 ```typescript
 //
 // Copyright 2026 DXOS.org
 //
 
-export { default as TicTacToeBlueprint } from './tictactoe-blueprint';
+export { default as TicTacToeSkill } from './tictactoe-skill';
 ```
 
-`src/blueprints/tictactoe-blueprint.ts`:
+`src/skills/tictactoe-skill.ts`:
 
 ```typescript
 //
@@ -463,20 +463,20 @@ export { default as TicTacToeBlueprint } from './tictactoe-blueprint';
 //
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Skill, Template } from '@dxos/skills';
 import { trim } from '@dxos/util';
 
 import { AiMove, Create, MakeMove, Print } from '#operations';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.tictactoe';
+const SKILL_KEY = 'org.dxos.skill.tictactoe';
 
 const operations = [Create, MakeMove, AiMove, Print];
 
 const make = () =>
-  Blueprint.make({
-    key: BLUEPRINT_KEY,
+  Skill.make({
+    key: SKILL_KEY,
     name: 'Tic-Tac-Toe',
-    tools: Blueprint.toolDefinitions({ operations }),
+    tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
         You are a Tic-Tac-Toe game assistant.
@@ -488,12 +488,12 @@ const make = () =>
     }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
-  key: BLUEPRINT_KEY,
+const skill: AppCapabilities.SkillDefinition = {
+  key: SKILL_KEY,
   make,
 };
 
-export default blueprint;
+export default skill;
 ```
 
 - [ ] **Step 11: Create capability stubs**
@@ -509,7 +509,7 @@ import { type OperationHandlerSet } from '@dxos/operation';
 
 import { Capability } from '@dxos/app-framework';
 
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
@@ -576,7 +576,7 @@ export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
 );
 ```
 
-`src/capabilities/blueprint-definition.ts`:
+`src/capabilities/skill-definition.ts`:
 
 ```typescript
 //
@@ -588,14 +588,14 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { TicTacToeBlueprint } from '#blueprints';
+import { TicTacToeSkill } from '#skills';
 
-const blueprintDefinition = Capability.makeModule<
+const skillDefinition = Capability.makeModule<
   [],
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, TicTacToeBlueprint)]));
+  Capability.Capability<typeof AppCapabilities.SkillDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TicTacToeSkill)]));
 
-export default blueprintDefinition;
+export default skillDefinition;
 ```
 
 - [ ] **Step 12: Create container stubs**
@@ -711,15 +711,15 @@ import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { TicTacToeBlueprint } from '#blueprints';
-import { BlueprintDefinition, OperationHandler, ReactSurface } from '#capabilities';
+import { TicTacToeSkill } from '#skills';
+import { SkillDefinition, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { TicTacToe } from '#types';
 
 import { translations } from './translations';
 
 export const TicTacToePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addMetadataModule({
     metadata: {
@@ -727,7 +727,7 @@ export const TicTacToePlugin = Plugin.define(meta).pipe(
       metadata: {
         icon: Annotation.IconAnnotation.get(TicTacToe.Game).pipe(Option.getOrThrow).icon,
         iconHue: Annotation.IconAnnotation.get(TicTacToe.Game).pipe(Option.getOrThrow).hue ?? 'white',
-        blueprints: [TicTacToeBlueprint.key],
+        skills: [TicTacToeSkill.key],
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = TicTacToe.make(props);
@@ -755,7 +755,7 @@ export const TicTacToePlugin = Plugin.define(meta).pipe(
 // Copyright 2026 DXOS.org
 //
 
-export * from './blueprints';
+export * from './skills';
 export * from './meta';
 export * from './types';
 export * from './TicTacToePlugin';

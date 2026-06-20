@@ -7,7 +7,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Transcript } from '@dxos/types';
 
 import {
-  BlueprintDefinition,
+  SkillDefinition,
   OperationHandler,
   ReactSurface,
   TextContent,
@@ -21,7 +21,7 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addTextContentModule({ activate: TextContent }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),

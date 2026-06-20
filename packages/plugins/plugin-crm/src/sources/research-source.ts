@@ -5,10 +5,10 @@
 import { type Operation } from '@dxos/compute';
 
 /**
- * Pluggable contract for augmenting the CRM blueprint with additional
+ * Pluggable contract for augmenting the CRM skill with additional
  * research sources (e.g. a LinkedIn browser-extension integration shipped
  * by composer-crx). v1 defines the contract only — no implementations ship
- * with plugin-crm. The CRM blueprint iterates over registered sources when
+ * with plugin-crm. The CRM skill iterates over registered sources when
  * building its tool list so that the agent has access to their tools
  * whenever the source is available.
  */
@@ -16,10 +16,10 @@ export interface ResearchSource {
   /** Stable identifier, e.g. `linkedin-crx`. */
   readonly id: string;
 
-  /** Human-readable description; surfaced in blueprint instructions. */
+  /** Human-readable description; surfaced in skill instructions. */
   readonly description: string;
 
-  /** Operations contributed to the CRM blueprint by this source. */
+  /** Operations contributed to the CRM skill by this source. */
   readonly operations?: ReadonlyArray<Operation.Definition.Any>;
 
   /** Native tool identifiers (e.g. provider-native tools) contributed by this source. */
@@ -27,7 +27,7 @@ export interface ResearchSource {
 }
 
 /**
- * Registry of ResearchSource contributions available to the CRM blueprint.
+ * Registry of ResearchSource contributions available to the CRM skill.
  * v1 exports an empty registry. Future work will add a capability-based
  * registration mechanism so plugins (e.g. composer-crx) can register their
  * own sources.

@@ -7,7 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
+  SkillDefinition,
   DiagnosticProviders,
   OperationHandler,
   ReactSurface,
@@ -20,7 +20,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DoctorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.addModule({

@@ -71,8 +71,8 @@ export const RunPromptInNewChat = Operation.make({
     db: Database.Database,
     /** Context objects to bind to the new chat. */
     objects: Schema.optional(Schema.Array(Obj.Unknown)),
-    /** Blueprint keys to look up and bind to the new chat. */
-    blueprints: Schema.optional(Schema.Array(Schema.String)),
+    /** Skill keys to look up and bind to the new chat. */
+    skills: Schema.optional(Schema.Array(Schema.String)),
     /** Raw instructions or an existing Routine object reference. */
     prompt: Schema.Union(Schema.String, Ref.Ref(Routine.Routine)),
     /**
@@ -143,7 +143,7 @@ export const EnsureCompanionChat = Operation.make({
   }),
 });
 
-export const BlueprintForm = Schema.Struct({
+export const SkillForm = Schema.Struct({
   key: Schema.String,
   name: Schema.String,
   description: Schema.optional(Schema.String),

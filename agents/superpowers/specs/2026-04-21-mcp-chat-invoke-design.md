@@ -72,7 +72,7 @@ When `apiKey` is provided, pass `Authorization: Bearer <apiKey>` header to the t
 **File:** `src/conversation/conversation.ts`
 
 - Add optional `mcpServers` parameter to `AiConversationRequestParams` — an array of space-level `McpServer` objects
-- In the turn loop, `connectMcpServers()` merges blueprint-defined servers with space-level enabled servers
+- In the turn loop, `connectMcpServers()` merges skill-defined servers with space-level enabled servers
 - Connection is per-turn (existing pattern), so enabling/disabling a server mid-conversation takes effect on the next turn
 
 ### 4. ChatOptions UI
@@ -86,7 +86,7 @@ New "MCP Servers" tab in the settings popover:
 - **Add:** form with name, URL, protocol dropdown (sse/http), optional API key
 - **Remove:** delete button per server
 
-Follows existing patterns from `BlueprintsPanel` and `ModelsPanel`.
+Follows existing patterns from `SkillsPanel` and `ModelsPanel`.
 
 ### 5. Wiring
 

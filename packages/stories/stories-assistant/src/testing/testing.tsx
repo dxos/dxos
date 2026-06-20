@@ -21,15 +21,15 @@ import { AppActivationEvents, AppCapabilities, LayoutOperation, Paths } from '@d
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
-  AgentBlueprint,
+  AgentSkill,
   AgentHandlers,
-  DelegationBlueprint,
+  DelegationSkill,
   DelegationHandlers,
-  PlanningBlueprint,
+  PlanningSkill,
   PlanningHandlers,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
+import { Skill, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -41,7 +41,7 @@ import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { MarkdownBlueprint, Markdown } from '@dxos/plugin-markdown';
+import { MarkdownSkill, Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -106,7 +106,7 @@ const buildPluginManagerOptions = ({
       types: [
         AccessToken.AccessToken,
         Assistant.Chat,
-        Blueprint.Blueprint,
+        Skill.Skill,
         Operation.PersistentOperation,
         Markdown.Document,
         Routine.Routine,
@@ -290,9 +290,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: () =>
       Effect.succeed([
         // TODO(burdon): Clean up.
-        Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
-        Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.BlueprintDefinition, DelegationBlueprint),
+        Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill),
+        Capability.contributes(AppCapabilities.SkillDefinition, PlanningSkill),
+        Capability.contributes(AppCapabilities.SkillDefinition, DelegationSkill),
         Capability.contributes(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
         Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
         Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
@@ -322,7 +322,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
             name: agentOptions.name ?? 'Default',
             instructions: agentOptions.instructions ?? '',
           },
-          AgentBlueprint.make(),
+          AgentSkill.make(),
         ).pipe(
           Effect.provide(
             ServiceResolver.provide({ space: space.id }, Database.Service).pipe(

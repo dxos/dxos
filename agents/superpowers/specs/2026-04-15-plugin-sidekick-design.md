@@ -60,9 +60,9 @@ You are {{userName}}'s personal sidekick agent.
 
 ## Operations Mapping
 
-All operations are pre-existing. The Sidekick Blueprint composes these blueprints:
+All operations are pre-existing. The Sidekick Skill composes these skills:
 
-### Database Blueprint (`org.dxos.blueprint.database`)
+### Database Skill (`org.dxos.skill.database`)
 
 - `Query` — find Person objects, tags, documents in space.
 - `Load` — read object content by reference.
@@ -73,23 +73,23 @@ All operations are pre-existing. The Sidekick Blueprint composes these blueprint
 - `RelationCreate` / `RelationDelete` — link profiles to people.
 - `ContextAdd` / `ContextRemove` — manage chat context.
 
-### Agent Blueprint (`org.dxos.blueprint.agent`)
+### Agent Skill (`org.dxos.skill.agent`)
 
 - `AddArtifact` — register managed documents as agent artifacts.
 
-### Markdown Blueprint (`org.dxos.blueprint.markdown`)
+### Markdown Skill (`org.dxos.skill.markdown`)
 
 - `Create` — create profile and journal documents.
 - `Open` — read document content.
 - `Update` — edit documents with structured changes.
 
-### Inbox Blueprint (`org.dxos.blueprint.inbox`)
+### Inbox Skill (`org.dxos.skill.inbox`)
 
 - `ReadEmail` — read mailbox contents.
 - `ClassifyEmail` — tag/classify incoming email.
 - `DraftEmail` — create draft email responses.
 
-### Inbox Send Blueprint (`org.dxos.blueprint.inbox-send`)
+### Inbox Send Skill (`org.dxos.skill.inbox-send`)
 
 - `GmailSend` — send emails (gated by user permission).
 

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { AgentPrompt, DatabaseBlueprint, Chat } from '@dxos/assistant-toolkit';
+import { AgentPrompt, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Skill, Operation, Routine, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { sync } from './testing';
 
 /**
  * Cron trigger on EDGE runs {@link AgentPrompt} for a {@link Routine} that uses the Database
- * blueprint Query tool against replicated ECHO documents.
+ * skill Query tool against replicated ECHO documents.
  *
  * Prereq: local EDGE (`configPreset({ edge: 'local' })` → `http://localhost:8787`) with LLM
  * available (API key and/or memo replay under `conversationsCache/`).
@@ -30,14 +30,14 @@ import { sync } from './testing';
 describe('Edge routine', { tags: ['functions-e2e'] }, () => {
   const config = configPreset({ edge: 'local' });
 
-  test('timer trigger runs routine with database blueprint on edge', { timeout: 420_000 }, async ({ expect }) => {
+  test('timer trigger runs routine with database skill on edge', { timeout: 420_000 }, async ({ expect }) => {
     await using client = await new Client({
       config,
       types: [
         Operation.PersistentOperation,
         Trigger.Trigger,
         Routine.Routine,
-        Blueprint.Blueprint,
+        Skill.Skill,
         Feed.Feed,
         Text.Text,
         Chat.Chat,
@@ -59,13 +59,13 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Globex Industries' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Initech' }));
 
-    const databaseBlueprint = space.db.add(DatabaseBlueprint.make());
+    const databaseSkill = space.db.add(DatabaseSkill.make());
 
     const routine = space.db.add(
       Routine.make({
-        name: 'edge-e2e-count-orgs-db-blueprint',
+        name: 'edge-e2e-count-orgs-db-skill',
         instructions: trim`
-              You have access to the Database blueprint tools.
+              You have access to the Database skill tools.
               Use the Query tool exactly once with typename "${Type.getTypename(TestSchema.Organization)}" and no other arguments.
               Then call completeJob with the output object { "count": <number of rows returned by Query> }.
               If you are unable to query -- fail.
@@ -75,7 +75,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
         output: Schema.Struct({
           count: Schema.Number,
         }),
-        blueprints: [Ref.make(databaseBlueprint)],
+        skills: [Ref.make(databaseSkill)],
         context: [],
       }),
     );

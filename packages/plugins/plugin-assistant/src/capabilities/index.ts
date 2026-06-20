@@ -20,7 +20,7 @@ export const IntegrationProvider = Capability.lazy(
 );
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const CompanionChatProvisioner = Capability.lazy(
   'CompanionChatProvisioner',
   () => import('./companion-chat-provisioner'),

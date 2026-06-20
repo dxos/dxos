@@ -88,7 +88,7 @@ export const LoadPostContent = Operation.make({
 
 /**
  * End-to-end magazine curation: syncs all referenced feeds (in parallel), then runs an in-memory
- * routine (the magazine's topic instructions + the registry-resolved Magazine blueprint) through the
+ * routine (the magazine's topic instructions + the registry-resolved Magazine skill) through the
  * agent to select matching posts, adds the selected posts mechanically, and finally enforces each
  * feed's `keep` bound. Drives the MagazineArticle Curate button; schedulable via triggers.
  */
@@ -96,7 +96,7 @@ export const CurateMagazine = Operation.make({
   meta: {
     key: makeKey('curateMagazine'),
     name: 'Curate Magazine',
-    description: 'Syncs feeds, selects matching posts via the magazine blueprint, and applies per-feed keep limits.',
+    description: 'Syncs feeds, selects matching posts via the magazine skill, and applies per-feed keep limits.',
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
@@ -108,7 +108,7 @@ export const CurateMagazine = Operation.make({
     synced: Schema.Number.annotations({ description: 'Number of feeds successfully synced.' }),
     curated: Schema.Number.annotations({ description: 'Number of posts added to the magazine.' }),
   }),
-  // Database.Service for candidate collection, Registry.Service to resolve the methodology blueprint;
+  // Database.Service for candidate collection, Registry.Service to resolve the methodology skill;
   // sub-operations (SyncFeed, AgentPrompt) resolve through the ambient Operation.Service invoker.
   services: [Database.Service, Registry.Service],
 });

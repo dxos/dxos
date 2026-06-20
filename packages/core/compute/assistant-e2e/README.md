@@ -9,11 +9,11 @@ Each test file in `src/testing/` follows a strict uniform structure. A test cons
 ### Template
 
 ```typescript
-import { Prompt } from '@dxos/blueprints';
+import { Prompt } from '@dxos/skills';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 import { describe, it } from '@effect/vitest';
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultSkills } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -29,7 +29,7 @@ describe('DescriptiveName', () => {
           - Expected outcome 1.
           - Expected outcome 2.
         `,
-        blueprints: getDefaultBlueprints(),
+        skills: getDefaultSkills(),
       }),
     ),
     { timeout: DEFAULT_TEST_TIMEOUT },
@@ -50,11 +50,11 @@ describe('DescriptiveName', () => {
 - Add **completion criteria** so success is unambiguous.
 - The agent starts with an **empty database** — instruct it to create any required data.
 
-### Blueprints
+### Skills
 
-- `getDefaultBlueprints()` — standard tests (includes `BlueprintManagerBlueprint`, `DatabaseBlueprint`).
-- Omit `blueprints` for tests that need none (e.g., smoke tests).
-- For custom sets, pass an array of `Ref.make(SomeBlueprint.make())`.
+- `getDefaultSkills()` — standard tests (includes `SkillManagerSkill`, `DatabaseSkill`).
+- Omit `skills` for tests that need none (e.g., smoke tests).
+- For custom sets, pass an array of `Ref.make(SomeSkill.make())`.
 
 ### Expecting Failure
 

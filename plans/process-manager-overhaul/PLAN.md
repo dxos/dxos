@@ -83,9 +83,9 @@ Overhaul the compute runtime to use the ProcessManager as the primary execution 
 
 ### Phase 3: Verify All Tests Pass
 
-#### 3.1 Project blueprint tests
+#### 3.1 Project skill tests
 
-- **File**: `packages/core/assistant-toolkit/src/blueprints/project/blueprint.test.ts`
+- **File**: `packages/core/assistant-toolkit/src/skills/project/skill.test.ts`
 - Currently passing, verify they stay passing after changes
 
 #### 3.2 Trigger dispatcher tests
@@ -161,7 +161,7 @@ User prompt → AiChatProcessor → AgentService.getSession()
 
 ## Completion Criteria Checklist
 
-- [x] Project blueprint tests passing (3/3 with flaky tag)
+- [x] Project skill tests passing (3/3 with flaky tag)
 - [x] Trigger dispatcher tests passing (18 tests, 1 skipped)
 - [x] All other unit tests passing (assistant, functions-runtime)
 - [x] TracingService deprecated in AiSession requirements (kept for backward compat)
@@ -177,6 +177,6 @@ User prompt → AiChatProcessor → AgentService.getSession()
 
 1. **ProcessManager builtinTagKeys**: Added `Trace.TraceService.key` so processes don't try to resolve it via ServiceResolver (ProcessManager provides its own).
 2. **Test layer ServiceResolver**: Added `FunctionInvocationService`, `ToolExecutionService`, `ToolResolverService` to `fromRequirements` so trigger-invoked operations can access them.
-3. **MarkdownHandlers**: Added `Open` operation handler (was missing, causing AiToolNotFoundError when MarkdownBlueprint tools were invoked).
+3. **MarkdownHandlers**: Added `Open` operation handler (was missing, causing AiToolNotFoundError when MarkdownSkill tools were invoked).
 4. **Project test**: Added `PlanningHandlers` to test operationHandlers.
 5. **Trace event types**: Defined AgentTurnStarted/Completed, ToolCallStarted/Completed, AgentInputReceived/RequestCompleted for future use.

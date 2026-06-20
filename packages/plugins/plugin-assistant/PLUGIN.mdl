@@ -4,7 +4,7 @@ name: AssistantPlugin
 version: 0.1.0
 ---
 
-An AI assistant plugin for DXOS Composer that provides conversational AI, blueprint-driven automation,
+An AI assistant plugin for DXOS Composer that provides conversational AI, skill-driven automation,
 multi-provider LLM support, and deep ECHO integration.
 
 ## Extensions
@@ -76,7 +76,7 @@ type NavigationTarget
 ```
 
 ```mdl
-type BlueprintForm
+type SkillForm
   fields:
     key: string
     name: string
@@ -174,11 +174,11 @@ op SetCurrentChat
 
 ```mdl
 op RunPromptInNewChat
-  desc: Creates a new chat, binds context objects and blueprints, then runs a prompt.
+  desc: Creates a new chat, binds context objects and skills, then runs a prompt.
   input:
     db: Database
     objects?: Obj[]
-    blueprints?: string[]
+    skills?: string[]
     prompt: string | RoutineRef
     background?: boolean
   output: Chat
@@ -256,14 +256,14 @@ feat F-2: Companion Chat
 ```
 
 ```mdl
-feat F-3: Blueprint System
+feat F-3: Skill System
 
-  req F-3.1: Blueprints define named AI configurations (instructions, tools, model).
-  req F-3.2: Built-in blueprints include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, BlueprintManager, AgentWizard.
+  req F-3.1: Skills define named AI configurations (instructions, tools, model).
+  req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager, AgentWizard.
   req F-3.3:
-    when: user selects a blueprint for a chat
-    then: chat uses that blueprint's instructions and tool set
-  req F-3.4: op:RunPromptInNewChat accepts blueprint keys to bind before sending the prompt.
+    when: user selects a skill for a chat
+    then: chat uses that skill's instructions and tool set
+  req F-3.4: op:RunPromptInNewChat accepts skill keys to bind before sending the prompt.
 ```
 
 ```mdl
@@ -279,7 +279,7 @@ feat F-4: Multi-Provider LLM
 ```mdl
 feat F-5: Tool Execution
 
-  req F-5.1: The assistant blueprint exposes LayoutOperation.Open and ResolveNavigationTargets as tools.
+  req F-5.1: The assistant skill exposes LayoutOperation.Open and ResolveNavigationTargets as tools.
   req F-5.2: Web search tool is registered via WebSearchToolkit.
   req F-5.3:
     when: AI invokes a tool during a conversation
@@ -289,7 +289,7 @@ feat F-5: Tool Execution
 ```mdl
 feat F-6: ECHO Integration
 
-  req F-6.1: Chat, CompanionTo, Blueprint, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO.
+  req F-6.1: Chat, CompanionTo, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO.
   req F-6.2:
     when: a new space is created
     then: op:OnCreateSpace provisions default assistant objects
@@ -325,11 +325,11 @@ test T-2: Companion chat provisioning
 ```
 
 ```mdl
-test T-3: Blueprint binding
+test T-3: Skill binding
   given: a chat exists
-  when: user binds the "WebSearch" blueprint key
+  when: user binds the "WebSearch" skill key
   then:
-    - blueprint instructions are applied to the next AI request
+    - skill instructions are applied to the next AI request
     - web search tool is available in the tool list
 ```
 

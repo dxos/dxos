@@ -33,7 +33,7 @@ vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
 
 Obj.ID.dangerouslyDisableRandomness();
 
-// TODO(burdon): Re-enable + regenerate web.conversations.json. The DatabaseBlueprint serializes the
+// TODO(burdon): Re-enable + regenerate web.conversations.json. The DatabaseSkill serializes the
 //   space's registered schemas (incl. @dxos/types Event) into the agent prompt, so the Event schema
 //   change (location/allDay) invalidated this fixture. Regeneration requires the live web-search tool
 //   (org.dxos.function.web-search.fetch + Anthropic web search), which is not registered in the local

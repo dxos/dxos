@@ -24,7 +24,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, type Key } from '@dxos/echo';
 import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
-import { operationHandlers as blueprintOperationHandlers, toolkits } from './blueprints';
+import { operationHandlers as skillOperationHandlers, toolkits } from './skills';
 import { type AiChatServices, chatLayer } from './runtime';
 
 export type TriggerRuntimeServices =
@@ -77,7 +77,7 @@ export const triggerRuntimeLayer = ({
       const toolkit = OpaqueToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)
-      const baseChatLayer = chatLayer({ provider: 'edge', spaceId, functions: blueprintOperationHandlers });
+      const baseChatLayer = chatLayer({ provider: 'edge', spaceId, functions: skillOperationHandlers });
 
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
@@ -89,9 +89,9 @@ export const triggerRuntimeLayer = ({
         Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
-        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: blueprintOperationHandlers })),
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: skillOperationHandlers })),
         Layer.provideMerge(baseChatLayer),
-        Layer.provideMerge(OperationHandlerSet.provide(blueprintOperationHandlers)),
+        Layer.provideMerge(OperationHandlerSet.provide(skillOperationHandlers)),
         Layer.provide(KeyValueStore.layerMemory),
       );
     }),

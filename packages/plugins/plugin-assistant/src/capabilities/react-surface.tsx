@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Skill, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { Position } from '@dxos/util';
 
 import { AssistantSettings } from '#components';
 import {
-  BlueprintArticle,
+  SkillArticle,
   ChatCompanion,
   ChatArticle,
   ChatDialog,
@@ -127,10 +127,10 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'blueprint',
-        filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
+        id: 'skill',
+        filter: AppSurface.object(AppSurface.Article, Skill.Skill),
         component: ({ data, role }) => (
-          <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <SkillArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({

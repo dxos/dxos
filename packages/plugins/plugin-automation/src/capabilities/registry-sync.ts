@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Operation } from '@dxos/compute';
+import { Skill, Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -15,12 +15,12 @@ import { ClientCapabilities } from '@dxos/plugin-client';
  *
  * Watches two capability atoms and imperatively adds entities to the
  * hypergraph registry when they change:
- * - {@link AppCapabilities.BlueprintDefinition} → instantiates each blueprint via `def.make()`.
+ * - {@link AppCapabilities.SkillDefinition} → instantiates each skill via `def.make()`.
  * - {@link Capabilities.OperationHandler} → serializes each handler via `Operation.serialize`.
  *
- * Blueprint DB copies (stored in a space when a blueprint is "enabled") are treated as
+ * Skill DB copies (stored in a space when a skill is "enabled") are treated as
  * user forks and are not overwritten. The registry is always used as the source of truth
- * for blueprint instructions at request time — see `formatSystemPrompt` in `@dxos/assistant`.
+ * for skill instructions at request time — see `formatSystemPrompt` in `@dxos/assistant`.
  *
  * Note: the plugin framework does not yet expose a teardown hook for capability
  * modules (see the TODO in process-manager-capability.ts), so the subscriptions
@@ -33,19 +33,19 @@ export default Capability.makeModule(
     const capabilityManager = yield* Capability.Service;
 
     //
-    // Blueprint registration.
+    // Skill registration.
     //
 
-    const blueprintDefinitionsAtom = capabilityManager.atom(AppCapabilities.BlueprintDefinition);
-    const prevBlueprintKeys = new Set<string>();
+    const skillDefinitionsAtom = capabilityManager.atom(AppCapabilities.SkillDefinition);
+    const prevSkillKeys = new Set<string>();
 
     atomRegistry.subscribe(
-      blueprintDefinitionsAtom,
+      skillDefinitionsAtom,
       (definitions) => {
-        const fresh: Blueprint.Blueprint[] = [];
+        const fresh: Skill.Skill[] = [];
         for (const def of definitions) {
-          if (!prevBlueprintKeys.has(def.key)) {
-            prevBlueprintKeys.add(def.key);
+          if (!prevSkillKeys.has(def.key)) {
+            prevSkillKeys.add(def.key);
             fresh.push(def.make());
           }
         }

@@ -52,7 +52,7 @@ describe('Agent prompt', () => {
           Routine.make({
             name: 'chat-mode-test',
             instructions: 'Reply with a single word: ack.',
-            blueprints: [],
+            skills: [],
             context: [],
           }),
         );

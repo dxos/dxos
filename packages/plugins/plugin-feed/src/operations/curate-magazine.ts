@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Skill, Operation, Routine } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -130,7 +130,7 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
 
 /**
  * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
- * The base methodology blueprint is referenced by its registry DXN (no clone into the space); the
+ * The base methodology skill is referenced by its registry DXN (no clone into the space); the
  * Magazine's instructions Text carries only the topic. Tolerates agent/parse failures (logs → no selection).
  */
 const selectPostIds = (
@@ -151,15 +151,15 @@ const selectPostIds = (
       })),
     };
     const topic = (yield* Effect.promise(() => magazine.instructions.source.load())).content ?? '';
-    // Resolve the base methodology blueprint from the registry by its key and hold it by value. A
+    // Resolve the base methodology skill from the registry by its key and hold it by value. A
     // bare `Ref.fromURI(registryURI(key))` is unhydrated — `Database.load` fails with EntityNotFoundError
     // resolve it ("Resolver is not set") — so we resolve to the object and let `Ref.make` carry it.
-    const blueprint = yield* Blueprint.resolve(Magazine.BLUEPRINT_KEY).pipe(Effect.option);
+    const skill = yield* Skill.resolve(Magazine.SKILL_KEY).pipe(Effect.option);
     const routine = Routine.make({
       input: CurationInput,
       output: CurationOutput,
       instructions: topic,
-      blueprints: Option.toArray(blueprint).map((value) => Ref.make(value)),
+      skills: Option.toArray(skill).map((value) => Ref.make(value)),
     });
 
     return yield* Operation.invoke(AgentPrompt, { prompt: Ref.make(routine), input }, { spaceId }).pipe(

@@ -1,0 +1,2 @@
+[mcp_servers.dxos-introspect]
+url = "https://introspect-service-labs.dxos.workers.dev/mcp"

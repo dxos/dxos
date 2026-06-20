@@ -11,7 +11,7 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AiContext } from '@dxos/assistant';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
@@ -35,12 +35,12 @@ const panelClassNames = 'bg-base-surface rounded-xs border border-separator over
 
 type DefaultStoryProps = {
   modules: FC<ModuleProps>[][];
-  blueprints?: string[];
+  skills?: string[];
   showContext?: boolean;
 };
 
-const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryProps) => {
-  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+const DefaultStory = ({ modules, showContext, skills = [] }: DefaultStoryProps) => {
+  const skillsDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
   const [space] = useSpaces();
@@ -55,16 +55,16 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
       return;
     }
 
-    // Add blueprints to context.
-    const registry = makeRegistry({ initial: blueprintsDefinitions.map((def) => def.make()) });
-    const blueprintObjects = blueprints
+    // Add skills to context.
+    const registry = makeRegistry({ initial: skillsDefinitions.map((def) => def.make()) });
+    const skillObjects = skills
       .map((key) => {
-        const blueprint = registry
-          .query(Filter.type(Blueprint.Blueprint))
+        const skill = registry
+          .query(Filter.type(Skill.Skill))
           .runSync()
           .find((b) => Obj.getMeta(b).key === key);
-        if (blueprint) {
-          return space.db.add(Obj.clone(blueprint));
+        if (skill) {
+          return space.db.add(Obj.clone(skill));
         }
       })
       .filter(isNonNullable);
@@ -74,8 +74,8 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
       Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
-    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
-  }, [space, blueprints, blueprintsDefinitions]);
+    await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
+  }, [space, skills, skillsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ModuleProps['onEvent']>>((event) => {
     log.info('event', { event });

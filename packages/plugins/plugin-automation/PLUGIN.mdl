@@ -14,7 +14,7 @@ per-space `TriggerDispatcher` that runs locally in the browser or is delegated t
 the DXOS edge when the space `computeEnvironment` is `edge`.
 
 The plugin integrates with the `@dxos/compute` operation registry and the
-`@dxos/functions-runtime` execution layer. Blueprint, operation-handler, and
+`@dxos/functions-runtime` execution layer. Skill, operation-handler, and
 toolkit contributions from other plugins are gathered at application scope and
 merged before being offered to space-level operation registries, so any plugin
 that contributes a `Capabilities.OperationHandler` automatically becomes
@@ -57,7 +57,7 @@ New types defined by this plugin:
 type TriggerTemplate
   desc: |
     Lightweight description of a trigger's spec used when creating a trigger
-    from a pre-defined template (e.g. from a Blueprint action).
+    from a pre-defined template (e.g. from a Skill action).
   literals: timer | feed
   fields:
     type: timer | feed
@@ -242,7 +242,7 @@ feat F-4: Operation Registry
     then: all Capabilities.OperationHandler contributions are merged into a single OperationHandlerProvider
 
   req F-4.2: OperationRegistry per space resolves operations from the merged OperationHandlerProvider.
-  req F-4.3: Blueprint registry is populated from AppCapabilities.BlueprintDefinition contributions.
+  req F-4.3: Skill registry is populated from AppCapabilities.SkillDefinition contributions.
   req F-4.4: OpaqueToolkit aggregates AppCapabilities.Toolkit contributions for agent invocation.
 ```
 

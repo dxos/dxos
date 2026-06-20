@@ -48,9 +48,9 @@ export default AgentPrompt.pipe(
 
         // Bind the routine's own refs, dropping any that no longer resolve. The refs must be
         // bound as-is (not re-wrapped via `Ref.make`) to preserve their registry DXN: bindings
-        // are persisted to the conversation feed, and registry-only blueprints have no space-DB
+        // are persisted to the conversation feed, and registry-only skills have no space-DB
         // identity, so an EID ref would not resolve when the binding is re-read.
-        const blueprintRefs = yield* Effect.filter(prompt.blueprints, (ref) =>
+        const skillRefs = yield* Effect.filter(prompt.skills, (ref) =>
           Database.load(ref).pipe(
             Effect.as(true),
             Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
@@ -106,7 +106,7 @@ export default AgentPrompt.pipe(
 
         yield* Effect.promise(() =>
           session.context.bind({
-            blueprints: blueprintRefs,
+            skills: skillRefs,
             objects: objectRefs,
           }),
         );

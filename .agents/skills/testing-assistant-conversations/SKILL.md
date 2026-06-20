@@ -1,9 +1,9 @@
 ---
 name: testing-assistant-conversations
-description: Test assistant conversations, agents, and blueprints using AssistantTestLayer, Effect/vitest, ECHO types, and memoized LLM fixtures. Use when writing or fixing assistant-toolkit tests, blueprint.operation tests, AiSession flows, or when CI fails on missing memoized conversations.
+description: Test assistant conversations, agents, and skills using AssistantTestLayer, Effect/vitest, ECHO types, and memoized LLM fixtures. Use when writing or fixing assistant-toolkit tests, skill.operation tests, AiSession flows, or when CI fails on missing memoized conversations.
 ---
 
-# Testing assistant conversations, agents, and blueprints
+# Testing assistant conversations, agents, and skills
 
 This guide matches patterns in `packages/core/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** `*.conversations.json` only, prefer the focused skill `regenerate-memoized-llm`.
 
@@ -15,21 +15,21 @@ Import from `@dxos/assistant/testing`.
 
 - **AI** — `TestAiService` (memoized by default; see below), default model `ai.claude.model.claude-opus-4-6`.
 - **Tool execution** — `ToolExecutionServices` and `OpaqueToolkit.providerLayer`.
-- **Blueprint registry** — `Blueprint.RegistryService` seeded with optional `blueprints`.
+- **Skill registry** — `Skill.RegistryService` seeded with optional `skills`.
 - **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/assistant/src/testing/layer.ts`).
 - **ECHO test DB** — `TestDatabaseLayer` with `types` you register.
 - **Credentials** — `CredentialsService.configuredLayer(credentials)` (often `[]` in tests).
 - **Tracing** — `noop` | `console` | `pretty`.
 
-Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled triggers (manual time control, in-memory trigger state). Example: `packages/core/assistant-toolkit/src/blueprints/project/blueprint.test.ts`.
+Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled triggers (manual time control, in-memory trigger state). Example: `packages/core/assistant-toolkit/src/skills/project/skill.test.ts`.
 
 ### Important options
 
 | Option                        | Role                                                                                                                                                                                                                                                                      |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `operationHandlers`           | `OperationHandlerSet` (or merged sets) registered via `OperationHandlerSet.provide` so `Operation.invoke` resolves your operations.                                                                                                                                       |
-| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                                                                            |
-| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                                                                    |
+| `types`                       | Every ECHO entity type the test creates or queries (`Skill.Skill`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                                                                            |
+| `skills`                  | Optional registry seed when code reads skills from `Skill.RegistryService` instead of only binding at runtime.                                                                                                                                                    |
 | `toolkits`                    | Extra toolkits (e.g. `OpaqueToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                                                                                |
 | `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. Defaults to `'direct'`, which calls Anthropic directly using the `DX_ANTHROPIC_API_KEY` env var (set it for cache regeneration; not needed for normal cached runs). |
 | `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                                                                        |
@@ -85,7 +85,7 @@ The default `aiServicePreset: 'direct'` calls the Anthropic API directly. Set `D
 (via `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
 memoized cache with `ALLOW_LLM_GENERATION=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
 (the latter breaks Claude Code). Normal cached runs need no key. Works for both direct operation
-invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/blueprints/blueprint-manager/blueprint.test.ts`.
+invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/skills/skill-manager/skill.test.ts`.
 
 ## General test structure
 
@@ -103,19 +103,19 @@ Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope fo
 2. `yield* Database.flush()` before invoking functions or conversations that read persisted state.
 3. Call **`Operation.invoke(Operation, input)`** for direct operation tests, or **`AiSessionService.run`**, **`new AiSession`**, **`AiRequest`**, etc., depending on the layer under test.
 
-### Registering blueprints in tests
+### Registering skills in tests
 
 Two common patterns:
 
-1. **Registry at layer build** — pass `blueprints: [SomeBlueprint.make(), ...]` into `AssistantTestLayer` when services read from the registry.
+1. **Registry at layer build** — pass `skills: [SomeSkill.make(), ...]` into `AssistantTestLayer` when services read from the registry.
 
-2. **Runtime bind** — `addBlueprints` from `packages/core/assistant-toolkit/src/blueprints/testing.ts` loads definition `make()` objects into the DB and calls `AiContextService.bindContext({ blueprints: [...] })`. Used with `AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))` in memory blueprint tests.
+2. **Runtime bind** — `addSkills` from `packages/core/assistant-toolkit/src/skills/testing.ts` loads definition `make()` objects into the DB and calls `AiContextService.bindContext({ skills: [...] })`. Used with `AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer))` in memory skill tests.
 
-You still pass the blueprint’s **`operations`** (handler set) into `AssistantTestLayer({ operationHandlers: ... })` so tools actually execute.
+You still pass the skill’s **`operations`** (handler set) into `AssistantTestLayer({ operationHandlers: ... })` so tools actually execute.
 
 ### Types list
 
-Include every ECHO type instances may have: blueprint metadata types, domain objects (`Message`, `Person`, plugin documents), `Blueprint.Blueprint`, `Trigger.Trigger`, queues, etc. If in doubt, mirror imports from a similar test in the same blueprint folder.
+Include every ECHO type instances may have: skill metadata types, domain objects (`Message`, `Person`, plugin documents), `Skill.Skill`, `Trigger.Trigger`, queues, etc. If in doubt, mirror imports from a similar test in the same skill folder.
 
 ## Quick checklist
 

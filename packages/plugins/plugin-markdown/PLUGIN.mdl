@@ -193,7 +193,7 @@ feat F-5: File Upload
 ```mdl
 feat F-6: AI Editing
 
-  req F-6.1: Plugin contributes a Blueprint exposing op:create, op:open, op:update as tools.
+  req F-6.1: Plugin contributes a Skill exposing op:create, op:open, op:update as tools.
   req F-6.2:
     when: agent invokes op:update
     then: edits applied as ordered oldString → newString diffs against Document.content

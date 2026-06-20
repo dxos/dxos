@@ -12,7 +12,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Operation, Routine, ServiceResolver, type Blueprint } from '@dxos/compute';
+import { Operation, Routine, ServiceResolver, type Skill } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
@@ -60,9 +60,9 @@ const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Pro
 
 const seedPrompt = (prompt: Routine.Routine) =>
   Effect.gen(function* () {
-    for (const blueprintRef of prompt.blueprints) {
-      const blueprint = yield* Database.load(blueprintRef);
-      yield* Database.add(blueprint);
+    for (const skillRef of prompt.skills) {
+      const skill = yield* Database.load(skillRef);
+      yield* Database.add(skill);
     }
     yield* Database.add(prompt);
     yield* Database.flush();
@@ -95,7 +95,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   instructions: string;
   input: Schema.Schema<I>;
   output: Schema.Schema<O>;
-  blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+  skills?: Ref.Ref<Skill.Skill>[];
   model?: ModelName;
   plugins?: Plugin.Plugin[];
 }
@@ -122,7 +122,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
 
     const prompt = Routine.make({
       instructions: options.instructions,
-      blueprints: options.blueprints ?? [],
+      skills: options.skills ?? [],
       input: options.input,
       output: options.output,
     });

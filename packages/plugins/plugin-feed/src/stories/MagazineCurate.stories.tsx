@@ -18,7 +18,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { MagazineBlueprint } from '#blueprints';
+import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
@@ -78,9 +78,9 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
 
     const magazine = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)] });
     space.db.add(magazine);
-    // Curation resolves the base methodology blueprint from the registry; register it here since the
-    // automation plugin (which normally syncs BlueprintDefinition capabilities) isn't in this story.
-    client.graph.registry.add([MagazineBlueprint.make()]);
+    // Curation resolves the base methodology skill from the registry; register it here since the
+    // automation plugin (which normally syncs SkillDefinition capabilities) isn't in this story.
+    client.graph.registry.add([MagazineSkill.make()]);
     yield* Effect.promise(() => space.db.flush());
   });
 
@@ -122,7 +122,7 @@ export const Default: Story = {};
  *
  * Skipped in CI (`!test`) — browser/timing-sensitive interactive demo. The
  * deterministic logic is covered by `theregister-fixture.test.ts` (fetch → parse)
- * and `curate-magazine.test.ts` (curation). The AI/blueprint path is out of scope.
+ * and `curate-magazine.test.ts` (curation). The AI/skill path is out of scope.
  */
 export const Test: Story = {
   tags: ['!test'],

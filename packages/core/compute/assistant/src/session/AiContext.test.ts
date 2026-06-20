@@ -28,7 +28,7 @@ describe('AiContext.Binder', () => {
 
       yield* Effect.promise(() =>
         binder.bind({
-          blueprints: [],
+          skills: [],
           objects: [ref],
         }),
       );

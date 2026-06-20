@@ -15,7 +15,7 @@ import { StateMap } from '@dxos/schema';
 
 import * as Subscription from './Subscription';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
+export const SKILL_KEY = 'org.dxos.skill.magazine';
 
 /** Per-Post magazine-scoped curation state, keyed by Post id. */
 export const PostState = Schema.Struct({
@@ -32,7 +32,7 @@ export type PostState = Schema.Schema.Type<typeof PostState>;
  * An agent-curated collection of articles drawn from one or more Feeds.
  * The Magazine carries the user's topic instructions ("what this magazine is
  * about"); the {@link CurateMagazine} operation combines them at curation time
- * with the plugin's base methodology (the Magazine blueprint) to select matching
+ * with the plugin's base methodology (the Magazine skill) to select matching
  * Posts and append their refs here.
  */
 export const Magazine = Schema.Struct({
@@ -65,7 +65,7 @@ export const Magazine = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--newspaper-clipping--regular', hue: 'indigo' }),
-  AppAnnotation.BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.magazine', '0.1.0')),
 );
 
@@ -83,7 +83,7 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' |
 
 /**
  * Creates a Magazine with its topic-instructions Text as a hidden child (cascade-deleted with the
- * magazine). The base curation methodology lives in the Magazine blueprint and is attached to the
+ * magazine). The base curation methodology lives in the Magazine skill and is attached to the
  * in-memory routine at curation time, so no Routine object is persisted here.
  */
 export const make = (props: MakeProps = {}): Magazine => {

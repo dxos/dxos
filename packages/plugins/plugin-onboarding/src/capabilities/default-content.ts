@@ -40,7 +40,7 @@ export default Capability.makeModule(
     });
 
     // Run plugin OnCreateSpace callbacks against the personal space so capabilities that
-    // depend on a fresh space (e.g. blueprints) wire themselves up. The exemplar space
+    // depend on a fresh space (e.g. skills) wire themselves up. The exemplar space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const personalRootCollection = Option.getOrUndefined(

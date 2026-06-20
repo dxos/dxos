@@ -9,7 +9,7 @@ Let a user turn a range of calendar events into a new Trip + itinerary in one ac
 `plugin-trip` contributes the action into the calendar's menu (via the app-graph). The action
 takes the events in the calendar's currently-selected date range (or, when nothing is selected,
 the next N days from today — default 14, configurable). It immediately creates a Trip, navigates
-to it, and runs a trip-planning blueprint that fills in connecting travel and accommodation while
+to it, and runs a trip-planning skill that fills in connecting travel and accommodation while
 the user looks at the new trip.
 
 ## Context / key facts
@@ -23,12 +23,12 @@ the user looks at the new trip.
   `{ from?: string; to?: string }`. We store ISO date strings there.
 - `plugin-trip` already depends on `@dxos/plugin-inbox`, `@dxos/plugin-attention`,
   `@dxos/app-toolkit`, `@dxos/types`. It does **not** yet depend on `@dxos/plugin-assistant`.
-- Operations/blueprints use `@dxos/compute` (`Operation`, `Blueprint`, `Template`), not
-  `@dxos/operation`. `Blueprint.Definition = { key, make }`; handlers are supplied separately via
+- Operations/skills use `@dxos/compute` (`Operation`, `Skill`, `Template`), not
+  `@dxos/operation`. `Skill.Definition = { key, make }`; handlers are supplied separately via
   the plugin's `OperationHandlerSet`.
 - `AssistantOperation.RunPromptInNewChat` (exported from `@dxos/plugin-assistant`) binds
-  `objects` + `blueprints` to a new chat and, with `background: true`, runs the agent without
-  navigating away. Blueprints are matched by meta key against `Blueprint.Blueprint` objects in the
+  `objects` + `skills` to a new chat and, with `background: true`, runs the agent without
+  navigating away. Skills are matched by meta key against `Skill.Skill` objects in the
   space db.
 - `ActivityDetails = { title?, venue?: Place, departAt?, arriveAt? }`.
   `Place = { name?, code?, city?, country?, geo? }`.
@@ -40,10 +40,10 @@ the user looks at the new trip.
    Events with no address are skipped (they are not itinerary stops).
 3. **Operation input** — `{ calendar, events }`. The app-graph action resolves the range and
    queries the events; the operation builds the trip. The trip span is derived from the events.
-4. **Blueprint** — a single `Trip` blueprint (the former booking + planning blueprints merged), tooled with a new `AddSegment` operation plus the
+4. **Skill** — a single `Trip` skill (the former booking + planning skills merged), tooled with a new `AddSegment` operation plus the
    existing `PlanRoute` and `SearchBookings`, so the agent can actually build the itinerary.
 5. **Run mechanism** — `AssistantOperation.RunPromptInNewChat` with `background: true`, binding the
-   new trip and the planning blueprint. Navigation to the trip is a separate `LayoutOperation.Open`.
+   new trip and the planning skill. Navigation to the trip is a separate `LayoutOperation.Open`.
 6. **Default window** — `DEFAULT_PLANNING_WINDOW_DAYS = 14`, configurable via plugin settings,
    bridged to the (headless) action through a process-level holder like `tripGapDays`.
 7. **Trip name** — default `"Trip · {Mon D – Mon D}"` from the span when no name given.
@@ -78,8 +78,8 @@ existing gap sync.
   - Build `Trip.make({ name, start, end })` (span = min start / max end across the events),
     `db.add(trip)` (db from `Obj.getDatabase(calendar)`), attach segments via `Trip.addSegment`.
   - Navigate: `LayoutOperation.Open` to the trip path.
-  - Run blueprint: `AssistantOperation.RunPromptInNewChat({ db, objects: [trip],
-blueprints: [TRIP_PLANNING_KEY], prompt: <kickoff>, background: true })`, wrapped in
+  - Run skill: `AssistantOperation.RunPromptInNewChat({ db, objects: [trip],
+skills: [TRIP_PLANNING_KEY], prompt: <kickoff>, background: true })`, wrapped in
     `Effect.catchAll` so a missing assistant runtime (tests/headless) does not fail trip creation.
   - Return `{ trip }`.
 - **`AddSegment`** (def + handler `operations/add-segment.ts`): input
@@ -87,16 +87,16 @@ blueprints: [TRIP_PLANNING_KEY], prompt: <kickoff>, background: true })`, wrappe
   Creates `Segment.makeDefault(kind)` (merging any `details`), `db.add`, `Trip.addSegment`.
   Registered in `TripOperationHandlerSet`.
 
-### 5. Blueprint (`plugin-trip/src/blueprints/trip-blueprint.ts`)
+### 5. Skill (`plugin-trip/src/skills/trip-skill.ts`)
 
-A single `Trip` blueprint (the former booking + planning blueprints merged). Key
-`${meta.id}/blueprint/trip`. Tools = `[AddSegment, RoutingOperation.PlanRoute,
+A single `Trip` skill (the former booking + planning skills merged). Key
+`${meta.id}/skill/trip`. Tools = `[AddSegment, RoutingOperation.PlanRoute,
 BookingOperation.SearchBookings]`. Instructions cover planning (given a trip whose `activity`
 segments are fixed appointments at addresses sorted by time, insert `road`/`transfer` segments
 connecting consecutive stops and `accommodation` for overnight gaps; use `PlanRoute` to
 geocode/route) and booking search (`SearchBookings`); do not invent confirmations. Export from
-`blueprints/index.ts`. `capabilities/blueprint-definition.ts` contributes the single `TripBlueprint`.
-`Trip.Trip` gets `BlueprintsAnnotation.set([TRIP_BLUEPRINT_KEY])` (import from `@dxos/app-toolkit`).
+`skills/index.ts`. `capabilities/skill-definition.ts` contributes the single `TripSkill`.
+`Trip.Trip` gets `SkillsAnnotation.set([TRIP_SKILL_KEY])` (import from `@dxos/app-toolkit`).
 
 ### 6. App-graph action (`plugin-trip/src/capabilities/app-graph-builder.ts`)
 
@@ -115,7 +115,7 @@ the Selection manager for the calendar context id, via `LayoutOperation.Select`.
 
 ### 8. Translations + deps
 
-Add label strings (`trip.plan-from-calendar.label`, blueprint name, notify titles). Add
+Add label strings (`trip.plan-from-calendar.label`, skill name, notify titles). Add
 `@dxos/plugin-assistant` as a `workspace:*` dependency of `plugin-trip` (no cycle: plugin-assistant
 does not depend on plugin-trip/inbox).
 
@@ -124,13 +124,13 @@ does not depend on plugin-trip/inbox).
 select range in CalendarArticle → Selection('range') → click "Plan trip from calendar" →
 action resolves range (or default window) + queries events → `CreateTripFromEvents` →
 build activity segments from located events → create + persist Trip → `LayoutOperation.Open(trip)` →
-`RunPromptInNewChat(background, objects=[trip], blueprints=[planning])` → agent adds travel/lodging.
+`RunPromptInNewChat(background, objects=[trip], skills=[planning])` → agent adds travel/lodging.
 
 ## Error handling
 
-- No located events in range → still create the Trip spanning the range (blueprint can help); the
+- No located events in range → still create the Trip spanning the range (skill can help); the
   action's notify reports how many stops were added.
-- Missing assistant runtime (tests/headless) → blueprint run is `catchAll`-logged; trip creation and
+- Missing assistant runtime (tests/headless) → skill run is `catchAll`-logged; trip creation and
   navigation still succeed.
 - No feed / no db on the calendar → action contributes no item (guard like inbox extensions).
 
@@ -140,12 +140,12 @@ build activity segments from located events → create + persist Trip → `Layou
   `activity` segments; PostalAddress→Place mapping; span derivation.
 - **Integration** (`create-trip-from-events.test.ts`, `AssistantTestLayer`): seed a `Calendar` + feed
   with events (some located), invoke `CreateTripFromEvents`, assert a `Trip` with the expected
-  `activity` segments and span is created. Blueprint run stubbed/absent.
+  `activity` segments and span is created. Skill run stubbed/absent.
 - Live verification in Composer: select a calendar range, run the action, confirm navigation +
   companion chat activity.
 
 ## Out of scope (first draft)
 
-- Surfacing the blueprint chat inline in the Trip article (relies on existing companion chat UX).
-- Auto-binding blueprints from `BlueprintsAnnotation` when an object is viewed (not yet implemented
+- Surfacing the skill chat inline in the Trip article (relies on existing companion chat UX).
+- Auto-binding skills from `SkillsAnnotation` when an object is viewed (not yet implemented
   in the assistant; we bind explicitly via `RunPromptInNewChat`).

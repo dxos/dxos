@@ -6,12 +6,12 @@ import { type AutomationCapabilities } from '@dxos/plugin-automation';
 
 import { makeScheduledRoutineAutomation } from './scaffold';
 
-/** The research blueprint drives the brief; web-search, markdown, and database tools support it. */
-const BLUEPRINT_KEYS = [
-  'org.dxos.blueprint.research',
-  'org.dxos.blueprint.webSearch',
-  'org.dxos.blueprint.markdown',
-  'org.dxos.blueprint.database',
+/** The research skill drives the brief; web-search, markdown, and database tools support it. */
+const SKILL_KEYS = [
+  'org.dxos.skill.research',
+  'org.dxos.skill.webSearch',
+  'org.dxos.skill.markdown',
+  'org.dxos.skill.database',
 ] as const;
 
 /** Runs weekly by default; the user edits the schedule and the topic by opening the trigger and routine. */
@@ -34,7 +34,7 @@ export const researchBrief: AutomationCapabilities.Template = {
     makeScheduledRoutineAutomation({
       name: name ?? 'Research Brief',
       instructions: DEFAULT_INSTRUCTIONS,
-      blueprintKeys: BLUEPRINT_KEYS,
+      skillKeys: SKILL_KEYS,
       cron: DEFAULT_CRON,
     }),
 };

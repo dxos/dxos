@@ -306,7 +306,7 @@ This is used inside echo-client itself (future: echo-client/src) and is a legiti
 internal-to-echo-client use; once S2 lands these files are inside `@dxos/echo-client`
 and can use a package-internal import instead. No public API needed.
 
-**`getProxyHandler`** — used only in `echo-handler.blueprint-test.ts`. After S8 (handler
+**`getProxyHandler`** — used only in `echo-handler.skill-test.ts`. After S8 (handler
 split), this will become redundant. No public API needed; keep in internal.
 
 **Decision**: Promote `isProxy` to public as `Obj.isLive`. Internalize `getProxyTarget` and

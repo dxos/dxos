@@ -40,8 +40,8 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 ### TS2883 (d.ts can't name @dxos/compute types): annotate the export, no fake imports
 
 - PREFERRED fix (supersedes the fake-import trick below): drop `Capability.makeModule(...)` and annotate the export — `const activate: () => Effect.Effect<Capability.Capability<typeof AppCapabilities.X>, never, Capability.Service> = Effect.fnUntraced(...); export default activate;` with the comment `// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).` Annotations are copied verbatim into the d.ts; inferred types are expanded (which is what drags in unnameable compute types). Explicit type args on `makeModule<...>()` do NOT help.
-- Barrels: annotate the lazy export `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]>` (array when the module contributes several). `makeModule` is an inference-only identity helper — safe to drop when annotating.
-- Name the module activation fn `activate` (it is consumed as `Plugin.addModule({ activate })`), or `blueprintDefinition` for blueprint modules.
+- Barrels: annotate the lazy export `Capability.LazyCapability<void, Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>` (array when the module contributes several). `makeModule` is an inference-only identity helper — safe to drop when annotating.
+- Name the module activation fn `activate` (it is consumed as `Plugin.addModule({ activate })`), or `skillDefinition` for skill modules.
 - Fake imports remain ONLY where annotation is impractical: huge inferred schema types (`types/*.ts` with echo `View`/`QueryAST`), deep Effect pipelines (plugin-inbox Google `Credential` files, functions-runtime), and ambient-augmentation imports (plugin-support Tooltip react-floater/type-fest — different mechanism).
 - For hard cases, transcribe the exact type from the previously emitted `dist/types/**/*.d.ts` instead of guessing.
 
@@ -77,7 +77,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### plugin-comments namespaces are Comment\*, not Thread\*
 
-- plugin-comments exports `CommentCapabilities`/`CommentOperation` (`src/types/CommentCapabilities.ts`, `CommentOperation.ts`), `CommentBlueprint`, and the `CommentState` type — never reintroduce `ThreadCapabilities`/`ThreadOperation` there. plugin-thread keeps its OWN channel-scoped `ThreadCapabilities` (`ChannelBackend`) / `ThreadOperation` (`CreateChannel`) — distinct namespaces, do not merge.
+- plugin-comments exports `CommentCapabilities`/`CommentOperation` (`src/types/CommentCapabilities.ts`, `CommentOperation.ts`), `CommentSkill`, and the `CommentState` type — never reintroduce `ThreadCapabilities`/`ThreadOperation` there. plugin-thread keeps its OWN channel-scoped `ThreadCapabilities` (`ChannelBackend`) / `ThreadOperation` (`CreateChannel`) — distinct namespaces, do not merge.
 - The `Thread.Thread` ECHO schema (`@dxos/types`) is unchanged — comment threads are still Thread objects; only plugin-comments' namespace/wording changed.
 
 ### CommentConfig contributions hit TS2883 — annotate the barrel export
@@ -171,8 +171,8 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### Routine.instructions is `Ref<Text>` (like Agent), not `Template`
 
-- `Routine.instructions` is now `Ref.Ref(Text.Text)` with `Format.Markdown` (mirrors `Agent.instructions`); `Routine.make({ instructions: string })` wraps via `Ref.make(Text.make({ content }))`. Agent-execution consumers load it directly (`Database.load(prompt.instructions)` then `Template.process(text.content, input)` — Handlebars preserved). `Blueprint.instructions` stays a `Template`.
-- `TemplateEditor` (`plugin-assistant/components`) now takes `source: Ref<Text>` (it only ever used `template.source`). Routine callers pass `routine.instructions`; Blueprint callers pass `blueprint.instructions.source`. `TemplateForm` still owns the `Template` (manages `inputs`) and passes `template.source` down.
+- `Routine.instructions` is now `Ref.Ref(Text.Text)` with `Format.Markdown` (mirrors `Agent.instructions`); `Routine.make({ instructions: string })` wraps via `Ref.make(Text.make({ content }))`. Agent-execution consumers load it directly (`Database.load(prompt.instructions)` then `Template.process(text.content, input)` — Handlebars preserved). `Skill.instructions` stays a `Template`.
+- `TemplateEditor` (`plugin-assistant/components`) now takes `source: Ref<Text>` (it only ever used `template.source`). Routine callers pass `routine.instructions`; Skill callers pass `skill.instructions.source`. `TemplateForm` still owns the `Template` (manages `inputs`) and passes `template.source` down.
 
 ### Owned child objects
 
@@ -215,7 +215,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### `Capability.lazy` cross-package
 
-- `Capability.lazy('X', () => import('./x'))` whose module contributes a type declared in ANOTHER package fails `tsc` with TS2883 ("inferred type cannot be named… not portable"). Fix: eager re-export `export { default as X } from './x';` (like `BlueprintDefinition`) instead of lazy. The `<T>` param of `lazy` is the module PROPS, not the contributed value — don't annotate with the value type.
+- `Capability.lazy('X', () => import('./x'))` whose module contributes a type declared in ANOTHER package fails `tsc` with TS2883 ("inferred type cannot be named… not portable"). Fix: eager re-export `export { default as X } from './x';` (like `SkillDefinition`) instead of lazy. The `<T>` param of `lazy` is the module PROPS, not the contributed value — don't annotate with the value type.
 
 ### Companion surfaces
 

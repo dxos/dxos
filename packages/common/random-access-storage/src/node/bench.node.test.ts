@@ -7,7 +7,7 @@ import path from 'path';
 import { afterAll, beforeAll, describe } from 'vitest';
 
 import { StorageType } from '../common';
-import { storageBenchmark } from '../testing/benchmark.blueprint-test';
+import { storageBenchmark } from '../testing/benchmark.skill-test';
 import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));

@@ -33,7 +33,7 @@ Migrate all `defineFunction` / `Function` / `FunctionDefinition` usages from `@d
 
 #### 3. Stale `type FunctionDefinition` imports (unused or need replacement)
 
-- `packages/devtools/cli/src/util/blueprints.ts:17` — remove unused import
+- `packages/devtools/cli/src/util/skills.ts:17` — remove unused import
 - `packages/devtools/cli/src/commands/chat/processor.ts:25` — remove unused import
 
 #### 4. `defineFunction` in `dxos:functions` virtual module (DO NOT MIGRATE)

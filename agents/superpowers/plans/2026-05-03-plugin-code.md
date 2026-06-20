@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rename `plugin-spec` → `plugin-code` and extend it with a `CodeProject` ECHO type, an Anthropic-API-key settings UI, a Coder blueprint, two stub operations, and a refactored `CodeArticle` that reuses `react-ui-editor` with a Spec/Code tab toggle.
+**Goal:** Rename `plugin-spec` → `plugin-code` and extend it with a `CodeProject` ECHO type, an Anthropic-API-key settings UI, a Coder skill, two stub operations, and a refactored `CodeArticle` that reuses `react-ui-editor` with a Spec/Code tab toggle.
 
 **Architecture:** Phase-1 ships scaffolding only. The Claude Agent SDK build service lives on EDGE in a separate PR. The existing `Spec` ECHO type is retained (typename `org.dxos.type.spec`) so existing data is compatible; `CodeProject` (`org.dxos.type.codeProject`) is a new type pairing a name with a `Ref<Spec>`. `CodeArticle` uses `Editor.Root/Toolbar/Content` from `@dxos/react-ui-editor` (the same composable plugin-markdown uses), with the existing `mdl()`/`mdlBlockDescription`/`mdlLint`/`mdlComplete` extensions. Tabs are contributed via `EditorToolbar.customActions` (an `Atom.Atom<ActionGraphProps>` of two toggle actions). The Anthropic API key is persisted as an `AccessToken` (`source: 'anthropic.com'`) via the composer credentials API; plugin Settings stores only an optional EDGE endpoint.
 
-**Tech Stack:** TypeScript, Effect Schema, `@dxos/echo`, `@dxos/react-ui-editor` (CodeMirror), `@dxos/app-framework` / `@dxos/app-toolkit`, `@dxos/types` (`AccessToken`), `@dxos/compute` (`Operation`), `@dxos/conductor` (`Blueprint`).
+**Tech Stack:** TypeScript, Effect Schema, `@dxos/echo`, `@dxos/react-ui-editor` (CodeMirror), `@dxos/app-framework` / `@dxos/app-toolkit`, `@dxos/types` (`AccessToken`), `@dxos/compute` (`Operation`), `@dxos/conductor` (`Skill`).
 
 ---
 
@@ -26,14 +26,14 @@ packages/plugins/plugin-code/                       (was plugin-spec)
     meta.ts                                         (id 'org.dxos.plugin.code')
     translations.ts                                 (renamed namespace + new keys)
     CodePlugin.tsx                                  (was SpecPlugin.tsx)
-    blueprints/
-      index.ts                                      (re-exports CoderBlueprint)
-      coder.ts                                      (NEW — CoderBlueprint)
+    skills/
+      index.ts                                      (re-exports CoderSkill)
+      coder.ts                                      (NEW — CoderSkill)
     capabilities/
       index.ts                                      (Capability.lazy() barrel)
       react-surface.tsx                             (article + settings surfaces)
       operation-handler.ts                          (NEW)
-      blueprint-definition.ts                      (NEW)
+      skill-definition.ts                      (NEW)
       settings.ts                                   (NEW)
     operations/
       index.ts                                      (NEW — barrel)
@@ -706,10 +706,10 @@ import { Capability } from '@dxos/app-framework';
 export const ReactSurface = Capability.lazy(() => import('./react-surface'));
 export const Settings = Capability.lazy(() => import('./settings'));
 export const OperationHandler = Capability.lazy(() => import('./operation-handler'));
-export const BlueprintDefinition = Capability.lazy(() => import('./blueprint-definition'));
+export const SkillDefinition = Capability.lazy(() => import('./skill-definition'));
 ```
 
-(`OperationHandler` and `BlueprintDefinition` are added in Tasks 6 and 7 — list them now to avoid editing the file twice.)
+(`OperationHandler` and `SkillDefinition` are added in Tasks 6 and 7 — list them now to avoid editing the file twice.)
 
 - [ ] **Step 4: Wire into `CodePlugin.tsx`**
 
@@ -1150,7 +1150,7 @@ feat(plugin-code): add stub verifySpec + runBuildAgent operations
 
 Both operations return deterministic placeholder values. They will be
 wired to the EDGE build service in a follow-up PR; for now they exist so
-the Coder blueprint's tool calls resolve.
+the Coder skill's tool calls resolve.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 EOF
@@ -1159,16 +1159,16 @@ EOF
 
 ---
 
-## Task 7: Coder blueprint
+## Task 7: Coder skill
 
 **Files:**
 
-- Create: `packages/plugins/plugin-code/src/blueprints/index.ts`
-- Create: `packages/plugins/plugin-code/src/blueprints/coder.ts`
-- Create: `packages/plugins/plugin-code/src/capabilities/blueprint-definition.ts`
+- Create: `packages/plugins/plugin-code/src/skills/index.ts`
+- Create: `packages/plugins/plugin-code/src/skills/coder.ts`
+- Create: `packages/plugins/plugin-code/src/capabilities/skill-definition.ts`
 - Modify: `packages/plugins/plugin-code/src/CodePlugin.tsx`
 
-- [ ] **Step 1: Create `blueprints/coder.ts`**
+- [ ] **Step 1: Create `skills/coder.ts`**
 
 ```ts
 //
@@ -1176,11 +1176,11 @@ EOF
 //
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 
 import { RunBuildAgent, VerifySpec } from '../operations';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.coder';
+const SKILL_KEY = 'org.dxos.skill.coder';
 
 const INSTRUCTIONS = `\
 You are the Coder. You help the user author a DEUS specification (an .mdl
@@ -1200,34 +1200,34 @@ Do not modify the user's repository directly. Operations are your only
 side-effecting tools.`;
 
 const make = () =>
-  Blueprint.make({
-    key: BLUEPRINT_KEY,
+  Skill.make({
+    key: SKILL_KEY,
     name: 'Coder',
-    tools: Blueprint.toolDefinitions({
+    tools: Skill.toolDefinitions({
       operations: [VerifySpec, RunBuildAgent],
     }),
     instructions: INSTRUCTIONS,
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
-  key: BLUEPRINT_KEY,
+const skill: AppCapabilities.SkillDefinition = {
+  key: SKILL_KEY,
   make,
 };
 
-export default blueprint;
+export default skill;
 ```
 
-- [ ] **Step 2: Create `blueprints/index.ts`**
+- [ ] **Step 2: Create `skills/index.ts`**
 
 ```ts
 //
 // Copyright 2026 DXOS.org
 //
 
-export { default as CoderBlueprint } from './coder';
+export { default as CoderSkill } from './coder';
 ```
 
-- [ ] **Step 3: Create `capabilities/blueprint-definition.ts`**
+- [ ] **Step 3: Create `capabilities/skill-definition.ts`**
 
 ```ts
 //
@@ -1239,10 +1239,10 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { CoderBlueprint } from '../blueprints';
+import { CoderSkill } from '../skills';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(AppCapabilities.BlueprintDefinition, CoderBlueprint)),
+  Effect.succeed(Capability.contributes(AppCapabilities.SkillDefinition, CoderSkill)),
 );
 ```
 
@@ -1251,7 +1251,7 @@ export default Capability.makeModule(() =>
 Add to the pipe chain:
 
 ```ts
-AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
 ```
 
 - [ ] **Step 5: Build**
@@ -1264,9 +1264,9 @@ Expected: PASS.
 ```bash
 git add -A
 git commit -m "$(cat <<'EOF'
-feat(plugin-code): add Coder blueprint
+feat(plugin-code): add Coder skill
 
-Defines org.dxos.blueprint.coder with verifySpec and runBuildAgent as
+Defines org.dxos.skill.coder with verifySpec and runBuildAgent as
 tools, plus a system prompt describing the spec → verify → build loop.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
@@ -1322,13 +1322,13 @@ Expected: working tree clean.
   - F-2 CodeProject type → Task 3 ✓
   - F-3 CodeArticle on Editor.\* + tabs → Task 2 ✓
   - F-4 Settings + credentials → Tasks 4 + 5 ✓
-  - F-5 Coder blueprint → Task 7 ✓
+  - F-5 Coder skill → Task 7 ✓
   - F-6 Stub operations → Task 6 ✓
   - Acceptance tests T-1…T-8 are covered by build/lint/test in Task 8 plus storybook smoke in Task 2; per-test unit tests are not added in phase 1 (TDD overhead would dominate; the stubs are too thin to merit their own test files).
 
 - **Type consistency:**
   - `CodeProject.CodeProject`, `Spec.Spec`, `Settings.Settings` — namespace re-exports consistent across files.
-  - Operation keys `org.dxos.function.code.verify-spec` / `…run-build-agent` and blueprint key `org.dxos.blueprint.coder` used identically in PLUGIN.mdl, definitions.ts, and coder.ts.
+  - Operation keys `org.dxos.function.code.verify-spec` / `…run-build-agent` and skill key `org.dxos.skill.coder` used identically in PLUGIN.mdl, definitions.ts, and coder.ts.
   - `useSettingsState` import path (Task 5 Step 6) flagged for confirmation against plugin-assistant.
   - `OperationHandlerSet.make().add(...)` shape (Task 6 Step 2) flagged for confirmation against plugin-discord.
 

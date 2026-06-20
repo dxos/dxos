@@ -7,10 +7,10 @@ import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { makeScheduledRoutineAutomation } from './scaffold';
 
 /** Inbox supplies new messages; database queries recent objects; markdown writes the digest document. */
-const BLUEPRINT_KEYS = [
-  'org.dxos.blueprint.inbox',
-  'org.dxos.blueprint.database',
-  'org.dxos.blueprint.markdown',
+const SKILL_KEYS = [
+  'org.dxos.skill.inbox',
+  'org.dxos.skill.database',
+  'org.dxos.skill.markdown',
 ] as const;
 
 /** Runs daily by default; the user edits the schedule and the scope by opening the trigger and routine. */
@@ -31,7 +31,7 @@ export const dailyDigest: AutomationCapabilities.Template = {
     makeScheduledRoutineAutomation({
       name: name ?? 'Daily Digest',
       instructions: DEFAULT_INSTRUCTIONS,
-      blueprintKeys: BLUEPRINT_KEYS,
+      skillKeys: SKILL_KEYS,
       cron: DEFAULT_CRON,
     }),
 };

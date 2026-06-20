@@ -12,7 +12,7 @@ import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/a
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, SkillManagerSkill, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Tag } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -31,9 +31,9 @@ import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;
 
-export const getDefaultBlueprints = () => [
-  Ref.make(BlueprintManagerBlueprint.make()),
-  Ref.make(DatabaseBlueprint.make()),
+export const getDefaultSkills = () => [
+  Ref.make(SkillManagerSkill.make()),
+  Ref.make(DatabaseSkill.make()),
 ];
 
 const INSTRUCTIONS = trim`
@@ -46,7 +46,7 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'blueprints' | 'input' | 'output'> {
+interface AgentTestOptions extends Pick<Routine.MakeProps, 'name' | 'skills' | 'input' | 'output'> {
   /** Agent instructions; the specification for the test. */
   instructions: string;
 
@@ -108,9 +108,9 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
 
 const seedPrompt = (prompt: Routine.Routine) =>
   Effect.gen(function* () {
-    for (const blueprintRef of prompt.blueprints) {
-      const blueprint = yield* Database.load(blueprintRef);
-      yield* Database.add(blueprint);
+    for (const skillRef of prompt.skills) {
+      const skill = yield* Database.load(skillRef);
+      yield* Database.add(skill);
     }
     yield* Database.add(prompt);
     yield* Database.flush();
@@ -141,7 +141,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   const prompt = Routine.make({
     name: options.name,
     instructions: formatInstructions(options.instructions, options.completionCriteria),
-    blueprints: options.blueprints ?? getDefaultBlueprints(),
+    skills: options.skills ?? getDefaultSkills(),
     input: options.input,
     output: options.output,
   });

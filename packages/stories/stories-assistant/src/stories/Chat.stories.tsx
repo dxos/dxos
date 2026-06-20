@@ -10,25 +10,25 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AgentPrompt,
-  DelegationBlueprint,
-  LinearBlueprint,
-  PlanningBlueprint,
-  WebSearchBlueprint,
+  DelegationSkill,
+  LinearSkill,
+  PlanningSkill,
+  WebSearchSkill,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
+import { Skill, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { AssistantBlueprint } from '@dxos/plugin-assistant';
+import { AssistantSkill } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { ChessBlueprint, ChessOperation } from '@dxos/plugin-chess';
-import { CommentBlueprint } from '@dxos/plugin-comments/blueprints';
-import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox';
+import { ChessSkill, ChessOperation } from '@dxos/plugin-chess';
+import { CommentSkill } from '@dxos/plugin-comments/skills';
+import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
-import { MapBlueprint } from '@dxos/plugin-map';
-import { MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { MapSkill } from '@dxos/plugin-map';
+import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
-import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
+import { TranscriptionSkill } from '@dxos/plugin-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text, ViewModel } from '@dxos/schema';
 import {
@@ -47,7 +47,7 @@ import {
 import { trim } from '@dxos/util';
 
 import {
-  BlueprintModule,
+  SkillModule,
   ChatModule,
   ChessModule,
   CommentsModule,
@@ -179,7 +179,7 @@ export const WithPlanning: Story = {
   }),
   args: {
     modules: [[ChatModule], [TraceModule, ContextModule]],
-    blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
+    skills: [MarkdownSkill.key, PlanningSkill.key],
   },
 };
 
@@ -191,7 +191,7 @@ export const WithPlanning: Story = {
 export const WithSubAgents: Story = {
   decorators: getDecorators({
     config: config.remote,
-    // TODO(burdon): Move instructions to blueprint?
+    // TODO(burdon): Move instructions to skill?
     createAgent: {
       name: 'Supervisor',
       instructions: 'You delegate units of work to sub-agents using the available tools.',
@@ -205,7 +205,7 @@ export const WithSubAgents: Story = {
   }),
   args: {
     modules: [[ChatModule], [TraceModule, ContextModule]],
-    blueprints: [DelegationBlueprint.key, PlanningBlueprint.key, MarkdownBlueprint.key],
+    skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
   },
 };
 
@@ -225,7 +225,7 @@ export const WithExecutionGraph: Story = {
   }),
   args: {
     modules: [[ChatModule], [TraceModule]],
-    blueprints: [MarkdownBlueprint.key],
+    skills: [MarkdownSkill.key],
   },
 };
 
@@ -271,7 +271,7 @@ export const WithWebSearch: Story = {
   }),
   args: {
     modules: [[ChatModule]],
-    blueprints: [WebSearchBlueprint.key],
+    skills: [WebSearchSkill.key],
   },
 };
 
@@ -312,11 +312,11 @@ export const WithMarkdown: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, CommentBlueprint.key],
+    skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
   },
 };
 
-export const WithBlueprints: Story = {
+export const WithSkills: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
       const [{ InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
@@ -338,7 +338,7 @@ export const WithBlueprints: Story = {
     },
   }),
   args: {
-    modules: [[ChatModule], [TasksModule, BlueprintModule]],
+    modules: [[ChatModule], [TasksModule, SkillModule]],
   },
 };
 
@@ -394,7 +394,7 @@ export const WithChess: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.key, ChessBlueprint.key],
+    skills: [AssistantSkill.key, ChessSkill.key],
   },
 };
 
@@ -431,7 +431,7 @@ export const WithMail: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.key, MarkdownBlueprint.key, InboxBlueprint.key],
+    skills: [AssistantSkill.key, MarkdownSkill.key, InboxSkill.key],
   },
 };
 
@@ -463,7 +463,7 @@ export const WithGmail: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [InboxModule, TokenManagerModule]],
-    blueprints: [AssistantBlueprint.key, InboxBlueprint.key],
+    skills: [AssistantSkill.key, InboxSkill.key],
   },
 };
 
@@ -495,7 +495,7 @@ export const WithCalendar: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [TokenManagerModule]],
-    blueprints: [AssistantBlueprint.key, CalendarBlueprint.key],
+    skills: [AssistantSkill.key, CalendarSkill.key],
   },
 };
 
@@ -545,7 +545,7 @@ export const WithMap: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.key, MapBlueprint.key],
+    skills: [AssistantSkill.key, MapSkill.key],
   },
 };
 
@@ -671,10 +671,10 @@ export const WithResearch: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
-    blueprints: [
-      // AssistantBlueprint.key
+    skills: [
+      // AssistantSkill.key
       // TODO(burdon): Too many open-ended tools (querying for tools, querying for schema) confuses the model.
-      WebSearchBlueprint.key,
+      WebSearchSkill.key,
     ],
   },
 };
@@ -719,7 +719,7 @@ export const WithTranscription: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [AssistantBlueprint.key, TranscriptionBlueprint.key],
+    skills: [AssistantSkill.key, TranscriptionSkill.key],
   },
 };
 
@@ -737,7 +737,7 @@ export const WithLinearSync: Story = {
   }),
   args: {
     modules: [[ChatModule], [GraphModule]],
-    blueprints: [LinearBlueprint.key],
+    skills: [LinearSkill.key],
   },
 };
 
@@ -757,7 +757,7 @@ export const WithTriggers: Story = {
   }),
   args: {
     modules: [[ChatModule], [TriggersModule, InvocationsModule]],
-    blueprints: [],
+    skills: [],
   },
 };
 
@@ -819,7 +819,7 @@ export const WithChessTrigger: Story = {
   }),
   args: {
     modules: [[ChessModule], [TriggersModule, InvocationsModule]],
-    blueprints: [],
+    skills: [],
   },
 };
 
@@ -845,7 +845,7 @@ export const WithResearchQueue: Story = {
           output: Schema.Any,
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(WebSearchBlueprint.make())],
+          skills: [Ref.make(WebSearchSkill.make())],
         }),
       );
 
@@ -867,7 +867,7 @@ export const WithResearchQueue: Story = {
       [ResearchInputModule, ResearchOutputModule],
       [TriggersModule, InvocationsModule, RoutineModule, GraphModule],
     ],
-    blueprints: [WebSearchBlueprint.key],
+    skills: [WebSearchSkill.key],
   },
 };
 
@@ -978,7 +978,7 @@ export const WithProject: Story = {
 
             {{organization}}
           `,
-          blueprints: [Ref.make(WebSearchBlueprint.make())],
+          skills: [Ref.make(WebSearchSkill.make())],
         }),
       );
 
@@ -1043,7 +1043,7 @@ export const WithProject: Story = {
   }),
   args: {
     modules: [[ProjectModule], [TriggersModule, InvocationsModule]],
-    blueprints: [],
+    skills: [],
   },
 };
 
@@ -1083,8 +1083,8 @@ export const WithScript: Story = {
       );
 
       space.db.add(
-        Blueprint.make({
-          key: 'org.dxos.blueprint.forex',
+        Skill.make({
+          key: 'org.dxos.skill.forex',
           name: 'Forex',
           instructions: Template.make({
             source: trim`
@@ -1098,8 +1098,8 @@ export const WithScript: Story = {
       await space.db.flush();
     },
     onChatCreated: async ({ space, binder }) => {
-      const blueprints = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
+      const skills = await space.db.query(Query.select(Filter.type(Skill.Skill))).run();
+      await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
     },
   }),
   args: {
@@ -1129,7 +1129,7 @@ export const WithPrompt: Story = {
           output: Schema.Any,
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(WebSearchBlueprint.make())],
+          skills: [Ref.make(WebSearchSkill.make())],
         }),
       );
 

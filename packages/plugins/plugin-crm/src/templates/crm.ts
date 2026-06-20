@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
+import { Skill, Operation, Routine, Trigger } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Automation, type AutomationCapabilities } from '@dxos/plugin-automation';
@@ -14,14 +14,14 @@ import { Mailbox } from '@dxos/plugin-inbox';
 import { trim } from '@dxos/util';
 
 /**
- * Blueprint keys composed into the CRM routine. The CRM blueprint provides CRM-specific tools; the others
+ * Skill keys composed into the CRM routine. The CRM skill provides CRM-specific tools; the others
  * supply the database, web-search, and document utilities the agent relies on.
  */
-const BLUEPRINT_KEYS = [
-  'org.dxos.blueprint.crm',
-  'org.dxos.blueprint.webSearch',
-  'org.dxos.blueprint.database',
-  'org.dxos.blueprint.markdown',
+const SKILL_KEYS = [
+  'org.dxos.skill.crm',
+  'org.dxos.skill.webSearch',
+  'org.dxos.skill.database',
+  'org.dxos.skill.markdown',
 ] as const;
 
 /** Default instructions seeded into the routine; the user edits these by opening the routine. */
@@ -49,7 +49,7 @@ export const crm: AutomationCapabilities.Template = {
       const mailbox = subject;
       const routineName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
-      const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
+      const skillRefs = SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
       const routine = yield* Database.add(
         Routine.make({
           name: routineName,
@@ -58,7 +58,7 @@ export const crm: AutomationCapabilities.Template = {
           // (`input: '{{event.item}}'`), so the routine input is the message itself, not a `{ message }` wrapper.
           input: Schema.Unknown,
           output: Schema.Void,
-          blueprints: blueprintRefs,
+          skills: skillRefs,
           context: [],
         }),
       );

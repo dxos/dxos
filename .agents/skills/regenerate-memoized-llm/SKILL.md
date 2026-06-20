@@ -75,7 +75,7 @@ ALLOW_LLM_GENERATION=1 moon run <package-name>:test -- <path/to/file.test.ts>
 Example:
 
 ```bash
-ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test -- src/blueprints/project/blueprint.test.ts
+ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test -- src/skills/project/skill.test.ts
 ```
 
 ## Notes

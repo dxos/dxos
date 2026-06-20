@@ -9,7 +9,7 @@ import { type TestSchema } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
-import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
+import { reactiveProxyTests } from './reactive-proxy.skill-test';
 
 // NOTE: These are tests for @dxos/echo/internal but they live here currently because the tests are shared.
 //  echo-schema cannot export the test sequence because @dxos/test is not published.

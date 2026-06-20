@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
@@ -50,7 +50,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Script.Script, Operation.PersistentOperation, Blueprint.Blueprint, Text.Text],
+          types: [Script.Script, Operation.PersistentOperation, Skill.Skill, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

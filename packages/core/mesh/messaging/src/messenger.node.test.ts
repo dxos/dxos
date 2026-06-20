@@ -4,7 +4,7 @@
 
 import { beforeEach, describe } from 'vitest';
 
-import { messengerTests } from './messenger.blueprint-test';
+import { messengerTests } from './messenger.skill-test';
 import { MemorySignalManager, MemorySignalManagerContext } from './signal-manager';
 
 // TODO(mykola): Use EDGE signal server.

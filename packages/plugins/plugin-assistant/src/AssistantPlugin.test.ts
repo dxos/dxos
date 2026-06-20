@@ -14,11 +14,11 @@ import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
   AgentPrompt,
-  AgentWizardBlueprint,
-  BlueprintManagerBlueprint,
-  DatabaseBlueprint,
+  AgentWizardSkill,
+  SkillManagerSkill,
+  DatabaseSkill,
 } from '@dxos/assistant-toolkit';
-import { AgentService, Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { AgentService, Skill, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
@@ -32,7 +32,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
 
-import { AssistantBlueprint } from './blueprints/assistant';
+import { AssistantSkill } from './skills/assistant';
 import { meta } from './meta';
 
 EntityId.dangerouslyDisableRandomness();
@@ -50,9 +50,9 @@ describe('AssistantPlugin', () => {
       expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
     );
 
-    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own blueprint.
+    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own skill.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // OperationHandler auto-cascades from ProcessManagerPlugin.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
@@ -155,7 +155,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('smoke test for agent service with standard blueprints', { timeout: 120_000 }, async (ctx) => {
+  test('smoke test for agent service with standard skills', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -175,13 +175,13 @@ describe('AssistantPlugin', () => {
 
     await harness.runPromise(
       Effect.gen(function* () {
-        const blueprints = yield* Effect.forEach(
-          [DatabaseBlueprint, AssistantBlueprint, BlueprintManagerBlueprint, AgentWizardBlueprint],
-          (_) => Blueprint.resolve(_.key),
+        const skills = yield* Effect.forEach(
+          [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
+          (_) => Skill.resolve(_.key),
         );
 
         const agent = yield* AgentServiceRuntime.createSession({
-          blueprints,
+          skills,
         });
         yield* agent.submitPrompt('Hello');
         yield* agent.waitForCompletion();

@@ -3,7 +3,7 @@
 //
 
 /**
- * Extract starter-prompt suggestions from a blueprint's instructions markdown.
+ * Extract starter-prompt suggestions from a skill's instructions markdown.
  *
  * Looks for the first `## Suggested starting prompts` heading (case-insensitive) and returns the
  * bullet-list items immediately following it. Items wrapped in single or double quotes have their

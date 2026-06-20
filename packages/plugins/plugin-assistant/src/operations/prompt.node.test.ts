@@ -23,7 +23,7 @@ import { AssistantPlugin } from '#plugin';
 EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {
-  // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).
+  // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, skills).
   // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
   test(
     'chat mode appends assistant messages to the chat queue',
@@ -50,7 +50,7 @@ describe('Agent prompt (composer plugin harness)', () => {
             Routine.make({
               name: 'chat-mode-test',
               instructions: 'Reply with a single word: ack.',
-              blueprints: [],
+              skills: [],
               context: [],
             }),
           );
